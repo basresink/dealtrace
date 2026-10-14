@@ -1,0 +1,774 @@
+<!-- Deel C · lagen en data. Fragment voor de voorbeeldpagina: alleen klassen uit
+     c-lagen-en-data.css, plus knoppen (.dd-act, .dd-acties) en pillen (.pil) uit deel B.
+     Flyouts en vensters staan open en stil in een .ds-podium; .is-statisch zet ze
+     absoluut in dat kader. -->
+
+<section class="ds-blok" id="flyout">
+  <h2 class="ds-kop">Flyout · detail in leesstand (standaard, 520px)</h2>
+  <div class="ds-podium">
+    <div class="fo-overlay is-statisch">
+      <aside class="fo-panel is-statisch" role="dialog" aria-modal="true" aria-labelledby="demo-fo-1" tabindex="-1">
+        <header class="fo-head">
+          <div class="fo-head-tekst">
+            <span class="fo-kicker"><span class="fo-stip fo-stip--urgent" aria-hidden="true"></span>Urgent · Open</span>
+            <h2 class="fo-titel" id="demo-fo-1">Bel met Van Dijk over verlenging</h2>
+            <p class="fo-meta">Van Dijk Installatietechniek · Installatie</p>
+          </div>
+          <button type="button" class="fo-sluit" aria-label="Sluiten">×</button>
+        </header>
+        <div class="fo-body">
+          <dl class="defs">
+            <div class="def-rij"><dt>Type</dt><dd><span class="pil pil--zwart">Bellen</span></dd></div>
+            <div class="def-rij"><dt>Vervaldatum</dt><dd class="fo-over-tijd"><span class="tnum">ma 12 okt</span> (2 dagen te laat)</dd></div>
+            <div class="def-rij"><dt>Toegewezen aan</dt><dd>Eva Jansen</dd></div>
+            <div class="def-rij"><dt>Contactpersoon</dt><dd><a class="fo-link" href="#">Sanne Mulder · Inkoop</a></dd></div>
+          </dl>
+          <article class="fo-blok">
+            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Klant in context</h3></header>
+            <p class="fo-tekst">Contract loopt over zes weken af. Laatste bezoek was in augustus.</p>
+          </article>
+          <article class="fo-blok fo-blok--accent">
+            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Volgende stap</h3></header>
+            <p class="fo-tekst">Plan een concreet moment en bevestig de afhandeling aan de klant zodra die klaar is.</p>
+          </article>
+          <article class="fo-blok fo-blok--agent">
+            <span class="fo-blok-kicker">Pitstop · voorzet</span>
+            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Belscript</h3></header>
+            <p class="fo-tekst">Open met de nieuwe vestiging in Deventer en vraag naar de onderhoudsplanning.</p>
+          </article>
+          <article class="fo-blok fo-blok--gevaar">
+            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Risico</h3></header>
+            <p class="fo-tekst">Concurrent heeft vorige maand een offerte uitgebracht.</p>
+          </article>
+        </div>
+        <footer class="fo-foot dd-acties">
+          <button type="button" class="dd-act dd-act--primair">Afronden</button>
+          <span class="dd-acties-vul fo-foot-vul"></span>
+          <button type="button" class="dd-act dd-act--icoon" aria-label="Vraag AI" title="Vraag AI"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg></button>
+          <button type="button" class="dd-act dd-act--icoon" aria-label="Snooze 1 dag" title="Snooze 1 dag"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button>
+          <button type="button" class="dd-act dd-act--icoon" aria-label="Bewerken" title="Bewerken"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>
+          <button type="button" class="dd-act dd-act--icoon dd-act--gevaar" aria-label="Verwijderen" title="Verwijderen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+          <button type="button" class="dd-act dd-act--icoon" aria-label="Open klantkaart" title="Open klantkaart"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </footer>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="flyout-bewerken">
+  <h2 class="ds-kop">Flyout · bewerkstand met fout na opslaan, sluitknop in hover en focus</h2>
+  <div class="ds-podium">
+    <div class="fo-overlay is-statisch">
+      <aside class="fo-panel is-statisch" role="dialog" aria-labelledby="demo-fo-2">
+        <header class="fo-head">
+          <div class="fo-head-tekst">
+            <span class="fo-kicker">Taak wijzigen · Hoog</span>
+            <h2 class="fo-titel" id="demo-fo-2">Offerte nabellen bij Bakkerij Hofstede</h2>
+            <p class="fo-meta">Bakkerij Hofstede · Food</p>
+          </div>
+          <button type="button" class="fo-sluit is-hover" aria-label="Sluiten">×</button>
+        </header>
+        <form class="fo-body fo-body--formulier">
+          <p class="fo-tekst">Het formulier zelf (velden, labels, keuzes) staat in deel B.</p>
+          <p class="fo-fout" role="alert">Opslaan mislukt: taak niet gevonden.</p>
+        </form>
+        <footer class="fo-foot dd-acties">
+          <button type="button" class="dd-act">Afronden</button>
+          <span class="dd-acties-vul fo-foot-vul"></span>
+          <button type="button" class="dd-act">Annuleren</button>
+          <button type="button" class="dd-act dd-act--primair" disabled>Opslaan…</button>
+        </footer>
+      </aside>
+    </div>
+  </div>
+  <p><button type="button" class="fo-sluit is-focus" aria-label="Sluiten">×</button> sluitknop met focus</p>
+</section>
+
+<section class="ds-blok" id="flyout-aanmaken">
+  <h2 class="ds-kop">Flyout · aanmaken, zonder record, smal (480px)</h2>
+  <div class="ds-podium">
+    <div class="fo-overlay is-statisch">
+      <aside class="fo-panel fo-panel--smal is-statisch" role="dialog" aria-labelledby="demo-fo-3">
+        <header class="fo-head">
+          <div class="fo-head-tekst">
+            <span class="fo-kicker">Nieuw contact</span>
+            <h2 class="fo-titel" id="demo-fo-3">Wie voeg je toe?</h2>
+          </div>
+          <button type="button" class="fo-sluit" aria-label="Sluiten">×</button>
+        </header>
+        <div class="fo-leeg">Geen account geselecteerd.</div>
+        <footer class="fo-foot dd-acties">
+          <button type="button" class="dd-act">Annuleren</button>
+          <span class="dd-acties-vul fo-foot-vul"></span>
+          <button type="button" class="dd-act dd-act--primair">Contact aanmaken</button>
+        </footer>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="flyout-analyse">
+  <h2 class="ds-kop">Flyout · analyse (560px, donkere overlay, omlijste X, witte voet, cijferstrook)</h2>
+  <div class="ds-podium">
+    <div class="fo-overlay fo-overlay--donker is-statisch">
+      <aside class="fo-panel fo-panel--breed is-statisch" role="dialog" aria-labelledby="demo-fo-4">
+        <header class="fo-head">
+          <div class="fo-head-tekst">
+            <span class="fo-kicker">Verdieping · Team · Deze maand</span>
+            <h2 class="fo-titel" id="demo-fo-4">Pipeline open</h2>
+          </div>
+          <button type="button" class="fo-sluit fo-sluit--kader" aria-label="Sluiten"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </header>
+        <div class="fo-body">
+          <div class="fo-cijfers">
+            <div class="fo-cijfer"><span class="fo-cijfer-label">Waarde</span><span class="fo-cijfer-waarde">€ 248.000</span></div>
+            <div class="fo-cijfer"><span class="fo-cijfer-label">Kans</span><span class="fo-cijfer-waarde">45%</span></div>
+            <div class="fo-cijfer"><span class="fo-cijfer-label">Gewogen</span><span class="fo-cijfer-waarde">€ 111.600</span></div>
+          </div>
+          <article class="fo-blok fo-blok--accent">
+            <p class="fo-tekst">Achttien deals staan open; vier daarvan zijn langer dan dertig dagen niet aangeraakt.</p>
+          </article>
+        </div>
+        <footer class="fo-foot fo-foot--wit dd-acties">
+          <button type="button" class="dd-act">Open pipeline</button>
+          <span class="dd-acties-vul fo-foot-vul"></span>
+          <button type="button" class="dd-act dd-act--primair">Vraag Dex over deze KPI</button>
+        </footer>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="flyout-ai">
+  <h2 class="ds-kop">Flyout · AI met donkere kop, bovenop een andere flyout</h2>
+  <div class="ds-podium">
+    <div class="fo-overlay fo-overlay--boven is-statisch">
+      <aside class="fo-panel fo-panel--ai fo-panel--analyse is-statisch" role="dialog" aria-labelledby="demo-fo-5">
+        <header class="fo-head fo-head--donker">
+          <div class="fo-head-tekst">
+            <span class="fo-kicker">Transcript-analyse · AI</span>
+            <h2 class="fo-titel" id="demo-fo-5">Kwartaalbezoek Van Dijk</h2>
+            <p class="fo-meta">12 oktober · 42 minuten</p>
+          </div>
+          <button type="button" class="fo-sluit" aria-label="Sluiten">×</button>
+        </header>
+        <div class="fo-body">
+          <article class="fo-blok fo-blok--agent">
+            <span class="fo-blok-kicker">Samenvatting</span>
+            <p class="fo-tekst">Klant wil de service uitbreiden naar de nieuwe vestiging. Besluit valt in november.</p>
+          </article>
+        </div>
+        <footer class="fo-foot dd-acties">
+          <button type="button" class="dd-act">Sluiten</button>
+          <span class="dd-acties-vul fo-foot-vul"></span>
+          <button type="button" class="dd-act dd-act--primair">Open AI-chat over dit transcript</button>
+        </footer>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="bevestigingsvenster">
+  <h2 class="ds-kop">Bevestigingsvenster · gevaar en gewone vraag</h2>
+  <div class="ds-podium">
+    <div class="cd-overlay is-statisch">
+      <div class="cd-dialog" role="alertdialog" aria-modal="true" aria-labelledby="demo-cd-1" aria-describedby="demo-cd-1t">
+        <header class="cd-head">
+          <svg class="cd-icon cd-icon--gevaar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></svg>
+          <h3 class="cd-title" id="demo-cd-1">Taak verwijderen?</h3>
+        </header>
+        <p class="cd-message" id="demo-cd-1t">"Bel met Van Dijk over verlenging" wordt definitief verwijderd.</p>
+        <footer class="cd-foot">
+          <button type="button" class="cd-btn cd-btn--ghost is-focus">Annuleren</button>
+          <button type="button" class="cd-btn cd-btn--danger">Verwijderen</button>
+        </footer>
+      </div>
+    </div>
+  </div>
+  <div class="ds-podium">
+    <div class="cd-overlay is-statisch">
+      <div class="cd-dialog" role="alertdialog" aria-labelledby="demo-cd-2" aria-describedby="demo-cd-2t">
+        <header class="cd-head">
+          <svg class="cd-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6M12 17h.01"/></svg>
+          <h3 class="cd-title" id="demo-cd-2">Deal gewonnen?</h3>
+        </header>
+        <p class="cd-message" id="demo-cd-2t">"Uitbreiding service-contract" wordt op gewonnen gezet, met de sluitdatum van vandaag.</p>
+        <footer class="cd-foot">
+          <button type="button" class="cd-btn cd-btn--ghost is-hover">Annuleren</button>
+          <button type="button" class="cd-btn cd-btn--primary">Markeer gewonnen</button>
+        </footer>
+      </div>
+    </div>
+  </div>
+  <p>Knoppen in hover: <button type="button" class="cd-btn cd-btn--primary is-hover">Bevestigen</button> <button type="button" class="cd-btn cd-btn--danger is-hover">Weggooien</button></p>
+</section>
+
+<section class="ds-blok" id="venster">
+  <h2 class="ds-kop">Venster · conflict oplossen</h2>
+  <div class="ds-podium">
+    <div class="venster-overlay is-statisch">
+      <aside class="venster" role="dialog" aria-modal="true" aria-labelledby="demo-v-1">
+        <header class="venster-kop">
+          <div>
+            <span class="venster-kicker">Conflict-resolutie</span>
+            <h2 class="venster-titel" id="demo-v-1">Server heeft een nieuwere versie van deze taak</h2>
+          </div>
+          <button type="button" class="fo-sluit" aria-label="Sluiten">×</button>
+        </header>
+        <div class="venster-body">
+          <p>Iemand anders heeft deze taak gewijzigd terwijl jij offline was.</p>
+          <div class="tabel-wrap">
+            <table class="tabel">
+              <thead><tr><th>Veld</th><th>Jouw versie</th><th>Server-versie</th></tr></thead>
+              <tbody><tr class="is-open"><td>Vervaldatum</td><td>ma 19 okt</td><td>vr 16 okt</td></tr></tbody>
+            </table>
+          </div>
+          <p class="venster-noot">Kies welke versie blijft. De andere gaat verloren.</p>
+        </div>
+        <footer class="venster-voet">
+          <button type="button" class="dd-act">Annuleren</button>
+          <button type="button" class="dd-act">Server wint</button>
+          <button type="button" class="dd-act dd-act--primair">Mijn versie houden</button>
+        </footer>
+      </aside>
+    </div>
+  </div>
+  <div class="ds-podium">
+    <div class="venster-overlay is-statisch">
+      <aside class="venster venster--klein" role="dialog" aria-labelledby="demo-v-2">
+        <header class="venster-kop">
+          <h2 class="venster-titel" id="demo-v-2">Dealtrace op je beginscherm.</h2>
+          <button type="button" class="fo-sluit" aria-label="Sluiten">×</button>
+        </header>
+        <div class="venster-body"><p>Installeer als app voor sneller werken, ook onderweg zonder netwerk.</p></div>
+        <footer class="venster-voet"><button type="button" class="dd-act dd-act--primair">Begrepen</button></footer>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="toasts">
+  <h2 class="ds-kop">Toasts · succes, info, let op, fout</h2>
+  <div class="ds-podium">
+    <div class="toast-stack is-statisch" role="status" aria-live="polite">
+      <div class="toast toast--succes">
+        <svg class="toast-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
+        <span class="toast-tekst">Taak aangemaakt.</span>
+        <button type="button" class="toast-sluit" aria-label="Sluiten">×</button>
+      </div>
+      <div class="toast">
+        <svg class="toast-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+        <span class="toast-tekst">Deal verwijderd.</span>
+        <button type="button" class="toast-sluit is-hover" aria-label="Sluiten">×</button>
+      </div>
+      <div class="toast toast--let-op">
+        <svg class="toast-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></svg>
+        <span class="toast-tekst">Geen contactpersoon gekoppeld.</span>
+        <button type="button" class="toast-sluit" aria-label="Sluiten">×</button>
+      </div>
+      <div class="toast toast--fout">
+        <svg class="toast-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></svg>
+        <span class="toast-tekst">Vastleggen mislukt. Probeer het opnieuw.</span>
+        <button type="button" class="toast-sluit is-focus" aria-label="Sluiten">×</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="banner">
+  <h2 class="ds-kop">Banner · offline, vastgelopen, bezig</h2>
+  <div class="banner banner--offline" role="status">
+    <div class="banner-inner">
+      <span class="banner-icoon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l22 22M8.5 16.1a6 6 0 0 1 6.5 0M5 12.6a10 10 0 0 1 4.3-3.7M12 20h.01"/></svg></span>
+      <span class="banner-tekst"><strong>Offline.</strong> Je werk wordt lokaal opgeslagen en gesynchroniseerd zodra je weer verbinding hebt.</span>
+    </div>
+  </div>
+  <div style="height: 16px"></div>
+  <div class="banner banner--sync" role="status">
+    <div class="banner-inner">
+      <span class="banner-icoon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-9-9M21 3v6h-6"/></svg></span>
+      <span class="banner-tekst"><strong>2 wijzigingen</strong> konden niet worden opgeslagen · sinds 10 minuten.</span>
+      <button type="button" class="banner-actie">Opnieuw proberen</button>
+    </div>
+  </div>
+  <div style="height: 16px"></div>
+  <div class="banner banner--sync" role="status">
+    <div class="banner-inner">
+      <span class="banner-icoon banner-icoon--draait" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-9-9M21 3v6h-6"/></svg></span>
+      <span class="banner-tekst"><strong>2 wijzigingen</strong> konden niet worden opgeslagen.</span>
+      <button type="button" class="banner-actie" disabled>Bezig…</button>
+    </div>
+  </div>
+  <p>Knop in hover en focus:</p>
+  <div class="banner banner--sync"><div class="banner-inner"><span class="banner-tekst">Voorbeeld</span><button type="button" class="banner-actie is-hover">Opnieuw proberen</button><button type="button" class="banner-actie is-focus">Opnieuw proberen</button></div></div>
+</section>
+
+<section class="ds-blok" id="meldingen">
+  <h2 class="ds-kop">Meldingen · notificatielijst en belpaneel</h2>
+  <ul class="melding-lijst" role="list">
+    <li class="melding melding--ongelezen">
+      <span class="melding-balk melding-balk--kritiek"></span>
+      <div class="melding-body">
+        <div class="melding-meta"><span class="pil pil--rood-vol">Kritiek</span><span class="melding-tijd">2 uur geleden</span><span class="melding-stip" aria-label="Ongelezen"></span></div>
+        <h3 class="melding-titel">Deal Van Dijk staat 21 dagen stil</h3>
+        <p class="melding-tekst">Geen contact sinds de offerte van 23 september.</p>
+      </div>
+      <div class="melding-acties">
+        <a class="dd-act dd-act--primair" href="#">Openen</a>
+        <button type="button" class="dd-act">Markeer gelezen</button>
+        <button type="button" class="dd-act">Verberg</button>
+      </div>
+    </li>
+    <li class="melding is-hover">
+      <span class="melding-balk melding-balk--hot"></span>
+      <div class="melding-body">
+        <div class="melding-meta"><span class="pil pil--paars-vol">Hot prospect</span><span class="melding-tijd">gisteren</span></div>
+        <h3 class="melding-titel">Bakkerij Hofstede zoekt een tweede leverancier</h3>
+        <p class="melding-tekst">Vacature inkoper geplaatst op 13 oktober.</p>
+      </div>
+      <div class="melding-acties"><a class="dd-act dd-act--primair" href="#">Openen</a><button type="button" class="dd-act">Verberg</button></div>
+    </li>
+    <li class="melding">
+      <span class="melding-balk melding-balk--dagstart"></span>
+      <div class="melding-body"><div class="melding-meta"><span class="melding-tijd">08:00</span></div><h3 class="melding-titel">Je dagstart staat klaar</h3></div>
+      <div class="melding-acties"><a class="dd-act dd-act--primair" href="#">Openen</a></div>
+    </li>
+    <li class="melding">
+      <span class="melding-balk melding-balk--herinnering"></span>
+      <div class="melding-body"><h3 class="melding-titel">Herinnering: offerte nabellen</h3></div>
+      <div class="melding-acties"><a class="dd-act dd-act--primair" href="#">Openen</a></div>
+    </li>
+    <li class="melding">
+      <span class="melding-balk melding-balk--inzicht"></span>
+      <div class="melding-body"><h3 class="melding-titel">Nieuw inzicht bij Van Dijk Installatietechniek</h3></div>
+      <div class="melding-acties"><a class="dd-act dd-act--primair" href="#">Openen</a></div>
+    </li>
+  </ul>
+  <div style="height: 16px"></div>
+  <div class="bel-paneel is-statisch">
+    <header class="bel-kop">
+      <div><span class="bel-kicker">Notificaties</span><h3 class="bel-titel">3 ongelezen</h3></div>
+      <button type="button" class="dd-act">Alle gelezen</button>
+    </header>
+    <ul class="bel-lijst" role="list">
+      <li class="bel-item bel-item--ongelezen">
+        <span class="melding-balk melding-balk--kritiek"></span>
+        <a class="bel-item-body" href="#"><span class="bel-item-cat">Kritiek</span><span class="bel-item-titel">Deal Van Dijk staat 21 dagen stil</span><span class="bel-item-tijd">2 uur geleden</span></a>
+        <button type="button" class="fo-sluit" aria-label="Verberg Deal Van Dijk staat 21 dagen stil">×</button>
+      </li>
+      <li class="bel-item">
+        <span class="melding-balk melding-balk--inzicht"></span>
+        <a class="bel-item-body is-hover" href="#"><span class="bel-item-cat">Inzicht</span><span class="bel-item-titel">Nieuw inzicht bij Bakkerij Hofstede</span><span class="bel-item-tijd">gisteren</span></a>
+        <button type="button" class="fo-sluit" aria-label="Verberg">×</button>
+      </li>
+    </ul>
+    <footer class="bel-voet"><a class="tabel-link" href="#">Alle notificaties →</a><a class="tabel-link" href="#">Voorkeuren</a></footer>
+  </div>
+</section>
+
+<section class="ds-blok" id="globale-zoek">
+  <h2 class="ds-kop">Globale zoek · met resultaten, filter open, actieve rij</h2>
+  <div class="ds-podium">
+    <div class="zoek-overlay is-statisch">
+      <div class="zoek-paneel" role="dialog" aria-modal="true" aria-label="Zoeken in Dealtrace">
+        <div class="zoek-veld">
+          <svg class="zoek-veld-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input class="zoek-invoer" type="text" value="van" aria-label="Zoekterm">
+          <button type="button" class="zoek-filterknop zoek-filterknop--actief" aria-expanded="true" aria-label="Kies waarin gezocht wordt"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span class="zoek-filter-teller">3</span></button>
+          <button type="button" class="zoek-sluit" aria-label="Sluiten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+        <div class="zoek-filter">
+          <label><input type="checkbox" checked> Klanten</label>
+          <label><input type="checkbox" checked> Contacten</label>
+          <label><input type="checkbox" checked> Taken</label>
+          <label><input type="checkbox"> Deals</label>
+          <button type="button" class="fout-blok-actie">Alles weer aan</button>
+        </div>
+        <div class="zoek-lijst" role="listbox" aria-label="Zoekresultaten">
+          <section class="zoek-groep">
+            <header class="zoek-groep-kop"><span class="zoek-groep-label">Klanten</span><span class="zoek-groep-telling">2</span></header>
+            <button type="button" class="zoek-rij zoek-rij--actief" role="option" aria-selected="true"><span class="zoek-rij-titel">Van Dijk Installatietechniek</span><span class="zoek-rij-detail">Zwolle · Installatie</span></button>
+            <button type="button" class="zoek-rij is-hover" role="option" aria-selected="false"><span class="zoek-rij-titel">Van der Linden Bouw</span><span class="zoek-rij-detail">Apeldoorn · Bouw</span></button>
+          </section>
+          <section class="zoek-groep">
+            <header class="zoek-groep-kop"><span class="zoek-groep-label">Contacten</span><span class="zoek-groep-telling">7</span></header>
+            <button type="button" class="zoek-rij" role="option" aria-selected="false"><span class="zoek-rij-titel">Sanne van Leeuwen</span><span class="zoek-rij-detail">Inkoop · Bakkerij Hofstede</span></button>
+            <p class="zoek-meer">nog 6, verfijn de zoekterm</p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ds-podium">
+    <div class="zoek-overlay is-statisch">
+      <div class="zoek-paneel" role="dialog" aria-label="Zoeken in Dealtrace">
+        <div class="zoek-veld">
+          <svg class="zoek-veld-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input class="zoek-invoer" type="text" placeholder="Zoek in klanten, contacten, taken, agenda, deals, offertes, inzichten, mail en documenten…" aria-label="Zoekterm">
+          <button type="button" class="zoek-filterknop is-focus" aria-label="Kies waarin gezocht wordt"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+          <button type="button" class="zoek-sluit is-hover" aria-label="Sluiten"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+        <div class="zoek-lijst">
+          <p class="zoek-hint">Typ om te zoeken in klanten, contacten, taken, agenda, deals, offertes, inzichten, mail en documenten.<span class="zoek-hint-toets">↑ ↓ kiezen · Enter openen · Esc sluiten</span></p>
+          <p class="zoek-hint">Niets gevonden voor <strong>xyz</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="tabellen">
+  <h2 class="ds-kop">Tabellen · standaard, rapport, plakkende kolom</h2>
+  <div class="tabel-wrap">
+    <table class="tabel tabel--plak">
+      <thead><tr><th>Account</th><th>Fase</th><th class="cel-r">Waarde</th><th class="cel-r">Kans</th><th>Actie</th></tr></thead>
+      <tbody>
+        <tr><td class="cel-naam"><a class="tabel-link" href="#">Van Dijk Installatietechniek</a></td><td>Voorstel</td><td class="cel-r">€ 48.000</td><td class="cel-r">60%</td><td><div class="cel-acties"><button type="button" class="dd-act">Open</button></div></td></tr>
+        <tr class="is-hover"><td class="cel-naam"><a class="tabel-link is-hover" href="#">Bakkerij Hofstede</a></td><td>Behoefte</td><td class="cel-r">€ 12.400</td><td class="cel-r">30%</td><td><div class="cel-acties"><button type="button" class="dd-act">Open</button></div></td></tr>
+        <tr class="is-open"><td class="cel-naam"><a class="tabel-link is-focus" href="#">Mulder Logistiek</a></td><td>Onderhandeling</td><td class="cel-r">€ 96.000</td><td class="cel-r">75%</td><td><div class="cel-acties"><button type="button" class="dd-act">Open</button></div></td></tr>
+        <tr><td class="cel-naam cel-stil">Van der Linden Bouw</td><td class="cel-stil">Identificatie</td><td class="cel-r cel-stil">€ 0</td><td class="cel-r cel-stil">10%</td><td></td></tr>
+        <tr class="somrij"><td>Totaal</td><td></td><td class="cel-r">€ 156.400</td><td></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="height: 16px"></div>
+  <table class="tabel tabel--rapport">
+    <thead><tr><th>Medewerker</th><th class="cel-r">Calls</th><th class="cel-r">Bezoeken</th><th class="cel-r">Offertes</th></tr></thead>
+    <tbody>
+      <tr><td>Eva Jansen</td><td class="cel-r">42</td><td class="cel-r">9</td><td class="cel-r">4</td></tr>
+      <tr><td>Thomas Bakker</td><td class="cel-r">35</td><td class="cel-r">12</td><td class="cel-r">6</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="ds-blok" id="lijstrijen">
+  <h2 class="ds-kop">Lijstrijen · standaard, hover, focus, compact, ongelezen</h2>
+  <div class="lijst">
+    <article class="rij" role="button" tabindex="0">
+      <span class="initialen initialen--groot">VD</span>
+      <div class="rij-info">
+        <h3 class="rij-titel">Van Dijk Installatietechniek <span class="pil pil--zwart">A</span></h3>
+        <div class="rij-sub">
+          <a class="kanaal" href="#" aria-label="Open website van Van Dijk Installatietechniek"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></a>
+          <span class="kanaal kanaal--leeg" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18"/><path d="M8 10v7M8 7h.01M12 17v-4a2 2 0 0 1 4 0v4"/></svg></span>
+          Zwolle · Installatie · 48 fte
+        </div>
+        <p class="rij-aanleiding">Nieuwe vestiging in Deventer geopend.</p>
+      </div>
+      <div class="rij-rechts"><span class="initialen-stapel"><span class="initialen initialen--blauw">SM</span><span class="initialen initialen--groen">JB</span></span></div>
+    </article>
+    <article class="rij is-hover" role="button" tabindex="0">
+      <span class="initialen initialen--groot initialen--paars">BH</span>
+      <div class="rij-info">
+        <h3 class="rij-titel">Bakkerij Hofstede <span class="pil pil--blauw-vol">B</span></h3>
+        <div class="rij-sub"><a class="kanaal is-hover" href="#" aria-label="Website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></a> Ede · Food</div>
+        <p class="rij-aanleiding rij-aanleiding--heet">Vacature inkoper geplaatst.</p>
+      </div>
+      <div class="rij-rechts"><span class="rij-leeg-tekst">Geen contactpersoon</span></div>
+    </article>
+    <article class="rij is-focus" role="button" tabindex="0">
+      <span class="initialen initialen--groot initialen--rood">ML</span>
+      <div class="rij-info">
+        <h3 class="rij-titel">Mulder Logistiek <span class="pil pil--oranje-vol">C</span></h3>
+        <div class="rij-sub"><a class="kanaal is-focus" href="#" aria-label="Website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></a> Tiel · Logistiek</div>
+        <p class="rij-aanleiding rij-aanleiding--let-op">Contract loopt over zes weken af.</p>
+      </div>
+      <div class="rij-rechts"></div>
+    </article>
+    <article class="rij rij--compact rij--ongelezen" role="button" tabindex="0">
+      <span class="initialen">VL</span>
+      <div class="rij-info"><h3 class="rij-titel">Van der Linden Bouw</h3><div class="rij-sub">Apeldoorn · Bouw</div></div>
+      <div class="rij-rechts"></div>
+    </article>
+  </div>
+</section>
+
+<section class="ds-blok" id="kaarten">
+  <h2 class="ds-kop">Kaarten · basis, LeadCard, BriefingCard, ResultaatTegel</h2>
+  <article class="kaart">
+    <header class="kaart-kop"><h3 class="kaart-titel">Kwartaalbezoek Van Dijk</h3><span class="pil">Bezoek</span></header>
+    <div class="kaart-meta"><span class="tnum">do 15 okt · 09:30</span><span>Zwolle</span></div>
+    <footer class="kaart-voet"><span class="kaart-meta">Sanne Mulder</span><button type="button" class="dd-act">Open</button></footer>
+  </article>
+  <div style="height: 16px"></div>
+  <article class="kaart kaart--vlak kaart--accent"><h3 class="kaart-titel">Vlakke kaart met accent</h3><p class="fo-tekst">Voor een aanbeveling op een grijze ondergrond.</p></article>
+  <div style="height: 16px"></div>
+  <article class="kaart kaart--klik is-hover" tabindex="0"><h3 class="kaart-titel">Klikbare kaart in hover</h3></article>
+  <div style="height: 16px"></div>
+  <article class="kaart kaart--klik is-focus" tabindex="0"><h3 class="kaart-titel">Klikbare kaart met focus</h3></article>
+
+  <article class="lead-kaart">
+    <div class="lead-raster">
+      <div class="lead-beeld lead-beeld--leeg"><span class="lead-beeld-initialen">VD</span><span class="lead-hoek">Hot</span></div>
+      <div>
+        <span class="lead-kicker">Signaal · vandaag</span>
+        <h2 class="lead-titel">Van Dijk opent een vestiging in Deventer.</h2>
+        <p class="lead-intro">Twaalf monteurs erbij, onderhoud nog niet belegd. Het moment om de service-uitbreiding te bespreken.</p>
+        <div class="lead-byline"><span class="lead-bron"><span class="lead-bron-blok"></span>De Stentor</span><span class="tnum">2 uur geleden</span></div>
+        <div class="lead-acties"><button type="button" class="dd-act dd-act--primair">Maak taak</button><button type="button" class="dd-act">Bekijk klant</button></div>
+      </div>
+    </div>
+  </article>
+  <article class="lead-kaart lead-kaart--compact">
+    <div class="lead-raster">
+      <div>
+        <span class="lead-kicker lead-kicker--standaard">Briefing</span>
+        <h2 class="lead-titel">Drie klanten wachten op een offerte.</h2>
+        <p class="lead-intro">De oudste staat er negen dagen.</p>
+      </div>
+    </div>
+  </article>
+  <article class="lead-kaart lead-kaart--compact">
+    <div class="lead-raster"><div><span class="lead-kicker lead-kicker--opinie">Analyse</span><h2 class="lead-titel">Bezoeken leveren dit kwartaal meer op dan calls.</h2></div></div>
+  </article>
+
+  <article class="briefing-kaart briefing-kaart--donker">
+    <span class="briefing-streep" aria-hidden="true"></span>
+    <header class="briefing-kicker">Advies van de week</header>
+    <h2 class="briefing-titel">Bel eerst de klanten die stil zijn gevallen.</h2>
+    <div class="briefing-tekst"><p>Zeven klanten hadden langer dan zestig dagen geen contact.</p></div>
+    <footer class="briefing-voet"><button type="button" class="dd-act dd-act--primair">Open de lijst</button></footer>
+  </article>
+  <article class="briefing-kaart briefing-kaart--geel">
+    <span class="briefing-streep" aria-hidden="true"></span>
+    <h2 class="briefing-titel">Gele variant</h2>
+  </article>
+  <article class="briefing-kaart briefing-kaart--licht">
+    <span class="briefing-streep" aria-hidden="true"></span>
+    <h2 class="briefing-titel">Lichte variant</h2>
+  </article>
+  <div style="height: 16px"></div>
+  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+    <button type="button" class="tegel" aria-pressed="false"><span class="tegel-label">Calls</span><span class="tegel-getal">142</span><span class="tegel-onder tegel-onder--op">+12 op vorige week</span></button>
+    <button type="button" class="tegel tegel--actief" aria-pressed="true"><span class="tegel-label">Afspraken</span><span class="tegel-getal">23</span><span class="tegel-onder">gelijk aan vorige week</span></button>
+    <button type="button" class="tegel tegel--alert" aria-pressed="false"><span class="tegel-label">Offertes open</span><span class="tegel-getal">9</span><span class="tegel-onder tegel-onder--af">4 langer dan 14 dagen</span></button>
+    <button type="button" class="tegel is-focus" aria-pressed="false"><span class="tegel-label">Bezoeken</span><span class="tegel-getal">17</span><span class="tegel-onder">op locatie</span></button>
+  </div>
+</section>
+
+<section class="ds-blok" id="kanban">
+  <h2 class="ds-kop">Kanban · campagnebord met slepen, doelkolom, hover en focus</h2>
+  <div class="kanban">
+    <div class="kanban-col kanban-col--gespot">
+      <header class="col-head"><h3 class="col-title">Gespot</h3><span class="col-count">2</span></header>
+      <div class="col-items">
+        <article class="kanban-kaart" draggable="true" tabindex="0"><h5 class="kanban-kaart-titel">Bakkerij Hofstede</h5><div class="kanban-kaart-noot">Ede · Food</div></article>
+        <article class="kanban-kaart kanban-kaart--sleept" draggable="true" tabindex="0"><h5 class="kanban-kaart-titel">Mulder Logistiek</h5><div class="kanban-kaart-noot">wordt gesleept</div></article>
+      </div>
+    </div>
+    <div class="kanban-col kanban-col--open kanban-col--sleepdoel">
+      <header class="col-head"><h3 class="col-title">Open</h3><span class="col-count">0</span></header>
+      <div class="col-items"><p class="col-empty">Sleep hier een kaart naartoe.</p></div>
+    </div>
+    <div class="kanban-col kanban-col--bezig">
+      <header class="col-head"><h3 class="col-title">Bezig</h3><span class="col-count">1</span></header>
+      <div class="col-items"><article class="kanban-kaart is-hover" draggable="true" tabindex="0"><h5 class="kanban-kaart-titel">Van Dijk Installatietechniek</h5><div class="kanban-kaart-voet"><span>Taak open</span><span>Eva</span></div></article></div>
+    </div>
+    <div class="kanban-col kanban-col--klaar">
+      <header class="col-head"><h3 class="col-title">Klaar</h3><span class="col-count">1</span></header>
+      <div class="col-items"><article class="kanban-kaart is-focus" draggable="true" tabindex="0"><h5 class="kanban-kaart-titel">Van der Linden Bouw</h5></article></div>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="kanban-fase">
+  <h2 class="ds-kop">Kanban · pipelinebord met een kolom per fase</h2>
+  <div class="kanban kanban--fase">
+    <div class="kanban-col">
+      <header class="col-head col-head--identificatie"><span class="col-title">Identificatie</span><span class="col-count">1</span></header>
+      <div class="col-som">€ 10.000</div>
+      <div class="col-items"><article class="kanban-kaart" tabindex="0"><h5 class="kanban-kaart-titel">Nieuwe vestiging Deventer</h5><div class="kanban-kaart-noot">Van Dijk Installatietechniek</div><div class="kanban-kaart-voet"><span>€ 10.000</span><span>10%</span></div></article></div>
+    </div>
+    <div class="kanban-col">
+      <header class="col-head col-head--kwalificatie"><span class="col-title">Kwalificatie</span><span class="col-count">0</span></header>
+      <div class="col-som">€ 0</div>
+      <div class="col-items"><p class="col-empty">Sleep hier een kaart naartoe.</p></div>
+    </div>
+    <div class="kanban-col">
+      <header class="col-head col-head--behoefte"><span class="col-title">Behoefte</span><span class="col-count">1</span></header>
+      <div class="col-som">€ 12.400</div>
+      <div class="col-items"><article class="kanban-kaart" tabindex="0"><h5 class="kanban-kaart-titel">Tweede leverancier meel</h5><div class="kanban-kaart-voet"><span>€ 12.400</span><span>30%</span></div></article></div>
+    </div>
+    <div class="kanban-col">
+      <header class="col-head col-head--voorstel"><span class="col-title">Voorstel</span><span class="col-count">1</span></header>
+      <div class="col-som">€ 48.000</div>
+      <div class="col-items"><article class="kanban-kaart" tabindex="0"><h5 class="kanban-kaart-titel">Uitbreiding service-contract</h5><div class="kanban-kaart-voet"><span>€ 48.000</span><span>60%</span></div></article></div>
+    </div>
+    <div class="kanban-col">
+      <header class="col-head col-head--onderhandeling"><span class="col-title">Onderhandeling</span><span class="col-count">1</span></header>
+      <div class="col-som">€ 96.000</div>
+      <div class="col-items"><article class="kanban-kaart" tabindex="0"><h5 class="kanban-kaart-titel">Vlootcontract 2027</h5><div class="kanban-kaart-voet"><span>€ 96.000</span><span>75%</span></div></article></div>
+    </div>
+    <div class="kanban-col">
+      <header class="col-head col-head--gewonnen"><span class="col-title">Gewonnen</span><span class="col-count">0</span></header>
+      <div class="col-som">€ 0</div>
+      <div class="col-items"><p class="col-empty">Sleep hier een kaart naartoe.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="tijdlijn">
+  <h2 class="ds-kop">Tijdlijn · alle soorten, status, hover, notitie</h2>
+  <ol class="tijdlijn" role="list">
+    <li class="tijdlijn-item">
+      <span class="tijdlijn-spoor tijdlijn-spoor--inzicht" aria-hidden="true"></span>
+      <button type="button" class="tijdlijn-kaart">
+        <div class="tijdlijn-kop"><span class="tijdlijn-soort tijdlijn-soort--inzicht">Inzicht</span><span class="tijdlijn-type">Nieuws</span><span class="tijdlijn-bron">De Stentor</span><span class="tijdlijn-datum">14 okt</span></div>
+        <h4 class="tijdlijn-titel">Nieuwe vestiging in Deventer</h4>
+        <p class="tijdlijn-tekst">Twaalf monteurs erbij vanaf januari.</p>
+      </button>
+    </li>
+    <li class="tijdlijn-item">
+      <span class="tijdlijn-spoor tijdlijn-spoor--taak" aria-hidden="true"></span>
+      <button type="button" class="tijdlijn-kaart is-hover">
+        <div class="tijdlijn-kop"><span class="tijdlijn-soort tijdlijn-soort--taak">Taak</span><span class="tijdlijn-type">Bellen</span><span class="tijdlijn-datum">13 okt</span></div>
+        <h4 class="tijdlijn-titel">Bel met Van Dijk over verlenging</h4>
+        <span class="tijdlijn-status tijdlijn-status--laat">Te laat</span>
+      </button>
+    </li>
+    <li class="tijdlijn-item">
+      <span class="tijdlijn-spoor tijdlijn-spoor--afspraak" aria-hidden="true"></span>
+      <button type="button" class="tijdlijn-kaart is-focus">
+        <div class="tijdlijn-kop"><span class="tijdlijn-soort tijdlijn-soort--afspraak">Afspraak</span><span class="tijdlijn-type">Bezoek</span><span class="tijdlijn-bron">Outlook</span><span class="tijdlijn-datum">12 okt</span></div>
+        <h4 class="tijdlijn-titel">Kwartaalbezoek met Sanne Mulder</h4>
+        <p class="tijdlijn-tekst">Uitbreiding besproken; besluit in november.</p>
+        <span class="tijdlijn-status tijdlijn-status--klaar">Afgerond</span>
+      </button>
+    </li>
+    <li class="tijdlijn-item">
+      <span class="tijdlijn-spoor tijdlijn-spoor--deal" aria-hidden="true"></span>
+      <button type="button" class="tijdlijn-kaart">
+        <div class="tijdlijn-kop"><span class="tijdlijn-soort tijdlijn-soort--deal">Deal</span><span class="tijdlijn-datum">2 okt</span></div>
+        <h4 class="tijdlijn-titel">Uitbreiding service-contract naar Voorstel</h4>
+        <span class="tijdlijn-status">Open</span>
+      </button>
+    </li>
+    <li class="tijdlijn-item">
+      <span class="tijdlijn-spoor tijdlijn-spoor--contact" aria-hidden="true"></span>
+      <button type="button" class="tijdlijn-kaart">
+        <div class="tijdlijn-kop"><span class="tijdlijn-soort tijdlijn-soort--contact">Contact</span><span class="tijdlijn-type">Mail</span><span class="tijdlijn-datum">29 sep</span></div>
+        <h4 class="tijdlijn-titel">Offerte verstuurd</h4>
+      </button>
+    </li>
+    <li class="tijdlijn-item">
+      <span class="tijdlijn-spoor tijdlijn-spoor--notitie" aria-hidden="true"></span>
+      <div class="tijdlijn-kaart tijdlijn-kaart--stil">
+        <div class="tijdlijn-kop"><span class="tijdlijn-datum">20 sep</span></div>
+        <p class="tijdlijn-tekst">Inkoper wisselt per 1 januari. Nieuwe naam volgt.</p>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<section class="ds-blok" id="lege-staten">
+  <h2 class="ds-kop">Lege staten · blok, regel, flyout, kolom</h2>
+  <div class="lege-staat">
+    <span class="lege-staat-kicker">Niets hier</span>
+    <h3 class="lege-staat-titel">Geen fases geselecteerd in het filter.</h3>
+    <p class="lege-staat-tekst">Zet een fase aan of reset het filter.</p>
+  </div>
+  <p class="lege-regel">Nog niets vastgelegd voor dit account.</p>
+  <p class="lege-regel lege-regel--midden">Geen notificaties.</p>
+  <div class="kaart"><div class="fo-leeg">Geen taak geselecteerd.</div></div>
+</section>
+
+<section class="ds-blok" id="laden">
+  <h2 class="ds-kop">Laden en skeletten · lijst met avatar, laadregel</h2>
+  <div class="skelet" role="status" aria-busy="true" aria-label="Contacten laden">
+    <div class="skelet-rij"><span class="skelet-avatar"></span><span class="skelet-tekst"><span class="skelet-balk"></span><span class="skelet-balk"></span><span class="skelet-balk"></span></span></div>
+    <div class="skelet-rij"><span class="skelet-avatar"></span><span class="skelet-tekst"><span class="skelet-balk"></span><span class="skelet-balk"></span><span class="skelet-balk"></span></span></div>
+    <div class="skelet-rij"><span class="skelet-tekst"><span class="skelet-balk skelet-balk--titel"></span><span class="skelet-balk skelet-balk--kort"></span></span></div>
+  </div>
+  <p class="laden-regel">Server-versie ophalen…</p>
+</section>
+
+<section class="ds-blok" id="foutstaten">
+  <h2 class="ds-kop">Foutstaten · blok met actie, pagina niet gevonden</h2>
+  <p class="fout-blok" role="alert">Opslaan mislukt: taak niet gevonden.</p>
+  <div style="height: 16px"></div>
+  <p class="fout-blok" role="alert"><strong>2 wijzigingen</strong> konden niet worden opgeslagen. <button type="button" class="fout-blok-actie">Opnieuw proberen</button> <button type="button" class="fout-blok-actie is-hover">hover</button> <button type="button" class="fout-blok-actie is-focus">focus</button></p>
+  <div style="height: 16px"></div>
+  <div class="fout-pagina">
+    <span class="fout-pagina-kicker">Niet gevonden</span>
+    <h3 class="fout-pagina-titel">Dit account bestaat niet in jouw organisatie.</h3>
+    <p class="fout-pagina-tekst">Het is verwijderd of hoort bij een andere organisatie. Ga terug naar de klantenlijst.</p>
+  </div>
+</section>
+
+<section class="ds-blok" id="grafieken">
+  <h2 class="ds-kop">Grafieken · staven, trechter, dekking</h2>
+  <div class="grafiek">
+    <header class="grafiek-kop"><h3 class="grafiek-titel">Activiteiten per dag</h3><span class="grafiek-meta">5 t/m 9 okt · 61 activiteiten</span></header>
+    <div class="staaf-wrap">
+      <div class="staaf-as" aria-hidden="true"><span class="staaf-tick">18</span><span class="staaf-tick">0</span></div>
+      <div class="staaf-vlak">
+        <div class="staaf-kol"><div class="staaf-stapel"><div class="staaf-seg staaf-seg--calls" style="height: 66px"></div><div class="staaf-seg staaf-seg--afspraken" style="height: 22px"></div><div class="staaf-seg staaf-seg--mails" style="height: 44px"></div></div><span class="staaf-label">ma</span></div>
+        <div class="staaf-kol"><div class="staaf-stapel"><div class="staaf-seg staaf-seg--calls" style="height: 88px"></div><div class="staaf-seg staaf-seg--meetings" style="height: 22px"></div><div class="staaf-seg staaf-seg--berichten" style="height: 11px"></div></div><span class="staaf-label">di</span></div>
+        <div class="staaf-kol"><div class="staaf-stapel"><div class="staaf-seg staaf-seg--calls" style="height: 110px"></div><div class="staaf-seg staaf-seg--afspraken" style="height: 44px"></div><div class="staaf-seg staaf-seg--todos" style="height: 44px"></div></div><span class="staaf-label">wo</span></div>
+        <div class="staaf-kol"><div class="staaf-stapel"><div class="staaf-seg staaf-seg--calls" style="height: 44px"></div><div class="staaf-seg staaf-seg--mails" style="height: 33px"></div></div><span class="staaf-label">do</span></div>
+        <div class="staaf-kol"><div class="staaf-stapel"><div class="staaf-seg staaf-seg--calls" style="height: 22px"></div></div><span class="staaf-label">vr</span></div>
+      </div>
+    </div>
+    <div class="legenda">
+      <span class="legenda-chip"><span class="legenda-blok legenda-blok--calls"></span>Calls</span>
+      <span class="legenda-chip"><span class="legenda-blok legenda-blok--afspraken"></span>Afspraken</span>
+      <span class="legenda-chip"><span class="legenda-blok legenda-blok--meetings"></span>Meetings</span>
+      <span class="legenda-chip"><span class="legenda-blok legenda-blok--mails"></span>Mails</span>
+      <span class="legenda-chip"><span class="legenda-blok legenda-blok--berichten"></span>Berichten</span>
+      <span class="legenda-chip"><span class="legenda-blok legenda-blok--todos"></span>To-do's</span>
+    </div>
+  </div>
+  <div style="height: 16px"></div>
+  <div class="grafiek">
+    <header class="grafiek-kop"><h3 class="grafiek-titel">Conversie per pipeline-fase</h3><span class="grafiek-meta">momentopname · aantal en waarde</span></header>
+    <div class="trechter">
+      <button type="button" class="trechter-rij"><span class="trechter-fase">Behoefte</span><span class="trechter-baan"><span class="trechter-staaf" style="width: 80%; background: var(--blue)"><span class="trechter-getal">8</span></span></span><span class="trechter-waarde">€ 124.000</span></button>
+      <button type="button" class="trechter-rij is-hover"><span class="trechter-fase">Voorstel</span><span class="trechter-baan"><span class="trechter-staaf" style="width: 50%; background: var(--yellow)"><span class="trechter-getal">5</span></span></span><span class="trechter-waarde">€ 88.000</span></button>
+      <button type="button" class="trechter-rij is-focus"><span class="trechter-fase">Offerte</span><span class="trechter-baan"><span class="trechter-staaf" style="width: 30%; background: var(--orange)"><span class="trechter-getal">3</span></span></span><span class="trechter-waarde">€ 96.000</span></button>
+      <button type="button" class="trechter-rij" disabled><span class="trechter-fase">Gewonnen</span><span class="trechter-baan"><span class="trechter-staaf" style="width: 0; background: var(--green)"><span class="trechter-getal">0</span></span></span><span class="trechter-waarde">€ 0</span></button>
+    </div>
+  </div>
+  <div style="height: 16px"></div>
+  <div class="grafiek">
+    <header class="grafiek-kop"><h3 class="grafiek-titel">Klantdekking</h3><span class="grafiek-meta">96 klanten · 53% &lt;30d</span></header>
+    <div class="dekking">
+      <button type="button" class="dekking-cel dekking-cel--vers"><span class="dekking-getal">31</span><span class="dekking-label">&lt;14d</span></button>
+      <button type="button" class="dekking-cel dekking-cel--recent is-hover"><span class="dekking-getal">20</span><span class="dekking-label">14 tot 30d</span></button>
+      <button type="button" class="dekking-cel dekking-cel--aandacht is-focus"><span class="dekking-getal">18</span><span class="dekking-label">30 tot 60d</span></button>
+      <button type="button" class="dekking-cel dekking-cel--oplopend"><span class="dekking-getal">12</span><span class="dekking-label">60 tot 90d</span></button>
+      <button type="button" class="dekking-cel dekking-cel--koud"><span class="dekking-getal">9</span><span class="dekking-label">90 tot 180d</span></button>
+      <button type="button" class="dekking-cel dekking-cel--ijskoud" disabled><span class="dekking-getal">0</span><span class="dekking-label">&gt;180d</span></button>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="minikaart">
+  <h2 class="ds-kop">Minikaart · route met pinnen, volgende stop</h2>
+  <div style="max-width: 320px;">
+    <div class="minikaart">
+      <div class="minikaart-laag" aria-hidden="true">
+        <div class="minikaart-pin minikaart-pin--volgende" style="left: 40%; top: 35%">
+          <span class="minikaart-druppel"><span class="minikaart-num">1</span></span>
+          <span class="minikaart-label">09:30 Van Dijk</span>
+        </div>
+        <div class="minikaart-pin" style="left: 62%; top: 55%">
+          <span class="minikaart-druppel"><span class="minikaart-num">2</span></span>
+        </div>
+        <div class="minikaart-pin" style="left: 30%; top: 75%">
+          <span class="minikaart-druppel"><span class="minikaart-num">3</span></span>
+          <span class="minikaart-label">14:00 Hofstede</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="afdrukken">
+  <h2 class="ds-kop">Afdrukken</h2>
+  <p class="fo-tekst">De afdrukstijl werkt alleen bij afdrukken. Druk deze pagina af om het effect te zien: knoppenrijen, toasts, banners en zoekvensters verdwijnen, donkere vlakken worden wit met een inktlijn, en blokken breken niet over een pagina. Zet <code>druk-flyout</code> op body om alleen een open flyout af te drukken.</p>
+  <article class="briefing-kaart briefing-kaart--donker">
+    <span class="briefing-streep" aria-hidden="true"></span>
+    <h2 class="briefing-titel">Weekrapport team Oost</h2>
+    <div class="briefing-tekst"><p>Op papier wordt dit vlak wit met een inktlijn links.</p></div>
+  </article>
+</section>

@@ -1,0 +1,617 @@
+<!-- Deel B · bediening: voorbeelden van alle onderdelen, alleen klassen uit b-bediening.css.
+     Iconen zijn Lucide-lijnen (24er viewBox, lijndikte 2), hier inline. -->
+
+<section class="ds-blok" id="knoppen">
+  <h2 class="ds-kop">Knoppen in een paginakop</h2>
+
+  <p>Varianten</p>
+  <div class="toolbar-buttons">
+    <button type="button" class="dd-actie dd-actie--primair"><svg class="dd-actie-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Klant</button>
+    <button type="button" class="dd-actie dd-actie--secundair"><svg class="dd-actie-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Taak</button>
+    <button type="button" class="dd-actie dd-actie--taak"><svg class="dd-actie-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Taak</button>
+    <button type="button" class="dd-actie dd-actie--mail"><svg class="dd-actie-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Mail</button>
+    <button type="button" class="dd-actie dd-actie--afspraak"><svg class="dd-actie-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Afspraak</button>
+    <button type="button" class="dd-actie dd-actie--deal"><svg class="dd-actie-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Deal</button>
+    <button type="button" class="dd-actie dd-actie--download">Download</button>
+    <button type="button" class="dd-actie dd-actie--gevaar">Verwijder account</button>
+    <button type="button" class="dd-actie dd-actie--icoon" aria-label="Zoeken" title="Zoeken"><svg class="dd-actie-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
+    <button type="button" class="dd-actie dd-actie--secundair dd-actie--klein">Openen</button>
+  </div>
+
+  <p>Toestanden</p>
+  <div class="toolbar-buttons">
+    <button type="button" class="dd-actie dd-actie--primair">Normaal</button>
+    <button type="button" class="dd-actie dd-actie--primair is-hover">Hover</button>
+    <button type="button" class="dd-actie dd-actie--primair is-focus">Focus</button>
+    <button type="button" class="dd-actie dd-actie--primair" disabled>Uitgeschakeld</button>
+    <button type="button" class="dd-actie dd-actie--primair is-laden" aria-busy="true" disabled>Opslaan…</button>
+  </div>
+  <div class="toolbar-buttons">
+    <button type="button" class="dd-actie dd-actie--secundair">Normaal</button>
+    <button type="button" class="dd-actie dd-actie--secundair is-hover">Hover</button>
+    <button type="button" class="dd-actie dd-actie--secundair is-focus">Focus</button>
+    <button type="button" class="dd-actie dd-actie--taak is-hover">Taak hover</button>
+    <button type="button" class="dd-actie dd-actie--gevaar is-hover">Verwijderen hover</button>
+  </div>
+</section>
+
+<section class="ds-blok" id="knoprollen">
+  <h2 class="ds-kop">Knoppen per rol</h2>
+  <div class="toolbar-buttons">
+    <button type="button" class="dd-actie dd-actie--primair"><svg class="dd-actie-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Prospect</button>
+    <button type="button" class="dd-act dd-act--primair">✓ Opslaan</button>
+    <button type="button" class="dd-act">Annuleren</button>
+    <button type="button" class="dd-act dd-act--icoon" title="Bewerken" aria-label="Bewerken"><svg class="dd-act-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
+    <button type="button" class="dd-act dd-act--icoon dd-act--gevaar" title="Verwijderen" aria-label="Verwijderen"><svg class="dd-act-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
+    <button type="button" class="cd-btn cd-btn--danger">Verwijderen</button>
+    <button type="button" class="dd-sluit" aria-label="Sluiten">×</button>
+    <button type="button" class="vd-toggle vd-toggle--active" aria-expanded="false"><svg class="vd-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></svg>Filters <span class="vd-toggle-count">2</span><svg class="vd-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+    <button type="button" class="vd-toggle" aria-expanded="false"><svg class="vd-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="vd-toggle-value">Weergave</span><svg class="vd-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+    <button type="button" class="dd-actie dd-actie--secundair">Exporteer CSV</button>
+    <button type="button" class="meer-knop">Toon meer</button>
+    <button type="button" class="dd-tekstknop">Reset filters</button>
+  </div>
+</section>
+
+<section class="ds-blok" id="werkbalk">
+  <h2 class="ds-kop">Werkbalk in de paginakop</h2>
+  <div class="toolbar-buttons">
+    <button type="button" class="dd-actie dd-actie--icoon" aria-label="Zoeken" title="Zoeken"><svg class="dd-actie-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
+    <button type="button" class="dd-actie dd-actie--primair"><svg class="dd-actie-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Klant</button>
+    <button type="button" class="dd-actie dd-actie--secundair"><svg class="dd-actie-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Taak</button>
+    <button type="button" class="dd-actie dd-actie--secundair"><svg class="dd-actie-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Afspraak</button>
+    <div class="vd-wrap">
+      <button type="button" class="vd-toggle" aria-expanded="false"><svg class="vd-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="vd-toggle-value">Weergave</span><svg class="vd-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+    </div>
+    <div class="vd-wrap">
+      <button type="button" class="vd-toggle" aria-expanded="false"><svg class="vd-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16"/></svg><span class="vd-toggle-value">Naam</span><svg class="vd-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+    </div>
+    <button type="button" class="vd-toggle" aria-expanded="false"><svg class="vd-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></svg>Filters<svg class="vd-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+    <button type="button" class="dd-actie dd-actie--download">Download</button>
+  </div>
+</section>
+
+<section class="ds-blok" id="dropdownknop">
+  <h2 class="ds-kop">Dropdownknop met menu: Weergave, Sortering, Filters</h2>
+  <div class="ds-podium">
+    <div class="toolbar-buttons">
+      <div class="vd-wrap">
+        <button type="button" class="vd-toggle" aria-expanded="true"><svg class="vd-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="vd-toggle-value">Weergave</span><svg class="vd-caret rotate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+        <ul class="vd-menu vd-menu--links">
+          <li><button type="button" class="vd-item vd-item--active"><svg class="vd-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Lijst</button></li>
+          <li><button type="button" class="vd-item is-hover"><svg class="vd-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18"/></svg>Compact</button></li>
+          <li><button type="button" class="vd-item"><svg class="vd-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Kaarten</button></li>
+          <li><button type="button" class="vd-item"><svg class="vd-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 5v11M12 5v6M18 5v14"/></svg>Kanban</button></li>
+        </ul>
+      </div>
+      <div class="vd-wrap">
+        <button type="button" class="vd-toggle is-hover" aria-expanded="true"><svg class="vd-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16"/></svg><span class="vd-toggle-value">Laatste activiteit</span><svg class="vd-caret rotate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+        <ul class="vd-menu vd-menu--links">
+          <li><button type="button" class="vd-item">Naam</button></li>
+          <li><button type="button" class="vd-item vd-item--active">Laatste activiteit</button></li>
+          <li><button type="button" class="vd-item">Score</button></li>
+          <li><button type="button" class="vd-item">Accountklasse</button></li>
+        </ul>
+      </div>
+      <button type="button" class="vd-toggle vd-toggle--active" aria-expanded="true"><svg class="vd-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></svg>Filters <span class="vd-toggle-count">1</span><svg class="vd-caret rotate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      <button type="button" class="vd-toggle vd-toggle--active" aria-expanded="false"><svg class="vd-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></svg>Filters <span class="vd-toggle-count">5/7</span><svg class="vd-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      <button type="button" class="vd-toggle is-focus" aria-expanded="false">Weekrapport<svg class="vd-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="actiebalk">
+  <h2 class="ds-kop">Actiebalk onderin een flyout of venster</h2>
+
+  <p>Nieuw</p>
+  <footer class="dd-acties">
+    <button type="button" class="dd-act">Annuleren</button>
+    <span class="dd-acties-vul"></span>
+    <button type="submit" class="dd-act dd-act--primair">✓ Maak taak</button>
+  </footer>
+
+  <p>Nieuw, verplichte velden nog leeg</p>
+  <footer class="dd-acties">
+    <button type="button" class="dd-act">Annuleren</button>
+    <span class="dd-acties-vul"></span>
+    <button type="submit" class="dd-act dd-act--primair" disabled>Deal toevoegen</button>
+  </footer>
+
+  <p>Lezen</p>
+  <footer class="dd-acties">
+    <button type="button" class="dd-act dd-act--primair"><svg class="dd-act-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>Afronden</button>
+    <span class="dd-acties-vul"></span>
+    <button type="button" class="dd-act dd-act--icoon" title="Vraag AI" aria-label="Vraag AI"><svg class="dd-act-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"/></svg></button>
+    <button type="button" class="dd-act dd-act--icoon" title="Snooze 1 dag" aria-label="Snooze 1 dag"><svg class="dd-act-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button>
+    <button type="button" class="dd-act dd-act--icoon is-hover" title="Bewerken" aria-label="Bewerken"><svg class="dd-act-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
+    <button type="button" class="dd-act dd-act--icoon dd-act--gevaar" title="Verwijderen" aria-label="Verwijderen"><svg class="dd-act-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
+    <button type="button" class="dd-act dd-act--icoon" title="Open klantkaart" aria-label="Open klantkaart"><svg class="dd-act-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </footer>
+
+  <p>Lezen, deal (tweede tekstknop in rood)</p>
+  <footer class="dd-acties">
+    <button type="button" class="dd-act dd-act--primair">Markeer gewonnen</button>
+    <button type="button" class="dd-act dd-act--gevaar">Markeer verloren</button>
+    <span class="dd-acties-vul"></span>
+    <button type="button" class="dd-act dd-act--icoon" title="Bewerken" aria-label="Bewerken"><svg class="dd-act-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
+    <button type="button" class="dd-act dd-act--icoon dd-act--gevaar is-hover" title="Verwijderen" aria-label="Verwijderen"><svg class="dd-act-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button>
+  </footer>
+
+  <p>Bewerken</p>
+  <footer class="dd-acties">
+    <button type="button" class="dd-act"><svg class="dd-act-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>Afronden</button>
+    <span class="dd-acties-vul"></span>
+    <button type="button" class="dd-act">Annuleren</button>
+    <button type="button" class="dd-act dd-act--primair">✓ Opslaan</button>
+  </footer>
+
+  <p>Bewerken, bezig met opslaan</p>
+  <footer class="dd-acties">
+    <button type="button" class="dd-act">Annuleren</button>
+    <span class="dd-acties-vul"></span>
+    <button type="button" class="dd-act dd-act--primair is-laden" aria-busy="true" disabled>Opslaan…</button>
+  </footer>
+
+  <p>Focus</p>
+  <footer class="dd-acties">
+    <button type="button" class="dd-act is-focus">Annuleren</button>
+    <span class="dd-acties-vul"></span>
+    <button type="button" class="dd-act dd-act--primair">✓ Plan afspraak</button>
+  </footer>
+</section>
+
+<section class="ds-blok" id="bevestiging">
+  <h2 class="ds-kop">Knoppen in het bevestigingsvenster</h2>
+  <div class="toolbar-buttons">
+    <button type="button" class="cd-btn cd-btn--ghost is-focus">Annuleren</button>
+    <button type="button" class="cd-btn cd-btn--danger">Verwijderen</button>
+  </div>
+  <div class="toolbar-buttons">
+    <button type="button" class="cd-btn cd-btn--ghost is-hover">Annuleren</button>
+    <button type="button" class="cd-btn cd-btn--danger is-hover">Verwijderen</button>
+  </div>
+  <div class="toolbar-buttons">
+    <button type="button" class="cd-btn cd-btn--ghost">Annuleren</button>
+    <button type="button" class="cd-btn cd-btn--primary">Zet in agenda</button>
+    <button type="button" class="cd-btn cd-btn--primary is-hover">Bevestigen</button>
+  </div>
+</section>
+
+<section class="ds-blok" id="tekstknop">
+  <h2 class="ds-kop">Tekstknop en sluitknop</h2>
+  <div class="toolbar-buttons">
+    <button type="button" class="dd-tekstknop">Reset filters</button>
+    <button type="button" class="dd-tekstknop is-hover">Reset filters</button>
+    <button type="button" class="dd-tekstknop is-focus">Toon alles</button>
+    <button type="button" class="dd-sluit" aria-label="Sluiten">×</button>
+    <button type="button" class="dd-sluit is-hover" aria-label="Sluiten">×</button>
+    <button type="button" class="dd-sluit is-focus" aria-label="Sluiten">×</button>
+  </div>
+</section>
+
+<section class="ds-blok" id="formulier">
+  <h2 class="ds-kop">Formulier: veld, label, invoer</h2>
+  <form class="formulier">
+    <label class="veld">
+      <span class="veld-label">Titel <span class="veld-verplicht">*</span></span>
+      <input class="invoer" type="text" required placeholder="bv. Bel Henk de Vries terug over Zwolle-vestiging">
+    </label>
+    <label class="veld">
+      <span class="veld-label">Titel, focus</span>
+      <input class="invoer is-focus" type="text" value="Bel Henk terug over offerte">
+    </label>
+    <label class="veld">
+      <span class="veld-label">Bedrag</span>
+      <input class="invoer invoer--fout" type="text" value="twaalfduizend" aria-invalid="true">
+      <span class="veld-fout veld-fout--regel">Vul een bedrag in cijfers in.</span>
+    </label>
+    <label class="veld">
+      <span class="veld-label">Accountnummer</span>
+      <input class="invoer" type="text" value="KL-2041" disabled>
+      <span class="veld-uitleg">Wordt door het systeem toegekend.</span>
+    </label>
+    <div class="veld veld--rij">
+      <label class="veld">
+        <span class="veld-label">Vervaldatum</span>
+        <input class="invoer" type="date" value="2026-10-16">
+      </label>
+      <label class="veld">
+        <span class="veld-label">Tijd</span>
+        <input class="invoer" type="time" value="15:00">
+      </label>
+    </div>
+    <label class="veld">
+      <span class="veld-label">Toegewezen aan</span>
+      <select class="invoer">
+        <option>Sanne Visser</option>
+        <option>Joris Bakker</option>
+      </select>
+    </label>
+    <label class="veld">
+      <span class="veld-label">Beschrijving</span>
+      <textarea class="invoer" rows="4" placeholder="Optioneel: details over wat er nu nodig is."></textarea>
+    </label>
+    <label class="veld">
+      <span class="veld-label">Notitie, compact</span>
+      <input class="invoer invoer--klein" type="text" placeholder="Korte notitie">
+    </label>
+    <p class="veld-fout">Opslaan mislukt: taak niet gevonden.</p>
+  </form>
+</section>
+
+<section class="ds-blok" id="vinkjes">
+  <h2 class="ds-kop">Vinkje, keuzerondje en schakelaar</h2>
+  <div>
+    <div><label class="vink"><input type="checkbox" checked> Alleen mijn accounts</label></div>
+    <div><label class="vink"><input type="checkbox"> Inclusief gearchiveerd</label></div>
+    <div><label class="vink vink--uit"><input type="checkbox" disabled> Niet beschikbaar</label></div>
+  </div>
+  <div>
+    <div><label class="vink vink--kapitaal"><input type="checkbox"> Taak herhalen</label></div>
+  </div>
+  <div role="radiogroup" aria-label="Kanaal">
+    <div><label class="vink"><input type="radio" name="kanaal" checked> In-app notificatie</label></div>
+    <div><label class="vink"><input type="radio" name="kanaal"> E-mail</label></div>
+  </div>
+  <div>
+    <button type="button" class="schakelaar schakelaar--aan" role="switch" aria-checked="true" aria-label="Dagstart per mail"><span class="schakelaar-spoor"></span><span class="schakelaar-duim"></span></button>
+    <button type="button" class="schakelaar" role="switch" aria-checked="false" aria-label="Weekrapport per mail"><span class="schakelaar-spoor"></span><span class="schakelaar-duim"></span></button>
+    <button type="button" class="schakelaar schakelaar--aan is-focus" role="switch" aria-checked="true" aria-label="Pushmeldingen"><span class="schakelaar-spoor"></span><span class="schakelaar-duim"></span></button>
+    <button type="button" class="schakelaar" role="switch" aria-checked="false" aria-label="Stille uren" disabled><span class="schakelaar-spoor"></span><span class="schakelaar-duim"></span></button>
+  </div>
+</section>
+
+<section class="ds-blok" id="keuzeknoppen">
+  <h2 class="ds-kop">Keuzeknoppen in een formulier</h2>
+  <fieldset class="veld">
+    <legend class="veld-label">Type</legend>
+    <div class="keuzeraster" role="group">
+      <button type="button" class="keuzeraster-knop keuzeraster-knop--aan" aria-pressed="true"><svg class="keuzeraster-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 5l2 2 4-4M3 15l2 2 4-4M13 6h8M13 16h8"/></svg>Te doen</button>
+      <button type="button" class="keuzeraster-knop is-hover" aria-pressed="false"><svg class="keuzeraster-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.5 3a2 2 0 0 1-.6 1.8L7.6 9.8a16 16 0 0 0 6.6 6.6l1.3-1.3a2 2 0 0 1 1.8-.6l3 .5a2 2 0 0 1 1.7 2Z"/></svg>Bellen</button>
+      <button type="button" class="keuzeraster-knop" aria-pressed="false"><svg class="keuzeraster-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="1"/><path d="m22 6-10 7L2 6"/></svg>Mailen</button>
+      <button type="button" class="keuzeraster-knop" aria-pressed="false"><svg class="keuzeraster-icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12Z"/></svg>Bericht</button>
+    </div>
+  </fieldset>
+  <fieldset class="veld">
+    <legend class="veld-label">Prioriteit</legend>
+    <div class="keuzeraster" role="group">
+      <button type="button" class="prio-knop" aria-pressed="false"><span class="prio-stip prio-stip--low"></span>Laag</button>
+      <button type="button" class="prio-knop prio-knop--aan" aria-pressed="true"><span class="prio-stip prio-stip--medium"></span>Middel</button>
+      <button type="button" class="prio-knop is-hover" aria-pressed="false"><span class="prio-stip prio-stip--high"></span>Hoog</button>
+      <button type="button" class="prio-knop" aria-pressed="false"><span class="prio-stip prio-stip--urgent"></span>Urgent</button>
+    </div>
+  </fieldset>
+  <fieldset class="veld veld-klap veld-klap--open">
+    <legend class="veld-label"><label class="vink vink--kapitaal"><input type="checkbox" checked> Herinnering instellen</label></legend>
+    <div class="veld veld--rij">
+      <label class="veld"><span class="veld-uitleg">Vóór vervaldatum</span><select class="invoer"><option>15 minuten</option><option>1 uur</option></select></label>
+      <label class="veld"><span class="veld-uitleg">Versturen via</span><select class="invoer"><option>In-app notificatie</option><option>E-mail</option></select></label>
+    </div>
+  </fieldset>
+</section>
+
+<section class="ds-blok" id="zoekvelden">
+  <h2 class="ds-kop">Zoekvelden en keuzechips</h2>
+  <div class="ds-podium">
+    <div class="formulier">
+      <input class="zoekinvoer" type="search" placeholder="Zoek naam, plaats of branche…" aria-label="Zoeken">
+      <div class="veld">
+        <span class="veld-label">Klant</span>
+        <div class="zoekveld">
+          <input class="invoer is-focus" type="text" value="bak" autocomplete="off">
+          <ul class="zoeklijst">
+            <li><button type="button" class="zoeklijst-item zoeklijst-item--actief">Bakker Bouw B.V. <span class="zoeklijst-sub">· Bouw</span></button></li>
+            <li><button type="button" class="zoeklijst-item">Bakkerij Ten Hove <span class="zoeklijst-sub">· Voeding</span></button></li>
+            <li><button type="button" class="zoeklijst-item">Van Bakel Logistiek <span class="zoeklijst-sub">· Transport</span></button></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="formulier">
+    <div class="veld">
+      <span class="veld-label">Contactpersoon</span>
+      <div class="zoek-keuze">
+        <span class="zoek-keuze-tekst">Henk de Vries <span class="zoek-keuze-sub">· Inkoper</span></span>
+        <button type="button" class="zoek-keuze-wis" aria-label="Wis gekozen contactpersoon">×</button>
+      </div>
+    </div>
+    <div class="veld">
+      <span class="veld-label">Contactpersoon, niets gevonden</span>
+      <div class="zoekveld">
+        <input class="invoer" type="text" value="Xander">
+        <p class="zoeklijst-leeg">Geen contactpersoon gevonden.</p>
+      </div>
+    </div>
+    <div class="veld">
+      <span class="veld-label">Betrokken contacten</span>
+      <ul class="keuzechips" role="list">
+        <li class="keuzechip">Henk de Vries <button type="button" class="keuzechip-weg" aria-label="Haal Henk de Vries weg">×</button></li>
+        <li class="keuzechip">Sanne Visser <button type="button" class="keuzechip-weg" aria-label="Haal Sanne Visser weg">×</button></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="inline-bewerken">
+  <h2 class="ds-kop">Inline bewerken</h2>
+
+  <p>EditableField</p>
+  <div class="ef">
+    <span class="ef-label">Telefoon</span>
+    <div class="ef-display">
+      <a class="ef-value ef-value--link" href="tel:0201234567">020 123 45 67</a>
+      <button type="button" class="ef-pencil" aria-label="Bewerk Telefoon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2.5 L13.5 5 L5.5 13 L2 14 L3 10.5 Z"/><path d="M10 3.5 L12.5 6"/></svg></button>
+    </div>
+  </div>
+  <div class="ef is-hover">
+    <span class="ef-label">Website</span>
+    <div class="ef-display">
+      <a class="ef-value ef-value--link" href="https://bakkerbouw.nl">bakkerbouw.nl <span class="ef-link-icoon">↗</span></a>
+      <button type="button" class="ef-pencil" aria-label="Bewerk Website"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2.5 L13.5 5 L5.5 13 L2 14 L3 10.5 Z"/><path d="M10 3.5 L12.5 6"/></svg></button>
+    </div>
+  </div>
+  <div class="ef ef--empty">
+    <span class="ef-label">Postcode</span>
+    <div class="ef-display">
+      <span class="ef-empty-text">+ Voeg postcode toe</span>
+      <button type="button" class="ef-pencil" aria-label="Bewerk Postcode"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2.5 L13.5 5 L5.5 13 L2 14 L3 10.5 Z"/><path d="M10 3.5 L12.5 6"/></svg></button>
+    </div>
+  </div>
+  <div class="ef">
+    <span class="ef-label">Plaats</span>
+    <form class="ef-edit">
+      <input class="ef-input is-focus" type="text" value="Zwolle">
+      <div class="ef-edit-actions">
+        <button type="button" class="ef-btn ef-btn--cancel" aria-label="Annuleren"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3 L13 13 M13 3 L3 13"/></svg></button>
+        <button type="submit" class="ef-btn ef-btn--save" aria-label="Opslaan"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 8 7 12 13 4"/></svg></button>
+      </div>
+    </form>
+  </div>
+
+  <p>InlineEditChip in een kicker</p>
+  <div><span class="veld-label">
+    <span class="iec"><button type="button" class="iec-trigger is-hover" title="Bewerk branche"><span class="iec-value">Bouw en installatie</span><svg class="iec-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button></span>
+    ·
+    <span class="iec"><button type="button" class="iec-trigger" title="Bewerk plaats"><span class="iec-value">Zwolle</span><svg class="iec-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button></span>
+    ·
+    <span class="iec"><button type="button" class="iec-trigger" title="Bewerk land"><span class="iec-empty-text">NL</span><svg class="iec-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button></span>
+    ·
+    <span class="iec"><form class="iec-edit"><input class="iec-input is-focus" type="text" value="Distributeur"></form></span>
+  </span></div>
+</section>
+
+<section class="ds-blok" id="filters">
+  <h2 class="ds-kop">Filters</h2>
+  <div class="section--filter">
+    <div class="filters">
+      <div class="filter-groep">
+        <input class="zoekinvoer" type="search" placeholder="Zoek naam, plaats of branche…" aria-label="Zoeken">
+      </div>
+      <div class="filter-groep">
+        <span class="filter-label">Accountklasse</span>
+        <button type="button" class="filter-pil">Alle klanten <span class="pil-teller">96</span></button>
+        <button type="button" class="filter-pil is-hover">A · Corporate <span class="pil-teller">27</span></button>
+        <button type="button" class="filter-pil filter-pil--aan">B · Groot MKB <span class="pil-teller">43</span></button>
+        <button type="button" class="filter-pil">C · Middenbedrijf <span class="pil-teller">17</span></button>
+        <button type="button" class="filter-pil" disabled>D · Klein MKB <span class="pil-teller">0</span></button>
+        <button type="button" class="filter-pil is-focus">Geen klasse <span class="pil-teller">9</span></button>
+      </div>
+      <div class="filter-groep">
+        <span class="filter-label">Functie</span>
+        <button type="button" class="filter-pil filter-pil--aan">Alle <span class="pil-teller">43</span></button>
+        <button type="button" class="filter-pil">Distributeurs <span class="pil-teller">41</span></button>
+        <a class="filter-link" href="#filters">Naast elkaar →</a>
+        <span class="filter-meta">2 zonder functie</span>
+      </div>
+      <div class="filter-groep">
+        <span class="filter-label">Periode</span>
+        <button type="button" class="filter-pil">Deze week <span class="pil-teller">12</span></button>
+        <button type="button" class="filter-pil filter-pil--aan">Eigen periode</button>
+      </div>
+      <div class="filter-groep">
+        <label class="datum-veld"><span class="filter-label">Van</span><input class="datum-invoer" type="date" value="2026-09-01"></label>
+        <label class="datum-veld"><span class="filter-label">Tot</span><input class="datum-invoer" type="date" value="2026-10-14"></label>
+      </div>
+      <div class="filter-groep filter-groep--eind">
+        <button type="button" class="dd-tekstknop">Reset filters</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="segmentknoppen">
+  <h2 class="ds-kop">Segmentknoppen</h2>
+  <div class="keuzegroep" role="group" aria-label="Venster">
+    <button type="button" class="keuzegroep-knop" aria-pressed="false">Week</button>
+    <button type="button" class="keuzegroep-knop keuzegroep-knop--aan" aria-pressed="true">Maand</button>
+    <button type="button" class="keuzegroep-knop is-hover" aria-pressed="false">Kwartaal</button>
+    <button type="button" class="keuzegroep-knop" aria-pressed="false">Jaar</button>
+  </div>
+  <p>Klein, in een kaartkop</p>
+  <div class="keuzegroep keuzegroep--klein" role="group" aria-label="Periode">
+    <button type="button" class="keuzegroep-knop keuzegroep-knop--aan" aria-pressed="true">30 dagen</button>
+    <button type="button" class="keuzegroep-knop" aria-pressed="false">90 dagen</button>
+  </div>
+</section>
+
+<section class="ds-blok" id="tabbalk">
+  <h2 class="ds-kop">Tabbalk</h2>
+  <nav class="tabbalk" aria-label="Klantkaart-tabs">
+    <button type="button" class="tab tab--actief" aria-current="page">Tijdslijn <span class="tab-teller">5</span></button>
+    <button type="button" class="tab">Inzichten <span class="tab-teller">1</span></button>
+    <button type="button" class="tab is-hover">Taken <span class="tab-teller">3</span></button>
+    <button type="button" class="tab">Notities</button>
+    <button type="button" class="tab">E-mails</button>
+    <button type="button" class="tab">Afspraken <span class="tab-teller">2</span></button>
+    <button type="button" class="tab is-focus">Gespreksverslagen</button>
+    <button type="button" class="tab">Deals</button>
+    <button type="button" class="tab">Campagnes</button>
+    <button type="button" class="tab">Documenten</button>
+  </nav>
+</section>
+
+<section class="ds-blok" id="paginering">
+  <h2 class="ds-kop">Paginering: Toon meer</h2>
+  <div class="meer-rij">
+    <span class="meer-tekst">25 van 96 getoond</span>
+    <button type="button" class="meer-knop">Toon meer</button>
+  </div>
+  <div class="meer-rij">
+    <span class="meer-tekst">50 van 312 getoond</span>
+    <button type="button" class="meer-knop is-hover">Meer laden</button>
+  </div>
+</section>
+
+<section class="ds-blok" id="contextmenu">
+  <h2 class="ds-kop">Contextmenu</h2>
+  <div class="ds-podium">
+    <div class="ctx-menu ctx-menu--in-blok" role="menu">
+      <header class="ctx-head">
+        <span class="ctx-head-kicker">Klant</span>
+        <span class="ctx-head-title">Bakker Bouw B.V.</span>
+      </header>
+      <ul class="ctx-list" role="none">
+        <li role="none"><button type="button" class="ctx-item" role="menuitem"><span class="ctx-item-icon"><svg class="ctx-item-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><span class="ctx-item-label">Open kaart</span></button></li>
+        <li role="none"><button type="button" class="ctx-item is-hover" role="menuitem"><span class="ctx-item-icon"><svg class="ctx-item-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7l.5 3a2 2 0 0 1-.6 1.8L7.6 9.8a16 16 0 0 0 6.6 6.6l1.3-1.3a2 2 0 0 1 1.8-.6l3 .5a2 2 0 0 1 1.7 2Z"/></svg></span><span class="ctx-item-label">Bel primaire contact</span></button></li>
+        <li role="none"><button type="button" class="ctx-item" role="menuitem"><span class="ctx-item-icon"><svg class="ctx-item-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="1"/><path d="m22 6-10 7L2 6"/></svg></span><span class="ctx-item-label">Stuur e-mail</span></button></li>
+        <li role="none"><button type="button" class="ctx-item is-focus" role="menuitem"><span class="ctx-item-icon"><svg class="ctx-item-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 12H3M16 6H3M16 18H3M18 9v6M21 12h-6"/></svg></span><span class="ctx-item-label">Nieuwe taak</span><span class="ctx-item-meta">T</span></button></li>
+        <li role="none"><button type="button" class="ctx-item ctx-item--danger" role="menuitem"><span class="ctx-item-icon"><svg class="ctx-item-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></span><span class="ctx-item-label">Verwijderen</span></button></li>
+      </ul>
+      <footer class="ctx-foot">Rechtsklik of lang drukken op een rij</footer>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="pillen">
+  <h2 class="ds-kop">Pillen, klasse, tags, statuslabels en tellers</h2>
+  <p>Pil</p>
+  <div>
+    <span class="pil">Standaard</span>
+    <span class="pil pil--grijs">Concept</span>
+    <span class="pil pil--geel">Nieuw</span>
+    <span class="pil pil--zwart">Actief</span>
+    <span class="pil pil--rood">Achterstallig</span>
+    <span class="pil pil--oranje">Let op</span>
+    <span class="pil pil--groen">Voor op schema</span>
+    <span class="pil pil--blauw">Klant</span>
+    <span class="pil pil--paars">Prospect</span>
+    <span class="pil pil--leeg">Geen fase</span>
+  </div>
+  <div>
+    <span class="pil pil--rood-vol">Urgent</span>
+    <span class="pil pil--oranje-vol">At-risk</span>
+    <span class="pil pil--groen-vol">Gewonnen</span>
+    <span class="pil pil--blauw-vol">Klant</span>
+    <span class="pil pil--paars-vol">Hot prospect</span>
+    <button type="button" class="pil pil--blauw-vol pil--knop">B · Groot MKB</button>
+  </div>
+  <p>Accountklasse</p>
+  <div>
+    <span class="klasse klasse--a">A · Corporate</span>
+    <span class="klasse klasse--b">B · Groot MKB</span>
+    <span class="klasse klasse--c">C · Middenbedrijf</span>
+    <span class="klasse klasse--d">D · Klein MKB</span>
+    <span class="klasse klasse--overig">Overig</span>
+    <span class="klasse klasse--geen">Geen klasse</span>
+  </div>
+  <p>Signaaltag</p>
+  <div>
+    <span class="tag tag--intern">Intern</span>
+    <span class="tag tag--extern">Extern</span>
+    <span class="tag tag--overig">Overig</span>
+    <span class="tag tag--vacature">Vacature</span>
+    <span class="tag tag--nieuws">Nieuws</span>
+    <span class="tag tag--social">Social</span>
+    <span class="tag tag--website">Website</span>
+    <span class="tag tag--concurrent">Concurrent</span>
+    <span class="tag tag--kvk">KvK-mutatie</span>
+    <span class="tag tag--kans">Upsell-kans</span>
+  </div>
+  <p>Statuslabel</p>
+  <div>
+    <span class="status status--strategisch">Strategisch</span>
+    <span class="status status--klant">Klant</span>
+    <span class="status status--at-risk">At-risk</span>
+    <span class="status status--hot-prospect">Hot prospect</span>
+    <span class="status status--warm-prospect">Warm prospect</span>
+    <span class="status status--prospect">Prospect</span>
+    <span class="status status--watchlist">Watchlist</span>
+  </div>
+  <p>Bandbadge</p>
+  <div>
+    <span class="band band--rood">Nog open</span>
+    <span class="band band--geel">Halverwege</span>
+    <span class="band band--groen">Rond</span>
+    <span class="band band--groen band--compact">3/3</span>
+  </div>
+  <p>Tellers</p>
+  <div>
+    <span class="pil-teller">23</span>
+    <span class="pil-teller pil-teller--zwart">8</span>
+    <span class="pil-teller pil-teller--geel">3</span>
+    <span class="vd-toggle-count">2</span>
+    <span class="tab-teller">5</span>
+  </div>
+</section>
+
+<section class="ds-blok" id="avatar">
+  <h2 class="ds-kop">Avatar en portret</h2>
+  <div class="initialen-stapel">
+    <a class="initialen initialen--blauw" href="#avatar" title="Henk de Vries · Inkoper">HV</a>
+    <a class="initialen initialen--groen" href="#avatar" title="Sanne Visser · Directeur">SV</a>
+    <a class="initialen initialen--paars" href="#avatar" title="Joris Bakker · Werkvoorbereider">JB</a>
+    <span class="initialen initialen--rest" title="Nog 2 contactpersonen">+2</span>
+  </div>
+  <div>
+    <span class="initialen initialen--oranje">LM</span>
+    <span class="initialen initialen--rood">PK</span>
+    <span class="initialen initialen--groot initialen--blauw">EB</span>
+  </div>
+  <div class="raster raster--4">
+  <article class="portret">
+    <div class="portret-foto portret-foto--zonder">
+      <span class="portret-rol portret-rol--beslisser">Beslisser</span>
+      <span class="portret-initialen">SV</span>
+    </div>
+    <div class="portret-body">
+      <h3 class="portret-naam">Sanne Visser</h3>
+      <p class="portret-functie">Directeur, Bakker Bouw B.V.</p>
+    </div>
+  </article>
+  </div>
+</section>
+
+<section class="ds-blok" id="scorecirkel">
+  <h2 class="ds-kop">Scorecirkel</h2>
+  <div>
+    <div class="scorecirkel scorecirkel--sm" title="Score 32 / 100 · Lage prioriteit">
+      <svg class="scorecirkel-svg" viewBox="0 0 100 100"><circle class="scorecirkel-baan" cx="50" cy="50" r="44" stroke-width="12"/><circle class="scorecirkel-ring scorecirkel-ring--rood" cx="50" cy="50" r="44" stroke-width="12" stroke-dasharray="88.5 276.5" transform="rotate(-90 50 50)"/></svg>
+      <div class="scorecirkel-inhoud"><span class="scorecirkel-getal">32</span></div>
+    </div>
+    <div class="scorecirkel scorecirkel--md" title="Score 55 / 100 · Aandacht waard">
+      <svg class="scorecirkel-svg" viewBox="0 0 100 100"><circle class="scorecirkel-baan" cx="50" cy="50" r="45.5" stroke-width="9"/><circle class="scorecirkel-ring scorecirkel-ring--oranje" cx="50" cy="50" r="45.5" stroke-width="9" stroke-dasharray="157.2 285.9" transform="rotate(-90 50 50)"/></svg>
+      <div class="scorecirkel-inhoud"><span class="scorecirkel-getal">55</span></div>
+    </div>
+    <div class="scorecirkel scorecirkel--lg" title="Score 82 / 100 · Hoge prioriteit">
+      <svg class="scorecirkel-svg" viewBox="0 0 100 100"><circle class="scorecirkel-baan" cx="50" cy="50" r="46.5" stroke-width="7"/><circle class="scorecirkel-ring scorecirkel-ring--groen" cx="50" cy="50" r="46.5" stroke-width="7" stroke-dasharray="239.6 292.2" transform="rotate(-90 50 50)"/></svg>
+      <div class="scorecirkel-inhoud"><span class="scorecirkel-getal">82</span><span class="scorecirkel-label">Score</span></div>
+    </div>
+    <div class="scorecirkel scorecirkel--xl" title="Score 91 / 100 · Hoge prioriteit">
+      <svg class="scorecirkel-svg" viewBox="0 0 100 100"><circle class="scorecirkel-baan" cx="50" cy="50" r="47" stroke-width="6"/><circle class="scorecirkel-ring scorecirkel-ring--groen" cx="50" cy="50" r="47" stroke-width="6" stroke-dasharray="268.7 295.3" transform="rotate(-90 50 50)"/></svg>
+      <div class="scorecirkel-inhoud"><span class="scorecirkel-getal">91</span><span class="scorecirkel-label">Score</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="ds-blok" id="voortgang">
+  <h2 class="ds-kop">Voortgangsbalk</h2>
+  <p>Accountplan, 62 procent</p>
+  <div class="voortgang" role="progressbar" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100"><span class="voortgang-vul voortgang-vul--groen" style="width: 62%"></span></div>
+  <p>Playbook, 3 van 8 stappen</p>
+  <div class="voortgang" role="progressbar" aria-valuenow="38" aria-valuemin="0" aria-valuemax="100"><span class="voortgang-vul" style="width: 38%"></span></div>
+  <p>Campagne achter op schema (tempostreep op 70 procent)</p>
+  <div class="voortgang" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"><span class="voortgang-vul voortgang-vul--rood" style="width: 45%"></span><span class="voortgang-tempo" style="left: 70%"></span></div>
+  <p>Meter met rand</p>
+  <div class="voortgang voortgang--rand" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"><span class="voortgang-vul voortgang-vul--geel" style="width: 80%"></span></div>
+</section>

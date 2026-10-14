@@ -1,0 +1,1677 @@
+/* ============================================================================
+   Dealtrace stijlbestand · Deel A · fundament
+   ----------------------------------------------------------------------------
+   Opvolger van docs/dealdrive-leadgeneratie-stijl.css. Afgeleid uit de hele
+   DealDrive-app (C:/Projecten/dealdrive, commit 75bee61, 14 oktober 2026):
+   app/assets/css/tokens.css, app/assets/css/fonts.css, tailwind.config.ts,
+   .stylelintrc.json, nuxt.config.ts, app.vue, AppSidebar.vue, AdminShell.vue,
+   MobileShell.vue, MerkLogo.vue en de style-blokken van 232 componenten en
+   pagina's (11.300 CSS-regels geteld). Waarden zijn gemeten met
+   getComputedStyle op http://localhost:3088 en http://localhost:3096.
+
+   Dit deel bevat: lettertypen, alle tokens, reset en basis, focusring,
+   selectie, scrollbalken, hulpklassen, typografie, links, iconen,
+   kleurstalen, de app-schil (zijbalk werkplek en HQ), de mobiele schil,
+   de pagina-opbouw (secties, container, raster, paginakop) en statkaarten.
+   Knoppen, formulieren en filters staan in deel B; flyouts, vensters,
+   toasts, tabellen, kaarten en lege staten in deel C.
+
+   Regels die .stylelintrc.json van DealDrive afdwingt en die dit bestand
+   volgt:
+   1. color, background-color en border-color alleen via var(--...),
+      transparent, currentColor, inherit, #fff of rgba(); achtergronden
+      mogen ook linear-gradient zijn.
+   2. Geen box-shadow, in geen enkele vorm. Diepte komt van randen en vlakken.
+   3. border-radius nooit 5 px of meer, nooit 9999 en nooit 50%. De praktijk
+      is 2 px: 742 keer letterlijk 2px en 186 keer var(--radius).
+   4. Tekst nooit kleiner dan var(--fs-label) (11 px); compact maak je met
+      letterafstand, niet met een kleiner corps.
+   ========================================================================== */
+
+/* ============================================================================
+   1. Lettertypen laden
+   ----------------------------------------------------------------------------
+   Bron: app/assets/css/fonts.css (letterlijk overgenomen) en nuxt.config.ts
+   (preconnect naar fonts.googleapis.com en fonts.gstatic.com met
+   crossorigin). Laadt via Google Fonts met display=swap.
+   - Source Serif 4, optische as 8 tot 60, gewicht 400, 600 en 700: koppen,
+     titels en cijfers. 515 keer letterlijk in de componenten.
+   - Inter 400, 500, 600, 700 en 800: alle andere tekst (body).
+   Gemeten op /taken: geladen zijn Inter 400, 600, 700, 800 en Source Serif 4
+   400 en 700; een gewicht wordt pas opgehaald als een pagina het vraagt.
+   Mono wordt niet geladen: DealDrive schrijft 18 keer 'IBM Plex Mono' maar
+   haalt het lettertype nergens op, dus het valt terug op ui-monospace
+   (Consolas op Windows, SF Mono op macOS). Dealtrace doet hetzelfde, zodat
+   het er identiek uitziet.
+   In de head van de app (zoals nuxt.config.ts):
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ============================================================================
+   2. Tokens
+   ----------------------------------------------------------------------------
+   Bron: app/assets/css/tokens.css. Alle 47 variabelen staan hieronder met
+   dezelfde naam en waarde als in DealDrive, met hun rol. Getal aan het eind
+   van het commentaar: hoe vaak var(--naam) in components en pages voorkomt.
+   Daarna volgt een aanvulling van 57 variabelen die NIET in tokens.css
+   staan: waarden die DealDrive overal letterlijk schrijft (lettertypen,
+   corpsen, wit, wit op donker, overlays, zachte tinten, duren, flyout- en
+   knopmaten). Getal tussen haakjes: hoe vaak de waarde letterlijk in
+   DealDrive staat. Deel B en C gebruiken uitsluitend deze tokens; een
+   letterlijke kleur staat alleen in dit blok. Bestaat er een DealDrive-naam
+   voor een waarde, gebruik dan die.
+   ========================================================================== */
+:root {
+  /* ===== Inkt: tekst en donkere vlakken ===== */
+  --ink:           #0a0a0a;  /* primaire tekst, zwarte vlakken (zijbalk, primaire knop, actieve statkaart) (2582) */
+  --ink-soft:      #2a2a2a;  /* secundaire tekst: subtitels, lopende tekst in kaarten; hover op zwarte knoppen (559) */
+  --muted:         #6b6b6b;  /* meta, kickers, labels, tertiaire tekst (1730) */
+  --muted-light:   #a0a0a0;  /* placeholders en uitgeschakeld (28) */
+
+  /* ===== Achtergrond en oppervlak ===== */
+  --bg:            #fafaf7;  /* paginakleur, warm wit; nooit kaal #fff als pagina (313) */
+  --surface:       #f1f1ee;  /* afwisselende secties, hover op lichte rijen, track van scrollbalken (694) */
+  --border:        #e3e1da;  /* standaardrand van kaarten en scheidingslijnen (911) */
+  --border-strong: #c8c5bc;  /* rand van knoppen, invoer en sterke scheidingen (703) */
+
+  /* ===== Accent: één kleur, krantgeel ===== */
+  --yellow:        #fed800;  /* CTA, actief item, kickerstreep, focus in velden, signaal (943) */
+  --yellow-dark:   #d4b400;  /* hover op geel; gele tekst op licht, alleen groot of vet (180) */
+
+  /* ===== Semantisch, spaarzaam ===== */
+  --red:           #c0392b;  /* fout, urgent, risico, verwijderen, teller op de bel (458) */
+  --red-dark:      #a02f24;  /* hover op een rode knop (7) */
+  --red-light:     #ff8a80;  /* rode tekst op een donkere ondergrond (4) */
+  --green:         #1e7c4a;  /* goed, positief, gewonnen, champion (274) */
+  --blue:          #194c8f;  /* info, klantstatus (172) */
+  --orange:        #d97706;  /* waarschuwing, at-risk, tussen geel en rood (100) */
+  --orange-dark:   #b45309;  /* oranje tekst die op een lichte pil leesbaar moet zijn (24) */
+  --purple:        #4c1d95;  /* hot prospect, social signaal (108) */
+
+  /* ===== Typografie: ondergrens ===== */
+  --fs-label:      11px;     /* kickers, veldlabels, pillen, badges, tabelkoppen, navigatielabels; nooit kleiner (490) */
+
+  /* ===== Afstandenschaal ===== */
+  --pagina-marge:   24px;    /* buitenmarge van pagina, venster en container (54) */
+  --sectie-padding: 32px;    /* boven en onder elke sectie op een lange pagina (97) */
+  --kaart-gap:      16px;    /* ruimte tussen kaarten in een raster (62) */
+  --kaart-padding:  16px;    /* binnenmarge van een kaart (63) */
+  --radius:         2px;     /* de enige hoek (192) */
+
+  /* ===== Mobiel: aanraakdoelen ===== */
+  --touch-target-min:          44px;   /* minimale hoogte van elk klikbaar element, iOS HIG (315) */
+  --touch-target-comfortable:  48px;   /* ruimer doel, Material (48) */
+  --touch-target-glove:        54px;   /* handschoenmodus, logistiek en bouw (alleen via glove-mode) */
+
+  /* ===== Veilige zones (notch en home-indicator) ===== */
+  --safe-area-top:    env(safe-area-inset-top, 0px);
+  --safe-area-right:  env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left:   env(safe-area-inset-left, 0px);
+
+  /* Ruimte onderaan op mobiel. Stond op 64px voor een menu onderin; dat
+     menu is weg (navigeren gaat via de zijbalk). De variabele blijft voor
+     de installatiemeldingen en de zoekbalk (5). */
+  --bottom-nav-h:     0px;
+  --mobile-cta-h:     56px;  /* hoogte van een vaste enkele CTA onderin (nergens in gebruik) */
+
+  /* ===== Breekpunten, informatief voor JS via matchMedia =====
+     CSS schrijft de getallen letterlijk omdat var() niet werkt in een
+     media query. useViewport: mobiel tot en met 767 px, tablet tot en met
+     1023 px, desktop vanaf 1024 px. */
+  --bp-mobile:        768px;
+  --bp-tablet:        1024px;
+
+  /* ===== Animatie ===== */
+  --transition-fast:   120ms ease-out;  /* hover, kleur, rand (232) */
+  --transition-base:   200ms ease-out;  /* in- en uitschuiven, transform, opacity (64) */
+  --transition-slow:   500ms ease-out;  /* zelden, voortgangsbalken (2) */
+
+  /* ===== Containerbreedtes ===== */
+  --container-w:        1180px;  /* standaard inhoudsbreedte (67, plus 23 keer letterlijk 1180px) */
+  --container-narrow:   920px;   /* smalle leespagina's (7) */
+
+  /* ===== Z-index-lagen ===== */
+  --z-base:        1;   /* boven buren binnen een blok */
+  --z-sticky:      10;  /* plakkende filterstrook en tabelkoppen */
+  --z-fixed:       20;  /* OfflineBanner */
+  --z-overlay:     30;  /* zijbalk, notificatiepaneel */
+  --z-modal:       40;  /* flyouts, vensters, contextmenu, gebruikersmenu (46) */
+  /* Flyout die bovenop een andere flyout opent (bijvoorbeeld offerte
+     uploaden vanuit de deal-flyout). Zonder eigen laag valt hij achter de
+     overlay van de flyout eronder. */
+  --z-modal-boven: 45;
+  --z-toast:       50;  /* bevestigingsvenster, globale zoek, installatiemelding */
+
+  /* ===== Aanvulling voor Dealtrace (niet in DealDrive tokens.css) ===== */
+  /* Lettertypefamilies, letterlijk zoals DealDrive ze schrijft. */
+  --font-serif: 'Source Serif 4', 'Georgia', serif;  /* 515 keer letterlijk */
+  --font-sans:  'Inter', system-ui, -apple-system, sans-serif;  /* body in tokens.css */
+  --font-mono:  'IBM Plex Mono', ui-monospace, monospace;     /* 18 keer letterlijk, niet geladen */
+
+  /* Corpsen die DealDrive letterlijk schrijft (telling van font-size). */
+  --fs-meta:         12px;  /* meta, knoppen onderin een venster (721) */
+  --fs-klein:        13px;  /* lopende tekst in kaarten, navigatie, knoppen (672) */
+  --fs-body:         14px;  /* subtitel, leestekst in vensters (334) */
+  --fs-lees:         16px;  /* body van de pagina */
+  --fs-kaarttitel:   18px;  /* titel van een kaart (75) */
+  --fs-venstertitel: 22px;  /* bloktitel, titel van een venster (99; in serif 86) */
+  --fs-paginatitel:  32px;  /* paginatitel op instellingen- en analysepagina's (27 pagina's) */
+  --fs-cijfer:       32px;  /* cijfer in een statkaart (taken; varieert van 24 tot 36) */
+
+  /* Wit. stylelint laat #fff toe, maar in dit stijlbestand staat elke kleur
+     als token; #fff komt alleen hier voor. Witte kaarten, velden, menu's en
+     statkaarten (DealDrive: 519 keer background: #fff); tekst op zwart. */
+  --wit:           #fff;
+
+  /* Wit op donker (zijbalk, actieve statkaart, toast, donkere flyoutkop).
+     DealDrive schrijft ruim twintig verschillende transparanties; dit is
+     de schaal waarop ze zijn samengebracht, met de waarden die er het
+     dichtst bij liggen tussen haakjes. Getal in de naam is de dekking. */
+  --wit-06:  rgba(255, 255, 255, 0.06);  /* hover-vlak op donker (0,06 en 0,07; 11 plus 2) */
+  --wit-10:  rgba(255, 255, 255, 0.1);   /* scheidingslijn op donker (0,08 tot 0,12; 23) */
+  --wit-16:  rgba(255, 255, 255, 0.16);  /* rand van een knop op donker (0,15 tot 0,22; 11) */
+  --wit-30:  rgba(255, 255, 255, 0.3);   /* rand bij hover, scrollbalk, uitgeschakeld (0,25 tot 0,35; 4) */
+  --wit-40:  rgba(255, 255, 255, 0.4);   /* scrollbalk bij hover, groepskop HQ (0,38 en 0,4; 3) */
+  --wit-55:  rgba(255, 255, 255, 0.55);  /* gedempte tekst: groepskop, datum, rol (0,5 en 0,55; 17) */
+  --wit-70:  rgba(255, 255, 255, 0.7);   /* zachte tekst: meta in een donkere kop (0,62 tot 0,72; 24) */
+  --wit-78:  rgba(255, 255, 255, 0.78);  /* navigatietekst in de zijbalk, lopende tekst op zwart (9) */
+  --wit-85:  rgba(255, 255, 255, 0.85);  /* tekst op donker (10) */
+
+  /* Overlays achter flyouts, vensters en menu's: inkt (10, 10, 10) op
+     dekking. Bron: alle *Flyout.vue, ConfirmDialog, GlobaleZoek, ContextMenu. */
+  --overlay:        rgba(10, 10, 10, 0.45);  /* achter een flyout en de globale zoek (29) */
+  --overlay-donker: rgba(10, 10, 10, 0.55);  /* achter een bevestigingsvenster of modal (14) */
+  --overlay-zacht:  rgba(10, 10, 10, 0.32);  /* achter een contextmenu (ContextMenu; 0,35 eenmaal in DealFlyout) */
+
+  /* Zachte tinten. DealDrive schrijft ze als rgba(); per kleur de meest
+     gebruikte waarde. Waar een kleur twee duidelijk verschillende rollen
+     heeft, is er een tweede token met de rol in de naam. */
+  --yellow-zacht:      rgba(254, 216, 0, 0.06);  /* uitgelicht blok: AI-blok, vandaag, voorstel (11) */
+  --yellow-licht:      rgba(254, 216, 0, 0.1);   /* geselecteerde of open rij, gekozen optie (10 plus 3 keer 0,08) */
+  --yellow-actief:     rgba(254, 216, 0, 0.12);  /* actief item op de zwarte zijbalk (AppSidebar 3, AdminShell 1) */
+  --yellow-teller:     rgba(254, 216, 0, 0.2);   /* teller in een actieve filterpil, hover op geel (0,18 en 0,2; 18) */
+  --yellow-op-donker:  rgba(254, 216, 0, 0.85);  /* gedempte gele tekst op zwart: label actieve statkaart, initialen (3) */
+  --yellow-dark-zacht: rgba(212, 180, 0, 0.24);  /* bandbadge geel (BandBadge.vue) */
+  --red-zacht:         rgba(192, 57, 43, 0.08);  /* hover op een gevaarlijke actie, foutvlak (28) */
+  --red-pil:           rgba(192, 57, 43, 0.12);  /* pil, badge of status op rood (6 plus 2 keer 0,1) */
+  --green-zacht:       rgba(30, 124, 74, 0.12);  /* pil en zachte groene achtergrond (6 plus 3 keer 0,14) */
+  --blue-zacht:        rgba(25, 76, 143, 0.12);  /* geen vaste waarde in DealDrive; uit de voorganger */
+  --orange-zacht:      rgba(217, 119, 6, 0.1);   /* zachte waarschuwing en oranje pil (6; 0,12 tot 0,15 elk 1 of 2) */
+  --purple-zacht:      rgba(76, 29, 149, 0.12);  /* geen vaste waarde in DealDrive; uit de voorganger */
+
+  /* Kaartvak voordat de tegels geladen zijn (MiniMap.vue). */
+  --kaart-water:   #e6f0f5;
+
+  /* Lagen boven de 47: toasts staan in DealDrive boven alles
+     (ToastContainer, letterlijk 100), ook boven --z-toast. */
+  --z-melding:     100;
+
+  /* Duren en curve die DealDrive letterlijk schrijft (telling over alle
+     componenten en pagina's). Altijd met ease-out, behalve de opveer. */
+  --duur-kort:     150ms;  /* hover op statkaart, pil, rij; draaien van een pijl (74) */
+  --duur-vervaag:  160ms;  /* vervagen binnen een uitklapper, zijbalk inklappen (20) */
+  --duur-uit:      180ms;  /* sluiten en uitvagen van overlay en venster (19) */
+  --duur-in:       220ms;  /* openen en inschuiven van flyout, venster, toast; uitklappen (35) */
+  --duur-lang:     600ms;  /* voortgang van scorecirkel en trechter (4) */
+  --curve-opveer:  cubic-bezier(0.18, 0.89, 0.32, 1.28);  /* licht opveren van het bevestigingsvenster (ConfirmDialog) */
+
+  /* Maten van de schil. DealDrive zet --sidebar-w op .app-shell in app.vue
+     (240px, ingeklapt 64px); HQ gebruikt 210px en 60px. */
+  --sidebar-w:      240px;
+  --sidebar-w-smal: 64px;
+
+  /* Flyoutbreedtes (max-width van het paneel; telling in deel C). */
+  --venster-w-smal:  480px;  /* gegevens, contacten, historie, campagne (6) */
+  --venster-w:       520px;  /* standaard (15) */
+  --venster-w-breed: 560px;  /* analyse, accountplan, verslag, document, upload (12) */
+  --venster-w-ruim:  640px;  /* AI-analyse van een gesprek; ook het paneel van de globale zoek (2) */
+  --venster-w-vol:   900px;  /* organisatiebeheer, meeting-achterstand (2) */
+
+  /* Knop- en bedieningsmaten onder de 44 px van --touch-target-min. Alleen
+     op desktop in dichte lijsten en kleine kaders; op mobiel geldt 44 px. */
+  --knop-h-compact:  34px;   /* icoonknop in een flyoutvoet, klein invoerveld (.dd-act--icoon, .invoer--klein) */
+  --knop-h-klein:    32px;   /* kleine knop in een rij, sluitknop, inline bewerken (.hq-btn--klein, EditableField) */
+  --knop-h-mini:     28px;   /* potloodknop bij inline bewerken (EditableField) */
+  --teller-h:        18px;   /* teller in de knop Filters (.vd-toggle-count) */
+  --keuzeknop-h:     56px;   /* knop in een keuzeraster met icoon en tekst */
+  --zoekveld-min-w:  280px;  /* minimale breedte van een zoekveld in een filterstrook */
+}
+
+/* Zonlichtmodus: iets donkerdere meta-tekst (tokens.css, §16.5). */
+@media (prefers-color-scheme: light) {
+  html[data-sunlight-mode='on'] {
+    --muted: #4a4a4a;
+  }
+}
+
+/* Handschoenmodus: alle aanraakdoelen naar 54 px (tokens.css, §16.5). */
+html[data-glove-mode='on'] {
+  --touch-target-min: var(--touch-target-glove);
+  --touch-target-comfortable: var(--touch-target-glove);
+}
+
+/* ============================================================================
+   3. Reset en basis
+   ----------------------------------------------------------------------------
+   Bron: de basisregels uit tokens.css plus de Tailwind-preflight die
+   DealDrive via @nuxtjs/tailwindcss laadt (gemeten: knoppen erven het
+   lettertype, p en h2 hebben marge 0, randen zijn standaard 0 en solid).
+   Zonder deze preflight ziet dezelfde markup er in Dealtrace anders uit,
+   daarom staat hij hier uitgeschreven.
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  border: 0 solid currentcolor; /* als losse border-color botst currentColor met value-keyword-case */
+}
+
+html {
+  line-height: 1.5;
+  scroll-behavior: smooth;
+  text-size-adjust: 100%;
+  tab-size: 4;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--fs-lees);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  /* Veilige zones voor notch en home-indicator */
+  padding: var(--safe-area-top) var(--safe-area-right) var(--safe-area-bottom) var(--safe-area-left);
+}
+
+h1, h2, h3, h4, h5, h6 { margin: 0; font-size: inherit; font-weight: inherit; }
+p, blockquote, dl, dd, figure, pre { margin: 0; }
+ol, ul, menu { margin: 0; padding: 0; list-style: none; }
+b, strong { font-weight: bolder; }
+a { color: inherit; text-decoration: none; }
+hr { height: 0; margin: 0; color: inherit; border-top-width: 1px; border-color: var(--border); }
+img, svg, video, canvas { display: block; vertical-align: middle; }
+img, video { max-width: 100%; height: auto; }
+table { border-collapse: collapse; text-indent: 0; }
+[hidden] { display: none; }
+
+button, input, optgroup, select, textarea {
+  margin: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+button, [type='button'], [type='reset'], [type='submit'] {
+  appearance: button;
+  background-color: transparent;
+  background-image: none;
+}
+button, [role='button'] { cursor: pointer; }
+:disabled { cursor: default; }
+textarea { resize: vertical; }
+
+/* Placeholder. Gemeten in DealDrive: #9ca3af, de standaardwaarde van de
+   Tailwind-preflight, geen token. tokens.css wijst --muted-light aan voor
+   placeholders; die waarde (#a0a0a0) ligt er vlak naast en is wel een token. */
+input::placeholder, textarea::placeholder { opacity: 1; color: var(--muted-light); }
+
+/* Code en toetsen. De preflight geeft ze de mono uit tailwind.config.ts
+   ('JetBrains Mono', Consolas): ook niet geladen, dus Consolas. De
+   toetsaanduiding in de zijbalk zet zelf font-family: inherit. */
+code, kbd, samp, pre { font-family: var(--font-mono); font-size: 1em; }
+
+/* Mobiele schil: MobileShell zet data-mobile-shell="on" op body. De
+   ruimte onderaan is nu 0, omdat de onderbalk is vervallen. */
+@media (max-width: 767px) {
+  body[data-mobile-shell='on'] {
+    padding-bottom: calc(var(--bottom-nav-h) + var(--safe-area-bottom));
+  }
+}
+
+/* Minder beweging als het systeem daarom vraagt (tokens.css, letterlijk).
+   Vier componenten zetten daarnaast hun eigen animatie op none. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================================
+   4. Focusring, selectie en scrollbalken
+   ----------------------------------------------------------------------------
+   Focus. DealDrive heeft geen globale focusregel; 24 bestanden zetten er
+   zelf een (36 regels). De meest gebruikte: 2 px massief inkt met 2 px
+   afstand (21 keer). Velden krijgen bij :focus 2 px geel binnen de rand
+   (37 keer, offset -1px) en een inkt-rand. Op de zwarte zijbalk is de ring
+   geel. Elementen zonder eigen regel tonen in DealDrive de ring van de
+   browser (gemeten: outline auto); Dealtrace maakt de meest gebruikte
+   regel globaal. .is-focus toont dezelfde ring in het voorbeeld.
+
+   Selectie. DealDrive definieert geen ::selection; tekstselectie is de
+   standaard van de browser. Dealtrace houdt dat zo.
+
+   Scrollbalken. De pagina gebruikt de scrollbalk van de browser. Twee
+   vaste patronen: de lijst in de zwarte zijbalk (8 px, wit op 22 procent)
+   en de inhoud van een lange flyout (TaakFlyout, InzichtFlyout: 10 px,
+   duim --border-strong op een --surface-baan). Klasse .scrollvak.
+   ========================================================================== */
+:focus-visible,
+.is-focus {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: -1px;
+}
+.app-sidebar :focus-visible,
+.app-sidebar .is-focus,
+.op-donker :focus-visible,
+.op-donker .is-focus {
+  outline-color: var(--yellow);
+}
+
+.scrollvak {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) var(--surface);
+}
+/* Vaste hoogte voor een los scrollvak buiten een flyout. */
+.scrollvak--beperkt { max-height: 160px; }
+.scrollvak::-webkit-scrollbar { width: 10px; }
+.scrollvak::-webkit-scrollbar-track { background: var(--surface); }
+.scrollvak::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border: 2px solid var(--surface);
+  border-radius: var(--radius);
+  background-clip: padding-box;
+}
+.scrollvak::-webkit-scrollbar-thumb:hover { background: var(--muted); background-clip: padding-box; }
+
+/* ============================================================================
+   5. Hulpklassen
+   ----------------------------------------------------------------------------
+   Bron: tokens.css (.tnum, time, .num) en terugkerende patronen.
+   - .tnum: tabellaire cijfers, 738 keer als klasse in templates; daarnaast
+     83 keer font-feature-settings "tnum" en 15 keer tabular-nums in CSS.
+     Zet hem op elk getal dat onder of naast een ander getal staat.
+   - .afkap: één regel met puntjes (ellipsis); zet de volle tekst in title.
+   - .breekbaar: lange woorden (e-mail, URL) breken binnen hun kolom.
+   - .visueel-verborgen: alleen voor schermlezers.
+   - .hover-bron en .hover-doel: een bediening die pas bij hover verschijnt
+     (potlood bij een tekstblok, menu bij een draad). Op aanraakschermen
+     (hover: none) is hij altijd zichtbaar, zoals DealDrive in 4 bestanden
+     doet.
+   ========================================================================== */
+.tnum, time, .num { font-feature-settings: "tnum"; }
+
+.afkap { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.breekbaar { overflow-wrap: anywhere; }
+
+.visueel-verborgen {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.hover-doel { opacity: 0; transition: opacity var(--transition-fast); }
+.hover-bron:hover .hover-doel,
+.hover-bron:focus-within .hover-doel,
+.hover-bron.is-hover .hover-doel { opacity: 1; }
+@media (hover: none) {
+  .hover-doel { opacity: 1; }
+}
+
+/* Inhoud op een zwarte ondergrond (zijbalk, actieve statkaart, donkere
+   strook). Tekst wit op 85 procent, gele focusring. */
+.op-donker { background: var(--ink); color: var(--wit-85); }
+.op-donker .label,
+.op-donker .meta { color: var(--wit-55); }
+
+/* ============================================================================
+   6. Typografie
+   ----------------------------------------------------------------------------
+   Bron: tailwind.config.ts (fontFamily, fontSize, fontWeight) en de
+   telling van alle font-regels. Twee families: Source Serif 4 voor koppen
+   en cijfers (altijd gewicht 700), Inter voor de rest. Gewichten in
+   gebruik: 700 (1564), 600 (402), 800 (371), 500 (36), 400 (33).
+   Letterafstand bij kapitalen: 0,06em tot 0,2em; negatief (-0,01em) bij
+   grote serif-koppen.
+
+   Rollen en klassen:
+   kicker          .kicker, .kicker--streep       11 px Inter 700 kapitalen
+   paginatitel     .title, .title--groot           32 px of 28 tot 44 px serif
+   subtitel        .subtitle, .subtitle--groot     14 px of 15 px
+   sectiekop       .sec-title + .sec-sub           28 tot 40 px serif
+   bloktitel       .kop-blok                       22 px serif
+   kaarttitel      .kop-kaart                      18 px serif
+   kleine kop      .kop-klein                      16 px serif
+   broodtekst      .tekst, .tekst--lees            13 px of 14 px
+   meta            .meta                           12 px muted
+   label           .label                          11 px 700 kapitalen
+   cijfer          .cijfer, .cijfer--groot         22 px of 32 px serif tnum
+   mono            .mono                           12 px mono 600
+
+   HTML van een paginakop staat bij groep 12.
+   ========================================================================== */
+
+/* Kicker. Twee vormen in DealDrive:
+   - zonder streep, letterafstand 0,08em: instellingen-, analyse- en
+     detailpagina's (34 regels);
+   - met een gele streep van 24 bij 2 px ervoor en letterafstand 0,2em:
+     de werkpagina's in de navigatie, zoals Taken, Pipeline, Inzichten,
+     Bezoeken, Briefings (25 regels plus 9 keer .sec-eyebrow).
+   Altijd een span direct boven de titel. */
+.kicker {
+  font-family: var(--font-sans);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.kicker--streep {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.2em;
+}
+.kicker--streep::before {
+  content: '';
+  width: 24px;
+  height: 2px;
+  background: var(--yellow);
+}
+/* Kicker die zelf een signaal is (rood: achterstallig, risico). */
+.kicker--alert { color: var(--red); }
+
+/* Paginatitel. Gemeten: 32 px, 700, regelhoogte 1,15, marge 4 px boven
+   (instellingen, 27 pagina's). Op werkpagina's groter: clamp(28px, 4vw,
+   44px), regelhoogte 1,1, letterafstand -0,01em, marge 12 px boven en
+   onder (gemeten 44 px op 1440 breed, 28 px op 390 breed). */
+.title {
+  margin: 4px 0 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-paginatitel);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.title--groot {
+  margin: 12px 0;
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.title--klein { font-size: 28px; }
+
+/* Subtitel. Standaard 14 px --ink-soft, maximaal 620 px breed (37 en 13
+   keer). Bij de grote titel 15 px --muted zonder marge (taken). */
+.subtitle {
+  margin: 8px 0 0;
+  max-width: 620px;
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.subtitle--groot {
+  margin: 0;
+  max-width: none;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.subtitle--alert,
+.subtitle--alert strong { color: var(--red); }
+
+/* Sectiekop binnen een lange pagina. clamp(28px, 3.4vw, 40px), 9 van 11
+   keer; gemeten 40 px op /klanten. Met .kicker--streep erboven. */
+.sec-title {
+  margin: 4px 0 0;
+  font-family: var(--font-serif);
+  font-size: clamp(28px, 3.4vw, 40px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.sec-sub {
+  margin: 8px 0 0;
+  max-width: 560px;
+  font-size: var(--fs-klein);
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+/* Bloktitel (DealDrive .block-title, 8 van 10 keer 22 px), kaarttitel
+   (.card-title, 18 px) en kleine kop (16 px serif, 46 keer). */
+.kop-blok {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-venstertitel);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink);
+}
+.kop-kaart {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-kaarttitel);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+.kop-klein {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-lees);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+/* Broodtekst. In kaarten en lijsten 13 px op 1,55 in --ink-soft (meest
+   voorkomend); leestekst in vensters en uitleg 14 px op 1,6. */
+.tekst {
+  font-size: var(--fs-klein);
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+.tekst--lees { font-size: var(--fs-body); line-height: 1.6; }
+.tekst--inkt { color: var(--ink); }
+
+.meta {
+  font-size: var(--fs-meta);
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* Label in kapitalen. 11 px, 700, 0,06em tot 0,1em; 0,08em is het midden
+   en de waarde van de kicker. Voor veldlabels zie deel B. */
+.label {
+  font-size: var(--fs-label);
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Cijfers: altijd serif 700 met tabellaire cijfers. */
+.cijfer {
+  font-family: var(--font-serif);
+  font-size: var(--fs-venstertitel);
+  font-weight: 700;
+  line-height: 1.1;
+  font-feature-settings: "tnum";
+  color: var(--ink);
+}
+.cijfer--groot { font-size: var(--fs-cijfer); line-height: 1.05; }
+.cijfer--alert { color: var(--red); }
+.cijfer--positief { color: var(--green); }
+
+/* Mono: tijden, datums in een tijdlijn, tellers (DealDrive: HistorieFlyout,
+   dagstart, Dex). 12 px, 600. */
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  font-feature-settings: "tnum";
+}
+
+/* ============================================================================
+   7. Links
+   ----------------------------------------------------------------------------
+   Bron: 158 regels met een klassenaam op -link in 105 bestanden. Een kale
+   a heeft geen stijl (kleur erft, geen onderstreping). Elke link krijgt
+   dus een klasse:
+   - .inline-link: link in lopende tekst. Inkt, 600, 1 px gele streep
+     eronder; hover --yellow-dark (DealDrive .inline-link, 7 keer, en
+     .tekst-link 3 keer, gelijk).
+   - .tabel-link: naam in een tabelrij of lijst. Inkt, 600, geen streep;
+     hover een gele streep (4 keer).
+   - .breadcrumb-link: kruimelpad boven de kicker, "← Mijn instellingen".
+     12 px, 700, kapitalen, 0,04em, --muted; hover inkt (28 keer).
+   - .back-link: terug-link in een metaregel, "← Klanten". Inkt, 700;
+     hover --yellow-dark (8 keer).
+   - .sec-link: navigatielink rechts in een sectiekop, "Alle klanten →".
+     Zwart vlak met gele tekst, 12 px kapitalen, minimaal 44 px hoog.
+   - .subtitle-link: link in een subtitel, onderstreept met 4 px afstand.
+   - Extern: zelfde klasse als intern, met een pijl ↗ in een span
+     (.link-extern, aria-hidden) en target="_blank" rel="noopener
+     noreferrer". 33 keer target="_blank", altijd met noopener.
+   Navigatielinks in de zijbalk staan bij groep 10.
+   ========================================================================== */
+.inline-link,
+.tekst-link {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid var(--yellow);
+  transition: color var(--transition-fast);
+}
+.inline-link:hover,
+.inline-link.is-hover,
+.tekst-link:hover { color: var(--yellow-dark); }
+
+.tabel-link {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--transition-fast);
+}
+.tabel-link:hover,
+.tabel-link.is-hover { border-bottom-color: var(--yellow); }
+
+.breadcrumb { margin-bottom: 8px; }
+.breadcrumb-link {
+  font-size: var(--fs-meta);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--muted);
+  transition: color var(--transition-fast);
+}
+.breadcrumb-link:hover,
+.breadcrumb-link.is-hover { color: var(--ink); }
+
+.back-link {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+.back-link:hover,
+.back-link.is-hover { color: var(--yellow-dark); }
+
+.sec-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--touch-target-min);
+  padding: 8px 16px;
+  background: var(--ink);
+  color: var(--yellow);
+  border-radius: var(--radius);
+  font-size: var(--fs-meta);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--transition-fast);
+}
+.sec-link:hover,
+.sec-link.is-hover { background: var(--ink-soft); }
+
+.subtitle-link {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.link-extern { margin-left: 2px; font-weight: 400; }
+
+/* Uitgeschakelde link (bijvoorbeeld een vervallen bron). */
+.inline-link[aria-disabled='true'],
+.tabel-link[aria-disabled='true'] {
+  color: var(--muted-light);
+  border-bottom-color: transparent;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   8. Iconen
+   ----------------------------------------------------------------------------
+   Bron: lucide-vue-next 0.577, geïmporteerd in 104 bestanden. Lucide tekent
+   een svg van 24 bij 24 met stroke="currentColor", stroke-width 2,
+   stroke-linecap en stroke-linejoin round, fill none. De kleur volgt dus de
+   tekst.
+   Maten in gebruik: 16 px (class w-4 h-4, 183 keer) is de standaard naast
+   tekst en in knoppen; 18 px in de zijbalk; 14 px (:size 14, 20 keer)
+   naast kleine tekst; 12 px (19 keer) in pillen; 20 px (18 keer) als los
+   icoon. Lijndikte 2 (72 keer expliciet); 1,5 tot 1,75 alleen bij grote
+   illustratieve iconen (lege staat, 56 tot 64 px).
+   Let op: DealDrive schrijft 41 keer w-3.5 h-3.5, maar die klasse bestaat
+   niet in de vergrendelde Tailwind-schaal; zulke iconen worden 24 px
+   (gemeten). Dealtrace gebruikt .icoon--14.
+   HTML:
+   <svg class="icoon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        aria-hidden="true">...</svg>
+   ========================================================================== */
+.icoon {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  stroke: currentcolor;
+  stroke-width: 2;
+  fill: none;
+}
+.icoon--12 { width: 12px; height: 12px; }
+.icoon--14 { width: 14px; height: 14px; }
+.icoon--18 { width: 18px; height: 18px; }
+.icoon--20 { width: 20px; height: 20px; }
+.icoon--24 { width: 24px; height: 24px; }
+.icoon--groot { width: 56px; height: 56px; stroke-width: 1.5; }
+.icoon--gedempt { color: var(--muted); }
+
+/* ============================================================================
+   9. Kleurstalen
+   ----------------------------------------------------------------------------
+   Een vlakje in een tokenkleur, voor documentatie en legenda's.
+   HTML: <span class="staal staal--yellow"></span>
+   ========================================================================== */
+.staal {
+  display: block;
+  width: 100%;
+  height: 48px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.staal--klein { width: 12px; height: 12px; display: inline-block; vertical-align: middle; }
+.staal--ink { background: var(--ink); }
+.staal--ink-soft { background: var(--ink-soft); }
+.staal--muted { background: var(--muted); }
+.staal--muted-light { background: var(--muted-light); }
+.staal--bg { background: var(--bg); }
+.staal--wit { background: var(--wit); }
+.staal--surface { background: var(--surface); }
+.staal--border { background: var(--border); }
+.staal--border-strong { background: var(--border-strong); }
+.staal--yellow { background: var(--yellow); }
+.staal--yellow-dark { background: var(--yellow-dark); }
+.staal--red { background: var(--red); }
+.staal--red-dark { background: var(--red-dark); }
+.staal--red-light { background: var(--red-light); }
+.staal--green { background: var(--green); }
+.staal--blue { background: var(--blue); }
+.staal--orange { background: var(--orange); }
+.staal--orange-dark { background: var(--orange-dark); }
+.staal--purple { background: var(--purple); }
+.staal--yellow-zacht { background: var(--yellow-zacht); }
+.staal--red-zacht { background: var(--red-zacht); }
+.staal--green-zacht { background: var(--green-zacht); }
+.staal--blue-zacht { background: var(--blue-zacht); }
+.staal--orange-zacht { background: var(--orange-zacht); }
+.staal--purple-zacht { background: var(--purple-zacht); }
+.staal--yellow-licht { background: var(--yellow-licht); }
+.staal--yellow-actief { background: var(--yellow-actief); }
+.staal--yellow-teller { background: var(--yellow-teller); }
+.staal--yellow-dark-zacht { background: var(--yellow-dark-zacht); }
+.staal--red-pil { background: var(--red-pil); }
+.staal--kaart-water { background: var(--kaart-water); }
+/* Overlays en wit op donker: de tint over een vlak in --ink of --wit, zoals in de app. */
+.staal--overlay-zacht { background: linear-gradient(var(--overlay-zacht), var(--overlay-zacht)), var(--wit); }
+.staal--overlay { background: linear-gradient(var(--overlay), var(--overlay)), var(--wit); }
+.staal--overlay-donker { background: linear-gradient(var(--overlay-donker), var(--overlay-donker)), var(--wit); }
+.staal--wit-06 { background: linear-gradient(var(--wit-06), var(--wit-06)), var(--ink); border-color: var(--ink); }
+.staal--wit-10 { background: linear-gradient(var(--wit-10), var(--wit-10)), var(--ink); border-color: var(--ink); }
+.staal--wit-16 { background: linear-gradient(var(--wit-16), var(--wit-16)), var(--ink); border-color: var(--ink); }
+.staal--wit-30 { background: linear-gradient(var(--wit-30), var(--wit-30)), var(--ink); border-color: var(--ink); }
+.staal--wit-40 { background: linear-gradient(var(--wit-40), var(--wit-40)), var(--ink); border-color: var(--ink); }
+.staal--wit-55 { background: linear-gradient(var(--wit-55), var(--wit-55)), var(--ink); border-color: var(--ink); }
+.staal--wit-70 { background: linear-gradient(var(--wit-70), var(--wit-70)), var(--ink); border-color: var(--ink); }
+.staal--wit-78 { background: linear-gradient(var(--wit-78), var(--wit-78)), var(--ink); border-color: var(--ink); }
+.staal--wit-85 { background: linear-gradient(var(--wit-85), var(--wit-85)), var(--ink); border-color: var(--ink); }
+
+/* ============================================================================
+   10. App-schil en zijbalk
+   ----------------------------------------------------------------------------
+   Bron: app.vue (.app-shell), AppSidebar.vue (774 regels), MerkLogo.vue,
+   useNavigatie.ts, useSidebarCollapse.ts, AdminShell.vue (HQ).
+   De klassenamen zijn die van de voorganger (en van de Dealtrace-mockups);
+   tussen haakjes de naam in DealDrive.
+
+   Opbouw:
+   <div class="app-shell [app-shell--ingeklapt]">
+     <aside class="app-sidebar [app-sidebar--ingeklapt]">
+       <div class="sb-merk">                          (sb-brand)
+         <a class="sb-merk-link" href="/">            (sb-logo-link)
+           <svg class="sb-merk-icoon">..</svg>        (MerkLogo)
+           <span class="sb-merk-naam">DealDrive</span>
+         </a>
+         <button class="sb-inklap" aria-label="Zijbalk inklappen">  (sb-collapse)
+       </div>
+       <div class="sb-meta">                          LIVE en datum
+         <span class="sb-live"><span class="sb-live-stip"></span>LIVE</span>
+         <span class="sb-datum tnum">14 okt</span>
+       </div>
+       <div class="sb-zoek-vak">
+         <button class="sb-zoek">icoon Zoeken <kbd class="sb-kbd">Ctrl K</kbd>
+       </div>
+       <nav class="sb-nav" aria-label="Hoofdnavigatie">
+         <div class="sb-groep">
+           <div class="sb-groep-kop">Start</div>       (sb-nav-section)
+           <a class="sb-link sb-link--actief" aria-current="page">  (sb-nav-item)
+             <svg class="sb-link-icoon">  <span class="sb-link-tekst">Vandaag</span>
+       <div class="sb-voet">                           (sb-bottom)
+         <button class="sb-bel">                       (sb-bell-row)
+         <div class="sb-gebruiker">                    (sb-user)
+           <button class="sb-gebruiker-knop" aria-expanded="false">
+           <div class="sb-menu" role="menu">           (sb-dropdown)
+     </aside>
+     <main class="app-shell-main">..</main>
+   </div>
+
+   Maten (gemeten op 1440 bij 900): zijbalk 240 px, ingeklapt 64 px,
+   merkstrook 56 px, LIVE-strook 31 px, zoekknop 40 px, groepskop 28 px,
+   navigatie-item 33 px, avatar 30 px. Inklappen animeert de breedte in
+   160 ms ease-out; de keuze staat in de cookie dealdrive_sidebar_collapsed.
+   Op mobiel (tot en met 767 px) is de zijbalk altijd de icoonstrook van
+   64 px. Navigatie-items zijn bewust krap (33 px): 25 items moeten op
+   900 px hoogte passen, de lijst scrollt en vervaagt onderaan.
+   ========================================================================== */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-left: var(--sidebar-w);
+  transition: padding-left var(--duur-vervaag) ease-out;
+}
+.app-shell--ingeklapt,
+.app-shell--collapsed { --sidebar-w: var(--sidebar-w-smal); }
+.app-shell-main {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg);
+}
+@media (max-width: 767px) {
+  .app-shell { --sidebar-w: var(--sidebar-w-smal); }
+}
+/* In een kader (voorbeeldpagina, mock-up): de zijbalk staat absoluut in
+   plaats van vast aan het venster. */
+.app-shell--in-kader { min-height: 100%; height: 100%; }
+.app-shell--in-kader .app-sidebar { position: absolute; }
+
+.app-sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-w);
+  overflow: hidden;
+  background: var(--ink);
+  color: var(--wit-85);
+  transition: width var(--duur-vervaag) ease-out;
+}
+/* Ingeklapt mag de inhoud buiten de strook steken: het gebruikersmenu
+   opent dan rechts ervan. */
+.app-sidebar--ingeklapt { width: var(--sidebar-w-smal); overflow: visible; }
+
+/* Merk */
+.sb-merk {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 56px;
+  padding: 14px 12px 12px;
+  border-bottom: 1px solid var(--wit-10);
+}
+.sb-merk-link {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--wit);
+  text-decoration: none;
+}
+/* Het merkbeeld: geel rondje, zwarte ring, gele kern (svg 32 bij 32,
+   cirkels r14 geel, r8 inkt, r3 geel), getekend op 28 px. */
+.sb-merk-icoon { flex-shrink: 0; width: 28px; height: 28px; }
+.sb-merk-icoon .merk-geel { fill: var(--yellow); }
+.sb-merk-icoon .merk-inkt { fill: var(--ink); }
+.sb-merk-naam {
+  overflow: hidden;
+  font-family: var(--font-serif);
+  font-size: var(--fs-kaarttitel);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--yellow);
+}
+.sb-inklap {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid var(--wit-16);
+  border-radius: var(--radius);
+  color: var(--wit-70);
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+.sb-inklap:hover,
+.sb-inklap.is-hover { color: var(--yellow); border-color: var(--yellow); }
+
+/* LIVE-strook: volgt de verbinding; zonder netwerk staat er OFFLINE. */
+.sb-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--wit-06);
+}
+.sb-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--yellow);
+}
+.sb-live-stip {
+  width: 7px;
+  height: 7px;
+  background: var(--yellow);
+  border-radius: var(--radius);
+  animation: sb-knipper 1.4s ease-in-out infinite;
+}
+.sb-live--offline { color: var(--wit-55); }
+.sb-live--offline .sb-live-stip { background: var(--wit-55); animation: none; }
+@keyframes sb-knipper {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.sb-datum { margin-left: auto; font-size: var(--fs-label); color: var(--wit-55); }
+
+/* Zoek-ingang: opent de globale zoek (deel C), ook met Ctrl K. */
+.sb-zoek-vak { padding: 10px 8px 2px; }
+.sb-zoek {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid var(--wit-16);
+  border-radius: var(--radius);
+  color: var(--wit-78);
+  font-size: var(--fs-klein);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+.sb-zoek:hover,
+.sb-zoek.is-hover {
+  background: var(--wit-06);
+  border-color: var(--wit-30);
+  color: var(--wit);
+}
+.sb-zoek-tekst { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.sb-kbd {
+  flex-shrink: 0;
+  padding: 1px 5px;
+  border: 1px solid var(--wit-16);
+  border-radius: var(--radius);
+  color: var(--wit-55);
+  font-family: inherit;
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* Navigatie */
+.sb-nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--wit-30) transparent;
+}
+.sb-nav::-webkit-scrollbar { width: 8px; }
+.sb-nav::-webkit-scrollbar-track { background: transparent; }
+.sb-nav::-webkit-scrollbar-thumb {
+  background: var(--wit-16);
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  background-clip: padding-box;
+}
+.sb-nav::-webkit-scrollbar-thumb:hover { background: var(--wit-40); background-clip: padding-box; }
+/* Vervaging onderaan: laat zien dat er meer onder staat. */
+.sb-nav::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  flex-shrink: 0;
+  height: 28px;
+  background: linear-gradient(to bottom, transparent, var(--ink));
+  pointer-events: none;
+}
+.sb-groep { display: flex; flex-direction: column; gap: 2px; }
+.sb-groep-kop {
+  padding: 8px 10px 2px;
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  /* 0,55 op zwart geeft ruim 5:1 contrast. */
+  color: var(--wit-55);
+}
+/* Ingeklapt vervangt een streep de groepskop. */
+.sb-scheiding { display: none; height: 1px; margin: 6px 12px; background: var(--wit-10); }
+
+.sb-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  color: var(--wit-78);
+  font-size: var(--fs-klein);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.sb-link:hover,
+.sb-link.is-hover { background: var(--wit-06); color: var(--wit); }
+.sb-link--actief,
+.sb-link--actief:hover { background: var(--yellow-actief); color: var(--yellow); }
+.sb-link--actief::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 0;
+  width: 3px;
+  background: var(--yellow);
+  border-radius: 0 2px 2px 0;
+}
+.sb-link[aria-disabled='true'] { color: var(--wit-30); pointer-events: none; }
+.sb-link-icoon { flex-shrink: 0; width: 18px; height: 18px; }
+.sb-link-tekst { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+/* Teller op een item (HQ: aantal aandachtsignalen op Klanten). */
+.sb-link-teller {
+  margin-left: auto;
+  padding: 0 6px;
+  background: var(--yellow);
+  color: var(--ink);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  line-height: 1.6;
+  font-feature-settings: "tnum";
+}
+
+/* Voet: notificaties en gebruiker */
+.sb-voet {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border-top: 1px solid var(--wit-10);
+}
+.sb-bel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--wit-78);
+  font-size: var(--fs-klein);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.sb-bel:hover,
+.sb-bel.is-hover { background: var(--wit-06); color: var(--wit); }
+.sb-bel--actief { background: var(--yellow-actief); color: var(--yellow); }
+.sb-bel-icoon { position: relative; display: inline-flex; }
+.sb-bel-teller {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--red);
+  border-radius: var(--radius);
+  color: var(--wit);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  line-height: 16px;
+  font-feature-settings: "tnum";
+}
+
+.sb-gebruiker { position: relative; }
+.sb-gebruiker-knop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--wit-85);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.sb-gebruiker-knop:hover,
+.sb-gebruiker-knop.is-hover { background: var(--wit-06); }
+.sb-gebruiker--open .sb-gebruiker-knop {
+  background: var(--wit-06);
+  border-color: var(--wit-10);
+}
+/* Op een pagina uit het gebruikersmenu licht het blok op. */
+.sb-gebruiker--actief .sb-gebruiker-knop { background: var(--yellow-actief); }
+.sb-gebruiker--actief .sb-gebruiker-naam { color: var(--yellow); }
+.sb-avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  background: var(--yellow);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-size: var(--fs-meta);
+  font-weight: 800;
+}
+.sb-gebruiker-info { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.sb-gebruiker-naam {
+  overflow: hidden;
+  font-size: var(--fs-meta);
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--wit);
+}
+.sb-gebruiker-rol {
+  font-size: var(--fs-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--wit-55);
+}
+.sb-gebruiker-pijl {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  color: var(--wit-55);
+  transition: transform var(--duur-kort) ease-out;
+}
+/* Dicht wijst de pijl omlaag; open omhoog (het menu opent naar boven). */
+.sb-gebruiker:not(.sb-gebruiker--open) .sb-gebruiker-pijl { transform: rotate(180deg); }
+
+/* Gebruikersmenu: opent naar boven, wit vlak met rand. Sluit bij klik
+   buiten, bij Escape (focus terug op de knop) en 250 ms na het verlaten
+   met de muis. */
+.sb-menu {
+  position: absolute;
+  right: 8px;
+  bottom: calc(100% + 6px);
+  left: 8px;
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px;
+  background: var(--wit);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--ink);
+  animation: sb-menu-in var(--transition-fast);
+}
+@keyframes sb-menu-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.sb-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-size: var(--fs-klein);
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 100ms ease-out;
+}
+.sb-menu-item:hover,
+.sb-menu-item.is-hover { background: var(--surface); }
+.sb-menu-item--gevaar { color: var(--red); }
+.sb-menu-item--gevaar:hover,
+.sb-menu-item--gevaar.is-hover { background: var(--red-zacht); }
+.sb-menu-scheiding { height: 1px; margin: 4px 6px; background: var(--border); }
+
+/* Ingeklapt (en op mobiel): alleen iconen, gecentreerd; labels weg. */
+.app-sidebar--ingeklapt .sb-merk {
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 0 12px;
+}
+.app-sidebar--ingeklapt .sb-merk-link { flex: 0 0 auto; justify-content: center; }
+.app-sidebar--ingeklapt .sb-meta { justify-content: center; padding: 6px 0; }
+.app-sidebar--ingeklapt .sb-zoek,
+.app-sidebar--ingeklapt .sb-link,
+.app-sidebar--ingeklapt .sb-gebruiker-knop { justify-content: center; padding: 8px 0; }
+.app-sidebar--ingeklapt .sb-bel { justify-content: center; padding: 10px 0; }
+.app-sidebar--ingeklapt .sb-merk-naam,
+.app-sidebar--ingeklapt .sb-live-tekst,
+.app-sidebar--ingeklapt .sb-datum,
+.app-sidebar--ingeklapt .sb-zoek-tekst,
+.app-sidebar--ingeklapt .sb-kbd,
+.app-sidebar--ingeklapt .sb-groep-kop,
+.app-sidebar--ingeklapt .sb-link-tekst,
+.app-sidebar--ingeklapt .sb-link-teller,
+.app-sidebar--ingeklapt .sb-bel-tekst,
+.app-sidebar--ingeklapt .sb-gebruiker-info,
+.app-sidebar--ingeklapt .sb-gebruiker-pijl { display: none; }
+.app-sidebar--ingeklapt .sb-scheiding { display: block; }
+.app-sidebar--ingeklapt .sb-menu {
+  right: auto;
+  bottom: 0;
+  left: 100%;
+  width: 220px;
+  margin-left: 6px;
+}
+
+@media (max-width: 767px) {
+  .app-sidebar { width: var(--sidebar-w); overflow: visible; }
+  .app-sidebar .sb-merk { flex-direction: column; justify-content: center; gap: 10px; padding: 14px 0 12px; }
+  .app-sidebar .sb-merk-link { flex: 0 0 auto; justify-content: center; }
+  .app-sidebar .sb-meta { justify-content: center; padding: 6px 0; }
+  .app-sidebar .sb-zoek,
+  .app-sidebar .sb-link,
+  .app-sidebar .sb-gebruiker-knop { justify-content: center; padding: 8px 0; }
+  .app-sidebar .sb-bel { justify-content: center; padding: 10px 0; }
+  .app-sidebar .sb-merk-naam,
+  .app-sidebar .sb-live-tekst,
+  .app-sidebar .sb-datum,
+  .app-sidebar .sb-zoek-tekst,
+  .app-sidebar .sb-kbd,
+  .app-sidebar .sb-groep-kop,
+  .app-sidebar .sb-link-tekst,
+  .app-sidebar .sb-link-teller,
+  .app-sidebar .sb-bel-tekst,
+  .app-sidebar .sb-gebruiker-info,
+  .app-sidebar .sb-gebruiker-pijl { display: none; }
+  .app-sidebar .sb-scheiding { display: block; }
+  .app-sidebar .sb-menu { right: auto; bottom: 0; left: 100%; width: 220px; margin-left: 6px; }
+}
+
+/* HQ-variant (AdminShell.vue). Zelfde gebaar, eigen maten: 210 px breed,
+   ingeklapt 60 px, een gele rand van 3 px rechts, items 12 px 700 met
+   0,03em en minimaal 44 px hoog, groepskop 800 met 0,14em op 38 procent
+   wit. Het merk is een geel vierkant van 28 px met "DD" en de tekst
+   "DealDrive HQ" met HQ in geel. De inhoud staat op --surface. Op smal
+   scherm vast op de icoonstrook zonder inklapknop.
+   <div class="app-shell app-shell--hq"> <aside class="app-sidebar app-sidebar--hq"> */
+.app-shell--hq { --sidebar-w: 210px; --sidebar-w-smal: 60px; }
+.app-shell--hq .app-shell-main { background: var(--surface); }
+.app-sidebar--hq { border-right: 3px solid var(--yellow); }
+.app-sidebar--hq .sb-merk { border-bottom-color: var(--wit-10); }
+.sb-merk-teken {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--yellow);
+  color: var(--ink);
+  font-size: var(--fs-meta);
+  font-weight: 800;
+}
+.sb-merk-tekst { font-size: var(--fs-klein); letter-spacing: 0.02em; white-space: nowrap; color: var(--wit); }
+.sb-merk-tekst strong { color: var(--yellow); }
+.app-sidebar--hq .sb-nav { padding: 12px 8px; }
+.app-sidebar--hq .sb-nav::after { display: none; }
+.app-sidebar--hq .sb-groep-kop {
+  padding: 12px 10px 4px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--wit-40);
+}
+.app-sidebar--hq .sb-link {
+  min-height: var(--touch-target-min);
+  padding: 9px 10px;
+  border-radius: 0;
+  font-size: var(--fs-meta);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--wit-70);
+}
+.app-sidebar--hq .sb-link:hover,
+.app-sidebar--hq .sb-link.is-hover { background: var(--wit-06); color: var(--wit); }
+.app-sidebar--hq .sb-link--actief,
+.app-sidebar--hq .sb-link--actief:hover { background: var(--yellow-actief); color: var(--yellow); }
+.app-sidebar--hq .sb-link-icoon { width: 16px; height: 16px; }
+.app-sidebar--hq .sb-voet { padding: 10px 8px 14px; border-top-color: var(--wit-10); }
+/* DealDrive zet HQ op de icoonstrook tot en met 720 px; Dealtrace gebruikt
+   voor beide zijbalken hetzelfde breekpunt (767 px), zodat de mobiele
+   regels hierboven ook voor HQ gelden. De inklapknop verdwijnt op die
+   strook, omdat hij daar niets zichtbaars doet. */
+@media (max-width: 767px) {
+  .app-shell--hq { --sidebar-w: 60px; }
+  .app-sidebar--hq .sb-inklap { display: none; }
+}
+
+/* ============================================================================
+   11. Mobiele schil
+   ----------------------------------------------------------------------------
+   Bron: MobileShell.vue (86 regels), app.vue, tokens.css §16.5,
+   useViewport.ts. MobileShell wikkelt elke pagina met OfflineBanner,
+   InstallPrompt, IOSInstallModal en PushSoftPrompt (die staan in deel C)
+   en zet data-mobile-shell="on" op body.
+   Gemeten op 390 bij 844:
+   - geen onderbalk: het menu onderin is vervallen; navigeren gaat via de
+     zijbalk als icoonstrook van 64 px (alle pagina's blijven bereikbaar);
+   - container houdt 24 px zijmarge (6 analysepagina's gaan onder 860 px
+     naar 16 px; uitzondering);
+   - paginatitel 28 px (ondergrens van de clamp), statkaarten 2 kolommen;
+   - knoppen in de paginakop lopen door op de volgende regel (flex-wrap);
+   - elk klikbaar element minimaal 44 px (--touch-target-min), in
+     handschoenmodus 54 px;
+   - hover-bediening is op aanraakschermen altijd zichtbaar (.hover-doel).
+   De klasse .onderbalk van de voorganger bestaat in DealDrive niet meer en
+   is hier uitgezet; gebruik hem niet in nieuwe schermen.
+   ========================================================================== */
+.onderbalk { display: none; }
+
+/* Telefoonkader voor voorbeelden en mock-ups: 390 px breed, de maat van
+   de metingen. De schil erin staat op .app-shell--ingeklapt, omdat een
+   media query op het venster reageert en niet op het kader. */
+.kader-telefoon {
+  position: relative;
+  width: 390px;
+  max-width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  background: var(--bg);
+}
+.kader-telefoon .stat-grid,
+.kader-telefoon .raster--4 { grid-template-columns: repeat(2, 1fr); }
+.kader-telefoon .raster--2,
+.kader-telefoon .raster--3 { grid-template-columns: 1fr; }
+
+/* ============================================================================
+   12. Pagina-opbouw: secties, container, raster en paginakop
+   ----------------------------------------------------------------------------
+   Bron: .section in 78 bestanden, .container in 80, .sec-head in 49,
+   .toolbar-buttons in 21, .breadcrumb in 25.
+   Een pagina is een stapel volle-breedte secties; elke sectie heeft een
+   container van maximaal 1180 px met 24 px zijmarge.
+
+   <section class="section">
+     <div class="container">
+       <div class="sec-head">
+         <div>
+           <nav class="breadcrumb" aria-label="Kruimelpad">
+             <a class="breadcrumb-link" href="..">← Mijn instellingen</a>
+           </nav>
+           <span class="kicker">Voorkeuren · Werkwijze</span>
+           <h1 class="title">Werkwijze</h1>
+           <p class="subtitle">Uitleg in een of twee zinnen.</p>
+         </div>
+         <div class="toolbar-buttons"> knoppen uit deel B </div>
+       </div>
+     </div>
+   </section>
+   <section class="section section--stats"> statkaarten </section>
+   <section class="section section--alt"> inhoud op --surface </section>
+
+   DealDrive gebruikt h2 voor .title (46 pagina's, h1 in 5). Gebruik in
+   Dealtrace h1, één per pagina; de stijl hangt aan de klasse.
+   Gemeten paginakop op /taken: sectie 32 px boven en onder met 1 px rand
+   --border eronder; kicker 18 px hoog; titel 44 px; knoppen 44 px hoog.
+   ========================================================================== */
+.section {
+  padding: var(--sectie-padding) 0;
+  border-bottom: 1px solid var(--border);
+}
+/* Afwisselende sectie op --surface (46 bestanden). */
+.section--alt { background: var(--surface); }
+/* Strook met statkaarten direct onder de paginakop (24 px). */
+.section--stats { padding: var(--pagina-marge) 0; }
+/* Plakkende filterstrook (de filters zelf staan in deel B). Sticky in
+   briefings, inzichten en kennisbank; rand onder in 5 van de 19. */
+.section--filter {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  padding: 16px 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+/* Lange lijst onderaan: extra ruimte onder (56 px, 7 keer), geen rand. */
+.section--lijst { padding: var(--sectie-padding) 0 56px; border-bottom: 0; }
+.section--laatste { border-bottom: 0; }
+
+.container {
+  max-width: var(--container-w);
+  margin: 0 auto;
+  padding: 0 var(--pagina-marge);
+}
+.container--smal { max-width: var(--container-narrow); }
+
+/* Rasters met --kaart-gap. Breekpunten zoals DealDrive ze het meest
+   schrijft: 700 en 720 voor twee kolommen, 1000 voor drie of meer. */
+.raster { display: grid; grid-template-columns: 1fr; gap: var(--kaart-gap); }
+.raster--4 { grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 720px) {
+  .raster--2,
+  .raster--3 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 700px) {
+  .raster--4 { grid-template-columns: repeat(4, 1fr); }
+}
+@media (min-width: 1000px) {
+  .raster--3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Paginakop: tekst links, knoppen rechts onderaan uitgelijnd. Flex met
+   wrap (32 bestanden); de grid-vorm (1fr auto vanaf 720 px, 17
+   bestanden) geeft hetzelfde beeld. Op smal scherm vallen de knoppen
+   onder de tekst. */
+.sec-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--pagina-marge);
+}
+.sec-head--boven { align-items: flex-start; }
+
+/* Knoppen rechtsboven (werkbalk). DealDrive: .toolbar-buttons (21),
+   .header-actions (3, naam van de voorganger). Gap 8 px (11 keer; 10 px
+   10 keer). Volgorde op /taken: zoeken (icoon), + Taak, + Afspraak,
+   Weergave, Filters; de vaste volgorde staat in deel B. */
+.toolbar-buttons,
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* ============================================================================
+   13. Statkaarten
+   ----------------------------------------------------------------------------
+   Bron: pages/taken.vue, inzichten.vue, notificaties.vue, pipeline.vue,
+   offertes.vue (.stat-card 70 keer in templates) en de stat-strip op
+   accounts/[id] en contacten/[id] (.stat-item).
+   Een statkaart is een knop die de lijst eronder filtert; de actieve
+   kaart is zwart met gele tekst.
+
+   <section class="section section--stats">
+     <div class="container">
+       <div class="stat-grid">
+         <button class="stat-card stat-card--actief" type="button" aria-pressed="true">
+           <span class="stat-label">Vandaag</span>
+           <span class="stat-num tnum">2</span>
+           <span class="stat-foot">taken</span>
+         </button>
+       </div>
+     </div>
+   </section>
+
+   Gemeten op /taken: kaart 271 bij 111 px, wit, rand --border, padding
+   16 px, tussenruimte 4 px; label 11 px 700 met 0,15em; cijfer 32 px
+   serif; voet 11 px. Raster 2 kolommen, vanaf 700 px 4 (taken, inzichten)
+   of 6 (notificaties, vanaf 720 px). Hover: rand inkt en 1 px omhoog in
+   150 ms. DealDrive wisselt per pagina: cijfer 24 (pipeline, offertes),
+   26 (notificaties), 32 (taken) of 36 px (inzichten), labelafstand 0,08em
+   tot 0,16em. Hier de waarden van taken.
+   Statstrook zonder kaarten (detailpagina): .stat-strip met .stat-item.
+   ========================================================================== */
+.stat-grid,
+.stat-grid--4 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--kaart-gap);
+}
+@media (min-width: 700px) {
+  .stat-grid,
+  .stat-grid--4 { grid-template-columns: repeat(4, 1fr); }
+}
+@media (min-width: 720px) {
+  .stat-grid--6 { grid-template-columns: repeat(6, 1fr); }
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--kaart-padding);
+  background: var(--wit);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font-family: inherit;
+  text-align: left;
+  transition: border-color var(--duur-kort) ease-out, transform var(--duur-kort) ease-out, background var(--duur-kort) ease-out;
+}
+button.stat-card { cursor: pointer; }
+button.stat-card:hover,
+.stat-card.is-hover {
+  border-color: var(--ink);
+  transform: translateY(-1px);
+}
+.stat-card:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.stat-label {
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.stat-num {
+  font-family: var(--font-serif);
+  font-size: var(--fs-cijfer);
+  font-weight: 700;
+  line-height: 1.05;
+  font-feature-settings: "tnum";
+  color: var(--ink);
+}
+.stat-foot { font-size: var(--fs-label); color: var(--muted); }
+.stat-foot--alert { color: var(--red); font-weight: 700; }
+
+/* Actief: de filter staat aan. */
+.stat-card--actief,
+.stat-card--active,
+button.stat-card--actief:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.stat-card--actief .stat-num,
+.stat-card--actief .stat-label,
+.stat-card--actief .stat-foot,
+.stat-card--active .stat-num,
+.stat-card--active .stat-label,
+.stat-card--active .stat-foot { color: var(--yellow); }
+
+/* Alert: het cijfer vraagt aandacht (achterstallig). */
+.stat-card--alert .stat-num { color: var(--red); }
+.stat-card--alert.stat-card--actief .stat-num { color: var(--yellow); }
+
+/* Kleurstreep links per soort (notificaties: 3 px). */
+.stat-card--urgent   { border-left: 3px solid var(--red); }
+.stat-card--let-op   { border-left: 3px solid var(--orange); }
+.stat-card--positief { border-left: 3px solid var(--green); }
+.stat-card--accent   { border-left: 3px solid var(--yellow); }
+.stat-card--info     { border-left: 3px solid var(--blue); }
+.stat-card--hot      { border-left: 3px solid var(--purple); }
+
+/* Laden: het cijfer is een grijs vlak tot de waarde er is (patroon van
+   de skeletten in deel C). */
+.stat-card--laden .stat-num {
+  width: 48px;
+  color: transparent;
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+.stat-card--laden .stat-foot { color: var(--muted-light); }
+
+/* Statstrook op een detailpagina: geen kaarten, alleen label en waarde.
+   2 kolommen, 3 vanaf 700 px, 6 vanaf 1000 px. */
+.stat-strip {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--kaart-gap);
+}
+@media (min-width: 700px) {
+  .stat-strip { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 1000px) {
+  .stat-strip { grid-template-columns: repeat(6, 1fr); }
+}
+.stat-item { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; }
+.stat-value {
+  font-family: var(--font-serif);
+  font-size: var(--fs-venstertitel);
+  font-weight: 700;
+  line-height: 1.1;
+  font-feature-settings: "tnum";
+  color: var(--ink);
+}
+.stat-value-tekst { font-size: var(--fs-body); font-weight: 600; line-height: 1.3; color: var(--ink); }

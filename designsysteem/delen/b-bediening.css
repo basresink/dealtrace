@@ -1,0 +1,1802 @@
+/* ============================================================================
+   Deel B · bediening
+   ----------------------------------------------------------------------------
+   Knoppen, werkbalk, actiebalk, formulieren, inline bewerken, filters,
+   dropdownknoppen, segmentknoppen, tabbalk, paginering, contextmenu,
+   pillen, tags, tellers, avatars, scorecirkel en voortgangsbalk.
+
+   Afgeleid van C:\Projecten\dealdrive (commit 75bee61, 14 oktober 2026):
+   app/assets/css/tokens.css (globale .dd-actie, .dd-acties, .dd-act,
+   .hq-btn), de <style>-blokken van 114 componenten en 116 pagina's, en
+   metingen met getComputedStyle op http://localhost:3088 en :3096.
+
+   Regels:
+   - Alleen tokens uit deel A: de 47 namen uit tokens.css van DealDrive en
+     de aanvulling voor Dealtrace. Waar geen token bestaat staat de
+     letterlijke waarde met de opmerking "geen token".
+   - Kleuren alleen via var() (ook wit: var(--wit)); geen box-shadow; hoeken
+     maximaal 2 px (var(--radius)); geen border-radius 50%.
+   - Klassenamen volgen het vorige stijlbestand
+     (dealdrive-leadgeneratie-stijl.css) waar die bestonden; nieuwe namen
+     volgen DealDrive zelf (.vd-toggle, .vd-menu, .ctx-menu, .ef, .iec).
+   - Toestanden: :hover, :focus-visible, :disabled, actief, laden en fout.
+     De klassen .is-hover, .is-focus en .is-laden geven dezelfde stijl,
+     voor de voorbeeldpagina.
+   - Breekpunten van DealDrive: 767 px (telefoon, max-width) en 600 px
+     (smalle rasters). var() werkt niet in een media query, dus de getallen
+     staan er letterlijk.
+   - Lettertypen: Inter erft van body; koppen in menu's en de scorecirkel
+     staan in var(--font-serif). Lettergroottes via --fs-label (11),
+     --fs-meta (12), --fs-klein (13), --fs-body (14) en hoger uit deel A.
+   ========================================================================== */
+
+
+/* ============================================================================
+   1. Knoppen in een paginakop (.dd-actie)
+   ----------------------------------------------------------------------------
+   Bron: tokens.css (globaal), gebruikt in 23 bestanden, 71 knoppen.
+   Varianten in de code: --taak 21x, --afspraak 18x, --primair 11x,
+   --secundair 9x, --mail 6x, --deal 4x, --download 4x (lokaal gestyled als
+   primair). Gemeten: 44 px hoog, padding 8px 14px, 13 px, gewicht 700,
+   letterafstand 0.01em, icoon 16 px, gap 6 px.
+
+   Opbouw:
+   <button type="button" class="dd-actie dd-actie--primair">
+     <svg class="dd-actie-icoon">...</svg> Klant
+   </button>
+
+   Kleurregel uit tokens.css: geel is wat je zelf doet (+ Taak, + Mail),
+   zwart is wat je met een ander afspreekt (+ Afspraak, + Deal). De
+   hoofdactie van een lijstpagina (+ Klant, + Prospect, + Campagne) is
+   zwart met gele tekst; ernaast staan secundaire knoppen (wit met rand).
+   ========================================================================== */
+.dd-actie {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--touch-target-min);
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--fs-klein);
+  font-weight: 700;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+.dd-actie-icoon { width: 16px; height: 16px; flex-shrink: 0; }
+
+.dd-actie--primair,
+.dd-actie--afspraak,
+.dd-actie--deal,
+.dd-actie--download {
+  background: var(--ink);
+  color: var(--yellow);
+  border-color: var(--ink);
+}
+.dd-actie--primair:hover:not(:disabled),
+.dd-actie--afspraak:hover:not(:disabled),
+.dd-actie--deal:hover:not(:disabled),
+.dd-actie--download:hover:not(:disabled),
+.dd-actie--primair.is-hover,
+.dd-actie--afspraak.is-hover,
+.dd-actie--deal.is-hover {
+  background: var(--ink-soft);
+  border-color: var(--ink-soft);
+}
+
+.dd-actie--taak,
+.dd-actie--mail {
+  background: var(--yellow);
+  color: var(--ink);
+  border-color: var(--yellow);
+}
+.dd-actie--taak:hover:not(:disabled),
+.dd-actie--mail:hover:not(:disabled),
+.dd-actie--taak.is-hover,
+.dd-actie--mail.is-hover {
+  background: var(--yellow-dark);
+  border-color: var(--yellow-dark);
+}
+
+.dd-actie--secundair {
+  background: var(--bg);
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+.dd-actie--secundair:hover:not(:disabled),
+.dd-actie--secundair.is-hover { border-color: var(--ink); }
+
+/* Gevaar: rode rand, vult pas onder de muis (.hq-btn--gevaar in tokens.css). */
+.dd-actie--gevaar {
+  background: transparent;
+  color: var(--red);
+  border-color: var(--red);
+}
+.dd-actie--gevaar:hover:not(:disabled),
+.dd-actie--gevaar.is-hover {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--wit);
+}
+
+/* Klein: in een tabelrij of lijstrij, nooit lager dan 32 px (.hq-btn--klein). */
+.dd-actie--klein {
+  min-height: var(--knop-h-klein);
+  padding: 5px 10px;
+  font-size: var(--fs-label);
+}
+
+/* Alleen een icoon, vierkant 44 x 44 (in DealDrive .btn-zoek, 16x in 12 bestanden). */
+.dd-actie--icoon {
+  width: var(--touch-target-min);
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+.dd-actie--icoon:hover:not(:disabled),
+.dd-actie--icoon.is-hover { border-color: var(--ink); }
+
+.dd-actie:focus-visible,
+.dd-actie.is-focus {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.dd-actie:disabled,
+.dd-actie.is-uit {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.dd-actie.is-laden,
+.dd-actie[aria-busy='true'] {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+
+/* ============================================================================
+   2. Werkbalk in de paginakop (.toolbar-buttons)
+   ----------------------------------------------------------------------------
+   Bron: 21 werkbalken in 15 pagina's (taken, klanten/alle, prospects/alle,
+   pipeline, campagnes, briefings, bezoeken, meetings, ...). Gap 8 px (11x)
+   of 10 px (10x). De werkbalk staat rechts naast titel en subtitel en valt
+   eronder als de ruimte op is (paginakop, deel A). Alleen klanten/alle
+   zet hem op een eigen regel (flex: 1 0 100%).
+
+   Vaste volgorde, links naar rechts:
+   1. Zoeken (icoonknop)
+   2. De primaire + knop van de pagina (+ Klant, + Taak, + Deal)
+   3. Andere + knoppen (+ Taak, + Afspraak, + Mail)
+   4. Weergave (dropdownknop)
+   5. Sortering (dropdownknop)
+   6. Filters (schakelknop met teller)
+   7. Download of Exporteer (achteraan)
+
+   Opbouw:
+   <div class="toolbar-buttons">
+     <button class="dd-actie dd-actie--icoon" aria-label="Zoeken">...</button>
+     <button class="dd-actie dd-actie--primair">+ Klant</button>
+     <div class="vd-wrap"><button class="vd-toggle">...</button></div>
+     <button class="vd-toggle vd-toggle--active">Filters <span class="vd-toggle-count">1</span></button>
+   </div>
+   ========================================================================== */
+/* .toolbar-buttons zelf (flex, wrap, gap 8 px) staat in deel A bij de
+   paginakop; hier alleen de knoppen die erin staan. */
+
+
+/* ============================================================================
+   3. Dropdownknop met menu: Weergave, Sortering, Filters (.vd-toggle)
+   ----------------------------------------------------------------------------
+   Bron: .vd-toggle 30x in 17 bestanden, .vd-toggle-count 21x in 16,
+   .vd-menu en .vd-item in 5 bestanden. Gemeten: 44 px hoog, padding
+   8px 14px, 13 px, gewicht 700, gap 7 px, wit vlak (#fff 10x, var(--bg) 10x).
+   Teller: 18 px hoog, 11 px, gewicht 800, geel vlak.
+   Menu: 180 px breed, padding 4 px, rand --border-strong, items 37 px hoog.
+   Pijltje (ChevronDown 14 px) draait 180 graden als het menu open is.
+
+   Opbouw:
+   <div class="vd-wrap">
+     <button class="vd-toggle" aria-expanded="true">
+       <svg class="vd-icoon"/> <span class="vd-toggle-value">Weergave</span>
+       <svg class="vd-caret rotate"/>
+     </button>
+     <ul class="vd-menu">
+       <li><button class="vd-item vd-item--active"><svg/> Lijst</button></li>
+     </ul>
+   </div>
+   ========================================================================== */
+.vd-wrap { position: relative; display: inline-flex; }
+
+.vd-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: var(--touch-target-min);
+  padding: 8px 14px;
+  background: var(--wit);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--fs-klein);
+  font-weight: 700;
+  line-height: 1.6;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+.vd-toggle:hover,
+.vd-toggle.is-hover { border-color: var(--ink); }
+.vd-toggle--active,
+.vd-toggle--active:hover {
+  background: var(--ink);
+  color: var(--yellow);
+  border-color: var(--ink);
+}
+.vd-toggle:focus-visible,
+.vd-toggle.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+.vd-toggle:disabled { opacity: 0.5; cursor: not-allowed; }
+.vd-icoon { width: 16px; height: 16px; flex-shrink: 0; }
+.vd-toggle-value { font-weight: 700; }
+
+.vd-toggle-count {
+  display: inline-block;
+  height: var(--teller-h);
+  margin-left: -2px;
+  padding: 0 7px;
+  background: var(--yellow);
+  color: var(--ink);
+  border-radius: var(--radius);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  line-height: var(--teller-h);
+  font-feature-settings: "tnum";
+}
+
+.vd-caret {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform var(--duur-kort) ease-out;
+}
+.vd-caret.rotate { transform: rotate(180deg); }
+
+.vd-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: var(--z-fixed);
+  min-width: 180px;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--wit);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+}
+.vd-menu--links { right: auto; left: 0; }
+.vd-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  color: var(--ink);
+  border: 0;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--fs-klein);
+  font-weight: 600;
+  line-height: 1.6;
+  text-align: left;
+  cursor: pointer;
+}
+.vd-item:hover,
+.vd-item.is-hover { background: var(--surface); }
+.vd-item:focus-visible,
+.vd-item.is-focus { outline: 2px solid var(--ink); outline-offset: -2px; }
+.vd-item--active,
+.vd-item--active:hover { background: var(--ink); color: var(--yellow); }
+
+.vd-fade-enter-active,
+.vd-fade-leave-active { transition: opacity var(--transition-fast), transform var(--transition-fast); }
+.vd-fade-enter-from,
+.vd-fade-leave-to { opacity: 0; transform: translateY(-4px); }
+
+
+/* ============================================================================
+   4. Actiebalk onderin een flyout of venster (.dd-acties, .dd-act)
+   ----------------------------------------------------------------------------
+   Bron: tokens.css (globaal). .dd-act 82x in 20 bestanden, --primair 28x,
+   --icoon 25x, --gevaar 7x; .dd-acties in 16 van de 34 voeten in de code
+   (de andere 18 hebben een eigen klasse met dezelfde opbouw).
+   Gemeten: tekstknop 37 px hoog (padding 8px 12px, 12 px, gewicht 700),
+   icoonknop 34 x 34. De voet zelf: padding 16px 28px, vlak --surface,
+   bovenrand --border, plakt onderaan (deel C).
+
+   Drie standen:
+   - Nieuw:    [Annuleren]  ......  [primair]              (17 van 19)
+   - Lezen:    [primair met woord]  ......  [icoon] x n
+               volgorde: helpen, uitstellen, wijzigen, weggooien, weggaan
+               (Vraag AI, Snooze 1 dag, Bewerken, Verwijderen, Open klantkaart)
+   - Bewerken: [nevenactie] ......  [Annuleren] [Opslaan]
+
+   Opbouw:
+   <footer class="dd-acties">
+     <button class="dd-act">Annuleren</button>
+     <span class="dd-acties-vul"></span>
+     <button class="dd-act dd-act--primair" type="submit">Maak taak</button>
+   </footer>
+   ========================================================================== */
+.dd-acties {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 8px;
+  overflow-x: auto;
+  /* Ruimte voor de focusring: overflow-x knipt alles buiten de rij af.
+     Padding en negatieve marge heffen elkaar op, de maten blijven gelijk. */
+  margin: -4px;
+  padding: 4px;
+}
+.dd-acties-vul { flex: 1; }
+
+.dd-act {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--fs-meta);
+  font-weight: 700;
+  line-height: 1.6;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+.dd-act:hover:not(:disabled),
+.dd-act.is-hover { border-color: var(--ink); }
+.dd-act:focus-visible,
+.dd-act.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+.dd-act:disabled,
+.dd-act.is-uit { opacity: 0.5; cursor: not-allowed; }
+.dd-act.is-laden,
+.dd-act[aria-busy='true'] { opacity: 0.5; cursor: wait; }
+
+.dd-act--primair {
+  background: var(--ink);
+  color: var(--yellow);
+  border-color: var(--ink);
+}
+.dd-act--primair:hover:not(:disabled),
+.dd-act--primair.is-hover { background: var(--ink-soft); border-color: var(--ink-soft); }
+
+.dd-act--icoon {
+  width: var(--knop-h-compact);
+  height: var(--knop-h-compact);
+  padding: 0;
+}
+.dd-act-icoon { width: 16px; height: 16px; flex-shrink: 0; }
+
+.dd-act--gevaar { color: var(--red); }
+.dd-act--gevaar:hover:not(:disabled),
+.dd-act--gevaar.is-hover { border-color: var(--red); }
+
+
+/* ============================================================================
+   5. Knoppen in het bevestigingsvenster (.cd-btn)
+   ----------------------------------------------------------------------------
+   Bron: ConfirmDialog.vue, opgeroepen via useConfirm (48x variant danger).
+   Het venster zelf staat in deel C. Gemeten: 44 px hoog, padding 10px 18px,
+   13 px, gewicht 700. Volgorde: Annuleren links, bevestigen rechts, rechts
+   uitgelijnd. Focus start op Annuleren.
+
+   Opbouw:
+   <footer class="cd-foot">
+     <button class="cd-btn cd-btn--ghost">Annuleren</button>
+     <button class="cd-btn cd-btn--danger">Verwijderen</button>
+   </footer>
+   ========================================================================== */
+.cd-btn {
+  min-height: var(--touch-target-min);
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--fs-klein);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.cd-btn--ghost { background: transparent; color: var(--ink); border-color: var(--border-strong); }
+.cd-btn--ghost:hover,
+.cd-btn--ghost.is-hover { border-color: var(--ink); }
+.cd-btn--primary { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+.cd-btn--primary:hover,
+.cd-btn--primary.is-hover { background: var(--yellow-dark); border-color: var(--yellow-dark); }
+.cd-btn--danger { background: var(--red); color: var(--wit); border-color: var(--red); }
+.cd-btn--danger:hover,
+.cd-btn--danger.is-hover { background: var(--red-dark); border-color: var(--red-dark); }
+.cd-btn:focus-visible,
+.cd-btn.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+
+/* ============================================================================
+   6. Tekstknop en sluitknop
+   ----------------------------------------------------------------------------
+   Tekstknop: "Reset filters" (.filter-reset, 14x in 11 bestanden): geen
+   rand, onderstreept, 12 px, gewicht 600, --muted, onder de muis --ink.
+   Sluitknop: het kruis rechtsboven in een flyout (57 knoppen "x" met
+   aria-label "Sluiten"): 44 x 44, teken 28 px, --muted, onder de muis --ink.
+   De plaats in de flyoutkop staat in deel C.
+
+   Opbouw:
+   <button class="dd-tekstknop">Reset filters</button>
+   <button class="dd-sluit" aria-label="Sluiten">×</button>
+   ========================================================================== */
+.dd-tekstknop {
+  padding: 4px 8px;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.dd-tekstknop:hover,
+.dd-tekstknop.is-hover { color: var(--ink); }
+.dd-tekstknop:focus-visible,
+.dd-tekstknop.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.dd-sluit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 28px; /* geen token */
+  line-height: 1;
+  cursor: pointer;
+}
+.dd-sluit:hover,
+.dd-sluit.is-hover { color: var(--ink); }
+.dd-sluit:focus-visible,
+.dd-sluit.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+
+/* ============================================================================
+   7. Formulier: veld, label, invoer, tekstvak, keuzelijst, datum
+   ----------------------------------------------------------------------------
+   Bron: elk formulier in een flyout (NieuweTaakFlyout .nt-*, NieuweDeal
+   .nd-*, NieuwAccount .na-*, TaakFlyout .tk-*, ...). 122 invoerregels in 71
+   bestanden. Meest gebruikt: rand 1px --border-strong (75x), hoek 2 px
+   (78x), tekst --ink (71x), 44 px hoog (33x), wit vlak (#fff 48x tegen
+   var(--bg) 31x), padding 10px 12px (15x). Lettergrootte 14 px in de
+   flyouts (gemeten), 13 px in compacte panelen (36x).
+   Focus: 2 px geel, offset -1 px (31x van 62 focusregels).
+   Label: 11 px, kapitalen, --muted (63x), gewicht 800, letterafstand 0.1em.
+   Veld: label boven invoer, gap 6 px; velden onder elkaar met gap 14 px.
+
+   Opbouw:
+   <label class="veld">
+     <span class="veld-label">Titel <span class="veld-verplicht">*</span></span>
+     <input class="invoer" type="text" required>
+     <span class="veld-uitleg">Wordt de naam van de taak.</span>
+   </label>
+   ========================================================================== */
+.formulier { display: flex; flex-direction: column; gap: 14px; }
+
+.veld {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.veld--rij { flex-direction: row; gap: 12px; }
+.veld--rij > .veld { flex: 1; }
+
+.veld-label {
+  font-size: var(--fs-label);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.veld-verplicht { color: var(--red); font-weight: 800; }
+.veld-uitleg { font-size: var(--fs-label); font-weight: 600; color: var(--muted); }
+
+/* Foutmelding onder het formulier, boven de actiebalk (16x dit patroon). */
+.veld-fout {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--red-zacht);
+  border-left: 3px solid var(--red);
+  color: var(--red);
+  font-size: var(--fs-klein);
+}
+/* Foutregel direct onder een veld (zeldzaam in DealDrive, dex/profiel). */
+.veld-fout--regel { padding: 0; background: transparent; border-left: 0; font-size: var(--fs-meta); font-weight: 600; }
+
+.invoer {
+  width: 100%;
+  min-height: var(--touch-target-min);
+  padding: 10px 12px;
+  background: var(--wit);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--fs-body);
+  line-height: 1.4;
+}
+.invoer::placeholder { color: var(--muted-light); }
+.invoer:focus,
+.invoer.is-focus { outline: 2px solid var(--yellow); outline-offset: -1px; }
+.invoer:disabled,
+.invoer[readonly] { background: var(--surface); color: var(--muted); cursor: not-allowed; }
+.invoer--fout,
+.invoer[aria-invalid='true'] { border-color: var(--red); }
+.invoer--klein { min-height: var(--knop-h-compact); padding: 6px 10px; font-size: var(--fs-klein); }
+
+textarea.invoer { min-height: 84px; resize: vertical; line-height: 1.45; }
+/* Keuzelijst: de native pijl van de browser (3x appearance: none in de hele code). */
+select.invoer { cursor: pointer; }
+
+/* Datum en tijd naast elkaar: .veld--rij met twee .veld. */
+input[type='date'].invoer,
+input[type='time'].invoer { font-feature-settings: "tnum"; }
+
+
+/* ============================================================================
+   8. Vinkje, keuzerondje en schakelaar
+   ----------------------------------------------------------------------------
+   Vinkje en rondje: native, accent --yellow-dark (15x) of --ink (5x).
+   30 checkboxes, 5 radio's. Label naast een vinkje in een flyout staat in
+   kapitalen 11 px (.vink--kapitaal, TaakFlyout "Taak herhalen").
+   Schakelaar: Toggle.vue (8x in 4 bestanden): knop 48 x 44, spoor 44 x 22,
+   duim 16 x 16 met rand --ink; uit = spoor --border-strong en witte duim,
+   aan = spoor --ink en gele duim. role="switch", aria-checked.
+
+   Opbouw:
+   <label class="vink"><input type="checkbox"> Herinnering instellen</label>
+   <button class="schakelaar schakelaar--aan" role="switch" aria-checked="true">
+     <span class="schakelaar-spoor"></span><span class="schakelaar-duim"></span>
+   </button>
+   ========================================================================== */
+.vink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--touch-target-min);
+  font-size: var(--fs-klein);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+.vink--kapitaal {
+  min-height: 0;
+  gap: 6px;
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.vink input[type='checkbox'],
+.vink input[type='radio'] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--yellow-dark);
+}
+.vink input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.vink--uit { opacity: 0.5; cursor: not-allowed; }
+
+.schakelaar {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 28px;
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.schakelaar-spoor {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 22px;
+  background: var(--border-strong);
+  transform: translate(-50%, -50%);
+  transition: background var(--transition-fast);
+}
+.schakelaar-duim {
+  position: absolute;
+  top: 50%;
+  left: calc(50% - 19px);
+  width: 16px;
+  height: 16px;
+  background: var(--wit);
+  border: 1px solid var(--ink);
+  transform: translateY(-50%);
+  transition: left var(--transition-fast), background var(--transition-fast);
+}
+.schakelaar--aan .schakelaar-spoor { background: var(--ink); }
+.schakelaar--aan .schakelaar-duim { left: calc(50% + 3px); background: var(--yellow); }
+.schakelaar:focus-visible,
+.schakelaar.is-focus { outline: 2px solid var(--ink); outline-offset: 4px; }
+.schakelaar:disabled,
+.schakelaar--uit { opacity: 0.5; cursor: not-allowed; }
+
+
+/* ============================================================================
+   9. Keuzeknoppen in een formulier: keuzeraster en prioriteit
+   ----------------------------------------------------------------------------
+   Keuzeraster (type taak: Te doen, Bellen, Mailen, Bericht): NieuweTaak,
+   TaakFlyout, NieuweActiviteit. Vier kolommen, drie onder 600 px. Knop 60
+   px hoog (min 56), icoon boven label 11 px.
+   Prioriteit (Laag, Middel, Hoog, Urgent): vier kolommen, 44 px, 12 px,
+   gekleurde stip 8 x 8.
+   Actief: zwart vlak, gele tekst. Onder de muis alleen als hij niet actief
+   is, anders verdwijnt het label (commentaar in de code).
+
+   Opbouw:
+   <div class="keuzeraster" role="group">
+     <button class="keuzeraster-knop keuzeraster-knop--aan" aria-pressed="true">
+       <svg/> Te doen
+     </button>
+   </div>
+   <div class="keuzeraster keuzeraster--prio">
+     <button class="prio-knop"><span class="prio-stip prio-stip--low"></span> Laag</button>
+   </div>
+   ========================================================================== */
+.keuzeraster { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+
+.keuzeraster-knop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: var(--keuzeknop-h);
+  padding: 10px 8px;
+  background: var(--wit);
+  color: var(--muted);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--fs-label);
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+}
+.keuzeraster-knop:not(.keuzeraster-knop--aan):hover,
+.keuzeraster-knop.is-hover { border-color: var(--ink); color: var(--ink); }
+.keuzeraster-knop--aan { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.keuzeraster-knop:focus-visible,
+.keuzeraster-knop.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+.keuzeraster-icoon { width: 16px; height: 16px; }
+
+.prio-knop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--touch-target-min);
+  padding: 8px 10px;
+  background: var(--wit);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--fs-meta);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+.prio-knop:hover,
+.prio-knop.is-hover { border-color: var(--ink); }
+.prio-knop--aan,
+.prio-knop--aan:hover { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.prio-knop:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.prio-stip { display: inline-block; width: 8px; height: 8px; flex-shrink: 0; border-radius: var(--radius); background: var(--muted); }
+.prio-stip--urgent { background: var(--red); }
+.prio-stip--high   { background: var(--orange); }
+.prio-stip--medium { background: var(--yellow); }
+.prio-stip--low    { background: var(--border-strong); }
+
+/* Uitklapblok (herhaling, herinnering): kader alleen als het open staat. */
+.veld-klap { border-radius: var(--radius); }
+.veld-klap--open { padding: 12px; background: var(--surface); border: 1px solid var(--border); }
+
+
+/* ============================================================================
+   10. Zoekvelden: filterzoekveld en type-ahead met gekozen waarde
+   ----------------------------------------------------------------------------
+   Filterzoekveld (.search-input, type="search", 20x): 48 px hoog
+   (--touch-target-comfortable), minimaal 280 px breed, padding 8px 14px,
+   14 px. Placeholder "Zoek naam, plaats of branche…" (begint met "Zoek", 24x).
+   Type-ahead in een flyout (klant, contactpersoon; 6 flyouts): lijst direct
+   onder de invoer, rand --border-strong zonder bovenrand, maximaal 240 px
+   hoog. Na een keuze wordt de invoer een grijze keuzechip met een kruisje
+   (.zoek-keuze, "Wis gekozen klant").
+
+   Opbouw:
+   <input class="zoekinvoer" type="search" placeholder="Zoek naam…">
+   <div class="zoekveld">
+     <input class="invoer" placeholder="Zoek op klantnaam…">
+     <ul class="zoeklijst"><li><button class="zoeklijst-item">Bakker Bouw <span class="zoeklijst-sub">· Bouw</span></button></li></ul>
+   </div>
+   <div class="zoek-keuze"><span class="zoek-keuze-tekst">Bakker Bouw <span class="zoek-keuze-sub">· Bouw</span></span>
+     <button class="zoek-keuze-wis" aria-label="Wis gekozen klant">×</button></div>
+   ========================================================================== */
+.zoekinvoer {
+  min-width: var(--zoekveld-min-w);
+  max-width: 100%;
+  min-height: var(--touch-target-comfortable);
+  padding: 8px 14px;
+  background: var(--wit);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--fs-body);
+}
+.zoekinvoer::placeholder { color: var(--muted-light); }
+.zoekinvoer:focus,
+.zoekinvoer.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.zoekveld { position: relative; }
+.zoeklijst {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  max-height: 240px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-top: 0;
+}
+.zoeklijst-item {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  color: var(--ink);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  font-family: inherit;
+  font-size: var(--fs-klein);
+  text-align: left;
+  cursor: pointer;
+}
+.zoeklijst-item:hover,
+.zoeklijst-item--actief { background: var(--surface); }
+.zoeklijst-sub { color: var(--muted); font-size: var(--fs-meta); }
+.zoeklijst-leeg {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-top: 0;
+  color: var(--muted);
+  font-size: var(--fs-meta);
+}
+
+.zoek-keuze {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: var(--touch-target-min);
+  padding: 6px 6px 6px 12px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-size: var(--fs-body);
+}
+.zoek-keuze-tekst { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.zoek-keuze-sub { color: var(--muted); font-weight: 400; }
+.zoek-keuze-wis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--knop-h-klein);
+  height: var(--knop-h-klein);
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  font-size: var(--fs-kaarttitel);
+  line-height: 1;
+  cursor: pointer;
+}
+.zoek-keuze-wis:hover,
+.zoek-keuze-wis.is-hover { color: var(--red); }
+
+/* Keuzechip in een lijst gekozen waarden (contactpersonen in een
+   accountplan): grijs vlak, 12 px, kruisje om te verwijderen. */
+.keuzechips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.keuzechip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+}
+.keuzechip-weg {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font-size: var(--fs-body);
+  line-height: 1;
+  cursor: pointer;
+}
+.keuzechip-weg:hover { color: var(--ink); }
+
+
+/* ============================================================================
+   11. Inline bewerken: EditableField (.ef) en InlineEditChip (.iec)
+   ----------------------------------------------------------------------------
+   EditableField: 43x, in InfoFlyout, ContactInfoFlyout. Raster 110 px label
+   en waarde, rij 49 px, stippellijn onderaan zodra je eroverheen gaat.
+   Potlood 28 x 28 verschijnt onder de muis (bij een leeg veld al half
+   zichtbaar, opacity 0.6). Bewerken: invoer met zwarte rand en gele focus,
+   daarnaast Annuleren (kruis) en Opslaan (vinkje) als knoppen van 32 x 32.
+   Enter slaat op, Escape annuleert, ongewijzigd opslaan doet niets.
+   Leeg: "+ Voeg <label> toe" cursief in --muted-light.
+
+   InlineEditChip: 4x, in de kicker van de klantkaart (branche, plaats,
+   land, functie). Neemt de letter van de omgeving over; potlood 11 px geel
+   onder de muis. Bewerken: kleine invoer met zwarte rand; opslaan bij
+   verlaten van het veld, Escape annuleert.
+
+   Opbouw:
+   <div class="ef">
+     <span class="ef-label">Telefoon</span>
+     <div class="ef-display"><span class="ef-value">020 123 45 67</span>
+       <button class="ef-pencil" aria-label="Bewerk Telefoon">...</button></div>
+   </div>
+   <span class="iec"><button class="iec-trigger"><span class="iec-value">Bouw</span><svg class="iec-pencil"/></button></span>
+   ========================================================================== */
+.ef {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px dashed transparent;
+}
+.ef:hover,
+.ef.is-hover { border-bottom-color: var(--border); }
+.ef-label {
+  align-self: center;
+  font-size: var(--fs-label);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ef-display {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--knop-h-klein);
+  cursor: pointer;
+}
+.ef-value { font-size: var(--fs-body); color: var(--ink); overflow-wrap: anywhere; }
+.ef-value--link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-strong);
+}
+.ef-value--link:hover { color: var(--ink-soft); border-bottom-color: var(--ink); }
+.ef-link-icoon { font-size: var(--fs-label); font-weight: 700; color: var(--muted); }
+.ef-empty-text { font-size: var(--fs-klein); font-style: italic; color: var(--muted-light); }
+
+.ef-pencil {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--knop-h-mini);
+  height: var(--knop-h-mini);
+  margin-left: auto;
+  padding: 0;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+.ef-pencil svg { width: 14px; height: 14px; }
+.ef-display:hover .ef-pencil,
+.ef-display:focus-within .ef-pencil,
+.ef.is-hover .ef-pencil { opacity: 1; }
+.ef-pencil:hover { background: var(--surface); color: var(--ink); border-color: var(--border-strong); }
+.ef--empty .ef-pencil { opacity: 0.6; }
+.ef--empty:hover .ef-pencil { opacity: 1; }
+
+.ef-edit { display: flex; align-items: stretch; gap: 6px; }
+.ef-input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--knop-h-klein);
+  padding: 6px 10px;
+  background: var(--wit);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--fs-body);
+}
+.ef-input:focus,
+.ef-input.is-focus { outline: 2px solid var(--yellow); outline-offset: -1px; }
+.ef-edit-actions { display: inline-flex; gap: 4px; }
+.ef-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--knop-h-klein);
+  height: var(--knop-h-klein);
+  padding: 0;
+  background: var(--wit);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.ef-btn svg { width: 14px; height: 14px; }
+.ef-btn:hover { border-color: var(--ink); }
+.ef-btn--save { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.ef-btn--save:hover { background: var(--ink-soft); }
+.ef-btn--cancel { color: var(--muted); }
+.ef-btn--cancel:hover { color: var(--red); border-color: var(--red); }
+
+.iec { display: inline-flex; align-items: center; }
+.iec-value { color: inherit; }
+.iec-edit { display: inline-flex; }
+.iec-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+.iec-trigger:hover,
+.iec-trigger.is-hover { color: var(--ink); }
+.iec-pencil { width: 11px; height: 11px; color: var(--yellow); opacity: 0; transition: opacity var(--transition-fast); }
+.iec-trigger:hover .iec-pencil,
+.iec-trigger.is-hover .iec-pencil { opacity: 0.7; }
+.iec-empty-text { color: var(--muted); font-style: italic; letter-spacing: 0; text-transform: none; }
+.iec-input {
+  min-width: 80px;
+  max-width: 240px;
+  padding: 2px 6px;
+  background: var(--wit);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+.iec-input:focus,
+.iec-input.is-focus { outline: none; border-color: var(--ink); }
+
+/* Op een aanraakscherm is er geen hover: potlood altijd tonen (4x in de code). */
+@media (hover: none) {
+  .ef-pencil { opacity: 1; }
+  .iec-pencil { opacity: 0.7; }
+}
+
+
+/* ============================================================================
+   12. Filters: filterstrook, groepen, filterpillen, tellers, reset
+   ----------------------------------------------------------------------------
+   Bron: .filter-pill 68x in 18 bestanden, .filter-group 78x in 17,
+   .filter-label 71x in 18, .section--filter 22x in 19, .filter-reset 14x
+   in 11, .pill-count 36x in 11. De strook klapt open onder de paginakop
+   via de knop Filters (.vd-toggle) en klapt dicht met max-height 220 ms.
+   Gemeten filterpil: 44 px hoog, padding 6px 12px, 12 px, gewicht 600,
+   tekst --muted op transparant; actief zwart vlak met gele tekst.
+   Teller in de pil: 11 px, gewicht 800, --surface; in een actieve pil geel
+   op 20 procent geel.
+   In DealDrive heten ze .filter-bar, .filter-group, .filter-pill en
+   .pill-count; hier de namen uit het vorige stijlbestand.
+
+   Opbouw:
+   <section class="section section--filter">
+     <div class="filters">
+       <div class="filter-groep"><input class="zoekinvoer" type="search"></div>
+       <div class="filter-groep">
+         <span class="filter-label">Accountklasse</span>
+         <button class="filter-pil filter-pil--aan">Alle klanten <span class="pil-teller">96</span></button>
+       </div>
+       <div class="filter-groep filter-groep--eind"><button class="dd-tekstknop">Reset filters</button></div>
+     </div>
+   </section>
+   ========================================================================== */
+/* .section--filter (plakkende strook, rand onder) staat in deel A. */
+.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; }
+.filter-groep { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.filter-groep--eind { margin-left: auto; }
+.filter-label {
+  margin-right: 4px;
+  font-size: var(--fs-label);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.filter-pil {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--touch-target-min);
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--duur-kort) ease-out, border-color var(--duur-kort) ease-out, background var(--duur-kort) ease-out;
+}
+.filter-pil:not(.filter-pil--aan):hover,
+.filter-pil.is-hover { color: var(--ink); border-color: var(--ink); }
+.filter-pil--aan { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.filter-pil:focus-visible,
+.filter-pil.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+.filter-pil:disabled,
+.filter-pil.is-uit { opacity: 0.45; cursor: not-allowed; }
+.filter-pil:disabled:hover { color: var(--muted); border-color: var(--border-strong); }
+
+/* Teller: in een filterpil, achter een tab, naast een groepskop. */
+.pil-teller {
+  display: inline-block;
+  padding: 1px 6px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  border-radius: var(--radius);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  line-height: 1.6;
+  font-feature-settings: "tnum";
+}
+.filter-pil--aan .pil-teller { background: var(--yellow-teller); color: var(--yellow); }
+.pil-teller--zwart { background: var(--ink); color: var(--wit); }
+.pil-teller--geel  { background: var(--yellow); color: var(--ink); }
+
+/* Link naar een verwante pagina binnen de strook ("Naast elkaar →"). */
+.filter-link {
+  margin-left: 4px;
+  padding-bottom: 1px;
+  color: var(--muted);
+  border-bottom: 1px dashed var(--border-strong);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  text-decoration: none;
+}
+.filter-link:hover { color: var(--ink); border-bottom-color: var(--ink); }
+.filter-meta { font-size: var(--fs-label); font-style: italic; color: var(--muted); }
+
+/* Eigen periode: twee datumvelden met het filterlabel ervoor. */
+.datum-veld { display: inline-flex; align-items: center; gap: 8px; }
+.datum-invoer {
+  min-height: var(--touch-target-min);
+  padding: 6px 10px;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--fs-klein);
+  font-feature-settings: "tnum";
+}
+.datum-invoer:focus { outline: 2px solid var(--yellow); outline-offset: -1px; }
+
+.filter-slide-enter-active,
+.filter-slide-leave-active {
+  max-height: 600px;
+  overflow: hidden;
+  transition: max-height var(--duur-in) ease-out, opacity var(--duur-vervaag) ease-out;
+}
+.filter-slide-enter-from,
+.filter-slide-leave-to { max-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; }
+
+
+/* ============================================================================
+   13. Segmentknoppen (.keuzegroep)
+   ----------------------------------------------------------------------------
+   Zeldzaam in DealDrive: verdieping.vue (.vd-seg, venster), OrganisatieFlyout
+   (.ak-per, periode in een kaartkop). Een periode of weergave kies je
+   meestal met filterpillen of het Weergave-menu. Gebruik de segmentknop
+   alleen voor twee tot vier standen die altijd zichtbaar moeten zijn.
+   Knop 44 px, 13 px, gewicht 700; actief zwart met gele tekst; aria-pressed.
+
+   Opbouw:
+   <div class="keuzegroep" role="group" aria-label="Venster">
+     <button class="keuzegroep-knop keuzegroep-knop--aan" aria-pressed="true">Maand</button>
+     <button class="keuzegroep-knop" aria-pressed="false">Kwartaal</button>
+   </div>
+   ========================================================================== */
+.keuzegroep {
+  display: inline-flex;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+}
+.keuzegroep-knop {
+  min-height: var(--touch-target-min);
+  padding: 8px 16px;
+  background: var(--bg);
+  color: var(--muted);
+  border: 0;
+  border-right: 1px solid var(--border-strong);
+  font-family: inherit;
+  font-size: var(--fs-klein);
+  font-weight: 700;
+  cursor: pointer;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+.keuzegroep-knop:last-child { border-right: 0; }
+.keuzegroep-knop:hover,
+.keuzegroep-knop.is-hover { color: var(--ink); }
+.keuzegroep-knop--aan,
+.keuzegroep-knop--aan:hover { background: var(--ink); color: var(--yellow); }
+.keuzegroep-knop:focus-visible,
+.keuzegroep-knop.is-focus { outline: 2px solid var(--ink); outline-offset: -2px; }
+/* Klein, in een kaartkop (.ak-per-knop): 11 px, padding 4px 11px. */
+.keuzegroep--klein .keuzegroep-knop { min-height: 0; padding: 4px 11px; font-size: var(--fs-label); }
+
+
+/* ============================================================================
+   14. Tabbalk (.tabbalk, .tab)
+   ----------------------------------------------------------------------------
+   Bron: klantkaart en contactkaart (.klant-tab, tien tabs), instellingen
+   (.tab), accountplan (.plan-tab). Onderstreepte tabs: 13 px, gewicht 600,
+   --muted; actief --ink met 2 px gele onderstreep. 47 px hoog gemeten.
+   De balk plakt bovenaan (position sticky, z-index --z-sticky), wit vlak,
+   onderrand --border. Bij te veel tabs: doorlopen naar een tweede regel
+   (klantkaart), niet horizontaal scrollen.
+   Uitzondering: tabs als blokknoppen (.callsheet-tab, playbooks, rechten)
+   in 3 bestanden; die volgen de filterpil.
+
+   Opbouw:
+   <nav class="tabbalk" aria-label="Klantkaart-tabs">
+     <button class="tab tab--actief" aria-current="page">Tijdslijn <span class="tab-teller">5</span></button>
+   </nav>
+   ========================================================================== */
+.tabbalk {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 14px;
+  background: var(--wit);
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--touch-target-min);
+  margin-bottom: -1px;
+  padding: 12px 2px;
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  font-family: inherit;
+  font-size: var(--fs-klein);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--duur-kort) ease-out, border-color var(--duur-kort) ease-out;
+}
+.tab:hover,
+.tab.is-hover { color: var(--ink); }
+.tab--actief { color: var(--ink); border-bottom-color: var(--yellow); }
+.tab:focus-visible,
+.tab.is-focus { outline: 2px solid var(--ink); outline-offset: -2px; }
+.tab-teller {
+  padding: 1px 6px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  line-height: 1.6;
+  font-feature-settings: "tnum";
+}
+
+
+/* ============================================================================
+   15. Paginering: Toon meer (.meer-rij)
+   ----------------------------------------------------------------------------
+   DealDrive bladert niet met paginanummers: lijsten tonen 25 rijen en
+   daaronder "x van y getoond" met de knop "Toon meer" (klanten/alle,
+   prospects/alle) of "Meer laden" (audit, porties van 50). Een nieuwe
+   filter of sortering zet de teller terug op 25. Pagina 1 / 3 met
+   "← Vorige" en "Volgende →" komt alleen voor in de klantomgeving
+   Eyecatcher, met een eigen huisstijl.
+
+   Opbouw:
+   <div class="meer-rij">
+     <span class="meer-tekst">25 van 96 getoond</span>
+     <button class="meer-knop">Toon meer</button>
+   </div>
+   ========================================================================== */
+.meer-rij { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 16px; }
+.meer-tekst { font-size: var(--fs-meta); color: var(--muted); font-feature-settings: "tnum"; }
+.meer-knop {
+  min-height: var(--touch-target-min);
+  padding: 8px 20px;
+  background: var(--wit);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--fs-klein);
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+.meer-knop:hover,
+.meer-knop.is-hover { border-color: var(--ink); }
+.meer-knop:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+
+/* ============================================================================
+   16. Contextmenu (.ctx-menu)
+   ----------------------------------------------------------------------------
+   Bron: ContextMenu.vue, 7x (taken, klanten/alle, prospects/alle, ...).
+   Opent met rechtsklik op een rij (6x @contextmenu) of lang drukken.
+   Desktop: zwevend bij de muis, 240 tot 360 px breed, zwarte rand, binnen
+   het scherm geklemd (12 px marge). Telefoon (onder 768 px): onderblad over
+   de volle breedte, schuift van onder in. Escape en klik naast het menu
+   sluiten het; elke keuze sluit het ook.
+   Kop: zwart vlak, kicker geel 11 px kapitalen, titel Source Serif 16 px.
+   Item: 48 px hoog (--touch-target-comfortable), icoon 16 px in een kolom
+   van 24 px, label 14 px gewicht 600, rechts optioneel meta 11 px.
+   Gevaar: label en icoon rood.
+
+   Opbouw:
+   <div class="ctx-overlay"></div>
+   <div class="ctx-menu" role="menu">
+     <header class="ctx-head"><span class="ctx-head-kicker">Klant</span><span class="ctx-head-title">Bakker Bouw</span></header>
+     <ul class="ctx-list"><li><button class="ctx-item" role="menuitem">
+       <span class="ctx-item-icon"><svg class="ctx-item-svg"/></span><span class="ctx-item-label">Open kaart</span></button></li></ul>
+   </div>
+   ========================================================================== */
+.ctx-overlay { position: fixed; inset: 0; z-index: var(--z-modal); background: var(--overlay-zacht); }
+.ctx-menu {
+  position: fixed;
+  z-index: var(--z-modal);
+  min-width: 240px;
+  max-width: 360px;
+  background: var(--wit);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+}
+/* Verankerd binnen een container met position relative (onder een knop). */
+.ctx-menu--in-blok { position: absolute; }
+.ctx-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 18px 12px;
+  background: var(--ink);
+  color: var(--wit);
+}
+.ctx-head-kicker {
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--yellow);
+}
+.ctx-head-title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-lees);
+  font-weight: 700;
+  line-height: 1.25;
+}
+.ctx-list { margin: 0; padding: 4px 0; list-style: none; }
+.ctx-item {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: var(--touch-target-comfortable);
+  padding: 0 18px;
+  background: transparent;
+  color: var(--ink);
+  border: 0;
+  font-family: inherit;
+  font-size: var(--fs-body);
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.ctx-item:hover,
+.ctx-item:active,
+.ctx-item.is-hover { background: var(--surface); }
+.ctx-item:focus-visible,
+.ctx-item.is-focus { outline: 2px solid var(--ink); outline-offset: -2px; }
+.ctx-item-icon { display: inline-flex; align-items: center; justify-content: center; color: var(--ink-soft); }
+.ctx-item-svg { width: 16px; height: 16px; }
+.ctx-item-label { font-weight: 600; color: var(--ink); }
+.ctx-item-meta {
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ctx-item--danger,
+.ctx-item--danger .ctx-item-label,
+.ctx-item--danger .ctx-item-icon { color: var(--red); }
+.ctx-foot { padding: 10px 18px; border-top: 1px solid var(--border); font-size: var(--fs-meta); color: var(--muted); }
+
+@media (max-width: 767px) {
+  .ctx-menu {
+    inset: auto 0 0;
+    max-width: none;
+    padding-bottom: var(--safe-area-bottom);
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+  }
+}
+.ctx-fade-enter-active,
+.ctx-fade-leave-active { transition: opacity var(--transition-fast); }
+.ctx-fade-enter-active .ctx-menu,
+.ctx-fade-leave-active .ctx-menu { transition: transform var(--transition-fast), opacity var(--transition-fast); }
+.ctx-fade-enter-from,
+.ctx-fade-leave-to { opacity: 0; }
+@media (min-width: 768px) {
+  .ctx-fade-enter-from .ctx-menu,
+  .ctx-fade-leave-to .ctx-menu { opacity: 0; transform: scale(0.96); }
+}
+@media (max-width: 767px) {
+  .ctx-fade-enter-from .ctx-menu,
+  .ctx-fade-leave-to .ctx-menu { transform: translateY(120%); }
+}
+
+
+/* ============================================================================
+   17. Pillen, klasse, signaaltags en statuslabels
+   ----------------------------------------------------------------------------
+   Een pil is een klein label in kapitalen: 11 px (--fs-label, nooit
+   kleiner), gewicht 800, letterafstand 0.04 tot 0.08em, padding 2px 8px,
+   gemeten 22 px hoog. Gevuld (wit op kleur) voor status en klasse; zacht
+   (kleur op 12 procent) voor een stand in een lijst; gestippeld voor "nog
+   niet gezet".
+   Accountklasse (AccountRow .acct-fase, kaarten .kaart-fase, top-lijsten
+   .top-fase, 6 plekken): A zwart met gele tekst (5x), B blauw, C oranje,
+   D grijs, overig paars, geen klasse gestippeld met de tekst "Geen klasse".
+   Signaaltag (SignalTag.vue, 15x): Intern zwart met geel, Extern geel met
+   zwart, Overig grijs; soorten gevuld (vacature paars, nieuws zwart,
+   concurrent rood, kvk oranje, kans groen). Geen hoek.
+   Statuslabel (StatusTag.vue): klant blauw, hot prospect paars, at-risk
+   oranje, strategisch rood, warm prospect groen, prospect grijs met rand,
+   watchlist grijs gestippeld.
+
+   Opbouw:
+   <span class="pil pil--blauw-vol">Klant</span>
+   <span class="klasse klasse--a">A · Corporate</span>
+   <span class="tag tag--extern">Extern</span>
+   ========================================================================== */
+.pil {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.pil--grijs   { background: var(--surface); color: var(--muted); border-color: var(--border-strong); }
+.pil--geel    { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+.pil--zwart   { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+/* Zacht: de kleur op 12 procent (oranje 10), via de zachte tokens uit deel A. */
+.pil--rood    { background: var(--red-pil); color: var(--red); }
+.pil--oranje  { background: var(--orange-zacht); color: var(--orange-dark); }
+.pil--groen   { background: var(--green-zacht); color: var(--green); }
+.pil--blauw   { background: var(--blue-zacht); color: var(--blue); }
+.pil--paars   { background: var(--purple-zacht); color: var(--purple); }
+.pil--rood-vol   { background: var(--red); color: var(--wit); border-color: var(--red); }
+.pil--oranje-vol { background: var(--orange); color: var(--wit); border-color: var(--orange); }
+.pil--groen-vol  { background: var(--green); color: var(--wit); border-color: var(--green); }
+.pil--blauw-vol  { background: var(--blue); color: var(--wit); border-color: var(--blue); }
+.pil--paars-vol  { background: var(--purple); color: var(--wit); border-color: var(--purple); }
+.pil--leeg    { background: transparent; color: var(--muted); border: 1px dashed var(--border-strong); }
+/* Klikbare pil (AccountfasePicker): helderder onder de muis, potlood verschijnt. */
+.pil--knop { cursor: pointer; font-family: inherit; transition: filter var(--transition-fast); }
+.pil--knop:hover { filter: brightness(1.08); }
+.pil--knop:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.klasse {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: var(--ink);
+  color: var(--wit);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.klasse--a { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.klasse--b { background: var(--blue); border-color: var(--blue); }
+.klasse--c { background: var(--orange); border-color: var(--orange); }
+.klasse--d { background: var(--muted); border-color: var(--muted); }
+.klasse--overig { background: var(--purple); border-color: var(--purple); }
+.klasse--geen { background: transparent; color: var(--muted); border: 1px dashed var(--border-strong); }
+
+.tag {
+  display: inline-block;
+  padding: 2px 7px;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--border-strong);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tag--intern { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.tag--extern { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+.tag--overig { background: var(--surface); color: var(--muted); border-color: var(--border-strong); }
+.tag--vacature { background: var(--purple); color: var(--wit); border-color: var(--purple); }
+.tag--nieuws { background: var(--ink); color: var(--wit); border-color: var(--ink); }
+.tag--social { background: var(--blue); color: var(--wit); border-color: var(--blue); }
+.tag--website { background: var(--green); color: var(--wit); border-color: var(--green); }
+.tag--branche { background: var(--muted); color: var(--wit); border-color: var(--muted); }
+.tag--concurrent,
+.tag--directiewissel,
+.tag--aflopend-contract { background: var(--red); color: var(--wit); border-color: var(--red); }
+.tag--kvk,
+.tag--omzetdaling { background: var(--orange); color: var(--wit); border-color: var(--orange); }
+.tag--kans { background: var(--green); color: var(--wit); border-color: var(--green); }
+
+.status {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: var(--fs-label);
+  font-weight: 800;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.status--strategisch { background: var(--red); color: var(--wit); }
+.status--klant { background: var(--blue); color: var(--wit); }
+.status--at-risk { background: var(--orange); color: var(--wit); }
+.status--hot-prospect { background: var(--purple); color: var(--wit); }
+.status--warm-prospect { background: var(--green); color: var(--wit); }
+.status--prospect { background: var(--surface); color: var(--muted); border: 1px solid var(--border-strong); }
+.status--watchlist { background: var(--surface); color: var(--muted); border: 1px dashed var(--border-strong); }
+
+/* Bandbadge (BandBadge.vue): drie standen van een dealband, zacht vlak,
+   geen kapitalen. */
+.band {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: var(--radius);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.band--compact { padding: 1px 5px; letter-spacing: 0.04em; }
+.band--rood  { background: var(--red-pil); color: var(--red); }
+.band--geel  { background: var(--yellow-dark-zacht); color: var(--ink); }
+.band--groen { background: var(--green-zacht); color: var(--green); }
+
+
+/* ============================================================================
+   18. Avatar en portret
+   ----------------------------------------------------------------------------
+   Avatar (AccountRow .acct-contact): vierkant 32 x 32 met hoek 2 px (nooit
+   rond: stylelint verbiedt 50 procent), initialen 11 px gewicht 800 wit op
+   een vaste kleur per persoon (blauw, groen, paars, oranje, rood, gekozen
+   uit de som van de tekencodes van het id). Maximaal drie naast elkaar,
+   8 px overlap, witte rand 2 px; de rest als "+2" in grijs. Klik opent de
+   contactkaart; onder de muis 2 px omhoog.
+   Portret (Portrait.vue): kaart met foto 4:3, rollabel linksboven,
+   zonder foto een donker verloop (.portret-foto--zonder) met initialen
+   56 px in var(--font-serif) en var(--yellow-op-donker).
+
+   Opbouw:
+   <div class="initialen-stapel">
+     <a class="initialen initialen--blauw" title="Henk de Vries · Inkoper">HV</a>
+     <span class="initialen initialen--rest">+2</span>
+   </div>
+   ========================================================================== */
+.initialen {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: var(--muted);
+  color: var(--wit);
+  border-radius: var(--radius);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform var(--transition-fast);
+}
+.initialen--blauw  { background: var(--blue); }
+.initialen--groen  { background: var(--green); }
+.initialen--paars  { background: var(--purple); }
+.initialen--oranje { background: var(--orange); }
+.initialen--rood   { background: var(--red); }
+.initialen--rest   { background: var(--surface); color: var(--muted); cursor: default; }
+.initialen--groot  { width: 44px; height: 44px; font-size: var(--fs-body); }
+.initialen-stapel { display: flex; align-items: center; }
+.initialen-stapel .initialen { margin-left: -8px; border: 2px solid var(--wit); }
+.initialen-stapel .initialen:first-child { margin-left: 0; }
+a.initialen:hover { position: relative; z-index: var(--z-base); transform: translateY(-2px); }
+a.initialen:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+
+.portret {
+  display: flex;
+  flex-direction: column;
+  background: var(--wit);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color var(--transition-base), transform var(--transition-base);
+}
+.portret:hover { border-color: var(--yellow); transform: translateY(-2px); }
+.portret-foto {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  background-color: var(--surface);
+  background-position: center;
+  background-size: cover;
+}
+/* Zonder foto: donker verloop met gele initialen. DealDrive kiest per naam
+   een tint (hsl met 22 en 16 procent licht); Dealtrace houdt het bij inkt. */
+.portret-foto--zonder { background-image: linear-gradient(135deg, var(--ink-soft) 0%, var(--ink) 100%); }
+.portret-initialen {
+  font-family: var(--font-serif);
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--yellow-op-donker);
+}
+.portret-rol {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  padding: 4px 10px;
+  font-size: var(--fs-label);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.portret-rol--beslisser { background: var(--ink); color: var(--yellow); }
+.portret-rol--beinvloeder { background: var(--yellow); color: var(--ink); }
+.portret-rol--champion { background: var(--green); color: var(--wit); }
+.portret-rol--gebruiker { background: var(--surface); color: var(--ink-soft); }
+.portret-body { display: flex; flex: 1; flex-direction: column; padding: 20px 22px; }
+.portret-naam {
+  margin: 0 0 4px;
+  font-family: var(--font-serif);
+  font-size: var(--fs-venstertitel);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.portret-functie { margin: 0; font-size: var(--fs-klein); color: var(--muted); }
+
+
+/* ============================================================================
+   19. Scorecirkel (AccountScoreCircle.vue)
+   ----------------------------------------------------------------------------
+   10x gebruikt, meestal maat lg (7x). Ring in SVG, viewBox 100: achterring
+   --border, voortgangsring rood onder 40, oranje 40 tot 69, groen vanaf 70.
+   Ring begint bovenaan, recht afgesneden (stroke-linecap butt), groeit in
+   600 ms. Getal in Source Serif, tabulair. Titel bij hover:
+   "Score 82 / 100 · Hoge prioriteit".
+   Maten: sm 40 px (lijn 12), md 64 (9), lg 96 (7), xl 128 (6);
+   getal 14, 20, 28, 38 px.
+
+   Opbouw:
+   <div class="scorecirkel scorecirkel--lg" title="Score 82 / 100 · Hoge prioriteit">
+     <svg class="scorecirkel-svg" viewBox="0 0 100 100">
+       <circle class="scorecirkel-baan" cx="50" cy="50" r="46.5" stroke-width="7"/>
+       <circle class="scorecirkel-ring scorecirkel-ring--groen" cx="50" cy="50" r="46.5" stroke-width="7"
+               stroke-dasharray="239.6 292.2" transform="rotate(-90 50 50)"/>
+     </svg>
+     <div class="scorecirkel-inhoud"><span class="scorecirkel-getal">82</span><span class="scorecirkel-label">Score</span></div>
+   </div>
+   ========================================================================== */
+.scorecirkel { position: relative; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.scorecirkel--sm { width: 40px; height: 40px; }
+.scorecirkel--md { width: 64px; height: 64px; }
+.scorecirkel--lg { width: 96px; height: 96px; }
+.scorecirkel--xl { width: 128px; height: 128px; }
+.scorecirkel-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.scorecirkel-baan { fill: none; stroke: var(--border); }
+.scorecirkel-ring { fill: none; stroke-linecap: butt; transition: stroke-dasharray var(--duur-lang) ease-out; }
+.scorecirkel-ring--rood   { stroke: var(--red); }
+.scorecirkel-ring--oranje { stroke: var(--orange); }
+.scorecirkel-ring--groen  { stroke: var(--green); }
+.scorecirkel-inhoud { position: relative; z-index: var(--z-base); display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.scorecirkel-getal {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-feature-settings: "tnum";
+}
+.scorecirkel--sm .scorecirkel-getal { font-size: var(--fs-body); }
+.scorecirkel--md .scorecirkel-getal { font-size: 20px; }
+.scorecirkel--lg .scorecirkel-getal { font-size: 28px; }
+.scorecirkel--xl .scorecirkel-getal { font-size: 38px; }
+.scorecirkel-label {
+  margin-top: 2px;
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+
+/* ============================================================================
+   20. Voortgangsbalk (.voortgang)
+   ----------------------------------------------------------------------------
+   Bron: accountplannen, campagnes, playbooks (.progress-bar), generator
+   (.meter-baan), evaluaties (.balk). 6 px hoog (6x), baan --surface (13x),
+   geen hoek in de meeste; vulling groen voor voortgang van een plan of
+   campagne, inkt voor een playbook, geel voor een meter. Breedte groeit
+   met --transition-base. Een tempostreep (2 px --yellow-dark) toont waar
+   je volgens schema had moeten zijn.
+
+   Opbouw:
+   <div class="voortgang" role="progressbar" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100">
+     <span class="voortgang-vul voortgang-vul--groen" style="width: 62%"></span>
+     <span class="voortgang-tempo" style="left: 70%"></span>
+   </div>
+   ========================================================================== */
+.voortgang { position: relative; height: 6px; overflow: hidden; background: var(--surface); }
+.voortgang--rand { height: 8px; border: 1px solid var(--border-strong); }
+.voortgang-vul { display: block; height: 100%; background: var(--ink); transition: width var(--transition-base); }
+.voortgang-vul--groen { background: var(--green); }
+.voortgang-vul--geel  { background: var(--yellow); }
+.voortgang-vul--rood  { background: var(--red); }
+.voortgang-tempo { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--yellow-dark); }
+
+
+/* ============================================================================
+   21. Telefoon en minder beweging
+   ----------------------------------------------------------------------------
+   Onder 768 px: de werkbalk loopt door naar de volgende regel (geen eigen
+   regel in DealDrive; gemeten op 375 px: zoek, + Klant en + Taak op regel
+   1, + Afspraak op regel 2, Weergave op 3, Sortering en Filters op 4).
+   Raster van keuzeknoppen naar drie kolommen onder 600 px. Velden naast
+   elkaar gaan onder elkaar. Een zoekveld van 280 px mag krimpen.
+   ========================================================================== */
+@media (max-width: 767px) {
+  .filters { gap: 16px; }
+  .filter-groep--eind { margin-left: 0; }
+  .zoekinvoer { min-width: 0; width: 100%; }
+}
+@media (max-width: 600px) {
+  .keuzeraster { grid-template-columns: repeat(3, 1fr); }
+  .veld--rij { flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dd-actie,
+  .dd-act,
+  .vd-toggle,
+  .vd-caret,
+  .filter-pil,
+  .tab,
+  .ef-pencil,
+  .iec-pencil,
+  .schakelaar-spoor,
+  .schakelaar-duim,
+  .scorecirkel-ring,
+  .voortgang-vul,
+  .initialen,
+  .portret,
+  .ctx-item {
+    transition: none;
+  }
+  a.initialen:hover,
+  .portret:hover { transform: none; }
+}

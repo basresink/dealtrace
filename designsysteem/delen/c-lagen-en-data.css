@@ -1,0 +1,2161 @@
+/* ============================================================================
+   Dealtrace stijlbestand · Deel C · lagen en data
+   ----------------------------------------------------------------------------
+   Flyouts, bevestigingsvenster, overige vensters, toasts, banners, meldingen,
+   globale zoek, tabellen, lijstrijen, kaarten, kanban, tijdlijn, lege staten,
+   laden en skeletten, foutstaten, grafieken, minikaart en afdrukken.
+
+   Afgeleid van C:\Projecten\dealdrive (14 oktober 2026): de 41
+   *Flyout.vue-componenten, ConfirmDialog, ConflictResolveModal,
+   IOSInstallModal, ToastContainer en useToast, OfflineBanner,
+   NotificationBell, pages/notificaties.vue, GlobaleZoek, AccountRow,
+   LeadCard, BriefingCard, ResultaatTegel, LegeStaat, HydratieLijst,
+   RapportageGrafieken, MiniMap, pages/pipeline.vue,
+   pages/campagnes/[id].vue en pages/accounts/[id]/index.vue, plus metingen
+   met getComputedStyle in de mockapp op localhost:3088.
+
+   Afspraken voor dit deel
+   1. Alleen tokens uit deel A: de 47 uit DealDrive tokens.css, precies
+      zoals ze daar heten, en de aanvulling voor Dealtrace (onder meer
+      --wit, --overlay, --overlay-donker, --venster-w en varianten,
+      --z-melding, --duur-*, --curve-opveer). Dit bestand definieert er geen.
+   2. Maten die geen token zijn (paddings, losse breedtes) staan er
+      letterlijk. Koppen staan in var(--font-serif); de broodtekst erft
+      Inter van body.
+   3. Kleuren alleen via var(), ook wit (var(--wit)), wit op donker
+      (var(--wit-70) en verwant) en de overlays. Letterlijke kleuren staan
+      alleen in de tokendefinities van deel A.
+   4. Geen box-shadow, hoeken maximaal var(--radius) (2px), nooit 50%.
+   5. Knoppen in een voet (.dd-act, .dd-acties) en alle pillen komen uit
+      deel B. Dit bestand regelt alleen de ruimte eromheen.
+   6. Voor de voorbeeldpagina: .is-hover en .is-focus geven dezelfde stijl
+      als :hover en :focus-visible; .is-statisch zet een laag die normaal
+      fixed over het scherm ligt absoluut neer, zodat hij in een kader past.
+   ========================================================================== */
+
+
+/* ============================================================================
+   1. Flyout (venster dat van rechts inschuift)
+   ----------------------------------------------------------------------------
+   Bron: 41 bestanden app/components/*Flyout.vue, plus acht flyouts die een
+   pagina zelf bouwt (belblokken, bezoek-analyse, rapportage-activiteiten,
+   team, team-weekrapport, instellingen/pipelines, MatrixAnalyse,
+   MailOpstellen). Er is geen gedeelde basiscomponent: elke flyout heeft
+   een eigen prefix (tk-, nt-, ap-, ...) met dezelfde opbouw. Dit is die
+   opbouw, genormaliseerd.
+
+   Telling over de 41 componenten:
+   - overlay rgba(10, 10, 10, 0.45): 27x; 0.55: 11x; 0.5: 2x; 0.35: 1x
+   - z-index var(--z-modal): 35x; var(--z-modal-boven): 2x; overig 4x
+   - paneel: wit 37x, border-left 1px var(--ink) 36x
+   - breedte (max-width): 520px 15x, 560px 12x, 480px 6x, 460px 2x,
+     640px 2x, 900px 2x, 580px 1x, 620px 1x
+   - kop: padding 24px 28px 16px 19x (24px 28px 18px 9x), achtergrond
+     var(--surface) 30x
+   - kicker: 11px (var(--fs-label)), 700, 0.1em, kapitalen, var(--muted) 26x
+   - titel: serif 22px 700 32x
+   - sluitknop: teken x van 28px in een vlak van 44 bij 44: 20x;
+     Lucide X 20px in een omlijst vlak van 32 bij 32: 12x
+   - inhoud: padding 18px 28px 28px 12x (18px 28px 9x), overflow-y auto
+   - voet: padding 16px 28px, var(--surface), border-top 1px var(--border):
+     14x; witte voet 10x; geen voet 6x
+   - animatie: opacity en transform op var(--transition-base) 19x;
+     0.18s en 0.22s ease 12x
+   - toegankelijkheid: useFlyoutA11y 41x, useBodyScrollLock of
+     useScrollLock 40x
+
+   Opbouw in HTML:
+   <div class="fo-overlay">                         klik hierop sluit
+     <aside class="fo-panel" role="dialog" aria-modal="true"
+            aria-labelledby="fo-titel" tabindex="-1">
+       <header class="fo-head">
+         <div class="fo-head-tekst">
+           <span class="fo-kicker">Hoog · Open</span>
+           <h2 class="fo-titel" id="fo-titel">...</h2>
+           <p class="fo-meta">Account · Branche</p>
+         </div>
+         <button class="fo-sluit" aria-label="Sluiten">×</button>
+       </header>
+       <div class="fo-body">
+         <dl class="defs"> ... </dl>
+         <article class="fo-blok"> ... </article>
+       </div>
+       <footer class="fo-foot dd-acties"> knoppen uit deel B </footer>
+     </aside>
+   </div>
+   ========================================================================== */
+
+.fo-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: var(--overlay);
+}
+
+/* Een flyout die bovenop een andere flyout opent (upload vanuit de deal,
+   verslag vanuit de afspraak). */
+.fo-overlay--boven { z-index: var(--z-modal-boven); }
+
+/* Analyse- en rapportageflyouts (Dagstart, Dekking, FaseDeals, Download,
+   DashboardKpi, MeetingAchter, ResultaatVerdiep, StartplanArchief,
+   Accountplan, Organisatie) leggen er een donkerder laag onder. */
+.fo-overlay--donker { background: var(--overlay-donker); }
+
+.fo-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--venster-w); /* standaardbreedte flyout */
+  background: var(--wit);
+  border-left: 1px solid var(--ink);
+}
+
+/* Breedtes. 520 is de standaard voor detail en aanmaken; de rest is een
+   bewuste keuze per soort inhoud. */
+.fo-panel--smal { max-width: var(--venster-w-smal); }  /* gegevens, contacten, historie, campagne */
+.fo-panel--breed { max-width: var(--venster-w-breed); } /* analyse, accountplan, verslag, document, upload */
+.fo-panel--analyse { max-width: var(--venster-w-ruim); } /* AI-analyse van een transcript of gesprek */
+.fo-panel--vol { max-width: var(--venster-w-vol); }   /* organisatiebeheer, meeting-achterstand */
+
+/* Kop: grijs vlak met kicker, titel en metaregel links, sluitknop rechts. */
+.fo-head {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 24px 28px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.fo-head-tekst { min-width: 0; }
+
+/* Donkere kop voor de AI-flyouts (AiChatFlyout, AfspraakAnalyseFlyout):
+   inkt met een gele kicker en een paneel op var(--bg). */
+.fo-panel--ai { background: var(--bg); border-left-color: var(--border); }
+.fo-head--donker {
+  padding: 20px 24px 16px;
+  background: var(--ink);
+  color: var(--wit);
+  border-bottom-color: var(--ink);
+}
+.fo-head--donker .fo-kicker { color: var(--yellow); letter-spacing: 0.18em; }
+.fo-head--donker .fo-titel { color: var(--wit); }
+.fo-head--donker .fo-meta { color: var(--wit-70); }
+.fo-head--donker .fo-sluit { color: var(--wit-70); }
+.fo-head--donker .fo-sluit:hover,
+.fo-head--donker .fo-sluit.is-hover { color: var(--wit); }
+
+.fo-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.6;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Prioriteitsstip in de kicker van een taak. */
+.fo-stip { width: 8px; height: 8px; border-radius: var(--radius); background: var(--muted); }
+.fo-stip--urgent { background: var(--red); }
+.fo-stip--hoog { background: var(--orange); }
+.fo-stip--middel { background: var(--yellow); }
+.fo-stip--laag { background: var(--border-strong); }
+
+.fo-titel {
+  margin: 6px 0 4px;
+  font-family: var(--font-serif);
+  font-size: var(--fs-venstertitel);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.fo-meta {
+  margin: 0;
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* Sluitknop: het teken × op 28px, raakvlak 44 bij 44. */
+.fo-sluit {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+.fo-sluit:hover,
+.fo-sluit.is-hover { color: var(--ink); }
+.fo-sluit:focus-visible,
+.fo-sluit.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Omlijste variant van de analyseflyouts: Lucide X van 20px in 32 bij 32. */
+.fo-sluit--kader {
+  width: var(--knop-h-klein);
+  height: var(--knop-h-klein);
+  margin: 0;
+  border: 1px solid var(--border);
+  color: var(--ink);
+}
+.fo-sluit--kader:hover,
+.fo-sluit--kader.is-hover { background: var(--surface); }
+.fo-sluit--kader svg { width: 20px; height: 20px; }
+
+/* Inhoud: de enige laag die scrolt. Kop en voet blijven staan. */
+.fo-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 28px 28px;
+  overscroll-behavior: contain;
+}
+.fo-body--formulier { display: flex; flex-direction: column; gap: 14px; }
+.fo-body--vlak { padding: 0; } /* lijst die tot de rand loopt (ContactenFlyout) */
+
+/* Geen record: één zin in het midden. */
+.fo-leeg {
+  padding: 40px 28px;
+  font-size: var(--fs-body);
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Blok in de inhoud: witte kaart met een gekleurde linkerrand. */
+.fo-blok {
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  background: var(--wit);
+  border-left: 3px solid var(--border-strong);
+}
+.fo-blok:last-child { margin-bottom: 0; }
+.fo-blok--accent {
+  background: var(--yellow-zacht);
+  border-left-color: var(--yellow);
+}
+.fo-blok--agent { background: var(--surface); border-left-color: var(--ink); }
+.fo-blok--gevaar {
+  background: var(--red-zacht);
+  border-left-color: var(--red);
+}
+.fo-blok-kop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.fo-blok-kicker {
+  display: block;
+  margin-bottom: 4px;
+  font-size: var(--fs-label);
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.fo-blok-titel {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-body);
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.fo-tekst {
+  margin: 0;
+  font-size: var(--fs-klein);
+  line-height: 1.55;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+/* Gegevenslijst: label links in kapitalen, waarde rechts, op grijs. */
+.defs {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  background: var(--surface);
+}
+.def-rij {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 12px;
+  font-size: var(--fs-klein);
+}
+.def-rij dt {
+  align-self: center;
+  margin: 0;
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.def-rij dd { margin: 0; color: var(--ink); }
+
+/* Link in een flyout: inkt met een gele onderstreep van 2px. */
+.fo-link {
+  padding-bottom: 1px;
+  border-bottom: 2px solid var(--yellow);
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+.fo-link:hover,
+.fo-link.is-hover { color: var(--yellow-dark); }
+.fo-link:focus-visible,
+.fo-link.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+.fo-over-tijd { font-weight: 600; color: var(--red); }
+
+/* Strook met drie cijfers bovenin (DealFlyout: Waarde, Kans, Gewogen). */
+.fo-cijfers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin-bottom: 14px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+.fo-cijfer { display: flex; flex-direction: column; gap: 3px; padding: 11px 13px; background: var(--bg); }
+.fo-cijfer-label {
+  font-size: var(--fs-label);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.fo-cijfer-waarde {
+  font-family: var(--font-serif);
+  font-size: var(--fs-kaarttitel);
+  font-weight: 700;
+  font-feature-settings: "tnum";
+  color: var(--ink);
+}
+
+/* Voet: staat altijd in beeld, krimpt nooit. De knoppenrij zelf
+   (.dd-acties met .dd-act) komt uit deel B. */
+.fo-foot {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 28px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.fo-foot--wit { background: var(--wit); } /* analyseflyouts */
+.fo-foot-vul { flex: 1; }
+
+/* Foutmelding boven de voet, na een mislukte opslag. Zie ook .fout-blok. */
+.fo-fout {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--red-zacht);
+  border-left: 3px solid var(--red);
+  font-size: var(--fs-klein);
+  color: var(--red);
+}
+
+/* Animatie. Vue-Transition-klassen: fo-fade op de overlay, fo-slide op
+   het paneel. Geef de binnenste Transition "appear" mee; in DealDrive
+   ontbreekt dat, waardoor alleen de overlay vervaagt (gemeten 200ms) en
+   het paneel zonder schuiven verschijnt. */
+.fo-fade-enter-active,
+.fo-fade-leave-active { transition: opacity var(--transition-base); }
+.fo-fade-enter-from,
+.fo-fade-leave-to { opacity: 0; }
+.fo-slide-enter-active,
+.fo-slide-leave-active { transition: transform var(--transition-base); }
+.fo-slide-enter-from,
+.fo-slide-leave-to { transform: translateX(100%); }
+
+/* Telefoon: het paneel is dan schermbreed (width 100%). Onder 560px
+   krimpt de binnenmarge naar 18px, zoals de analyseflyouts dat doen. */
+@media (max-width: 560px) {
+  .fo-head { padding: 18px 18px 14px; }
+  .fo-body { padding: 14px 18px 18px; }
+  .fo-foot { padding: 12px 18px calc(12px + var(--safe-area-bottom)); }
+  .fo-leeg { padding: 32px 18px; }
+  .def-rij { grid-template-columns: 1fr; gap: 2px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fo-fade-enter-active,
+  .fo-fade-leave-active,
+  .fo-slide-enter-active,
+  .fo-slide-leave-active { transition: none; }
+}
+
+/* Alleen voor de voorbeeldpagina: in een kader in plaats van over het scherm. */
+.fo-overlay.is-statisch,
+.fo-panel.is-statisch { position: absolute; }
+
+
+/* ============================================================================
+   2. Bevestigingsvenster (ConfirmDialog)
+   ----------------------------------------------------------------------------
+   Bron: app/components/ConfirmDialog.vue en composables/useConfirm.ts.
+   Eén exemplaar in app.vue; elke vraag loopt via useConfirm().ask(). In
+   de *Flyout.vue-componenten 10 aanroepen (8x variant danger). Gemeten:
+   dialoog 460px breed, overlay 0.55, z-index 50, knoppen 44px hoog,
+   focus start op Annuleren, Escape sluit alleen de dialoog.
+
+   Opbouw in HTML:
+   <div class="cd-overlay">
+     <div class="cd-dialog" role="alertdialog" aria-modal="true"
+          aria-labelledby="cd-titel" aria-describedby="cd-tekst">
+       <header class="cd-head">
+         <svg class="cd-icon cd-icon--gevaar">AlertTriangle</svg>
+         <h3 class="cd-title" id="cd-titel">Taak verwijderen?</h3>
+       </header>
+       <p class="cd-message" id="cd-tekst">"..." wordt definitief verwijderd.</p>
+       <footer class="cd-foot">
+         <button class="cd-btn cd-btn--ghost">Annuleren</button>
+         <button class="cd-btn cd-btn--danger">Verwijderen</button>
+       </footer>
+     </div>
+   </div>
+   De knoppen houden de DealDrive-namen cd-btn--primary en cd-btn--danger
+   (deel B).
+   ========================================================================== */
+
+.cd-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-toast);
+  display: grid;
+  place-items: center;
+  padding: var(--pagina-marge);
+  background: var(--overlay-donker);
+}
+.cd-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 460px;
+  padding: 22px 24px 18px;
+  background: var(--wit);
+  border-radius: var(--radius);
+}
+.cd-head { display: flex; align-items: center; gap: 10px; }
+.cd-icon { flex-shrink: 0; width: 22px; height: 22px; color: var(--blue); }
+.cd-icon--gevaar { color: var(--red); }
+.cd-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-kaarttitel);
+  font-weight: 700;
+  color: var(--ink);
+}
+.cd-message { margin: 0; font-size: var(--fs-body); line-height: 1.55; color: var(--ink-soft); }
+.cd-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+/* De knoppen .cd-btn, .cd-btn--ghost, .cd-btn--primary en .cd-btn--danger
+   staan in deel B (bediening). */
+
+.cd-fade-enter-active,
+.cd-fade-leave-active { transition: opacity var(--duur-uit) ease-out; }
+.cd-fade-enter-from,
+.cd-fade-leave-to { opacity: 0; }
+.cd-pop-enter-active { transition: opacity var(--duur-in) var(--curve-opveer), transform var(--duur-in) var(--curve-opveer); }
+.cd-pop-leave-active { transition: opacity var(--duur-kort) ease-out, transform var(--duur-kort) ease-out; }
+.cd-pop-enter-from { opacity: 0; transform: scale(0.92); }
+.cd-pop-leave-to { opacity: 0; transform: scale(0.96); }
+
+@media (max-width: 560px) {
+  .cd-foot { flex-direction: column-reverse; align-items: stretch; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cd-pop-enter-active,
+  .cd-pop-leave-active,
+  .cd-fade-enter-active,
+  .cd-fade-leave-active { transition: none; }
+}
+.cd-overlay.is-statisch { position: absolute; }
+
+
+/* ============================================================================
+   3. Venster (overige modals)
+   ----------------------------------------------------------------------------
+   Bron: ConflictResolveModal.vue (pages/sync.vue) en IOSInstallModal.vue
+   (MobileShell). Twee vensters, elk anders; dit is de gemene deler.
+   Op een telefoon komt het venster van onderen (bottom sheet), vanaf 768px
+   staat het in het midden.
+
+   Opbouw in HTML:
+   <div class="venster-overlay">
+     <aside class="venster" role="dialog" aria-modal="true" aria-labelledby="...">
+       <header class="venster-kop">
+         <div><span class="venster-kicker">..</span><h2 class="venster-titel">..</h2></div>
+         <button class="fo-sluit" aria-label="Sluiten">×</button>
+       </header>
+       <div class="venster-body"> ... </div>
+       <footer class="venster-voet"> knoppen uit deel B </footer>
+     </aside>
+   </div>
+   ========================================================================== */
+
+.venster-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--overlay-donker);
+}
+.venster {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 760px;
+  max-height: 92vh;
+  overflow: hidden;
+  background: var(--wit);
+  border: 1px solid var(--ink);
+}
+.venster--klein { max-width: 420px; } /* IOSInstallModal */
+.venster-kop {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.venster-kicker {
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.venster-titel {
+  margin: 4px 0 0;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink);
+}
+.venster-body { flex: 1; overflow-y: auto; padding: 18px 22px; font-size: var(--fs-body); line-height: 1.5; }
+.venster-voet {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 22px calc(14px + var(--safe-area-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.venster-noot {
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-left: 3px solid var(--border-strong);
+  font-size: var(--fs-klein);
+}
+
+@media (min-width: 768px) {
+  .venster-overlay { align-items: center; padding: var(--sectie-padding); }
+  .venster-voet { padding-bottom: 14px; }
+}
+
+.venster-fade-enter-active,
+.venster-fade-leave-active { transition: opacity var(--transition-base); }
+.venster-fade-enter-active .venster,
+.venster-fade-leave-active .venster { transition: transform var(--transition-base); }
+.venster-fade-enter-from,
+.venster-fade-leave-to { opacity: 0; }
+.venster-fade-enter-from .venster,
+.venster-fade-leave-to .venster { transform: translateY(100%); }
+@media (min-width: 768px) {
+  .venster-fade-enter-from .venster,
+  .venster-fade-leave-to .venster { transform: scale(0.96); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .venster-fade-enter-active,
+  .venster-fade-leave-active,
+  .venster-fade-enter-active .venster,
+  .venster-fade-leave-active .venster { transition: none; }
+}
+.venster-overlay.is-statisch { position: absolute; }
+
+
+/* ============================================================================
+   4. Toasts
+   ----------------------------------------------------------------------------
+   Bron: ToastContainer.vue (app.vue) en composables/useToast.ts.
+   Gebruik in de app: toast.success 57x, toast.info 31x, toast.error 38x,
+   toast.warn 3x. Rechtsonder, maximaal 5 tegelijk, 4 seconden (fout 6),
+   klik op de toast sluit hem. Er is geen knop "Ongedaan maken": acties
+   zonder weg terug krijgen vooraf een bevestiging.
+   Gemeten: 280 tot 420px breed, 48px hoog, padding 12px 14px, 13px 500.
+
+   Opbouw in HTML:
+   <div class="toast-stack" role="status" aria-live="polite">
+     <div class="toast toast--succes">
+       <svg class="toast-icoon">CheckCircle2</svg>
+       <span class="toast-tekst">Taak aangemaakt.</span>
+       <button class="toast-sluit" aria-label="Sluiten">×</button>
+     </div>
+   </div>
+   ========================================================================== */
+
+.toast-stack {
+  position: fixed;
+  right: 16px;
+  bottom: calc(var(--bottom-nav-h) + var(--safe-area-bottom) + 16px);
+  z-index: var(--z-melding);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  pointer-events: none;
+}
+.toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 280px;
+  max-width: 420px;
+  padding: 12px 14px;
+  background: var(--ink);
+  color: var(--wit);
+  border-left: 3px solid var(--yellow);
+  border-radius: var(--radius);
+  font-size: var(--fs-klein);
+  font-weight: 500;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.toast--succes { border-left-color: var(--green); }
+.toast--let-op { border-left-color: var(--orange); }
+.toast--fout { border-left-color: var(--red); }
+.toast-icoon { flex-shrink: 0; width: 18px; height: 18px; color: var(--yellow); }
+.toast--succes .toast-icoon { color: var(--green); }
+.toast--let-op .toast-icoon { color: var(--orange); }
+.toast--fout .toast-icoon { color: var(--red-light); }
+.toast-tekst { flex: 1; line-height: 1.4; }
+.toast-sluit {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--fs-kaarttitel);
+  line-height: 1;
+  color: var(--wit-55);
+  cursor: pointer;
+}
+.toast-sluit:hover,
+.toast-sluit.is-hover { color: var(--wit); background: var(--wit-10); }
+.toast-sluit:focus-visible,
+.toast-sluit.is-focus { outline: 2px solid var(--yellow); outline-offset: 1px; }
+
+.toast-enter-active,
+.toast-leave-active { transition: opacity var(--duur-in) ease-out, transform var(--duur-in) ease-out; }
+.toast-enter-from,
+.toast-leave-to { opacity: 0; transform: translateY(12px); }
+.toast-move { transition: transform var(--duur-in) ease-out; }
+
+@media (max-width: 767px) {
+  .toast-stack { left: 16px; right: 16px; }
+  .toast { min-width: 0; max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast-enter-active,
+  .toast-leave-active,
+  .toast-move { transition: none; }
+}
+.toast-stack.is-statisch { position: absolute; }
+
+
+/* ============================================================================
+   5. Banner (OfflineBanner)
+   ----------------------------------------------------------------------------
+   Bron: OfflineBanner.vue in MobileShell. Plakt bovenaan de pagina, onder
+   de zijbalk. Twee standen: offline (rood) en vastgelopen wijzigingen
+   (inkt, met de knop "Opnieuw proberen"). Geen sluitknop: de banner gaat
+   weg zodra de toestand voorbij is.
+
+   Opbouw in HTML:
+   <div class="banner banner--offline" role="status" aria-live="polite">
+     <div class="banner-inner">
+       <span class="banner-icoon"><svg>...</svg></span>
+       <span class="banner-tekst"><strong>Offline.</strong> ...</span>
+       <button class="banner-actie">Opnieuw proberen</button>
+     </div>
+   </div>
+   ========================================================================== */
+
+.banner {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-fixed);
+  padding-top: var(--safe-area-top);
+  color: var(--wit);
+  background: var(--ink);
+}
+.banner--offline { background: var(--red); }
+.banner--sync { background: var(--ink); }
+.banner-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  max-width: var(--container-w);
+  margin: 0 auto;
+  padding: 10px 16px;
+  font-size: var(--fs-klein);
+  line-height: 1.4;
+}
+.banner-icoon { display: inline-flex; flex: 0 0 auto; width: 20px; height: 20px; }
+.banner-icoon svg { width: 100%; height: 100%; }
+.banner-icoon--draait svg { animation: banner-draai 1.2s linear infinite; }
+.banner-tekst { flex: 1; }
+.banner-tekst strong { margin-right: 4px; font-weight: 700; }
+.banner-actie {
+  flex: 0 0 auto;
+  min-height: var(--touch-target-min);
+  padding: 6px 14px;
+  background: var(--yellow);
+  color: var(--ink);
+  border: 0;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--fs-meta);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+.banner-actie:hover:not(:disabled),
+.banner-actie.is-hover { background: var(--yellow-dark); }
+.banner-actie:focus-visible,
+.banner-actie.is-focus { outline: 2px solid var(--wit); outline-offset: 2px; }
+.banner-actie:disabled { opacity: 0.65; cursor: wait; }
+
+@keyframes banner-draai { to { transform: rotate(360deg); } }
+
+.banner-enter-active,
+.banner-leave-active { transition: transform var(--transition-base), opacity var(--transition-base); }
+.banner-enter-from,
+.banner-leave-to { transform: translateY(-100%); opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .banner-icoon--draait svg { animation: none; }
+  .banner-enter-active,
+  .banner-leave-active { transition: none; }
+}
+
+
+/* ============================================================================
+   6. Meldingen: notificatielijst en belpaneel
+   ----------------------------------------------------------------------------
+   Bron: pages/notificaties.vue (de lijst), de belregel in AppSidebar.vue
+   (deel A) en NotificationBell.vue (uitklappaneel; staat in de code maar
+   wordt nergens gebruikt). Kleur per categorie op de balk links:
+   kritiek rood, hot prospect paars, dagstart blauw, herinnering geel,
+   inzicht groen.
+
+   Opbouw notificatierij:
+   <ul class="melding-lijst">
+     <li class="melding melding--ongelezen">
+       <span class="melding-balk melding-balk--kritiek"></span>
+       <div class="melding-body">
+         <div class="melding-meta">
+           <span class="pil ...">Kritiek</span>   pil uit deel B
+           <span class="melding-tijd">2 uur geleden</span>
+           <span class="melding-stip" aria-label="Ongelezen"></span>
+         </div>
+         <h3 class="melding-titel">...</h3>
+         <p class="melding-tekst">...</p>
+       </div>
+       <div class="melding-acties"> knoppen uit deel B </div>
+     </li>
+   </ul>
+   ========================================================================== */
+
+.melding-lijst { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.melding {
+  display: grid;
+  grid-template-columns: 4px 1fr;
+  background: var(--wit);
+  border: 1px solid var(--border);
+  transition: border-color var(--transition-fast);
+}
+.melding:hover,
+.melding.is-hover { border-color: var(--ink); }
+.melding--ongelezen { background: var(--surface); }
+.melding-balk { width: 4px; background: var(--muted); }
+.melding-balk--kritiek { background: var(--red); }
+.melding-balk--hot { background: var(--purple); }
+.melding-balk--dagstart { background: var(--blue); }
+.melding-balk--herinnering { background: var(--yellow); }
+.melding-balk--inzicht { background: var(--green); }
+.melding-body { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; }
+.melding-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.melding-tijd { font-size: var(--fs-label); letter-spacing: 0.02em; color: var(--muted); font-feature-settings: "tnum"; }
+.melding-stip { display: inline-block; width: 8px; height: 8px; background: var(--yellow); border: 1px solid var(--ink); }
+.melding-titel {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.melding-tekst { margin: 0; font-size: var(--fs-body); line-height: 1.5; color: var(--ink-soft); }
+.melding-acties {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+}
+@media (min-width: 768px) {
+  .melding { grid-template-columns: 4px 1fr auto; }
+  .melding-acties { grid-column: auto; min-width: 180px; border-top: 0; border-left: 1px solid var(--border); }
+}
+
+/* Belpaneel: uitklapper van 360px onder een belknop. */
+.bel-paneel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: var(--z-overlay);
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  background: var(--wit);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+}
+.bel-paneel.is-statisch { position: relative; top: auto; right: auto; }
+.bel-kop {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.bel-kicker { font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.bel-titel {
+  margin: 2px 0 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-kaarttitel);
+  font-weight: 700;
+  line-height: 1.2;
+}
+.bel-lijst { max-height: 360px; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.bel-item { display: grid; grid-template-columns: 4px 1fr auto; border-bottom: 1px solid var(--border); }
+.bel-item:last-child { border-bottom: 0; }
+.bel-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: var(--touch-target-comfortable);
+  padding: 12px 8px 12px 12px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.bel-item-body:hover,
+.bel-item-body.is-hover { background: var(--surface); }
+.bel-item-body:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.bel-item-cat { font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.bel-item-titel { font-size: var(--fs-klein); font-weight: 600; line-height: 1.3; }
+.bel-item-tijd { font-size: var(--fs-label); color: var(--muted); }
+.bel-item--ongelezen .bel-item-titel { font-weight: 700; }
+.bel-item--ongelezen .bel-item-cat { color: var(--ink); }
+.bel-voet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.bel-pop-enter-active,
+.bel-pop-leave-active { transform-origin: top right; transition: opacity var(--transition-fast), transform var(--transition-fast); }
+.bel-pop-enter-from,
+.bel-pop-leave-to { opacity: 0; transform: scale(0.96); }
+@media (prefers-reduced-motion: reduce) {
+  .bel-pop-enter-active,
+  .bel-pop-leave-active { transition: none; }
+}
+
+
+/* ============================================================================
+   7. Globale zoek (Ctrl+K of Cmd+K)
+   ----------------------------------------------------------------------------
+   Bron: GlobaleZoek.vue en composables/useGlobaleZoek.ts; geopend vanuit
+   de zoekregel in de zijbalk of met Ctrl+K. Gemeten: paneel 640px breed,
+   maximaal 560px hoog, 12vh vanaf de bovenkant (108px bij 900px), overlay
+   0.45 op z-index 50, invoer 16px en 44px hoog, rij 44px of hoger.
+
+   Opbouw in HTML:
+   <div class="zoek-overlay">
+     <div class="zoek-paneel" role="dialog" aria-modal="true" aria-label="Zoeken in Dealtrace">
+       <div class="zoek-veld">
+         <svg class="zoek-veld-icoon">Search</svg>
+         <input class="zoek-invoer" type="text" enterkeyhint="search">
+         <button class="zoek-filterknop">SlidersHorizontal</button>
+         <button class="zoek-sluit" aria-label="Sluiten">X</button>
+       </div>
+       <div class="zoek-filter"> checkboxen per soort </div>
+       <div class="zoek-lijst" role="listbox">
+         <section class="zoek-groep">
+           <header class="zoek-groep-kop"><span class="zoek-groep-label">Klanten</span>
+             <span class="zoek-groep-telling">3</span></header>
+           <button class="zoek-rij zoek-rij--actief" role="option" aria-selected="true">
+             <span class="zoek-rij-titel">..</span><span class="zoek-rij-detail">..</span>
+           </button>
+         </section>
+       </div>
+     </div>
+   </div>
+   ========================================================================== */
+
+.zoek-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-toast);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 16px var(--pagina-marge);
+  background: var(--overlay);
+}
+.zoek-paneel {
+  display: flex;
+  flex-direction: column;
+  width: min(var(--venster-w-ruim), 100%);
+  max-height: min(70vh, 560px);
+  overflow: hidden;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+}
+.zoek-veld {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.zoek-veld-icoon { flex-shrink: 0; width: 18px; height: 18px; color: var(--muted); }
+.zoek-invoer {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--touch-target-min);
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: var(--fs-lees); /* niet kleiner: iOS zoomt anders in */
+  color: var(--ink);
+}
+.zoek-invoer:focus { outline: none; }
+.zoek-invoer::placeholder { color: var(--muted-light); }
+.zoek-filterknop {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--muted);
+  cursor: pointer;
+}
+.zoek-filterknop:hover,
+.zoek-filterknop.is-hover { color: var(--ink); }
+.zoek-filterknop--actief { color: var(--ink); border-color: var(--border-strong); }
+.zoek-filterknop:focus-visible,
+.zoek-filterknop.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+.zoek-filter-teller {
+  padding: 0 5px;
+  background: var(--yellow);
+  border-radius: var(--radius);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  color: var(--ink);
+}
+.zoek-sluit {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: var(--knop-h-klein);
+  height: var(--knop-h-klein);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+.zoek-sluit:hover,
+.zoek-sluit.is-hover { color: var(--ink); border-color: var(--ink); }
+.zoek-sluit:focus-visible,
+.zoek-sluit.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+.zoek-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-meta);
+}
+.zoek-lijst { overflow-y: auto; padding: 6px; }
+.zoek-groep + .zoek-groep { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+.zoek-groep-kop { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 8px 10px 4px; }
+.zoek-groep-label { font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.zoek-groep-telling { font-size: var(--fs-label); font-weight: 700; color: var(--muted-light); font-feature-settings: "tnum"; }
+.zoek-rij {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  width: 100%;
+  min-height: var(--touch-target-min);
+  padding: 8px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius);
+  font-family: inherit;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.zoek-rij:hover,
+.zoek-rij.is-hover { background: var(--surface); }
+.zoek-rij--actief,
+.zoek-rij--actief:hover { background: var(--ink); }
+.zoek-rij--actief .zoek-rij-titel { color: var(--yellow); }
+.zoek-rij--actief .zoek-rij-detail { color: var(--wit-70); }
+.zoek-rij-titel,
+.zoek-rij-detail { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zoek-rij-titel { font-size: var(--fs-body); font-weight: 600; line-height: 1.35; }
+.zoek-rij-detail { font-size: var(--fs-meta); color: var(--muted); }
+.zoek-meer { margin: 2px 10px 4px; font-size: var(--fs-label); color: var(--muted-light); }
+.zoek-hint { margin: 0; padding: 18px 12px; font-size: var(--fs-klein); line-height: 1.5; color: var(--muted); }
+.zoek-hint strong { color: var(--ink); }
+.zoek-hint-toets { display: block; margin-top: 8px; font-size: var(--fs-label); color: var(--muted-light); }
+
+.zoek-fade-enter-active,
+.zoek-fade-leave-active { transition: opacity var(--transition-fast); }
+.zoek-fade-enter-from,
+.zoek-fade-leave-to { opacity: 0; }
+
+@media (max-width: 767px), (hover: none) and (pointer: coarse) {
+  .zoek-hint-toets { display: none; }
+}
+@media (max-width: 767px) {
+  .zoek-overlay { padding: 12px 10px calc(var(--bottom-nav-h) + var(--safe-area-bottom) + 12px); }
+  .zoek-paneel { max-height: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .zoek-fade-enter-active,
+  .zoek-fade-leave-active { transition: none; }
+}
+.zoek-overlay.is-statisch { position: absolute; }
+
+
+/* ============================================================================
+   8. Tabellen
+   ----------------------------------------------------------------------------
+   Bron: 28 bestanden met een <table>; de klasse .tabel in 11 (bezoek-
+   analyse, evaluaties, gebieden, startplannen, verbruik, rapportage-
+   activiteiten, AccountplanRitme, EvaluatieBlokken, MatrixAnalyse,
+   MeetingRitmeAnalyse), daarnaast 21 eigen namen. Telling over 73
+   kopcelregels: 11px (var(--fs-label)) 27x, kapitalen 27x, var(--muted)
+   28x, gewicht 800 17x tegen 700 11x, onderrand 1px var(--border) 22x,
+   2px var(--ink) 7x. Cellen: 12px tot 13px, onderrand 1px var(--border).
+
+   Opbouw in HTML:
+   <div class="tabel-wrap">
+     <table class="tabel">
+       <thead><tr><th>Account</th><th class="cel-r">Waarde</th></tr></thead>
+       <tbody>
+         <tr><td class="cel-naam"><a class="tabel-link">..</a></td>
+             <td class="cel-r tnum">€ 12.400</td></tr>
+         <tr class="somrij"><td>Totaal</td><td class="cel-r">..</td></tr>
+       </tbody>
+     </table>
+   </div>
+   Sorteerbare koppen staan in deel B.
+   ========================================================================== */
+
+.tabel-wrap {
+  overflow-x: auto;
+  background: var(--wit);
+  border: 1px solid var(--border);
+}
+.tabel {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-meta);
+  background: var(--wit);
+}
+.tabel th,
+.tabel td {
+  padding: 9px 11px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+.tabel th {
+  font-size: var(--fs-label);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--muted);
+  background: var(--surface);
+}
+.tabel tbody tr:last-child td { border-bottom: 0; }
+.tabel tbody tr:hover td,
+.tabel tbody tr.is-hover td { background: var(--bg); }
+.tabel tr.is-open td { background: var(--yellow-licht); }
+.tabel .cel-r { text-align: right; font-feature-settings: "tnum"; }
+.tabel .cel-naam { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.tabel .cel-acties { display: flex; justify-content: flex-end; gap: 6px; }
+.tabel .cel-stil { color: var(--muted); }
+.tabel tr.somrij td { background: var(--bg); border-top: 1px solid var(--border-strong); font-weight: 700; }
+
+/* Kop met een inktlijn eronder en zonder vlak: rapportagetabellen
+   (MatrixAnalyse, funnel, evaluaties). */
+.tabel--rapport th { background: transparent; border-bottom: 2px solid var(--ink); }
+.tabel--rapport td { font-size: var(--fs-body); padding: 10px 12px; }
+
+/* Laatste kolom plakt rechts bij horizontaal scrollen. */
+.tabel--plak th:last-child,
+.tabel--plak td:last-child { position: sticky; right: 0; background: var(--wit); border-left: 1px solid var(--border); }
+.tabel--plak th:last-child { background: var(--surface); }
+
+/* .tabel-link (naam als link in een tabel of lijst) staat in deel A. */
+
+@media (max-width: 767px) {
+  .tabel th,
+  .tabel td { padding: 8px; }
+  .tabel .cel-naam { min-width: 130px; max-width: 200px; white-space: normal; overflow-wrap: break-word; }
+}
+
+
+/* ============================================================================
+   9. Lijstrijen (AccountRow)
+   ----------------------------------------------------------------------------
+   Bron: AccountRow.vue (klanten/alle, prospects/alle), hetzelfde patroon in
+   contacten/alle. Gemeten: rij 1130px breed, 127px hoog, padding 20px 24px,
+   raster 56px 1fr 40px, titel serif 18px 700, subregel 12px var(--muted).
+   De hele rij is de knop (role button, tabindex 0, Enter en spatie openen,
+   rechtsklik opent het contextmenu uit deel B).
+
+   Opbouw in HTML:
+   <div class="lijst">
+     <article class="rij" role="button" tabindex="0">
+       <span class="initialen">..</span>                  logo of initialen
+       <div class="rij-info">
+         <h3 class="rij-titel">Bouwbedrijf De Vries <span class="pil ..">A</span></h3>
+         <div class="rij-sub"><a class="kanaal">..</a> Zwolle · Bouw</div>
+         <p class="rij-aanleiding">Nieuwe vestiging in Deventer</p>
+       </div>
+       <div class="rij-rechts"> contacten of knoppen </div>
+     </article>
+   </div>
+   ========================================================================== */
+
+.lijst { background: var(--wit); border: 1px solid var(--border); }
+.rij {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  min-height: var(--touch-target-comfortable);
+  padding: 20px var(--pagina-marge);
+  background: var(--wit);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background-color var(--duur-kort) ease-out;
+}
+.rij:last-child { border-bottom: 0; }
+.rij:hover,
+.rij.is-hover { background: var(--surface); }
+.rij:focus-visible,
+.rij.is-focus { outline: 2px solid var(--ink); outline-offset: -2px; }
+.rij--compact { padding: 12px var(--kaart-padding); }
+.rij--ongelezen { background: var(--surface); }
+.rij-info { min-width: 0; }
+.rij-titel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px;
+  font-family: var(--font-serif);
+  font-size: var(--fs-kaarttitel);
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.rij-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: var(--fs-meta);
+  color: var(--muted);
+}
+.rij-aanleiding {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--yellow);
+  font-size: var(--fs-klein);
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.rij-aanleiding--heet { border-left-color: var(--red); }
+.rij-aanleiding--let-op { border-left-color: var(--orange); }
+.rij-rechts { display: flex; flex-shrink: 0; align-items: center; gap: 8px; }
+.rij-leeg-tekst { font-size: var(--fs-label); font-style: italic; white-space: nowrap; color: var(--muted-light); }
+
+/* Kanaalicoon (website, LinkedIn). Zonder adres vervaagd en niet klikbaar,
+   zodat de rij niet verspringt. */
+.kanaal {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: var(--wit);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  text-decoration: none;
+  cursor: pointer;
+}
+.kanaal:hover,
+.kanaal.is-hover { border-color: var(--ink); color: var(--ink); }
+.kanaal:focus-visible,
+.kanaal.is-focus { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.kanaal--leeg { opacity: 0.35; cursor: default; }
+.kanaal svg { width: 13px; height: 13px; }
+
+@media (max-width: 799px) {
+  .rij { grid-template-columns: auto 1fr; padding: 16px; }
+  .rij-rechts { grid-column: 1 / -1; padding-left: 70px; }
+}
+
+
+/* ============================================================================
+   10. Kaarten
+   ----------------------------------------------------------------------------
+   Bron: LeadCard.vue (Vandaag, klantkaart, inzichten), BriefingCard.vue
+   (staat in de code, wordt niet gebruikt), ResultaatTegel.vue (team) en de
+   kaarten die pagina's zelf schrijven (wit, rand var(--border), padding
+   var(--kaart-padding)). Statkaarten staan in deel A.
+   ========================================================================== */
+
+/* Basiskaart */
+.kaart {
+  padding: var(--kaart-padding);
+  background: var(--wit);
+  border: 1px solid var(--border);
+}
+.kaart--vlak { background: var(--surface); }
+.kaart--accent { border-left: 3px solid var(--yellow); }
+.kaart--klik { cursor: pointer; transition: border-color var(--transition-fast); }
+.kaart--klik:hover,
+.kaart--klik.is-hover { border-color: var(--ink); }
+.kaart--klik:focus-visible,
+.kaart--klik.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+.kaart-kop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.kaart-titel {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-kaarttitel);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink);
+}
+.kaart-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: var(--fs-meta); color: var(--muted); }
+.kaart-voet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* LeadCard: krantenopening met beeld, kicker, grote serifkop en intro. */
+.lead-kaart { padding: 56px 0 40px; border-bottom: 1px solid var(--border); }
+.lead-kaart--compact { padding: 20px 0 16px; }
+.lead-raster { display: grid; grid-template-columns: 1fr; gap: 36px; }
+.lead-beeld { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--surface); }
+.lead-beeld img { width: 100%; height: 100%; object-fit: cover; }
+.lead-beeld--leeg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--ink) 0%, var(--ink-soft) 100%);
+}
+.lead-beeld-initialen {
+  font-family: var(--font-serif);
+  font-size: 96px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--yellow-op-donker);
+}
+.lead-hoek {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 8px 14px;
+  background: var(--yellow);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.lead-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 18px;
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.lead-kicker::before { content: ''; width: 24px; height: 2px; background: var(--red); }
+.lead-kicker--standaard { color: var(--ink); }
+.lead-kicker--standaard::before { background: var(--yellow); }
+.lead-kicker--opinie { color: var(--blue); }
+.lead-kicker--opinie::before { background: var(--blue); }
+.lead-titel {
+  margin: 0 0 22px;
+  font-family: var(--font-serif);
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--ink);
+}
+.lead-kaart--compact .lead-titel { margin-bottom: 8px; font-size: clamp(20px, 2.4vw, 26px); }
+.lead-intro { margin: 0 0 24px; font-size: var(--fs-kaarttitel); line-height: 1.55; color: var(--ink-soft); }
+.lead-kaart--compact .lead-intro { margin-bottom: 0; font-size: 15px; }
+.lead-byline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-klein);
+  color: var(--muted);
+}
+.lead-bron { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--ink); }
+.lead-bron-blok { display: inline-block; width: 14px; height: 14px; background: var(--blue); }
+.lead-acties { display: flex; flex-wrap: wrap; gap: 10px; }
+@media (min-width: 900px) {
+  .lead-raster { grid-template-columns: 1.4fr 1fr; align-items: center; }
+  .lead-kaart--compact .lead-raster { grid-template-columns: 1fr; }
+}
+
+/* BriefingCard: vlak in drie tonen met een streep van 60 bij 4. */
+.briefing-kaart { position: relative; padding: 36px 40px; }
+.briefing-kaart--donker { background: var(--ink); color: var(--wit); }
+.briefing-kaart--geel { background: var(--yellow); color: var(--ink); }
+.briefing-kaart--licht { background: var(--wit); color: var(--ink); border: 1px solid var(--border); }
+.briefing-streep { display: inline-block; width: 60px; height: 4px; margin-bottom: 22px; background: var(--yellow); }
+.briefing-kaart--geel .briefing-streep { background: var(--ink); }
+.briefing-kicker { margin: 0 0 12px; font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.8; }
+.briefing-titel {
+  margin: 0 0 14px;
+  font-family: var(--font-serif);
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+.briefing-tekst { max-width: 640px; font-size: var(--fs-lees); line-height: 1.6; }
+.briefing-kaart--donker .briefing-tekst { color: var(--wit-78); }
+.briefing-voet { margin-top: 24px; }
+@media (max-width: 767px) {
+  .briefing-kaart { padding: var(--pagina-marge); }
+}
+
+/* ResultaatTegel: klikbare cijfertegel die een paneel eronder opent. */
+.tegel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  min-height: var(--touch-target-min);
+  padding: var(--kaart-padding);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.tegel:hover,
+.tegel.is-hover { border-color: var(--ink); }
+.tegel:focus-visible,
+.tegel.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+.tegel--actief { padding: calc(var(--kaart-padding) - 1px); border: 2px solid var(--ink); }
+.tegel--alert { padding-left: calc(var(--kaart-padding) - 2px); border-left: 3px solid var(--red); }
+.tegel--alert:hover { border-left-color: var(--red); }
+.tegel--alert .tegel-getal { color: var(--red); }
+.tegel-label { font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.1em; line-height: 1.3; text-transform: uppercase; color: var(--muted); }
+.tegel-getal {
+  font-family: var(--font-serif);
+  font-size: 21px;
+  font-weight: 700;
+  font-feature-settings: "tnum";
+  line-height: 1.1;
+  color: var(--ink);
+}
+.tegel-onder { overflow: hidden; font-size: var(--fs-label); line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.tegel-onder--op { font-weight: 600; color: var(--green); }
+.tegel-onder--af { font-weight: 600; color: var(--red); }
+
+
+/* ============================================================================
+   11. Kanban
+   ----------------------------------------------------------------------------
+   Twee borden in DealDrive:
+   - Campagnebord (pages/campagnes/[id].vue): vier kolommen Gespot, Open,
+     Bezig, Klaar, kolom grijs met een bovenrand van 4px in de kolomkleur,
+     elke kolom scrolt zelf (max 70vh). Dit is .kanban.
+   - Pipelinebord (pages/pipeline.vue): een kolom per fase, witte kolom,
+     kop met een bovenrand van 3px in de fasekleur en een somregel eronder.
+     Gemeten: kolom 200px (minimum), kop padding 10px 12px, kaart padding
+     12px 14px op var(--bg). Dit is .kanban--fase.
+   Slepen: de doelkolom krijgt een gestippelde gele omlijning, de gesleepte
+   kaart wordt half doorzichtig.
+
+   Opbouw in HTML:
+   <div class="kanban">
+     <div class="kanban-col kanban-col--bezig">
+       <header class="col-head"><h3 class="col-title">Bezig</h3>
+         <span class="col-count">4</span></header>
+       <div class="col-items">
+         <article class="kanban-kaart" draggable="true"> ... </article>
+         <p class="col-empty">Sleep hier een kaart naartoe.</p>
+       </div>
+     </div>
+   </div>
+   ========================================================================== */
+
+.kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--kaart-gap); }
+.kanban-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.kanban-col--gespot { border-top: 4px solid var(--red); }
+.kanban-col--open { border-top: 4px solid var(--muted); }
+.kanban-col--bezig { border-top: 4px solid var(--yellow); }
+.kanban-col--klaar { border-top: 4px solid var(--green); }
+.kanban-col--sleepdoel {
+  background: var(--yellow-licht);
+  outline: 2px dashed var(--yellow-dark);
+  outline-offset: -2px;
+}
+.col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.col-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-body);
+  font-weight: 700;
+}
+.col-count {
+  padding: 2px 8px;
+  background: var(--ink);
+  border-radius: var(--radius);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  font-feature-settings: "tnum";
+  color: var(--yellow);
+}
+.col-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 200px;
+  max-height: 70vh;
+  padding: 10px;
+  overflow-y: auto;
+}
+.col-empty { margin: 0; padding: 12px 0; font-size: var(--fs-meta); font-style: italic; text-align: center; color: var(--muted); }
+.kanban-kaart {
+  padding: 10px 12px;
+  background: var(--wit);
+  border: 1px solid var(--border);
+  cursor: grab;
+  transition: border-color var(--duur-kort) ease-out, opacity var(--duur-kort) ease-out;
+}
+.kanban-kaart:hover,
+.kanban-kaart.is-hover { border-color: var(--ink); }
+.kanban-kaart:focus-visible,
+.kanban-kaart.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+.kanban-kaart:active { cursor: grabbing; }
+.kanban-kaart--sleept { opacity: 0.4; }
+.kanban-kaart-titel {
+  margin: 0 0 8px;
+  font-family: var(--font-serif);
+  font-size: var(--fs-body);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+.kanban-kaart-noot { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 8px; font-size: var(--fs-label); color: var(--muted); }
+.kanban-kaart-voet {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-label);
+  font-weight: 600;
+  font-feature-settings: "tnum";
+  color: var(--ink);
+}
+
+/* Pipelinebord: kolom per fase. */
+.kanban--fase { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.kanban--fase .kanban-col { background: var(--wit); }
+.kanban--fase .col-head { padding: 10px 12px; background: var(--bg); border-top: 3px solid var(--border-strong); }
+.kanban--fase .col-title {
+  font-family: inherit;
+  font-size: var(--fs-label);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.kanban--fase .col-count { padding: 0; background: transparent; font-size: var(--fs-meta); color: var(--muted); }
+.kanban--fase .col-items { min-height: 180px; max-height: none; }
+.kanban--fase .kanban-kaart { padding: 12px 14px; background: var(--bg); }
+.kanban--fase .col-head--identificatie { border-top-color: var(--border-strong); }
+.kanban--fase .col-head--behoefte { border-top-color: var(--blue); }
+.kanban--fase .col-head--voorstel { border-top-color: var(--yellow); }
+.kanban--fase .col-head--onderhandeling { border-top-color: var(--orange); }
+.kanban--fase .col-head--gewonnen { border-top-color: var(--green); }
+.kanban--fase .col-head--kwalificatie { border-top-color: var(--ink-soft); }
+.col-som {
+  padding: 6px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-meta);
+  font-weight: 700;
+  font-feature-settings: "tnum";
+  color: var(--ink);
+}
+
+@media (min-width: 700px) {
+  .kanban--fase { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .kanban--fase { grid-template-columns: repeat(6, minmax(200px, 1fr)); overflow-x: auto; }
+}
+@media (max-width: 960px) {
+  .kanban { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kanban-kaart { transition: none; }
+}
+
+
+/* ============================================================================
+   12. Tijdlijn en activiteitenfeed
+   ----------------------------------------------------------------------------
+   Bron: tabblad Tijdlijn en Notities op pages/accounts/[id]/index.vue
+   (klassen tl-*), dezelfde opbouw in HistorieFlyout. ActivityFeed.vue staat
+   in de code maar wordt niet gebruikt. Een spoor van 4px links in de kleur
+   van de soort, daarnaast een kaart die als knop het item opent.
+
+   Opbouw in HTML:
+   <ol class="tijdlijn" role="list">
+     <li class="tijdlijn-item">
+       <span class="tijdlijn-spoor tijdlijn-spoor--taak" aria-hidden="true"></span>
+       <button class="tijdlijn-kaart">
+         <div class="tijdlijn-kop">
+           <span class="tijdlijn-soort tijdlijn-soort--taak">Taak</span>
+           <span class="tijdlijn-type">Bellen</span>
+           <span class="tijdlijn-bron">Outlook</span>
+           <span class="tijdlijn-datum">14 okt</span>
+         </div>
+         <h4 class="tijdlijn-titel">..</h4>
+         <p class="tijdlijn-tekst">..</p>
+         <span class="tijdlijn-status tijdlijn-status--klaar">Afgerond</span>
+       </button>
+     </li>
+   </ol>
+   ========================================================================== */
+
+.tijdlijn { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.tijdlijn-item { display: grid; grid-template-columns: 4px 1fr; gap: 12px; }
+.tijdlijn-spoor { border-radius: var(--radius); background: var(--border-strong); }
+.tijdlijn-spoor--inzicht { background: var(--yellow); }
+.tijdlijn-spoor--taak { background: var(--blue); }
+.tijdlijn-spoor--afspraak { background: var(--green); }
+.tijdlijn-spoor--deal { background: var(--purple); }
+.tijdlijn-spoor--contact { background: var(--muted); }
+.tijdlijn-spoor--notitie { background: var(--ink); }
+.tijdlijn-kaart {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--wit);
+  border: 1px solid var(--border);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+.tijdlijn-kaart:hover,
+.tijdlijn-kaart.is-hover { background: var(--surface); border-color: var(--ink); }
+.tijdlijn-kaart:focus-visible,
+.tijdlijn-kaart.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+.tijdlijn-kaart--stil,
+.tijdlijn-kaart--stil:hover { background: var(--wit); border-color: var(--border); cursor: default; }
+.tijdlijn-kop { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 6px; }
+.tijdlijn-soort,
+.tijdlijn-type {
+  padding: 2px 7px;
+  border-radius: var(--radius);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.tijdlijn-soort--inzicht { background: var(--yellow); color: var(--ink); }
+.tijdlijn-soort--taak { background: var(--blue); color: var(--wit); }
+.tijdlijn-soort--afspraak { background: var(--green); color: var(--wit); }
+.tijdlijn-soort--deal { background: var(--purple); color: var(--wit); }
+.tijdlijn-soort--contact { background: var(--surface); color: var(--muted); border: 1px solid var(--border-strong); }
+.tijdlijn-type { background: var(--surface); color: var(--ink-soft); border: 1px solid var(--border); }
+.tijdlijn-bron { font-size: var(--fs-label); color: var(--muted); }
+.tijdlijn-datum { margin-left: auto; font-size: var(--fs-label); font-feature-settings: "tnum"; white-space: nowrap; color: var(--muted); }
+.tijdlijn-titel {
+  margin: 0 0 3px;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.tijdlijn-tekst { margin: 0; font-size: var(--fs-klein); line-height: 1.5; color: var(--ink-soft); }
+.tijdlijn-status {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 2px 8px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.tijdlijn-status--klaar { background: var(--green-zacht); color: var(--green); }
+.tijdlijn-status--laat { background: var(--red-pil); color: var(--red); }
+
+
+/* ============================================================================
+   13. Lege staten
+   ----------------------------------------------------------------------------
+   Bron: LegeStaat.vue (pipeline, campagnes, campagnebord, kennisbank,
+   offertes) en 91 eigen leeg-regels in 80 bestanden (klassen die eindigen
+   op -leeg of -empty): var(--muted) 82x, gecentreerd 37x, 13px 27x,
+   14px 21x, cursief 15x.
+   LegeStaat heeft geen knop: alleen kicker, kop en een optionele regel.
+   ========================================================================== */
+
+.lege-staat {
+  padding: 48px var(--pagina-marge);
+  background: var(--wit);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+.lege-staat-kicker {
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.lege-staat-titel {
+  margin: 12px 0 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-venstertitel);
+  font-weight: 700;
+  color: var(--ink);
+}
+.lege-staat-tekst { margin: 8px 0 0; font-size: var(--fs-body); color: var(--muted); }
+
+/* Eén regel in een blok of kolom die leeg is. */
+.lege-regel { margin: 0; padding: 12px 0; font-size: var(--fs-klein); font-style: italic; color: var(--muted); }
+.lege-regel--midden { text-align: center; }
+
+
+/* ============================================================================
+   14. Laden en skeletten
+   ----------------------------------------------------------------------------
+   Bron: HydratieLijst.vue (contacten/alle), pages/contacten/index.vue
+   (skelet-balk), OfflineBanner (draaiend icoon) en de laadregels in
+   OrganisatieFlyout (adm-laden) en ConflictResolveModal (cr-loading).
+   Skelet: zelfde hoogte en vorm als de lijst die komt, een glans die in
+   1400ms van rechts naar links loopt, en geen glans bij reduced motion.
+   Knoppen die laden (tekst "Opslaan…", "Bezig…") staan in deel B.
+
+   Opbouw in HTML:
+   <div class="skelet" role="status" aria-busy="true" aria-label="Contacten laden">
+     <div class="skelet-rij">
+       <span class="skelet-avatar"></span>
+       <span class="skelet-tekst">
+         <span class="skelet-balk"></span><span class="skelet-balk"></span>
+         <span class="skelet-balk"></span>
+       </span>
+     </div>
+   </div>
+   ========================================================================== */
+
+.skelet { background: var(--wit); border: 1px solid var(--border); }
+.skelet-rij {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 90px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.skelet-rij:last-child { border-bottom: 0; }
+.skelet-avatar { flex: none; width: 56px; height: 56px; }
+.skelet-tekst { display: flex; flex: 1; flex-direction: column; gap: 8px; min-width: 0; }
+.skelet-balk { display: block; width: 48%; height: 12px; border-radius: var(--radius); }
+.skelet-balk:nth-child(1) { width: 42%; height: 15px; }
+.skelet-balk:nth-child(2) { width: 66%; }
+.skelet-balk:nth-child(3) { width: 54%; }
+.skelet-balk--titel { width: 50%; height: 18px; }
+.skelet-balk--kort { width: 40%; }
+.skelet-avatar,
+.skelet-balk {
+  background: linear-gradient(90deg, var(--surface) 0%, var(--border) 50%, var(--surface) 100%);
+  background-size: 200% 100%;
+  animation: skelet-glans 1400ms ease-in-out infinite;
+}
+@keyframes skelet-glans {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* Laadregel in een blok of venster. */
+.laden-regel { margin: 0; padding: 4px 0 8px; font-size: var(--fs-meta); font-style: italic; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .skelet-avatar,
+  .skelet-balk { background: var(--surface); animation: none; }
+}
+
+
+/* ============================================================================
+   15. Foutstaten
+   ----------------------------------------------------------------------------
+   Bron: 45 foutregels in 41 bestanden (klassen die eindigen op -error,
+   -fout of -foutmelding): tekst var(--red) 36x, linkerrand 3px var(--red)
+   16x op rgba(192, 57, 43, 0.08) 16x, padding 10px 12px 14x, 13px 19x.
+   Een fout staat waar hij ontstond: boven de voet van een flyout, onder
+   een blok, in de lijst. Een fout zonder vaste plek wordt een toast
+   (toast.error, 6 seconden). Fouten bij een los veld staan in deel B.
+   ========================================================================== */
+
+.fout-blok {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--red-zacht);
+  border-left: 3px solid var(--red);
+  font-size: var(--fs-klein);
+  line-height: 1.5;
+  color: var(--red);
+}
+.fout-blok strong { font-weight: 700; }
+.fout-blok-actie {
+  margin-left: 8px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--red);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.fout-blok-actie:hover,
+.fout-blok-actie.is-hover { color: var(--red-dark); }
+.fout-blok-actie:focus-visible,
+.fout-blok-actie.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Pagina of record niet gevonden (AccountNietGevonden). */
+.fout-pagina {
+  padding: 48px var(--pagina-marge);
+  background: var(--wit);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--red);
+}
+.fout-pagina-kicker { font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--red); }
+.fout-pagina-titel {
+  margin: 12px 0 8px;
+  font-family: var(--font-serif);
+  font-size: var(--fs-venstertitel);
+  font-weight: 700;
+  color: var(--ink);
+}
+.fout-pagina-tekst { margin: 0; font-size: var(--fs-body); color: var(--ink-soft); }
+
+
+/* ============================================================================
+   16. Grafieken (RapportageGrafieken)
+   ----------------------------------------------------------------------------
+   Bron: RapportageGrafieken.vue (via RapportagePagina). Geen grafiek-
+   bibliotheek: staven, trechter en dekkingsraster zijn HTML en CSS.
+   Kleuren per activiteit: calls var(--blue), afspraken var(--yellow),
+   meetings var(--orange), mails var(--green), berichten var(--purple),
+   to-do's var(--ink-soft). Nullijn 2px var(--ink), as 11px var(--muted),
+   plotvlak 200px hoog. Dekking loopt van vers (groen) naar ijskoud
+   (var(--red-dark)).
+
+   Opbouw staafgrafiek:
+   <div class="grafiek">
+     <header class="grafiek-kop"><h3 class="grafiek-titel">..</h3>
+       <span class="grafiek-meta">..</span></header>
+     <div class="staaf-wrap">
+       <div class="staaf-as"><span class="staaf-tick">12</span><span class="staaf-tick">0</span></div>
+       <div class="staaf-vlak">
+         <div class="staaf-kol"><div class="staaf-stapel">
+           <div class="staaf-seg staaf-seg--calls" style="height:40px"></div>
+         </div><span class="staaf-label">ma</span></div>
+       </div>
+     </div>
+     <div class="legenda"><span class="legenda-chip"><span class="legenda-blok legenda-blok--calls"></span>Calls</span></div>
+   </div>
+   ========================================================================== */
+
+.grafiek { padding: var(--kaart-padding); background: var(--wit); border: 1px solid var(--border); }
+.grafiek-kop { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 20px; }
+.grafiek-titel {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-kaarttitel);
+  font-weight: 700;
+  color: var(--ink);
+}
+.grafiek-meta { font-size: var(--fs-meta); color: var(--muted); }
+
+.staaf-wrap { display: flex; align-items: flex-start; gap: 10px; }
+.staaf-as { display: flex; flex: 0 0 auto; flex-direction: column; justify-content: space-between; height: 200px; }
+.staaf-tick { font-size: var(--fs-label); font-weight: 700; font-feature-settings: "tnum"; line-height: 1; color: var(--muted); }
+.staaf-vlak {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 0 4px 6px;
+  overflow-x: auto;
+  border-bottom: 2px solid var(--ink);
+}
+.staaf-kol { display: flex; flex: 1; flex-direction: column; align-items: center; gap: 6px; min-width: 24px; }
+.staaf-stapel { display: flex; flex-direction: column-reverse; justify-content: flex-start; width: 100%; height: 200px; }
+.staaf-seg { width: 100%; min-height: 2px; border-top: 1px solid var(--wit-55); }
+.staaf-seg--calls,
+.legenda-blok--calls { background: var(--blue); }
+.staaf-seg--afspraken,
+.legenda-blok--afspraken { background: var(--yellow); }
+.staaf-seg--meetings,
+.legenda-blok--meetings { background: var(--orange); }
+.staaf-seg--mails,
+.legenda-blok--mails { background: var(--green); }
+.staaf-seg--berichten,
+.legenda-blok--berichten { background: var(--purple); }
+.staaf-seg--todos,
+.legenda-blok--todos { background: var(--ink-soft); }
+.staaf-label { font-size: var(--fs-label); font-feature-settings: "tnum"; color: var(--muted); }
+
+.legenda { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; font-size: var(--fs-meta); font-weight: 600; color: var(--ink-soft); }
+.legenda-chip { display: inline-flex; align-items: center; padding: 4px 10px; background: var(--surface); border-radius: var(--radius); }
+.legenda-blok { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: var(--radius); }
+
+/* Trechter per pipelinefase. De staafkleur komt uit de fase. */
+.trechter { display: flex; flex-direction: column; gap: 10px; }
+.trechter-rij {
+  display: grid;
+  grid-template-columns: 110px 1fr 80px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+button.trechter-rij { cursor: pointer; }
+button.trechter-rij:hover:not(:disabled) .trechter-baan,
+.trechter-rij.is-hover .trechter-baan { outline: 2px solid var(--ink); outline-offset: -1px; }
+button.trechter-rij:focus-visible,
+.trechter-rij.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+button.trechter-rij:disabled { cursor: default; }
+.trechter-fase {
+  padding: 3px 9px;
+  background: var(--surface);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.trechter-baan { display: flex; align-items: center; height: 30px; background: var(--bg); border: 1px solid var(--border); }
+.trechter-staaf { display: flex; align-items: center; min-width: 36px; height: 100%; padding: 0 10px; background: var(--ink); transition: width var(--duur-lang) ease-out; }
+.trechter-getal {
+  padding: 0 6px;
+  background: var(--wit);
+  border-radius: var(--radius);
+  font-family: var(--font-serif);
+  font-size: var(--fs-lees);
+  font-weight: 700;
+  line-height: 20px;
+  color: var(--ink);
+}
+.trechter-waarde { font-size: var(--fs-klein); font-weight: 600; font-feature-settings: "tnum"; text-align: right; color: var(--ink); }
+
+/* Dekkingsraster: hoe lang geleden het laatste contact was. */
+.dekking { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--kaart-gap); }
+.dekking-cel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--touch-target-min);
+  padding: var(--kaart-padding);
+  border: 0;
+  font-family: inherit;
+  text-align: center;
+  color: var(--wit);
+  cursor: pointer;
+}
+.dekking-cel:hover:not(:disabled),
+.dekking-cel.is-hover { outline: 2px solid var(--ink); outline-offset: -2px; }
+.dekking-cel:focus-visible,
+.dekking-cel.is-focus { outline: 2px solid var(--ink); outline-offset: 2px; }
+.dekking-cel:disabled,
+.dekking-cel--leeg { opacity: 0.55; cursor: default; }
+.dekking-cel--vers { background: var(--green); }
+.dekking-cel--recent { background: color-mix(in srgb, var(--green) 45%, var(--bg)); color: var(--ink); }
+.dekking-cel--aandacht { background: var(--yellow); color: var(--ink); }
+.dekking-cel--oplopend { background: var(--orange); }
+.dekking-cel--koud { background: var(--red); }
+.dekking-cel--ijskoud { background: var(--red-dark); }
+.dekking-getal {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 700;
+  font-feature-settings: "tnum";
+  line-height: 1;
+}
+.dekking-label { font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.05em; }
+
+@media (max-width: 560px) {
+  .trechter-rij { grid-template-columns: 90px 1fr 70px; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .trechter-staaf { transition: none; }
+}
+
+
+/* ============================================================================
+   17. Minikaart (MiniMap)
+   ----------------------------------------------------------------------------
+   Bron: MiniMap.vue op pages/bezoeken.vue. Google Maps-embed in een vak van
+   4 bij 5 met daaroverheen genummerde pinnen. De volgende stop is rood en
+   pulseert (1.8s). Het vak heeft de achtergrond var(--kaart-water)
+   (#e6f0f5, zoals in DealDrive) tot de kaart geladen is.
+
+   Opbouw in HTML:
+   <div class="minikaart">
+     <iframe class="minikaart-iframe" title="Routekaart"></iframe>
+     <div class="minikaart-laag" aria-hidden="true">
+       <div class="minikaart-pin minikaart-pin--volgende" style="left:40%;top:30%">
+         <span class="minikaart-druppel"><span class="minikaart-num">1</span></span>
+         <span class="minikaart-label">09:30 De Vries</span>
+       </div>
+     </div>
+   </div>
+   ========================================================================== */
+
+.minikaart {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--kaart-water);
+  border: 1px solid var(--border);
+}
+.minikaart-iframe { position: absolute; inset: 0; display: block; width: 100%; height: 100%; border: 0; }
+.minikaart-laag { position: absolute; inset: 0; pointer-events: none; }
+.minikaart-pin {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  transform: translate(-50%, -100%);
+  transform-origin: 50% 100%;
+}
+.minikaart-druppel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  rotate: -45deg;
+  background: var(--ink);
+  border: 2px solid var(--yellow);
+  border-radius: 2px 50% 50% 0;
+  color: var(--yellow);
+}
+.minikaart-num { rotate: 45deg; font-size: var(--fs-label); font-weight: 800; font-feature-settings: "tnum"; line-height: 1; }
+.minikaart-pin--volgende { z-index: 2; animation: minikaart-puls 1.8s ease-in-out infinite; }
+.minikaart-pin--volgende .minikaart-druppel { background: var(--red); border-color: var(--wit); color: var(--wit); }
+.minikaart-label {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  padding: 3px 8px;
+  background: var(--ink);
+  border-radius: var(--radius);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: var(--yellow);
+  transform: translate(2px, -50%);
+}
+@keyframes minikaart-puls {
+  0%, 100% { transform: translate(-50%, -100%) scale(1); opacity: 1; }
+  50% { transform: translate(-50%, -100%) scale(1.18); opacity: 0.82; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .minikaart-pin--volgende { animation: none; }
+}
+
+
+/* ============================================================================
+   18. Afdrukken
+   ----------------------------------------------------------------------------
+   Bron: @media print in pages/accounts/[id]/briefing.vue,
+   pages/team-weekrapport.vue, pages/team.vue (weekflyout als document),
+   WeekrapportFunnel.vue en WeekrapportKansen.vue; window.print() op die
+   drie pagina's en in StartplanArchiefFlyout. Regel: bediening en
+   navigatie van het blad, donkere vlakken worden wit met een inktlijn,
+   een flyout die je afdrukt wordt het document zelf.
+   Zet op body de klasse .druk-flyout om alleen de open flyout af te
+   drukken (in DealDrive: body.dd-team-weekfly).
+   ========================================================================== */
+
+@media print {
+  .toast-stack,
+  .banner,
+  .zoek-overlay,
+  .cd-overlay,
+  .fo-foot,
+  .fo-sluit,
+  .dd-acties,
+  .lead-acties,
+  .rij-rechts { display: none !important; }
+
+  body { background: var(--wit); }
+  .fo-overlay,
+  .fo-panel { position: static; background: transparent; border-left: 0; }
+  .fo-panel { max-width: none; }
+  .fo-head { padding: 0 0 16px; background: transparent; }
+  .fo-body { overflow: visible; padding: 0; }
+  .fo-blok,
+  .kaart,
+  .tegel,
+  .grafiek,
+  .tijdlijn-item,
+  .rij { break-inside: avoid; }
+  .briefing-kaart--donker,
+  .fo-head--donker { background: var(--wit); color: var(--ink); border-left: 2px solid var(--ink); }
+  .kaart--vlak,
+  .tegel,
+  .defs { background: transparent; border: 1px solid var(--border-strong); border-left: 2px solid var(--ink); }
+  body.druk-flyout > :not(.fo-overlay) { display: none !important; }
+  .tabel { font-size: 11pt; }
+  .tabel th { background: transparent; }
+  .lege-staat-kicker,
+  .fo-kicker,
+  .fo-meta { color: var(--ink-soft); }
+}
