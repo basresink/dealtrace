@@ -1,0 +1,53 @@
+{
+  "extends": ["stylelint-config-standard", "stylelint-config-recommended-vue"],
+  "overrides": [
+    {
+      "files": ["**/*.vue"],
+      "customSyntax": "postcss-html"
+    }
+  ],
+  "rules": {
+    "color-no-invalid-hex": true,
+
+    "declaration-property-value-allowed-list": {
+      "color": [
+        "/var\\(--/",
+        "transparent",
+        "currentColor",
+        "inherit",
+        "/^#fff$|^#ffffff$|^white$/",
+        "/^rgba?\\(/"
+      ],
+      "background-color": [
+        "/var\\(--/",
+        "transparent",
+        "/^#fff$|^#ffffff$|^white$/",
+        "/^rgba?\\(/",
+        "/^linear-gradient/"
+      ],
+      "border-color": [
+        "/var\\(--/",
+        "transparent",
+        "currentColor",
+        "/^#fff$|^#ffffff$|^white$/",
+        "/^rgba?\\(/"
+      ]
+    },
+
+    "declaration-property-value-disallowed-list": {
+      "border-radius": ["/^([5-9]|[1-9][0-9]+)px$/", "/9999/", "/^50%$/"],
+      "box-shadow": ["/.+/"]
+    },
+
+    "selector-pseudo-class-no-unknown": [true, { "ignorePseudoClasses": ["deep", "global"] }],
+    "no-descending-specificity": null,
+    "selector-class-pattern": null,
+    "comment-empty-line-before": null,
+    "rule-empty-line-before": null,
+    "at-rule-empty-line-before": null,
+    "alpha-value-notation": null,
+    "color-function-notation": null,
+    "media-feature-range-notation": null,
+    "declaration-block-single-line-max-declarations": null
+  }
+}

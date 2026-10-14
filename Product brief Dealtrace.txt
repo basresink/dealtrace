@@ -1,0 +1,144 @@
+# DealDrive New Business: productbriefing
+
+Dit document beschrijft wat DealDrive New Business is en hoe het werkt. Gebruik het als basis voor het uitwerken van ideeën en prototypes. Het gaat over functionaliteit en werkwijze, niet over de techniek erachter.
+
+Stand: 14 oktober 2026. De ontwikkelversie draait op https://dealdrive.dev.marteco.nl.
+
+---
+
+## 1. Wat is het
+
+Een portal waarin een salesteam per doelgroep een eigen new business proces inricht en uitvoert.
+
+- Per doelgroep komt er een *prospectreis*: fases met activiteiten.
+- Mens en AI voeren die activiteiten samen uit op de accounts van de doelgroep.
+- Alles wat er gebeurt komt in een *activiteit-log*, per account en per contactpersoon.
+- Elke activiteit hangt aan het *SalesDNA* van de organisatie. Zo heeft elke stap een reden en een verwacht resultaat.
+
+Het doel: new business wordt een herhaalbaar, meetbaar proces in plaats van losse acties.
+
+## 2. Voor wie
+
+Het portaal is multi-tenant. Elke klant van Sales Legends is een eigen organisatie met eigen data. Sales Legends is de eerste organisatie.
+
+Rollen:
+
+| Rol | Wat doet die |
+|---|---|
+| Founder | Beheert alle organisaties |
+| Admin | Richt de eigen organisatie in: gebruikers, kanalen, koppelingen |
+| Salesmanager | Richt doelgroepen, processen en campagnes in, stuurt op inzichten |
+| Accountmanager | Voert de dagelijkse activiteiten uit |
+| AI-agent | Doet onderzoek, maakt concepten en voert goedgekeurde taken uit |
+
+Inloggen gaat met mailadres en een code per mail. Geen wachtwoorden.
+
+## 3. Kernbegrippen
+
+*Doelgroep (ICP).* De definitie van een groep bedrijven, bijvoorbeeld "installatiebedrijven in Noord-Brabant". Alles bouwt hierop voort.
+
+*SalesDNA.* De bouwstenen van het verhaal van de organisatie:
+- Golden Circle: waarom, hoe, wat
+- Bedrijfsverhaal
+- Waarde en belofte
+- Winpunten, met argumenten en bewijs (klantcases)
+
+*Procestemplate.* Per doelgroep de fases en standaardactiviteiten. Drie fases:
+1. Pre-data en kwalificatie
+2. Prospectfase
+3. Connectiefase
+
+Een template heeft versies. Een lopende reis blijft op zijn versie. Een oudere versie kun je terugzetten.
+
+Elke activiteit in een template heeft vier verplichte velden:
+- *Waarom*: welk Golden Circle-element of winpunt
+- *Verwacht resultaat*: bijvoorbeeld "profielbezoek leidt tot één reactie"
+- *Uitvoerder*: mens, AI of beide
+- *Benodigde input*: welke AI-inzichten de uitvoerder nodig heeft
+
+*Campagne.* Een uitvoering van een proces met: kanalen, prospectmix (bijvoorbeeld 30 accounts), tussendoelen, einddoel en een capaciteitsinschatting per week (uren, kaartjes, belpogingen, kosten). Aangemaakt via een wizard van vijf stappen, met een bord om de voortgang te volgen.
+
+*Prospectreis.* De uitvoering per doelgroep, met eigen status en historie. Accounts bewegen door de fases. Elke stap heeft een uitkomst.
+
+*Activiteit-log.* Elke actie van mens of AI, per account en contact, met resultaat. Alleen toevoegen, nooit wijzigen.
+
+*Nee als datapunt.* Een nee is geen einde maar informatie:
+- reden (vaste lijst plus vrije tekst)
+- terugkomdatum en voorwaarde
+- afkoelperiode per kanaal
+- automatisch weer oppakken als er een nieuw signaal komt
+
+*Signalen.* Gebeurtenissen bij een bedrijf die een reden geven om contact op te nemen. Bijvoorbeeld: een vacature voor een salesfunctie, een nieuwe commercieel directeur, een jubileum (50 jaar bestaan). Signaalregels koppelen een signaal aan een winpunt en zetten een account van "wachten" naar "nu oppakken". Regels zijn te bewerken en in bulk te importeren.
+
+*Accounts en contacten.* Bedrijven (naam, website, telefoon, adres, LinkedIn) en personen (rol, mail, mobiel, LinkedIn). Bij elk veld staat de bron en de datum. Zo weet je altijd waar een gegeven vandaan komt.
+
+## 4. Schermen
+
+| Scherm | Inhoud |
+|---|---|
+| *Vandaag* | De werklijst van de gebruiker. Per stap een AI-briefing: haakje, bron, conceptbericht of openingszin. Eén klik om af te ronden en te loggen. |
+| *Accounts* | Lijst en detail per bedrijf: gegevens met bron, contacten, buying committee, activiteit-log, AI-accountbrief. |
+| *Doelgroepen* | Definitie per doelgroep, inclusief waar en hoe er bedrijven gezocht worden. |
+| *Proces* | Procestemplates per doelgroep, met versies en terugzetten. |
+| *Campagnes* | Overzicht, wizard voor een nieuwe campagne, en een bord per campagne. |
+| *SalesDNA* | De bouwstenen van het verhaal invullen en bijwerken. |
+| *Playbook* | De startset: fases, reisstappen, regels, campagnesoorten, hercontactritmes, meetingsoorten, redenen voor nee, signaalregels. |
+| *LinkedIn* | Wachtrij van LinkedIn-taken: zoeken, profiel bekijken, bedrijf volgen, connecten, bericht. Connecten en berichten alleen na goedkeuring door een mens. |
+| *Inzichten* | Conversie per activiteit, doelgroep, winpunt, campagne en tussendoel. Campagnes en prospectmixen vergelijken. |
+| *Beheer* | Organisaties, gebruikers, kanalen (mail, WhatsApp) en de koppeling met de AI-agent. |
+
+## 5. Mens en AI
+
+De verdeling van werk is een kernprincipe:
+
+- *AI zelfstandig*: onderzoek, bedrijfsinformatie verzamelen, signalen opsporen, concepten schrijven.
+- *Alleen mens*: kaartjes sturen, bellen.
+- *AI bereidt voor, mens keurt goed*: alles wat naar buiten gaat (mail, LinkedIn-connectie, bericht, WhatsApp).
+
+Wat de AI levert:
+
+- *Bedrijven vinden.* Per doelgroep zoekt het systeem bedrijven en vult ze aan met openbare gegevens van hun eigen website (algemeen mailadres, telefoon, omschrijving, oprichtingsjaar, beslissers van team- en over-ons-pagina's). Alleen openbare bedrijfsgegevens, geen persoonlijke mailadressen.
+- *Signalen waarnemen.* Nieuws en websites worden gevolgd op signalen. Bij elk signaal staat de letterlijke zin en de bron.
+- *AI-accountbrief.* Samenvatting van het bedrijf en recent nieuws, het buying committee (wie beslist, wie beïnvloedt, wie blokkeert), een gespreksverhaal per rol op basis van het bedrijfsverhaal, met bronnen.
+- *AI-verbetervoorstel.* Op basis van de conversiecijfers een voorstel om het proces te verbeteren.
+
+AI draait alleen als een gebruiker erom vraagt. Een scherm openen kost geen AI-aanroep.
+
+## 6. Kanalen
+
+- *Mail* vanuit het portaal, met een daglimiet en een noodschakelaar.
+- *WhatsApp* alleen met opt-in en goedgekeurde sjablonen.
+- *LinkedIn* via een wachtrij met daglimieten per soort actie, schrijvende acties pas na goedkeuring.
+- *Telefoon en kaartje* als taak die de mens met de hand bevestigt.
+
+## 7. Startset per organisatie
+
+Elke nieuwe organisatie krijgt een startset op basis van het concept en de mockup:
+3 fases, 11 reisstappen, 21 regels, 8 soorten campagnes, 3 hercontactritmes, 7 soorten meetings, redenen voor nee met afkoelperiode per kanaal, 6 signaalregels.
+
+Voor Sales Legends staat er een concept klaar: SalesDNA uit saleslegends.nl (met bewijs van PontMeyer, Solar Nederland en Ratio Electric, vijf winpunten), 14 signaalregels, zeven doelgroepen (energie, groothandel, ICT, industrie, transport, bouw, installatie) met een conceptproces per doelgroep.
+
+## 8. Wat staat er en wat komt
+
+*Staat er (ontwikkelversie):* alles uit hoofdstuk 3 tot en met 7, behalve wat hieronder open staat.
+
+*Nog open:*
+- De volledige activity selling-master (230+ signaalregels)
+- De echte SalesDNA van Sales Legends
+- WhatsApp-provider
+- LinkedIn-agent volledig in de prospectreis: AI-activiteiten maken automatisch LinkedIn-taken aan, resultaten voeden de accountbrief
+- Maandelijks AI-voorstel in de feedbackloop
+
+*Niet nu:* testomgeving en productie, koppeling met SalesDNA van buitenaf, overdracht naar DealDrive voor bestaande klanten.
+
+## 9. Spelregels voor het prototype
+
+- Gebruik verzonnen voorbeelddata, geen echte klant- of persoonsgegevens.
+- Schermteksten in het Nederlands.
+- Houd de huisstijl van DealDrive aan.
+- Beschrijf bij elk idee welk probleem het oplost en voor welke rol. Dat maakt het makkelijk om het in het echte product op te nemen.
+- Het prototype is een ontwerp en denkmodel. Het echte product bouwen we in DealDrive zelf.
+
+### Voorbeeld startprompt
+
+> Je helpt me met het ontwerpen van DealDrive New Business. De bijgevoegde briefing beschrijft het product. Ik wil een klikbaar prototype van [scherm of idee] voor de rol [rol]. Gebruik verzonnen voorbeelddata van Nederlandse MKB-bedrijven in de doelgroep [doelgroep]. Laat zien hoe het samenhangt met het SalesDNA, de prospectreis en het activiteit-log.
