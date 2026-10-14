@@ -22,21 +22,21 @@
 | B | 5 | De dag en de week van binnendienst, buitendienst en salesmanager |
 | B | 6 | Informatiearchitectuur en navigatie |
 | B | 7 | Het new business-proces: fases, statussen en prospectreis |
-| C | 8 | Featurecatalogus (24 features, elk met functionele en technische uitwerking) |
-| D | 9 | Datamodel |
-| D | 10 | AI-architectuur en agents |
-| D | 11 | Integraties: CRM, KvK, Datacollectief, mail, agenda, DealDrive |
-| D | 12 | Technische architectuur |
-| D | 13 | Designsysteem en UI-patronen |
-| D | 14 | Datakwaliteit, AVG en beveiliging |
-| E | 15 | Succescriteria en KPI's |
-| E | 16 | Fasering in sprints |
-| E | 17 | Van bouwplan naar bouwprompts |
-| E | 18 | Definition of Done en teststrategie |
-| E | 19 | Beslissingen (ADR) |
-| E | 20 | Risico's |
-| E | 21 | Open vragen |
-| E | 22 | Woordenlijst |
+| C | 9 | Featurecatalogus (24 features, elk met functionele en technische uitwerking) |
+| D | 10 | Datamodel |
+| D | 11 | AI-architectuur en agents |
+| D | 12 | Integraties: CRM, KvK, Datacollectief, mail, agenda, DealDrive |
+| D | 13 | Technische architectuur |
+| D | 14 | Designsysteem en UI-patronen |
+| D | 15 | Datakwaliteit, AVG en beveiliging |
+| E | 16 | Succescriteria en KPI's |
+| E | 17 | Fasering in sprints |
+| E | 18 | Van bouwplan naar bouwprompts |
+| E | 19 | Definition of Done en teststrategie |
+| E | 20 | Beslissingen (ADR) |
+| E | 21 | Risico's |
+| E | 22 | Open vragen |
+| E | 23 | Woordenlijst |
 
 ---
 
@@ -69,11 +69,11 @@ Deze beslissingen gaan voor alles wat in de bronnen anders staat.
 | B4 | **Geen aparte HQ**. Alle founder- en beheerfuncties zitten in de app zelf, achter de juiste rol | Eén app, één domein, één build; platformbeheer als afgeschermde sectie (feature F23 en ADR-011) |
 | B5 | **Standaard belscript-templates** die je in Instellingen maakt en die de gebruiker kiest | Feature F08 |
 | B6 | **Eigen velden** (custom fields) toevoegen | Feature F19 |
-| B7 | **AI-agents voor interne en externe bronnen** die inzichten presenteren | Feature F14 en hoofdstuk 10 |
+| B7 | **AI-agents voor interne en externe bronnen** die inzichten presenteren | Feature F14 en hoofdstuk 11 |
 | B8 | **Prospectreis** (in DealDrive de customer journey) als **standaard**, maar ook als **maatwerk**: de gebruiker maakt een eigen prospectreis per doelgroep | Feature F05 |
 | B9 | **Kansen langs de route bij bezoeken**, zoals in DealDrive | Feature F10 |
 | B10 | **Helpcenter** met artikelen over hoe Dealtrace werkt en **new business-artikelen** (hoe werf je nieuwe klanten) | Feature F21 |
-| B11 | **Leadgenerator** om nieuwe prospects toe te voegen via import, CRM-koppeling en externe bronnen (**KvK**, **Datacollectief**) | Feature F02 en hoofdstuk 11 |
+| B11 | **Leadgenerator** om nieuwe prospects toe te voegen via import, CRM-koppeling en externe bronnen (**KvK**, **Datacollectief**) | Feature F02 en hoofdstuk 12 |
 
 ### 0.3 Wat dit plan wijzigt ten opzichte van het architectuurplan
 
@@ -108,7 +108,7 @@ Deze beslissingen gaan voor alles wat in de bronnen anders staat.
 | **Drie harde principes** | Geen bewijs, geen inzicht · AI handelt nooit buiten zijn mandaat en verstuurt nooit een eerste bericht zonder goedkeuring · template en uitvoering gescheiden |
 | **Stack** | Nuxt 4, Vue 3.5, Nitro, TypeScript strict, Postgres (Supabase EU) met RLS, offline-first PWA, Netlify, Claude via de Anthropic API met mock-provider |
 | **Hergebruik** | Ongeveer 60 procent van de logica komt uit DealDrive: opslaglaag, sync, rechten, motor, journey-engine, AI-beoordeling, Pitstop, campagnes, belblokken, leadgenerator, gebieden, huisstijl |
-| **Omvang** | 10 sprints van twee weken tot een complete eerste versie (hoofdstuk 16), 24 features |
+| **Omvang** | 10 sprints van twee weken tot een complete eerste versie (hoofdstuk 17), 24 features |
 
 ### 1.1 Wat Dealtrace is, in zeven zinnen
 
@@ -196,7 +196,7 @@ Een rol bepaalt wat je **mag** (rechten op data en instellingen). Het niveau (ho
 | `beheerder` | Inrichter van de klantorganisatie (vaak de salesmanager of een salesoperations-medewerker) | Gebruikers, rollen, niveaus, instellingen, eigen velden, koppelingen, belscript-templates, agentmandaten, abonnement en facturen van de eigen organisatie | Instellingen en alle data van de organisatie |
 | `founder` | Het team achter Dealtrace (niet uitdeelbaar, alleen via de database of door een andere founder) | Organisaties aanmaken en beheren, abonnementen en facturen, AI-koppeling en platformprompts, roadmap, instappen bij een organisatie met audit | Platformbeheer, en een organisatie alleen na expliciet instappen |
 | `partner` | Dealer of agent zonder login | Bevestigt of weigert een doorgezette lead via een eenmalige link | Eén bevestigingspagina per lead |
-| AI-agent | Geen mens; een rol in de motor met een mandaat | Zoekt, verrijkt, volgt bronnen, schrijft concepten, plant, notuleert, coacht | Alleen wat het mandaat toestaat (hoofdstuk 10) |
+| AI-agent | Geen mens; een rol in de motor met een mandaat | Zoekt, verrijkt, volgt bronnen, schrijft concepten, plant, notuleert, coacht | Alleen wat het mandaat toestaat (hoofdstuk 11) |
 
 Een gebruiker heeft precies één rol. Een beheerder kan ook accountmanager zijn in de praktijk; dan krijgt hij de rol `beheerder` en het werkplekprofiel van zijn dagelijkse werk.
 
@@ -500,7 +500,7 @@ Regels: idempotent op `(itemId, stap)` zodat offline afronden bij synchronisatie
 
 # Deel C · Featurecatalogus
 
-## 8. Featurecatalogus
+## 9. Featurecatalogus
 
 Elke feature heeft dezelfde opbouw, zodat je er direct een bouwprompt van maakt:
 
@@ -667,7 +667,7 @@ Elke importbatch is terug te draaien zolang er nog geen activiteit op de account
 
 - **KvK**: API-sleutel van de organisatie, test, gebruiksteller. Functies: zoeken (handelsnaam, KvK-nummer, plaats, postcode, SBI), basisprofiel en vestigingsprofiel ophalen, maandelijkse controle op wijzigingen bij prospects in reis (wordt een inzicht "KvK-mutatie").
 - **Datacollectief**: sleutel, test, tegoed. Functies: selectie op doelgroep (branche, omvang, regio, functieniveau), verrijken van een account met contactpersonen, verrijken van een contact (functie, nummer, e-mail). Elk opgehaald record kost tegoed en telt in de bundel.
-- **CRM** (eerst HubSpot, daarna Salesforce, Dynamics, Pipedrive, AFAS via dezelfde koppellaag): OAuth-verbinding, veldtoewijzing, richting per object (lezen, schrijven, beide), eigenaarsregel (CRM-eigenaar naar Dealtrace-gebruiker op e-mail), synchronisatiemoment (elk uur en op verzoek), conflictregel (bronprioriteit, zie 14.1). Lezen: klanten en prospects voor ontdubbelen en profiel; schrijven: overgenomen leads met contactpersonen, uitkomsten en deals.
+- **CRM** (eerst HubSpot, daarna Salesforce, Dynamics, Pipedrive, AFAS via dezelfde koppellaag): OAuth-verbinding, veldtoewijzing, richting per object (lezen, schrijven, beide), eigenaarsregel (CRM-eigenaar naar Dealtrace-gebruiker op e-mail), synchronisatiemoment (elk uur en op verzoek), conflictregel (bronprioriteit, zie 15.1). Lezen: klanten en prospects voor ontdubbelen en profiel; schrijven: overgenomen leads met contactpersonen, uitkomsten en deals.
 
 **Tabblad Rondes en verbruik**: lijst van rondes en imports met datum, bron, aantal gevonden, overgenomen, afgewezen, conversie naar afspraak; meters per bron; daggrens per gebruiker (10 rondes).
 
@@ -718,7 +718,7 @@ lead_verbruik: organisation_id, maand, soort ('ronde'|'dossier'|'kvk'|'datacolle
 | `POST /api/datacollectief/selectie`, `POST /api/accounts/:id/verrijk-contacten` | Datacollectief |
 | `GET /api/leads/verbruik` | Meters |
 
-**AI-stappen**: zoekronde (`zoekBedrijven`, Claude met websearch, maximaal 3 zoekopdrachten, 25 bedrijven, URL's alleen uit echte resultaten) en dossier (zes criteria met bewijs); schema en bewijsplicht als in 10.3. KvK en Datacollectief zijn geen AI-bronnen; hun gegevens gaan als feiten met bron `kvk` of `datacollectief` het materiaal in.
+**AI-stappen**: zoekronde (`zoekBedrijven`, Claude met websearch, maximaal 3 zoekopdrachten, 25 bedrijven, URL's alleen uit echte resultaten) en dossier (zes criteria met bewijs); schema en bewijsplicht als in 11.3. KvK en Datacollectief zijn geen AI-bronnen; hun gegevens gaan als feiten met bron `kvk` of `datacollectief` het materiaal in.
 
 **Acceptatiecriteria**
 
@@ -808,7 +808,7 @@ Sortering: "Naam", "Laatste contact", "Score", "Klasse", "Dagen in fase", "Afsta
 
 #### Technisch
 
-- Tabel `accounts` als in hoofdstuk 9, met kolommen voor alles waarop gefilterd wordt (`nb_status`, `reis_id`, `fase_id`, `klasse`, `owner_id`, `gebied_id`, `score`, `laatste_contact_op`, `lat`, `lng`).
+- Tabel `accounts` als in hoofdstuk 10, met kolommen voor alles waarop gefilterd wordt (`nb_status`, `reis_id`, `fase_id`, `klasse`, `owner_id`, `gebied_id`, `score`, `laatste_contact_op`, `lat`, `lng`).
 - Pure functies: `berekenScore(account, context)` met opbouw, `laatsteContact(account, records)`, `primairContact(contacts)`, `filterTellers(accounts, filters)`.
 - Endpoints: `GET /api/accounts?...` (server-side filtering en paginering boven 2.000 accounts), `POST /api/accounts`, `PUT /api/accounts/:id`, `POST /api/accounts/:id/nee`, `POST /api/accounts/:id/promoveer`, `POST /api/accounts/samenvoegen`, `GET /api/accounts/export` (Expert).
 - Acceptatie: tellers op filterpillen kloppen met het resultaat als je ze aanklikt; filters overleven herladen via de URL; een dubbel bedrijf wordt bij aanmaken gevangen op KvK, domein en naam; de score toont zijn opbouw.
@@ -1125,7 +1125,7 @@ Het Pitstop-accent van de fase gaat mee in elke voorbereiding (belscript-invulli
 
 #### Technisch
 
-- `tasks` en `signals` als in hoofdstuk 9; `tasks.uitkomst`, `tasks.later_op`, `tasks.data.poging {n, van, kanaal, vorige}`, `tasks.data.herkomst`, `signals.data.agent`, `signals.data.afwijsReden`.
+- `tasks` en `signals` als in hoofdstuk 10; `tasks.uitkomst`, `tasks.later_op`, `tasks.data.poging {n, van, kanaal, vorige}`, `tasks.data.herkomst`, `signals.data.agent`, `signals.data.afwijsReden`.
 - Pure functies: `rondTaakAf`, `ordenTaken`, `horizon(taken, nu)`, `voorinvullingUitInzicht(inzicht)`, `volgendWerkmoment(nu, feestdagen)`.
 - Endpoints: sync op `tasks` en `signals`; `POST /api/tasks/:id/afronden {uitkomst, laterOp?, reden?}`; `POST /api/signals/:id/omzetten`; `POST /api/signals/:id/afwijzen {reden}`; `POST /api/tasks/bulk {ids, actie}`; `POST /api/motor/reminders-sweep` (elke 5 minuten).
 - Acceptatie: afronden via elk pad geeft dezelfde stuurvelden, dezelfde activiteitenregel en dezelfde volgende poging; een offline afgeronde poging telt bij synchronisatie één keer; achterstallige taken staan in de horizonweergave; een afgewezen inzicht telt in de rapportage per regel.
@@ -1345,7 +1345,7 @@ belscript_versies: id, organisation_id, belscript_id, versie, data jsonb, geacti
 | Opzet maken | doel, doelgroep, reisfase, golden circle, winpunten, top bezwaren | volledig script volgens het datamodel, status concept | Altijd concept; mens activeert |
 | Bezwaren ophalen | verslagen van de laatste 90 dagen in de doelgroep | `[{bezwaar, aantal, voorbeeldCitaat, antwoordVoorstel, argumentRef}]` | Antwoord zonder `argumentRef` wordt "geen bron in de waarde" |
 
-Soort in de AI-bundel: `belscript` (zie hoofdstuk 10).
+Soort in de AI-bundel: `belscript` (zie hoofdstuk 11).
 
 **Acceptatiecriteria**
 
@@ -1458,7 +1458,7 @@ Spraakherkenning die automatisch het volgende blok kiest; automatisch bellen (di
 **Geografie**
 
 - Elk account krijgt bij aanmaken, import en adreswijziging een coördinaat: adres, anders postcode, anders plaats; de herkomst wordt opgeslagen en getoond ("op postcode").
-- Omrijtijd via een routedienst (bijvoorbeeld OpenRouteService of de Google Routes API, keuze in hoofdstuk 21); als terugval hemelsbreed maal 1,3 bij 60 km per uur, zichtbaar als "schatting".
+- Omrijtijd via een routedienst (bijvoorbeeld OpenRouteService of de Google Routes API, keuze in hoofdstuk 22); als terugval hemelsbreed maal 1,3 bij 60 km per uur, zichtbaar als "schatting".
 - Start- en eindpunt per gebruiker (thuisadres of kantoor), per dag aan te passen.
 - Straal alternatief: binnen X minuten van de lijn tussen twee stops ("langs de route") in plaats van rond een plaats.
 
@@ -1523,7 +1523,7 @@ De soort volgt eerst de meetingsoort, dan de fase in de reis, dan het aantal ges
 - Geen aparte briefingtabel: berekend live; eigen tekst in `briefing_teksten: organisation_id, onderwerp ('afspraak'|'taak'), onderwerp_id, blok, tekst, door, op`; AI-versies in `agent_runs` met `draft`.
 - Pure functies: `kiesBriefingSoort(context)`, `vulBriefing(soort, context)` (geen AI), `gewogenBezwaren(offerte, account)`.
 - Endpoints: `GET /api/briefing?afspraak=|taak=|account=`, `PUT /api/briefing/tekst`, `POST /api/agent/prepare {taskId|appointmentId|dealId}`.
-- AI: Pitstop met de promptketen (platform, organisatie, code), schema per concepttype, lengtegrenzen (belscript 150 woorden, mail 120, LinkedIn 80, WhatsApp 60, kaart 40), stijlcheck (10.5).
+- AI: Pitstop met de promptketen (platform, organisatie, code), schema per concepttype, lengtegrenzen (belscript 150 woorden, mail 120, LinkedIn 80, WhatsApp 60, kaart 40), stijlcheck (11.5).
 - Acceptatie: elke ingang kiest dezelfde soort voor hetzelfde gesprek; achterstallige taken krijgen ook een briefing; zonder AI-bundel werkt de briefing volledig met berekende tekst.
 - Hergebruik: `briefings.vue`, `BriefingFlyout.vue`, `BriefingOverviewFlyout.vue`, `OfferteBriefingFlyout.vue`, `accounts/[id]/briefing.vue`, `useQuickBriefing.ts`, `agentExecutor.ts`.
 
@@ -1569,7 +1569,7 @@ De soort volgt eerst de meetingsoort, dan de fase in de reis, dan het aantal ges
 
 #### Technisch
 
-- `campagnes` als in hoofdstuk 9 met `reis_id`, `doelgroep_id`, `soort`, `status`, `started_at`, `ends_at`, `data { winpuntId, boodschap, scriptId, mailreeks[], ritme {ritmeId}, tussendoelen[], doel {type, waarde}, capaciteit, verdeling, items[] }`.
+- `campagnes` als in hoofdstuk 10 met `reis_id`, `doelgroep_id`, `soort`, `status`, `started_at`, `ends_at`, `data { winpuntId, boodschap, scriptId, mailreeks[], ritme {ritmeId}, tussendoelen[], doel {type, waarde}, capaciteit, verdeling, items[] }`.
 - `campagnesoorten` (26, startset in `shared/campagneSoorten.ts`, door de organisatie aan en uit te zetten): sleutel, groep, naam, standaardDoel, ritmeId, kanalen, uitvoerder, scriptId, mailsjabloonId.
 - Pure functies: `campagneTempo`, `campagneAdvies`, `spreidTaken(items, blokken, regiodagen, looptijd)`, `capaciteit(items, soort, eigenaars)`, `campagneResultaat(items, activiteiten)`.
 - Endpoints: `POST /api/campagnes`, `PUT /api/campagnes/:id`, `POST /api/campagnes/:id/activeer`, `POST /api/campagnes/:id/taken {itemIds?}`, `POST /api/campagnes/:id/verdeel`, `POST /api/campagnes/:id/boodschap` (AI), `GET /api/campagnes/:id/resultaat`.
@@ -1631,7 +1631,7 @@ De soort volgt eerst de meetingsoort, dan de fase in de reis, dan het aantal ges
 
 ### F14 AI-agents voor interne en externe bronnen
 
-**Beslissing B7.** AI-agents lezen interne en externe bronnen en presenteren wat ze vinden als **inzichten met bewijs**. Ze doen het werk dat een accountmanager anders niet doet (honderden websites, vacaturesites en registers bijhouden), maar ze handelen nooit buiten hun mandaat. De volledige agentarchitectuur staat in hoofdstuk 10; deze feature beschrijft wat de gebruiker ziet en wat hij kan instellen.
+**Beslissing B7.** AI-agents lezen interne en externe bronnen en presenteren wat ze vinden als **inzichten met bewijs**. Ze doen het werk dat een accountmanager anders niet doet (honderden websites, vacaturesites en registers bijhouden), maar ze handelen nooit buiten hun mandaat. De volledige agentarchitectuur staat in hoofdstuk 11; deze feature beschrijft wat de gebruiker ziet en wat hij kan instellen.
 
 #### Functioneel
 
@@ -1672,7 +1672,7 @@ Elk inzicht toont: bron (soort en naam), datum, letterlijk citaat, link, relevan
 - Ouderdom: vacatures zacht 30 en hard 120 dagen, nieuws 90 en 365, website 30 en 90; boven hard geschrapt, boven zacht geen taakvoorstel.
 - Een inzicht met zekerheid onder 60 krijgt geen taakvoorstel.
 - Een trigger kan een account uit "wachtend" of "nee" terughalen (regel `trigger-heractivatie`), maar alleen als de afkoelperiode voor het voorgestelde kanaal voorbij is.
-- Kosten per bron vallen in de bundel (hoofdstuk 10.9); de Waarnemer volgt per run maximaal 25 accounts per regel.
+- Kosten per bron vallen in de bundel (11.4); de Waarnemer volgt per run maximaal 25 accounts per regel.
 
 #### Technisch
 
@@ -1747,7 +1747,7 @@ Cadans: Dagelijks 1, 2 dagen, 3 dagen, Wekelijks 7, 2 weken 14, Maandelijks 30, 
 
 #### Technisch
 
-- `activity_rules` en `rule_runs` als in hoofdstuk 9; regel `data` met alle velden die de editor toont (de editor is de enige bron; Excel is import en export daarvan).
+- `activity_rules` en `rule_runs` als in hoofdstuk 10; regel `data` met alle velden die de editor toont (de editor is de enige bron; Excel is import en export daarvan).
 - Pure functies: `evaluateTrigger`, `cadansVerstreken`, `ruleTargetsAccount`, `vulSjabloon`, `landingsmoment(taak, gebruiker, blokken, regiodagen)`, `droogloop(regel, accounts)`.
 - Endpoints: `GET /api/regels`, `PUT /api/regels/:id`, `POST /api/regels`, `DELETE /api/regels/:id`, `POST /api/regels/:id/droogloop`, `POST /api/regels/excel-export`, `POST /api/regels/excel-import`, `POST /api/motor/run`, `POST /api/motor/run-all` (geplande functie met `x-motor-secret`), `GET /api/motor/updates?since=`.
 - Acceptatie: een run over 40 prospects in vier klassen levert precies de verwachte taken; een tweede run direct erna levert niets; een persoonlijke regel van een Expert raakt alleen zijn eigen accounts; capaciteitsplafond schuift het overschot door.
@@ -1812,7 +1812,7 @@ Cadans: Dagelijks 1, 2 dagen, 3 dagen, Wekelijks 7, 2 weken 14, Maandelijks 30, 
 
 #### Technisch
 
-- `deals`, `quotes` als in hoofdstuk 9; instellingen `dealStages`, `pipelines`, `offerteOpvolging`.
+- `deals`, `quotes` als in hoofdstuk 10; instellingen `dealStages`, `pipelines`, `offerteOpvolging`.
 - Pure functies: `verplaatsDeal`, `gewogenWaarde`, `offerteUrgentie`, `overdrachtPakket(account)`.
 - Endpoints: sync op `deals` en `quotes`; `POST /api/quotes/:id/status`; `POST /api/deals/:id/gewonnen`; `POST /api/integraties/overdracht/:accountId`; `POST /api/motor/offertes-sweep` (dagelijks).
 - Hergebruik: `pipeline.vue`, `DealFlyout.vue`, `NieuweDealFlyout.vue`, `offertes.vue`, `useDealStages.ts`, `useDealStageChange.ts`, `usePipelines.ts`.
@@ -2186,9 +2186,9 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 
 # Deel D · Techniek
 
-## 9. Datamodel
+## 10. Datamodel
 
-### 9.1 Principes
+### 10.1 Principes
 
 | Principe | Uitwerking |
 |---|---|
@@ -2200,7 +2200,7 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 | Activiteitenlog alleen toevoegen | Elke handeling van mens of agent is een rij; rapportage leest alleen deze log en de afgeleide tabellen. |
 | Afgeleide tabellen herberekenbaar | `nb_*` en `org_gezondheid` komen uit jobs en zijn zonder verlies opnieuw te berekenen. |
 
-### 9.2 Tabellen
+### 10.2 Tabellen
 
 | Groep | Tabel | Belangrijkste kolommen (naast `id`, `organisation_id`, `data`, tijdstempels) |
 |---|---|---|
@@ -2230,11 +2230,11 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 | Verkoopverhaal | `verhaal_richting`, `winpunten`, `winpunt_bewijs` (eigen inrichting) of `salesdna_*` (spiegel, alleen-lezen) | zie F22 |
 | Coaching | `coaching_sessies`, `coaching_notities` | zie F20 |
 | Planning | `belblok_sessies`, `klaargezet_voor`, `kans_overslaan` | zie F07, F10 |
-| Koppelingen | `koppelingen`, `koppeling_runs` | zie F02, hoofdstuk 11 |
-| AI | `agent_runs`, `waarnemer_profielen`, `briefing_teksten` | zie hoofdstuk 10 |
+| Koppelingen | `koppelingen`, `koppeling_runs` | zie F02, hoofdstuk 12 |
+| AI | `agent_runs`, `waarnemer_profielen`, `briefing_teksten` | zie hoofdstuk 11 |
 | Afgeleid | `nb_kpi_dag`, `nb_conversies`, `nb_script_resultaten`, `nb_regel_resultaten`, `nb_prospectmix_stand`, `nb_bezwaren` | dagelijkse en wekelijkse jobs |
 
-### 9.3 Relaties in één oogopslag
+### 10.3 Relaties in één oogopslag
 
 ```
 organisations ─┬─ users ── teams
@@ -2254,9 +2254,9 @@ organisations ─┬─ users ── teams
 
 ---
 
-## 10. AI-architectuur en agents
+## 11. AI-architectuur en agents
 
-### 10.1 Zes AI-lagen
+### 11.1 Zes AI-lagen
 
 | Laag | Wat | Waar in de app |
 |---|---|---|
@@ -2267,7 +2267,7 @@ organisations ─┬─ users ── teams
 | 5. Notuleren | Verslag per agendapunt, open vragen, voorgestelde uitkomst, koopsignalen, bezwaren | F09, F10 |
 | 6. Verbeteren en coachen | Maandelijks verbetervoorstel per doelgroep, coachingpunten per persoon, helpvraag | F05, F20, F21 |
 
-### 10.2 Vangrails die altijd gelden
+### 11.2 Vangrails die altijd gelden
 
 | Vangrail | Regel |
 |---|---|
@@ -2282,7 +2282,7 @@ organisations ─┬─ users ── teams
 | Provider met zero-retention | Anthropic API zonder training, EU-verwerking waar beschikbaar, vastgelegd in de verwerkersovereenkomst |
 | Zonder sleutel | Elke laag heeft een mock met vaste fixtures; tests draaien zonder netwerk en zonder kosten |
 
-### 10.3 Agents en mandaten
+### 11.3 Agents en mandaten
 
 Mandaatniveaus: **A** autonoom (doet het zelf, logt het, de mens ziet het achteraf), **B** autonoom binnen een goedgekeurd kader, **C** per stuk goedkeuren, **D** altijd mens. Harde grenzen: D blijft D; nooit zonder consent of in een afkoelperiode; nooit buiten het ritme; nooit een template, regel of verhaal wijzigen; alles herleidbaar; stopknop "Agents pauzeren".
 
@@ -2314,7 +2314,7 @@ Mandaatniveaus: **A** autonoom (doet het zelf, logt het, de mens ziet het achter
 
 **Hoe een agent werkt**: 1. voorstel (uit een regel, ritme, trigger of job) → 2. Bewaker `magHandelen(agent, handeling, account, contact, nu)` → 3. uitvoering: A en B direct met een rij in `activiteiten` en `agent_runs`, C als taak met concept, D als taak met voorbereiding. Elke agent is één module `server/utils/agents/<naam>.ts` met `draai(context)`, aangeroepen door de motor of een job.
 
-### 10.4 Modellen, kosten en bundel
+### 11.4 Modellen, kosten en bundel
 
 | Soort | Model | Bundel Starter / Plus / Compleet per maand |
 |---|---|---|
@@ -2333,13 +2333,13 @@ Mandaatniveaus: **A** autonoom (doet het zelf, logt het, de mens ziet het achter
 
 Modelnamen en prijzen worden vastgelegd in de tabel `llm_prijzen` met peildatum; de modelkeuze per soort staat in de AI-koppeling (F23) zodat wisselen zonder release kan. Een Beginner op Starter heeft dus geen AI-invulling van scripts: het script werkt met vaste teksten en terugvalzinnen (F08).
 
-### 10.5 Schrijven: de boodschap
+### 11.5 Schrijven: de boodschap
 
 Volgorde bij een eerste contact: waarom (uit de golden circle) → hoe (het winpunt) → één vraag; het "wat" niet in de eerste alinea. Precies één argument met bewijs. Lengte: mail 120 woorden, LinkedIn 80, WhatsApp 60, belscript 150, kaart 40. Stijlscore `5 + min(5, passende woorden) − 2 × vermeden woorden`, begrensd 1 tot 10; onder 7 één keer opnieuw met de vermeden woorden in de instructie. Toon "Zakelijk", "Persoonlijk", "Kort" verandert de vorm, niet het waarom.
 
 ---
 
-## 11. Integraties
+## 12. Integraties
 
 | Integratie | Doel | Richting | Mechanisme | Wie richt in | Sprint |
 |---|---|---|---|---|---|
@@ -2361,9 +2361,9 @@ Voor elke integratie geldt: een adapter met dezelfde interface, een mock met vas
 
 ---
 
-## 12. Technische architectuur
+## 13. Technische architectuur
 
-### 12.1 Stack
+### 13.1 Stack
 
 | Laag | Keuze |
 |---|---|
@@ -2377,7 +2377,7 @@ Voor elke integratie geldt: een adapter met dezelfde interface, een mock met vas
 | Tests | vitest (unit), databasevrije suites, wegwerp-Postgres, Playwright (desktop verplicht, mobiel voor buitendienstschermen), golden masters voor prompts |
 | Checks | `tsc`, `vue-tsc`, eslint, stylelint, `check:rechten`, `check:platform`, `check:functies` (elke functie in de catalogus van 4.2 heeft een niveau, pakket, recht en helpartikel) |
 
-### 12.2 Repo-indeling
+### 13.2 Repo-indeling
 
 ```
 dealtrace/
@@ -2403,7 +2403,7 @@ dealtrace/
   docs/                               HOE-HET-WERKT.md (levend handboek), BOUWPLAN.md (dit document), prompts/
 ```
 
-### 12.3 Kritieke flows
+### 13.3 Kritieke flows
 
 1. **Lead naar prospect**: ronde of import → ontdubbelen (KvK, domein, naam) → verrijken (KvK, Datacollectief) → beoordelen en groeperen → "Neem over" → account, contacten, `lead-overgenomen`, reis en fase, eerste taak in blok of op regiodag.
 2. **Poging afronden (offline-bestendig)**: uitkomst in belmodus of taakflyout → `rondTaakAf` lokaal → wachtrij → server: rechten, versie, upsert → `verwerkUitkomst` (idempotent op item en stap) → volgende poging, statuswissel, gebeurtenis → motor voor dat account → Vandaag bij de volgende poll.
@@ -2411,7 +2411,7 @@ dealtrace/
 4. **Werken in een organisatie** (founder): reden en modus → servercontrole en audit → ondertekende cookie → gele balk → schrijfacties volgens modus.
 5. **Motorrun**: per organisatie, eerst afsluiter campagnes, dan regels (deterministisch in één transactie, AI erbuiten), dan Planner (landing en capaciteit), dan belblokvuller, dan automatisch voorbereiden.
 
-### 12.4 Prestatiebudgetten
+### 13.4 Prestatiebudgetten
 
 | Meting | Budget |
 |---|---|
@@ -2426,7 +2426,7 @@ dealtrace/
 
 ---
 
-## 13. Designsysteem en UI-patronen
+## 14. Designsysteem en UI-patronen
 
 Dealtrace gebruikt het designsysteem uit `designsysteem/` (stijlbestand `dealdrive-designsysteem.css` met 104 tokens en het opbouwdocument in drie delen) als enige globale stylesheet. Samenvatting van wat een bouwer moet weten:
 
@@ -2451,9 +2451,9 @@ Dealtrace gebruikt het designsysteem uit `designsysteem/` (stijlbestand `dealdri
 
 ---
 
-## 14. Datakwaliteit, AVG en beveiliging
+## 15. Datakwaliteit, AVG en beveiliging
 
-### 14.1 Datakwaliteit
+### 15.1 Datakwaliteit
 
 | Onderwerp | Regel |
 |---|---|
@@ -2464,7 +2464,7 @@ Dealtrace gebruikt het designsysteem uit `designsysteem/` (stijlbestand `dealdri
 | Geen verzonnen gegevens | de Verrijker vult nooit een nummer of adres in dat niet op een bron staat; een patroon ("voornaam@domein") is een voorstel met de pil "aanname" |
 | Datakwaliteit in de dag | de drie grootste gaten op Vandaag en in Team, met één knop (verrijken of taak); een campagne kan niet starten als meer dan 20 procent van de accounts het kanaal van de eerste stap niet kan |
 
-### 14.2 AVG
+### 15.2 AVG
 
 | Verwerking | Grondslag | Maatregel |
 |---|---|---|
@@ -2478,7 +2478,7 @@ Dealtrace gebruikt het designsysteem uit `designsysteem/` (stijlbestand `dealdri
 
 Bewaartermijnen: contactpersonen zonder activiteit 24 maanden na het laatste contact, daarna gepseudonimiseerd (melding 30 dagen vooraf); niet overgenomen leads 60 dagen, afgewezen 120; `agent_runs` 13 maanden; audit 7 jaar; transcripten 12 maanden. Rechten van betrokkenen: export en pseudonimiseren per contact via Instellingen, Privacy, binnen 30 dagen, geaudit.
 
-### 14.3 Beveiliging
+### 15.3 Beveiliging
 
 Authenticatie via Supabase met httpOnly-cookies; TOTP voor founder; wachtwoord minimaal 12 tekens of eenmalige code; autorisatie met rechtenmatrix op server en client plus RLS; geheimen alleen op Netlify per context, nooit in logs, rotatie elk half jaar; webhooks met HMAC, tijdvenster en replay-bescherming; publieke tokens (partner, afmelden) 32 bytes, eenmalig, 14 dagen, rate-limit; sleutels van koppelingen en AI-providers versleuteld met AES-256-GCM met een eigen geheim per doel; wekelijkse afhankelijkheidsaudit; PITR 7 dagen plus wekelijkse dump in de EU; meldplicht binnen 72 uur met draaiboek.
 
@@ -2487,9 +2487,9 @@ Authenticatie via Supabase met httpOnly-cookies; TOTP voor founder; wachtwoord m
 
 # Deel E · Uitvoering
 
-## 15. Succescriteria en KPI's
+## 16. Succescriteria en KPI's
 
-### 15.1 Accountmanager binnendienst
+### 16.1 Accountmanager binnendienst
 
 | KPI | Doel | Meting |
 |---|---|---|
@@ -2501,7 +2501,7 @@ Authenticatie via Supabase met httpOnly-cookies; TOTP voor founder; wachtwoord m
 | Pogingen tot afspraak | gemiddeld 4 tot 5 (niet stoppen na 2) | ritmestand bij afspraak |
 | Afspraken voor de buitendienst | volgens teamnorm | `gepland_door` |
 
-### 15.2 Accountmanager buitendienst
+### 16.2 Accountmanager buitendienst
 
 | KPI | Doel | Meting |
 |---|---|---|
@@ -2511,7 +2511,7 @@ Authenticatie via Supabase met httpOnly-cookies; TOTP voor founder; wachtwoord m
 | Bezoek afgerond met verslag binnen 24 uur | boven 90 procent | uitkomst en verslag |
 | Kilometers per bezoek | dalend | route |
 
-### 15.3 Salesmanager en organisatie
+### 16.3 Salesmanager en organisatie
 
 | KPI | Doel |
 |---|---|
@@ -2524,7 +2524,7 @@ Authenticatie via Supabase met httpOnly-cookies; TOTP voor founder; wachtwoord m
 | Kosten per afspraak (AI, data, tijd) | dalend per kwartaal |
 | Datakwaliteit | boven 95 procent van de actieve prospects met geldig nummer of e-mail |
 
-### 15.4 Product en techniek
+### 16.4 Product en techniek
 
 | KPI | Doel |
 |---|---|
@@ -2536,7 +2536,7 @@ Authenticatie via Supabase met httpOnly-cookies; TOTP voor founder; wachtwoord m
 
 ---
 
-## 16. Fasering in sprints
+## 17. Fasering in sprints
 
 Tien sprints van twee weken. Elke sprint eindigt met een werkende, geteste toestand die de eerste organisatie kan gebruiken. Het niveaumodel is vanaf sprint 1 aanwezig, zodat elke nieuwe functie direct een niveau, pakket en helpartikel krijgt.
 
@@ -2557,11 +2557,11 @@ Bezetting: één bouwer (Claude Code in sessies per bouwprompt) met de founder a
 
 ---
 
-## 17. Van bouwplan naar bouwprompts
+## 18. Van bouwplan naar bouwprompts
 
 Dit bouwplan wordt omgezet in bouwprompts: per sprint één tot drie prompts, elk uitvoerbaar in één Claude Code-sessie. Elke prompt bestaat uit twee delen.
 
-### 17.1 Functionele prompt (wat en waarom)
+### 18.1 Functionele prompt (wat en waarom)
 
 ```
 # Prompt <nr>: <naam>
@@ -2576,7 +2576,7 @@ Regels: in gewone taal, met getallen.
 Helpartikel(en): titel en kern van het artikel dat met deze functie meekomt.
 ```
 
-### 17.2 Technische prompt (hoe)
+### 18.2 Technische prompt (hoe)
 
 ```
 Datamodel: tabellen, kolommen, data-velden, migratie, RLS, rechtenmatrix, sync-allowlist.
@@ -2588,21 +2588,21 @@ Functiecatalogus: sleutel, niveau, pakket, recht, helpartikel.
 Hergebruik uit DealDrive: bestanden en wat je aanpast.
 Acceptatiecriteria: databasevrij, wegwerp-Postgres, Playwright (desktop, mobiel waar het buitendienst is).
 Buiten scope.
-Definition of Done (hoofdstuk 18).
+Definition of Done (hoofdstuk 19).
 ```
 
-### 17.3 Indeling van de prompts
+### 18.3 Indeling van de prompts
 
 | Prompt | Sprint | Features | Bron in dit plan |
 |---|---|---|---|
 | P01 Fundament, rollen, niveaus | 1 | F22, F24 basis | 3, 4, 6, 9, 12 |
-| P02 Platformbeheer basis en werken in een organisatie | 1 | F23 basis | F23, 14.3 |
+| P02 Platformbeheer basis en werken in een organisatie | 1 | F23 basis | F23, 15.3 |
 | P03 Accounts, contacten, eigen velden | 2 | F03, F04, F19 | F03, F04, F19 |
-| P04 Import en datakwaliteit | 2 | F02 import | F02, 14.1 |
+| P04 Import en datakwaliteit | 2 | F02 import | F02, 15.1 |
 | P05 Standaard prospectreis en statusmachine | 3 | F05 standaard | 7, F05 |
 | P06 Motor, regels en accountmatrix | 3 | F15, F16 | F15, F16 |
 | P07 Taken, inzichten, Vandaag, hercontact | 4 | F01, F06, F13 ritme | F01, F06, F13 |
-| P08 Mandaten, Bewaker, Planner | 4 | hoofdstuk 10.3 | 10 |
+| P08 Mandaten, Bewaker, Planner | 4 | 11.3 | 11 |
 | P09 Helpcenter basis en groeipad | 4 | F21 basis, 4.4 | F21, 4 |
 | P10 Belblokken, belmodus en belscripts | 5 | F07, F08 | F07, F08 |
 | P11 Leadgenerator, AI-zoeker en KvK | 5 | F02 | F02, 11 |
@@ -2612,7 +2612,7 @@ Definition of Done (hoofdstuk 18).
 | P15 Datacollectief | 6 | F02 | F02, 11 |
 | P16 Campagnes | 7 | F12 | F12 |
 | P17 Pipeline, deals, offertes, overdracht | 7 | F17 | F17 |
-| P18 Briefings, Pitstop, Schrijver, mail | 7 | F11 | F11, 10.5 |
+| P18 Briefings, Pitstop, Schrijver, mail | 7 | F11 | F11, 11.5 |
 | P19 Agents voor interne en externe bronnen | 8 | F14 | F14, 10 |
 | P20 CRM-koppeling | 8 | F02 CRM | F02, 11 |
 | P21 Team, coaching, analyse | 9 | F20 | F20 |
@@ -2624,7 +2624,7 @@ Definition of Done (hoofdstuk 18).
 
 ---
 
-## 18. Definition of Done en teststrategie
+## 19. Definition of Done en teststrategie
 
 **Per prompt**
 
@@ -2645,7 +2645,7 @@ Definition of Done (hoofdstuk 18).
 
 ---
 
-## 19. Beslissingen (ADR)
+## 20. Beslissingen (ADR)
 
 De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kracht, met deze aanpassingen en toevoegingen.
 
@@ -2707,7 +2707,7 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 
 ---
 
-## 20. Risico's
+## 21. Risico's
 
 | Risico | Impact | Maatregel |
 |---|---|---|
@@ -2726,7 +2726,7 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 
 ---
 
-## 21. Open vragen
+## 22. Open vragen
 
 | # | Vraag | Voorstel | Wie | Wanneer |
 |---|---|---|---|---|
@@ -2749,7 +2749,7 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 
 ---
 
-## 22. Woordenlijst
+## 23. Woordenlijst
 
 - **Aanleiding (trigger)**: een gebeurtenis bij een bedrijf met bewijs (vacature, verhuizing, jubileum, nieuwe directeur) die een reden geeft om contact op te nemen.
 - **Afkoelperiode**: de periode per kanaal waarin een account na een nee niet benaderd wordt.
