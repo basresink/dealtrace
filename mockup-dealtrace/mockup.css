@@ -825,3 +825,18 @@ html[data-werkplek='buitendienst'] [data-werkplek='binnendienst'] { display: non
 .mt-16 { margin-top: var(--kaart-gap); }
 .mt-32 { margin-top: var(--sectie-padding); }
 .kaart--geel { border: 2px solid var(--yellow); }
+.kansregel--stop { border-left-color: var(--border); }
+.gele-balk--voorbeeld { position: static; }
+.actiebalk--3 { grid-template-columns: repeat(3, 1fr); }
+.spraakgolf .g1 { height: 16px; }
+.spraakgolf .g2 { height: 30px; }
+.spraakgolf .g3 { height: 46px; }
+.tf-container { max-width: none; }
+.groet-tekst { font-size: var(--fs-lees); }
+.buying .portret-foto { aspect-ratio: 3 / 1; }
+.buying .portret-initialen { font-size: 32px; }
+.tf-scherm { display: flex; flex-direction: column; }
+.tf-scherm > .tf-pad { flex: 1 0 auto; }
+.belmodus-voet .uitkomstraster { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+.taakregel--rij { grid-template-columns: 76px 1fr; align-items: center; }
+.taakregel--rij .rijtje { justify-content: space-between; }

@@ -401,7 +401,7 @@
   function sluitSheet() { var s = document.getElementById('dt-sheet'); if (s) s.remove(); }
 
   var ZOEK = '<label class="veld"><span class="veld-label">Zoek prospects, contacten, campagnes en helpartikelen</span><input class="invoer" type="search" value="bront" aria-label="Zoeken"></label>' +
-    '<p class="meer-groep-kop" style="margin-top:12px">Prospects</p>' +
+    '<p class="meer-groep-kop mt-12">Prospects</p>' +
     '<a class="meer-item" href="account.html">' + ic('building') + 'Brontsma Installatietechniek<small>Drachten</small></a>' +
     '<p class="meer-groep-kop">Contacten</p>' +
     '<a class="meer-item" href="account.html">' + ic('user') + 'Hilde Brontsma<small>eigenaar</small></a>' +
@@ -415,13 +415,13 @@
     '<div class="stapelrij"><strong>Klaargezet</strong><span>Sanne zette Marskamp Installaties klaar voor je regiodag.</span><span class="meta">gisteren</span></div>';
   function spraakHtml() {
     var acc = paginaKey() === 'account' ? 'Brontsma Installatietechniek (van dit scherm)' : 'Brontsma Installatietechniek';
-    return '<div class="spraakgolf" aria-hidden="true"><span style="height:18px"></span><span style="height:34px"></span><span style="height:48px"></span><span style="height:26px"></span><span style="height:40px"></span><span style="height:14px"></span></div>' +
+    return '<div class="spraakgolf" aria-hidden="true"><span class="g1"></span><span class="g2"></span><span class="g3"></span><span class="g2"></span><span class="g3"></span><span class="g1"></span></div>' +
       '<p class="tekst tekst--lees tekst--inkt">"Bel Hilde volgende week dinsdag over de offerte."</p>' +
-      '<article class="fo-blok fo-blok--agent" style="margin-top:12px"><span class="fo-blok-kicker">Concept</span>' +
+      '<article class="fo-blok fo-blok--agent mt-12"><span class="fo-blok-kicker">Concept</span>' +
       '<dl class="defs"><div class="def-rij"><dt>Soort</dt><dd>Taak · bellen</dd></div><div class="def-rij"><dt>Account</dt><dd>' + acc + '</dd></div>' +
       '<div class="def-rij"><dt>Persoon</dt><dd>Hilde Brontsma</dd></div><div class="def-rij"><dt>Titel</dt><dd>Bel Hilde over de offerte</dd></div>' +
       '<div class="def-rij"><dt>Datum</dt><dd>di 20 okt 2026</dd></div><div class="def-rij"><dt>Checks</dt><dd>Account bestaat · persoon gevonden · datum is een werkdag</dd></div></dl></article>' +
-      '<p class="meta" data-max="beginner" style="margin-top:8px">Als Beginner maak je met spraak een taak of notitie. Afspraak en mail komen bij Gevorderd.</p>';
+      '<p class="meta mt-8" data-max="beginner">Als Beginner maak je met spraak een taak of notitie. Afspraak en mail komen bij Gevorderd.</p>';
   }
 
   /* ===== Vergrendeld: uitlegflyout (6.1) ===== */
@@ -476,7 +476,7 @@
         '<p class="subtitle">Dit is een functie voor ' + groot(min) + '. Je salesmanager kan hem voor je vrijgeven.</p>' +
         '<article class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Wat het doet</h3></header><p class="fo-tekst">' + it.wat + '</p></article>' +
         '<article class="fo-blok fo-blok--accent"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Tot die tijd</h3></header><p class="fo-tekst">' + it.tot + '</p></article>' +
-        '<div class="toolbar-buttons" style="margin-top:16px"><button type="button" class="dd-actie dd-actie--primair" data-slot="' + k + '">' + ic('lock', 'dd-actie-icoon') + 'Wanneer gaat het open?</button>' +
+        '<div class="toolbar-buttons mt-16"><button type="button" class="dd-actie dd-actie--primair" data-slot="' + k + '">' + ic('lock', 'dd-actie-icoon') + 'Wanneer gaat het open?</button>' +
         '<a class="dd-actie dd-actie--secundair" href="helpcenter.html">Lees hoe het werkt</a></div></div></div></section>';
     }
     if (html) {
@@ -593,6 +593,17 @@
     if ((el = e.target.closest('[data-meer-slot]'))) {
       var lijst = el.parentNode.querySelector('[data-meer-slotlijst]');
       lijst.hidden = !lijst.hidden; el.setAttribute('aria-expanded', String(!lijst.hidden)); return;
+    }
+    if ((el = e.target.closest('[data-instappen]'))) {
+      var reden = document.getElementById('vi-reden');
+      var fout = document.getElementById('vi-fout');
+      if (!reden || reden.value.trim().length < 5) { if (fout) fout.hidden = false; return; }
+      var keuze = document.querySelector('input[name="vi-modus"]:checked');
+      el.closest('.mk-venster-overlay').hidden = true;
+      staat.werktIn = keuze && keuze.value === 'wijzigen' ? 'wijzigen' : 'meekijken';
+      bewaar(); renderAlles();
+      toast('Je werkt nu in Testbedrijf Voltvast. De beheerder kreeg een melding.');
+      return;
     }
     if ((el = e.target.closest('[data-terug-platform]'))) {
       staat.werktIn = false; bewaar(); window.location.href = 'platform.html'; return;

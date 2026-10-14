@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bezoeken · Dealtrace</title>
+<link rel="stylesheet" href="../designsysteem/dealdrive-designsysteem.css">
+<link rel="stylesheet" href="mockup.css">
+</head>
+<body data-pagina="bezoeken" data-titel="Route">
+<div class="app-shell">
+<main class="app-shell-main" id="inhoud">
+<section class="section">
+  <div class="container">
+    <div class="sec-head">
+      <div>
+        <span class="kicker kicker--streep">Bezoeken · vandaag · regio Noord</span>
+        <h1 class="title title--groot">3 bezoeken op de planning.</h1>
+        <p class="subtitle subtitle--groot">Bezoeken 3 · Klantcontact 3u 30 · Rijtijd 1u 50 · 142 km</p>
+        <p class="subtitle" data-werkplek="binnendienst">Je werkplek is binnendienst. Je ziet hier de route van Jan Wolters (buitendienst) en zet kansen voor zijn regiodag klaar.</p>
+      </div>
+      <div class="toolbar-buttons">
+        <button type="button" class="dd-actie dd-actie--primair" data-stub="Nieuw bezoek"><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Bezoek</button>
+        <button type="button" class="vd-toggle" data-min="gevorderd" aria-expanded="false" data-toast="Periode: vandaag, morgen, deze week."><svg class="icoon vd-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-filter"/></svg>Filters<svg class="icoon vd-caret" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+        <button type="button" class="dd-actie dd-actie--secundair knop-slot" data-max="beginner" data-slot="route-plannen"><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg>Route plannen</button>
+        <a class="dd-actie dd-actie--secundair" href="index.html#niet-uitgewerkt" data-stub="Agenda">Agenda</a>
+        <a class="dd-actie dd-actie--secundair" href="helpcenter.html"><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-help"/></svg>Hulp</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="raster raster--2">
+      <div class="minikaart" aria-label="Kaart met de route van vandaag">
+        <div class="minikaart-laag" aria-hidden="true">
+          <div class="minikaart-pin minikaart-pin--volgende" style="left:30%;top:30%"><span class="minikaart-druppel"><span class="minikaart-num">1</span></span><span class="minikaart-label">09:30 Brontsma</span></div>
+          <div class="minikaart-pin" style="left:68%;top:22%"><span class="minikaart-druppel"><span class="minikaart-num">2</span></span><span class="minikaart-label">13:30 Wildeboer</span></div>
+          <div class="minikaart-pin" style="left:62%;top:58%"><span class="minikaart-druppel"><span class="minikaart-num">3</span></span><span class="minikaart-label">15:30 Teunisveld</span></div>
+          <div class="minikaart-pin" style="left:52%;top:74%"><span class="minikaart-druppel"><span class="minikaart-num">K</span></span><span class="minikaart-label">Kans: Marskamp</span></div>
+        </div>
+      </div>
+      <div>
+        <h2 class="kop-blok">Route van vandaag</h2>
+        <p class="meta">Start thuis in Heerenveen · einde thuis</p>
+        <div class="kansregel mt-16">
+          <span class="kansregel-nr">1</span>
+          <div>
+            <span class="pil pil--rood-vol">Volgende</span> <span class="meta">09:30 tot 10:15 · Kennismaking</span>
+            <h3 class="kop-kaart mt-4"><a href="account.html">Brontsma Installatietechniek</a></h3>
+            <p class="tekst">Hilde Brontsma · Industrieweg 12, Drachten · 24 min naar stop 2</p>
+            <div class="rijtje mt-8"><button type="button" class="dd-act dd-act--primair" data-toast="Navigatie geopend in je kaartapp."><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-navigation"/></svg>Navigeer</button><a class="dd-act" href="tel:+31612345678"><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-phone"/></svg>Bel</a><button type="button" class="dd-act" data-toast="Pitstop geopend.">Pitstop</button><button type="button" class="dd-act" data-open="fo-afronden">Bezoek afronden</button></div>
+          </div>
+        </div>
+        <div class="kansregel kansregel--stop mt-8">
+          <span class="kansregel-nr">2</span>
+          <div><span class="meta">13:30 tot 14:30 · Schouw</span><h3 class="kop-kaart mt-4">Wildeboer Elektro</h3><p class="tekst">Pieter Wildeboer · Groningen · 38 min naar stop 3</p>
+            <div class="rijtje mt-8"><button type="button" class="dd-act" data-toast="Navigatie geopend in je kaartapp."><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-navigation"/></svg>Navigeer</button><button type="button" class="dd-act" data-toast="Bellen."><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-phone"/></svg>Bel</button><button type="button" class="dd-act" data-toast="Pitstop geopend.">Pitstop</button></div></div>
+        </div>
+        <div class="kansregel kansregel--stop mt-8">
+          <span class="kansregel-nr">3</span>
+          <div><span class="meta">15:30 tot 16:15 · Kennismaking</span><h3 class="kop-kaart mt-4">Teunisveld Installatie</h3><p class="tekst">Lotte Teunisveld · Assen · 48 min naar huis</p>
+            <div class="rijtje mt-8"><button type="button" class="dd-act" data-toast="Navigatie geopend in je kaartapp."><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-navigation"/></svg>Navigeer</button><button type="button" class="dd-act" data-toast="Bellen."><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-phone"/></svg>Bel</button><button type="button" class="dd-act" data-toast="Pitstop geopend.">Pitstop</button></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section--alt">
+  <div class="container">
+    <div class="sec-head">
+      <div>
+        <span class="kicker kicker--streep">Kansen langs de route · <span data-max="beginner">3</span><span data-min="gevorderd">9</span></span>
+        <h2 class="sec-title">Prospects en kansen vlak bij je bezoeken</h2>
+        <p class="sec-sub">Kansscore is basisscore plus bron, plus een vrij moment, min de minuten omrijden. Accounts in je route, op nee of van collega's tellen niet mee.</p>
+      </div>
+    </div>
+    <div class="filters mt-16" data-min="gevorderd">
+      <div class="filter-groep"><span class="filter-label">Bron</span><button type="button" class="filter-pil filter-pil--aan">Alle <span class="pil-teller">9</span></button><button type="button" class="filter-pil">Bezoektaak <span class="pil-teller">2</span></button><button type="button" class="filter-pil">Aanleiding <span class="pil-teller">3</span></button><button type="button" class="filter-pil">Klaargezet <span class="pil-teller">1</span></button></div>
+      <div class="filter-groep"><span class="filter-label">Omrijden</span><button type="button" class="filter-pil">10 min</button><button type="button" class="filter-pil filter-pil--aan">20 min</button><button type="button" class="filter-pil">30 min</button></div>
+      <div class="filter-groep"><label class="vink"><input type="checkbox" checked> Alleen mijn accounts</label><label class="vink"><input type="checkbox" checked> Alleen prospects</label></div>
+      <div class="filter-groep" data-min="expert"><label class="vink"><input type="checkbox"> Toon ook ongeplande prospects in dit gebied</label></div>
+    </div>
+    <div class="stapel mt-16">
+      <article class="kansregel">
+        <span class="kansregel-nr">1</span>
+        <div>
+          <h3 class="kop-kaart">Marskamp Installaties <span class="klasse klasse--c">C</span> <span class="pil">Signaal</span></h3>
+          <p class="tekst tekst--inkt">Klaargezet door Sanne (binnendienst) · Beilen</p>
+          <p class="tekst">12 min omrijden, tussen stop 2 en 3 · 45 min vrij tussen 14:30 en 15:15</p>
+          <p class="meta">Bart Marskamp · eigenaar · laatste contact 30 sep</p>
+          <p class="scoreopbouw" data-min="gevorderd">klaargezet +90 · basisscore 54 · vrij moment +10 · 12 min omrijden -12 · kansscore 142</p>
+          <div class="rijtje mt-8">
+            <button type="button" class="dd-act dd-act--primair" data-open="fo-tussenstop"><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Tussenstop</button>
+            <a class="dd-act" href="belblokken.html#start" data-min="gevorderd">Eerst bellen</a>
+            <button type="button" class="dd-act" data-min="gevorderd" data-open="fo-afronden">Inloopbezoek</button>
+            <button type="button" class="dd-act" data-min="gevorderd" data-toast="Overgeslagen. De kans komt een week niet terug.">Overslaan</button>
+            <button type="button" class="dd-act" data-toast="Navigatie geopend in je kaartapp."><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-navigation"/></svg>Navigeer</button>
+          </div>
+        </div>
+      </article>
+      <article class="kansregel">
+        <span class="kansregel-nr">2</span>
+        <div>
+          <h3 class="kop-kaart">Zijlstra-Hoving Installaties <span class="klasse klasse--b">B</span></h3>
+          <p class="tekst tekst--inkt">Open bezoektaak · Smilde</p>
+          <p class="tekst">9 min omrijden, tussen stop 2 en 3 · past in het vrije moment</p>
+          <p class="scoreopbouw" data-min="gevorderd">bezoektaak +100 · basisscore 38 · 9 min omrijden -9 · kansscore 129</p>
+          <div class="rijtje mt-8"><button type="button" class="dd-act dd-act--primair" data-open="fo-tussenstop"><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Tussenstop</button><button type="button" class="dd-act" data-toast="Navigatie geopend in je kaartapp."><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-navigation"/></svg>Navigeer</button></div>
+        </div>
+      </article>
+      <article class="kansregel">
+        <span class="kansregel-nr">3</span>
+        <div>
+          <h3 class="kop-kaart">Klaver en Wiersma Techniek <span class="klasse klasse--b">B</span></h3>
+          <p class="tekst tekst--inkt">Hete aanleiding: vacature monteur (vacaturesite, 9 okt) · Leek</p>
+          <p class="tekst">15 min omrijden, tussen stop 1 en 2 · beste moment 11:00 tot 12:30</p>
+          <p class="scoreopbouw" data-min="gevorderd">hete aanleiding +35 · basisscore 71 · 15 min omrijden -15 · kansscore 91</p>
+          <div class="rijtje mt-8"><button type="button" class="dd-act dd-act--primair" data-open="fo-tussenstop"><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Tussenstop</button><button type="button" class="dd-act" data-toast="Navigatie geopend in je kaartapp."><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-navigation"/></svg>Navigeer</button></div>
+        </div>
+      </article>
+      <article class="kansregel" data-min="gevorderd">
+        <span class="kansregel-nr">4</span>
+        <div>
+          <h3 class="kop-kaart">Noorderveld Zonnewerk <span class="klasse klasse--c">C</span></h3>
+          <p class="tekst tekst--inkt">Offerte die volgens de offertematrix een bezoek vraagt · Roden</p>
+          <p class="tekst">18 min omrijden, tussen stop 1 en 2</p>
+          <p class="scoreopbouw">offerte +80 · basisscore 22 · 18 min omrijden -18 · kansscore 84</p>
+          <div class="rijtje mt-8"><button type="button" class="dd-act dd-act--primair" data-open="fo-tussenstop"><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Tussenstop</button><button type="button" class="dd-act" data-toast="Overgeslagen. De kans komt een week niet terug.">Overslaan</button></div>
+        </div>
+      </article>
+      <p class="meta" data-max="beginner">Je ziet de top drie. Bij Gevorderd zie je alle kansen, met filters en acties als Eerst bellen en Inloopbezoek.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section--laatste">
+  <div class="container">
+    <div class="raster raster--2">
+      <div data-min="gevorderd">
+        <h2 class="kop-blok">Bellijst naast je bezoeken</h2>
+        <p class="meta">Top 5 voor reistijd en lege momenten, zonder de accounts die je vandaag bezoekt.</p>
+        <div class="lijst mt-12">
+          <div class="rij rij--compact"><div class="rij-info"><h3 class="rij-titel">Oldenhave Klimaattechniek</h3><div class="rij-sub">poging 2 van 5 · vorige: voicemail</div></div><div class="rij-rechts"><a class="dd-act" href="tel:+31687654321">Bel</a></div></div>
+          <div class="rij rij--compact"><div class="rij-info"><h3 class="rij-titel">Ploegmakers Utiliteit</h3><div class="rij-sub">Offerte wacht 9 dagen</div></div><div class="rij-rechts"><a class="dd-act" href="tel:+31301234567">Bel</a></div></div>
+          <div class="rij rij--compact"><div class="rij-info"><h3 class="rij-titel">De Kemphaan Zonnetechniek</h3><div class="rij-sub">poging 4 van 5</div></div><div class="rij-rechts"><a class="dd-act" href="tel:+31320123456">Bel</a></div></div>
+        </div>
+      </div>
+      <div>
+        <h2 class="kop-blok">Te plannen bezoeken</h2>
+        <p class="meta">Open bezoektaken, oudste eerst.</p>
+        <div class="lijst mt-12">
+          <div class="rij rij--compact"><div class="rij-info"><h3 class="rij-titel">Woonstichting Grauwe Gans</h3><div class="rij-sub">Ritme: klasse C, 120 dagen niet geweest</div></div><div class="rij-rechts"><button type="button" class="dd-act" data-toast="Bezoek gepland en gekoppeld aan de taak."><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Plan bezoek</button></div></div>
+          <div class="rij rij--compact"><div class="rij-info"><h3 class="rij-titel">Zijlstra-Hoving Installaties</h3><div class="rij-sub">Uit de binnendienst: Sanne</div></div><div class="rij-rechts"><button type="button" class="dd-act" data-toast="Bezoek gepland en gekoppeld aan de taak."><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Plan bezoek</button></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="fo-overlay" id="fo-tussenstop" hidden>
+  <aside class="fo-panel" role="dialog" aria-modal="true" aria-labelledby="fo-ts-titel" tabindex="-1">
+    <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Tussenstop</span><h2 class="fo-titel" id="fo-ts-titel">Plan een afspraak in</h2><p class="fo-meta">Marskamp Installaties · Beilen</p></div><button type="button" class="fo-sluit" aria-label="Sluiten" data-fo-sluit>×</button></header>
+    <div class="fo-body fo-body--formulier">
+      <label class="veld"><span class="veld-label">Contact</span><select class="invoer"><option>Bart Marskamp · eigenaar</option></select></label>
+      <label class="veld"><span class="veld-label">Meetingsoort</span><select class="invoer"><option>Kennismaking</option><option>Inloopbezoek</option></select></label>
+      <div class="veld veld--rij"><label class="veld"><span class="veld-label">Datum</span><input class="invoer" type="date" value="2026-10-14"></label><label class="veld"><span class="veld-label">Start</span><input class="invoer" type="time" value="14:40"></label></div>
+      <label class="veld"><span class="veld-label">Duur</span><select class="invoer"><option>30 minuten</option><option>45 minuten</option></select></label>
+      <label class="veld"><span class="veld-label">Titel</span><input class="invoer" type="text" value="Kennismaking, klaargezet door Sanne"></label>
+    </div>
+    <footer class="fo-foot dd-acties"><button type="button" class="dd-act dd-act--primair" data-fo-sluit data-toast="Tussenstop staat in je route om 14:40. Reistijden herberekend.">Plan afspraak</button><button type="button" class="dd-act" data-fo-sluit>Annuleren</button></footer>
+  </aside>
+</div>
+
+<div class="fo-overlay" id="fo-afronden" hidden>
+  <aside class="fo-panel" role="dialog" aria-modal="true" aria-labelledby="fo-af-titel" tabindex="-1">
+    <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Bezoek afronden</span><h2 class="fo-titel" id="fo-af-titel">Brontsma Installatietechniek</h2><p class="fo-meta">09:30 tot 10:15 · Kennismaking</p></div><button type="button" class="fo-sluit" aria-label="Sluiten" data-fo-sluit>×</button></header>
+    <div class="fo-body fo-body--formulier">
+      <span class="veld-label">Uitkomst</span>
+      <div class="uitkomstraster uitkomstraster--2">
+        <button type="button" class="uitkomst">Interesse, vervolg</button><button type="button" class="uitkomst">Offerte gevraagd</button>
+        <button type="button" class="uitkomst">Geen interesse</button><button type="button" class="uitkomst">Andere contactpersoon</button>
+      </div>
+      <label class="veld"><span class="veld-label">Verslag</span><textarea class="invoer" rows="4" placeholder="Spreek je verslag in of typ het hier."></textarea></label>
+      <div class="rijtje"><button type="button" class="dd-act dd-act--primair" data-toast="Opname gestart."><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mic"/></svg>Spreek je verslag in</button><button type="button" class="dd-act" data-toast="Camera geopend."><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-camera"/></svg>Foto</button></div>
+      <label class="veld"><span class="veld-label">Volgende stap</span><input class="invoer" type="text" value="Offerte sturen voor 21 okt"></label>
+    </div>
+    <footer class="fo-foot dd-acties"><button type="button" class="dd-act dd-act--primair" data-fo-sluit data-toast="Bezoek vastgelegd.">Bewaar bezoek</button><button type="button" class="dd-act" data-fo-sluit>Annuleren</button></footer>
+  </aside>
+</div>
+</main>
+</div>
+<script src="mockup.js"></script>
+</body>
+</html>
