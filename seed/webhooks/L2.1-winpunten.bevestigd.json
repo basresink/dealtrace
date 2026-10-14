@@ -1,0 +1,91 @@
+{
+  "_toelichting": "Voorbeeldpayload sublaag.bevestigd voor L2.1 (Winpunten), Testbedrijf Voltvast. Fictief.",
+  "methode": "POST",
+  "pad": "/api/koppelingen/salesdna/webhook",
+  "headers": {
+    "Content-Type": "application/json",
+    "X-SalesDNA-Event-Id": "evt-voltvast-0006",
+    "X-SalesDNA-Tijd": "2026-10-08T15:10:00+02:00",
+    "X-SalesDNA-Signature": "sha256=<HMAC-SHA256 over de ruwe body met het geheim van de mock, berekend bij verzenden>"
+  },
+  "body": {
+    "eventId": "evt-voltvast-0006",
+    "soort": "sublaag.bevestigd",
+    "tijd": "2026-10-08T15:10:00+02:00",
+    "organisatie": {
+      "id": "org-voltvast",
+      "naam": "Testbedrijf Voltvast"
+    },
+    "onderwerpId": "L2.1",
+    "titel": "Winpunten",
+    "versie": 2,
+    "status": "bevestigd",
+    "verouderd": false,
+    "bevestigdOp": "2026-10-08T15:10:00+02:00",
+    "bijgewerktOp": "2026-10-08T15:10:00+02:00",
+    "inhoud": {
+      "rijen": [
+        {
+          "_id": "wp-01",
+          "fase": "fa-03",
+          "titel": "Gratis projectschouw binnen 48 uur",
+          "omschrijving": "Binnen 48 uur na de aanvraag komt een specialist gratis op de bouw kijken en maakt een leverplan per bouwfase.",
+          "onderscheidend": "Concurrenten sturen alleen een prijslijst.",
+          "concurrenten": "",
+          "impact": "hoog",
+          "bijlagen": []
+        },
+        {
+          "_id": "wp-02",
+          "fase": "fa-04",
+          "titel": "Levering op het uur",
+          "omschrijving": "We leveren op het afgesproken uur op de bouwplaats, niet op de dag.",
+          "onderscheidend": "Monteurs staan niet te wachten.",
+          "concurrenten": "",
+          "impact": "hoog",
+          "bijlagen": []
+        },
+        {
+          "_id": "wp-03",
+          "fase": "fa-05",
+          "titel": "Projectapp voor de installateur",
+          "omschrijving": "De installateur ziet in de app per project wat besteld, onderweg en geleverd is.",
+          "onderscheidend": "Minder bellen, minder fouten.",
+          "concurrenten": "",
+          "impact": "midden",
+          "bijlagen": []
+        }
+      ]
+    },
+    "context": {
+      "fasen": [
+        {
+          "_id": "fa-01",
+          "naam": "Signaal",
+          "soort": "Pre-prospect- en pre-kwalificatiefase"
+        },
+        {
+          "_id": "fa-02",
+          "naam": "Kennismaking",
+          "soort": "Prospect- en kwalificatiefase"
+        },
+        {
+          "_id": "fa-03",
+          "naam": "Behoefte en schouw",
+          "soort": "Kennismakingsfase"
+        },
+        {
+          "_id": "fa-04",
+          "naam": "Offerte",
+          "soort": "Offerte- en dealfase"
+        },
+        {
+          "_id": "fa-05",
+          "naam": "Klant en uitbouw",
+          "soort": "Klantrelatiefase"
+        }
+      ],
+      "toelichting": "Fasen komen uit de sublaag Fasen en gaan mee zodat de projectie vv_fasen kan vullen."
+    }
+  }
+}

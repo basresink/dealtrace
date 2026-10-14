@@ -1,0 +1,47 @@
+{
+  "_toelichting": "Voorbeeldpayload sublaag.bevestigd voor L0.4 (Waarde en belofte), Testbedrijf Voltvast. Fictief.",
+  "methode": "POST",
+  "pad": "/api/koppelingen/salesdna/webhook",
+  "headers": {
+    "Content-Type": "application/json",
+    "X-SalesDNA-Event-Id": "evt-voltvast-0003",
+    "X-SalesDNA-Tijd": "2026-10-02T14:05:00+02:00",
+    "X-SalesDNA-Signature": "sha256=<HMAC-SHA256 over de ruwe body met het geheim van de mock, berekend bij verzenden>"
+  },
+  "body": {
+    "eventId": "evt-voltvast-0003",
+    "soort": "sublaag.bevestigd",
+    "tijd": "2026-10-02T14:05:00+02:00",
+    "organisatie": {
+      "id": "org-voltvast",
+      "naam": "Testbedrijf Voltvast"
+    },
+    "onderwerpId": "L0.4",
+    "titel": "Waarde en belofte",
+    "versie": 2,
+    "status": "bevestigd",
+    "verouderd": false,
+    "bevestigdOp": "2026-10-02T14:05:00+02:00",
+    "bijgewerktOp": "2026-10-02T14:05:00+02:00",
+    "inhoud": {
+      "velden": [
+        {
+          "sleutel": "waardestatement",
+          "tekst": "Voor installateurs met projecten in Midden- en Noord-Nederland die tijd verliezen door late of verkeerde leveringen. Wij denken mee vanaf het ontwerp en leveren per bouwfase, zodat monteurs doorwerken en het project op tijd wordt opgeleverd."
+        },
+        {
+          "sleutel": "kernbelofte",
+          "tekst": "Uw materiaal staat op het afgesproken uur op de bouw."
+        }
+      ],
+      "perBranche": [
+        {
+          "_id": "pb-l04-01",
+          "branche": "br-01",
+          "waardestatement": "Voor installatiebedrijven in de woningbouw: minder wachttijd voor monteurs en minder retouren, omdat de levering vooraf op het project is afgestemd.",
+          "kernbelofte": "Binnen 48 uur een gratis projectschouw, daarna levering per bouwfase."
+        }
+      ]
+    }
+  }
+}

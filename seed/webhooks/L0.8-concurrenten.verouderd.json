@@ -1,0 +1,33 @@
+{
+  "_toelichting": "Voorbeeldpayload sublaag.verouderd voor L0.8 (testgeval C.9 punt 8). Dealtrace toont het label 'Mogelijk verouderd in SalesDNA' en werkt door met versie 1.",
+  "methode": "POST",
+  "pad": "/api/koppelingen/salesdna/webhook",
+  "headers": {
+    "Content-Type": "application/json",
+    "X-SalesDNA-Event-Id": "evt-voltvast-0101",
+    "X-SalesDNA-Tijd": "2026-10-14T11:01:00+02:00",
+    "X-SalesDNA-Signature": "sha256=<HMAC-SHA256 over de ruwe body met het geheim van de mock, berekend bij verzenden>"
+  },
+  "body": {
+    "eventId": "evt-voltvast-0101",
+    "soort": "sublaag.verouderd",
+    "tijd": "2026-10-14T11:01:00+02:00",
+    "organisatie": {
+      "id": "org-voltvast",
+      "naam": "Testbedrijf Voltvast"
+    },
+    "onderwerpId": "L0.8",
+    "titel": "Concurrenten",
+    "versie": 1,
+    "status": "bevestigd",
+    "verouderd": true,
+    "verouderdDoor": {
+      "onderwerpId": "L0.6",
+      "titel": "Branches",
+      "versie": 2,
+      "op": "2026-10-14T11:00:00+02:00"
+    },
+    "reden": "Bevestigde wijziging in de rijen van Branches (br-02 hernoemd).",
+    "bijgewerktOp": "2026-10-14T11:01:00+02:00"
+  }
+}

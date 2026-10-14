@@ -1,0 +1,95 @@
+{
+  "_toelichting": "Voorbeeldpayload sublaag.bevestigd voor L3.14 (Hercontact ritme), Testbedrijf Voltvast. Fictief.",
+  "methode": "POST",
+  "pad": "/api/koppelingen/salesdna/webhook",
+  "headers": {
+    "Content-Type": "application/json",
+    "X-SalesDNA-Event-Id": "evt-voltvast-0007",
+    "X-SalesDNA-Tijd": "2026-10-05T11:45:00+02:00",
+    "X-SalesDNA-Signature": "sha256=<HMAC-SHA256 over de ruwe body met het geheim van de mock, berekend bij verzenden>"
+  },
+  "body": {
+    "eventId": "evt-voltvast-0007",
+    "soort": "sublaag.bevestigd",
+    "tijd": "2026-10-05T11:45:00+02:00",
+    "organisatie": {
+      "id": "org-voltvast",
+      "naam": "Testbedrijf Voltvast"
+    },
+    "onderwerpId": "L3.14",
+    "titel": "Hercontact ritme",
+    "versie": 2,
+    "status": "bevestigd",
+    "verouderd": false,
+    "bevestigdOp": "2026-10-05T11:45:00+02:00",
+    "bijgewerktOp": "2026-10-05T11:45:00+02:00",
+    "inhoud": {
+      "rijen": [
+        {
+          "_id": "hc-01",
+          "reden": "verloren-offerte",
+          "termijn": "over-een-kwartaal",
+          "kanaal": "telefoon",
+          "accountklasse": "",
+          "rollen": "rol-binnendienst",
+          "aanpak": "Bel met een nieuw project als aanleiding, niet met dezelfde offerte."
+        },
+        {
+          "_id": "hc-02",
+          "reden": "beslissing-uitgesteld",
+          "termijn": "over-2-maanden",
+          "kanaal": "e-mail",
+          "accountklasse": "",
+          "rollen": "rol-binnendienst",
+          "aanpak": "Korte e-mail met een nieuwe aanleiding."
+        },
+        {
+          "_id": "hc-03",
+          "reden": "prijs-te-hoog",
+          "termijn": "over-een-halfjaar",
+          "kanaal": "bezoek",
+          "accountklasse": "",
+          "rollen": "rol-accountmanager",
+          "aanpak": "Langs met een klantverhaal over de kosten van wachttijd."
+        },
+        {
+          "_id": "hc-06",
+          "reden": "blijft-bij-bestaande-leverancier",
+          "termijn": "over-een-jaar",
+          "kanaal": "telefoon",
+          "accountklasse": "",
+          "rollen": "rol-binnendienst",
+          "aanpak": "Bel bij de start van het nieuwe bouwseizoen met de schouw als proef."
+        }
+      ],
+      "extra": [
+        {
+          "_id": "hc-04",
+          "redenSlapen": "6-maanden-niet-besteld",
+          "termijn": "direct",
+          "kanaal": "telefoon",
+          "accountklasse": "",
+          "rollen": "rol-binnendienst",
+          "aanpak": "Vraag aan welk project de klant nu werkt."
+        },
+        {
+          "_id": "hc-05",
+          "redenSlapen": "contactpersoon-vertrokken",
+          "termijn": "over-een-maand",
+          "kanaal": "bezoek",
+          "accountklasse": "",
+          "rollen": "rol-accountmanager",
+          "aanpak": "Binnen een maand kennismaken met de opvolger."
+        }
+      ],
+      "eigenOpties": {
+        "reden": [],
+        "redenSlapen": [],
+        "termijn": [
+          "direct"
+        ],
+        "kanaal": []
+      }
+    }
+  }
+}

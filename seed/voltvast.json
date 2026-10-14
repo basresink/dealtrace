@@ -1,0 +1,1826 @@
+{
+  "_meta": {
+    "naam": "Startset Testbedrijf Voltvast",
+    "seedversie": "1.0.0",
+    "gemaakt_op": "2026-10-14",
+    "bron": "Bouwplan Dealtrace, Bijlage C (C.1 tot en met C.9), met de veldnamen uit de bijlage SalesDNA-sublagen voor Dealtrace en F25.",
+    "fictief": true,
+    "fictief_toelichting": "Alle organisaties, personen, KvK-nummers (beginnen met 99), e-mailadressen (domein .test) en telefoonnummers zijn verzonnen. Geen gegevens van Sales Legends of een bestaand bedrijf.",
+    "herkomst_waarden": {
+      "bron": "Komt uit de bron (Bijlage C markeert het als bron).",
+      "aangevuld": "Voor de seed aangevuld in dezelfde lijn; fictief."
+    },
+    "herkomst_regels": "herkomst geldt voor de hele regel. aangevuld_velden noemt velden die binnen een bronregel zijn aangevuld; bron_velden noemt velden die binnen een aangevulde regel uit de bron komen.",
+    "laden_als": [
+      "salesdna",
+      "eigen"
+    ],
+    "laden_toelichting": "De kolom bron wordt bij het laden gezet (salesdna via de webhook-fixtures, eigen via de eigen inrichting). Het veld herkomst in deze seed is iets anders dan de herkomst salesdna bij ontkoppelen (F25).",
+    "referentiedatum": "2026-10-14"
+  },
+  "organisatie": {
+    "id": "org-voltvast",
+    "naam": "Testbedrijf Voltvast",
+    "omschrijving": "Fictieve demo-organisatie: technische groothandel voor installateurs.",
+    "werkgebied": "Midden- en Noord-Nederland",
+    "teams": [
+      {
+        "id": "team-organisatie",
+        "naam": "Organisatie"
+      },
+      {
+        "id": "team-binnendienst",
+        "naam": "Binnendienst"
+      },
+      {
+        "id": "team-noord",
+        "naam": "Team Noord"
+      },
+      {
+        "id": "team-zuid",
+        "naam": "Team Zuid"
+      }
+    ],
+    "rollen": [
+      {
+        "id": "rol-accountmanager",
+        "naam": "Accountmanager"
+      },
+      {
+        "id": "rol-business-developer",
+        "naam": "Business developer"
+      },
+      {
+        "id": "rol-binnendienst",
+        "naam": "Binnendienst"
+      },
+      {
+        "id": "rol-salesmanager",
+        "naam": "Salesmanager"
+      }
+    ],
+    "accountklassen": [
+      {
+        "id": "kl-a-prospects",
+        "naam": "A · Aantal monteurs (Prospects)",
+        "tabblad": "Prospects"
+      },
+      {
+        "id": "kl-b-prospects",
+        "naam": "B · Aantal monteurs (Prospects)",
+        "tabblad": "Prospects"
+      },
+      {
+        "id": "kl-c-prospects",
+        "naam": "C · Aantal monteurs (Prospects)",
+        "tabblad": "Prospects"
+      },
+      {
+        "id": "kl-a-klanten",
+        "naam": "A · Jaaromzet bij Voltvast (Klanten)",
+        "tabblad": "Klanten"
+      },
+      {
+        "id": "kl-b-klanten",
+        "naam": "B · Jaaromzet bij Voltvast (Klanten)",
+        "tabblad": "Klanten"
+      },
+      {
+        "id": "kl-c-klanten",
+        "naam": "C · Jaaromzet bij Voltvast (Klanten)",
+        "tabblad": "Klanten"
+      }
+    ],
+    "kwartaal": "Q4 2026",
+    "herkomst": "bron",
+    "herkomst_toelichting": "Naam, werkgebied, teams, rollen, accountklassen en kwartaal komen uit de bron (C.1). De ids, de omschrijving en de gebruikers en gebieden hieronder zijn aangevuld."
+  },
+  "gebruikers": [
+    {
+      "id": "u-01",
+      "naam": "Testgebruiker Anouk Noorderveld",
+      "rol": "rol-accountmanager",
+      "team": "team-noord",
+      "werkplek": "buitendienst",
+      "niveau": "gevorderd",
+      "email": "anouk@voltvast.test"
+    },
+    {
+      "id": "u-02",
+      "naam": "Testgebruiker Bram Middelkamp",
+      "rol": "rol-accountmanager",
+      "team": "team-zuid",
+      "werkplek": "buitendienst",
+      "niveau": "beginner",
+      "email": "bram@voltvast.test"
+    },
+    {
+      "id": "u-03",
+      "naam": "Testgebruiker Sanne Belhuis",
+      "rol": "rol-binnendienst",
+      "team": "team-binnendienst",
+      "werkplek": "binnendienst",
+      "niveau": "gevorderd",
+      "email": "sanne@voltvast.test"
+    },
+    {
+      "id": "u-04",
+      "naam": "Testgebruiker Joost Stuurman",
+      "rol": "rol-salesmanager",
+      "team": "team-organisatie",
+      "werkplek": "binnendienst",
+      "niveau": "expert",
+      "email": "joost@voltvast.test"
+    },
+    {
+      "id": "u-05",
+      "naam": "Testgebruiker Lieke Nieuwland",
+      "rol": "rol-business-developer",
+      "team": "team-noord",
+      "werkplek": "buitendienst",
+      "niveau": "gevorderd",
+      "email": "lieke@voltvast.test"
+    }
+  ],
+  "gebieden": [
+    {
+      "id": "geb-noord",
+      "naam": "Regio Noord",
+      "reeksen": [
+        {
+          "van": "7700",
+          "tot": "7999"
+        },
+        {
+          "van": "8400",
+          "tot": "9999"
+        }
+      ],
+      "plaatsen": [
+        "Groningen",
+        "Leeuwarden",
+        "Assen",
+        "Emmen",
+        "Drachten",
+        "Hoogeveen"
+      ],
+      "eigenaren": {
+        "buitendienst": [
+          "u-01"
+        ],
+        "binnendienst": [
+          "u-03"
+        ]
+      },
+      "dagen": [
+        {
+          "gebruikerId": "u-01",
+          "weekdag": "dinsdag",
+          "weken": "alle"
+        }
+      ]
+    },
+    {
+      "id": "geb-midden",
+      "naam": "Regio Midden",
+      "reeksen": [
+        {
+          "van": "3400",
+          "tot": "3999"
+        },
+        {
+          "van": "7300",
+          "tot": "7499"
+        },
+        {
+          "van": "8000",
+          "tot": "8399"
+        }
+      ],
+      "plaatsen": [
+        "Utrecht",
+        "Amersfoort",
+        "Apeldoorn",
+        "Deventer",
+        "Zwolle",
+        "Lelystad"
+      ],
+      "eigenaren": {
+        "buitendienst": [
+          "u-02"
+        ],
+        "binnendienst": [
+          "u-03"
+        ]
+      },
+      "dagen": [
+        {
+          "gebruikerId": "u-02",
+          "weekdag": "donderdag",
+          "weken": "alle"
+        }
+      ]
+    }
+  ],
+  "verkoopverhaal": {
+    "vv_sublagen": [
+      {
+        "onderwerp_id": "L0.1",
+        "onderdeel": "bedrijfsverhaal",
+        "titel": "Bedrijfsverhaal",
+        "status": "bevestigd",
+        "versie": 3,
+        "verouderd": false,
+        "bevestigd_op": "2026-09-30T10:15:00+02:00",
+        "bijgewerkt_op": "2026-10-12T09:40:00+02:00",
+        "herkomst": "aangevuld",
+        "herkomst_toelichting": "De bron noemt alleen dat het verhaal bevestigd is en een keer op Mogelijk verouderd stond door de Golden circle (besloten dat de sublaag nog klopt). Versie 3 en de datums zijn aangevuld."
+      },
+      {
+        "onderwerp_id": "L0.2",
+        "onderdeel": "ambitie_visie",
+        "titel": "Ambitie & visie",
+        "status": "bevestigd",
+        "versie": 2,
+        "verouderd": false,
+        "bevestigd_op": "2026-09-30T10:20:00+02:00",
+        "bijgewerkt_op": "2026-09-30T10:20:00+02:00",
+        "herkomst": "aangevuld",
+        "herkomst_toelichting": "Status bevestigd, versienummer en datums aangevuld."
+      },
+      {
+        "onderwerp_id": "L0.4",
+        "onderdeel": "waarde_belofte",
+        "titel": "Waarde en belofte",
+        "status": "bevestigd",
+        "versie": 2,
+        "verouderd": false,
+        "bevestigd_op": "2026-10-02T14:05:00+02:00",
+        "bijgewerkt_op": "2026-10-02T14:05:00+02:00",
+        "herkomst": "aangevuld",
+        "herkomst_toelichting": "Status bevestigd, versienummer en datums aangevuld."
+      },
+      {
+        "onderwerp_id": "L0.6",
+        "onderdeel": "branches",
+        "titel": "Branches",
+        "status": "bevestigd",
+        "versie": 1,
+        "verouderd": false,
+        "bevestigd_op": "2026-09-24T11:00:00+02:00",
+        "bijgewerkt_op": "2026-09-24T11:00:00+02:00",
+        "herkomst": "bron",
+        "herkomst_toelichting": "Versie 1, bevestigd komt uit de bron (C.2). De datums zijn aangevuld."
+      },
+      {
+        "onderwerp_id": "L0.8",
+        "onderdeel": "concurrenten",
+        "titel": "Concurrenten",
+        "status": "bevestigd",
+        "versie": 1,
+        "verouderd": false,
+        "bevestigd_op": "2026-10-06T16:30:00+02:00",
+        "bijgewerkt_op": "2026-10-06T16:30:00+02:00",
+        "herkomst": "aangevuld",
+        "herkomst_toelichting": "Status bevestigd, versienummer en datums aangevuld."
+      },
+      {
+        "onderwerp_id": "L2.1",
+        "onderdeel": "winpunten",
+        "titel": "Winpunten",
+        "status": "bevestigd",
+        "versie": 2,
+        "verouderd": false,
+        "bevestigd_op": "2026-10-08T15:10:00+02:00",
+        "bijgewerkt_op": "2026-10-08T15:10:00+02:00",
+        "herkomst": "aangevuld",
+        "herkomst_toelichting": "Status bevestigd, versienummer en datums aangevuld. Fasen en winpunten samen in een onderdeel, zoals in C.7."
+      },
+      {
+        "onderwerp_id": "L3.14",
+        "onderdeel": "terugkomregels",
+        "titel": "Hercontact ritme",
+        "status": "bevestigd",
+        "versie": 2,
+        "verouderd": false,
+        "bevestigd_op": "2026-10-05T11:45:00+02:00",
+        "bijgewerkt_op": "2026-10-05T11:45:00+02:00",
+        "herkomst": "bron",
+        "herkomst_toelichting": "Bevestigd op 5 oktober 2026 komt uit de bron (C.8). Versienummer 2 is aangevuld."
+      }
+    ],
+    "vv_branches": [
+      {
+        "extern_id": "br-01",
+        "naam": "Installatiebedrijven woningbouw",
+        "focus": "primair",
+        "horizon": "huidig",
+        "termijn": "nu",
+        "prioriteit": "hoog",
+        "volgorde": 1,
+        "herkomst": "bron",
+        "termijn_vanaf": "2026-10-14",
+        "termijn_vanaf_relatief": "vandaag",
+        "aangevuld_velden": [
+          "termijn_vanaf"
+        ]
+      },
+      {
+        "extern_id": "br-02",
+        "naam": "Utiliteitsinstallateurs",
+        "focus": "primair",
+        "horizon": "huidig",
+        "termijn": "nu",
+        "prioriteit": "midden",
+        "volgorde": 2,
+        "herkomst": "bron",
+        "termijn_vanaf": "2026-10-14",
+        "termijn_vanaf_relatief": "vandaag",
+        "aangevuld_velden": [
+          "termijn_vanaf"
+        ]
+      },
+      {
+        "extern_id": "br-03",
+        "naam": "Woningcorporaties (via installateurs)",
+        "focus": "secundair",
+        "horizon": "toekomstig",
+        "termijn": "2027",
+        "prioriteit": "hoog",
+        "volgorde": 3,
+        "herkomst": "bron",
+        "termijn_vanaf": "2027-01-01",
+        "aangevuld_velden": [
+          "termijn_vanaf"
+        ]
+      },
+      {
+        "extern_id": "br-04",
+        "naam": "Zonne-energiebedrijven",
+        "focus": "secundair",
+        "horizon": "toekomstig",
+        "termijn": "2028",
+        "prioriteit": "laag",
+        "volgorde": 4,
+        "herkomst": "bron",
+        "termijn_vanaf": "2028-01-01",
+        "aangevuld_velden": [
+          "termijn_vanaf"
+        ]
+      }
+    ],
+    "vv_teksten": [
+      {
+        "id": "tx-l01-algemeen",
+        "sublaag": "L0.1",
+        "sleutel": "bedrijfsverhaal",
+        "branche_id": null,
+        "tekst": "Voltvast is een technische groothandel voor installateurs in Midden- en Noord-Nederland. Installateurs verliezen tijd als materiaal te laat of verkeerd op de bouw komt. Daarom denken wij mee vanaf het ontwerp, schouwen we het project en leveren we op het afgesproken uur. Zo kan de installateur zijn project zonder zorgen opleveren, ook nu de energietransitie het werk complexer maakt.",
+        "kernzin": "Voltvast is een technische groothandel voor installateurs in Midden- en Noord-Nederland.",
+        "versie": 3,
+        "woorden_bron": 64,
+        "woorden_tekst": 59,
+        "leestijd": "1 minuut · 64 woorden",
+        "herkomst": "aangevuld",
+        "bron_velden": [
+          "kernzin",
+          "woorden_bron",
+          "leestijd"
+        ],
+        "herkomst_toelichting": "De bron geeft alleen de kernzin en de lengte (64 woorden); de volledige tekst is aangevuld en telt minder woorden. Dealtrace rekent leestijd en woorden uit de tekst zelf; woorden_bron is alleen ter vergelijking met SalesDNA."
+      },
+      {
+        "id": "tx-l01-br01",
+        "extern_id": "pb-l01-01",
+        "sublaag": "L0.1",
+        "sleutel": "verhaal",
+        "branche_id": "br-01",
+        "tekst": "Bij woningbouwprojecten staan monteurs vaak te wachten op materiaal. Wij plannen de levering per bouwfase en zijn binnen 48 uur op de bouw voor een gratis projectschouw.",
+        "kernzin": null,
+        "versie": 3,
+        "herkomst": "aangevuld",
+        "herkomst_toelichting": "Het bestaan van een verhaal voor br-01 komt uit de bron; de tekst is aangevuld."
+      },
+      {
+        "id": "tx-l01-br02",
+        "extern_id": "pb-l01-02",
+        "sublaag": "L0.1",
+        "sleutel": "verhaal",
+        "branche_id": "br-02",
+        "tekst": "Utiliteitsprojecten vragen veel afstemming tussen techniek en planning. Wij denken vanaf het ontwerp mee en houden de installateur via de projectapp op de hoogte van elke levering.",
+        "kernzin": null,
+        "versie": 3,
+        "herkomst": "aangevuld",
+        "herkomst_toelichting": "Het bestaan van een verhaal voor br-02 komt uit de bron; de tekst is aangevuld."
+      },
+      {
+        "id": "tx-l02-ambitie",
+        "sublaag": "L0.2",
+        "sleutel": "ambitie",
+        "branche_id": null,
+        "tekst": "In 2029 is Voltvast de vaste projectpartner van 400 installatiebedrijven in onze regio, met 60 procent van onze omzet uit projecten waarin we vanaf het ontwerp meedenken.",
+        "kernzin": null,
+        "versie": 2,
+        "herkomst": "bron",
+        "herkomst_toelichting": "Letterlijk uit de bron, 27 woorden."
+      },
+      {
+        "id": "tx-l02-visie",
+        "sublaag": "L0.2",
+        "sleutel": "visie",
+        "branche_id": null,
+        "tekst": "De energietransitie maakt installatiewerk complexer. Installateurs zoeken een partner die techniek, planning en levering samenbrengt. Wie dat het beste doet, wint hun loyaliteit.",
+        "kernzin": null,
+        "versie": 2,
+        "herkomst": "bron",
+        "herkomst_toelichting": "Eerste zin letterlijk uit de bron; het vervolg is een samenvatting uit de bron, voor de seed in zinnen gezet."
+      },
+      {
+        "id": "tx-l02-missie",
+        "sublaag": "L0.2",
+        "sleutel": "missie",
+        "branche_id": null,
+        "tekst": "Wij helpen installateurs elk project zonder zorgen op te leveren, met eerlijk advies, de juiste materialen en levering op het afgesproken uur.",
+        "kernzin": null,
+        "versie": 2,
+        "herkomst": "bron",
+        "herkomst_toelichting": "Samenvatting uit de bron, voor de seed in een zin gezet."
+      },
+      {
+        "id": "tx-l04-kernbelofte",
+        "sublaag": "L0.4",
+        "sleutel": "kernbelofte",
+        "branche_id": null,
+        "tekst": "Uw materiaal staat op het afgesproken uur op de bouw.",
+        "kernzin": null,
+        "versie": 2,
+        "herkomst": "aangevuld"
+      },
+      {
+        "id": "tx-l04-waardestatement",
+        "sublaag": "L0.4",
+        "sleutel": "waardestatement",
+        "branche_id": null,
+        "tekst": "Voor installateurs met projecten in Midden- en Noord-Nederland die tijd verliezen door late of verkeerde leveringen. Wij denken mee vanaf het ontwerp en leveren per bouwfase, zodat monteurs doorwerken en het project op tijd wordt opgeleverd.",
+        "kernzin": null,
+        "versie": 2,
+        "herkomst": "aangevuld"
+      },
+      {
+        "id": "tx-l04-br01-kernbelofte",
+        "extern_id": "pb-l04-01",
+        "sublaag": "L0.4",
+        "sleutel": "kernbelofte",
+        "branche_id": "br-01",
+        "tekst": "Binnen 48 uur een gratis projectschouw, daarna levering per bouwfase.",
+        "kernzin": null,
+        "versie": 2,
+        "herkomst": "aangevuld",
+        "herkomst_toelichting": "Het blok voor br-01 komt uit de bron (editorvoorbeeld); de tekst is aangevuld."
+      },
+      {
+        "id": "tx-l04-br01-waardestatement",
+        "extern_id": "pb-l04-01",
+        "sublaag": "L0.4",
+        "sleutel": "waardestatement",
+        "branche_id": "br-01",
+        "tekst": "Voor installatiebedrijven in de woningbouw: minder wachttijd voor monteurs en minder retouren, omdat de levering vooraf op het project is afgestemd.",
+        "kernzin": null,
+        "versie": 2,
+        "herkomst": "aangevuld",
+        "herkomst_toelichting": "Het blok voor br-01 komt uit de bron (editorvoorbeeld); de tekst is aangevuld."
+      }
+    ],
+    "vv_concurrenten": [
+      {
+        "extern_id": "cc-01",
+        "volgorde": 1,
+        "concurrent": "Landelijke groothandelsketen",
+        "soortConcurrent": "concurrent-direct",
+        "soort_label": "Direct",
+        "sterk": "Groot assortiment, scherpe inkoop.",
+        "zwak": "Geen projectkennis.",
+        "onderscheid": "Meedenken vanaf het ontwerp en levering per bouwfase.",
+        "zoZegJeHet": "Zij hebben het grootste assortiment. Wij kennen uw project en leveren per bouwfase.",
+        "alsDeKlantZegt": "\"Bij de keten heb ik alles onder één dak.\" Antwoord: \"Klopt. Wat kost het u als een monteur een ochtend wacht?\"",
+        "bewijs": "Levering op het afgesproken uur, gemeten per project.",
+        "wanneerVerliezen": "Bij losse kleine bestellingen zonder project.",
+        "herkomst": "aangevuld",
+        "bron_velden": [
+          "concurrent",
+          "soortConcurrent"
+        ],
+        "herkomst_toelichting": "Naam en soort Direct komen uit de bron; de overige velden zijn aangevuld. Sterk, zwak en onderscheid volgen het voorbeeld in C.6."
+      },
+      {
+        "extern_id": "cc-02",
+        "volgorde": 2,
+        "concurrent": "Online webgroothandel",
+        "soortConcurrent": "concurrent-direct",
+        "soort_label": "Direct",
+        "sterk": "Scherpe prijs per stuk, dag en nacht bestellen.",
+        "zwak": "Geen advies op het project en geen levering per bouwfase.",
+        "onderscheid": "Rekenen met de kosten van het hele project en een gratis projectschouw binnen 48 uur.",
+        "zoZegJeHet": "Online is de prijs per stuk scherp. Wij rekenen met de kosten van het hele project.",
+        "alsDeKlantZegt": "\"Online is het goedkoper.\" Antwoord: \"Per stuk soms wel. Zullen we uw laatste project naast elkaar leggen?\"",
+        "bewijs": "Projectschouw binnen 48 uur.",
+        "wanneerVerliezen": "Bij standaardmateriaal in kleine aantallen.",
+        "herkomst": "aangevuld",
+        "herkomst_toelichting": "Het bezwaar dat online goedkoper is, hoort de binnendienst volgens de bron aan de telefoon; de teksten zijn aangevuld."
+      },
+      {
+        "extern_id": "cc-03",
+        "volgorde": 3,
+        "concurrent": "Fabrikant die direct levert",
+        "soortConcurrent": "concurrent-indirect",
+        "soort_label": "Indirect",
+        "sterk": "Diepe kennis van het eigen product.",
+        "zwak": "Levert alleen het eigen merk en plant niet per project.",
+        "onderscheid": "Merken combineren voor één project, in één levering per bouwfase.",
+        "zoZegJeHet": "De fabrikant kent zijn product. Wij combineren merken voor één project.",
+        "alsDeKlantZegt": "\"Ik bestel rechtstreeks bij de fabrikant.\" Antwoord: \"Voor hoeveel merken doet u dat nu per project?\"",
+        "bewijs": "Projectapp met alle leveringen.",
+        "wanneerVerliezen": "Bij grote orders van één merk.",
+        "herkomst": "aangevuld",
+        "herkomst_toelichting": "Het bestaan van vijf concurrenten komt uit de bron; deze regel is aangevuld."
+      },
+      {
+        "extern_id": "cc-04",
+        "volgorde": 4,
+        "concurrent": "Eigen magazijn van de installateur",
+        "soortConcurrent": "concurrent-intern",
+        "soort_label": "Intern (de klant doet het zelf)",
+        "sterk": "Materiaal direct bij de hand.",
+        "zwak": "Kapitaal ligt op de plank en voorraad veroudert.",
+        "onderscheid": "Zekerheid van levering per bouwfase, zonder eigen voorraad.",
+        "zoZegJeHet": "Een eigen voorraad geeft zekerheid. Wij geven die zekerheid zonder dat uw kapitaal op de plank ligt.",
+        "alsDeKlantZegt": "\"We hebben zelf een magazijn.\" Antwoord: \"Hoeveel van die voorraad ligt er langer dan een kwartaal?\"",
+        "bewijs": "Levering per bouwfase.",
+        "wanneerVerliezen": "Bij installateurs met een eigen logistiek medewerker.",
+        "herkomst": "aangevuld",
+        "herkomst_toelichting": "Het bestaan van vijf concurrenten komt uit de bron; deze regel is aangevuld."
+      },
+      {
+        "extern_id": "cc-05",
+        "volgorde": 5,
+        "concurrent": "Niets doen (blijft bij vaste leverancier)",
+        "soortConcurrent": "niets-doen",
+        "soort_label": "Niets doen",
+        "sterk": "Geen moeite, vertrouwde contacten.",
+        "zwak": "Wachttijd van monteurs wordt niet gemeten en blijft dus bestaan.",
+        "onderscheid": "Beginnen met één project en een gratis projectschouw als proef.",
+        "zoZegJeHet": "Overstappen kost moeite. Begin met één project, dan ziet u het verschil zelf.",
+        "alsDeKlantZegt": "\"We zijn tevreden met onze leverancier.\" Antwoord: \"Mooi. Wanneer stond een monteur voor het laatst te wachten?\"",
+        "bewijs": "Gratis projectschouw als proef.",
+        "wanneerVerliezen": "Als er geen nieuw project in de komende zes maanden is.",
+        "herkomst": "aangevuld",
+        "bron_velden": [
+          "soortConcurrent"
+        ],
+        "herkomst_toelichting": "Het bestaan van een regel Niets doen (met onderscheid, antwoord en bewijs) komt uit de bron; de teksten zijn aangevuld."
+      }
+    ],
+    "vv_fasen": [
+      {
+        "extern_id": "fa-01",
+        "naam": "Signaal",
+        "soort": "Pre-prospect- en pre-kwalificatiefase",
+        "volgorde": 1,
+        "reis_hoofdfase": "vinden-en-kwalificeren",
+        "herkomst": "bron",
+        "aangevuld_velden": [
+          "reis_hoofdfase"
+        ],
+        "herkomst_toelichting": "Naam en soort uit de bron; de koppeling van naam aan soort is afgeleid uit de volgorde en moet in SalesDNA worden gecontroleerd. De reisfase is een Dealtrace-mapping (aangevuld)."
+      },
+      {
+        "extern_id": "fa-02",
+        "naam": "Kennismaking",
+        "soort": "Prospect- en kwalificatiefase",
+        "volgorde": 2,
+        "reis_hoofdfase": "bewerken-op-ritme",
+        "herkomst": "bron",
+        "aangevuld_velden": [
+          "reis_hoofdfase"
+        ],
+        "herkomst_toelichting": "Naam en soort uit de bron; de koppeling van naam aan soort is afgeleid uit de volgorde en moet in SalesDNA worden gecontroleerd. De reisfase is een Dealtrace-mapping (aangevuld)."
+      },
+      {
+        "extern_id": "fa-03",
+        "naam": "Behoefte en schouw",
+        "soort": "Kennismakingsfase",
+        "volgorde": 3,
+        "reis_hoofdfase": "verbinden",
+        "herkomst": "bron",
+        "aangevuld_velden": [
+          "reis_hoofdfase"
+        ],
+        "herkomst_toelichting": "Naam en soort uit de bron; de koppeling van naam aan soort is afgeleid uit de volgorde en moet in SalesDNA worden gecontroleerd. De reisfase is een Dealtrace-mapping (aangevuld)."
+      },
+      {
+        "extern_id": "fa-04",
+        "naam": "Offerte",
+        "soort": "Offerte- en dealfase",
+        "volgorde": 4,
+        "reis_hoofdfase": "verbinden",
+        "herkomst": "bron",
+        "aangevuld_velden": [
+          "reis_hoofdfase"
+        ],
+        "herkomst_toelichting": "Naam en soort uit de bron; de koppeling van naam aan soort is afgeleid uit de volgorde en moet in SalesDNA worden gecontroleerd. De reisfase is een Dealtrace-mapping (aangevuld)."
+      },
+      {
+        "extern_id": "fa-05",
+        "naam": "Klant en uitbouw",
+        "soort": "Klantrelatiefase",
+        "volgorde": 5,
+        "reis_hoofdfase": "klant",
+        "herkomst": "bron",
+        "aangevuld_velden": [
+          "reis_hoofdfase"
+        ],
+        "herkomst_toelichting": "Naam en soort uit de bron; de koppeling van naam aan soort is afgeleid uit de volgorde en moet in SalesDNA worden gecontroleerd. De reisfase is een Dealtrace-mapping (aangevuld)."
+      }
+    ],
+    "vv_winpunten": [
+      {
+        "extern_id": "wp-01",
+        "fase": "fa-03",
+        "volgorde": 1,
+        "titel": "Gratis projectschouw binnen 48 uur",
+        "omschrijving": "Binnen 48 uur na de aanvraag komt een specialist gratis op de bouw kijken en maakt een leverplan per bouwfase.",
+        "onderscheidend": "Concurrenten sturen alleen een prijslijst.",
+        "concurrenten": [],
+        "impact": "hoog",
+        "bijlagen": [],
+        "context": {
+          "winloss": {
+            "gewonnen_deals_90_dagen": 3,
+            "bij_meest_voorkomende_redenen": true,
+            "herkomst": "bron"
+          }
+        },
+        "weging": 1.0,
+        "herkomst": "bron",
+        "aangevuld_velden": [
+          "omschrijving",
+          "weging"
+        ]
+      },
+      {
+        "extern_id": "wp-02",
+        "fase": "fa-04",
+        "volgorde": 1,
+        "titel": "Levering op het uur",
+        "omschrijving": "We leveren op het afgesproken uur op de bouwplaats, niet op de dag.",
+        "onderscheidend": "Monteurs staan niet te wachten.",
+        "concurrenten": [],
+        "impact": "hoog",
+        "bijlagen": [],
+        "context": {
+          "klantfeedback": {
+            "gemiddeld": 3.3,
+            "norm": 4.0,
+            "antwoorden": 9,
+            "onder_norm": true,
+            "herkomst": "bron"
+          },
+          "meekijkronde": {
+            "tekst": "5 kijken mee, tot 16 oktober",
+            "vraag_van_verkoper": true,
+            "herkomst": "bron"
+          }
+        },
+        "weging": 0.5,
+        "herkomst": "bron",
+        "aangevuld_velden": [
+          "omschrijving",
+          "weging"
+        ]
+      },
+      {
+        "extern_id": "wp-03",
+        "fase": "fa-05",
+        "volgorde": 1,
+        "titel": "Projectapp voor de installateur",
+        "omschrijving": "De installateur ziet in de app per project wat besteld, onderweg en geleverd is.",
+        "onderscheidend": "Minder bellen, minder fouten.",
+        "concurrenten": [],
+        "impact": "midden",
+        "bijlagen": [],
+        "context": {},
+        "weging": 1.0,
+        "herkomst": "bron",
+        "aangevuld_velden": [
+          "omschrijving",
+          "weging"
+        ]
+      }
+    ],
+    "vv_terugkomregels": [
+      {
+        "extern_id": "hc-01",
+        "lijst": "verloren",
+        "volgorde": 1,
+        "reden": "Verloren offerte",
+        "termijn": "Over een kwartaal",
+        "termijn_eigen": false,
+        "termijn_dagen": 91,
+        "kanaal": "Telefoon",
+        "klassen": [],
+        "klassen_betekenis": "alle klassen",
+        "rollen": [
+          "rol-binnendienst"
+        ],
+        "rollen_label": [
+          "Binnendienst"
+        ],
+        "aanpak": "Bel met een nieuw project als aanleiding, niet met dezelfde offerte.",
+        "hercontactritme_id": null,
+        "herkomst": "bron",
+        "aangevuld_velden": [
+          "aanpak",
+          "kanaal",
+          "rollen",
+          "termijn_dagen"
+        ],
+        "herkomst_toelichting": "Reden en termijn uit de lokale stand van de bron (bevestigd 5 oktober 2026); aanpak, kanaal en rol aangevuld. Termijn in dagen is een eigen aanvulling van Dealtrace."
+      },
+      {
+        "extern_id": "hc-02",
+        "lijst": "verloren",
+        "volgorde": 2,
+        "reden": "Beslissing uitgesteld",
+        "termijn": "Over 2 maanden",
+        "termijn_eigen": false,
+        "termijn_dagen": 61,
+        "kanaal": "E-mail",
+        "klassen": [],
+        "klassen_betekenis": "alle klassen",
+        "rollen": [
+          "rol-binnendienst"
+        ],
+        "rollen_label": [
+          "Binnendienst"
+        ],
+        "aanpak": "Korte e-mail met een nieuwe aanleiding.",
+        "hercontactritme_id": null,
+        "herkomst": "bron",
+        "aangevuld_velden": [
+          "termijn_dagen"
+        ],
+        "herkomst_toelichting": "Uit de helptekst van de bron. Termijn in dagen is een eigen aanvulling van Dealtrace."
+      },
+      {
+        "extern_id": "hc-03",
+        "lijst": "verloren",
+        "volgorde": 3,
+        "reden": "Prijs te hoog",
+        "termijn": "Over een halfjaar",
+        "termijn_eigen": false,
+        "termijn_dagen": 182,
+        "kanaal": "Bezoek",
+        "klassen": [],
+        "klassen_betekenis": "alle klassen",
+        "rollen": [
+          "rol-accountmanager"
+        ],
+        "rollen_label": [
+          "Accountmanager"
+        ],
+        "aanpak": "Langs met een klantverhaal over de kosten van wachttijd.",
+        "hercontactritme_id": null,
+        "herkomst": "bron",
+        "aangevuld_velden": [
+          "termijn_dagen"
+        ],
+        "herkomst_toelichting": "Uit de helptekst van de bron. Termijn in dagen is een eigen aanvulling van Dealtrace."
+      },
+      {
+        "extern_id": "hc-04",
+        "lijst": "slapend",
+        "volgorde": 1,
+        "reden": "6 maanden niet besteld",
+        "termijn": "direct",
+        "termijn_eigen": true,
+        "termijn_dagen": 0,
+        "kanaal": "Telefoon",
+        "klassen": [],
+        "klassen_betekenis": "alle klassen",
+        "rollen": [
+          "rol-binnendienst"
+        ],
+        "rollen_label": [
+          "Binnendienst"
+        ],
+        "aanpak": "Vraag aan welk project de klant nu werkt.",
+        "hercontactritme_id": null,
+        "herkomst": "bron",
+        "aangevuld_velden": [
+          "aanpak",
+          "termijn_dagen"
+        ],
+        "herkomst_toelichting": "Reden en eigen termijn direct uit de lokale stand van de bron; aanpak aangevuld. Termijn in dagen is een eigen aanvulling van Dealtrace."
+      },
+      {
+        "extern_id": "hc-05",
+        "lijst": "slapend",
+        "volgorde": 2,
+        "reden": "Contactpersoon vertrokken",
+        "termijn": "Over een maand",
+        "termijn_eigen": false,
+        "termijn_dagen": 30,
+        "kanaal": "Bezoek",
+        "klassen": [],
+        "klassen_betekenis": "alle klassen",
+        "rollen": [
+          "rol-accountmanager"
+        ],
+        "rollen_label": [
+          "Accountmanager"
+        ],
+        "aanpak": "Binnen een maand kennismaken met de opvolger.",
+        "hercontactritme_id": null,
+        "herkomst": "bron",
+        "aangevuld_velden": [
+          "termijn_dagen"
+        ],
+        "herkomst_toelichting": "Uit de helptekst van de bron. Termijn in dagen is een eigen aanvulling van Dealtrace."
+      },
+      {
+        "extern_id": "hc-06",
+        "lijst": "verloren",
+        "volgorde": 4,
+        "reden": "Blijft bij bestaande leverancier",
+        "termijn": "Over een jaar",
+        "termijn_eigen": false,
+        "termijn_dagen": 365,
+        "kanaal": "Telefoon",
+        "klassen": [],
+        "klassen_betekenis": "alle klassen",
+        "rollen": [
+          "rol-binnendienst"
+        ],
+        "rollen_label": [
+          "Binnendienst"
+        ],
+        "aanpak": "Bel bij de start van het nieuwe bouwseizoen met de schouw als proef.",
+        "hercontactritme_id": null,
+        "herkomst": "aangevuld",
+        "aangevuld_velden": [
+          "termijn_dagen"
+        ],
+        "herkomst_toelichting": "Aangevuld voor de seed. Termijn in dagen is een eigen aanvulling van Dealtrace."
+      }
+    ],
+    "vv_eigen_opties": [
+      {
+        "sublaag": "L3.14",
+        "veld": "termijn",
+        "waarde": "direct",
+        "herkomst": "bron"
+      }
+    ],
+    "eigen_aanvullingen": {
+      "vv_branche_mapping": [
+        {
+          "branche_id": "br-01",
+          "sbi_codes": [
+            "4321",
+            "4322"
+          ],
+          "trefwoorden": [],
+          "doelgroep_ids": [],
+          "herkomst": "aangevuld"
+        },
+        {
+          "branche_id": "br-02",
+          "sbi_codes": [
+            "4321",
+            "4322"
+          ],
+          "trefwoorden": [],
+          "doelgroep_ids": [],
+          "herkomst": "aangevuld"
+        },
+        {
+          "branche_id": "br-03",
+          "sbi_codes": [
+            "6820"
+          ],
+          "trefwoorden": [],
+          "doelgroep_ids": [],
+          "herkomst": "aangevuld"
+        },
+        {
+          "branche_id": "br-04",
+          "sbi_codes": [
+            "4321"
+          ],
+          "trefwoorden": [
+            "zonnepanelen"
+          ],
+          "doelgroep_ids": [],
+          "herkomst": "aangevuld"
+        }
+      ],
+      "vv_ambitiedoelen": [
+        {
+          "id": "ad-01",
+          "naam": "Vaste projectpartners",
+          "doel": 400,
+          "eenheid": "aantal",
+          "jaar": 2029,
+          "stand": 112,
+          "status": "voorstel",
+          "herkomst": "aangevuld",
+          "herkomst_toelichting": "Doel en jaar afgeleid uit de ambitie (bron); de stand 112 volgt het voorbeeld in F25."
+        },
+        {
+          "id": "ad-02",
+          "naam": "Omzet uit projecten",
+          "doel": 60,
+          "eenheid": "procent",
+          "jaar": 2029,
+          "stand": null,
+          "status": "voorstel",
+          "herkomst": "aangevuld",
+          "herkomst_toelichting": "Doel en jaar afgeleid uit de ambitie (bron)."
+        }
+      ],
+      "vv_redenmapping": [
+        {
+          "bron_soort": "deal_verloren",
+          "dealtrace_reden": "Prijs",
+          "terugkomregel_id": "hc-03",
+          "herkomst": "aangevuld"
+        },
+        {
+          "bron_soort": "deal_verloren",
+          "dealtrace_reden": "Timing",
+          "terugkomregel_id": "hc-02",
+          "herkomst": "aangevuld"
+        },
+        {
+          "bron_soort": "deal_verloren",
+          "dealtrace_reden": "Geen besluit",
+          "terugkomregel_id": "hc-02",
+          "herkomst": "aangevuld"
+        },
+        {
+          "bron_soort": "deal_verloren",
+          "dealtrace_reden": "Concurrent",
+          "terugkomregel_id": "hc-06",
+          "herkomst": "aangevuld"
+        },
+        {
+          "bron_soort": "deal_verloren",
+          "dealtrace_reden": "Geen budget",
+          "terugkomregel_id": null,
+          "herkomst": "aangevuld",
+          "toelichting": "Geen passende regel; Dealtrace valt terug op de standaard afkoelperiode."
+        },
+        {
+          "bron_soort": "nee",
+          "dealtrace_reden": "Tevreden met huidige leverancier",
+          "terugkomregel_id": "hc-06",
+          "herkomst": "aangevuld"
+        },
+        {
+          "bron_soort": "nee",
+          "dealtrace_reden": "Verkeerd moment",
+          "terugkomregel_id": "hc-02",
+          "herkomst": "aangevuld"
+        },
+        {
+          "bron_soort": "offerte_verloren",
+          "dealtrace_reden": "Verloren",
+          "terugkomregel_id": "hc-01",
+          "herkomst": "aangevuld"
+        },
+        {
+          "bron_soort": "slapend",
+          "dealtrace_reden": "6 maanden niet besteld",
+          "terugkomregel_id": "hc-04",
+          "herkomst": "aangevuld"
+        },
+        {
+          "bron_soort": "slapend",
+          "dealtrace_reden": "Contactpersoon vertrokken",
+          "terugkomregel_id": "hc-05",
+          "herkomst": "aangevuld"
+        }
+      ]
+    },
+    "context": {
+      "sbi_omschrijving": {
+        "4321": "Elektrotechnische bouwinstallatie",
+        "4322": "Loodgieters- en verwarmingsinstallatie",
+        "6820": "Verhuur van onroerend goed"
+      },
+      "dekking": {
+        "L0.1": {
+          "met_eigen_blok": [
+            "br-01",
+            "br-02"
+          ],
+          "zonder_eigen_blok": [
+            "br-03",
+            "br-04"
+          ],
+          "label": "2 van 4",
+          "herkomst": "bron"
+        },
+        "L0.4": {
+          "met_eigen_blok": [
+            "br-01"
+          ],
+          "zonder_eigen_blok": [
+            "br-02",
+            "br-03",
+            "br-04"
+          ],
+          "label": "1 van 4",
+          "herkomst": "bron"
+        }
+      },
+      "branches_komt_terug_in": {
+        "waarden": [
+          "Bedrijfsverhaal",
+          "Waarde en belofte",
+          "Up- en cross-sell",
+          "Campagnes"
+        ],
+        "niet_in": [
+          "Regio indeling"
+        ],
+        "herkomst": "bron"
+      },
+      "bedrijfsverhaal": {
+        "kader5_taken": [
+          {
+            "tekst": "Bedrijfsverhaal laten lezen door twee vestigingsleiders",
+            "status": "te laat",
+            "herkomst": "bron"
+          }
+        ],
+        "tijdslijn": [
+          {
+            "gebeurtenis": "markeerde de sublaag als mogelijk verouderd door een wijziging in Golden circle",
+            "herkomst": "bron"
+          },
+          {
+            "gebeurtenis": "besloot dat de sublaag nog klopt",
+            "herkomst": "bron"
+          }
+        ]
+      },
+      "plan_jaarkeuzes": [
+        {
+          "id": "jk-01",
+          "bij": "Winpunten",
+          "tekst": "Winpunt voor de eerste fasen vastleggen",
+          "herkomst": "aangevuld",
+          "herkomst_toelichting": "Het bestaan van een jaarkeuze bij Winpunten komt uit de bron; de tekst is aangevuld."
+        },
+        {
+          "id": "jk-02",
+          "bij": "Prospectmix",
+          "tekst": "Werfroute voor woningcorporaties",
+          "herkomst": "aangevuld",
+          "herkomst_toelichting": "Het bestaan van een jaarkeuze bij Prospectmix komt uit de bron; de tekst is aangevuld."
+        },
+        {
+          "id": "jk-03",
+          "bij": "Branches",
+          "tekst": "Branches toetsen aan de klantdata",
+          "herkomst": "aangevuld",
+          "herkomst_toelichting": "Het bestaan van een jaarkeuze bij Branches komt uit de bron; de tekst is aangevuld."
+        }
+      ],
+      "concurrenten": {
+        "prospectmix_idee": {
+          "tekst": "Klanten van Landelijke groothandelsketen overhalen.",
+          "concurrent_id": "cc-01",
+          "herkomst": "bron"
+        },
+        "komt_terug_in": {
+          "waarden": [
+            "Plan"
+          ],
+          "herkomst": "bron"
+        },
+        "geen_winpunt_kiest_concurrent": {
+          "waarde": true,
+          "herkomst": "bron"
+        }
+      },
+      "winpunten": {
+        "fasen_zonder_winpunt": {
+          "fasen": [
+            "fa-01",
+            "fa-02"
+          ],
+          "melding": "Geen winpunt in Signaal en Kennismaking",
+          "herkomst": "bron"
+        },
+        "tegen_wie_en_bijlagen_leeg": {
+          "waarde": true,
+          "herkomst": "bron"
+        },
+        "komt_terug_in": {
+          "waarden": [
+            "Activiteiten",
+            "KPI's per fase",
+            "Plan"
+          ],
+          "herkomst": "bron"
+        }
+      },
+      "terugkomregels": {
+        "lokale_stand_bron": {
+          "bevestigd_op": "2026-10-05",
+          "regels": [
+            "hc-01",
+            "hc-04"
+          ],
+          "zonder_kanaal_klasse_rollen": true,
+          "herkomst": "bron",
+          "toelichting": "In de lokale stand van de bron hebben beide regels geen kanaal, klasse en rollen; het demoscript heeft zes regels met kanalen en rollen."
+        }
+      }
+    }
+  },
+  "testvarianten": {
+    "toelichting": "Apart te laden bovenop de basisseed; niet standaard actief.",
+    "wp-01-tegen-wie": {
+      "doel": "De keuzeregel 'Tegen wie we hier winnen' testen (kiesWinpunt kiest eerst een winpunt dat tegen de huidige leverancier wint).",
+      "herkomst": "aangevuld",
+      "wijziging": {
+        "tabel": "vv_winpunten",
+        "extern_id": "wp-01",
+        "velden": {
+          "concurrenten": [
+            "cc-01",
+            "cc-02"
+          ]
+        }
+      }
+    },
+    "hc-03-klasse-a": {
+      "doel": "Een terugkomregel die alleen voor een accountklasse geldt.",
+      "herkomst": "aangevuld",
+      "wijziging": {
+        "tabel": "vv_terugkomregels",
+        "extern_id": "hc-03",
+        "velden": {
+          "klassen": [
+            "kl-a-prospects"
+          ],
+          "klassen_betekenis": "A · Aantal monteurs (Prospects)"
+        }
+      }
+    }
+  },
+  "accounts": [
+    {
+      "id": "pr-01",
+      "naam": "Testinstallatie Koperwiek",
+      "account_kind": "prospect",
+      "kvk": "99000101",
+      "sbi": [
+        "4321",
+        "4322"
+      ],
+      "plaats": "Amersfoort",
+      "postcode": "3821",
+      "provincie": "Utrecht",
+      "lat": 52.17,
+      "lng": 5.4,
+      "gebied_id": "geb-midden",
+      "klasse": "kl-a-prospects",
+      "aantal_monteurs": 24,
+      "vv_branche_id": "br-01",
+      "huidige_leverancier_id": "cc-02",
+      "nb_status": "in reis",
+      "vv_fase_id": "fa-02",
+      "owner_id": "u-03",
+      "domein": "koperwiek.test",
+      "fictief": true,
+      "testgevallen": [
+        2,
+        9,
+        10
+      ]
+    },
+    {
+      "id": "pr-02",
+      "naam": "Testinstallatie Vonkenburg",
+      "account_kind": "prospect",
+      "kvk": "99000102",
+      "sbi": [
+        "4321"
+      ],
+      "plaats": "Groningen",
+      "postcode": "9723",
+      "provincie": "Groningen",
+      "lat": 53.21,
+      "lng": 6.57,
+      "gebied_id": "geb-noord",
+      "klasse": "kl-b-prospects",
+      "aantal_monteurs": 12,
+      "vv_branche_id": "br-01",
+      "huidige_leverancier_id": null,
+      "nb_status": "gescoord",
+      "vv_fase_id": "fa-04",
+      "owner_id": "u-01",
+      "domein": "vonkenburg.test",
+      "fictief": true,
+      "testgevallen": [
+        4
+      ]
+    },
+    {
+      "id": "pr-03",
+      "naam": "Testinstallatie Stroomdal",
+      "account_kind": "prospect",
+      "kvk": "99000103",
+      "sbi": [
+        "4322"
+      ],
+      "plaats": "Assen",
+      "postcode": "9401",
+      "provincie": "Drenthe",
+      "lat": 53.0,
+      "lng": 6.56,
+      "gebied_id": "geb-noord",
+      "klasse": "kl-c-prospects",
+      "aantal_monteurs": 6,
+      "vv_branche_id": "br-01",
+      "huidige_leverancier_id": null,
+      "nb_status": "nieuw",
+      "vv_fase_id": "fa-01",
+      "owner_id": "u-03",
+      "domein": "stroomdal.test",
+      "fictief": true,
+      "testgevallen": [
+        3
+      ]
+    },
+    {
+      "id": "pr-04",
+      "naam": "Testinstallatie Leidingveld",
+      "account_kind": "prospect",
+      "kvk": "99000104",
+      "sbi": [
+        "4322"
+      ],
+      "plaats": "Zwolle",
+      "postcode": "8011",
+      "provincie": "Overijssel",
+      "lat": 52.51,
+      "lng": 6.09,
+      "gebied_id": "geb-midden",
+      "klasse": "kl-a-prospects",
+      "aantal_monteurs": 31,
+      "vv_branche_id": "br-01",
+      "huidige_leverancier_id": "cc-01",
+      "nb_status": "in reis",
+      "vv_fase_id": "fa-02",
+      "owner_id": "u-02",
+      "domein": "leidingveld.test",
+      "fictief": true,
+      "testgevallen": []
+    },
+    {
+      "id": "pr-05",
+      "naam": "Testtechniek Kantoorhaven",
+      "account_kind": "prospect",
+      "kvk": "99000105",
+      "sbi": [
+        "4321"
+      ],
+      "plaats": "Apeldoorn",
+      "postcode": "7311",
+      "provincie": "Gelderland",
+      "lat": 52.21,
+      "lng": 5.97,
+      "gebied_id": "geb-midden",
+      "klasse": "kl-a-prospects",
+      "aantal_monteurs": 40,
+      "vv_branche_id": "br-02",
+      "huidige_leverancier_id": null,
+      "nb_status": "nee",
+      "vv_fase_id": "fa-04",
+      "owner_id": "u-02",
+      "domein": "kantoorhaven.test",
+      "fictief": true,
+      "testgevallen": [
+        5
+      ]
+    },
+    {
+      "id": "pr-06",
+      "naam": "Testtechniek Gevelpunt",
+      "account_kind": "prospect",
+      "kvk": "99000106",
+      "sbi": [
+        "4321",
+        "4322"
+      ],
+      "plaats": "Leeuwarden",
+      "postcode": "8911",
+      "provincie": "Friesland",
+      "lat": 53.2,
+      "lng": 5.8,
+      "gebied_id": "geb-noord",
+      "klasse": "kl-b-prospects",
+      "aantal_monteurs": 18,
+      "vv_branche_id": "br-02",
+      "huidige_leverancier_id": "cc-03",
+      "nb_status": "in reis",
+      "vv_fase_id": "fa-03",
+      "owner_id": "u-01",
+      "domein": "gevelpunt.test",
+      "fictief": true,
+      "testgevallen": [
+        6
+      ]
+    },
+    {
+      "id": "pr-07",
+      "naam": "Testtechniek Plafondwerk",
+      "account_kind": "prospect",
+      "kvk": "99000107",
+      "sbi": [
+        "4321"
+      ],
+      "plaats": "Utrecht",
+      "postcode": "3542",
+      "provincie": "Utrecht",
+      "lat": 52.1,
+      "lng": 5.08,
+      "gebied_id": "geb-midden",
+      "klasse": "kl-b-prospects",
+      "aantal_monteurs": 15,
+      "vv_branche_id": "br-02",
+      "huidige_leverancier_id": "cc-05",
+      "nb_status": "wachtend",
+      "vv_fase_id": "fa-02",
+      "owner_id": "u-03",
+      "domein": "plafondwerk.test",
+      "fictief": true,
+      "testgevallen": [
+        6
+      ],
+      "terug_op": "2027-10-14",
+      "terug_regel_id": "hc-06",
+      "terug_reden": "Blijft bij bestaande leverancier"
+    },
+    {
+      "id": "pr-08",
+      "naam": "Teststichting Woonhof Noord",
+      "account_kind": "prospect",
+      "kvk": "99000108",
+      "sbi": [
+        "6820"
+      ],
+      "plaats": "Emmen",
+      "postcode": "7811",
+      "provincie": "Drenthe",
+      "lat": 52.78,
+      "lng": 6.9,
+      "gebied_id": "geb-noord",
+      "klasse": "kl-a-prospects",
+      "aantal_monteurs": null,
+      "vv_branche_id": "br-03",
+      "huidige_leverancier_id": null,
+      "nb_status": "nieuw",
+      "vv_fase_id": "fa-01",
+      "owner_id": "u-05",
+      "domein": "woonhof.test",
+      "fictief": true,
+      "testgevallen": [
+        1
+      ]
+    },
+    {
+      "id": "pr-09",
+      "naam": "Teststichting Huurwaarde",
+      "account_kind": "prospect",
+      "kvk": "99000109",
+      "sbi": [
+        "6820"
+      ],
+      "plaats": "Deventer",
+      "postcode": "7411",
+      "provincie": "Overijssel",
+      "lat": 52.26,
+      "lng": 6.16,
+      "gebied_id": "geb-midden",
+      "klasse": "kl-b-prospects",
+      "aantal_monteurs": null,
+      "vv_branche_id": "br-03",
+      "huidige_leverancier_id": null,
+      "nb_status": "nieuw",
+      "vv_fase_id": "fa-01",
+      "owner_id": "u-05",
+      "domein": "huurwaarde.test",
+      "fictief": true,
+      "testgevallen": [
+        1
+      ]
+    },
+    {
+      "id": "pr-10",
+      "naam": "Teststichting Dakenrij Wonen",
+      "account_kind": "prospect",
+      "kvk": "99000110",
+      "sbi": [
+        "6820"
+      ],
+      "plaats": "Drachten",
+      "postcode": "9203",
+      "provincie": "Friesland",
+      "lat": 53.11,
+      "lng": 6.1,
+      "gebied_id": "geb-noord",
+      "klasse": "kl-c-prospects",
+      "aantal_monteurs": null,
+      "vv_branche_id": "br-03",
+      "huidige_leverancier_id": null,
+      "nb_status": "nieuw",
+      "vv_fase_id": "fa-01",
+      "owner_id": "u-05",
+      "domein": "dakenrij.test",
+      "fictief": true,
+      "testgevallen": [
+        1
+      ]
+    },
+    {
+      "id": "pr-11",
+      "naam": "Testzon Paneelveld",
+      "account_kind": "prospect",
+      "kvk": "99000111",
+      "sbi": [
+        "4321"
+      ],
+      "plaats": "Lelystad",
+      "postcode": "8232",
+      "provincie": "Flevoland",
+      "lat": 52.51,
+      "lng": 5.47,
+      "gebied_id": "geb-midden",
+      "klasse": "kl-b-prospects",
+      "aantal_monteurs": 9,
+      "vv_branche_id": "br-04",
+      "huidige_leverancier_id": "cc-04",
+      "nb_status": "nieuw",
+      "vv_fase_id": "fa-01",
+      "owner_id": "u-05",
+      "domein": "paneelveld.test",
+      "fictief": true,
+      "trefwoorden": [
+        "zonnepanelen"
+      ],
+      "testgevallen": []
+    },
+    {
+      "id": "pr-12",
+      "naam": "Testzon Lichtakker",
+      "account_kind": "prospect",
+      "kvk": "99000112",
+      "sbi": [
+        "4321"
+      ],
+      "plaats": "Hoogeveen",
+      "postcode": "7901",
+      "provincie": "Drenthe",
+      "lat": 52.72,
+      "lng": 6.48,
+      "gebied_id": "geb-noord",
+      "klasse": "kl-c-prospects",
+      "aantal_monteurs": 5,
+      "vv_branche_id": "br-04",
+      "huidige_leverancier_id": null,
+      "nb_status": "nieuw",
+      "vv_fase_id": "fa-01",
+      "owner_id": "u-05",
+      "domein": "lichtakker.test",
+      "fictief": true,
+      "trefwoorden": [
+        "zonnepanelen"
+      ],
+      "testgevallen": []
+    },
+    {
+      "id": "kl-01",
+      "naam": "Testinstallatie Schakelaar",
+      "account_kind": "klant",
+      "kvk": "99000201",
+      "sbi": [
+        "4321"
+      ],
+      "plaats": "Groningen",
+      "postcode": "9744",
+      "provincie": "Groningen",
+      "lat": 53.22,
+      "lng": 6.53,
+      "gebied_id": "geb-noord",
+      "klasse": "kl-b-klanten",
+      "aantal_monteurs": 14,
+      "vv_branche_id": "br-01",
+      "huidige_leverancier_id": null,
+      "nb_status": "klant",
+      "vv_fase_id": "fa-05",
+      "owner_id": "u-01",
+      "domein": "schakelaar.test",
+      "fictief": true,
+      "laatste_bestelling_op": "2026-04-08",
+      "slapend": true,
+      "terug_op": "2026-10-14",
+      "terug_regel_id": "hc-04",
+      "terug_reden": "6 maanden niet besteld",
+      "testgevallen": []
+    },
+    {
+      "id": "kl-02",
+      "naam": "Testtechniek Kabelgoot",
+      "account_kind": "klant",
+      "kvk": "99000202",
+      "sbi": [
+        "4321",
+        "4322"
+      ],
+      "plaats": "Amersfoort",
+      "postcode": "3825",
+      "provincie": "Utrecht",
+      "lat": 52.18,
+      "lng": 5.42,
+      "gebied_id": "geb-midden",
+      "klasse": "kl-a-klanten",
+      "aantal_monteurs": 22,
+      "vv_branche_id": "br-02",
+      "huidige_leverancier_id": null,
+      "nb_status": "klant",
+      "vv_fase_id": "fa-05",
+      "owner_id": "u-02",
+      "domein": "kabelgoot.test",
+      "fictief": true,
+      "laatste_bestelling_op": "2026-09-22",
+      "slapend": true,
+      "terug_op": "2026-11-09",
+      "terug_regel_id": "hc-05",
+      "terug_reden": "Contactpersoon vertrokken",
+      "testgevallen": []
+    }
+  ],
+  "contacten": [
+    {
+      "id": "ct-01",
+      "account_id": "pr-01",
+      "first_name": "Jorien",
+      "last_name": "Testkolk",
+      "functie": "Directeur-eigenaar",
+      "rol": "beslisser",
+      "email": "jorien.testkolk@koperwiek.test",
+      "telefoon": "+31 6 0000 0001",
+      "status": "actief",
+      "fictief": true
+    },
+    {
+      "id": "ct-02",
+      "account_id": "pr-01",
+      "first_name": "Ruud",
+      "last_name": "Testbeek",
+      "functie": "Werkvoorbereider",
+      "rol": "beinvloeder",
+      "email": "ruud.testbeek@koperwiek.test",
+      "telefoon": "+31 6 0000 0002",
+      "status": "actief",
+      "fictief": true
+    },
+    {
+      "id": "ct-03",
+      "account_id": "pr-02",
+      "first_name": "Marloes",
+      "last_name": "Testhuizen",
+      "functie": "Projectleider",
+      "rol": "beslisser",
+      "email": "marloes.testhuizen@vonkenburg.test",
+      "telefoon": "+31 6 0000 0003",
+      "status": "actief",
+      "fictief": true
+    },
+    {
+      "id": "ct-04",
+      "account_id": "pr-03",
+      "first_name": "Gerrit",
+      "last_name": "Testveen",
+      "functie": "Eigenaar",
+      "rol": "beslisser",
+      "email": "gerrit.testveen@stroomdal.test",
+      "telefoon": "+31 6 0000 0004",
+      "status": "actief",
+      "fictief": true
+    },
+    {
+      "id": "ct-05",
+      "account_id": "pr-04",
+      "first_name": "Henk",
+      "last_name": "Testwold",
+      "functie": "Inkoper",
+      "rol": "beinvloeder",
+      "email": "henk.testwold@leidingveld.test",
+      "telefoon": "+31 6 0000 0005",
+      "status": "actief",
+      "fictief": true
+    },
+    {
+      "id": "ct-06",
+      "account_id": "pr-05",
+      "first_name": "Ilse",
+      "last_name": "Testmeer",
+      "functie": "Bedrijfsleider",
+      "rol": "beslisser",
+      "email": "ilse.testmeer@kantoorhaven.test",
+      "telefoon": "+31 6 0000 0006",
+      "status": "actief",
+      "fictief": true
+    },
+    {
+      "id": "ct-07",
+      "account_id": "pr-06",
+      "first_name": "Wietse",
+      "last_name": "Testsma",
+      "functie": "Hoofd projecten",
+      "rol": "beslisser",
+      "email": "wietse.testsma@gevelpunt.test",
+      "telefoon": "+31 6 0000 0007",
+      "status": "actief",
+      "fictief": true
+    },
+    {
+      "id": "ct-08",
+      "account_id": "pr-07",
+      "first_name": "Esther",
+      "last_name": "Testdijk",
+      "functie": "Inkoper",
+      "rol": "beslisser",
+      "email": "esther.testdijk@plafondwerk.test",
+      "telefoon": "+31 6 0000 0008",
+      "status": "actief",
+      "fictief": true
+    },
+    {
+      "id": "ct-09",
+      "account_id": "pr-08",
+      "first_name": "Arjen",
+      "last_name": "Testhof",
+      "functie": "Manager vastgoed",
+      "rol": "beslisser",
+      "email": "arjen.testhof@woonhof.test",
+      "telefoon": "+31 6 0000 0009",
+      "status": "actief",
+      "fictief": true
+    },
+    {
+      "id": "ct-10",
+      "account_id": "pr-09",
+      "first_name": "Nadia",
+      "last_name": "Testberg",
+      "functie": "Projectleider onderhoud",
+      "rol": "beinvloeder",
+      "email": "nadia.testberg@huurwaarde.test",
+      "telefoon": "+31 6 0000 0010",
+      "status": "actief",
+      "fictief": true
+    },
+    {
+      "id": "ct-11",
+      "account_id": "pr-11",
+      "first_name": "Sven",
+      "last_name": "Testlicht",
+      "functie": "Eigenaar",
+      "rol": "beslisser",
+      "email": "sven.testlicht@paneelveld.test",
+      "telefoon": "+31 6 0000 0011",
+      "status": "actief",
+      "fictief": true
+    },
+    {
+      "id": "ct-12",
+      "account_id": "kl-01",
+      "first_name": "Karin",
+      "last_name": "Testhorst",
+      "functie": "Inkoper",
+      "rol": "beslisser",
+      "email": "karin.testhorst@schakelaar.test",
+      "telefoon": "+31 6 0000 0012",
+      "status": "actief",
+      "fictief": true
+    },
+    {
+      "id": "ct-13",
+      "account_id": "kl-02",
+      "first_name": "Peter",
+      "last_name": "Testgoot",
+      "functie": "Inkoper",
+      "rol": "beslisser",
+      "email": "peter.testgoot@kabelgoot.test",
+      "telefoon": "+31 6 0000 0013",
+      "status": "vertrokken",
+      "fictief": true
+    },
+    {
+      "id": "ct-14",
+      "account_id": "kl-02",
+      "first_name": "Yara",
+      "last_name": "Testgoot",
+      "functie": "Inkoper (opvolger)",
+      "rol": "beslisser",
+      "email": "yara.testgoot@kabelgoot.test",
+      "telefoon": "+31 6 0000 0014",
+      "status": "actief",
+      "fictief": true
+    }
+  ],
+  "notities": [
+    {
+      "id": "nt-01",
+      "account_id": "pr-01",
+      "contact_id": "ct-01",
+      "auteur_id": "u-03",
+      "op": "2026-10-09T10:12:00+02:00",
+      "tekst": "Jorien Testkolk zegt dat ze nu alles bij de online webgroothandel bestelt omdat het goedkoper is. Ruud Testbeek plant de woningbouw in Hoogland. Bellen na de bouwvergadering.",
+      "testgevallen": [
+        9
+      ],
+      "verwachting": "De namen Jorien Testkolk en Ruud Testbeek gaan niet mee in een AI-aanroep of suggestie."
+    }
+  ],
+  "deals": [
+    {
+      "id": "dl-01",
+      "account_id": "pr-05",
+      "naam": "Kantoorrenovatie fase 2",
+      "waarde": 48000,
+      "fase": "Verloren",
+      "sluitdatum": "2026-10-12",
+      "verlies_reden": "Prijs",
+      "owner_id": "u-02",
+      "data": {
+        "verlorenAan": null,
+        "winpuntIngezet": [
+          "wp-02"
+        ]
+      },
+      "testgevallen": [
+        5
+      ],
+      "verwachting": {
+        "terugkomregel_id": "hc-03",
+        "reden": "Prijs te hoog",
+        "termijn_dagen": 182,
+        "berekende_datum": "2027-04-12",
+        "regiodag": "donderdag (u-02, Regio Midden)",
+        "taak": {
+          "soort": "bezoek",
+          "owner_id": "u-02",
+          "due_date": "2027-04-15",
+          "aanpak": "Langs met een klantverhaal over de kosten van wachttijd."
+        }
+      }
+    },
+    {
+      "id": "dl-02",
+      "account_id": "pr-02",
+      "naam": "Nieuwbouw 36 woningen",
+      "waarde": 62000,
+      "fase": "Voorstel",
+      "sluitdatum": "2026-11-28",
+      "owner_id": "u-01",
+      "data": {
+        "winpuntIngezet": []
+      },
+      "testgevallen": [
+        4
+      ]
+    }
+  ],
+  "campagnes": [
+    {
+      "id": "cp-01",
+      "naam": "Werfroute woningcorporaties",
+      "branche_ids": [
+        "br-03"
+      ],
+      "status": "concept",
+      "testgevallen": [
+        1
+      ],
+      "verwachting": "Dekkingsmelding: Woningcorporaties (via installateurs) heeft geen eigen verhaal en geen eigen belofte; de campagne gebruikt het algemene verhaal en de algemene belofte."
+    }
+  ]
+}

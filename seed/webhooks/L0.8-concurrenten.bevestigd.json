@@ -1,0 +1,91 @@
+{
+  "_toelichting": "Voorbeeldpayload sublaag.bevestigd voor L0.8 (Concurrenten), Testbedrijf Voltvast. Fictief.",
+  "methode": "POST",
+  "pad": "/api/koppelingen/salesdna/webhook",
+  "headers": {
+    "Content-Type": "application/json",
+    "X-SalesDNA-Event-Id": "evt-voltvast-0005",
+    "X-SalesDNA-Tijd": "2026-10-06T16:30:00+02:00",
+    "X-SalesDNA-Signature": "sha256=<HMAC-SHA256 over de ruwe body met het geheim van de mock, berekend bij verzenden>"
+  },
+  "body": {
+    "eventId": "evt-voltvast-0005",
+    "soort": "sublaag.bevestigd",
+    "tijd": "2026-10-06T16:30:00+02:00",
+    "organisatie": {
+      "id": "org-voltvast",
+      "naam": "Testbedrijf Voltvast"
+    },
+    "onderwerpId": "L0.8",
+    "titel": "Concurrenten",
+    "versie": 1,
+    "status": "bevestigd",
+    "verouderd": false,
+    "bevestigdOp": "2026-10-06T16:30:00+02:00",
+    "bijgewerktOp": "2026-10-06T16:30:00+02:00",
+    "inhoud": {
+      "rijen": [
+        {
+          "_id": "cc-01",
+          "concurrent": "Landelijke groothandelsketen",
+          "soortConcurrent": "concurrent-direct",
+          "sterk": "Groot assortiment, scherpe inkoop.",
+          "zwak": "Geen projectkennis.",
+          "onderscheid": "Meedenken vanaf het ontwerp en levering per bouwfase.",
+          "zoZegJeHet": "Zij hebben het grootste assortiment. Wij kennen uw project en leveren per bouwfase.",
+          "alsDeKlantZegt": "\"Bij de keten heb ik alles onder één dak.\" Antwoord: \"Klopt. Wat kost het u als een monteur een ochtend wacht?\"",
+          "bewijs": "Levering op het afgesproken uur, gemeten per project.",
+          "wanneerVerliezen": "Bij losse kleine bestellingen zonder project."
+        },
+        {
+          "_id": "cc-02",
+          "concurrent": "Online webgroothandel",
+          "soortConcurrent": "concurrent-direct",
+          "sterk": "Scherpe prijs per stuk, dag en nacht bestellen.",
+          "zwak": "Geen advies op het project en geen levering per bouwfase.",
+          "onderscheid": "Rekenen met de kosten van het hele project en een gratis projectschouw binnen 48 uur.",
+          "zoZegJeHet": "Online is de prijs per stuk scherp. Wij rekenen met de kosten van het hele project.",
+          "alsDeKlantZegt": "\"Online is het goedkoper.\" Antwoord: \"Per stuk soms wel. Zullen we uw laatste project naast elkaar leggen?\"",
+          "bewijs": "Projectschouw binnen 48 uur.",
+          "wanneerVerliezen": "Bij standaardmateriaal in kleine aantallen."
+        },
+        {
+          "_id": "cc-03",
+          "concurrent": "Fabrikant die direct levert",
+          "soortConcurrent": "concurrent-indirect",
+          "sterk": "Diepe kennis van het eigen product.",
+          "zwak": "Levert alleen het eigen merk en plant niet per project.",
+          "onderscheid": "Merken combineren voor één project, in één levering per bouwfase.",
+          "zoZegJeHet": "De fabrikant kent zijn product. Wij combineren merken voor één project.",
+          "alsDeKlantZegt": "\"Ik bestel rechtstreeks bij de fabrikant.\" Antwoord: \"Voor hoeveel merken doet u dat nu per project?\"",
+          "bewijs": "Projectapp met alle leveringen.",
+          "wanneerVerliezen": "Bij grote orders van één merk."
+        },
+        {
+          "_id": "cc-04",
+          "concurrent": "Eigen magazijn van de installateur",
+          "soortConcurrent": "concurrent-intern",
+          "sterk": "Materiaal direct bij de hand.",
+          "zwak": "Kapitaal ligt op de plank en voorraad veroudert.",
+          "onderscheid": "Zekerheid van levering per bouwfase, zonder eigen voorraad.",
+          "zoZegJeHet": "Een eigen voorraad geeft zekerheid. Wij geven die zekerheid zonder dat uw kapitaal op de plank ligt.",
+          "alsDeKlantZegt": "\"We hebben zelf een magazijn.\" Antwoord: \"Hoeveel van die voorraad ligt er langer dan een kwartaal?\"",
+          "bewijs": "Levering per bouwfase.",
+          "wanneerVerliezen": "Bij installateurs met een eigen logistiek medewerker."
+        },
+        {
+          "_id": "cc-05",
+          "concurrent": "Niets doen (blijft bij vaste leverancier)",
+          "soortConcurrent": "niets-doen",
+          "sterk": "Geen moeite, vertrouwde contacten.",
+          "zwak": "Wachttijd van monteurs wordt niet gemeten en blijft dus bestaan.",
+          "onderscheid": "Beginnen met één project en een gratis projectschouw als proef.",
+          "zoZegJeHet": "Overstappen kost moeite. Begin met één project, dan ziet u het verschil zelf.",
+          "alsDeKlantZegt": "\"We zijn tevreden met onze leverancier.\" Antwoord: \"Mooi. Wanneer stond een monteur voor het laatst te wachten?\"",
+          "bewijs": "Gratis projectschouw als proef.",
+          "wanneerVerliezen": "Als er geen nieuw project in de komende zes maanden is."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "_toelichting": "Voorbeeldpayload sublaag.bevestigd voor L0.1 (Bedrijfsverhaal), Testbedrijf Voltvast. Fictief.",
+  "methode": "POST",
+  "pad": "/api/koppelingen/salesdna/webhook",
+  "headers": {
+    "Content-Type": "application/json",
+    "X-SalesDNA-Event-Id": "evt-voltvast-0001",
+    "X-SalesDNA-Tijd": "2026-09-30T10:15:00+02:00",
+    "X-SalesDNA-Signature": "sha256=<HMAC-SHA256 over de ruwe body met het geheim van de mock, berekend bij verzenden>"
+  },
+  "body": {
+    "eventId": "evt-voltvast-0001",
+    "soort": "sublaag.bevestigd",
+    "tijd": "2026-09-30T10:15:00+02:00",
+    "organisatie": {
+      "id": "org-voltvast",
+      "naam": "Testbedrijf Voltvast"
+    },
+    "onderwerpId": "L0.1",
+    "titel": "Bedrijfsverhaal",
+    "versie": 3,
+    "status": "bevestigd",
+    "verouderd": false,
+    "bevestigdOp": "2026-09-30T10:15:00+02:00",
+    "bijgewerktOp": "2026-10-12T09:40:00+02:00",
+    "inhoud": {
+      "velden": [
+        {
+          "sleutel": "bedrijfsverhaal",
+          "tekst": "Voltvast is een technische groothandel voor installateurs in Midden- en Noord-Nederland. Installateurs verliezen tijd als materiaal te laat of verkeerd op de bouw komt. Daarom denken wij mee vanaf het ontwerp, schouwen we het project en leveren we op het afgesproken uur. Zo kan de installateur zijn project zonder zorgen opleveren, ook nu de energietransitie het werk complexer maakt."
+        }
+      ],
+      "perBranche": [
+        {
+          "_id": "pb-l01-01",
+          "branche": "br-01",
+          "verhaal": "Bij woningbouwprojecten staan monteurs vaak te wachten op materiaal. Wij plannen de levering per bouwfase en zijn binnen 48 uur op de bouw voor een gratis projectschouw."
+        },
+        {
+          "_id": "pb-l01-02",
+          "branche": "br-02",
+          "verhaal": "Utiliteitsprojecten vragen veel afstemming tussen techniek en planning. Wij denken vanaf het ontwerp mee en houden de installateur via de projectapp op de hoogte van elke levering."
+        }
+      ]
+    }
+  }
+}

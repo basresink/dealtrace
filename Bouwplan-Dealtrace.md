@@ -2592,7 +2592,7 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 **Meldingen**
 
 - Bel onderaan de zijbalk met rode teller; pagina `/meldingen` met rijen (kleurbalk per soort: kritiek rood, hete aanleiding paars, dagstart blauw, herinnering geel, inzicht groen), "Openen", "Markeer gelezen", "Verberg".
-- Soorten: herinnering (taak of afspraak), dagstart (08:00: afspraken, taken van vandaag, top 3 aanleidingen), nieuwe hete aanleiding bij een eigen account, concept klaar ter goedkeuring, afspraak gemaakt door een collega voor jou, kans klaargezet door de binnendienst, campagne loopt achter, niveauvoorstel en ontgrendeling, coachingafspraak gedeeld, leverancier werkt in je organisatie (beheerder), bundel op 80 procent (beheerder).
+- Soorten: herinnering (taak of afspraak), dagstart (zelfgekozen tijd, standaard 07:45 zoals in 8.10: afspraken, taken van vandaag, top 3 aanleidingen), nieuwe hete aanleiding bij een eigen account, concept klaar ter goedkeuring, afspraak gemaakt door een collega voor jou, kans klaargezet door de binnendienst, campagne loopt achter, niveauvoorstel en ontgrendeling, coachingafspraak gedeeld, leverancier werkt in je organisatie (beheerder), bundel op 80 procent (beheerder).
 - Kanalen: in-app, e-mail, web-push (PWA); per soort aan of uit en stille uren in Mijn instellingen; tijdens een belblok met "meldingen stil" worden ze vastgehouden tot het einde.
 
 **Globaal zoeken** (Ctrl K of `/`): prospects, klanten, contacten, campagnes, deals, helpartikelen; per soort gegroepeerd met telling; pijltjes, Enter, Escape; accent- en hoofdletterongevoelig; vergrendelde functies met slot en uitleg.
@@ -2603,7 +2603,7 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 
 - Lezen: Vandaag, de route van vandaag en morgen, de accountkaarten van de accounts in je route, taken en afspraken van deze week staan in IndexedDB.
 - Schrijven: afronden, uitkomst, verslag (tekst; spraak wordt lokaal getranscribeerd waar de browser dat kan, anders als opname bewaard tot er verbinding is), nieuwe prospect, nieuwe taak en afspraak gaan in de synchronisatiewachtrij.
-- Banner bovenaan (rood) "Je bent offline. Wat je doet wordt bewaard en verstuurd zodra je weer verbinding hebt."; bij een vastgelopen wachtrij een donkere banner met "Opnieuw proberen".
+- Strook onder de kop (geel, 8.3) "Offline · 3 wijzigingen wachten"; bij een vastgelopen wachtrij wordt hij rood met "Opnieuw proberen". De meldingsstrook zegt bij elke handeling "Bewaard op je telefoon, wordt verstuurd zodra je verbinding hebt".
 - Conflicten: versiecontrole per record; bij een conflict een venster met beide versies en "Houd mijn versie", "Neem de andere over"; pogingen zijn idempotent op item en stap.
 
 #### Technisch

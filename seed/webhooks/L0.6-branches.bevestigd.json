@@ -1,0 +1,63 @@
+{
+  "_toelichting": "Voorbeeldpayload sublaag.bevestigd voor L0.6 (Branches), Testbedrijf Voltvast. Fictief.",
+  "methode": "POST",
+  "pad": "/api/koppelingen/salesdna/webhook",
+  "headers": {
+    "Content-Type": "application/json",
+    "X-SalesDNA-Event-Id": "evt-voltvast-0004",
+    "X-SalesDNA-Tijd": "2026-09-24T11:00:00+02:00",
+    "X-SalesDNA-Signature": "sha256=<HMAC-SHA256 over de ruwe body met het geheim van de mock, berekend bij verzenden>"
+  },
+  "body": {
+    "eventId": "evt-voltvast-0004",
+    "soort": "sublaag.bevestigd",
+    "tijd": "2026-09-24T11:00:00+02:00",
+    "organisatie": {
+      "id": "org-voltvast",
+      "naam": "Testbedrijf Voltvast"
+    },
+    "onderwerpId": "L0.6",
+    "titel": "Branches",
+    "versie": 1,
+    "status": "bevestigd",
+    "verouderd": false,
+    "bevestigdOp": "2026-09-24T11:00:00+02:00",
+    "bijgewerktOp": "2026-09-24T11:00:00+02:00",
+    "inhoud": {
+      "rijen": [
+        {
+          "_id": "br-01",
+          "branche": "Installatiebedrijven woningbouw",
+          "focus": "primair",
+          "horizon": "huidig",
+          "termijn": "nu",
+          "prioriteit": "hoog"
+        },
+        {
+          "_id": "br-02",
+          "branche": "Utiliteitsinstallateurs",
+          "focus": "primair",
+          "horizon": "huidig",
+          "termijn": "nu",
+          "prioriteit": "midden"
+        },
+        {
+          "_id": "br-03",
+          "branche": "Woningcorporaties (via installateurs)",
+          "focus": "secundair",
+          "horizon": "toekomstig",
+          "termijn": "2027",
+          "prioriteit": "hoog"
+        },
+        {
+          "_id": "br-04",
+          "branche": "Zonne-energiebedrijven",
+          "focus": "secundair",
+          "horizon": "toekomstig",
+          "termijn": "2028",
+          "prioriteit": "laag"
+        }
+      ]
+    }
+  }
+}

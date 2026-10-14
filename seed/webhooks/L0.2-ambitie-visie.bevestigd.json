@@ -1,0 +1,43 @@
+{
+  "_toelichting": "Voorbeeldpayload sublaag.bevestigd voor L0.2 (Ambitie & visie), Testbedrijf Voltvast. Fictief.",
+  "methode": "POST",
+  "pad": "/api/koppelingen/salesdna/webhook",
+  "headers": {
+    "Content-Type": "application/json",
+    "X-SalesDNA-Event-Id": "evt-voltvast-0002",
+    "X-SalesDNA-Tijd": "2026-09-30T10:20:00+02:00",
+    "X-SalesDNA-Signature": "sha256=<HMAC-SHA256 over de ruwe body met het geheim van de mock, berekend bij verzenden>"
+  },
+  "body": {
+    "eventId": "evt-voltvast-0002",
+    "soort": "sublaag.bevestigd",
+    "tijd": "2026-09-30T10:20:00+02:00",
+    "organisatie": {
+      "id": "org-voltvast",
+      "naam": "Testbedrijf Voltvast"
+    },
+    "onderwerpId": "L0.2",
+    "titel": "Ambitie & visie",
+    "versie": 2,
+    "status": "bevestigd",
+    "verouderd": false,
+    "bevestigdOp": "2026-09-30T10:20:00+02:00",
+    "bijgewerktOp": "2026-09-30T10:20:00+02:00",
+    "inhoud": {
+      "velden": [
+        {
+          "sleutel": "ambitie",
+          "tekst": "In 2029 is Voltvast de vaste projectpartner van 400 installatiebedrijven in onze regio, met 60 procent van onze omzet uit projecten waarin we vanaf het ontwerp meedenken."
+        },
+        {
+          "sleutel": "visie",
+          "tekst": "De energietransitie maakt installatiewerk complexer. Installateurs zoeken een partner die techniek, planning en levering samenbrengt. Wie dat het beste doet, wint hun loyaliteit."
+        },
+        {
+          "sleutel": "missie",
+          "tekst": "Wij helpen installateurs elk project zonder zorgen op te leveren, met eerlijk advies, de juiste materialen en levering op het afgesproken uur."
+        }
+      ]
+    }
+  }
+}
