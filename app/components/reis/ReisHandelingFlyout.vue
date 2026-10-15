@@ -34,8 +34,8 @@ async function bewaar() {
       await $fetch(`/api/accounts/${id}/verplaats-reis`, { method: 'POST', body: { reisId: keuze.value, reden: reden.value } })
       emit('klaar', 'Verplaatst naar de andere reis.')
     } else {
-      await $fetch(`/api/accounts/${id}/terug-op`, { method: 'PUT', body: { datum: datum.value, reden: reden.value } })
-      emit('klaar', `Terug op ${datum.value}.`)
+      const r = await $fetch<any>(`/api/accounts/${id}/terug-op`, { method: 'PUT', body: { datum: datum.value, reden: reden.value } })
+      emit('klaar', r.melding ?? `Terug op ${r.terugOp}.`)
     }
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }

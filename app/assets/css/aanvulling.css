@@ -736,3 +736,20 @@
 .kvk-groep .zoek-rij { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; }
 .kvk-groep .zoek-rij-detail { grid-column: 1; }
 .kvk-groep .zoek-rij .dd-act { grid-column: 2; grid-row: 1 / span 2; }
+
+/* P12: jaarkalender met twaalf maandtegels; op de telefoon horizontaal vegen */
+.jaarkalender { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.maandtegel { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; padding: 12px; background: var(--wit, #fff); border: 1px solid var(--border); font: inherit; cursor: pointer; min-height: 96px; }
+.maandtegel--nu { border-color: var(--ink); }
+.maandtegel--aan { outline: 3px solid var(--yellow); outline-offset: -3px; }
+.maandtegel-naam { font-weight: 700; text-transform: capitalize; }
+.maandtegel-groep { font-size: var(--fs-meta); }
+.plan-rij .dd-act { min-height: var(--touch-target-min); }
+@media (max-width: 767px) {
+  .jaarkalender { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 8px; padding-bottom: 4px; }
+  .maandtegel { flex: 0 0 100%; scroll-snap-align: start; }
+  .plan-rij { flex-wrap: wrap; }
+  .plan-rij .rij-rechts { width: 100%; display: flex; gap: 8px; }
+  .plan-rij .dd-act { flex: 1; min-height: 48px; justify-content: center; }
+}
+.hoofdletter::first-letter { text-transform: uppercase; }

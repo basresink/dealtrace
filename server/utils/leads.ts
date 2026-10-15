@@ -352,8 +352,9 @@ const TIJD = new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digi
  */
 export async function eersteTaak(tx: Tx, org: string, eigenaar: { id: string; werkplek?: string | null; data?: any }, account: { id: string; naam: string }, stap: EersteStap, nu = new Date()): Promise<{ taskId: string; tekst: string }> {
   await draaiMotor(tx, org, { soort: 'gebeurtenis', door: eigenaar.id, accountIds: [account.id], nu })
+  // Maakte de motor al een contacttaak (bijvoorbeeld SR07), dan wordt die de eerste taak.
   const [open] = await tx.select().from(schema.tasks).where(and(eq(schema.tasks.accountId, account.id), inArray(schema.tasks.status, ['open', 'bezig']), inArray(schema.tasks.actionType, ['bellen', 'bezoek'])))
-  if (open) return { taskId: open.id, tekst: 'De eerste taak staat klaar.' }
+  if (open && !(stap === 'belblok' && open.actionType === 'bellen')) return { taskId: open.id, tekst: 'De eerste taak staat klaar.' }
   const tijd = nu.toISOString()
   const herkomst = { bron: 'leadgenerator', actiesoort: stap === 'bezoek' ? 'bezoek' : 'bellen', uitvoerder: eigenaar.id }
   if (stap === 'belblok') {
@@ -362,6 +363,10 @@ export async function eersteTaak(tx: Tx, org: string, eigenaar: { id: string; we
     if (v) {
       const start = v.start.toISOString()
       const s = await sessieOp(tx, org, eigenaar.id, start, new Date(v.start.getTime() + v.blok.minuten * 60_000).toISOString(), { plek: v.blok.plek, soort: v.blok.soort, verhouding: v.blok.verhouding, scriptId: v.blok.scriptId ?? null, gesprekken: [] }, v.blok.id)
+      if (open) {
+        await tx.update(schema.tasks).set({ title: `Poging 1: ${account.naam}`, dueDate: start, belblokId: s.status === 'gepland' ? s.id : null, data: { ...(open.data as any), poging: { n: 1, van: 5, kanaal: 'bellen' }, ...(s.status === 'gepland' ? { belblokId: s.id } : {}) }, updatedAt: tijd }).where(eq(schema.tasks.id, open.id))
+        return { taskId: open.id, tekst: `Eerste belpoging staat in je blok van ${DAGNAAM.format(v.start)} ${TIJD.format(v.start)}.` }
+      }
       const [t] = await tx.insert(schema.tasks).values({
         organisationId: org, ownerId: eigenaar.id, accountId: account.id, actionType: 'bellen', title: `Poging 1: ${account.naam}`, priority: 'middel', dueDate: start, executor: 'mens',
         belblokId: s.status === 'gepland' ? s.id : null, onderwerp: `${account.id}:eerste`, data: { waarom: 'Nieuwe lead uit de leadgenerator', herkomst, poging: { n: 1, van: 5, kanaal: 'bellen' }, ...(s.status === 'gepland' ? { belblokId: s.id } : {}) }, createdAt: tijd, updatedAt: tijd,

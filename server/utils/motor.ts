@@ -9,6 +9,7 @@ import { fase as zoekFase } from '../../shared/reis'
 import type { MotorAccount, Regel, RegelData } from '../../shared/regelPatronen'
 import { BELMATRIX_STANDAARD, CAPACITEIT_STANDAARD, klasseCode, leesMatrix, type Klasse } from '../../shared/ritmematrix'
 import { leadOnderhoud } from './leads'
+import { benaderdDitJaar, leesPlanning, POGING_SOORTEN, potentieVan, vensterVan, verkoopjaar } from '../../shared/planning'
 import { schema } from './db'
 import { draai as draaiPlanner } from './agents/planner'
 import { vulBelblokken } from './bellen'
@@ -89,6 +90,19 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
       signalen: ((a.data?.signalen as any[]) ?? []).map((s, i) => ({ id: s.id ?? `${a.id}-s${i}`, soort: s.soort, op: s.op, extern: s.extern !== false })),
     }
   })
+
+  // Jaarplanning (F13, SR07): venster per potentie en "benaderd" in het lopende verkoopjaar.
+  const planInst = leesPlanning(await instelling(tx, 'prospectplanning'), ((await instelling(tx, 'organisatie')) as any)?.verkoopjaarStartmaand)
+  const jaar = verkoopjaar(nu, planInst.startmaand)
+  const pogingen = ids.length ? (await tx.execute(sql`select account_id, soort, uitkomst, op from activiteiten where op >= ${jaar.start} and soort in ${[...POGING_SOORTEN]}${accountIds?.length ? sql` and account_id in ${ids}` : sql``}`)).rows as { account_id: string; soort: string; uitkomst: string | null; op: string | Date }[] : []
+  const pogingPer = new Map<string, { soort: string; uitkomst: string | null; op: string }[]>()
+  for (const r of pogingen) (pogingPer.get(r.account_id) ?? pogingPer.set(r.account_id, []).get(r.account_id)!).push({ soort: r.soort, uitkomst: r.uitkomst, op: new Date(r.op).toISOString() })
+  for (const a of accounts) {
+    if (a.type !== 'prospect') continue
+    const rij = accountRijen.find((x) => x.id === a.id)!
+    const p = potentieVan({ klasse: rij.klasse, score: rij.score, cf: (rij.data as any)?.customFields }, planInst, klassen)
+    if (p) a.jaarplanning = { vensterEind: vensterVan(p, jaar.start, planInst.vensters).tot, benaderdDitJaar: benaderdDitJaar(pogingPer.get(a.id) ?? [], jaar).benaderd }
+  }
 
   // Geschiedenis voor cadans en ontdubbelen: laatste keer per regel en onderwerp, en wat nog open staat.
   const hist = (await tx.execute(sql`

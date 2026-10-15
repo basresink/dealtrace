@@ -422,6 +422,27 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'bellen.handsfree', naam: 'Handsfree bellen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-belmodus', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'Dealtrace leest naam, reden en opening voor terwijl je rijdt.', totDieTijd: 'Je leest het script zelf op het scherm.' },
   },
+  // P12: prospectplanning en terugkomregels (F13, F25).
+  {
+    sleutel: 'planning.jaar', naam: 'Jaarplanning', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospectplanning', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Zien wie dit verkoopjaar aan de beurt is per potentie, en wat er knelt.', totDieTijd: 'De motor zet je belpogingen klaar op Vandaag.' },
+  },
+  {
+    sleutel: 'planning.inplannen', naam: 'Plan in belblokken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospectplanning', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een achterstand met één klik verdelen over je koude belblokken.', totDieTijd: 'Plan je belblokken zelf of laat de motor het doen.' },
+  },
+  {
+    sleutel: 'planning.vensters', naam: 'Vensters per potentie', pakket: 'starter', rollen: ['salesmanager', 'beheerder'], helpartikel: 'prospectplanning', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Startmaand, vensters en de potentie per klasse instellen.', totDieTijd: 'Vraag je salesmanager.' },
+  },
+  {
+    sleutel: 'terugkomen.lezen', naam: 'Terugkomregels', pakket: 'starter', rollen: 'iedereen', helpartikel: 'wanneer-we-iemand-terugbellen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Zien wanneer en hoe je terugkomt na een nee, een verlies of een slapende periode.', totDieTijd: 'Op de terugkomdatum staat een taak met de aanpak.' },
+  },
+  {
+    sleutel: 'terugkomen.koppelenEnOpbrengst', naam: 'Opbrengst per terugkomregel', pakket: 'starter', rollen: 'iedereen', helpartikel: 'wanneer-we-iemand-terugbellen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Per regel zien wat terugkomen opleverde, en een regel aan een ander ritme voorstellen.', totDieTijd: 'Je ziet de regels zelf.' },
+  },
   // P11: leadgenerator, AI-zoeker en KvK (F02).
   {
     sleutel: 'leads.overnemen', naam: 'Neem over', pakket: 'starter', rollen: 'iedereen', helpartikel: 'leadgenerator', startNiveau: 'gevorderd',
@@ -658,7 +679,7 @@ export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | u
 const FEATURE_GROEPEN: [RegExp, string][] = [
   [/^nav\./, 'Navigatie'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
-  [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\./, 'F13 Hercontactritme'],
+  [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],
   [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^leads\.|^koppeling\.kvk|^onderweg\.kvk/, 'F02 Leadgenerator'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
 ]

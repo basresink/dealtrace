@@ -4,7 +4,7 @@
 // shared/reis.ts en shared/nbStatus.ts.
 import { and, eq, inArray, isNull, lte, sql } from 'drizzle-orm'
 import {
-  AFKOELING_STANDAARD, GEBEURTENIS_LABEL, afkoelingVoorNee, volgendeStatus,
+  AFKOELING_STANDAARD, GEBEURTENIS_LABEL, KANAAL_LABEL, afkoelingVoorNee, volgendeStatus,
   type Afkoeling, type Gebeurtenis, type Handeling, type Kanaal, type NeeGegevens,
 } from '../../shared/nbStatus'
 import {
@@ -12,6 +12,7 @@ import {
   type Doelgroep, type DoelgroepAccount, type ReisData,
 } from '../../shared/reis'
 import { terugkomDatum, type VerkoopverhaalStand } from '../../shared/verkoopverhaal'
+import { metAfkoeling } from '../../shared/planning'
 import { schrijfAudit } from './audit'
 import { schema } from './db'
 import { draaiMotor } from './motor'
@@ -341,23 +342,23 @@ export async function zetTerugOp(tx: Tx, accountId: string, datum: string, reden
   if (!reden?.trim()) throw new ReisFout(422, 'Geef een reden')
   const a = await laadAccount(tx, accountId)
   if (!['nee', 'wachtend'].includes(a.nbStatus)) throw new ReisFout(422, 'Alleen een account op nee of wachtend heeft een terugkomdatum')
-  // Niet binnen de afkoelperiode van het kanaal uit de regel.
+  // Binnen de afkoelperiode van het kanaal uit de regel schuift de datum naar het einde ervan (7.3, P12).
   const kanaal = (a.data?.terugkom?.kanaal ?? 'bellen') as Kanaal
-  const dagen = a.data?.nee?.afkoeling?.[kanaal]
-  if (a.nbStatus === 'nee' && a.data?.nee && dagen != null) {
-    const ondergrens = dagNa(new Date(a.data.nee.op), dagen)
-    if (datum < ondergrens) throw new ReisFout(422, `De afkoelperiode loopt tot ${ondergrens}`)
-  }
+  const m = a.nbStatus === 'nee' ? metAfkoeling(datum, a.data?.nee, kanaal) : { datum, geschoven: false, tot: null }
+  const nieuw = m.datum
   await tx.update(schema.accounts).set({
-    terugOp: datum, updatedAt: nu.toISOString(),
-    data: { ...(a.data ?? {}), terugkom: { ...(a.data?.terugkom ?? { reden: null }), datum }, ...(a.nbStatus === 'wachtend' ? { wachtendTot: datum } : {}) },
+    terugOp: nieuw, updatedAt: nu.toISOString(),
+    data: {
+      ...(a.data ?? {}), terugkom: { ...(a.data?.terugkom ?? { reden: null }), datum: nieuw }, ...(a.nbStatus === 'wachtend' ? { wachtendTot: nieuw } : {}),
+      terugHistorie: [...(((a.data as any)?.terugHistorie ?? []) as unknown[]), { van: a.terugOp, naar: nieuw, op: nu.toISOString(), door, reden }],
+    } as any,
   }).where(eq(schema.accounts.id, a.id))
   await tx.insert(schema.reisgeschiedenis).values({
     organisationId: a.organisationId, accountId: a.id, versie: 1, vanFaseId: a.faseId, naarFaseId: a.faseId, vanStatus: a.nbStatus, naarStatus: a.nbStatus,
-    gebeurtenis: 'handmatig', door, op: nu.toISOString(), reden: `Terugkomdatum naar ${datum}: ${reden}`,
+    gebeurtenis: 'handmatig', door, op: nu.toISOString(), reden: `Terugkomdatum naar ${nieuw}: ${reden}`,
   })
-  await schrijfAudit(tx, { organisationId: a.organisationId, actorId: door, action: 'account.terugOp', resourceType: 'accounts', resourceId: a.id, changes: { van: a.terugOp, naar: datum, reden } })
-  return { terugOp: datum }
+  await schrijfAudit(tx, { organisationId: a.organisationId, actorId: door, action: 'account.terugOp', resourceType: 'accounts', resourceId: a.id, changes: { van: a.terugOp, naar: nieuw, reden } })
+  return { terugOp: nieuw, geschoven: m.geschoven, melding: m.geschoven ? `De afkoelperiode voor ${KANAAL_LABEL[kanaal].toLowerCase()} loopt tot ${m.tot}. De terugkomdatum is daarop gezet.` : null }
 }
 
 /**

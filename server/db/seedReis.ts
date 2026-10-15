@@ -32,6 +32,17 @@ export async function seedReis(client: Pick<pg.Client, 'query'>, orgId: string, 
       nee: { reden: 'Geen behoefte', op: neeOp, door: 'u-03', afkoeling: { ...AFKOELING_STANDAARD, mail: 60 } },
       terugkom: { datum: bewakerTerug, regelId: null, reden: 'Geen behoefte', aanpak: null, kanaal: 'bellen' },
     })])
+  // P12: prospectplanning. De Voltvast-klassen A en B tellen als groot, C als middel; 50 extra
+  // fictieve prospects van u-07, waarvan 36 grote zonder poging in het lopende verkoopjaar.
+  await client.query(`insert into org_settings (organisation_id, key, value) values ($1, 'prospectplanning', $2) on conflict (organisation_id, key) do nothing`,
+    [orgId, JSON.stringify({ startmaand: 1, vensters: { groot: 2, middel: 5, klein: 12 }, potentieBron: 'klasse', klassePotentie: { 'kl-a-prospects': 'groot', 'kl-b-prospects': 'groot', 'kl-c-prospects': 'middel' } })])
+  const PLAATSEN = ['Zwolle', 'Assen', 'Groningen', 'Leeuwarden', 'Emmen', 'Meppel', 'Kampen', 'Deventer', 'Apeldoorn', 'Amersfoort']
+  for (let i = 1; i <= 50; i++) {
+    const klasse = i <= 18 ? 'kl-a-prospects' : i <= 36 ? 'kl-b-prospects' : i <= 46 ? 'kl-c-prospects' : null
+    await client.query(`insert into accounts (id, organisation_id, name, account_kind, owner_id, nb_status, klasse, city, nb_bron, fase_sinds, vv_branche_id, data)
+      values ($1, $2, $3, 'prospect', 'u-07', 'nieuw', $4, $5, 'import', now(), $6, '{"customFields": {}}') on conflict (id) do nothing`,
+      [`pl-${String(i).padStart(2, '0')}`, orgId, `Testplanning Installatie ${String(i).padStart(2, '0')}`, klasse, PLAATSEN[i % PLAATSEN.length], i % 3 === 0 ? 'br-02' : 'br-01'])
+  }
   await zorgVoorReizen(client)
   await zorgVoorRegels(client)
   await zorgVoorRitmes(client, RITMES_STARTSET)

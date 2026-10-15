@@ -27,3 +27,7 @@ Dealtrace stelt een terugkomdatum voor uit de terugkomregel die bij de reden hoo
 1. Klik op de accountkaart in het blok Ritme op **Zet nee**.
 2. Kies de reden.
 3. Klik **Zet op nee**. Je ziet tot wanneer het account op nee staat.
+
+## De terugkomdatum
+
+Bij een nee kiest Dealtrace via de terugkomregel van de reden een **terugkomdatum**, nooit binnen de afkoelperiode. Vanaf Gevorderd pas je die datum aan met **Pas datum aan**; geef altijd een reden. Lees "Wanneer we iemand terugbellen".

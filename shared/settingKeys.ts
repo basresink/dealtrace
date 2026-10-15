@@ -15,6 +15,7 @@ export const SETTING_KEYS = [
   'segmenten', // [{id, naam, filters: [{sleutel, vergelijking, waarde}]}]
   'capaciteit', // {binnendienst, buitendienst}
   'helpVerborgen', // artikel-id's van platformartikelen die de beheerder verbergt (P09)
+  'prospectplanning', // PlanningInstelling uit shared/planning.ts (P12)
   // Van de leverancier:
   'pakket',
   'aiCredits',

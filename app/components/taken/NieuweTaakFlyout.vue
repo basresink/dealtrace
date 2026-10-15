@@ -2,7 +2,7 @@
 // Nieuwe taak ("Wat moet er gebeuren?", F06). Beginner: klant, titel, actiesoort,
 // vervaldatum. Gevorderd ook prioriteit, toegewezen aan, herhaling, herinnering en beschrijving.
 import { ACTIE_LABEL } from '~~/shared/taken'
-const props = defineProps<{ open: boolean; account?: { id: string; naam: string } | null; teamleden?: { id: string; naam: string }[] }>()
+const props = defineProps<{ open: boolean; account?: { id: string; naam: string } | null; teamleden?: { id: string; naam: string }[]; actiesoort?: string }>()
 const emit = defineEmits<{ sluit: []; gemaakt: [] }>()
 const { functie } = useMe()
 const toast = useToast()
@@ -12,7 +12,7 @@ const f = reactive(leeg())
 const klant = ref<{ id: string; naam: string } | null>(null)
 const zoek = ref('')
 const treffers = ref<any[]>([])
-watch(() => props.open, (o) => { if (o) { Object.assign(f, leeg()); klant.value = props.account ?? null; zoek.value = '' } })
+watch(() => props.open, (o) => { if (o) { Object.assign(f, leeg(), props.actiesoort ? { actionType: props.actiesoort } : {}); klant.value = props.account ?? null; zoek.value = '' } })
 let timer: any
 watch(zoek, (q) => { clearTimeout(timer); timer = setTimeout(async () => { treffers.value = q.length >= 2 ? await $fetch<any[]>('/api/accounts/kies', { query: { q } }) : [] }, 250) })
 async function maak() {

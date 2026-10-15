@@ -254,11 +254,11 @@
   "naam": "Jaarplanningsvenster voorbij",
   "categorie": "Bewerken",
   "motor": "regel",
-  "cadansDagen": 30,
+  "cadansDagen": 7,
   "prioriteit": "middel",
   "data": {
    "omschrijving": "Het venster uit de prospectplanning is voorbij.",
-   "activiteit": "inzicht",
+   "activiteit": "taak",
    "bron": "intern",
    "specifiekeBron": "",
    "trigger": {
@@ -274,7 +274,7 @@
     "actiesoort": "bellen",
     "uitvoerderrol": "eigenaar",
     "termijnWerkdagen": 3,
-    "taaksjabloon": "Inplannen: {account}",
+    "taaksjabloon": "Venster voorbij, bellen: {account}",
     "belscriptId": null,
     "automatischVoorbereiden": false,
     "signaaltype": null,

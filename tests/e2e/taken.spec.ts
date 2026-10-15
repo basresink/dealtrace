@@ -142,7 +142,7 @@ test.describe('niveaus', () => {
     await page.keyboard.press('Escape')
     await ga(page, '/inzichten')
     await expect(page.getByTestId('niet-aangezet-pagina')).toBeVisible()
-    await ga(page, '/planning')
+    await ga(page, '/planning?tab=ritme')
     await expect(page.getByTestId('niet-aangezet-pagina')).toBeVisible()
   })
   test('Gevorderd: horizon met achterstallig bovenaan in Vandaag, bulk uitstellen, en het tabblad Hercontactritme', async ({ page }) => {
@@ -155,7 +155,7 @@ test.describe('niveaus', () => {
     await page.locator('.taak-kaart input[type=checkbox]').first().check()
     await page.getByTestId('bulk-week').click()
     await expect(page.locator('.toast').last()).toContainText('1 taak bijgewerkt')
-    await ga(page, '/planning')
+    await ga(page, '/planning?tab=ritme')
     await expect(page.getByTestId('ritme-Koud')).toContainText('dag 21')
     await expect(page.getByTestId('ritme-Koud')).toContainText('180 dagen')
   })
