@@ -14,11 +14,14 @@ export const SYNCBARE_TABELLEN = {
   signals: 'taken',
   // P09: "Markeer als gelezen" in het helpcenter, ook offline (recordId = artikel-id).
   help_gelezen: 'persoonlijk',
+  // P32: signaalbesluiten op Vandaag (Gedaan, Later, Weg), ook offline; recordId = signaalsleutel.
+  signaal_besluiten: 'persoonlijk',
 } as const
 
 export const ACCOUNT_MUTATIESOORTEN = ['account.nee', 'account.pauzeer'] as const
 export const TAAK_MUTATIESOORTEN = ['taak.afronden', 'taak.uitstellen'] as const
 export const INZICHT_MUTATIESOORTEN = ['inzicht.gelezen', 'inzicht.afwijzen'] as const
+export const SIGNAAL_MUTATIESOORTEN = ['signaal.besluit'] as const
 
 export type SyncbareTabel = keyof typeof SYNCBARE_TABELLEN
 

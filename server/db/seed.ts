@@ -13,6 +13,7 @@ import { verbindingsopties } from '../../shared/verbinding'
 import { seedAccounts } from './seedAccounts'
 import { BEHEER_URL } from './omgeving'
 import { seedReis } from './seedReis'
+import { seedDag } from './seedDag'
 import { versleutel } from '../utils/geheimen'
 
 interface SeedGebruiker {
@@ -126,6 +127,7 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
     const p03 = await seedAccounts(client, org, voltvast)
 
     await seedReis(client, org.id, voltvast)
+    await seedDag(client, org.id)
 
     // P11: Voltvast heeft een (mock-)KvK-sleutel; Tweede niet, zodat "niet gekoppeld" te zien is.
     // De buitendienst heeft een thuisbasis voor het werkgebied met een straal.

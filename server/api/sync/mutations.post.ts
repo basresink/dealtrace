@@ -11,7 +11,8 @@ import { rolMag } from '../../../shared/permissions'
 import { SYNCBARE_TABELLEN, isSyncbareTabel } from '../../../shared/syncTabellen'
 import { pasPatchToe } from '../../../shared/wisPatch'
 import { metOrganisatie, schema } from '../../utils/db'
-import { ACCOUNT_MUTATIESOORTEN, INZICHT_MUTATIESOORTEN, TAAK_MUTATIESOORTEN } from '../../../shared/syncTabellen'
+import { ACCOUNT_MUTATIESOORTEN, INZICHT_MUTATIESOORTEN, SIGNAAL_MUTATIESOORTEN, TAAK_MUTATIESOORTEN } from '../../../shared/syncTabellen'
+import { besluit } from '../../utils/dagritme'
 import { AFWIJS_REDENEN, uitstellen } from '../../../shared/taken'
 import { magTaak, rondAf } from '../../utils/taken'
 import { isNeeReden } from '../../../shared/nbStatus'
@@ -108,6 +109,11 @@ export default defineEventHandler(async (event) => {
           if (!(AFWIJS_REDENEN as readonly string[]).includes(p.reden)) return { status: 'geweigerd', recordId: m.recordId, code: 422, reden: 'Kies een reden om af te wijzen' }
           await tx.update(schema.signals).set({ status: 'afgewezen', data: { ...(s.data ?? {}), afwijsReden: p.reden }, updatedAt: new Date().toISOString() }).where(eq(schema.signals.id, m.recordId))
         } else if (s.status === 'nieuw') await tx.update(schema.signals).set({ status: 'gelezen', updatedAt: new Date().toISOString() }).where(eq(schema.signals.id, m.recordId))
+      } else if (m.tabel === 'signaal_besluiten') {
+        // P32: Gedaan, Later of Weg; recordId is de signaalsleutel. Het besluit telt op de dag waarop het viel.
+        const p = (m.patch ?? {}) as Record<string, any>
+        if (!(SIGNAAL_MUTATIESOORTEN as readonly string[]).includes(p.soort) || !['gedaan', 'later', 'weg'].includes(p.besluit)) return { status: 'geweigerd', recordId: m.recordId, code: 422, reden: 'Alleen signaal.besluit met Gedaan, Later of Weg' }
+        await besluit(tx, organisatie.id, gebruiker.id, m.recordId.slice(0, 200), p.besluit, p.op && !Number.isNaN(Date.parse(p.op)) ? new Date(p.op) : new Date())
       } else if (m.tabel === 'help_gelezen') {
         if (!(await markeerGelezen(tx, organisatie.id, gebruiker.id, m.recordId))) return { status: 'geweigerd', recordId: m.recordId, code: 404, reden: 'Artikel onbekend' }
       } else if (m.tabel === 'notificaties') {

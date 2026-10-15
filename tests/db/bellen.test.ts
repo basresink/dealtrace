@@ -113,7 +113,7 @@ describe('plannen, gesprek en versies (acceptatie 2, 6, 10)', () => {
       await beltaken(tx)
       const k = bouwBellijst(await laadBelKandidaten(tx, 'u-03'), new Date()).find((x) => x.contactId)!
       await tx.execute(sql`update contacts set data = data || '{"belMeNiet": true}'::jsonb where id = ${k.contactId}`)
-      return { id: k.accountId, lijst: bouwBellijst(await laadBelKandidaten(tx, 'u-03'), new Date()).map((x) => x.accountId) }
+      return { id: k.contactId, lijst: bouwBellijst(await laadBelKandidaten(tx, 'u-03'), new Date()).map((x) => x.contactId) }
     })
     expect(r.lijst).not.toContain(r.id)
   })

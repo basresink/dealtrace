@@ -7,7 +7,8 @@ import { fasePil } from '~/utils/accountWeergave'
 const toast = useToast()
 const { rondAf, versie } = useAfronden()
 const motorVersie = useState('motorVersie', () => 0)
-const { data: v, refresh } = await useFetch<any>('/api/vandaag', { default: () => null })
+const route = useRoute()
+const { data: v, refresh } = await useFetch<any>('/api/vandaag', { query: computed(() => ({ dag: route.query.dag || undefined })), default: () => null })
 watch([versie, motorVersie], () => refresh())
 const open = ref<string | null>(null)
 const nieuweTaak = ref(false)
@@ -38,6 +39,8 @@ useHead({ title: 'Vandaag · Dealtrace' })
 
 <template>
   <div v-if="v">
+    <VandaagTelefoon class="vt-alleen-telefoon" :t="v.telefoon" :kan="v.kan" @open="(id) => (open = id)" @ververs="refresh()" />
+    <div class="vt-alleen-groot">
     <section class="section">
       <div class="container">
         <div class="sec-head">
@@ -64,6 +67,7 @@ useHead({ title: 'Vandaag · Dealtrace' })
           <div class="reis-knoppen mt-16"><button type="button" class="dd-act dd-act--primair" data-test="aanleiding-maak-taak" @click="maakTaak(v.aanleiding.id)">Maak taak</button><NuxtLink v-if="v.aanleiding.account" class="dd-act" :to="`/accounts/${v.aanleiding.account.id}`">Open kaart</NuxtLink></div>
         </article>
 
+        <p v-if="v.telefoon.focus" class="kaart vt-focusregel" data-test="focusregel"><span class="kicker">Je eerste zet</span> {{ v.telefoon.focus.wat }} · <span class="meta">{{ v.telefoon.focus.waarom }}</span></p>
         <div class="vandaag-kolommen mt-16">
           <article class="kaart" data-test="kolom-taken">
             <header class="kaart-kop"><h2 class="kaart-titel">Taken <span class="pil pil--leeg tnum">{{ v.taken.totaal }}</span></h2></header>
@@ -83,8 +87,9 @@ useHead({ title: 'Vandaag · Dealtrace' })
             <NuxtLink v-if="v.taken.meer" to="/acties" class="tekst-link mt-8" data-test="nog-meer">nog {{ v.taken.meer }} meer →</NuxtLink>
           </article>
           <article class="kaart" data-test="kolom-afspraken">
-            <header class="kaart-kop"><h2 class="kaart-titel">Afspraken <span class="pil pil--leeg tnum">{{ v.afspraken.totaal }}</span></h2></header>
-            <p class="kaart-meta">Geen afspraken vandaag.</p>
+            <header class="kaart-kop"><h2 class="kaart-titel">Afspraken <span class="pil pil--leeg tnum">{{ v.telefoon.dag.stapels.afspraken.length }}</span></h2></header>
+            <p v-if="!v.telefoon.dag.stapels.afspraken.length" class="kaart-meta">Geen afspraken vandaag.</p>
+            <ul class="schakel-lijst"><li v-for="a in v.telefoon.dag.stapels.afspraken" :key="a.id" class="schakel-rij"><button type="button" class="taak-titel" @click="open = a.taakId">{{ a.tijd }} {{ a.accountNaam ?? a.titel }}</button><span v-if="a.zonderVerslag" class="pil pil--oranje">verslag</span></li></ul>
           </article>
           <article class="kaart" data-test="kolom-prio">
             <header class="kaart-kop"><h2 class="kaart-titel">Prio <span class="pil pil--leeg tnum">{{ v.prio.length }}</span></h2></header>
@@ -128,6 +133,7 @@ useHead({ title: 'Vandaag · Dealtrace' })
         </div>
       </div>
     </section>
+    </div>
     <TaakFlyout :open="!!open" :taak-id="open" @sluit="open = null" @klaar="refresh()" @gewijzigd="refresh()" />
     <NieuweTaakFlyout :open="nieuweTaak" @sluit="nieuweTaak = false" @gemaakt="nieuweTaak = false; refresh()" />
     <NieuweProspectFlyout :open="nieuweProspect" @sluit="nieuweProspect = false" @aangemaakt="(id) => navigateTo(`/accounts/${id}`)" @bestaand="(id) => navigateTo(`/accounts/${id}`)" />

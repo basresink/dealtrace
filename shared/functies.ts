@@ -443,6 +443,35 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'verkoopverhaal.mappings', naam: 'Mappings verkoopverhaal', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'ons-verhaal', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Branche naar SBI, verliesreden naar terugkomreden en ambitiedoelen beheren.', totDieTijd: 'Vraag je beheerder.' },
   },
+  // P32: dagritme-kern en Vandaag op de telefoon (F01, hoofdstuk 8).
+  {
+    sleutel: 'vandaag.telefoon', naam: 'Vandaag op de telefoon', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Groet, eerste zet, telstrip en stapels met de handeling in de regel.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'vandaag.voorlezen', naam: 'Lees voor', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Je dag in een minuut voorgelezen door je telefoon.', totDieTijd: 'Lees de dag zelf.' },
+  },
+  {
+    sleutel: 'vandaag.signaal', naam: 'Signaal van de dag', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Eén signaal per keer met bewijs, af te handelen met Gedaan, Later of Weg.', totDieTijd: 'Je ziet inzichten bij Acties.' },
+  },
+  {
+    sleutel: 'vandaag.tip', naam: 'Tip van de dag', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Eén regel advies onder je eerste zet.', totDieTijd: 'Geen tip.' },
+  },
+  {
+    sleutel: 'vandaag.dagkiezerWeek', naam: 'Dagkiezer met Week', pakket: 'starter', rollen: 'iedereen', helpartikel: 'vandaag', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Vandaag, morgen of een dag in de week bekijken.', totDieTijd: 'Je kijkt vooruit naar morgen.' },
+  },
+  {
+    sleutel: 'vandaag.recapRisico', naam: 'Recap met risico\'s', pakket: 'starter', rollen: 'iedereen', helpartikel: 'vandaag', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Na 16:00 ook achterstand en stilstaande reizen in de recap.', totDieTijd: 'De recap toont verslagen en morgen.' },
+  },
+  {
+    sleutel: 'vandaag.recapWeek', naam: 'Recap met weekterugblik', pakket: 'starter', rollen: 'iedereen', helpartikel: 'vandaag', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'De recap met gesprekken, afspraken en overdrachten van deze week.', totDieTijd: 'De recap toont de dag.' },
+  },
   // P29: SalesDNA-koppeling (F25).
   {
     sleutel: 'koppeling.salesdna', naam: 'SalesDNA koppelen', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'koppelingen', startNiveau: 'expert',

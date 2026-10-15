@@ -1,19 +1,25 @@
 // GET /api/vandaag: alle blokken van Vandaag in één antwoord (F01). De laptop (P07) en de
 // telefoon (P32) gebruiken hetzelfde. Blokken zonder bron laten we weg.
-import { verkoopverhaal } from '../utils/reis'
+import { verkoopverhaal } from '../../utils/reis'
 import { and, eq, gte, inArray, sql } from 'drizzle-orm'
-import { nlMoment, plusDagen, volgendeWerkdag } from '../../shared/datum'
-import { ordenTaken, isAchterstallig } from '../../shared/taken'
-import { groetVoor, kiesAanleidingVanDeDag, samenvattingsregel, vandaagKicker } from '../../shared/vandaag'
-import { kan } from '../utils/accounts'
-import { metOrganisatie, schema } from '../utils/db'
-import { eigenTeams } from '../utils/gebruikers'
-import { vereisFunctie } from '../utils/sessie'
+import { nlMoment, plusDagen, volgendeWerkdag } from '../../../shared/datum'
+import { ordenTaken, isAchterstallig } from '../../../shared/taken'
+import { groetVoor, kiesAanleidingVanDeDag, samenvattingsregel, vandaagKicker } from '../../../shared/vandaag'
+import { kan } from '../../utils/accounts'
+import { metOrganisatie, schema } from '../../utils/db'
+import { eigenTeams } from '../../utils/gebruikers'
+import { vereisFunctie } from '../../utils/sessie'
+import { telefoonDag } from '../../utils/dagritme'
 
 export default defineEventHandler(async (event) => {
   const ctx = await vereisFunctie(event, 'nav.vandaag')
   const q = getQuery(event)
-  const nu = typeof q.dag === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(q.dag) ? new Date(`${q.dag}T08:00:00Z`) : new Date()
+  if (q.dag !== undefined && (typeof q.dag !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(q.dag) || Number.isNaN(Date.parse(q.dag)))) throw createError({ statusCode: 400, statusMessage: 'Ongeldige datum' })
+  const echtNu = new Date()
+  const dag = typeof q.dag === 'string' ? q.dag : nlMoment(echtNu).datum
+  const isVandaag = dag === nlMoment(echtNu).datum
+  // De laptop rekent (zoals in P07) vanaf de gekozen dag; de telefoon met het echte nu en de dag uit de URL.
+  const nu = isVandaag ? echtNu : new Date(`${dag}T08:00:00Z`)
   const v = nlMoment(nu).datum
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
     const mijn = ctx.gebruiker.id
@@ -93,6 +99,9 @@ export default defineEventHandler(async (event) => {
     const volgorde = ((mij?.data as any)?.vandaagVolgorde as string[] | undefined) ?? ['agents', 'datakwaliteit', 'week']
     const aanleidingAccount = aanleiding?.accountId ? per.get(aanleiding.accountId) : null
     // P10: het belblok van vandaag dat nog loopt, met zijn open gesprekken.
+    // P32: de telefoonweergave uit dezelfde rekenkern; de laptop leest er de focusregel uit.
+    const niveau = (ctx.organisatie.iedereenAlles ? 'expert' : ctx.gebruiker.niveau) as 'beginner' | 'gevorderd' | 'expert'
+    const tel = await telefoonDag(tx, { id: mijn, werkplek, niveau }, dag, echtNu)
     const [blokVandaag] = (await tx.execute(sql`select s.id, s.start_op, (select count(*)::int from tasks t where t.belblok_id = s.id and t.status in ('open', 'bezig')) as n
       from belblok_sessies s where s.gebruiker_id = ${ctx.gebruiker.id} and s.status in ('gepland', 'bezig') and s.eind_op > now() and s.start_op < now() + interval '18 hours' order by s.start_op limit 1`)).rows as { id: string; start_op: string; n: number }[]
     return {
@@ -116,7 +125,8 @@ export default defineEventHandler(async (event) => {
       week: gevorderd && kan(ctx, 'vandaag.week') ? week : null,
       team: kan(ctx, 'vandaag.team') ? team : null,
       volgorde,
-      kan: { indeling: kan(ctx, 'vandaag.indeling'), nieuwProspect: kan(ctx, 'prospects.nieuw') },
+      kan: { indeling: kan(ctx, 'vandaag.indeling'), nieuwProspect: kan(ctx, 'prospects.nieuw'), voorlezen: kan(ctx, 'vandaag.voorlezen'), week: kan(ctx, 'vandaag.dagkiezerWeek') },
+      telefoon: { ...tel, vandaag: nlMoment(echtNu).datum, groet: `${groetVoor(echtNu)}, ${ctx.gebruiker.naam.replace(/^Test(gebruiker|founder)\s+/, '').split(' ')[0]}.`, werkplek, niveau },
     }
   })
 })
