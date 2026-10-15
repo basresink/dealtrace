@@ -1,6 +1,6 @@
 // GET /api/accounts/:id: de accountkaart. Eigen velden alleen voor het eigen niveau
 // (ook niet in de respons, F19); de scoreopbouw alleen voor Expert.
-import { desc, eq, inArray } from 'drizzle-orm'
+import { desc, eq, inArray, sql } from 'drizzle-orm'
 import { ontbrekendeRollen, primairContact, sorteerContacten } from '../../../../shared/contactgegevens'
 import { telOpenTaken } from '../../../../shared/score'
 import { contactUit, effectiefNiveau, eigenVeldenVoor, kan, zichtbareCustomFields } from '../../../utils/accounts'
@@ -38,6 +38,16 @@ export default defineEventHandler(async (event) => {
     const f = reis ? zoekFase(reis.data, a.faseId) : undefined
     const nu = new Date()
     const vv = a.accountKind === 'prospect' ? await verkoopverhaal(tx) : null
+    // Een verwijzing naar iets dat uit SalesDNA verdween, blijft op id staan met een label (P29).
+    const weg: { branche?: any; leverancier?: any } = {}
+    if (a.vvBrancheId && !(vv?.branches ?? []).some((b) => b.id === a.vvBrancheId)) {
+      const [r] = (await tx.execute(sql`select extern_id, naam, bron from vv_branches where extern_id = ${a.vvBrancheId} and not actief`)).rows as any[]
+      if (r) weg.branche = { id: r.extern_id, naam: r.naam, verwijderd: r.bron === 'salesdna' ? 'Verwijderd uit SalesDNA' : 'Niet meer actief' }
+    }
+    if (a.huidigeLeverancierId && !((vv?.concurrenten ?? []) as any[]).some((c) => c.id === a.huidigeLeverancierId)) {
+      const [r] = (await tx.execute(sql`select extern_id, naam, bron from vv_concurrenten where extern_id = ${a.huidigeLeverancierId} and not actief`)).rows as any[]
+      if (r) weg.leverancier = { id: r.extern_id, naam: r.naam, verwijderd: r.bron === 'salesdna' ? 'Verwijderd uit SalesDNA' : 'Niet meer actief' }
+    }
     const regel = a.terugRegelId ? vv?.terugkomregels.find((r) => r.id === a.terugRegelId) ?? null : null
     const eigen = a.ownerId === ctx.gebruiker.id
     const manager = ctx.gebruiker.rol === 'salesmanager' || ctx.gebruiker.rol === 'beheerder'
@@ -72,8 +82,8 @@ export default defineEventHandler(async (event) => {
       reizen: kan(ctx, 'reis.verplaatsen') ? reizen.filter((r) => r.status === 'actief' && r.id !== a.reisId).map((r) => ({ id: r.id, naam: r.naam })) : [],
       concurrenten: vv?.concurrenten ?? [],
       // Verkoopverhaal op de kaart (P28): branche uit het verhaal en de huidige leverancier.
-      vvBranche: a.vvBrancheId ? (vv?.branches ?? []).find((b) => b.id === a.vvBrancheId) ?? { id: a.vvBrancheId, naam: a.vvBrancheId } : null,
-      huidigeLeverancier: a.huidigeLeverancierId ? ((vv?.concurrenten ?? []) as any[]).find((c) => c.id === a.huidigeLeverancierId) ?? { id: a.huidigeLeverancierId, naam: 'Onbekende leverancier' } : null,
+      vvBranche: a.vvBrancheId ? (vv?.branches ?? []).find((b) => b.id === a.vvBrancheId) ?? weg.branche ?? { id: a.vvBrancheId, naam: a.vvBrancheId } : null,
+      huidigeLeverancier: a.huidigeLeverancierId ? ((vv?.concurrenten ?? []) as any[]).find((c) => c.id === a.huidigeLeverancierId) ?? weg.leverancier ?? { id: a.huidigeLeverancierId, naam: 'Onbekende leverancier' } : null,
       kanLeverancier: kan(ctx, 'account.huidigeLeverancier'),
       klassen: ((klasseRij?.value as any[]) ?? []).filter((k) => !k.tabblad || k.tabblad === (a.accountKind === 'klant' ? 'Klanten' : 'Prospects')),
       gebruikers: gebruikers.filter((u) => u.status !== 'gearchiveerd').map((u) => ({ id: u.id, naam: u.naam })),

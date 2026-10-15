@@ -19,8 +19,10 @@ export default defineEventHandler(async (event) => {
     const totaalGesprekken = gesprekken.reduce((t, g) => t + g.n, 0)
     const ritmes = (await tx.select({ id: schema.hercontactritmes.id, naam: schema.hercontactritmes.naam }).from(schema.hercontactritmes))
     const bevestigd = ONDERDELEN.some((o) => s[o].status === 'bevestigd')
+    const uitSalesdna = ONDERDELEN.filter((o) => s[o].bron === 'salesdna')
+    const bijgewerkt = uitSalesdna.map((o) => s[o].bevestigdOp).filter(Boolean).sort().at(-1) ?? null
     return {
-      leeg: !bevestigd, bron: ONDERDELEN.some((o) => s[o].bron === 'salesdna') ? 'salesdna' : 'eigen', status, stand,
+      leeg: !bevestigd, bron: uitSalesdna.length ? 'salesdna' : 'eigen', bronBijgewerkt: bijgewerkt, status, stand,
       golden: Object.fromEntries((stand.teksten ?? []).filter((t) => t.sublaag === 'L0.0').map((t) => [t.sleutel, t.tekst])),
       dekking: { verhaal: dekking('bedrijfsverhaal', stand), belofte: dekking('waarde', stand) },
       branches: (stand.branches ?? []).map((b) => ({ ...b, accounts: perBranche.find((x) => x.b === b.id)?.n ?? 0, aandeelGesprekken: totaalGesprekken ? Math.round(((gesprekken.find((x) => x.b === b.id)?.n ?? 0) / totaalGesprekken) * 100) : null })),

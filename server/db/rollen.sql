@@ -120,3 +120,4 @@ revoke update, delete on belscript_versies from dealtrace_app;
 
 -- P28: versies van het verkoopverhaal zijn een log.
 revoke update, delete on vv_versies from dealtrace_app;
+revoke update, delete on salesdna_sublaag_versies from dealtrace_app;

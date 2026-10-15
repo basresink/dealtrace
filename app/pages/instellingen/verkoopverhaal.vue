@@ -2,6 +2,7 @@
 // Instellingen, Verkoopverhaal (F25, P28): de acht onderdelen als concept, automatisch bewaren per
 // veld na 600 ms, Bevestig (nieuwe versie), Klopt nog, Kopieer uit startset (beheerder), mappings
 // (beheerder) en voorstellen van experts. Alleen bevestigde inhoud gaat naar buiten.
+import { PLEK_IN_SALESDNA } from '~~/shared/salesdna'
 import { CONCURRENT_SOORTEN, MAX_HOOG_IMPACT, ONDERDEEL_LABEL, ONDERDELEN, TERMIJNEN, kernzin, ontbrekendeVelden, teveelHoog, type Onderdeel } from '~~/shared/verkoopverhaal'
 const { functie } = useMe()
 if (!functie('verkoopverhaal.inrichten')?.beschikbaar) throw createError({ statusCode: 403, statusMessage: 'Alleen salesmanager en beheerder richten het verkoopverhaal in' })
@@ -15,6 +16,7 @@ const c = (o: Onderdeel) => data.value.onderdelen[o]?.concept ?? {}
 const leeg = computed(() => ONDERDELEN.every((o) => !data.value.onderdelen[o]?.versie && !Object.values(data.value.onderdelen[o]?.concept ?? {}).some((v: any) => (Array.isArray(v) ? v.length : v && (typeof v !== 'object' || Object.keys(v).length)))))
 
 function bewaar(o: Onderdeel) {
+  if (gespiegeld(o)) return
   status.value[o] = 'Opslaan…'
   clearTimeout(timers[o])
   timers[o] = setTimeout(async () => {
@@ -57,6 +59,7 @@ function perBranche(o: 'waarde', b: string) {
 }
 function zetBrancheVerhaal(b: string, w: string) { const x = c('bedrijfsverhaal'); x.perBranche ??= {}; x.perBranche[b] = w; bewaar('bedrijfsverhaal') }
 const mist = (o: Onderdeel) => ontbrekendeVelden(o, c(o))
+const gespiegeld = (o: Onderdeel) => data.value.onderdelen[o]?.bron === 'salesdna'
 const statusTekst = (s: any) => (s?.status === 'bevestigd' ? `Bevestigd · versie ${s.versie}` : s?.versie ? `Concept · laatst bevestigd versie ${s.versie}` : 'Concept')
 
 // Mappings (beheerder)
@@ -112,16 +115,21 @@ useHead({ title: 'Verkoopverhaal · Instellingen · Dealtrace' })
             <header class="rij-tussen">
               <div>
                 <h2 class="kaart-titel">{{ ONDERDEEL_LABEL[o] }}</h2>
-                <p class="kaart-meta"><span class="pil" data-test="vv-status">{{ statusTekst(data.onderdelen[o]) }}</span> · Eigen inrichting
+                <p class="kaart-meta"><span class="pil" data-test="vv-status">{{ statusTekst(data.onderdelen[o]) }}</span> · {{ gespiegeld(o) ? 'Uit SalesDNA' : 'Eigen inrichting' }}
+                  <span v-if="data.onderdelen[o].verouderd && gespiegeld(o)" class="pil pil--oranje">Mogelijk verouderd in SalesDNA</span>
                   <span v-if="data.onderdelen[o].controleren" class="pil pil--geel" data-test="vv-controleren">Controleren</span>
                   <span v-if="status[o]" class="meta" role="status"> · {{ status[o] }}</span></p>
               </div>
               <div>
-                <button v-if="data.onderdelen[o].controleren" type="button" class="dd-act" data-test="vv-klopt-nog" @click="kloptNog(o)">Klopt nog</button>
-                <button type="button" class="dd-act dd-act--primair" :disabled="mist(o).length > 0" data-test="vv-bevestig" @click="bevestig(o)">Bevestig</button>
+                <template v-if="!gespiegeld(o)">
+                  <button v-if="data.onderdelen[o].controleren" type="button" class="dd-act" data-test="vv-klopt-nog" @click="kloptNog(o)">Klopt nog</button>
+                  <button type="button" class="dd-act dd-act--primair" :disabled="mist(o).length > 0" data-test="vv-bevestig" @click="bevestig(o)">Bevestig</button>
+                </template>
               </div>
             </header>
-            <p v-if="mist(o).length" class="meta mt-8" data-test="vv-mist">Nog nodig om te bevestigen: {{ mist(o).join(', ') }}</p>
+            <p v-if="gespiegeld(o)" class="kaart kaart--geel mt-8" data-test="vv-gespiegeld">Wijzigen doe je in SalesDNA, {{ PLEK_IN_SALESDNA[o] }}. De eigen aanvullingen hieronder blijven bewerkbaar.</p>
+            <p v-else-if="mist(o).length" class="meta mt-8" data-test="vv-mist">Nog nodig om te bevestigen: {{ mist(o).join(', ') }}</p>
+            <fieldset :disabled="gespiegeld(o)" class="vv-fieldset">
 
             <div v-if="o === 'golden_circle'" class="mt-8">
               <label v-for="[k, l] in [['waarom', 'Waarom'], ['hoe', 'Hoe'], ['wat', 'Wat']]" :key="k" class="veld"><span class="veld-label">{{ l }}<span v-if="k !== 'wat'" class="veld-verplicht"> *</span></span>
@@ -214,6 +222,7 @@ useHead({ title: 'Verkoopverhaal · Instellingen · Dealtrace' })
               </div>
               <button type="button" class="dd-act mt-8" data-test="vv-nieuw" @click="voegToe('terugkomregels')">Regel toevoegen</button>
             </div>
+            </fieldset>
           </article>
         </template>
 

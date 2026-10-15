@@ -45,6 +45,7 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
   {
     naam: 'Koppelingen',
     kaarten: [
+      { titel: 'SalesDNA', tekst: 'Het verkoopverhaal automatisch uit SalesDNA, met bron per onderdeel.', link: '/instellingen/koppelingen/salesdna', toon: !!functie('koppeling.salesdna')?.beschikbaar },
       { titel: 'Agenda en mail', tekst: 'Microsoft 365 en Google.', toon: beheerder.value },
       { titel: 'Bronnen', tekst: 'KVK, Datacollectief en CRM.', toon: beheerder.value },
       { titel: 'DealDrive', tekst: 'Overdracht na de eerste afspraak.', toon: beheerder.value },

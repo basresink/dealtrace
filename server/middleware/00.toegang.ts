@@ -2,8 +2,9 @@
 // Lokaal (geen TOEGANGSWACHTWOORD en niet online) doet deze middleware niets.
 import { STANDAARD_GEHEIM, TOEGANG_COOKIE, gelijk, ontbrekendeInstellingen, toegangsPagina, toegangsbewijs } from '../utils/toegang'
 
-// /api/motor/run-all heeft een eigen geheim (x-motor-secret) voor de geplande functie.
-const VRIJ = ['/toegang', '/_nuxt/', '/favicon.ico', '/robots.txt', '/manifest.webmanifest', '/iconen/', '/api/motor/run-all', '/api/motor/reminders-sweep']
+// /api/motor/run-all heeft een eigen geheim (x-motor-secret) voor de geplande functie; de
+// SalesDNA-webhook controleert zelf de HMAC-handtekening.
+const VRIJ = ['/toegang', '/_nuxt/', '/favicon.ico', '/robots.txt', '/manifest.webmanifest', '/iconen/', '/api/motor/run-all', '/api/motor/reminders-sweep', '/api/koppelingen/salesdna/webhook', '/api/koppelingen/salesdna/webhook/']
 
 export default defineEventHandler((event) => {
   const config = useRuntimeConfig(event)

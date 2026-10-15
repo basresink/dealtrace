@@ -62,13 +62,13 @@ export async function kloptNog(tx: Tx, org: string, onderdeel: Onderdeel, door: 
 const arr = (a: string[] | undefined | null) => sql`${`{${(a ?? []).map((x) => `"${String(x).replace(/["\\]/g, '')}"`).join(',')}}`}::text[]`
 
 /** Concept naar leesmodel. Upsert op extern_id; wat niet meer in het concept staat, wordt inactief. */
-export async function projecteer(tx: Tx, org: string, onderdeel: Onderdeel, c: any, versie: number) {
+export async function projecteer(tx: Tx, org: string, onderdeel: Onderdeel, c: any, versie: number, bron: 'eigen' | 'salesdna' = 'eigen') {
   if (['golden_circle', 'bedrijfsverhaal', 'ambitie', 'waarde'].includes(onderdeel)) {
     const teksten = tekstenUitConcept(onderdeel as 'waarde', c)
     const sub = teksten[0]?.sublaag ?? ({ golden_circle: 'L0.0', bedrijfsverhaal: 'L0.1', ambitie: 'L0.2', waarde: 'L0.4' } as Record<string, string>)[onderdeel]
     await tx.execute(sql`delete from vv_teksten where organisation_id = ${org} and sublaag = ${sub}`)
     for (const t of teksten) {
-      await tx.execute(sql`insert into vv_teksten (organisation_id, extern_id, sublaag, sleutel, branche_id, tekst, kernzin, versie) values (${org}, ${t.id}, ${t.sublaag}, ${t.sleutel}, ${t.brancheId}, ${t.tekst}, ${t.kernzin ?? null}, ${versie})`)
+      await tx.execute(sql`insert into vv_teksten (organisation_id, extern_id, sublaag, sleutel, branche_id, tekst, kernzin, versie, bron) values (${org}, ${t.id}, ${t.sublaag}, ${t.sleutel}, ${t.brancheId}, ${t.tekst}, ${t.kernzin ?? null}, ${versie}, ${bron})`)
     }
     return
   }
@@ -76,8 +76,8 @@ export async function projecteer(tx: Tx, org: string, onderdeel: Onderdeel, c: a
     const items = (c as Concepten['branches']).items ?? []
     await tx.execute(sql`update vv_branches set actief = false where organisation_id = ${org}`)
     for (const [i, b] of items.entries()) {
-      await tx.execute(sql`insert into vv_branches (organisation_id, extern_id, naam, focus, horizon, termijn, prioriteit, volgorde, actief) values (${org}, ${b.id}, ${b.naam}, ${b.focus}, ${b.horizon ?? null}, ${b.termijn ?? null}, ${b.prioriteit ?? null}, ${i + 1}, ${b.actief !== false})
-        on conflict (organisation_id, extern_id) do update set naam = excluded.naam, focus = excluded.focus, horizon = excluded.horizon, termijn = excluded.termijn, prioriteit = excluded.prioriteit, volgorde = excluded.volgorde, actief = excluded.actief`)
+      await tx.execute(sql`insert into vv_branches (organisation_id, extern_id, naam, focus, horizon, termijn, prioriteit, volgorde, actief, bron) values (${org}, ${b.id}, ${b.naam}, ${b.focus}, ${b.horizon ?? null}, ${b.termijn ?? null}, ${b.prioriteit ?? null}, ${i + 1}, ${b.actief !== false}, ${bron})
+        on conflict (organisation_id, extern_id) do update set naam = excluded.naam, focus = excluded.focus, horizon = excluded.horizon, termijn = excluded.termijn, prioriteit = excluded.prioriteit, volgorde = excluded.volgorde, actief = excluded.actief, bron = excluded.bron`)
     }
     return
   }
@@ -85,33 +85,33 @@ export async function projecteer(tx: Tx, org: string, onderdeel: Onderdeel, c: a
     await tx.execute(sql`update vv_concurrenten set actief = false where organisation_id = ${org}`)
     for (const [i, x] of ((c as Concepten['concurrenten']).items ?? []).entries()) {
       const { id, naam, soort, actief, ...data } = x
-      await tx.execute(sql`insert into vv_concurrenten (organisation_id, extern_id, naam, soort, data, volgorde, actief) values (${org}, ${id}, ${naam}, ${soort}, ${JSON.stringify(data)}::jsonb, ${i + 1}, ${actief !== false})
-        on conflict (organisation_id, extern_id) do update set naam = excluded.naam, soort = excluded.soort, data = excluded.data, volgorde = excluded.volgorde, actief = excluded.actief`)
+      await tx.execute(sql`insert into vv_concurrenten (organisation_id, extern_id, naam, soort, data, volgorde, actief, bron) values (${org}, ${id}, ${naam}, ${soort}, ${JSON.stringify(data)}::jsonb, ${i + 1}, ${actief !== false}, ${bron})
+        on conflict (organisation_id, extern_id) do update set naam = excluded.naam, soort = excluded.soort, data = excluded.data, volgorde = excluded.volgorde, actief = excluded.actief, bron = excluded.bron`)
     }
     return
   }
   if (onderdeel === 'winpunten') {
     const w = c as Concepten['winpunten']
     for (const f of w.fasen ?? []) {
-      await tx.execute(sql`insert into vv_fasen (organisation_id, extern_id, naam, soort, volgorde, reis_hoofdfase) values (${org}, ${f.id}, ${f.naam}, ${f.soort ?? null}, ${f.volgorde}, ${f.reisHoofdfase ?? null})
-        on conflict (organisation_id, extern_id) do update set naam = excluded.naam, soort = excluded.soort, volgorde = excluded.volgorde, reis_hoofdfase = excluded.reis_hoofdfase`)
+      await tx.execute(sql`insert into vv_fasen (organisation_id, extern_id, naam, soort, volgorde, reis_hoofdfase, bron) values (${org}, ${f.id}, ${f.naam}, ${f.soort ?? null}, ${f.volgorde}, ${f.reisHoofdfase ?? null}, ${bron})
+        on conflict (organisation_id, extern_id) do update set naam = excluded.naam, soort = excluded.soort, volgorde = excluded.volgorde, reis_hoofdfase = coalesce(excluded.reis_hoofdfase, vv_fasen.reis_hoofdfase), bron = excluded.bron`)
     }
     await tx.execute(sql`update vv_winpunten set actief = false where organisation_id = ${org}`)
     for (const [i, x] of (w.items ?? []).entries()) {
-      await tx.execute(sql`insert into vv_winpunten (organisation_id, extern_id, fase_id, titel, omschrijving, waarom, impact, concurrent_ids, context, weging, volgorde, actief)
-        values (${org}, ${x.id}, ${x.faseId}, ${x.titel}, ${x.omschrijving}, ${x.waarom ?? null}, ${x.impact}, ${arr(x.concurrentIds)}, ${JSON.stringify(x.context ?? {})}::jsonb, ${x.weging ?? 1}, ${i + 1}, ${x.actief !== false})
+      await tx.execute(sql`insert into vv_winpunten (organisation_id, extern_id, fase_id, titel, omschrijving, waarom, impact, concurrent_ids, context, weging, volgorde, actief, bron)
+        values (${org}, ${x.id}, ${x.faseId}, ${x.titel}, ${x.omschrijving}, ${x.waarom ?? null}, ${x.impact}, ${arr(x.concurrentIds)}, ${JSON.stringify(x.context ?? {})}::jsonb, ${x.weging ?? 1}, ${i + 1}, ${x.actief !== false}, ${bron})
         on conflict (organisation_id, extern_id) do update set fase_id = excluded.fase_id, titel = excluded.titel, omschrijving = excluded.omschrijving, waarom = excluded.waarom, impact = excluded.impact,
-          concurrent_ids = excluded.concurrent_ids, context = excluded.context, weging = excluded.weging, volgorde = excluded.volgorde, actief = excluded.actief`)
+          concurrent_ids = excluded.concurrent_ids, context = excluded.context, weging = excluded.weging, volgorde = excluded.volgorde, actief = excluded.actief, bron = excluded.bron`)
     }
     return
   }
   if (onderdeel === 'terugkomregels') {
     await tx.execute(sql`update vv_terugkomregels set actief = false where organisation_id = ${org}`)
     for (const [i, r] of ((c as Concepten['terugkomregels']).items ?? []).entries()) {
-      await tx.execute(sql`insert into vv_terugkomregels (organisation_id, extern_id, lijst, reden, termijn, termijn_dagen, kanaal, klassen, rollen, aanpak, hercontactritme_id, volgorde, actief)
-        values (${org}, ${r.id}, ${r.lijst}, ${r.reden}, ${r.termijn}, ${r.termijnDagen}, ${r.kanaal}, ${arr(r.klassen)}, ${arr(r.rollen)}, ${r.aanpak}, ${r.hercontactritmeId ?? null}, ${i + 1}, true)
+      await tx.execute(sql`insert into vv_terugkomregels (organisation_id, extern_id, lijst, reden, termijn, termijn_dagen, kanaal, klassen, rollen, aanpak, hercontactritme_id, volgorde, actief, bron)
+        values (${org}, ${r.id}, ${r.lijst}, ${r.reden}, ${r.termijn}, ${r.termijnDagen}, ${r.kanaal}, ${arr(r.klassen)}, ${arr(r.rollen)}, ${r.aanpak}, ${r.hercontactritmeId ?? null}, ${i + 1}, true, ${bron})
         on conflict (organisation_id, extern_id) do update set lijst = excluded.lijst, reden = excluded.reden, termijn = excluded.termijn, termijn_dagen = excluded.termijn_dagen, kanaal = excluded.kanaal,
-          klassen = excluded.klassen, rollen = excluded.rollen, aanpak = excluded.aanpak, hercontactritme_id = excluded.hercontactritme_id, volgorde = excluded.volgorde, actief = true`)
+          klassen = excluded.klassen, rollen = excluded.rollen, aanpak = excluded.aanpak, hercontactritme_id = excluded.hercontactritme_id, volgorde = excluded.volgorde, actief = true, bron = excluded.bron`)
     }
   }
 }

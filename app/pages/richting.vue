@@ -33,8 +33,9 @@ useHead({ title: 'Richting · Dealtrace' })
   <div v-if="data">
     <PaginaKop kicker="Richting · Verkoopverhaal" titel="Ons verhaal" helpartikel="ons-verhaal">
       <template #acties>
-        <span class="pil pil--leeg" data-test="vv-bron">{{ data.bron === 'salesdna' ? 'Uit SalesDNA' : 'Eigen inrichting' }}</span>
-        <NuxtLink v-if="data.kan.inrichten" class="dd-act" to="/instellingen/verkoopverhaal" data-test="inrichten">Inrichten</NuxtLink>
+        <span class="pil pil--leeg" data-test="vv-bron">{{ data.bron === 'salesdna' ? `Uit SalesDNA${data.bronBijgewerkt ? ` · bijgewerkt ${datum(data.bronBijgewerkt)}` : ''}` : 'Eigen inrichting' }}</span>
+        <span v-if="data.kan.inrichten && st?.bron === 'salesdna'" class="meta" data-test="wijzig-in-salesdna">Wijzigen doe je in SalesDNA</span>
+        <NuxtLink v-else-if="data.kan.inrichten" class="dd-act" to="/instellingen/verkoopverhaal" data-test="inrichten">Inrichten</NuxtLink>
       </template>
     </PaginaKop>
     <section class="section section--laatste">
@@ -48,7 +49,7 @@ useHead({ title: 'Richting · Dealtrace' })
             <span class="pil" :class="st?.status === 'bevestigd' ? 'pil--groen' : 'pil--grijs'">{{ st?.status === 'bevestigd' ? `Bevestigd · versie ${st.versie}` : 'Concept' }}</span>
             <span v-if="st?.bevestigdOp" class="meta">{{ datum(st.bevestigdOp) }}</span>
             <span v-if="st?.controleren" class="pil pil--oranje" data-test="controleren">Controleren</span>
-            <span v-if="st?.verouderd" class="pil pil--oranje">Mogelijk verouderd in SalesDNA</span>
+            <span v-if="st?.verouderd" class="pil pil--oranje" data-test="verouderd">Mogelijk verouderd in SalesDNA</span>
           </p>
 
           <div v-if="tab.k === 'verhaal'" class="stapel mt-16" data-test="vv-verhaal">

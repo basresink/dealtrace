@@ -32,6 +32,10 @@ Een nieuwe organisatie begint leeg. De beheerder kan op **Kopieer uit startset**
 
 Ambitiedoelen, SBI-codes en trefwoorden per branche en de koppeling van redenen aan terugkomregels zijn altijd bewerkbaar. De beheerder beheert ze.
 
+## Uit SalesDNA
+
+Werken jullie met SalesDNA, dan kan de beheerder per onderdeel kiezen dat het verhaal daar vandaan komt. Op Richting staat dan "Uit SalesDNA" met de datum van de laatste versie, en in Instellingen "Wijzigen doe je in SalesDNA". Staat er **Mogelijk verouderd in SalesDNA**, dan is daar iets veranderd waar dit onderdeel op leunt. Dealtrace gebruikt tot een nieuwe versie de laatst bevestigde. Zie [Koppelingen](/help/koppelingen).
+
 ## Voorstellen
 
 Experts kunnen op Richting een beter antwoord voorstellen. Je ziet ze onderaan de instellingenpagina en kiest **Overgenomen** of **Afwijzen**.

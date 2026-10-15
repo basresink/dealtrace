@@ -810,3 +810,4 @@ html.zonlicht body { color: #000; }
 .vv-regel textarea, .vv-onderdeel textarea { width: 100%; min-height: 72px; }
 .vv-velden { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 .rij-tussen { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.vv-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
