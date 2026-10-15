@@ -30,9 +30,17 @@ export function normaliseerUrl(ruw: string, naam = 'De databaseregel'): string {
     const u = new URL(t)
     if (!u.hostname) throw new Error('geen host')
   } catch {
-    throw new Error(`${naam} is geen geldig adres. Controleer het deel na de @ (bijvoorbeeld aws-0-eu-central-1.pooler.supabase.com:5432/postgres).`)
+    throw new Error(`${naam} is geen geldig adres. ${beschrijf(m[1]!, rest)} Verwacht: postgresql://postgres.PROJECTCODE:WACHTWOORD@aws-0-eu-central-1.pooler.supabase.com:5432/postgres`)
   }
   return t
+}
+
+/** Hoe de regel gelezen is, met het wachtwoord als ***. Gebruiker en host zijn geen geheimen. */
+function beschrijf(schema: string, rest: string): string {
+  const at = rest.lastIndexOf('@')
+  if (at < 0) return `Er staat geen @ in de regel (${rest.length} tekens na ${schema}).`
+  const gebruiker = rest.slice(0, at).split(':')[0]
+  return `Gelezen als: ${schema}${gebruiker}:***@${rest.slice(at + 1)}.`
 }
 
 export function isLokaleUrl(url: string): boolean {

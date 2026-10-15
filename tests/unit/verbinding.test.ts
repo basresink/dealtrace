@@ -28,3 +28,15 @@ describe('normaliseerUrl', () => {
     expect(verbindingsopties(`postgresql://a:b@${HOST}?sslmode=require`).connectionString).not.toContain('sslmode')
   })
 })
+
+describe('foutmelding', () => {
+  it('toont gebruiker en host maar nooit het wachtwoord', () => {
+    let melding = ''
+    try { normaliseerUrl('postgresql://postgres.abc:GeheimXYZ@host met fout:5432/postgres'.replace(' met fout', ':poort'), 'X') } catch (e) { melding = (e as Error).message }
+    expect(melding).toContain('postgres.abc:***@')
+    expect(melding).not.toContain('GeheimXYZ')
+  })
+  it('meldt een ontbrekende @', () => {
+    expect(() => normaliseerUrl('postgresql://postgres.abc', 'X')).toThrow(/geen @/)
+  })
+})
