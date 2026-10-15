@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process'
 import pg from 'pg'
 import { migreer } from '../../server/db/migreer'
 import { seed } from '../../server/db/seed'
-import { verbindingsopties } from '../../shared/verbinding'
+import { normaliseerUrl, verbindingsopties } from '../../shared/verbinding'
 
 const beheer = process.env.DATABASE_URL_BEHEER
 if (!beheer) {
@@ -15,6 +15,16 @@ if (!beheer) {
 }
 if (!process.env.DATABASE_APP_WACHTWOORD || process.env.DATABASE_APP_WACHTWOORD === 'dealtrace_app') {
   console.error('Zet DATABASE_APP_WACHTWOORD bij Netlify op een eigen, sterk wachtwoord.')
+  process.exit(1)
+}
+
+// Controleer beide regels vooraf, met een duidelijke melding zonder wachtwoord.
+try {
+  normaliseerUrl(beheer, 'DATABASE_URL_BEHEER')
+  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL ontbreekt. Zet hem bij Netlify onder Environment variables.')
+  normaliseerUrl(process.env.DATABASE_URL, 'DATABASE_URL')
+} catch (e) {
+  console.error(`\n${(e as Error).message}\n`)
   process.exit(1)
 }
 
