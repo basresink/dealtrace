@@ -4,8 +4,8 @@
 |---|---|
 | Sprint | 7 |
 | Features | F02 Leadgenerator (bron Datacollectief) |
-| Hangt af van | P01 (fundament, functiecatalogus, rechten), P27 (inloggen en mobiele schil), P03 (accounts, contacten, eigen velden), P04 (import en datakwaliteit), P28 (verkoopverhaal, `vv_branche_mapping`), P08 (bundel en Bewaker), P11 (leadgenerator, leadstabel, AI-zoeker en KvK) |
-| Bron in het bouwplan | F02 (bronnen, tabblad Koppelingen, grenzen, technisch), 12 (Integraties, rij Datacollectief), 11.4 (bundel), 15.1 (datakwaliteit), 15.2 (AVG), 10.1 (herkomst per gegeven), 22 (open vraag 5), ADR-015, Bijlage A regel 4 |
+| Hangt af van | P01 (fundament, functiecatalogus, rechten), P27 (inloggen en mobiele schil), P03 (accounts, contacten, eigen velden), P04 (import en datakwaliteit), P28 (verkoopverhaal, `vv_branche_mapping`), P08 (Bewaker en plafonds), P11 (leadgenerator, leadstabel, AI-zoeker en KvK) |
+| Bron in het bouwplan | F02 (bronnen, tabblad Koppelingen, grenzen, technisch), 12 (Integraties, rij Datacollectief), 11.4 (Datacollectief valt buiten de AI-credits), 15.1 (datakwaliteit), 15.2 (AVG), 10.1 (herkomst per gegeven), 22 (open vraag 5), ADR-015, Bijlage A regel 4 |
 
 ## Lees eerst
 
@@ -21,14 +21,14 @@ Je koppelt Datacollectief als bron in de leadgenerator: selecties op doelgroep d
 
 ### Waarom
 
-Een lead uit KvK of de AI-zoeker heeft vaak geen aanspreekpunt. Zonder contactpersoon met functie en nummer haalt een lead het criterium Bereikbaarheid niet en belt de binnendienst de receptie. Datacollectief levert bedrijven en contactpersonen (functie, direct nummer, zakelijk e-mailadres, LinkedIn), branche, omvang en selecties op doelgroep (F02). In DealDrive bestond de leadgenerator alleen als schil zonder server en zonder bundelmeting (Bijlage A, regel 4). Dealtrace bouwt één leadstroom met vijf bronnen (ADR-015): Datacollectief levert dezelfde leadstructuur, dezelfde ontdubbeling, dezelfde criteria en dezelfde vijf groepen als de andere bronnen.
+Een lead uit KvK of de AI-zoeker heeft vaak geen aanspreekpunt. Zonder contactpersoon met functie en nummer haalt een lead het criterium Bereikbaarheid niet en belt de binnendienst de receptie. Datacollectief levert bedrijven en contactpersonen (functie, direct nummer, zakelijk e-mailadres, LinkedIn), branche, omvang en selecties op doelgroep (F02). In DealDrive bestond de leadgenerator alleen als schil zonder server en zonder meting van het verbruik (Bijlage A, regel 4). Dealtrace bouwt één leadstroom met vijf bronnen (ADR-015): Datacollectief levert dezelfde leadstructuur, dezelfde ontdubbeling, dezelfde criteria en dezelfde vijf groepen als de andere bronnen.
 
 ### Gebruikers en niveaus
 
 | Rol | Niveau | Wat |
 |---|---|---|
-| Accountmanager | Beginner | Ziet leads met bronpil "Datacollectief" die de salesmanager of een ronde klaarzette; met ontgrendeling "Neem over" en "Niet relevant" (F02). Ziet op contacten de herkomst "Datacollectief" met datum |
-| Accountmanager | Gevorderd | Ziet Datacollectief als vinkje bij Bronnen in een zoekronde zodra de koppeling actief is en het pakket het toelaat. Niet vastgelegd in het bouwplan; voorstel: verrijken van één eigen account met contactpersonen ("Zoek contactpersonen") ook vanaf Gevorderd, omdat het per account is en binnen de bundel telt |
+| Accountmanager | Beginner | Ziet leads met bronpil "Datacollectief" die de salesmanager of een ronde klaarzette; staat "Neem over" voor Beginner aan (`/platform/features`, 4.2), dan ook "Neem over" en "Niet relevant" (F02). Ziet op contacten de herkomst "Datacollectief" met datum |
+| Accountmanager | Gevorderd | Ziet Datacollectief als vinkje bij Bronnen in een zoekronde zodra de koppeling actief is en het pakket het toelaat. Niet vastgelegd in het bouwplan; voorstel: verrijken van één eigen account met contactpersonen ("Zoek contactpersonen") ook vanaf Gevorderd, omdat het per account is en binnen het maandplafond van de organisatie telt |
 | Accountmanager | Expert | Datacollectief in bulk: selecties op doelgroep, opgeslagen zoekopdrachten en automatische rondes per doelgroep met Datacollectief als bron (4.3) |
 | Salesmanager | Gevorderd of Expert | Als Expert, plus verbruik van het team lezen (3.3) |
 | Beheerder | Expert | Koppelt Datacollectief: sleutel, test, tegoed, maandplafond (tabblad Koppelingen) |
@@ -67,8 +67,8 @@ Pakket te laag: de kaart toont "Onderdeel van Compleet" met een link naar het ab
 
 ### Knoppen, bevestigingen en meldingen
 
-- "Nieuwe ronde" is uit als de bundel op is, met tooltip (F02). Voor Datacollectief geldt hetzelfde bij een vol maandplafond. Niet vastgelegd in het bouwplan; voorstel tooltip: "Je maandplafond voor Datacollectief-records is op."
-- Bij 80 procent van het plafond een melding aan de beheerder (11.2, F24 "bundel op 80 procent").
+- "Nieuwe ronde" is een knop met uitleg als de AI-credits op zijn (F02, P11). Voor Datacollectief geldt hetzelfde bij een vol maandplafond. Niet vastgelegd in het bouwplan; voorstel tooltip: "Je maandplafond voor Datacollectief-records is op."
+- Bij 80 procent van het maandplafond een melding aan de beheerder (F24). Niet vastgelegd in het bouwplan; voorstel: soort "Datacollectief op 80 procent".
 - Bij 100 procent een blokkade vóór de aanroep (11.2).
 - "Zoek contactpersonen" vraagt bevestiging met het maximale aantal records, omdat het tegoed kost.
 
@@ -78,7 +78,7 @@ Geen nieuwe filters. De bestaande bronfilter in de leadgenerator en op Rondes en
 
 ### Regels
 
-- Elk opgehaald record kost tegoed en telt in de bundel (F02). Bundel Datacollectief-records: Starter 0, Plus 0, Compleet volgens contract (11.4).
+- Elk opgehaald record kost tegoed en telt in het maandverbruik in `lead_verbruik` (F02). Datacollectief is geen AI en valt buiten de AI-credits; het aantal records volgt het contract van de organisatie (11.4).
 - Plafond per maand per organisatie uit de instellingen; afgedwongen op de server.
 - Herkomst `datacollectief` met datum op elk veld (12). Bronprioriteit: hand boven kvk boven datacollectief boven crm boven salesdna boven web boven ai boven import; een lagere bron overschrijft een hogere nooit stil (10.1). Datacollectief overschrijft dus nooit een handmatig of KvK-veld.
 - Validatie: e-mail syntaxis plus MX, telefoon naar E.164 (15.1).
@@ -150,7 +150,7 @@ Geen. Datacollectief is geen AI-bron; de gegevens gaan als feiten met bron `data
 
 Sleutelnamen zijn niet vastgelegd in het bouwplan; voorstel:
 
-| Sleutel | Niveau | Pakket | Recht | Helpartikel |
+| Sleutel | Startindeling: aan vanaf | Pakket | Recht | Helpartikel |
 |---|---|---|---|---|
 | `leadgenerator.datacollectief` (selectie, bron in rondes) | Expert | Compleet | leads schrijven eigen | "KvK en Datacollectief" |
 | `datacollectief.verrijken` (contactpersonen per account) | Gevorderd (voorstel) | Compleet | prospects schrijven | "KvK en Datacollectief" |
@@ -171,7 +171,7 @@ Sleutelnamen zijn niet vastgelegd in het bouwplan; voorstel:
 
 ## Acceptatiecriteria
 
-1. Bijlage A regel 4: de leadgenerator heeft een echte server, leadstabel en bundelmeting; Datacollectief is de vijfde werkende bron naast AI-zoeker, KvK, import en CRM (de CRM-bron volgt in P20).
+1. Bijlage A regel 4: de leadgenerator heeft een echte server, leadstabel en meting van het verbruik; Datacollectief is de vijfde werkende bron naast AI-zoeker, KvK, import en CRM (de CRM-bron volgt in P20).
 2. Bijlage A regel 16: er is één definitie van de leadstructuur, de ontdubbeling en de bronprioriteit in `shared/`; Datacollectief heeft geen eigen kopie.
 3. Een ronde met Datacollectief als bron levert leads in de vijf groepen met bronpil "Datacollectief" (F02).
 4. Een lead met hetzelfde KvK-nummer als een bestaand account staat in "Al in je bestand".
@@ -186,7 +186,7 @@ Sleutelnamen zijn niet vastgelegd in het bouwplan; voorstel:
 13. Cross-tenant: de koppeling en het verbruik van organisatie A zijn onzichtbaar voor B (wegwerp-Postgres).
 14. Telefoon (8.12, 8.15, 8.16): op 375, 390 en 412 px opent `/leadgenerator` met "Beter op een groot scherm", zonder horizontale scroll; de herkomst op de compacte accountkaart is leesbaar; "Zoek contactpersonen" heeft een tikdoel van minimaal 44 px.
 15. Offline (8.8): zonder verbinding toont de knop "Zoek contactpersonen" dat het niet kan en komt er niets in de wachtrij.
-16. Niveaus: als Beginner ziet de gebruiker geen bronkeuze en geen "Zoek contactpersonen" (of met slot en uitleg); als Gevorderd ziet hij het vinkje Datacollectief niet in rondes in bulk (vergrendeld met uitleg); als Expert werkt alles binnen het pakket. Getest per niveau.
+16. Niveaus: als Beginner ziet de gebruiker geen bronkeuze en geen "Zoek contactpersonen" (of met slot en uitleg); als Gevorderd ziet hij het vinkje Datacollectief niet in rondes in bulk ("Nog niet aangezet" met uitleg); als Expert werkt alles binnen het pakket. Getest per niveau.
 
 ## Definition of Done
 

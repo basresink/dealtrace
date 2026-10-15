@@ -9,7 +9,7 @@
 
 ## Lees eerst
 
-- Bouwplan-Dealtrace.md: F03, F04, F19, 7.2 (statussen), 8.3 (actiebalk), 8.5.5, 8.7, 8.11, 10.1 en 10.2 (`accounts`, `contacts`), 14, 15.1, 15.2 (bel-me-niet), Bijlage A.
+- Bouwplan-Dealtrace.md: 0.2 (B17), F03, F04, F19, 7.2 (statussen), 8.3 (actiebalk), 8.5.5, 8.7, 8.11, 10.1 en 10.2 (`accounts`, `contacts`), 14, 15.1, 15.2 (bel-me-niet), Bijlage A.
 - DealDrive (commit 75bee61):
   - Pagina's: `app/pages/prospects/index.vue`, `app/pages/prospects/alle.vue`, `app/pages/prospects/[id]/index.vue`, `app/pages/accounts/[id]/index.vue`, `app/pages/klanten/alle.vue`, `app/pages/contacten/index.vue`, `app/pages/contacten/alle.vue`, `app/pages/contacten/[id]/index.vue`, `app/pages/instellingen/custom-fields.vue`.
   - Componenten: `app/components/AccountRow.vue`, `AccountScoreCircle.vue`, `KlantGradePicker.vue`, `EditableField.vue`, `InlineEditChip.vue`, `ContactInfoFlyout.vue`, `ContactenFlyout.vue`, `Portrait.vue`.
@@ -24,7 +24,7 @@ De prospectlijsten, de accountkaart (ook compact op 390 px), contacten met één
 
 ### Waarom
 
-Een account is een bedrijf; prospect of klant is een eigenschap, geen aparte tabel. De prospectlijst is voor de binnendienst de bellijst en voor de buitendienst de selectie per regio; de accountkaart is het dossier voor en na elk gesprek. "Hebben we de beslisser al, en wie ontbreekt er nog?" is de kern van kwalificatie. Elke organisatie verkoopt iets anders en wil eigen gegevens vastleggen (beslissing B6).
+Een account is een bedrijf; prospect of klant is een eigenschap, geen aparte tabel. Klanten komen uit DealDrive of het CRM (voor kansen langs de route en winback); Dealtrace loopt tot en met de eerste afspraak en maakt zelf geen klant van een prospect (B17). De prospectlijst is voor de binnendienst de bellijst en voor de buitendienst de selectie per regio; de accountkaart is het dossier voor en na elk gesprek. "Hebben we de beslisser al, en wie ontbreekt er nog?" is de kern van kwalificatie. Elke organisatie verkoopt iets anders en wil eigen gegevens vastleggen (beslissing B6).
 
 ### Gebruikers en niveaus
 
@@ -45,9 +45,9 @@ Een account is een bedrijf; prospect of klant is een eigenschap, geen aparte tab
 - Kop "← Prospects · 86 prospects totaal", titel "Alle prospects". Werkbalk in vaste volgorde: zoeken, "+ Prospect" (geel), "+ Taak", "+ Afspraak", "Weergave" (Lijst, Compact, Kaarten), "Sortering", "Filters" met teller. "+ Taak" en "+ Afspraak" openen hun flyout zodra P07 en P13 er zijn; tot dan niet tonen.
 - Rij: logo of initialen in de kleur van de prospectgraad, naam met klassepil, fasepil en statuspil, metaregel (website- en LinkedIn-icoon, branche, plaats, telefoon als bellink, "Inzichten: n", "Laatste contact: 4 sep" of "nog nooit"), aanleiding eronder (rood bij hete aanleiding), rechts hooguit drie contacten als initialen (beslissers eerst) of "Geen contactpersoon".
 - Paginering 25 rijen, "Toon meer".
-- Contextmenu (rechtsklik of lang drukken): "Open kaart", "Bel primaire contact", "Stuur e-mail", "Nieuwe taak", "Plan afspraak", "Zet in campagne", "Zet nee", "Promoveer tot klant". Items van latere prompts (taak, afspraak, campagne, nee) verschijnen pas als hun prompt klaar is.
+- Contextmenu (rechtsklik of lang drukken): "Open kaart", "Bel primaire contact", "Stuur e-mail", "Nieuwe taak", "Plan afspraak", "Zet in campagne", "Zet nee". Items van latere prompts (taak, afspraak, campagne, nee) verschijnen pas als hun prompt klaar is. Er is geen "Promoveer tot klant" (B17).
 - Lege staat: "Niets gevonden." met "Toon alles".
-- `/klanten` bestaat als lijst voor accounts met status klant; standaard verborgen voor de Beginner.
+- `/klanten` bestaat als lijst voor accounts met status klant uit DealDrive of het CRM (kansen langs de route en winback); standaard verborgen voor de Beginner.
 
 **Filters** (tellers rekenen mee met alle andere actieve filters; een pil met nul is uitgeschakeld; filters en sortering in de URL; opgeslagen filters per gebruiker vanaf Gevorderd):
 
@@ -74,33 +74,33 @@ Sortering: "Naam", "Laatste contact", "Score", "Klasse", "Dagen in fase", "Afsta
 3. Contactstrip: website, telefoon (bellink), LinkedIn.
 4. Stuurstrip, alleen lezen: "Laatste actie", "Laatste call", "Laatste bezoek", "Reis", "Ritme: poging 3 van 5 · volgende do 16 okt · bellen" (reis en ritme gevuld vanaf P05 en P07).
 5. Knoppen: "Info", "Contacten 3", "Briefing" (zwart, vanaf P18), "Bel", "+ Taak", "+ Afspraak".
-6. Statstrook: "Open acties" (n achterstallig rood), "Inzichten" (n ongezien), "Open offertes", "Open deals", "Laatste contact", "Eigenaar".
+6. Statstrook: "Open acties" (n achterstallig rood), "Inzichten" (n ongezien), "Eerstvolgende afspraak", "Volgende stap", "Laatste contact", "Eigenaar".
 7. Strook nieuwste aanleiding.
 8. Blokken in drie kolommen: "Dossier" (datum, aantal criteria, kernfeiten), "Kwalificatie BAND 3/4" (Behoefte, Autoriteit, Noodzaak, Draagvlak, elk met bron), "Ritme" (vanaf P05 en P07).
 9. Buying committee.
-10. Tabbladen "Tijdlijn", "Taken", "Contacten", "Notities", "Deals" (Gevorderd), en achter "Meer": "Inzichten", "E-mails", "Afspraken", "Verslagen", "Campagnes", "Activiteitenlog", "Eigen velden".
+10. Tabbladen "Tijdlijn", "Taken", "Contacten", "Notities", "Reis" (gevuld vanaf P05), en achter "Meer": "Inzichten", "E-mails", "Afspraken", "Verslagen", "Campagnes", "Activiteitenlog", "Eigen velden".
 
-Een blok of tabblad zonder bron in deze sprint toont een lege staat die zegt wat er niet is en waarom, bijvoorbeeld "Nog geen deals. Deals maak je vanaf de pipeline." Niet vastgelegd welke teksten; voorstel: één zin per blok volgens 2.3.
+Een blok of tabblad zonder bron in deze sprint toont een lege staat die zegt wat er niet is en waarom, bijvoorbeeld "Nog geen afspraken. Een afspraak plan je met + Afspraak." Niet vastgelegd welke teksten; voorstel: één zin per blok volgens 2.3.
 
-**Info-flyout** (520 px): basisvelden, eigen velden per sectie, eigenaar (gat 9), klasse, herkomst per veld (Expert), scoreopbouw (Expert). Beginner: geavanceerde blokken ingeklapt achter "Meer" (4.5).
+**Info-flyout** (520 px): basisvelden, eigen velden per sectie, eigenaar (gat 9), klasse, herkomst per veld (Expert), scoreopbouw (Expert). Beginner: geavanceerde blokken ingeklapt achter "Meer" (4.4).
 
 **Flyout Nieuwe prospect** ("Wie ga je erbij zetten?"): Bedrijfsnaam (verplicht) met directe dubbelcheck ("Bedoel je Teeuwen Bouw B.V. in Houten? Al in je bestand."), "Zoek in KvK" (vult officiële naam, KvK, SBI, adres, medewerkers; de KvK-adapter is P11; tot dan verborgen), Klasse (voorstel uit medewerkers), adres, telefoon, website, LinkedIn, eigen velden per sectie, doelgroep en reis (vanaf P05). Knop "Prospect aanmaken"; toast "Teeuwen Bouw staat erbij." en de kaart opent. Een Beginner ziet alleen naam, plaats, telefoon, website en "Zoek in KvK".
 
-**Promoveren tot klant**: altijd een bevestiging ("Teeuwen Bouw promoveren tot klant?", gevolg in de tekst, knop "Promoveren"), wie en wanneer gelogd, gebeurtenis `handmatig-klant` (meldpunt in P05), optioneel overdracht naar DealDrive of het CRM (P17, P23). Niet vastgelegd welke bevestigingstekst; voorstel.
+**Geen promoveren** (B17): Dealtrace maakt geen klant van een prospect; dat gebeurt in DealDrive of het CRM. In de plaats komt **Overdragen** na een gehouden eerste afspraak met vervolg, altijd met bevestiging en audit, gebeurtenis `overgedragen` en status `overgedragen`; dat bouwt P17 Funnel van de prospectreis en overdracht (met de echte overdracht naar DealDrive in P23). Op de accountkaart reserveer je alleen de plek voor de knop "Overdragen".
 
 **Contacten.** Routes `/contacten` (Top deze week: beslissers en beïnvloeders), `/contacten/alle`, `/contacten/:id`.
 
 - Rollen (één begrip): "Beslisser", "Beïnvloeder", "Champion", "Gebruiker", "Blokkeerder", "Poortwachter", "Onbekend".
 - **Snelformulier** op de accountkaart: "Contacten" opent een flyout met de contacten (rolvolgorde, binnen rol laatst bijgewerkt eerst) en onderaan "+ Snel contactpersoon": Voornaam, Achternaam (verplicht), Functie, E-mail, Telefoon, Mobiel, Rol (standaard Onbekend), met dubbelcheck op e-mail en naam binnen het bedrijf. "Contactpersoon toevoegen" zet hem direct in de lijst.
 - **Buying committee** (blok op de kaart): per rol een vak met namen, bron ("LinkedIn, ingevoerd door Sanne", "verslag 1 okt", "Datacollectief") en zekerheid ("vermoedelijk" onder 60). Ontbrekende rollen als grijze vakken met "Nog niet gevonden" en de actie "Vraag in je volgende gesprek" (zet een vraag in het belscript, vanaf P10) of "Zoek via Datacollectief" (Expert, vanaf P15).
-- **Contactkaart**: portret of initialen, naam, functie, bedrijf (link), telefoon en mobiel als bellink, LinkedIn; stuurstrip van het account met label ("Account · laatste call"); statstrook; tabbladen "Tijdlijn", "Taken", "Notities", "Afspraken", "Verslagen", "Deals"; voetnoot "Daarnaast 2 open taken op accountniveau".
+- **Contactkaart**: portret of initialen, naam, functie, bedrijf (link), telefoon en mobiel als bellink, LinkedIn; stuurstrip van het account met label ("Account · laatste call"); statstrook; tabbladen "Tijdlijn", "Taken", "Notities", "Afspraken", "Verslagen"; voetnoot "Daarnaast 2 open taken op accountniveau".
 - **Toestemming en voorkeur**: per contact "E-mail" en "WhatsApp" met status onbekend, ja, nee, datum en bron; "Voorkeurskanaal"; "Bel me niet" (blokkeert bellen en zet het nummer op de bel-me-niet-lijst van de organisatie).
 - **Status "vertrokken"** met datum in plaats van verwijderen; het contact blijft in de historie.
 - Filters lijst: zoeken (naam, functie, bedrijf), rol, "Bij prospects" of "Bij klanten", "Van mijn accounts", "Zonder e-mail", "Zonder telefoon", "Geen contact in 30 of 90 dagen", eigen velden. Sortering: rol, laatste contact, bedrijf.
 
 **Eigen velden** (`/instellingen/eigen-velden`, beheerder)
 
-- Kop "Eigen velden", subtitel "Velden die jullie zelf nodig hebben, bovenop de standaard.", knop "+ Veld" (geel). Tabbladen **Account**, **Contact**, **Deal**, **Campagne**, **Afspraak**.
+- Kop "Eigen velden", subtitel "Velden die jullie zelf nodig hebben, bovenop de standaard.", knop "+ Veld" (geel). Tabbladen **Account**, **Contact**, **Campagne**, **Afspraak**.
 - Per object de secties (Account: Adres, Bereik, Stamgegevens, Kwalificatie, Contract en order, plus eigen secties met "+ Sectie"); per sectie de velden met sleepgreep, naam, type, verplicht, zichtbaar voor, gebruikt in, aantal ingevuld.
 - **Veldflyout**: Naam; Sleutel (automatisch uit de naam, uniek per object, na aanmaken niet te wijzigen); Type (Tekst, Lange tekst, Getal, Bedrag, Datum, Ja of nee, Keuzelijst, Meerkeuze, Telefoon, E-mail, Link, Gebruiker); Opties (waarden met volgorde en kleur); Sectie; Verplicht (Nee, Bij aanmaken, Bij een fase); Standaardwaarde; Hulptekst; Zichtbaar voor (alle niveaus, vanaf Gevorderd, vanaf Expert); Bewerkbaar door (iedereen, eigenaar en manager, alleen beheerder); Filterbaar; Bron (handmatig, import, KvK, Datacollectief, CRM-veld); "Toon in kop". Knoppen "Annuleren", "Veld opslaan".
 - Archiveren in plaats van verwijderen zolang er waarden zijn: "Archiveren verbergt het veld; de 214 ingevulde waarden blijven bewaard."
@@ -112,7 +112,7 @@ Een blok of tabblad zonder bron in deze sprint toont een lege staat die zegt wat
 2. "Waarom nu": de reden van de motor of het sterkste inzicht, met bron (vanaf P06 en P19; tot dan de nieuwste aanleiding).
 3. Contacten: per persoon rol, telefoon (tikbaar), mail; de beslisser bovenaan.
 4. Laatste drie contactmomenten met kanaal, datum en uitkomst.
-5. Open taken en deals.
+5. Open taken en de eerstvolgende afspraak.
 6. Pitstop (ingeklapt, vanaf P18).
 7. Tabs onder de vouw: Tijdlijn, Inzichten, Eigen velden, Details.
 8. Plakkende actiebalk "Bellen", "Mail", "WhatsApp", "Navigeer" (P27-component); een knop zonder gegevens is uitgegrijsd met de reden. "Navigeer" opent de kaartapp; de keuze in Mijn instellingen komt in P30. Niet vastgelegd welke kaartapp tot dan; voorstel: Apple Kaarten op iOS, Google Maps op Android.
@@ -125,20 +125,20 @@ Wijzigen op de telefoon per niveau (8.11): Beginner basisvelden, Gevorderd alle 
 2. Bij een nieuw bedrijf: velden invullen, "Prospect aanmaken", toast "Teeuwen Bouw staat erbij.", de kaart opent met status `nieuw` en een berekende score.
 3. Op de kaart "Contacten 3", onderaan "+ Snel contactpersoon", Rol "Beslisser", "Contactpersoon toevoegen": het buying committee vult het vak Beslisser en het primaire contact wordt deze persoon.
 4. Gevorderd zet filter "Zonder beslisser": de teller op de pil was 12 en de lijst toont 12 rijen; de URL bevat het filter; na herladen staat het er nog.
-5. Salesmanager kiest in het contextmenu "Promoveer tot klant": bevestiging, auditregel, status klant; het account verdwijnt uit `/prospects/alle` en verschijnt in `/klanten`.
+5. Een account met status klant (uit DealDrive of het CRM, in deze sprint uit de seed) staat in `/klanten` en niet in `/prospects/alle`; het contextmenu heeft geen "Promoveer tot klant".
 6. Salesmanager verwijdert een account: bevestiging ("Verwijderen" rood), contacten gaan mee op de server, de activiteitenlog blijft met "account verwijderd".
 7. Beheerder maakt eigen veld "Aantal monteurs" (Getal, filterbaar, vanaf Gevorderd); een Beginner ziet het veld niet; een Gevorderde filtert erop met tellers.
 8. Op de telefoon tikt de accountmanager op de compacte kaart "Bellen": de `tel:`-link opent met het mobiele nummer van de beslisser eerst (1 tik).
 
 ### Regels
 
-- **Score** 0 tot 100 met zichtbare opbouw (hover en Info-flyout): versheid van aanleidingen 30, bereikbaarheid (beslisser met nummer, e-mail) 25, fit met de doelgroep (criteria uit het dossier) 20, momentum (recente uitkomsten, open deal) 15, recentheid van contact 10. Een nieuw account krijgt de berekende waarde, geen vaste 50 (gat 25). Onderdelen zonder bron in deze sprint tellen 0 en staan in de opbouw als "nog geen gegevens".
+- **Score** 0 tot 100 met zichtbare opbouw (hover en Info-flyout): versheid van aanleidingen 30, bereikbaarheid (beslisser met nummer, e-mail) 25, fit met de doelgroep (criteria uit het dossier) 20, momentum (recente uitkomsten, geplande afspraak) 15, recentheid van contact 10. Een nieuw account krijgt de berekende waarde, geen vaste 50 (gat 25). Onderdelen zonder bron in deze sprint tellen 0 en staan in de opbouw als "nog geen gegevens".
 - **Laatste contact**: jongste moment uit verzonden of ontvangen mail, afgeronde bel-, mail-, bericht- en afspraaktaken, gehouden afspraken; open taken en toekomstige afspraken tellen niet; import fabriceert geen contactmoment. Eén functie voor lijst, sortering en kaart (gat 26).
 - **Primair contact**: eerste beslisser of champion, anders iemand met telefoonnummer, anders de eerste.
 - **Klasse**: één veld `klasse` voor kaart, lijst, filter en later de leadgenerator (gat 2).
 - **Eigenaar**: in de Info-flyout; "Van mij" standaard aan op elke lijst (gat 9). Eigenaar wijzigen: salesmanager en beheerder.
 - **Verwijderen**: alleen salesmanager en beheerder; cascade van contacten op de server; de knop staat er alleen met recht; inline wissen met `null` (gat 10).
-- **Promoveren** altijd met bevestiging en audit (gat 27).
+- **Geen promoveren** (gat 27, B17): er is geen schrijfpad van prospect naar klant in Dealtrace; overdragen gaat altijd met bevestiging en audit (P17).
 - **Rol**: één rolbegrip voor alle formulieren; geen los vinkje "beslist mee" (gat 28).
 - **Open taken** tellen op contact- en accountkaart met dezelfde regel (gat 29).
 - **Duplicaten** (15.1): KvK gelijk is altijd een duplicaat; anders domein zonder `www.`; anders genormaliseerde naam (zonder B.V., N.V., Holding, Group) met Sørensen-Dice: 80 procent duplicaat, 60 procent mogelijk. Contacten: exact op e-mail, anders volledige naam binnen het bedrijf. Bij samenvoegen blijven beide id's bewaard in `data.samengevoegdUit[]`.
@@ -173,7 +173,7 @@ Migratie `0003_accounts_contacten_eigen_velden`.
 
 | Functie | Invoer | Uitvoer | Randgevallen en unit-tests |
 |---|---|---|---|
-| `berekenScore(account, context)` in `shared/score.ts` | account, aanleidingen, contacten, dossier, uitkomsten, deals, nu | `{score, opbouw: {aanleiding, bereikbaarheid, fit, momentum, recentheid}}` | leeg account geeft geen 50; elk onderdeel op zijn maximum; som nooit boven 100 |
+| `berekenScore(account, context)` in `shared/score.ts` | account, aanleidingen, contacten, dossier, uitkomsten, afspraken, nu | `{score, opbouw: {aanleiding, bereikbaarheid, fit, momentum, recentheid}}` | leeg account geeft geen 50; elk onderdeel op zijn maximum; som nooit boven 100 |
 | `laatsteContact(account, records)` | account, mails, taken, afspraken | ISO-datum of null | open taak en toekomstige afspraak tellen niet; import telt niet; gelijk tijdstip |
 | `primairContact(contacts)` | contacten | contact of null | geen beslisser; champion zonder telefoon; alles vertrokken |
 | `filterTellers(accounts, filters)` | accounts, actieve filters | telling per pilwaarde | teller gelijk aan resultaat na klikken; pil met nul |
@@ -195,7 +195,6 @@ Migratie `0003_accounts_contacten_eigen_velden`.
 | `POST /api/accounts` | schrijven | velden | account met score | 409 met de match bij een zeker duplicaat |
 | `PUT /api/accounts/:id` | schrijven; eigenaar alleen salesmanager en beheerder | patch (`null` wist) | account | 403, 409 versie |
 | `DELETE /api/accounts/:id` | verwijderen (salesmanager team, beheerder) | | 204, cascade contacten | 403 |
-| `POST /api/accounts/:id/promoveer` | schrijven | `{bevestigd: true}` | account | 428 zonder bevestiging |
 | `POST /api/accounts/samenvoegen` | Expert | `{behoudId, samenvoegenId}` | account | 409 als een klant prospect zou worden |
 | `GET /api/accounts/export` | Expert | filters | CSV | 403 |
 | `GET/POST/PUT /api/contacten` | lezen, schrijven | | | 400 zonder `accountId` |
@@ -209,7 +208,7 @@ Migratie `0003_accounts_contacten_eigen_velden`.
 
 ### AI-stappen
 
-Geen in deze prompt. "Stel voor met AI" (Profielbouwer, `bouwCommittee` met schema `[{naam?, functie, rol, bron, zekerheid}]`) staat in F04 maar de agent en de Bewaker komen in P08 en P19. Niet vastgelegd in welke prompt de knop komt; voorstel: P19, tot dan als vergrendelde knop met uitleg voor Gevorderd.
+Geen in deze prompt. "Stel voor met AI" (Profielbouwer, `bouwCommittee` met schema `[{naam?, functie, rol, bron, zekerheid}]`) staat in F04 maar de agent en de Bewaker komen in P08 en P19. Niet vastgelegd in welke prompt de knop komt; voorstel: P19, tot dan als knop met slot en uitleg voor Gevorderd ("Nog niet aangezet").
 
 ### Integraties
 
@@ -217,7 +216,7 @@ Geen. "Zoek in KvK" en "Zoek via Datacollectief" verschijnen pas met hun adapter
 
 ### Functiecatalogus
 
-| Sleutel | Niveau | Pakket | Recht | Helpartikel |
+| Sleutel | Startindeling: aan vanaf | Pakket | Recht | Helpartikel |
 |---|---|---|---|---|
 | `prospects.lijst`, `prospects.kaart`, `prospects.nieuw` | Beginner | Starter | iedereen | "Een prospect toevoegen", "De accountkaart lezen" |
 | `prospects.filtersAlle`, `prospects.weergaven`, `prospects.opgeslagenFilters`, `prospects.klasseZetten` | Gevorderd | Starter | iedereen | "De accountkaart lezen" |
@@ -237,7 +236,7 @@ Pakket: het bouwplan legt per functie geen pakket vast; voorstel Starter.
 
 | Bestand | Wat je aanpast |
 |---|---|
-| `prospects/*`, `accounts/[id]/index.vue`, `klanten/alle.vue` | één accountkaart voor prospect en klant; stuurstrip met reis en ritme; tabbladen per niveau |
+| `prospects/*`, `accounts/[id]/index.vue`, `klanten/alle.vue` | één accountkaart voor prospect en klant; stuurstrip met reis en ritme; tabbladen per niveau; zonder tabblad "Deals", "Open deals", "Open offertes" en promoveren |
 | `AccountRow.vue`, `AccountScoreCircle.vue` | score uit `berekenScore` met opbouw, geen vaste 50 |
 | `KlantGradePicker.vue` | schrijft alleen `klasse` (gat 2) |
 | `EditableField.vue`, `InlineEditChip.vue` | wissen met `null` (gat 10) |
@@ -247,7 +246,7 @@ Pakket: het bouwplan legt per functie geen pakket vast; voorstel Starter.
 
 ### Buiten scope
 
-Zet nee, statusmachine en reis (P05), taken en Vandaag (P07), afspraken (P13), deals (P17), briefing (P18), inzichten en Profielbouwer (P19), KvK (P11), Datacollectief (P15), import (P04), de velden uit het verkoopverhaal op de kaart ("Branche (verkoopverhaal)", "Huidige leverancier", "Terug op"; P28 en P05).
+Zet nee, statusmachine en reis (P05), taken en Vandaag (P07), afspraken (P13), overdragen na de eerste afspraak (P17 Funnel van de prospectreis en overdracht), briefing (P18), inzichten en Profielbouwer (P19), KvK (P11), Datacollectief (P15), import (P04), de velden uit het verkoopverhaal op de kaart ("Branche (verkoopverhaal)", "Huidige leverancier", "Terug op"; P28 en P05).
 
 ## Acceptatiecriteria
 
@@ -262,7 +261,7 @@ Zet nee, statusmachine en reis (P05), taken en Vandaag (P07), afspraken (P13), d
 9. Bijlage A, gat 10: verwijderen wist contacten op de server; de verwijderknop staat er alleen met recht; inline wissen gebruikt `null`.
 10. Bijlage A, gat 25: een nieuw account krijgt een berekende score, niet 50.
 11. Bijlage A, gat 26: lijst, sortering "Laatste contact" en kaart gebruiken `laatsteContact`.
-12. Bijlage A, gat 27: promoveren vraagt altijd bevestiging en schrijft audit.
+12. Bijlage A, gat 27: Dealtrace promoveert niet; er is geen endpoint, menu-item of knop "Promoveer tot klant"; de accountkaart heeft geen "Open deals", "Open offertes" of tabblad "Deals".
 13. Bijlage A, gat 28: één rolbegrip in snelformulier, contactkaart en Info-flyout.
 14. Bijlage A, gat 29: open taken tellen op contact- en accountkaart via `telOpenTaken`.
 15. Bijlage A, gat 16: score, laatste contact, primair contact en ontdubbelen staan elk één keer in `shared/`.

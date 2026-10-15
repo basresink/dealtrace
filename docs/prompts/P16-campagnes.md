@@ -4,12 +4,12 @@
 |---|---|
 | Sprint | 9 |
 | Features | F12 Campagnes |
-| Hangt af van | P01 (functiecatalogus, rechten), P27 (mobiele schil), P03 (accounts, segmenten, opgeslagen filters), P04 (importbatches), P05 (doelgroepen, reis, fases), P06 (motor, regel campagne-achterstand, capaciteit), P07 (taken, `rondTaakAf`), P08 (mandaten, Bewaker, Verzender), P10 (belblokken en belscripts), P11 (leadrondes), P12 (hercontactritmes in de planning), P13 (regiodagen in de agenda), P14 (gebieden), P28 (verkoopverhaal: branches, winpunten, dekking). P18 (Schrijver en mail) loopt in dezelfde sprint; zie Afbakening |
+| Hangt af van | P01 (functiecatalogus, rechten), P27 (mobiele schil), P03 (accounts, segmenten, opgeslagen filters), P04 (importbatches), P05 (doelgroepen, reis, fases), P06 (motor, regel campagne-achterstand, capaciteit), P07 (taken, `rondTaakAf`), P08 (mandaten, Bewaker, Verzender), P33 (AI-credits: `shared/credits.ts`), P10 (belblokken en belscripts), P11 (leadrondes), P12 (hercontactritmes in de planning), P13 (regiodagen in de agenda), P14 (gebieden), P28 (verkoopverhaal: branches, winpunten, dekking). P18 (Schrijver en mail) loopt in dezelfde sprint; zie Afbakening |
 | Bron in het bouwplan | F12, F25 (campagnes), 7.4 (laag 3), 11.3 (Verzender, mandaat), 11.5, 15.1 (kanaaldekking), 15.2 (afmeldlink), F13 (ritmes), F15 (SR11, capaciteit), 16.1, Bijlage A regels 13, 16, 38 |
 
 ## Lees eerst
 
-- `Bouwplan-Dealtrace.md`: 2.1, 2.3, 2.4, 3.3 (rij Campagnes), 4.3 (rij F12), 6.1, 7.1 tot en met 7.4, 8.11 en 8.12 (campagnes opzetten niet op de telefoon), F05 (doelgroepen), F07 (koude belblokken), F08 (scripts), F12 volledig, F13 (ritmes, afkoelperiode), F15 (capaciteit, landing, regel campagne-achterstand), F25 (dekking, winpunten, jaarkeuzes), 10.2 (rij `campagnes`, `campagnesoorten`), 11.2, 11.3, 11.5, 15.1, 15.2, 19, ADR-007, Bijlage A, Bijlage B (rij Campagnes).
+- `Bouwplan-Dealtrace.md`: 2.1, 2.3, 2.4, 3.3 (rij Campagnes), 4.3 (rij F12), 6.1, 7.1 tot en met 7.4, 8.11 en 8.12 (campagnes opzetten niet op de telefoon), F05 (doelgroepen), F07 (koude belblokken), F08 (scripts), F12 volledig, F13 (ritmes, afkoelperiode), F15 (capaciteit, landing, regel campagne-achterstand), F25 (dekking, winpunten, jaarkeuzes), 10.2 (rij `campagnes`, `campagnesoorten`), 11.2 tot en met 11.5, 15.1, 15.2, 19, ADR-007, Bijlage A, Bijlage B (rij Campagnes).
 - DealDrive op commit 75bee61: `app/pages/campagnes/index.vue`, `app/pages/campagnes/[id].vue`, `app/components/CampagneFlyout.vue`, `app/components/NieuweCampagneFlyout.vue`, `app/components/CampagneAccountsFlyout.vue`, `app/components/CampagneVoortgangFlyout.vue`, `app/composables/useCampagneDetail.ts`, `app/composables/useCampagneTempo.ts`, `shared/campagneSoorten.ts`, `shared/campagneAdvies.ts`, `server/utils/campagneTempo.ts`, `server/utils/campagneAdvies.ts`, `server/utils/campagneAfsluiter.ts`.
 
 ## Deel 1: Functioneel (wat en waarom)
@@ -46,9 +46,9 @@ Een campagne is laag 3 van de vijf lagen (7.4): een actie met soort, winpunt, bo
 
 Meldingen in de wizard: een branche zonder eigen verhaal of belofte geeft een gele melding met link naar de inrichting; een toekomstige branche met prioriteit hoog krijgt het advies "Eerst referenties en verhaal, dan volume" (F25). Een kanaal dat meer dan 20 procent van de accounts niet kan bereiken, blokkeert de start (15.1). Niet vastgelegd als tekst; voorstel: "23 van de 30 accounts hebben een telefoonnummer. Vul eerst de nummers aan of kies een ander kanaal voor de eerste stap."
 
-**`/campagnes/:id`** (bord): kop met soort, status, reis, winpunt, ritme ("koud, 5 pogingen in 3 weken"), doel en stand ("14 van 30 afspraken"), tempopil, knoppen "Zet om naar taken (7)", "Verdeel over belblokken", "Voortgang", "Wijzigen", "+ Accounts". Blok "Begin hier · uitgerekend, geen AI" (drie accounts: nooit contact eerst, dan langst stil, met aanleiding als tweede sleutel). Kolommen "Gespot", "Benaderd", "In gesprek", "Afspraak", "Geparkeerd", "Afgewezen"; kaartje met initialen in fasekleur, naam, "poging 3 van 5", volgende stap en datum, eigenaar. Slepen kan; een kolomwissel naar Afspraak, Geparkeerd of Afgewezen vraagt de uitkomst. Kanban is altijd een keuze naast een lijst (14): knop "Weergave" met Bord en Lijst.
+**`/campagnes/:id`** (bord): kop met soort, status, reis, winpunt, ritme ("koud, 5 pogingen in 3 weken"), doel en stand ("14 van 30 afspraken"), tempopil, knoppen "Zet om naar taken (7)", "Verdeel over belblokken", "Voortgang", "Wijzigen", "+ Accounts". Blok "Begin hier · uitgerekend, geen AI" (drie accounts: nooit contact eerst, dan langst stil, met aanleiding als tweede sleutel). Kolommen "Gespot", "Benaderd", "In gesprek", "Afspraak", "Geparkeerd", "Afgewezen"; kaartje met initialen in fasekleur, naam, "poging 3 van 5", volgende stap en datum, eigenaar. Slepen kan; een kolomwissel naar Afspraak, Geparkeerd of Afgewezen vraagt de uitkomst. Een bord is altijd een keuze naast een lijst (14): knop "Weergave" met Bord en Lijst.
 
-**Afgerond**: samenvatting met bereikt, gesprekken, afspraken, deals, pipelinewaarde, conversie, winpunt uitgevoerd.
+**Afgerond**: samenvatting met bereikt, gesprekken, afspraken gepland en gehouden, overgedragen, conversie, winpunt uitgevoerd (F12). Geen deals of pipelinewaarde (B17).
 
 **Telefoon (390 px).** Campagnes staat onder "Meer" (8.4). Lijst en bord zijn leesbaar; het bord toont op de telefoon de lijstweergave per kolom als uitklapgroepen (voorstel, niet vastgelegd). Campagnes opzetten staat bewust niet op de telefoon: de wizard opent met "Beter op een groot scherm" (8.12). Taken uit een campagne voer je uit vanuit Vandaag, Bellen en Route.
 
@@ -80,7 +80,7 @@ Lijst: status (concept, actief, afgerond, voorstel ook gepauzeerd), soort, eigen
 
 ### Helpartikelen
 
-- "Campagnes" (Plannen en sturen) en "Een campagne opzetten" (leerpad Gevorderd, F21).
+- "Campagnes" en "Een campagne opzetten" (Plannen en sturen, F21). Er zijn geen leerpaden per niveau (B19).
 - New business: "De prospectmix: koud, warm, referral, winback", "Waarom de vierde en vijfde poging het verschil maken", "De eerste mail: waarom, hoe, vraag".
 
 ## Deel 2: Technisch (hoe)
@@ -110,7 +110,7 @@ campagnesoorten: id, organisation_id, sleutel, groep, naam, standaardDoel, ritme
 | `campagneAdvies(items, activiteiten)` ("Begin hier") | items | drie accounts | nooit contact eerst, dan langst stil, aanleiding als tweede sleutel |
 | `spreidTaken(items, blokken, regiodagen, looptijd)` | items, koude belblokken, regiodagen | vervaldatums | meer items dan plekken; feestdagen; buitendienst zonder regiodag |
 | `capaciteit(items, soort, eigenaars)` | | uren per week tegen beschikbaar | eigenaar zonder blokken |
-| `campagneResultaat(items, activiteiten)` | | bereikt, gesprekken, afspraken, deals, pipelinewaarde, conversie, winpunt uitgevoerd | lege campagne |
+| `campagneResultaat(items, activiteiten)` | | bereikt, gesprekken, afspraken gepland en gehouden, overgedragen, conversie, winpunt uitgevoerd | lege campagne; overgedragen telt alleen accounts met gebeurtenis `overgedragen` |
 | `overslagen(accounts, ritmes, afkoeling, partners)` (voorstel) | | lijst met reden | account in ritme, in afkoeling, bij partner |
 | `kanaalDekking(accounts, kanaal)` (voorstel) | | percentage | grens 20 procent (15.1) |
 | `kolomUitUitkomst(uitkomst)` (voorstel) | uitkomstcode uit 7.3 | kolom | `afspraak` naar Afspraak, `geen_interesse` naar Afgewezen, laatste poging zonder reactie naar Geparkeerd |
@@ -126,16 +126,16 @@ Eén tempofunctie in `shared/` voor scherm en motor (regel 13 en 16).
 | `POST /api/campagnes/:id/activeer` | eigenaar; boven capaciteit salesmanager | geen | status actief, startdatum | 403 `{reden: 'capaciteit'}`; 400 kanaaldekking onder 80 procent |
 | `POST /api/campagnes/:id/taken {itemIds?}` | eigenaar | items | taken | |
 | `POST /api/campagnes/:id/verdeel` | salesmanager | verdeling | items met eigenaar | |
-| `POST /api/campagnes/:id/boodschap` | Gevorderd | kanaal, toon | concept met stijlscore | 402 of 429 bundel op (voorstel: 429 met tekst uit 11.2) |
+| `POST /api/campagnes/:id/boodschap` | Gevorderd | kanaal, toon | concept met stijlscore | 402 credits op, met de tekst uit 11.4 ("De AI-credits van deze maand zijn op. Je beheerder kan extra credits aanvragen.") |
 | `GET /api/campagnes/:id/resultaat` | lezen | geen | resultaat | |
 | `POST /api/campagnes/:id/items/:accountId/kolom` (voorstel) | eigenaar | `{kolom, uitkomst, reden?}` | item en taak | 400 uitkomst ontbreekt |
 
 ### AI-stappen
 
-| Stap | Agent en mandaat | Materiaal | Schema | Vangrails | Mock | Bundelsoort |
+| Stap | Agent en mandaat | Materiaal | Schema | Vangrails | Mock | Credits (11.4) |
 |---|---|---|---|---|---|---|
-| Winpuntvoorstel | Schrijver, A (concept) | fase van de doelgroep, laatste 20 verslagen, bevestigde winpunten | `{winpuntId, motivatie}` (motivatie hooguit 40 woorden) | AI schrijft geen winpunten, kiest alleen uit bestaande; namenfilter | vaste fixture | Concept |
-| Boodschap per kanaal | Schrijver, A (concept) | verkoopverhaal (golden circle, belofte, winpunt met één bewijs), dossier | per kanaal tekst, stijlscore | 11.5: waarom, hoe, vraag; lengtegrenzen; stijlscore onder 7 één keer opnieuw; bericht 2 ander winpunt | vaste fixture | Concept |
+| Winpuntvoorstel | Schrijver, A (concept) | fase van de doelgroep, laatste 20 verslagen, bevestigde winpunten | `{winpuntId, motivatie}` (motivatie hooguit 40 woorden) | AI schrijft geen winpunten, kiest alleen uit bestaande; namenfilter | vaste fixture | concept, 2 per handeling |
+| Boodschap per kanaal | Schrijver, A (concept) | verkoopverhaal (golden circle, belofte, winpunt met één bewijs), dossier | per kanaal tekst, stijlscore | 11.5: waarom, hoe, vraag; lengtegrenzen; stijlscore onder 7 één keer opnieuw; bericht 2 ander winpunt | vaste fixture | concept, 2 per kanaal |
 | Versturen mailreeks | Verzender, C voor eerste mail en beslisser, B daarna (Expert, organisatie aan) | goedgekeurde concepten | n.v.t. | Bewaker: consent, afkoeling, dagplafond 40, afmeldlink, stop bij antwoord of bounce | mock-mailprovider | n.v.t. |
 
 ### Afbakening met P18
@@ -146,13 +146,13 @@ P18 bouwt de Schrijver (11.5, stijlcheck) en het versturen van mail (mailprovide
 
 Sleutels niet vastgelegd in het bouwplan; voorstel:
 
-| Sleutel | Niveau | Pakket | Recht | Helpartikel |
+| Sleutel | Startindeling: aan vanaf | Pakket | Recht | Helpartikel |
 |---|---|---|---|---|
 | `campagnes.meedoen` | Beginner | Starter | taken schrijven | "Campagnes" |
 | `campagnes.maken` (acht startsoorten, wizard, bord) | Gevorderd | Starter | campagnes schrijven eigen | "Een campagne opzetten" |
 | `campagnes.alleSoorten`, `campagnes.tussendoelen`, `campagnes.dynamisch` | Expert | Plus (voorstel) | campagnes schrijven eigen | idem |
 | `campagnes.mailreeksB` (Verzender op mandaat B) | Expert | Plus | campagnes schrijven eigen; organisatie zet B aan | idem |
-| `campagnes.boodschapAI` | Gevorderd | Plus (AI-bundel Concept) | campagnes schrijven eigen | idem |
+| `campagnes.boodschapAI` | Gevorderd | Plus (AI-soort concept, 2 credits per handeling via `creditsVoor`, P33) | campagnes schrijven eigen | idem |
 | `campagnes.team` (activeren boven capaciteit, verdelen) | Gevorderd | Starter | salesmanager | idem |
 
 ### Hergebruik uit DealDrive
@@ -186,7 +186,7 @@ Sleutels niet vastgelegd in het bouwplan; voorstel:
 13. Telefoon (8.12, 8.15, 8.16): op 375, 390 en 412 px zijn lijst en bord leesbaar zonder horizontale scroll; de wizard toont "Beter op een groot scherm" en werkt wel; tikdoelen minimaal 44 px.
 14. Offline (8.8): taken uit een campagne afronden en een kolomwissel met uitkomst slagen offline en komen na herstel één keer aan (idempotent op item en stap).
 15. Niveaus: als Beginner geen "+ Campagne" (knop met slot en uitleg), wel taken uitvoeren en het bord lezen; als Gevorderd de acht startsoorten; als Expert alle soorten, tussendoelen en mailreeks op mandaat B. Getest per niveau.
-16. AI-stappen met schema, mock en golden master; een boodschap bewaart `vvVersies`; zonder AI-bundel werkt de wizard met de vaste scripttekst.
+16. AI-stappen met schema, mock en golden master; een boodschap bewaart `vvVersies`; zonder AI-credits (of op Starter, waar de AI-soort concept niet aanstaat) werkt de wizard met de vaste scripttekst.
 
 ## Definition of Done
 

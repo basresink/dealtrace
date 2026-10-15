@@ -42,7 +42,7 @@ F25 noemt bij de route "beheerder en salesmanager" als inrichters en in de aline
 1. Kop: kicker "RICHTING · VERKOOPVERHAAL", titel "Ons verhaal", rechts de bron ("Eigen inrichting", of na P29 "Uit SalesDNA · bijgewerkt 12 okt") en voor de beheerder "Inrichten".
 2. Tabbladen: Verhaal, Richting, Belofte, Branches, Concurrenten, Winpunten, Terugkomen. Elk tabblad toont per onderdeel de status ("Bevestigd · versie 3", "Concept", en na P29 "Mogelijk verouderd in SalesDNA"), het label "Controleren" waar de verouderingsregel geldt, en bij inhoud per branche de dekking ("2 van 4 branches hebben een eigen verhaal").
 3. **Verhaal**: kernzin groot, het volledige verhaal, per branche een kaart; zonder eigen verhaal: "Voor Woningcorporaties is nog geen eigen verhaal; je ziet het algemene verhaal." De golden circle (waarom, hoe, wat) staat ook hier. Niet vastgelegd op welk tabblad de golden circle staat; voorstel: bovenaan Verhaal.
-4. **Richting**: ambitie, visie, missie; ambitiedoelen als voortgangsbalk ("Projectpartners: 112 van 400, doel 2029"). Niet vastgelegd waar de stand (112) vandaan komt; voorstel: per ambitiedoel een handmatig bijgehouden stand met datum, en waar het doel "aantal klanten" is, de telling van accounts met status klant.
+4. **Richting**: ambitie, visie, missie; ambitiedoelen als voortgangsbalk ("Projectpartners: 112 van 400, doel 2029"). Niet vastgelegd waar de stand (112) vandaan komt; voorstel: per ambitiedoel een handmatig bijgehouden stand met datum, en waar het doel "aantal klanten" is, de telling van accounts met status klant uit DealDrive of het CRM (Dealtrace maakt zelf geen klanten, B17).
 5. **Belofte**: algemeen en per branche, het waardestatement als uitklap "Als de klant doorvraagt".
 6. **Branches**: tabel met focus, horizon, termijn, prioriteit, aantal accounts en het aandeel gesprekken van dit kwartaal.
 7. **Concurrenten**: per concurrent een kaart met de negen velden (naam, soort, sterk, zwak, onderscheid, "Zo zeg je het", "Als de klant zegt" met antwoord, bewijs, "Wanneer we verliezen"); "Download concurrentiekaart" (PDF, Gevorderd).
@@ -68,7 +68,7 @@ F25 noemt bij de route "beheerder en salesmanager" als inrichters en in de aline
 
 - Keuzewaarden: branches focus primair of secundair, horizon huidig of toekomstig; concurrent soort direct, indirect, intern (de klant doet het zelf) of niets doen; winpunt impact hoog, midden, laag; terugkomregel lijst verloren of slapend, termijn standaard 30, 61, 91, 182, 365 dagen of "direct" (0).
 - **Eigen aanvullingen** (altijd bewerkbaar, ook later bij een gespiegeld onderdeel): SBI-mapping en trefwoorden per branche, termijn als datum, concurrentcontext per branche en regio, winpunt per branche, eigen bewijs (klantcase, cijfer), termijn van een terugkomregel in dagen, mapping van Dealtrace-redenen naar terugkomredenen, ambitiedoelen, stijlprofiel (toon, passende woorden, te vermijden woorden).
-- **Mappings**: branche naar SBI en doelgroepen; SalesDNA-fase naar hoofdfase van de reis (Vinden, Bewerken, Verbinden, Klant, Verloren); verliesreden en reden voor nee naar terugkomreden.
+- **Mappings**: branche naar SBI en doelgroepen; SalesDNA-fase naar hoofdfase van de reis (Vinden, Bewerken, Verbinden, Overgedragen, Verloren; SalesDNA-fases na de eerste afspraak, soort offerte en klantrelatie, koppelen aan Overgedragen en Dealtrace bewerkt ze niet, F05); verliesreden en reden voor nee naar terugkomreden.
 - Een nieuwe organisatie krijgt een lege inrichting met de knop "Kopieer uit startset" (Bijlage C), nooit een stille standaard. Bevestiging: "Startset Voltvast kopiëren? Dit vult alle acht onderdelen als concept. Je past ze daarna aan op jullie eigen verhaal." Niet vastgelegd; voorstel voor de tekst. Gekopieerde inhoud staat op concept, niet op bevestigd.
 - Automatisch bewaren per veld na 600 ms met "Opslaan…", "Opgeslagen", "Opslaan mislukt" (F22); bevestigen maakt een nieuwe versie met auditregel.
 - **AI schrijft nooit een winpunt.** Bij winpunten staat de knop "Help me met vragen": AI stelt vragen ("Waarom kiest een installateur in de woningbouw voor jullie en niet voor de keten?"), de mens schrijft het antwoord. Niet vastgelegd hoe de knop heet en in welke prompt hij komt; voorstel: deze knop in P18 met de Schrijver, in deze prompt nog niet.
@@ -99,7 +99,7 @@ F25 noemt bij de route "beheerder en salesmanager" als inrichters en in de aline
 
 ### Helpartikelen
 
-Leerpad bij F25 (F21, collectie "Hoe werkt Dealtrace" en academie), met de inhoud uit het leesmodel van de eigen organisatie:
+Artikelen bij F25 (F21, collectie "Hoe werkt Dealtrace" en academie; geen leerpaden per niveau, B19), met de inhoud uit het leesmodel van de eigen organisatie:
 
 - "Ons verhaal": kernzin, golden circle, verhaal per branche.
 - "Onze belofte": kernbelofte en waardestatement, per branche.
@@ -128,7 +128,7 @@ Migratie `0005_verkoopverhaal`. Elke tabel met `organisation_id`, RLS `org_isola
 | `vv_versies` | voorstel, niet vastgelegd: `onderdeel`, `versie`, `inhoud jsonb`, `bevestigd_op`, `door`; de geschiedenis van de eigen inrichting (de spiegel heeft `salesdna_sublaag_versies` in P29) |
 
 - Eigen inrichting en spiegel vullen dezelfde tabellen; kolom `bron` en `extern_id` (SalesDNA `_id`, bij eigen inhoud een eigen id) per rij (ADR-017).
-- Afgeleid (nachtelijke job, nu alleen de structuur): `nb_branche_stand`, `nb_winpunt_resultaten`, `nb_concurrent_resultaten`, `nb_terugkom_resultaten`. Niet vastgelegd in welke prompt de jobs gaan draaien; voorstel: `nb_branche_stand` hier (nodig voor het aandeel gesprekken op Branches), de andere in P17, P20 en P21.
+- Afgeleid (nachtelijke job, nu alleen de structuur): `nb_branche_stand`, `nb_winpunt_resultaten`, `nb_concurrent_resultaten`, `nb_terugkom_resultaten`. Niet vastgelegd in welke prompt de jobs gaan draaien; voorstel: `nb_branche_stand` hier (nodig voor het aandeel gesprekken op Branches), de andere in P17 Funnel van de prospectreis en overdracht, P20 en P21.
 - Gebruik op accounts: `vv_branche_id`, `huidige_leverancier_id`, `terug_op`, `terug_regel_id` (kolommen uit P03).
 - Rechten: lezen iedereen; schrijven en bevestigen salesmanager en beheerder; mappings en bronkeuze beheerder. Sync-allowlist: geen `vv_*`-tabellen (alleen online inrichten); `accounts` blijft erin voor `huidige_leverancier_id`.
 
@@ -178,7 +178,7 @@ Geen in deze prompt. Stijlprofiel "door AI voorgesteld uit het verhaal" (F22) en
 
 ### Functiecatalogus
 
-| Sleutel | Niveau | Pakket | Recht | Helpartikel |
+| Sleutel | Startindeling: aan vanaf | Pakket | Recht | Helpartikel |
 |---|---|---|---|---|
 | `richting.lezen` | Beginner | Starter | iedereen | "Ons verhaal" |
 | `richting.concurrentiekaart` | Gevorderd | Starter | iedereen | "Tegen wie we verkopen" |
@@ -195,7 +195,7 @@ Geen bestanden uit Bijlage B voor het verkoopverhaal. Gebruik het patroon van `s
 
 ### Buiten scope
 
-De SalesDNA-koppeling, spiegel, webhooks en bronkeuze per onderdeel (P29); suggesties naar SalesDNA (P23); AI-vragen bij winpunten, stijlprofiel en kanaalvarianten (P18); het zetten van "Terug op" bij nee, verlies of slapen (P05, P12, P17); de koppeling van een terugkomregel aan een hercontactritme (P07, P12); de tien weergaven, kaders, meekijkronde en Kwartaal check van SalesDNA.
+De SalesDNA-koppeling, spiegel, webhooks en bronkeuze per onderdeel (P29); suggesties naar SalesDNA (P23); AI-vragen bij winpunten, stijlprofiel en kanaalvarianten (P18); het zetten van "Terug op" bij nee (P05, P12) en bij verlies of slapen na terugkomst uit DealDrive of het CRM (P23, P20); de koppeling van een terugkomregel aan een hercontactritme (P07, P12); de tien weergaven, kaders, meekijkronde en Kwartaal check van SalesDNA.
 
 ## Acceptatiecriteria
 
@@ -223,5 +223,5 @@ Hoofdstuk 19 geldt volledig. Specifiek voor deze prompt:
 - Unit-tests voor elke functie in `shared/verkoopverhaal.ts` met de Voltvast-seed als fixture.
 - Wegwerp-Postgres: seed laden als eigen inrichting, projectie naar `vv_*`, cross-tenant (organisatie B ziet het verhaal van A niet).
 - Playwright: `/richting` op desktop en 375, 390, 412 px; inrichten en bevestigen op desktop.
-- De vijf helpartikelen uit het leerpad staan in `content/help/` en lezen hun voorbeeld uit het leesmodel van de eigen organisatie.
+- De vijf helpartikelen bij F25 staan in `content/help/` en lezen hun voorbeeld uit het leesmodel van de eigen organisatie.
 - Testdata alleen uit Bijlage C; geen inhoud van Sales Legends of een echt bedrijf.

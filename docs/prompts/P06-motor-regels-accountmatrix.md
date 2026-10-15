@@ -9,8 +9,8 @@
 
 ## Lees eerst
 
-- `Bouwplan-Dealtrace.md`: 2.1 en 2.4 (één regelmotor, één rekenpunt), 3.3, 4.2 en 4.3, 7.2 tot en met 7.4, F05 (gebeurtenissencatalogus en meldpunt), F06 (regels met activiteit "taak" en inzichtstatussen), F13 (hercontactritme, afkoelperiodes), F15, F16, F22 (instellingen bewaren per veld), 10.1, 10.2, 13.3, 13.4, 19, Bijlage A, Bijlage B.
-- DealDrive op commit 75bee61 (alleen lezen): `server/utils/ruleEngine.ts` (`runRulesForOrg`, `runEventRules`, `voegWerkdagenToe`), `server/utils/activityRulesStore.ts`, `server/utils/activitySellingWerkmap.ts`, `shared/activitySellingExcel.ts`, `shared/activitySellingKolommen.ts`, `shared/activitySellingRestanten.ts`, `shared/activitySellingVoorbeeld.ts`, `app/composables/useActivitySellingRules.ts`, `app/pages/instellingen/activity-selling.vue`, `app/plugins/motorPoll.client.ts`, `shared/ritmematrix.ts`, `shared/offerteOpvolging.ts`, `shared/datum.ts`, `shared/periodeFilter.ts`, `app/pages/instellingen/accountritme.vue`, `app/composables/useRitmematrix.ts`, `shared/leadGenerator.ts` (`klasseVoorOmvang`).
+- `Bouwplan-Dealtrace.md`: 0.2 (B17, B20), 2.1 en 2.4 (één regelmotor, één rekenpunt), 3.3, 4.2 en 4.3, 7.2 tot en met 7.4, F05 (gebeurtenissencatalogus en meldpunt), F09 (uitkomsten van de eerste afspraak), F06 (regels met activiteit "taak" en inzichtstatussen), F13 (hercontactritme, afkoelperiodes), F15, F16, F22 (instellingen bewaren per veld), 10.1, 10.2, 13.3, 13.4, 19, Bijlage A, Bijlage B.
+- DealDrive op commit 75bee61 (alleen lezen): `server/utils/ruleEngine.ts` (`runRulesForOrg`, `runEventRules`, `voegWerkdagenToe`), `server/utils/activityRulesStore.ts`, `server/utils/activitySellingWerkmap.ts`, `shared/activitySellingExcel.ts`, `shared/activitySellingKolommen.ts`, `shared/activitySellingRestanten.ts`, `shared/activitySellingVoorbeeld.ts`, `app/composables/useActivitySellingRules.ts`, `app/pages/instellingen/activity-selling.vue`, `app/plugins/motorPoll.client.ts`, `shared/ritmematrix.ts`, `shared/datum.ts`, `shared/periodeFilter.ts`, `app/pages/instellingen/accountritme.vue`, `app/composables/useRitmematrix.ts`, `shared/leadGenerator.ts` (`klasseVoorOmvang`).
 
 ## Deel 1: Functioneel (wat en waarom)
 
@@ -47,14 +47,14 @@ Dealtrace belooft dat je 's ochtends weet wie je belt, mailt of bezoekt en waaro
 |---|---|
 | Wat en wanneer | Categorie, Subcategorie, Omschrijving, Activiteit (Inzicht of Taak), Cadans, Prioriteit |
 | Sturing | Bron (Intern, Extern), Specifieke bron, Triggerpatroon met parameters, Motor (Regel of AI), Afbakening: accounttype, status, reis en fase, doelgroep, campagne, klasse |
-| Gevolg | Actiesoort (Bellen, Mailen, LinkedIn, Bezoek, Bericht, Geen), Uitvoerderrol (Binnendienst, Buitendienst, Eigenaar, Salesmanager), Termijn ("binnen 24 uur", "binnen 3 werkdagen"), Taaksjabloon met `{account}`, `{contact}`, `{offerte}`, Belscript (bij bellen), Automatisch voorbereiden, Signaaltype, Verwacht resultaat |
+| Gevolg | Actiesoort (Bellen, Mailen, LinkedIn, Bezoek, Bericht, Geen), Uitvoerderrol (Binnendienst, Buitendienst, Eigenaar, Salesmanager), Termijn ("binnen 24 uur", "binnen 3 werkdagen"), Taaksjabloon met `{account}`, `{contact}`, `{afspraak}`, Belscript (bij bellen), Automatisch voorbereiden, Signaaltype, Verwacht resultaat |
 
 6. Onder het paneel het live voorbeeld "Zo verschijnt hij in de takenlijst" met een voorbeeldprospect.
 7. Droogloop: "Deze regel raakt nu 214 accounts en maakt bij de volgende run 38 taken", met de verdeling per persoon. Een regel die meer dan 50 taken per persoon zou maken vraagt bevestiging.
 
 Lege staat (gefilterd zonder treffers): Niet vastgelegd in het bouwplan; voorstel: "Geen regels die aan deze filters voldoen." met "Toon alles" (2.3).
 
-Per niveau: een Gevorderde ziet de pagina alleen lezen (velden niet bewerkbaar, geen schakelaars, wel droogloop); een Expert ziet alleen zijn persoonlijke regels bewerkbaar en bij teamregels de knop "Stel wijziging voor". Een Beginner die de route opent, ziet de paginakop met kicker "Vergrendeld" en de uitleg uit 6.1, nooit een foutpagina.
+Per niveau: een Gevorderde ziet de pagina alleen lezen (velden niet bewerkbaar, geen schakelaars, wel droogloop); een Expert ziet alleen zijn persoonlijke regels bewerkbaar en bij teamregels de knop "Stel wijziging voor". Een Beginner die de route opent, ziet de paginakop met kicker "Nog niet aangezet" en de uitleg uit 6.1, nooit een foutpagina.
 
 Ingang voor Gevorderd en Expert: de zijbalk toont Instellingen alleen voor de beheerder (6.1). Niet vastgelegd in het bouwplan; voorstel: in Mijn instellingen een regel "Regels bekijken" (Gevorderd) en "Mijn regels" (Expert, zie F22), en in de taakflyout onder "Waarom krijg ik dit?" de link "Bekijk de regel" (Gevorderd en hoger).
 
@@ -64,9 +64,10 @@ Ingang voor Gevorderd en Expert: de zijbalk toont Instellingen alleen voor de be
 2. **Segmenten**: regels op velden, inclusief eigen velden en matrixvelden; leden met teller.
 3. **Belmatrix**: per accounttype (prospect, klant) en klasse het aantal per maand, kwartaal, halfjaar en jaar, met afgeleid ritme ("12×/jaar = elke 4 weken"). "niet ingesteld" en "bewust uit (0)" zijn zichtbaar verschillend. Standaard prospect A en B maandelijks, C per kwartaal, D per halfjaar; klant A maandelijks, B per kwartaal, C per halfjaar, D jaarlijks.
 4. **Afspraakmatrix**: per klasse meeting (online) en bezoek; standaard A per kwartaal, B per halfjaar, C jaarlijks, D bezoek jaarlijks.
-5. **Offertematrix**: per waardeklasse kanaal, uitvoerderrol (binnendienst, buitendienst, salesmanager, directie), opvolgtermijn in werkdagen en toelichting. Standaard €0 mail binnendienst 5 werkdagen, €10.000 bellen 3, €50.000 bezoek buitendienst 5, €100.000 salesmanager belt binnen 2. Contracten altijd in een persoonlijk gesprek op locatie (F16: "face-to-face").
-6. **Afkoelperiodes en consent**: per kanaal de afkoelperiode na een nee (standaard bellen 90 dagen, mail 60, LinkedIn 90, WhatsApp 180, bezoek 180, kaart 365; 7.2) en het frequentieplafond (maximaal één bericht per kanaal per 3 werkdagen buiten het ritme).
-7. **Overschrijven per reis**: welke reizen (F05) een eigen belmatrix, offertematrix of ritme gebruiken.
+5. **Afkoelperiodes en consent**: per kanaal de afkoelperiode na een nee (standaard bellen 90 dagen, mail 60, LinkedIn 90, WhatsApp 180, bezoek 180, kaart 365; 7.2) en het frequentieplafond (maximaal één bericht per kanaal per 3 werkdagen buiten het ritme).
+6. **Overschrijven per reis**: welke reizen (F05) een eigen belmatrix of ritme gebruiken.
+
+Er is geen offertematrix: Dealtrace loopt tot en met de eerste afspraak (B17).
 
 **Telefoon (390 px).** De regeleditor en Instellingen staan bewust niet op de telefoon (8.12). Beide pagina's openen wel, met bovenaan de melding "Beter op een groot scherm", en tonen de lijst en de matrix alleen lezen in één kolom zonder horizontale scroll. De uitleg "Waarom krijg ik dit?" in het taakvenster werkt volledig op de telefoon.
 
@@ -92,8 +93,8 @@ Ingang voor Gevorderd en Expert: de zijbalk toont Instellingen alleen voor de be
 | Te lang in fase | dagen in fase boven het verwachte verblijf | marge |
 | Lead verlopen | dossier ouder dan N dagen | dagen (30) |
 | Jaarplanning-venster | venster voorbij en niet benaderd dit verkoopjaar | geen |
-| Offerte verstuurd | offerte verstuurd zonder opvolgtaak | werkdagen (3) |
-| Deal onvoldoende gekwalificeerd | open deal boven bedrag, ouder dan N dagen, BAND 1 of minder | bedrag, dagen |
+| Afspraak niet overgedragen | eerste afspraak gehouden zonder overdracht of uitkomst | werkdagen (1) |
+| Afspraak onvoldoende gekwalificeerd | eerste afspraak gepland bij een account met BAND 1 of minder | dagen vooraf (2) |
 | Campagne-achterstand | tempo N punten achter | marge (10) |
 | Hercontact-vervolg | volgende poging in een ritme is aan de beurt | geen |
 | Geparkeerd terug | terugkomdatum bereikt | geen |
@@ -105,15 +106,15 @@ Cadans: Dagelijks 1, 2 dagen, 3 dagen, Wekelijks 7, 2 weken 14, Maandelijks 30, 
 
 ### Starterset
 
-Elke regel draait; "Starterset terugzetten" laadt precies deze set: SR01 nieuwe lead zonder dossier · SR02 dossier verloopt · SR03 gekwalificeerd, nog geen contact (inactiviteit 7 dagen, ook zonder datum, bellen, binnendienst) · SR04 belritme prospect (ritme, matrix) · SR05 bezoekritme A en B (buitendienst, op regiodag) · SR06 contact-stilte 45 dagen · SR07 jaarplanningsvenster voorbij · SR08 afspraak gehad, geen vervolg · SR09 offerte opvolgen · SR10 deal onvoldoende gekwalificeerd · SR11 campagne loopt achter · SR12 deal gewonnen: overdracht · SR13 deal verloren: heropvolging over 90 dagen · SR14 AI-kansanalyse A en B · SR15 vacatures · SR16 nieuws · SR17 hercontact-vervolg · SR18 geparkeerd terug · SR19 trigger-heractivatie (jubileum, vacature, directiewissel, verhuizing, subsidie) · SR20 partner te laat · SR21 tussendoel gehaald · SR22 te lang in fase · SR23 KvK-mutatie bij prospect in reis.
+Elke regel draait; "Starterset terugzetten" laadt precies deze set: SR01 nieuwe lead zonder dossier · SR02 dossier verloopt · SR03 gekwalificeerd, nog geen contact (inactiviteit 7 dagen, ook zonder datum, bellen, binnendienst) · SR04 belritme prospect (ritme, matrix) · SR05 bezoekritme A en B (buitendienst, op regiodag) · SR06 contact-stilte 45 dagen · SR07 jaarplanningsvenster voorbij · SR08 afspraak gehad, geen vervolg · SR09 eerste afspraak bevestigen · SR10 afspraak onvoldoende gekwalificeerd · SR11 campagne loopt achter · SR12 afspraak gehouden: overdracht · SR13 no-show: opnieuw inplannen · SR14 AI-kansanalyse A en B · SR15 vacatures · SR16 nieuws · SR17 hercontact-vervolg · SR18 geparkeerd terug · SR19 trigger-heractivatie (jubileum, vacature, directiewissel, verhuizing, subsidie) · SR20 partner te laat · SR21 tussendoel gehaald · SR22 te lang in fase · SR23 KvK-mutatie bij prospect in reis.
 
-Een deel van de bronnen bestaat in sprint 4 nog niet (offertes P17, campagnes P16, AI-regels en webbronnen P19, KvK-mutaties P11). Niet vastgelegd in het bouwplan; voorstel: alle 23 regels worden geladen en geëvalueerd; een regel waarvan de brondata nog niet bestaat levert nul treffers zonder fout, en heeft al wel een unit-test met fixturedata, zodat hij werkt zodra de bron er is. AI-regels (SR14 tot en met SR16) draaien in deze prompt tegen de mock-provider.
+Een deel van de bronnen bestaat in sprint 4 nog niet (afspraken en hun uitkomsten P13, overdracht P17, campagnes P16, AI-regels en webbronnen P19, KvK-mutaties P11). Niet vastgelegd in het bouwplan; voorstel: alle 23 regels worden geladen en geëvalueerd; een regel waarvan de brondata nog niet bestaat levert nul treffers zonder fout, en heeft al wel een unit-test met fixturedata, zodat hij werkt zodra de bron er is. AI-regels (SR14 tot en met SR16) draaien in deze prompt tegen de mock-provider.
 
 ### Regels van de motor
 
 - Draait elk uur per organisatie, direct na een gebeurtenis voor dat ene account, en op "Draai motor nu"; open sessies zien het resultaat binnen 3 minuten.
 - Volgorde van een motorrun (13.3): eerst de afsluiter van campagnes, dan regels (deterministisch in één transactie, AI erbuiten), dan Planner (landing en capaciteit), dan belblokvuller, dan automatisch voorbereiden. Stappen die nog niet bestaan, sla je over met een lege stap in het runverslag.
-- Cadanspoort per regel en onderwerp; ontdubbelen van open inzichten: bijwerken zonder terug naar ongelezen (gat 40 hoort bij P07, de motor levert hier het gedrag); offertes en deals krijgen één opvolging per onderwerp.
+- Cadanspoort per regel en onderwerp; ontdubbelen van open inzichten: bijwerken zonder terug naar ongelezen (gat 40 hoort bij P07, de motor levert hier het gedrag); een afspraak krijgt één opvolging per onderwerp.
 - **Afbakening**: accounttype, status (7.2), reis en fase, doelgroep, campagne, klasse. Elke afbakening filtert echt (gat 6).
 - **Capaciteit**: per uitvoerder een dagplafond, standaard binnendienst 40 beltaken en buitendienst 6 bezoeken per regiodag; wat erboven valt schuift naar de volgende werkdag en wordt gemeld.
 - **Landing**: taken voor de binnendienst krijgen als vervaldatum het eerstvolgende passende belblok, taken voor de buitendienst de regiodag van het account. Zolang belblokken (P10) en regiodagen (P14) niet bestaan, valt de landing terug op `volgendWerkmoment`.
@@ -126,8 +127,8 @@ Een deel van de bronnen bestaat in sprint 4 nog niet (offertes P17, campagnes P1
 ### Helpartikelen
 
 - "Regels" (collectie Hoe werkt Dealtrace, categorie Inrichten): wat een regel is, de drie blokken, triggerpatronen, droogloop, persoonlijke regels voor Experts, de leerlus.
-- "Accountmatrix" (Inrichten): klassen, belmatrix, afspraakmatrix, offertematrix, afkoelperiodes, het verschil tussen "niet ingesteld" en "bewust uit".
-- "Regels die werk opleveren (en geen ruis)" staat in het leerpad Expert (F21); Niet vastgelegd in het bouwplan; voorstel: schrijf het in deze prompt als concept, P09 publiceert het in het leerpad.
+- "Accountmatrix" (Inrichten): klassen, belmatrix, afspraakmatrix, afkoelperiodes, het verschil tussen "niet ingesteld" en "bewust uit".
+- "Regels die werk opleveren (en geen ruis)": Niet vastgelegd in het bouwplan; voorstel: schrijf het in deze prompt als concept in de collectie "Hoe werkt Dealtrace" (categorie Inrichten); P09 Helpcenter basis en features per niveau publiceert het. Er zijn geen leerpaden per niveau (B19).
 - Tekst achter "Waarom krijg ik dit?" komt uit de regel (omschrijving plus de trigger in gewone taal), geen apart artikel.
 
 ## Deel 2: Technisch (hoe)
@@ -150,7 +151,7 @@ rule_runs: id, organisation_id, rule_id?, soort ('uur'|'gebeurtenis'|'handmatig'
 
 - `activity_rules.reis_id` en `fase_id`: null betekent alle reizen of alle fases (F05).
 - De editor is de enige bron; `data` bevat alle velden die de editor toont en niets anders. Velden die niets sturen bestaan niet (gat 6 en 7). Excel is import en export van dezelfde structuur; normalisatie laat geen veld vallen (gat 7).
-- Instellingssleutels in `shared/settingKeys.ts`: `accountklassen`, `belmatrix`, `afspraakmatrix`, `offerteOpvolging`, `afkoeling`, `frequentieplafond`, `segmenten`, `capaciteit` (Niet vastgelegd in het bouwplan; voorstel voor `segmenten` en `capaciteit`).
+- Instellingssleutels in `shared/settingKeys.ts`: `accountklassen`, `belmatrix`, `afspraakmatrix`, `afkoeling`, `frequentieplafond`, `segmenten`, `capaciteit` (Niet vastgelegd in het bouwplan; voorstel voor `segmenten` en `capaciteit`).
 - Matrixcel: `null` is "niet ingesteld", `0` is "bewust uit" (gat 43). Een patch met `null` wist de sleutel, `undefined` wist niets (10.1).
 - Migratie maakt beide tabellen met `organisation_id`, RLS-policy `org_isolation` en indexen op `(organisation_id, actief)` en `(organisation_id, rule_id, gestart_op)`.
 - Rechtenmatrix (`server/utils/permissions.ts`, 3.3): `activity_rules` accountmanager lezen (vanaf Gevorderd), schrijven alleen `scope='persoonlijk'` met `eigenaar_id = zelf` (Expert); salesmanager lezen, schrijven `scope='team'` voor eigen teams; beheerder alles; founder alleen de platformstartset en na instappen. Instellingssleutels van de matrix: lezen iedereen, schrijven beheerder.
@@ -161,16 +162,15 @@ rule_runs: id, organisation_id, rule_id?, soort ('uur'|'gebeurtenis'|'handmatig'
 
 | Functie | Invoer | Uitvoer | Randgevallen en tests |
 |---|---|---|---|
-| `evaluateTrigger(regel, onderwerp, nu)` | regel, account of deal of lead of campagne, `nu` | `{vuurt, reden, bewijs[]}` | elk van de vijftien patronen; inactiviteit met `ookZonderDatum` gebruikt de aanmaakdatum als anker (gat 20); datum precies op de grens |
+| `evaluateTrigger(regel, onderwerp, nu)` | regel, account of afspraak of lead of campagne, `nu` | `{vuurt, reden, bewijs[]}` | elk van de vijftien patronen; inactiviteit met `ookZonderDatum` gebruikt de aanmaakdatum als anker (gat 20); datum precies op de grens |
 | `ruleTargetsAccount(regel, account)` | regel, account | boolean | elke afbakening apart en gecombineerd; klant tegenover prospect (gat 6); account in afkoeling |
 | `cadansVerstreken(regel, onderwerpId, vorigeRuns, nu)` | | boolean | Continu; eerste run; precies op de grens; werkdagen met feestdagen uit `shared/datum.ts` |
-| `vulSjabloon(sjabloon, context)` | taaksjabloon, account, contact, offerte | tekst | ontbrekende waarde; onbekende variabele geeft fout bij opslaan |
+| `vulSjabloon(sjabloon, context)` | taaksjabloon, account, contact, afspraak | tekst | ontbrekende waarde; onbekende variabele geeft fout bij opslaan |
 | `landingsmoment(taak, gebruiker, blokken, regiodagen)` | | datum en tijd | geen blokken; regiodag vandaag al voorbij; weekend en feestdag |
 | `verdeelCapaciteit(taken, plafonds, nu)` | | `{geland[], geschoven[]}` | precies 40; 41 schuift één taak; meerdere uitvoerders (Niet vastgelegd in het bouwplan; voorstel voor de naam) |
 | `droogloop(regel, accounts)` | | `{geraakt, taken, perPersoon{}}` | regel met 0 treffers; meer dan 50 per persoon zet `vraagtBevestiging` |
 | `jaartotaal`, `intervalDagen`, `ritmeLabel` | matrixrij | getal, getal, tekst | `null` en `0` verschillend; interval minimaal 1 dag |
 | `klasseVoorOmvang(medewerkers, klassen)` | | klassecode of null | grenzen 10, 50, 250; eigen klassen van de organisatie |
-| `offerteProfiel(bedrag, matrix, soort)` | | `{kanaal, rol, werkdagen}` | precies op een drempel; contract altijd bezoek |
 | `ritmeAfrekening(accounts, activiteiten, periode)` | | per account achter, op schema, vooruit | afrekening per account, niet per klasse (gat 44); kanaal telt alleen als het overeenkomt |
 
 Alle functies staan in `shared/` (motorlogica die geen database leest) of `server/utils/` en hebben `nu` als parameter. Elke definitie staat één keer (gat 16): één catalogus van triggerpatronen in `shared/regelPatronen.ts` (Niet vastgelegd in het bouwplan; voorstel voor de bestandsnaam), gebruikt door editor, Excel en motor.
@@ -197,7 +197,7 @@ De server weigert elk endpoint van een functie die voor de gebruiker niet beschi
 
 ### AI-stappen
 
-De AI-regels (Motor "AI", SR14 tot en met SR16) draaien buiten de deterministische transactie, via de providerlaag met schema en bewijsplicht (11.2), minimaal wekelijks. Mandaat en Bewaker komen in P08; in deze prompt draaien ze alleen tegen de mock met vaste fixtures en een golden master. Bundelsoort: inzicht-beoordeling (11.4).
+De AI-regels (Motor "AI", SR14 tot en met SR16) draaien buiten de deterministische transactie, via de providerlaag met schema en bewijsplicht (11.2), minimaal wekelijks. Mandaat en Bewaker komen in P08; in deze prompt draaien ze alleen tegen de mock met vaste fixtures en een golden master. Credits: een inzicht-beoordeling kost 1 credit per handeling (11.4); de reservering en boeking via `creditsVoor` in `shared/credits.ts` levert P33 (AI-assistent en credits, sprint 5). Tot dan draait de mock zonder boeking; automatische AI stopt later bij 10 procent van de pot.
 
 ### Integraties
 
@@ -205,9 +205,9 @@ Geen externe integratie. "Stel voor uit medewerkers" leest bestaande velden (med
 
 ### Functiecatalogus
 
-Niet vastgelegd in het bouwplan; voorstel voor de sleutels (niveau en recht uit 4.3 en 3.3; pakket: alle pakketten, behalve de AI-regels die de bundel van het pakket volgen):
+Niet vastgelegd in het bouwplan; voorstel voor de sleutels (niveau en recht uit 4.3 en 3.3; pakket: alle pakketten, behalve de AI-regels, die alleen draaien in pakketten waarin de AI-soort inzicht-beoordeling aanstaat, Plus en Compleet, 11.4):
 
-| Sleutel | Niveau | Pakket | Recht | Helpartikel |
+| Sleutel | Startindeling: aan vanaf | Pakket | Recht | Helpartikel |
 |---|---|---|---|---|
 | `regels.lezen` | Gevorderd | Starter | accountmanager | Regels |
 | `regels.persoonlijk` | Expert | Starter | accountmanager | Regels |
@@ -224,7 +224,7 @@ Niet vastgelegd in het bouwplan; voorstel voor de sleutels (niveau en recht uit 
 - `server/utils/activityRulesStore.ts`, `useActivitySellingRules.ts`, `instellingen/activity-selling.vue`: master en detail, opslaan per veld; pas aan naar de drie blokken en de nieuwe afbakening.
 - `activitySellingWerkmap.ts`, `shared/activitySellingExcel.ts`, `shared/activitySellingKolommen.ts`: Excel met blad Regels en Toelichting; de kolommen volgen het nieuwe datamodel.
 - `app/plugins/motorPoll.client.ts`: poll op `GET /api/motor/updates`.
-- `shared/ritmematrix.ts` en `shared/offerteOpvolging.ts`: letterlijk, plus het onderscheid tussen `null` en `0`.
+- `shared/ritmematrix.ts`: letterlijk, plus het onderscheid tussen `null` en `0`. `shared/offerteOpvolging.ts` neem je niet over (B17).
 - `instellingen/accountritme.vue` en `useRitmematrix.ts`: basis voor `/instellingen/ritme`.
 - `shared/leadGenerator.ts` (`klasseVoorOmvang`): verhuist naar één plek en leest de klassen van de organisatie.
 
@@ -255,7 +255,7 @@ Niet vastgelegd in het bouwplan; voorstel voor de sleutels (niveau en recht uit 
 16. Een kapotte matrixinstelling laat de motorrun slagen met de standaardwaarden en een waarschuwing in het runverslag.
 17. Motorrun per organisatie met 600 accounts en 25 regels duurt onder 20 seconden zonder AI (13.4).
 18. Cross-tenant in de wegwerp-Postgres: een regel en een run van organisatie A zijn onzichtbaar voor B; een founder in "Alleen meekijken" kan geen regel opslaan.
-19. Per niveau getest: als Beginner opent `/instellingen/regels` de vergrendelde uitleg en geeft `GET /api/regels` 403 met reden `niveau`; als Gevorderd is alles alleen lezen en werkt de droogloop; als Expert kan hij een persoonlijke regel maken en een teamregel alleen voorstellen.
+19. Per niveau getest: als Beginner opent `/instellingen/regels` de uitleg met kicker "Nog niet aangezet" en geeft `GET /api/regels` 403 met reden `niveau`; als Gevorderd is alles alleen lezen en werkt de droogloop; als Expert kan hij een persoonlijke regel maken en een teamregel alleen voorstellen.
 20. Telefoon (375, 390, 412 px): beide pagina's openen met "Beter op een groot scherm", zonder horizontale scroll; "Waarom krijg ik dit?" is in het taakvenster leesbaar en de link is een tikdoel van minimaal 44 px.
 21. Testdata: de seed gebruikt Testbedrijf Voltvast (Bijlage C) met de klassen "A · Aantal monteurs (Prospects)" en verder; prospects voor de motortests zijn fictief. Niet vastgelegd in het bouwplan; voorstel: voeg 40 fictieve prospects toe in de branches br-01 tot en met br-04 met herkenbare testnamen ("Testprospect Woningbouw 01").
 

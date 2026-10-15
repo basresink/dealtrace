@@ -4,8 +4,8 @@
 |---|---|
 | Sprint | 6 |
 | Features | F07 Belblokken en belmodus, F08 Belscript-templates (met de verkoopverhaal-variabelen uit F25), bellen op de telefoon (8.5.4) |
-| Hangt af van | P01 (fundament, functiecatalogus), P27 (mobiele schil), P02 (startset: 6 belscripts, 7 meetingsoorten), P03 (accounts, contacten, eigen velden, BAND), P05 (reis, fases, gebeurtenissen), P28 (leesmodel verkoopverhaal: kernzin, belofte, winpunten, concurrenten), P06 (motor), P07 (`rondTaakAf`, uitkomsten, hercontactritme), P08 (Bewaker, Planner, bundel), P32 (dagkern, belstapel op Vandaag) |
-| Bron in het bouwplan | F07, F08, F25 (variabelen, bezwaren per concurrent, Per niveau), 8.5.4, 8.7, 8.9, 8.11, 8.16, 2.2, 5.1, 7.3, 11.4 (bundelsoort belscript), 11.5, 13.3 (flow 2 en 3), 13.4, 15.2 (bel-me-niet), ADR-014, Bijlage A (gat 16, 35, 36, 37) |
+| Hangt af van | P01 (fundament, functiecatalogus), P27 (mobiele schil), P02 (startset: 6 belscripts, 6 meetingsoorten), P03 (accounts, contacten, eigen velden, BAND), P05 (reis, fases, gebeurtenissen), P28 (leesmodel verkoopverhaal: kernzin, belofte, winpunten, concurrenten), P06 (motor), P07 (`rondTaakAf`, uitkomsten, hercontactritme), P08 (Bewaker, Planner, creditscheck), P33 (AI-assistent en credits: `shared/credits.ts`), P32 (dagkern, belstapel op Vandaag) |
+| Bron in het bouwplan | F07, F08, F25 (variabelen, bezwaren per concurrent, Per niveau), 8.5.4, 8.7, 8.9, 8.11, 8.16, 2.2, 5.1, 7.3, 11.4 (credits per handeling: belscript-invulling), 11.5, 13.3 (flow 2 en 3), 13.4, 15.2 (bel-me-niet), ADR-014, Bijlage A (gat 16, 35, 36, 37) |
 
 ## Lees eerst
 
@@ -55,7 +55,7 @@ Drie knoppen uit F07 hebben geen code in 7.3. Niet vastgelegd in het bouwplan; v
 
 1. Kop: kicker "INSTELLINGEN · VERKOOP", titel "Belscripts", subtitel "Standaardscripts die je team kiest in het belpaneel. AI vult per account de aanleiding en het winpunt in." Rechtsboven "+ Nieuw script" (geel) en "Kopieer uit startset".
 2. Statkaarten, klikbaar als filter: "Actief", "Concept", "Gebruikt in 30 dagen", "Beste conversie".
-3. Filters: Doel (Koude acquisitie, Opvolging, Aanleiding, Offerte nabellen, Winback, Afspraak bevestigen, Anders), Reisfase, Doelgroep, Team, Status (Concept, Actief, Gearchiveerd).
+3. Filters: Doel (Koude acquisitie, Opvolging, Aanleiding, Winback, Afspraak bevestigen, Anders), Reisfase, Doelgroep, Team, Status (Concept, Actief, Gearchiveerd).
 4. Tabel: "Naam", "Doel", "Reisfase", "Doelgroepen", "Teams", "Versie", "Status", "Gesprekken 30 d", "Naar afspraak", "Laatst gewijzigd". Rij klikken opent de editor.
 5. Lege staat: "Er zijn nog geen belscripts. Begin met de startset van zes scripts." met "Kopieer uit startset".
 
@@ -93,7 +93,7 @@ Drie knoppen uit F07 hebben geen code in 7.3. Niet vastgelegd in het bouwplan; v
 ### Regels
 
 - **Rangorde** (één functie voor belblokken, bezoeken en de vuller): open beltaken eerst met `1000 + urgentie × 10 + prioriteit × 20 + score` (urgentie achterstallig 100, vandaag 80, later 50, zonder datum 40; prioriteit urgent 4, hoog 3, middel 2, laag 1); daarna aanvulling zonder beltaak `score + min(20, aanleidingen × 5) + min(15, open taken × 4) + 15 bij hete aanleiding of 5 bij waarschuwing`. Prospects zonder historie doen mee.
-- **Soort stuurt de vulling**: "Koude acquisitie" vult uit prospects in reis met status nieuw of gekwalificeerd, prospectplanning (venster open, nog niet benaderd) en campagnes van soort bellen; "Opvolging en ritme" uit lopende hercontactpogingen en offerte-opvolging; "Gemengd" volgens de ingestelde verhouding.
+- **Soort stuurt de vulling**: "Koude acquisitie" vult uit prospects in reis met status nieuw of gekwalificeerd, prospectplanning (venster open, nog niet benaderd) en campagnes van soort bellen; "Opvolging en ritme" uit lopende hercontactpogingen en eerste afspraken die bevestigd moeten worden; "Gemengd" volgens de ingestelde verhouding.
 - **Duur per gesprek**: 8 minuten, 12 bij urgent, plus 2 bij score 70 of meer, plus 2 bij meer dan één taak; na 20 gesprekken leert de schatting van de werkelijke gemiddelde duur van de gebruiker.
 - **Marge** een kwart van de gesprekstijd, naar boven afgerond op 5 minuten; blokduur gesprekstijd plus marge naar boven afgerond op een half uur, minimaal 30 minuten.
 - **Wat niet past** schuift naar het eerstvolgende vaste blok; zonder vast blok blijft het in de bellijst.
@@ -105,12 +105,12 @@ Drie knoppen uit F07 hebben geen code in 7.3. Niet vastgelegd in het bouwplan; v
 - **Scriptkeuze**: script van de campagne, script van het belblok, script dat past bij doel, reisfase, doelgroep en rol van het contact, persoonlijke variant van de gebruiker van dat script, startscript van de organisatie.
 - **Scriptregels**: een actief script heeft minimaal een opening, een afsluiting en een voicemail; een winpunt of concurrent waarnaar verwezen wordt, bestaat en is actief, anders gaat het script op "Controleren" met een inzicht aan de eigenaar; richtlijn 150 woorden, waarschuwing boven 200; voicemail maximaal 25 seconden; vergelijken vraagt minimaal 30 gesprekken per versie of variant ("Te weinig gesprekken om te vergelijken"); varianten erven doel, fases en koppelingen.
 - **Uit het verkoopverhaal** (F25, 11.5): variabelen `{verhaal.kernzin}`, `{verhaal.branche}`, `{visie.kernzin}`, `{belofte.branche}`, `{waarde}`, `{winpunt.naam}`, `{argument}`, `{bewijs.klant}`, `{concurrent.naam}`, `{concurrent.zoZegJeHet}`. De opening gebruikt de kernzin van de branche (terugval algemeen); "Waarom wij" de belofte; "Bezwaren" krijgt per concurrent een bezwaar uit "Als de klant zegt" met `argumentRef`. Alleen bevestigde versies; het gesprek bewaart de gebruikte versies.
-- AI-invulling: één aanroep per gesprek, gecachet 24 uur per account en scriptversie; zonder bundel vaste tekst met terugvalzinnen.
+- AI-invulling: één aanroep per gesprek, gecachet 24 uur per account en scriptversie; zonder AI-credits, of op Starter waar de AI-soort belscript-invulling niet aanstaat (11.4), vaste tekst met terugvalzinnen.
 
 ### Helpartikelen
 
 - "De belmodus", "Een belscript kiezen" (Dagelijks werk), "Belblokken" (Plannen en sturen), "Belscripts maken" (Inrichten).
-- Leerpad Beginner "Een belblok uitvoeren met een script" volledig; leerpad Gevorderd "Je week plannen: belblokken en regiodagen" (deel belblokken) en "Bezwaren ombuigen"; leerpad Expert "Scripts testen en verbeteren".
+- "Een belblok uitvoeren met een script" (Aan de slag) volledig. Niet vastgelegd in het bouwplan; voorstel: daarnaast "Je week plannen: belblokken en regiodagen" (deel belblokken), "Bezwaren ombuigen" en "Scripts testen en verbeteren" als gewone artikelen in de collecties van F21. Er zijn geen leerpaden per niveau (B19).
 
 ## Deel 2: Technisch (hoe)
 
@@ -159,7 +159,7 @@ Drie knoppen uit F07 hebben geen code in 7.3. Niet vastgelegd in het bouwplan; v
 | `POST /api/belscripts/:id/activeer` | salesmanager, beheerder | nieuwe versie; 422 bij validatiefout |
 | `POST /api/belscripts/:id/kopie` | Gevorderd | persoonlijke variant |
 | `POST /api/belscripts/:id/archiveer` | salesmanager, beheerder | |
-| `POST /api/belscripts/invullen` | iedere gebruiker, binnen de bundel | AI-invulling `{scriptId, accountId, contactId}`; 429 bij bundel op met terugval |
+| `POST /api/belscripts/invullen` | iedere gebruiker; AI-soort belscript-invulling aan in het pakket (Plus, Compleet) | AI-invulling `{scriptId, accountId, contactId}`; 402 bij credits op, met terugval op vaste tekst |
 | `POST /api/belscripts/opzet` | salesmanager, beheerder | AI-opzet als concept |
 | `GET /api/belscripts/resultaten` | salesmanager; eigen varianten vanaf Expert | vergelijking |
 
@@ -171,7 +171,7 @@ Drie knoppen uit F07 hebben geen code in 7.3. Niet vastgelegd in het bouwplan; v
 | Opzet maken | Schrijver | doel, doelgroep, reisfase, golden circle, winpunten, top bezwaren | volledig script, status concept | altijd concept; mens activeert; AI schrijft geen winpunten |
 | Bezwaren ophalen | Schrijver | verslagen van de laatste 90 dagen in de doelgroep | `[{bezwaar, aantal, voorbeeldCitaat, antwoordVoorstel, argumentRef}]` | antwoord zonder `argumentRef` wordt "geen bron in de waarde"; namenfilter |
 
-Elke stap via de Bewaker en de gemeenschappelijke AI-schil van P08; bundelsoort `belscript` (Starter 0, Plus en Compleet 3.000 per maand); mock met vaste fixtures en golden master.
+Elke stap via de Bewaker en de gemeenschappelijke AI-schil van P08. Credits (11.4): een belscript-invulling kost 1 credit per handeling en staat aan in Plus en Compleet; de prijs komt uit `creditsVoor` in `shared/credits.ts` (P33 AI-assistent en credits). Niet vastgelegd welke soort de opzet en het ophalen van bezwaren zijn; voorstel: concept, 2 credits. Mock met vaste fixtures en golden master.
 
 ### Integraties
 
@@ -183,7 +183,7 @@ Elke stap via de Bewaker en de gemeenschappelijke AI-schil van P08; bundelsoort 
 
 Niet vastgelegd in het bouwplan; voorstel (niveaus uit 4.3 en 8.11):
 
-| Sleutel | Niveau | Pakket | Recht | Helpartikel |
+| Sleutel | Startindeling: aan vanaf | Pakket | Recht | Helpartikel |
 |---|---|---|---|---|
 | `belblok.uitvoeren` | Beginner | Starter | iedereen | De belmodus |
 | `belblok.plannen` | Gevorderd | Starter | iedereen | Belblokken |
@@ -221,12 +221,12 @@ Niet vastgelegd in het bouwplan; voorstel (niveaus uit 4.3 en 8.11):
 8. Een beheerder maakt een script met vijf blokken en twee bezwaren, activeert het, en een accountmanager in het gekoppelde team ziet het voorgeselecteerd in een belblok van die doelgroep.
 9. Een onbekende variabele blokkeert opslaan met de melding welke variabele het is.
 10. Een gesprek logt scriptId en versie; de rapportage telt het in de juiste versie; een nieuwe versie activeren tijdens een lopend blok verandert het script in dat blok niet.
-11. Zonder AI-sleutel (mock) en zonder bundel (Starter) werkt het script met de vaste teksten en terugvalzinnen.
+11. Zonder AI-sleutel (mock), met de credits op 0 en op Starter (geen AI-invulling) werkt het script met de vaste teksten en terugvalzinnen.
 12. Vergelijken onder 30 gesprekken toont "Te weinig gesprekken om te vergelijken".
 13. Verkoopverhaal met de Voltvast-seed: een prospect in br-01 met huidige leverancier cc-02 krijgt in het script de kernzin, de belofte van br-01, winpunt wp-01 en het bezwaar "Online is het goedkoper." met antwoord (Bijlage C.9 geval 2); een prospect in br-03 valt terug op het algemene verhaal met melding (geval 1); wp-02 komt niet als eerste winpunt (geval 4); een contactnaam uit aantekeningen komt niet in de AI-aanroep (geval 9).
 14. Telefoon, tikdoelen uit 8.7: een prospect bellen en de uitkomst vastleggen kost hooguit 2 tikken, 3 met de scriptuitkomst; "Hoe ging het?" verschijnt automatisch na terugkeer uit een `tel:`-oproep; elke regel op `/bellen` heeft een belknop van minimaal 44 px binnen duimbereik (8.16).
 15. Telefoon offline: een uitkomst na bellen slaagt zonder verbinding met zichtbare status en komt na herstel precies één keer aan.
-16. Handsfree (Gevorderd) leest naam, reden en opening voor in `nl-NL`; een Beginner ziet de schakelaar als vergrendelde knop met uitleg.
+16. Handsfree (Gevorderd) leest naam, reden en opening voor in `nl-NL`; een Beginner ziet de schakelaar als knop met slot en de uitleg "Nog niet aangezet".
 17. Per niveau getest: Beginner ziet Top 5 en "Zelf kiezen", de standaard vaste blokken, alleen actieve scripts van zijn team en geen knop "Maak persoonlijke variant"; Gevorderd ziet Top 10 en 15, eigen blokken, "Mijn scripts" en conversie in de keuzelijst; Expert ziet "Vult zichzelf", verhouding en scriptvergelijking; de variant toont "Het origineel is gewijzigd" na een nieuwe versie van het origineel.
 18. Cross-tenant: scripts, sessies en resultaten van organisatie A zijn onzichtbaar voor B.
 

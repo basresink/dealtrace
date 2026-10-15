@@ -5,11 +5,12 @@
 | Sprint | 2 (Prospects en data) |
 | Features | F02 Leadgenerator, alleen het tabblad Importeren |
 | Hangt af van | P01 (herkomst, rechten, functiecatalogus), P03 (accounts, contacten, eigen velden, ontdubbelen) |
-| Bron in het bouwplan | F02 (tabblad Importeren, datamodel `import_batches`, endpoints import), 15.1, 15.2, 10.1 (herkomst), ADR-015, 8.12, Bijlage A (gat 16) |
+| Bron in het bouwplan | F02 (tabblad Importeren, datamodel `import_batches`, endpoints import), 15.1, 15.2, 10.1 (herkomst), 12 (rij DealDrive), ADR-015, 8.12, Bijlage A (gat 16) |
 
 ## Lees eerst
 
-- Bouwplan-Dealtrace.md: F02 (vooral "Tabblad Importeren", het datamodel en de acceptatiecriteria), F03 (regel "Laatste contact"), F19 (rij "Import en CRM"), 10.1 (herkomst en bronprioriteit), 15.1, 15.2, ADR-015, 8.12 ("Bewust niet op de telefoon"), 13.4, Bijlage A.
+- Bouwplan-Dealtrace.md: F02 (vooral "Tabblad Importeren", het datamodel en de acceptatiecriteria), F03 (regel "Laatste contact"), F19 (rij "Import en CRM"), 10.1 (herkomst en bronprioriteit), 12 (rij DealDrive), 15.1, 15.2, ADR-015, 8.12 ("Bewust niet op de telefoon"), 13.4, Bijlage A.
+- `docs/api/dealdrive-koppeling.md` hoofdstuk 4 (Ontdubbelen, `GET /accounts/zoek`) en `seed/dealdrive-mock/zoek-antwoord.json` (B21).
 - DealDrive (commit 75bee61): `app/pages/import.vue` (wizard en dubbelcheck), `shared/leadGenerator.ts` (matchregels), `app/pages/generator.vue` (alleen voor de tabbladen).
 
 ## Deel 1: Functioneel (wat en waarom)
@@ -26,7 +27,7 @@ Elke organisatie heeft lijsten (beurs, gekochte lijst, netwerk, oude offertes) d
 
 | Rol | Niveau | Wat |
 |---|---|---|
-| accountmanager | Beginner | Geen import; ziet het tabblad als vergrendeld met uitleg; een losse ontgrendeling door de salesmanager is mogelijk (4.2) |
+| accountmanager | Beginner | Geen import in de startindeling; het tabblad staat in "Nog niet aangezet" met uitleg; zet de founder import aan voor Beginner (`/platform/features`, 4.2), dan importeert elke Beginner |
 | accountmanager | Gevorderd | Importeren met ontdubbelen, eigen batches terugdraaien |
 | accountmanager | Expert | Idem; plus verrijken via KvK en Datacollectief in de laatste stap zodra de koppelingen er zijn (P11, P15) |
 | salesmanager | Gevorderd, Expert | Importeren voor het team, eigenaar verdelen over het team |
@@ -40,7 +41,7 @@ Elke organisatie heeft lijsten (beurs, gekochte lijst, netwerk, oude offertes) d
 
 1. **Bestand**: Excel (.xlsx) of CSV, hooguit 10.000 rijen en 10 MB; keuze "Bedrijven" of "Bedrijven met contactpersonen"; voorbeeldbestand te downloaden; bron en label verplicht (bijvoorbeeld "Beurs Vakdagen 2026").
 2. **Kolommen koppelen**: per kolom een doelveld (bedrijfsnaam verplicht; KvK, domein, adres, postcode, plaats, SBI, medewerkers, telefoon, contact voornaam, achternaam, functie, e-mail, mobiel, eigen velden als `cf:<sleutel>`); automatische herkenning op kolomnaam; voorbeeld van de eerste 10 rijen.
-3. **Controle en ontdubbelen**: rapport "85 nieuw · 12 al in je bestand · 3 dubbel in het bestand · 4 met fouten"; per regel kiezen "Importeer als nieuw", "Voeg samen met …", "Sla over". Samenvoegen zet nooit een klant terug naar prospect.
+3. **Controle en ontdubbelen**: rapport "85 nieuw · 12 al in je bestand · 3 dubbel in het bestand · 4 met fouten"; per regel kiezen "Importeer als nieuw", "Voeg samen met …", "Sla over". Samenvoegen zet nooit een klant terug naar prospect. **Optioneel tegen DealDrive** (B21): staat de DealDrive-koppeling aan (of draait de mock), dan vraagt de controle per nieuwe rij `GET /accounts/zoek` op KvK, domein en naam; een treffer met soort `klant` staat als "Al klant in DealDrive" (standaard "Sla over"; niet benaderen tenzij de salesmanager het toestaat), een treffer met soort `prospect` als "Al prospect in DealDrive" met de eigenaar. Staat de koppeling uit, dan ontbreekt deze groep zonder melding.
 4. **Bevestigen en verrijken**: keuzes "Verrijk na import via KvK" en "Zoek contactpersonen via Datacollectief" (met kostenindicatie), doelgroep en eigenaar (vast, of verdelen over het team volgens gebieden), "Zet in campagne". Daarna een voortgangsbalk en een samenvatting met een link naar de importbatch.
 
 Wat in stap 4 van latere prompts afhangt:
@@ -140,6 +141,7 @@ import_batches: id, organisation_id, gebruiker_id, bestandsnaam, soort ('bedrijv
 
 - **MX-controle**: DNS-opzoeking achter een adapter met mock; in tests geen netwerk. Een time-out telt als "onbekend", niet als fout. Niet vastgelegd; voorstel.
 - KvK en Datacollectief na import: P11 en P15, met adapter en mock volgens hoofdstuk 12.
+- **Ontdubbelen tegen DealDrive** (optioneel, B21): leg `server/utils/dealdriveAdapter.ts` aan met alleen `zoekAccounts({kvk?, domein?, naam?})` volgens `docs/api/dealdrive-koppeling.md` hoofdstuk 4, met de uitvoering `mock` (fixture `seed/dealdrive-mock/zoek-antwoord.json`) en de uitvoering `http` (ondertekening uit hoofdstuk 2 van het contract), antwoorden 24 uur gecachet per sleutel. Lokaal en in tests draait altijd de mock (13.5). P11 gebruikt dezelfde functie; P23 breidt de adapter uit met overdracht en terugmeldingen. Een fout of time-out van DealDrive blokkeert de import nooit: de groep vervalt en het rapport meldt "DealDrive was niet bereikbaar; niet gecontroleerd tegen DealDrive." Niet vastgelegd; voorstel voor de tekst.
 
 ### AI-stappen
 
@@ -147,7 +149,7 @@ Geen. Kolomherkenning is een pure functie, geen AI.
 
 ### Functiecatalogus
 
-| Sleutel | Niveau | Pakket | Recht | Helpartikel |
+| Sleutel | Startindeling: aan vanaf | Pakket | Recht | Helpartikel |
 |---|---|---|---|---|
 | `import.uitvoeren` | Gevorderd | Starter | accountmanager (eigen), salesmanager, beheerder | "Importeren" |
 | `import.terugdraaien` | Gevorderd | Starter | eigen batch; salesmanager en beheerder alle | "Importeren" |
@@ -178,12 +180,13 @@ Zoeken, AI-zoeker, KvK, Datacollectief, CRM, rondes en verbruik (P11, P15, P20);
 8. Een geïmporteerd account heeft geen `laatste_contact_op`, ook niet als het bestand een datumkolom "laatste contact" had.
 9. Een contact op de onderdrukkingslijst krijgt toestemming e-mail "nee"; een nummer op de bel-me-niet-lijst krijgt "Bel me niet".
 10. Elk geïmporteerd veld heeft herkomst `import` met batch, datum en gebruiker.
-11. Een Beginner ziet het tabblad als vergrendeld met uitleg; met een losse ontgrendeling kan hij importeren; de server weigert zonder ontgrendeling met 403 en `reden: 'niveau'`.
-12. Getest als Beginner (vergrendeld), Gevorderd (eigen import en terugdraaien) en Expert, en als salesmanager (verdelen over het team) en beheerder (batch van een ander terugdraaien).
-13. De MX-adapter heeft een mock; de tests draaien zonder netwerk.
-14. Op 390 px opent de pagina met "Beter op een groot scherm" en zonder horizontale scroll.
-15. Bijlage A, gat 16: ontdubbelregels en validatie staan één keer in `shared/` en worden ook door P03 ("+ Prospect") gebruikt.
-16. Bijlage A, gat 34 (bij P18 als prompt genoemd): het importdeel "import fabriceert geen contactmoment" is hier al getoetst.
+11. Een Beginner ziet het tabblad in "Nog niet aangezet" met uitleg; de server weigert met 403 en `reden: 'niveau'`; staat import in `functies_per_niveau` aan voor Beginner, dan kan elke Beginner importeren zonder release.
+12. Met de DealDrive-mock staat een rij met het KvK-nummer uit `zoek-antwoord.json` als "Al prospect in DealDrive" met eigenaar; een treffer met soort `klant` staat als "Al klant in DealDrive" en wordt standaard overgeslagen; met de koppeling uit of DealDrive onbereikbaar loopt de import door zonder die groep.
+13. Getest als Beginner (niet aangezet), Gevorderd (eigen import en terugdraaien) en Expert, en als salesmanager (verdelen over het team) en beheerder (batch van een ander terugdraaien).
+14. De MX-adapter en de DealDrive-adapter hebben een mock; de tests draaien zonder netwerk.
+15. Op 390 px opent de pagina met "Beter op een groot scherm" en zonder horizontale scroll.
+16. Bijlage A, gat 16: ontdubbelregels en validatie staan één keer in `shared/` en worden ook door P03 ("+ Prospect") gebruikt.
+17. Bijlage A, gat 34 (bij P18 als prompt genoemd): het importdeel "import fabriceert geen contactmoment" is hier al getoetst.
 
 ## Definition of Done
 

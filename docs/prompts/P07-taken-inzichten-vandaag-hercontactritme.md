@@ -38,9 +38,9 @@ Een Beginner krijgt motorvoorstellen altijd als inzicht ter goedkeuring, behalve
 
 **Vandaag op de laptop** (`/`, eerste item in de zijbalk). De telefoonweergave van Vandaag bouw je in P32; deze prompt levert de gegevens via `GET /api/vandaag` die beide gebruiken. Van boven naar beneden:
 
-1. **Kop.** Groet met naam ("Goedemorgen, Sanne."), kicker met datum en week ("VANDAAG · DINSDAG 13 OKTOBER · WEEK 42"), samenvattende regel ("6 taken · 3 uit campagnes · koude norm 3 van 5 deze maand · volgende koude actie 10:00"). Rechts "+ Taak" (geel), "+ Afspraak", "+ Prospect", "AI".
+1. **Kop.** Groet met naam ("Goedemorgen, Sanne."), kicker met datum en week ("VANDAAG · DINSDAG 13 OKTOBER · WEEK 42"), samenvattende regel ("6 taken · 3 uit campagnes · koude norm 3 van 5 deze maand · volgende koude actie 10:00"). Rechts "+ Taak" (geel), "+ Afspraak", "+ Prospect", "Vraag AI" (F26; de assistent zelf bouwt P33).
 2. **Aanleiding van de dag.** Eén kaart met het belangrijkste inzicht voor een van jouw accounts (ongelezen, relevantie 85 of hoger, jonger dan 48 uur wint), met bron, citaat en de knoppen "Maak taak" en "Open kaart".
-3. **Drie kolommen.** "TAKEN n": maximaal 8, eerst achterstallig, dan vandaag, dan hoog en urgent; per taak tijd, account, actiesoort als label ("BEL", "MAIL", "LINKEDIN", "BEZOEK", "TAAK"), regel "poging 2 van 5 · vorige: voicemail", winpunt of script, label "AI" als er een concept klaarstaat; "nog N meer →" naar Acties. "AFSPRAKEN n": vandaag, met meetingsoort, plaats of "online", link "Pitstop →". "PRIO n": maximaal 4: nieuwe aanleidingen, offertes die op opvolging wachten, geparkeerde accounts die vandaag terugkomen, partnerleads te laat.
+3. **Drie kolommen.** "TAKEN n": maximaal 8, eerst achterstallig, dan vandaag, dan hoog en urgent; per taak tijd, account, actiesoort als label ("BEL", "MAIL", "LINKEDIN", "BEZOEK", "TAAK"), regel "poging 2 van 5 · vorige: voicemail", winpunt of script, label "AI" als er een concept klaarstaat; "nog N meer →" naar Acties. "AFSPRAKEN n": vandaag, met meetingsoort, plaats of "online", link "Pitstop →". "PRIO n": maximaal 4: nieuwe aanleidingen, eerste afspraken die nog bevestigd of overgedragen moeten worden, geparkeerde accounts die vandaag terugkomen, partnerleads te laat.
 4. **Werkblok** volgens het werkplekprofiel. Binnendienst: "BELBLOK 10:00 tot 11:00 · 6 gesprekken · 48 min" met "Start belblok" (geel) en "Vul aan". Buitendienst: "BEZOEKDAG · REGIO OOST · 3 bezoeken · 4 kansen langs de route" met "Open route" (geel).
 5. **Klaargezet door AI.** "4 concepten wachten op je goedkeuring", elk met "Bekijk".
 6. **Door agents gedaan sinds gisteren** (Gevorderd): "12 dossiers ververst · 3 nieuwe aanleidingen · 2 accounts geparkeerd · 5 mails verstuurd binnen campagne X"; klik opent de activiteitenlog gefilterd op agents.
@@ -126,7 +126,7 @@ Bevestiging alleen bij onomkeerbaar: echt verwijderen (beheerder). Toasts in ver
 - "Vandaag" (Dagelijks werk): de blokken, wat er per niveau bij komt.
 - "Een taak afronden met een uitkomst" (Dagelijks werk): de uitkomsten uit 7.3 en wat er daarna gebeurt.
 - "Wat betekent poging 3 van 5" (Dagelijks werk) en "Hercontactritme" (Plannen en sturen).
-- "Vandaag lezen en afronden" en "Waarom vijf pogingen werken" staan in het leerpad Beginner (F21); schrijf de inhoud hier, P09 zet ze in het leerpad.
+- "Vandaag lezen en afronden" en "Waarom vijf pogingen werken" horen bij "Aan de slag" (F21); schrijf de inhoud hier, P09 Helpcenter basis en features per niveau publiceert ze. Er zijn geen leerpaden per niveau (B19).
 
 ## Deel 2: Technisch (hoe)
 
@@ -172,7 +172,7 @@ Bevestiging alleen bij onomkeerbaar: echt verwijderen (beheerder). Toasts in ver
 
 ### AI-stappen
 
-Geen nieuwe AI-stap. Het label "AI" en het conceptblok tonen wat P10 en P18 later klaarzetten; "Vraag AI" en "Andere toon" roepen in deze prompt de mock aan.
+Geen nieuwe AI-stap. Het label "AI" en het conceptblok tonen wat P10 en P18 later klaarzetten; "Vraag AI" en "Andere toon" roepen in deze prompt de mock aan; de AI-assistent met credits is P33.
 
 ### Integraties
 
@@ -182,7 +182,7 @@ Geen.
 
 Niet vastgelegd in het bouwplan; voorstel voor de sleutels (niveaus uit 4.3, alle in Starter):
 
-| Sleutel | Niveau | Recht | Helpartikel |
+| Sleutel | Startindeling: aan vanaf | Recht | Helpartikel |
 |---|---|---|---|
 | `vandaag.basis` | Beginner | iedereen | Vandaag |
 | `vandaag.agentsGedaan`, `vandaag.week`, `vandaag.indeling` | Gevorderd | iedereen | Vandaag |
@@ -207,7 +207,7 @@ Niet vastgelegd in het bouwplan; voorstel voor de sleutels (niveaus uit 4.3, all
 - Vandaag op de telefoon, focuskaart, signalen en recap (P32).
 - Belblok en belmodus (P10), bezoekdag en route (P14, P30), conceptinhoud en versturen (P18), Verzender en mails van agents (P16, P19).
 - Tabbladen Jaarplanning en Terugkomregels (P12); ritme kiezen per campagne (P16).
-- Groeipad en de kaart "Jouw niveau" op Vandaag (P09).
+- Het helpcenter en de pagina Features per niveau (P09 Helpcenter basis en features per niveau); de AI-assistent en credits (P33). Er is geen groeipad en geen kaart "Jouw niveau" op Vandaag (B19).
 
 ## Acceptatiecriteria
 
@@ -226,7 +226,7 @@ Niet vastgelegd in het bouwplan; voorstel voor de sleutels (niveaus uit 4.3, all
 13. `GET /api/vandaag` onder 1,0 s warm op desktop met de Voltvast-seed plus 600 fictieve accounts (13.4).
 14. Telefoon (375, 390, 412 px): Acties zonder horizontale scroll; vegen links rondt af, vegen rechts stelt uit; de taakflyout opent als schuifvenster; alle knoppen en uitkomsttegels minimaal 44 px (8.7, 8.16); afronden werkt offline met zichtbare status en komt na herstel precies één keer aan.
 15. De stapels en lijsten tonen standaard alleen het werk van de ingelogde gebruiker ("Van mij").
-16. Per niveau getest: Beginner ziet Vandaag blok 1 tot en met 5, de lijstweergave en de minimale velden van Nieuwe taak, en geen horizon of bulk (vergrendeld met uitleg); Gevorderd ziet blok 6 tot en met 8, horizon, filters, bulk en `/inzichten`; Expert ziet daarnaast eigen weergaven en taaksjablonen.
+16. Per niveau getest: Beginner ziet Vandaag blok 1 tot en met 5, de lijstweergave en de minimale velden van Nieuwe taak, en geen horizon of bulk ("Nog niet aangezet" met uitleg); Gevorderd ziet blok 6 tot en met 8, horizon, filters, bulk en `/inzichten`; Expert ziet daarnaast eigen weergaven en taaksjablonen.
 17. Salesmanager ziet "Team vandaag" en in Acties de teamweergave alleen voor zijn eigen teams (server-side).
 
 ## Definition of Done

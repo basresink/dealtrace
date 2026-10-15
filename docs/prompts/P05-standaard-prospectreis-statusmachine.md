@@ -5,18 +5,18 @@
 | Sprint | 4 (Reis, motor en ritme) |
 | Features | F05 Doelgroepen en prospectreis (standaard), statusmachine uit 7.2, terugkomregels uit F25 |
 | Hangt af van | P01 (rechten, niveaus, audit), P03 (accounts, contacten, eigen velden, accountkaart), P04 (import als binnenkomst), P28 (leesmodel met branches, fasen en terugkomregels) |
-| Bron in het bouwplan | hoofdstuk 7 (7.1 tot en met 7.4), F05 (standaardreis, doelgroepen, toewijzing, meldpunt, accountkaart), F03 ("Zet nee", "Promoveren"), F13 (afkoelperiode, terugkomregels), F25 (terugkomregels, fasen), ADR-004, ADR-018, Bijlage A (gaten 3, 5, 16, 41), Bijlage C (C.7, C.8, C.9 punt 5) |
+| Bron in het bouwplan | hoofdstuk 7 (7.1 tot en met 7.4), F05 (standaardreis, doelgroepen, toewijzing, meldpunt, accountkaart), F03 ("Zet nee", "Overdragen"), F13 (afkoelperiode, terugkomregels), F25 (terugkomregels, fasen), ADR-004, ADR-018, Bijlage A (gaten 3, 5, 16, 41), Bijlage C (C.7, C.8, C.9 punt 5) |
 
 ## Lees eerst
 
-- Bouwplan-Dealtrace.md: hoofdstuk 7 volledig, F05 volledig (de maatwerkeditor alleen om te weten wat P22 later doet), F03 ("Zet nee", "Promoveren tot klant", stuurstrip), F13 (Regels en Terugkomregels), F25 (Terugkomregel en hercontactritme, Terugkomen, `terugkomDatum`), 8.5.5, 10.2 (Proces), ADR-004, ADR-013 (alleen ter kennis), ADR-018, Bijlage A (gaten 3, 5, 41), Bijlage C (C.7, C.8, C.9).
+- Bouwplan-Dealtrace.md: 0.2 (B17), hoofdstuk 7 volledig, F05 volledig (de maatwerkeditor alleen om te weten wat P22 later doet), F03 ("Zet nee", "Overdragen", stuurstrip), F09 (uitkomsten na de eerste afspraak), F17 (alinea "De overdracht na de eerste afspraak"), F13 (Regels en Terugkomregels), F25 (Terugkomregel en hercontactritme, Terugkomen, `terugkomDatum`), 8.5.5, 10.2 (Proces), ADR-004, ADR-013 (alleen ter kennis), ADR-018, Bijlage A (gaten 3, 5, 41), Bijlage C (C.7, C.8, C.9).
 - DealDrive (commit 75bee61): `server/utils/journeyEngine.ts` (doorschuiven, audit), `app/composables/useCustomerJourney.ts`, `app/pages/instellingen/customer-journey.vue` (fasekaarten, overgangsrijen, kleurkeuze, accent), `server/utils/faseAccent.ts`, `server/utils/agentExecutor.ts` (Pitstop-accent), `shared/bandKwalificatie.ts`.
 
 ## Deel 1: Functioneel (wat en waarom)
 
 ### Wat je bouwt
 
-Doelgroepen gekoppeld aan branches, de standaard prospectreis als echte rij per organisatie met elf fases en een melder per gebeurtenis, het meldpunt voor gebeurtenissen, de statusmachine met nee, afkoelperiode en terugkomregel, en de reis, fase en status op de accountkaart met "Fase corrigeren", "Zet nee", "Pauzeer tot" en "Verplaats naar reis".
+Doelgroepen gekoppeld aan branches, de standaard prospectreis als echte rij per organisatie met tien fases tot en met de eerste afspraak en de overdracht, met een melder per gebeurtenis, het meldpunt voor gebeurtenissen, de statusmachine met nee, afkoelperiode en terugkomregel, en de reis, fase en status op de accountkaart met "Fase corrigeren", "Zet nee", "Pauzeer tot" en "Verplaats naar reis".
 
 ### Waarom
 
@@ -49,10 +49,10 @@ Gevorderd ziet geen zijbalkitem Prospectreizen, maar mag volgens 4.3 "reis per d
 - Knop "Kwalificeer" (bij status `nieuw` en fase Gevonden of Dossier compleet). Niet vastgelegd waar de knop staat; voorstel: in het blok "Kwalificatie BAND", en de melding gaat ook automatisch bij BAND minimaal 3 van 4.
 - "Fase corrigeren" (Gevorderd): fase en reden (verplicht); meldt `handmatig`.
 - Blok "Ritme": "Zet nee", "Pauzeer tot", "Verplaats naar reis". De ritmestand ("poging 3 van 5") komt in P07.
-- **Zet nee** (flyout, op de telefoon schuifvenster): keuzelijst met de vaste redenen "Geen behoefte", "Tevreden met huidige leverancier", "Geen budget", "Verkeerd moment", "Niet de beslisser", "Niet geschikt", "Anders" (toelichting verplicht bij "Anders"); terugkomdatum (voorstel volgens reden en terugkomregel); afkoelperiode per kanaal (voorgevuld). Knop "Zet op nee". Bevestiging "Teeuwen Bouw staat op nee tot 13 januari 2027."
+- **Zet nee** (flyout, op de telefoon schuifvenster): keuzelijst met de vaste redenen "Geen behoefte", "Tevreden met huidige leverancier", "Geen budget", "Verkeerd moment", "Niet de beslisser", "Niet geschikt", "Anders" (toelichting verplicht bij "Anders"); bij "Tevreden met huidige leverancier" de vraag "Bij wie?" (keuze uit de concurrenten uit P28, wordt "Verloren aan"); terugkomdatum (voorstel volgens reden en terugkomregel); afkoelperiode per kanaal (voorgevuld). Knop "Zet op nee". Bevestiging "Teeuwen Bouw staat op nee tot 13 januari 2027."
 - **Pauzeer tot**: datum; status `wachtend` tot die datum. Niet vastgelegd welke velden; voorstel: datum en optionele reden.
 - **Verplaats naar reis**: reis en reden (Gevorderd voor eigen accounts, salesmanager voor alle).
-- **Promoveren tot klant** (uit P03) meldt nu ook `handmatig-klant` op het meldpunt. F03 noemt `handmatig-klant`, de gebeurtenissencatalogus van F05 niet. Niet vastgelegd; voorstel: gebeurtenis `handmatig` met reden "Handmatig gepromoveerd tot klant" en doelfase Klant, zodat de catalogus vast blijft.
+- **Geen promoveren** (B17): Dealtrace maakt geen klant van een prospect. De reis eindigt in de fase Overgedragen, alleen te bereiken via de gebeurtenis `overgedragen` na een gehouden eerste afspraak (P17 Funnel van de prospectreis en overdracht). Accounts met status klant komen uit DealDrive of het CRM (kansen langs de route en winback).
 
 **Lijsten** (P03): filters "Status" (Nieuw, In reis, Wachtend, Nee, Gescoord) en "Reis en fase" zijn nu gevuld; sortering "Dagen in fase" werkt.
 
@@ -72,7 +72,7 @@ Gevorderd ziet geen zijbalkitem Prospectreizen, maar mag volgens 4.3 "reis per d
 
 ### Regels
 
-**Statusmachine** (7.2): `nieuw`, `in reis`, `wachtend`, `nee`, `gescoord`, `klant`.
+**Statusmachine** (7.2): `nieuw`, `in reis`, `wachtend`, `nee`, `gescoord`, `overgedragen`.
 
 | Status | Komt erin door | Gaat eruit door |
 |---|---|---|
@@ -80,16 +80,16 @@ Gevorderd ziet geen zijbalkitem Prospectreizen, maar mag volgens 4.3 "reis per d
 | `in reis` | kwalificatie, terugkomst uit wachtend of nee | laatste poging zonder reactie, nee, afspraak |
 | `wachtend` | laatste poging zonder resultaat, "gesproken, later", pauzeren | terugkomdatum, nieuwe aanleiding |
 | `nee` | uitkomst "niet geschikt" of "geen interesse", "Zet nee" | terugkomdatum of nieuwe aanleiding |
-| `gescoord` | `eerste-afspraak-gepland` | `deal-gewonnen` of `deal-verloren` |
-| `klant` | `deal-gewonnen`, handmatige promotie | n.v.t.; een verloren klant komt terug als winback-kandidaat |
+| `gescoord` | `eerste-afspraak-gepland` (eerste afspraak gepland, nog niet gehouden of nog niet afgerond) | `overgedragen`, nee (`geen-vervolg`), of terug naar `in reis` (`afspraak-niet-verschenen` of geannuleerd) |
+| `overgedragen` | `overgedragen` (eerste afspraak gehouden met vervolg en overgedragen) | n.v.t.; komt het account later terug uit DealDrive of het CRM (verloren deal, slapende klant), dan via een terugkomregel als winback-kandidaat |
 
-**Uitkomsten en status** (7.3; de ritmestappen zelf zijn P07): "Gesproken, afspraak" naar `gescoord` via `eerste-afspraak-gepland`; "Gesproken, later" met datum naar `wachtend` tot de datum; "Niet geschikt" naar `nee` met afkoelperiode 365 dagen voor alle kanalen; "Geen interesse" met reden naar `nee` met afkoelperiode per kanaal.
+**Uitkomsten en status** (7.3; de ritmestappen zelf zijn P07): "Gesproken, afspraak" naar `gescoord` via `eerste-afspraak-gepland`; "Gesproken, later" met datum naar `wachtend` tot de datum; "Niet geschikt" naar `nee` met afkoelperiode 365 dagen voor alle kanalen; "Geen interesse" met reden naar `nee` met afkoelperiode per kanaal. Na de eerste afspraak (uitkomsten uit F09, melders in P13): `eerste-afspraak-gehouden` houdt `gescoord` tot de overdracht; `overgedragen` geeft `overgedragen`; `geen-vervolg` geeft `nee` met reden en terugkomregel; `afspraak-niet-verschenen` (of geannuleerd) geeft `in reis` in de fase In gesprek.
 
 **Afkoelperiode**: bellen 90 dagen, mail 60, LinkedIn 90, WhatsApp 180, bezoek 180, kaart 365; instelbaar per organisatie; gecontroleerd vóór elke poging (`magBenaderen`).
 
-**Terugkomregel** (7.3, ADR-018): een nee, een geparkeerd account of een verloren deal krijgt naast de reden een terugkomregel uit het verkoopverhaal: terugkomdatum, kanaal, rol en aanpak. De afkoelperiode is de ondergrens: een terugkomdatum binnen de afkoelperiode schuift op naar het einde ervan. Op de terugkomdatum start de motor het hercontactritme uit de regel; de binnendienst krijgt telefoon en mail, de buitendienst een bezoek op de eerstvolgende regiodag (taken in P07, regiodag in P14). Niet vastgelegd welke afkoelperiode de ondergrens is als de regel een kanaal noemt; voorstel: de afkoelperiode van het kanaal uit de regel, of bij "Niet geschikt" 365 dagen.
+**Terugkomregel** (7.3, ADR-018): een nee, een geparkeerd account of een account dat uit DealDrive of het CRM terugkomt (verloren deal, slapende klant) krijgt naast de reden een terugkomregel uit het verkoopverhaal: terugkomdatum, kanaal, rol en aanpak. De afkoelperiode is de ondergrens: een terugkomdatum binnen de afkoelperiode schuift op naar het einde ervan. Op de terugkomdatum start de motor het hercontactritme uit de regel; de binnendienst krijgt telefoon en mail, de buitendienst een bezoek op de eerstvolgende regiodag (taken in P07, regiodag in P14). Niet vastgelegd welke afkoelperiode de ondergrens is als de regel een kanaal noemt; voorstel: de afkoelperiode van het kanaal uit de regel, of bij "Niet geschikt" 365 dagen.
 
-**Standaardreis**: elf fases in vijf hoofdfases, met accent en verwacht verblijf:
+**Standaardreis**: tien fases in vijf hoofdfases, met accent en verwacht verblijf; de reis eindigt bij de eerste afspraak en de overdracht (B17):
 
 | Hoofdfase | Fase | Pitstop-accent | Verwacht verblijf |
 |---|---|---|---|
@@ -98,26 +98,25 @@ Gevorderd ziet geen zijbalkitem Prospectreizen, maar mag volgens 4.3 "reis per d
 | Bewerken | Gekwalificeerd | Kennismaken: één reden voor contact, geen pitch. | 10 dagen |
 | Bewerken | Benaderd | Verwijs naar het eerdere contact en stel één vraag. | 21 dagen |
 | Bewerken | In gesprek | Onderscheid benoemen en vergelijkingscriteria opvragen. | 21 dagen |
-| Verbinden | Eerste afspraak | Behoefte, beslisser, noodzaak, draagvlak toetsen. | 14 dagen |
-| Verbinden | Offerte uit | Bezwaren over prijs, voorwaarden en timing voor zijn. | 14 dagen |
-| Verbinden | Onderhandeling | Eén besluitvraag; wat is nodig om te tekenen. | 14 dagen |
-| Klant | Klant | Onboarding: eerste 30 dagen, eerste order. | eindfase |
+| Verbinden | Afspraak gepland | Bevestigen, voorbereiden: wie zit erbij, wat wil je weten, welk winpunt. | tot de afspraak |
+| Verbinden | Afspraak gehouden | Behoefte, beslisser, noodzaak, draagvlak toetsen; vervolg afspreken. | 2 dagen |
+| Overgedragen | Overgedragen | Overdracht met briefing; de deal ontstaat in DealDrive of het CRM. | eindfase |
 | Verloren | Verloren | Heropvolging over drie maanden, zonder druk. | eindfase |
 | Verloren | Geparkeerd | Alleen bij een nieuwe aanleiding. | tot terugkomdatum |
 
-Kleuren per hoofdfase: Vinden zwart, Bewerken geel, Verbinden paars en oranje, Klant groen, Verloren rood en grijs (via tokens).
+Kleuren per hoofdfase: Vinden zwart, Bewerken geel, Verbinden paars en oranje, Overgedragen groen, Verloren rood en grijs (via tokens).
 
-**Overgangen** van de standaardreis: exact de tabel in F05 (van instap tot heropvolging). Elke fase is bereikbaar en elke fase heeft een uitweg.
+**Overgangen** van de standaardreis: exact de tabel in F05 (van instap tot heropvolging), met na Afspraak gepland: `eerste-afspraak-gehouden` naar Afspraak gehouden, `afspraak-niet-verschenen` of geannuleerd terug naar In gesprek; na Afspraak gehouden: `overgedragen` naar Overgedragen, `geen-vervolg` naar Verloren. Elke fase is bereikbaar en elke fase heeft een uitweg.
 
-**Startactiviteiten** per fase en rol: exact de tabel in F05 (Gevonden: "Dossier controleren (taak, 2 werkdagen)"; Dossier compleet: kwalificeren met BAND-vragen; Gekwalificeerd: eerste belpoging met het script "Koude acquisitie beslisser" of kans langs de route; Benaderd: opvolgpoging volgens het ritme; Eerste afspraak: briefing en bevestigen of Pitstop; Offerte uit: nabellen volgens de offertematrix; Geparkeerd: terugkomtaak op de terugkomdatum). Ze staan als rijen in `activiteitstemplates`; de motor (P06) voert ze uit bij "fase betreden".
+**Startactiviteiten** per fase en rol: exact de tabel in F05 (Gevonden: "Dossier controleren (taak, 2 werkdagen)"; Dossier compleet: kwalificeren met BAND-vragen; Gekwalificeerd: eerste belpoging met het script "Koude acquisitie beslisser" of kans langs de route; Benaderd: opvolgpoging volgens het ritme; Afspraak gepland: briefing maken en afspraak bevestigen (binnendienst) of Pitstop klaarzetten op de dag van het bezoek (buitendienst); Afspraak gehouden: overdracht klaarzetten (binnendienst) of afronden met verslag en overdragen binnen 24 uur (buitendienst); Geparkeerd: terugkomtaak op de terugkomdatum). Ze staan als rijen in `activiteitstemplates`; de motor (P06) voert ze uit bij "fase betreden".
 
 **Toewijzing aan een reis**: bij binnenkomst (overname, import, CRM) kiest `kiesReis` de eerste actieve doelgroep in prioriteitsvolgorde waarin het account past, anders de standaardreis. Een account zit in hoogstens één actieve reis. Een afgeronde reis bewaart fase en historie; heropvolging start een nieuwe inschrijving, geen overschrijving.
 
-**Fasen van het verkoopverhaal**: elke SalesDNA-fase of eigen fase in `vv_fasen` koppelt aan een hoofdfase (`reis_hoofdfase`); de winpunten van die fase verschijnen bij de fases van die hoofdfase. Bijlage C.7 noemt de fasen Signaal, Kennismaking, Behoefte en schouw, Offerte, Klant en uitbouw, maar geen hoofdfase. Niet vastgelegd welke Voltvast-fase bij welke hoofdfase hoort; voorstel: Signaal naar Vinden, Kennismaking naar Bewerken, Behoefte en schouw naar Verbinden, Offerte naar Verbinden, Klant en uitbouw naar Klant, als mapping in Instellingen die de beheerder controleert.
+**Fasen van het verkoopverhaal**: elke SalesDNA-fase of eigen fase in `vv_fasen` koppelt aan een hoofdfase (`reis_hoofdfase`); de winpunten van die fase verschijnen bij de fases van die hoofdfase. Bijlage C.7 noemt de fasen Signaal, Kennismaking, Behoefte en schouw, Offerte, Klant en uitbouw, maar geen hoofdfase. Niet vastgelegd welke Voltvast-fase bij welke hoofdfase hoort; voorstel: Signaal naar Vinden, Kennismaking naar Bewerken, Behoefte en schouw naar Verbinden, Offerte en Klant en uitbouw naar Overgedragen, als mapping in Instellingen die de beheerder controleert. SalesDNA-fases na de eerste afspraak (soort offerte en klantrelatie) koppelen aan de hoofdfase Overgedragen: hun winpunten staan op `/richting` en in de overdrachtsbriefing, maar Dealtrace bewerkt ze niet (F05, B17).
 
 ### Helpartikelen
 
-- "De prospectreis en fases" (Prospects): elf fases, hoofdfases, status naast fase, dagen in fase, fase corrigeren.
+- "De prospectreis en fases" (Prospects): tien fases tot en met de eerste afspraak en de overdracht, hoofdfases, status naast fase, dagen in fase, fase corrigeren.
 - "Nee met reden en afkoelperiode" (Prospects): de zeven redenen, afkoelperiode per kanaal, terugkomdatum.
 - "Doelgroepen en reizen" (Inrichten): doelgroep maken, prioriteit, ambitietoets, standaard terugzetten.
 - Academie: "Nee is een datapunt" en "Parkeren en terughalen" (Volhouden), elk met "Zo doe je het in Dealtrace".
@@ -146,7 +145,7 @@ reisgeschiedenis: id, organisation_id, account_id, prospectreis_id, versie, van_
 ```
 
 - `doelgroepen.data.brancheIds[]` staat niet in het datamodel van F05 maar wel in de functionele tekst ("kiest een of meer branches uit het leesmodel"). Niet vastgelegd; voorstel: dit veld.
-- `accounts`: `reis_id`, `fase_id`, `nb_status`, `fase_sinds`, `doelgroep_id`, `terug_op`, `terug_regel_id` als kolommen; `data.nee {reden, toelichting?, op, door, afkoeling {bellen, mail, linkedin, whatsapp, bezoek, kaart}}`, `data.wachtendTot`.
+- `accounts`: `reis_id`, `fase_id`, `nb_status`, `fase_sinds`, `doelgroep_id`, `terug_op`, `terug_regel_id` als kolommen; `data.nee {reden, toelichting?, verlorenAan? (concurrent-id), op, door, afkoeling {bellen, mail, linkedin, whatsapp, bezoek, kaart}}`, `data.wachtendTot`.
 - `activity_rules.reis_id` en `activity_rules.fase_id` (null is alle) komen met de motor in P06.
 - De standaardreis wordt bij het aanmaken van een organisatie als echte rij gemaakt (`is_standaard true`), via het startsetregister van P02; nooit alleen in code. Voor bestaande organisaties: "Startset aanvullen".
 - `org_settings`: `afkoeling` (dagen per kanaal), `nee.redenen` (vast, alleen lezen).
@@ -159,7 +158,7 @@ reisgeschiedenis: id, organisation_id, account_id, prospectreis_id, versie, van_
 
 | Functie | Invoer | Uitvoer | Randgevallen en unit-tests |
 |---|---|---|---|
-| `volgendeStatus(status, gebeurtenisOfUitkomst, context)` | huidige status, gebeurtenis of uitkomstcode | nieuwe status | elke rij van de tabel; `klant` blijft `klant` behalve winback; onbekende combinatie geeft de huidige status terug |
+| `volgendeStatus(status, gebeurtenisOfUitkomst, context)` | huidige status, gebeurtenis of uitkomstcode | nieuwe status | elke rij van de tabel; `overgedragen` blijft `overgedragen` (terugkomst alleen via een terugkomregel); `afspraak-niet-verschenen` vanuit `gescoord` geeft `in reis`; onbekende combinatie geeft de huidige status terug |
 | `cooldownActief(account, kanaal, nu)` | account met `data.nee` | boolean | precies op de laatste dag; ander kanaal; "Niet geschikt" 365 voor alles |
 | `magBenaderen(account, kanaal, nu)` | account, kanaal | `{mag, reden?}` | status `nee` in afkoeling, `wachtend` tot een datum, bel me niet (P03) |
 
@@ -174,7 +173,7 @@ reisgeschiedenis: id, organisation_id, account_id, prospectreis_id, versie, van_
 | `isEersteAfspraak(account, afspraken)` | account, afspraken | boolean | geannuleerde eerste afspraak telt niet; tweede afspraak geeft false (gat 3) |
 | `dagenInFase(account, nu)` en `verblijfOverschreden(account, fase, nu)` | account | getal, boolean | eindfase nooit overschreden |
 
-**`shared/verkoopverhaal.ts`** (uit P28): `terugkomDatum(reden, regels, nu, afkoeling)` krijgt hier de afkoelperiode als ondergrens. Test C.9 punt 5: reden "Prijs" via `vv_redenmapping` naar "Prijs te hoog" (hc-03) geeft 182 dagen en kanaal bezoek; de taak op de eerstvolgende regiodag is P14 en P17.
+**`shared/verkoopverhaal.ts`** (uit P28): `terugkomDatum(reden, regels, nu, afkoeling)` krijgt hier de afkoelperiode als ondergrens. Test C.9 punt 5: reden "Prijs" via `vv_redenmapping` naar "Prijs te hoog" (hc-03) geeft 182 dagen en kanaal bezoek; de taak op de eerstvolgende regiodag is P14; het terugkomen van een verloren deal uit DealDrive of het CRM is P23 en P20.
 
 Unit-tests per overgang van de standaardreis: elke fase is via een echte gebeurtenis bereikbaar.
 
@@ -190,9 +189,10 @@ Unit-tests per overgang van de standaardreis: elke fase is via een echte gebeurt
 | `eerste-contact` | eerste afgeronde poging met uitkomst anders dan geen reactie | P07 |
 | `gesprek-gevoerd` | uitkomst "Gesproken" (later, afspraak) | P07 |
 | `eerste-afspraak-gepland` | alleen de eerste niet-geannuleerde afspraak met een prospect | P13 (regel `isEersteAfspraak` hier) |
-| `offerte-verstuurd` | offerte op status verstuurd | P17 |
-| `onderhandeling-gestart` | deal naar fase onderhandeling of knop op de deal | P17 |
-| `deal-gewonnen`, `deal-verloren` | deal op gewonnen of verloren, ook via slepen | P17 |
+| `eerste-afspraak-gehouden` | "Rond af" van de eerste afspraak met een uitkomst (F09) | P13 |
+| `afspraak-niet-verschenen` | eerste afspraak op status niet verschenen of geannuleerd | P13 |
+| `overgedragen` | overdracht naar DealDrive, het CRM of een collega (F17) | P17 Funnel van de prospectreis en overdracht |
+| `geen-vervolg` | uitkomst zonder vervolg na de eerste afspraak, met reden voor nee | P13 |
 | `geparkeerd`, `heropvolging` | `hercontact.verwerkUitkomst` en de regels `geparkeerd-terug` of `trigger-heractivatie`; in deze prompt ook de dagelijkse controle op `terug_op` | P05 (terugkomdatum), P06 en P07 |
 | `handmatig` | "Fase corrigeren" met verplichte reden | P05 |
 
@@ -219,7 +219,7 @@ Geen eigen AI-stap. Het Pitstop-accent van de fase is materiaal voor elke voorbe
 
 ### Functiecatalogus
 
-| Sleutel | Niveau | Pakket | Recht | Helpartikel |
+| Sleutel | Startindeling: aan vanaf | Pakket | Recht | Helpartikel |
 |---|---|---|---|---|
 | `reis.zien` | Beginner | Starter | iedereen | "De prospectreis en fases" |
 | `reis.kwalificeer`, `account.nee` | Beginner | Starter | iedereen | "Nee met reden en afkoelperiode" |
@@ -242,7 +242,7 @@ Pakket: het bouwplan legt per functie geen pakket vast; voorstel Starter.
 
 ### Buiten scope
 
-Maatwerkreizen, de editor, publiceren met fasemapping en "Fase verwijderen" (P22); motor en startactiviteiten uitvoeren (P06); hercontactritme en `verwerkUitkomst` met stappen (P07); de terugkomtaak op een regiodag (P14); deals en offertes als melders (P17); vergelijken van versies in Analyse (P21).
+Maatwerkreizen, de editor, publiceren met fasemapping en "Fase verwijderen" (P22); motor en startactiviteiten uitvoeren (P06); hercontactritme en `verwerkUitkomst` met stappen (P07); de terugkomtaak op een regiodag (P14); de melders na de eerste afspraak (P13) en de overdracht (P17 Funnel van de prospectreis en overdracht); vergelijken van versies in Analyse (P21).
 
 ## Acceptatiecriteria
 

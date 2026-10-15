@@ -85,9 +85,9 @@ Filters: "Van mij" (standaard), team (salesmanager), doelgroep, gebied; in de UR
 - **Benaderd** telt alleen echte pogingen in het lopende verkoopjaar; **gesproken** vraagt een gesprek met iemand (bij voorkeur de beslisser); geïmporteerde datums tellen niet.
 - De motorregel `jaarplanning-venster` (SR07) maakt wekelijks een beltaak voor prospects waarvan het venster voorbij is en die niet benaderd zijn.
 - "Plan in belblokken" spreidt de beltaken over de koude blokken van de komende weken binnen het venster; de capaciteit van de Planner (40 beltaken per dag) geldt.
-- **Terugkomregel**: een nee, een geparkeerd account of een verloren deal krijgt naast de reden een terugkomregel: terugkomdatum, kanaal, rol en aanpak. De afkoelperiode per kanaal blijft de ondergrens: een terugkomdatum binnen de afkoelperiode schuift op naar het einde ervan (7.3).
+- **Terugkomregel**: een nee, een geparkeerd account of een account dat uit DealDrive of het CRM terugkomt (verloren deal, slapende klant) krijgt naast de reden een terugkomregel: terugkomdatum, kanaal, rol en aanpak. De afkoelperiode per kanaal blijft de ondergrens: een terugkomdatum binnen de afkoelperiode schuift op naar het einde ervan (7.3).
 - Klassen leeg in een regel betekent "alle klassen" (Bijlage C.8).
-- Slapende klanten herkent Dealtrace uit besteldata van CRM of DealDrive (3, 6 of 12 maanden niet besteld) en maakt er een herwinaccount van. CRM (P20) en DealDrive (P23) komen later; tot dan is de lijst slapende klanten leeg. Niet vastgelegd in het bouwplan; voorstel: lege staat "Slapende klanten verschijnen zodra jullie CRM of DealDrive gekoppeld is."
+- Slapende klanten herkent Dealtrace uit besteldata van CRM of DealDrive (3, 6 of 12 maanden niet besteld; DealDrive meldt dit met de terugmelding `klant.slapend` uit `docs/api/dealdrive-koppeling.md`) en maakt er een herwinaccount van. Dealtrace zelf maakt geen klanten (B17). CRM (P20) en DealDrive (P23) komen later; tot dan is de lijst slapende klanten leeg. Niet vastgelegd in het bouwplan; voorstel: lege staat "Slapende klanten verschijnen zodra jullie CRM of DealDrive gekoppeld is."
 - **Hercontact op tijd** = het aandeel accounts met een bereikte terugkomdatum waarvoor binnen de termijn een eerste poging is gedaan. Niet vastgelegd in het bouwplan hoe "op tijd" gemeten wordt; voorstel: eerste poging uiterlijk 5 werkdagen na de terugkomdatum.
 - Een account zit nooit in twee ritmes; een terugkomregel start geen ritme op een account dat al in een ritme zit, maar schuift de start naar het einde daarvan (voorstel, uit de regel "nooit twee ritmes tegelijk").
 
@@ -96,7 +96,7 @@ Filters: "Van mij" (standaard), team (salesmanager), doelgroep, gebied; in de UR
 - "Prospectplanning" (Plannen en sturen): potentie, vensters, benaderd, "Plan in belblokken".
 - "Wanneer we iemand terugbellen" (uit F25 en F21): terugkomregels, verschil met het hercontactritme, afkoelperiode als ondergrens.
 - "Nee met reden en afkoelperiode" (Prospects) aanvullen met de terugkomdatum.
-- Leerpad Gevorderd "Je week plannen: belblokken en regiodagen" aanvullen met de jaarplanning; academie "Parkeren en terughalen" en "Nee is een datapunt" als titel en samenvatting (volledig in P25).
+- Het artikel "Je week plannen: belblokken en regiodagen" (P10, P14) aanvullen met de jaarplanning (geen leerpaden per niveau, B19); academie "Parkeren en terughalen" en "Nee is een datapunt" als titel en samenvatting (volledig in P25).
 
 ## Deel 2: Technisch (hoe)
 
@@ -147,7 +147,7 @@ Geen nieuwe. Besteldata voor slapende klanten komt via de CRM-adapter (P20) en d
 
 Niet vastgelegd in het bouwplan; voorstel:
 
-| Sleutel | Niveau | Pakket | Recht | Helpartikel |
+| Sleutel | Startindeling: aan vanaf | Pakket | Recht | Helpartikel |
 |---|---|---|---|---|
 | `planning.jaar` | Gevorderd | Starter | iedereen | Prospectplanning |
 | `planning.inplannen` | Gevorderd | Starter | iedereen | Prospectplanning |
@@ -174,11 +174,11 @@ Niet vastgelegd in het bouwplan; voorstel:
 3. "Plan 36 in belblokken" spreidt de beltaken over de koude blokken van de komende weken binnen het venster, met `belblok_id`, zonder het dagplafond van 40 te overschrijden (F13).
 4. Een account met ritme koud dat vijf keer niet reageert, wordt geparkeerd met terugkomdatum en komt bij een nieuwe aanleiding terug als de afkoelperiode voorbij is.
 5. Een terugkomdatum binnen de afkoelperiode schuift naar het einde ervan (test per kanaal).
-6. Bijlage C.9 geval 5: deal verloren met reden "Prijs" geeft via de mapping "Prijs te hoog" (hc-03) een bezoektaak over 182 dagen op de eerstvolgende regiodag; zolang regiodagen (P14) niet bestaan, op het volgende werkmoment na 182 dagen.
+6. Bijlage C.9 geval 5: een uit DealDrive of het CRM teruggekomen verloren deal met reden "Prijs" (hier met de mock-fixture `seed/dealdrive-mock/webhook-deal-verloren.json`; de echte terugmelding bouwt P23) geeft via de mapping "Prijs te hoog" (hc-03) een bezoektaak over 182 dagen op de eerstvolgende regiodag; zolang regiodagen (P14) niet bestaan, op het volgende werkmoment na 182 dagen.
 7. Met de Voltvast-seed toont het tabblad Terugkomregels zes regels (hc-01 tot en met hc-06) in twee lijsten; hc-04 met termijn "direct" (0 dagen); klassen leeg toont "alle klassen".
 8. Dezelfde seed als eigen inrichting en als spiegel geeft op het tabblad hetzelfde resultaat (Bijlage C.9 geval 10).
 9. "Hercontact op tijd" toont gezond bij 90 procent en aandacht bij 70 procent, getoetst op de grens.
-10. Een Beginner ziet geen menu-item Prospectplanning; een directe link toont de vergrendelde uitleg; `GET /api/planning/jaar` geeft 403 met reden `niveau`.
+10. Een Beginner ziet geen menu-item Prospectplanning; een directe link toont de uitleg met kicker "Nog niet aangezet"; `GET /api/planning/jaar` geeft 403 met reden `niveau`.
 11. Per niveau getest: Gevorderd ziet jaarplanning, "Plan in belblok" en kan een terugkomdatum met reden aanpassen; Expert ziet daarnaast de opbrengst per regel en kan een regel aan een ritme koppelen als voorstel; Beginner ziet alleen de taak op de terugkomdatum met de aanpak.
 12. Salesmanager ziet met scope team alleen zijn eigen teams (server-side).
 13. Telefoon (375, 390, 412 px): `/planning` zonder horizontale paginascroll; knoppen "Bel" en "Plan bezoek" minimaal 44 px; "Bel" opent een `tel:`-link.

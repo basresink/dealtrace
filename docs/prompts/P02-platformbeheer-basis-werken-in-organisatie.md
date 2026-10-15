@@ -40,7 +40,7 @@ Beslissing B4 en ADR-011: geen aparte HQ, één app, één domein, één build. 
 **Klanten** (`/platform/klanten`). Na inloggen landt de founder hier zolang hij niet in een organisatie werkt.
 
 1. Paginakop: kicker "PLATFORMBEHEER", titel "Klanten", knop "+ Nieuwe klant" (geel). Niet vastgelegd welke kicker en titel; voorstel: deze.
-2. Meetlat: "Klanten" (verdeling Gezond, Let op, Risico, Leeg), "Gebruikers" (met login), "Maandomzet" (alleen actieve contracten), "AI-kostprijs deze maand", "Aandacht" (aantal signalen). Maandomzet en AI-kostprijs zijn in sprint 1 nul of leeg; Stripe en het AI-verbruik komen in P24 en P08. Niet vastgelegd hoe ze er in sprint 1 uitzien; voorstel: tegel met "Nog geen gegevens".
+2. Meetlat: "Klanten" (verdeling Gezond, Let op, Risico, Leeg), "Gebruikers" (met login), "Maandomzet" (alleen actieve contracten), "AI-kostprijs deze maand", "Aandacht" (aantal signalen). Maandomzet en AI-kostprijs zijn in sprint 1 nul of leeg; Stripe komt in P24, het AI-verbruik in credits in P33 (AI-assistent en credits). Niet vastgelegd hoe ze er in sprint 1 uitzien; voorstel: tegel met "Nog geen gegevens".
 3. Tabel: Klant, Pakket, Gebruikers ("8/9 met login"), Laatst actief, AI-kosten, Stand (redenen bij hover), knoppen "Openen" en "Werk in deze organisatie".
 4. Lege staat: "Nog geen klanten. Maak de eerste klant aan met Nieuwe klant." Niet vastgelegd; voorstel.
 
@@ -57,7 +57,7 @@ Activiteit telt breed: pogingen, berichten, nieuwe prospects, afspraken (gat 48)
 
 **Nieuwe klant** (flyout): organisatienaam, pakket (standaard Starter, of proefperiode met einddatum), contact en adres, eerste beheerder (naam en e-mail). Knop "Klant aanmaken". De server maakt de organisatie met de startset en stuurt de uitnodiging (inloggen met code, P27). Toast: "Van Dijk Installatie is aangemaakt. De uitnodiging is verstuurd." Niet vastgelegd; voorstel voor de toast. Gebruik in tests alleen Testbedrijf Voltvast (Bijlage C).
 
-**Startset.** F23 noemt: klassen, standaardreis, 23 regels, 6 belscripts, 4 hercontactritmes, 7 meetingsoorten, 8 campagnesoorten, redenen voor nee met afkoelperiodes, signaalregels, voorbeelden van eigen velden, help-artikelen. De meeste onderdelen bouwen latere prompts. Niet vastgelegd hoe de startset groeit; voorstel: `orgStarter` als register waar elke prompt zijn onderdeel aan toevoegt, idempotent per onderdeel, met een herstart voor bestaande organisaties ("Startset aanvullen" in de klantflyout).
+**Startset.** F23 noemt: klassen, standaardreis, 23 regels, 6 belscripts, 4 hercontactritmes, 7 meetingsoorten (F09 noemt er zes: Offertebespreking vervalt met B17), 8 campagnesoorten, redenen voor nee met afkoelperiodes, signaalregels, voorbeelden van eigen velden, help-artikelen. De meeste onderdelen bouwen latere prompts. Niet vastgelegd hoe de startset groeit; voorstel: `orgStarter` als register waar elke prompt zijn onderdeel aan toevoegt, idempotent per onderdeel, met een herstart voor bestaande organisaties ("Startset aanvullen" in de klantflyout).
 
 **Klantflyout** (eigen URL `?klant=<id>`), in deze prompt met:
 
@@ -108,7 +108,7 @@ Op de telefoon staat de gele balk onder de compacte kop; Platformbeheer opent in
 
 ### Helpartikelen
 
-- "Abonnement en verbruik" (Inrichten, beheerder): pakket lezen, upgrade aanvragen, seats.
+- "Abonnement, verbruik en AI-credits" (Inrichten, beheerder): pakket lezen, upgrade aanvragen, seats.
 - "Gebruikers, rollen en niveaus" (Inrichten): uitbreiden met aanvragen binnen of boven de seats.
 - Nieuw, niet in de lijst van F21; voorstel: "Als Dealtrace meekijkt in je organisatie" (Inrichten): wat de leverancier ziet, de melding, "Alleen na toestemming", de audit.
 
@@ -168,15 +168,15 @@ Het bouwplan noemt de routes van de schermen maar geen API-routes; voorstel:
 
 ### Functiecatalogus
 
-| Sleutel | Niveau | Pakket | Recht | Helpartikel |
+| Sleutel | Startindeling: aan vanaf | Pakket | Recht | Helpartikel |
 |---|---|---|---|---|
 | `platform.klanten` | n.v.t. | n.v.t. | founder | geen; platformdocumentatie in `docs/HOE-HET-WERKT.md` |
 | `platform.werkIn` | n.v.t. | n.v.t. | founder | idem |
-| `instellingen.abonnement` | Expert | Starter | beheerder | "Abonnement en verbruik" |
+| `instellingen.abonnement` | Expert | Starter | beheerder | "Abonnement, verbruik en AI-credits" |
 | `instellingen.audit` | Expert | Starter | beheerder | "Als Dealtrace meekijkt in je organisatie" |
 | `instellingen.gebruikersAanvragen` | Expert | Starter | beheerder | "Gebruikers, rollen en niveaus" |
 
-Niet vastgelegd of founderfuncties in de catalogus staan; voorstel: wel, met niveau en pakket n.v.t., zodat `check:functies` ze kent; `check:functies` slaat het helpartikel over voor recht `founder`.
+Niet vastgelegd of founderfuncties in de catalogus staan; voorstel: wel, met pakket n.v.t. en zonder regels in `functies_per_niveau`, zodat `check:functies` ze kent; `check:functies` slaat het helpartikel over voor recht `founder`.
 
 ### AI-stappen en integraties
 
@@ -196,7 +196,7 @@ Geen AI. De mail met de uitnodiging gaat via Supabase Auth (P27). Stripe, Moneyb
 
 ### Buiten scope
 
-Abonnementenmatrix, facturen, Stripe, Moneybird, AI-verbruik in euro's, AI-koppeling, agent-prompts, roadmap, motor, help-artikelen beheren en "Data en AVG" in de klantflyout (P24); de pagina Audit voor de salesmanager (P21).
+Abonnementenmatrix, facturen, Stripe, Moneybird, AI-verbruik in euro's, AI-koppeling, agent-prompts, roadmap, motor, help-artikelen beheren en "Data en AVG" in de klantflyout (P24); de pagina Features per niveau op `/platform/features` (P09 Helpcenter basis en features per niveau); AI-credits per pakket en extra credits (P33 en P24); de pagina Audit voor de salesmanager (P21).
 
 ## Acceptatiecriteria
 
@@ -209,7 +209,7 @@ Abonnementenmatrix, facturen, Stripe, Moneybird, AI-verbruik in euro's, AI-koppe
 7. Elke start, modewissel en stop staat in `platform_audit` en in `audit_events` van de klant; de beheerder krijgt een melding met naam, reden en modus.
 8. Met "Alleen na toestemming" ontstaat eerst een verzoek; zonder goedkeuring van de beheerder geen toegang.
 9. `dealtrace_platform`-functies geven alleen geaggregeerde getallen; een test bevestigt dat ze geen kolommen uit `accounts` of `contacts` teruggeven.
-10. Een beheerder kan pakket, bundel, functievlaggen en platformprompts niet via `PUT /api/settings/:key` schrijven (403).
+10. Een beheerder kan pakket, AI-credits, functievlaggen en platformprompts niet via `PUT /api/settings/:key` schrijven (403).
 11. Bijlage A, gat 48: een pakketwissel vraagt bevestiging met wat de klant wint en verliest en wordt geaudit; gezondheid telt activiteit breed (pogingen, berichten, nieuwe prospects, afspraken, voor zover die tabellen bestaan) en niet alleen taakwijzigingen; een gebruikersaanvraag geeft de founder een melding.
 12. Bijlage A, gat 16: gezondheidsregels en pakketverschil staan één keer in `shared/`.
 13. Een nieuwe klant krijgt bij aanmaken alle startsetonderdelen die op dat moment geregistreerd zijn; "Startset aanvullen" is idempotent.

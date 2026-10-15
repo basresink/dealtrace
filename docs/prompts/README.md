@@ -21,9 +21,9 @@ De nummers P01 tot en met P26 zijn gelijk aan versie 1.0 van het bouwplan; P27 t
 | 4 | [P06](P06-motor-regels-accountmatrix.md) | Motor, regels en accountmatrix |
 | 5 | [P07](P07-taken-inzichten-vandaag-hercontactritme.md) | Taken, inzichten, Vandaag en hercontactritme |
 | 5 | [P32](P32-dagritme-kern-vandaag-telefoon.md) | Dagritme-kern en Vandaag op de telefoon |
+| 5 | [P33](P33-ai-assistent-credits.md) | AI-assistent en credits |
 | 5 | [P08](P08-mandaten-bewaker-planner.md) | Mandaten, Bewaker, Planner |
 | 5 | [P09](P09-helpcenter-basis-features-per-niveau.md) | Helpcenter basis en features per niveau |
-| 5 | [P33](P33-ai-assistent-credits.md) | AI-assistent en credits |
 | 6 | [P10](P10-belblokken-belmodus-belscripts.md) | Belblokken, belmodus en belscripts |
 | 6 | [P12](P12-prospectplanning-terugkomregels.md) | Prospectplanning en terugkomregels in de planning |
 | 7 | [P11](P11-leadgenerator-ai-zoeker-kvk.md) | Leadgenerator, AI-zoeker en KvK |

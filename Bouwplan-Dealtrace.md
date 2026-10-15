@@ -1067,9 +1067,9 @@ Elke importbatch is terug te draaien zolang er nog geen activiteit op de account
 - **Datacollectief**: sleutel, test, tegoed. Functies: selectie op doelgroep (branche, omvang, regio, functieniveau), verrijken van een account met contactpersonen, verrijken van een contact (functie, nummer, e-mail). Elk opgehaald record kost tegoed en telt in de bundel.
 - **CRM** (eerst HubSpot, daarna Salesforce, Dynamics, Pipedrive, AFAS via dezelfde koppellaag): OAuth-verbinding, veldtoewijzing, richting per object (lezen, schrijven, beide), eigenaarsregel (CRM-eigenaar naar Dealtrace-gebruiker op e-mail), synchronisatiemoment (elk uur en op verzoek), conflictregel (bronprioriteit, zie 15.1). Lezen: klanten en prospects voor ontdubbelen en profiel; schrijven: overgenomen leads met contactpersonen, uitkomsten en deals.
 
-**Tabblad Rondes en verbruik**: lijst van rondes en imports met datum, bron, aantal gevonden, overgenomen, afgewezen, conversie naar afspraak; meters per bron; daggrens per gebruiker (10 rondes).
+**Tabblad Rondes en verbruik**: lijst van rondes en imports met datum, bron, aantal gevonden, overgenomen, afgewezen, conversie naar afspraak; meters per bron in credits; daggrens per gebruiker (10 rondes).
 
-**Grenzen** (op de server afgedwongen): 120 rondes per organisatie per maand, 240 dossiers, 10 rondes per gebruiker per dag, 25 bedrijven per AI-ronde, dezelfde zoekopdracht binnen 24 uur geeft het bewaarde resultaat zonder kosten; KvK en Datacollectief met eigen plafonds per maand uit de instellingen.
+**Grenzen** (op de server afgedwongen): elke ronde en elk dossier kost AI-credits (ronde 20, dossier 10; 11.4) uit de pot van de organisatie, 10 rondes per gebruiker per dag, 25 bedrijven per AI-ronde, dezelfde zoekopdracht binnen 24 uur geeft het bewaarde resultaat zonder kosten; KvK en Datacollectief met eigen plafonds per maand uit de instellingen.
 
 **Uit het verkoopverhaal (F25).** Een zoekopdracht kiest een branche uit het leesmodel; `vv_branche_mapping` levert de SBI-codes en trefwoorden voor KvK en Datacollectief. Per concurrent met soort Direct is er een zoeksjabloon "Overstappers van <concurrent>". Een nieuwe lead krijgt `vv_branche_id` via de mapping. Op de telefoon kun je een bedrijf op naam opzoeken in KvK en met één tik toevoegen (8.6).
 
@@ -1214,7 +1214,7 @@ Sortering: "Naam", "Laatste contact", "Score", "Klasse", "Dagen in fase", "Afsta
 
 - Tabel `accounts` als in hoofdstuk 10, met kolommen voor alles waarop gefilterd wordt (`nb_status`, `reis_id`, `fase_id`, `klasse`, `owner_id`, `gebied_id`, `score`, `laatste_contact_op`, `lat`, `lng`).
 - Pure functies: `berekenScore(account, context)` met opbouw, `laatsteContact(account, records)`, `primairContact(contacts)`, `filterTellers(accounts, filters)`.
-- Endpoints: `GET /api/accounts?...` (server-side filtering en paginering boven 2.000 accounts), `POST /api/accounts`, `PUT /api/accounts/:id`, `POST /api/accounts/:id/nee`, `POST /api/accounts/:id/promoveer`, `POST /api/accounts/samenvoegen`, `GET /api/accounts/export` (Expert).
+- Endpoints: `GET /api/accounts?...` (server-side filtering en paginering boven 2.000 accounts), `POST /api/accounts`, `PUT /api/accounts/:id`, `POST /api/accounts/:id/nee`, `POST /api/accounts/:id/overdragen` (F17), `POST /api/accounts/samenvoegen`, `GET /api/accounts/export` (Expert).
 - Acceptatie: tellers op filterpillen kloppen met het resultaat als je ze aanklikt; filters overleven herladen via de URL; een dubbel bedrijf wordt bij aanmaken gevangen op KvK, domein en naam; de score toont zijn opbouw.
 - Hergebruik: `AccountRow.vue`, `AccountScoreCircle.vue`, `KlantGradePicker.vue`, `EditableField.vue`, `InlineEditChip.vue`, pagina's `prospects/*` en `accounts/[id]`.
 
@@ -2298,7 +2298,7 @@ Cadans: Dagelijks 1, 2 dagen, 3 dagen, Wekelijks 7, 2 weken 14, Maandelijks 30, 
 
 **Gebiedsindeling**: blok "Je week" met vijf dagkaarten (regio, tellers klanten, prospects, nooit bezocht, langer dan 90 dagen niet bezocht); per regio naam, postcodereeksen ("3701-3799, 3800-3829"), plaatsen (vangnet), **eigenaren** (buitendienst en binnendienstpartner; nieuwe prospects in die regio krijgen automatisch die eigenaren), regiodag per persoon (twee buitendienstmedewerkers kunnen hetzelfde gebied op verschillende dagen rijden; even en oneven weken mogelijk); overlap wordt bij invoer geblokkeerd met een duidelijke melding; synoniemen voor plaatsnamen ("Den Bosch" is "'s-Hertogenbosch"); "Voorstel uit je accounts" groepeert op het eerste cijfer van de postcode.
 
-**Regio-analyse** ("Waar laat je potentie liggen?"): cijfers "Accounts in beeld", "Stil of nooit bezocht", "Nog niet benaderde prospects", "Gekwalificeerde prospects zonder contact in 60 dagen", "Bezocht in 90 dagen" (doel 80 procent); tabel per regio (regiodag, klanten, prospects, nog niet benaderd, open deals, dekking als balk, stil en nooit), altijd een rij "Zonder regio"; kaartweergave met punten per status; per regio een lijst (nooit bezocht boven, dan langst stil, dan dealwaarde) met "+ Afspraak" en "Klaarzetten voor regiodag".
+**Regio-analyse** ("Waar laat je potentie liggen?"): cijfers "Accounts in beeld", "Stil of nooit bezocht", "Nog niet benaderde prospects", "Gekwalificeerde prospects zonder contact in 60 dagen", "Bezocht in 90 dagen" (doel 80 procent); tabel per regio (regiodag, klanten, prospects, nog niet benaderd, eerste afspraken, dekking als balk, stil en nooit), altijd een rij "Zonder regio"; kaartweergave met punten per status; per regio een lijst (nooit bezocht boven, dan langst stil, dan dealwaarde) met "+ Afspraak" en "Klaarzetten voor regiodag".
 
 **Regels**: indeling postcode (Nederlandse vier cijfers) gaat voor plaats; buitenlandse postcodes vallen nooit in een Nederlandse reeks; tellingen via één bronfunctie; taken en kansen voor de buitendienst landen op de regiodag (F10, F15).
 
@@ -2572,7 +2572,7 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 - Meetlat: Klanten (verdeling Gezond, Let op, Risico, Leeg), Gebruikers (met login), Maandomzet (alleen actieve contracten), AI-kostprijs deze maand, Aandacht (aantal signalen).
 - Tabel: Klant, Pakket, Gebruikers ("8/9 met login"), Laatst actief, AI-kosten, Stand (met redenen bij hover), knoppen "Openen" en "Werk in deze organisatie".
 - **Gezondheid** (vaste regels, geen score): 0 gebruikers is Leeg; niemand met login, nooit activiteit, meer dan 30 dagen geen activiteit of 0 accounts is Risico; minder dan de helft met login, 15 tot 30 dagen stil, taken zonder afronding in 30 dagen, motor 14 dagen zonder resultaat, of minder dan de afgesproken eerste gesprekken per verkoper per week is Let op. Activiteit telt breed: pogingen, berichten, nieuwe prospects, afspraken. Vooraf berekend in `org_gezondheid` (elk uur).
-- **Nieuwe klant**: organisatienaam, pakket (standaard Starter, of proefperiode met einddatum), contact en adres, eerste beheerder (naam en e-mail); de server maakt de organisatie met de **startset** (klassen, standaardreis, 23 regels, 6 belscripts, 4 hercontactritmes, 7 meetingsoorten, 8 campagnesoorten aan, redenen voor nee met afkoelperiodes, signaalregels, eigen velden-voorbeelden, help-artikelen) en stuurt de uitnodiging.
+- **Nieuwe klant**: organisatienaam, pakket (standaard Starter, of proefperiode met einddatum), contact en adres, eerste beheerder (naam en e-mail); de server maakt de organisatie met de **startset** (klassen, standaardreis, 23 regels, 6 belscripts, 4 hercontactritmes, 6 meetingsoorten, 8 campagnesoorten aan, redenen voor nee met afkoelperiodes, signaalregels, eigen velden-voorbeelden, help-artikelen) en stuurt de uitnodiging.
 - **Klantflyout** (eigen URL `?klant=`): contactgegevens; contract en abonnement (status Proef, Actief, Opgezegd; prijs, start, looptijd, opzegtermijn, "Loopt tot … · opzeggen vóór …"); gebruikers en aanvragen (stand "Aanvragen via ons" of "Zelf toevoegen binnen de seats"); AI-koppeling; agent-prompts; functievlaggen per groep ("live", "voorbereid", "pakket te laag"); AI-kosten; gebruik en gezondheid; **Data en AVG** (gebruikte bronnen, verrijkte contacten, bewaartermijnen, verwerkersovereenkomst, verwijderverzoeken).
 
 **Werken in een organisatie** (vervangt instappen over twee domeinen)
@@ -3292,9 +3292,9 @@ De nummers P01 tot en met P26 blijven gelijk aan versie 1.0, zodat de verwijzing
 | P06 Motor, regels en accountmatrix | 4 | F15, F16 | F15, F16 |
 | P07 Taken, inzichten, Vandaag en hercontactritme | 5 | F01, F06, F13 ritme | F01, F06, F13 |
 | P32 Dagritme-kern en Vandaag op de telefoon | 5 | F01, hoofdstuk 8 | 8.5.1, 8.13 |
+| P33 AI-assistent en credits | 5 | F26 | F26, 11.2, 11.4 |
 | P08 Mandaten, Bewaker, Planner | 5 | 11.3 | 11 |
 | P09 Helpcenter basis en features per niveau | 5 | F21 basis, 4.2 | F21, 4 |
-| P33 AI-assistent en credits | 5 | F26 | F26, 11.2, 11.4 |
 | P10 Belblokken, belmodus en belscripts | 6 | F07, F08 | F07, F08, F25, 8.5.4 |
 | P12 Prospectplanning en terugkomregels in de planning | 6 | F13 planning | F13, F25 |
 | P11 Leadgenerator, AI-zoeker en KvK | 7 | F02 | F02, 12 |

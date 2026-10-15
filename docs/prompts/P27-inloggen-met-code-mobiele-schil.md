@@ -5,11 +5,11 @@
 | Sprint | 1 (Fundament en één app) |
 | Features | F24 Meldingen, zoeken, mobiel en offline (mobiele schil en PWA-basis), hoofdstuk 8 Mobiel en onderweg |
 | Hangt af van | P01 (gebruikers, rollen, niveaus, werkplekprofiel, functiecatalogus, sync en offline-indicator) |
-| Bron in het bouwplan | 8.2 tot en met 8.4, 8.14 (schil, routes, PWA), 8.15, 8.16, 13.1 (Auth), 15.3, 6.2, 14, ADR-019, ADR-020, beslissing B12 en B13 |
+| Bron in het bouwplan | 8.2 tot en met 8.4, 8.14 (schil, routes, PWA), 8.15, 8.16, 13.1 (Auth), 13.5 (lokaal bouwen), 15.3, 6.2, 14, ADR-019, ADR-020, beslissing B12 en B13 |
 
 ## Lees eerst
 
-- Bouwplan-Dealtrace.md: 0.2 (B12, B13, B15), 6.2, hoofdstuk 8 (vooral 8.1 tot en met 8.4, 8.7, 8.14 tot en met 8.16), 13.1 (rij Auth en Client), hoofdstuk 14, 15.3, ADR-019, ADR-020, hoofdstuk 19.
+- Bouwplan-Dealtrace.md: 0.2 (B12, B13, B15), 6.2, hoofdstuk 8 (vooral 8.1 tot en met 8.4, 8.7, 8.14 tot en met 8.16), 13.1 (rij Auth en Client), 13.5, hoofdstuk 14, 15.3, ADR-019, ADR-020, hoofdstuk 19.
 - DealDrive (commit 75bee61):
   - Inloggen: `app/pages/login.vue`, `app/middleware/auth.global.ts`, `server/api/auth/login.post.ts`, `server/api/auth/logout.post.ts`, `server/api/auth/me.get.ts`, `server/utils/supabaseAuth.ts`, `server/utils/session.ts` (DealDrive logt in met wachtwoord; Dealtrace niet).
   - Schil: `app/components/MobileShell.vue`, `app/components/DexShell.vue`, `app/components/DexKaart.vue`, `app/components/DexNieuw.vue`, `app/components/DexMelding.vue`, `shared/werkplek.ts`, `nuxt.config.ts` (hook `pages:extend` met `DEALDRIVE_APP`, die vervalt).
@@ -29,7 +29,7 @@ Beslissing B12: geen wachtwoorden. Beslissing B13: de buitendienst werkt de hele
 
 | Rol | Niveau | Wat |
 |---|---|---|
-| accountmanager | Beginner, Gevorderd, Expert | Inloggen met code; onderbalk volgens werkplekprofiel, op elk niveau gelijk; "Meer" bevat de rest van de zijbalk van zijn niveau met "Nog te ontgrendelen" onderaan |
+| accountmanager | Beginner, Gevorderd, Expert | Inloggen met code; onderbalk volgens werkplekprofiel, op elk niveau gelijk; "Meer" bevat de rest van de zijbalk van zijn niveau met "Nog niet aangezet" onderaan |
 | salesmanager | Gevorderd, Expert | Zelfde inloggen; zonder eigen portefeuille de onderbalk Team, Coaching, Acties, Prospects, Meer |
 | beheerder | Expert | Zelfde inloggen, TOTP optioneel; Instellingen in "Meer" met "Beter op een groot scherm" |
 | founder | n.v.t. | Code per mail plus verplichte TOTP; Platformbeheer in "Meer" met "Beter op een groot scherm" |
@@ -66,7 +66,7 @@ Beslissing B12: geen wachtwoorden. Beslissing B13: de buitendienst werkt de hele
 | Salesmanager zonder eigen portefeuille | Team `/team` | Coaching `/coaching` | Acties `/acties` | Prospects `/prospects` | Meer |
 
 - Niet vastgelegd hoe Dealtrace weet dat een salesmanager geen eigen portefeuille heeft; voorstel: rol salesmanager zonder werkplekprofiel, of een vinkje "Geen eigen portefeuille" in de gebruikersflyout.
-- **Meer** opent een schuifvenster met de overige items van de zijbalk van je niveau, in dezelfde groepen en volgorde als op de laptop (6.1): Agenda, Acties of Bezoeken (wat niet in de onderbalk staat), Concepten, Inzichten, Campagnes, Pipeline, Richting, Mijn resultaten, Helpcenter, Mijn instellingen, Uitloggen. Vergrendelde items onderaan in de ingeklapte groep "Nog te ontgrendelen". Instellingen en Platformbeheer staan er met "Beter op een groot scherm" en openen wel.
+- **Meer** opent een schuifvenster met de overige items van de zijbalk van je niveau, in dezelfde groepen en volgorde als op de laptop (6.1): Agenda, Acties of Bezoeken (wat niet in de onderbalk staat), Concepten, Inzichten, Campagnes, Funnel, Richting, AI-assistent, Mijn resultaten, Helpcenter, Mijn instellingen, Uitloggen. Items die niet aanstaan, staan onderaan in de ingeklapte groep "Nog niet aangezet", net als op de laptop. Instellingen en Platformbeheer staan er met "Beter op een groot scherm" en openen wel.
 - Pagina's die een latere prompt bouwt (`/onderweg` in P30, `/bellen` in P10, `/team` en `/coaching` in P21) bestaan nu als lege pagina met de lege staat "Deze pagina komt in een volgende versie." Niet vastgelegd in het bouwplan; voorstel: deze tekst, zodat de onderbalk vanaf dag één klopt.
 - Op de laptop stuurt `/onderweg` door naar `/bezoeken` (8.14).
 
@@ -88,7 +88,7 @@ Beslissing B12: geen wachtwoorden. Beslissing B13: de buitendienst werkt de hele
 2. Na 30 dagen op hetzelfde toestel moet hij opnieuw een code aanvragen; binnen die 30 dagen niet.
 3. Een zesde aanvraag binnen een uur voor hetzelfde adres geeft de limietmelding; er gaat geen mail uit.
 4. Founder vult code en daarna TOTP in; zonder geldige TOTP komt hij niet verder dan stap 3.
-5. Buitendienstmedewerker tikt "Meer": het schuifvenster toont Agenda, Acties, Concepten, Inzichten en de rest van zijn niveau; als Beginner staat onderaan "Nog te ontgrendelen".
+5. Buitendienstmedewerker tikt "Meer": het schuifvenster toont Agenda, Acties, Concepten, Inzichten en de rest van zijn niveau; als Beginner staat onderaan "Nog niet aangezet".
 6. Hij opent vanuit "Meer" Agenda: de tab "Meer" licht op (Agenda hoort bij Meer).
 7. In Mijn instellingen tikt hij "Uitloggen op alle toestellen": na bevestiging is elke sessie ongeldig, ook op zijn laptop.
 
@@ -102,7 +102,7 @@ Beslissing B12: geen wachtwoorden. Beslissing B13: de buitendienst werkt de hele
 
 ### Helpartikelen
 
-- "Je eerste dag in Dealtrace" (leerpad Beginner): inloggen met een code, Vandaag, de onderbalk.
+- "Je eerste dag in Dealtrace" (Aan de slag): inloggen met een code, Vandaag, de onderbalk.
 - "Dealtrace op je telefoon en offline" (Aan de slag): installeren op iPhone en Android, de onderbalk per werkplek, "Meer", de offline-strook.
 
 ## Deel 2: Technisch (hoe)
@@ -121,7 +121,7 @@ Beslissing B12: geen wachtwoorden. Beslissing B13: de buitendienst werkt de hele
 |---|---|---|---|
 | `tabsVoor(werkplekprofiel, rol, eigenPortefeuille)` in `shared/onderbalk.ts` | profiel, rol | vijf tabs met label, icoon, route | elk profiel uit 8.4; hybride; salesmanager zonder portefeuille; onbekend profiel valt terug op binnendienst. Niet vastgelegd; voorstel: terugval binnendienst |
 | `tabVoorRoute(pad, tabs)` | pad, tabs | index van de actieve tab | elke route uit 6.1 geeft precies één tab; subpagina's (`/accounts/:id`) horen bij Prospects; alles wat niet in de onderbalk staat hoort bij "Meer" |
-| `meerItems(zijbalk, tabs)` | uitvoer van `zijbalkVoor` (P01) en tabs | groepen met items | niets dubbel met de onderbalk; vergrendelde items onderaan |
+| `meerItems(zijbalk, tabs)` | uitvoer van `zijbalkVoor` (P01) en tabs | groepen met items | niets dubbel met de onderbalk; items die niet aanstaan onderaan |
 | `schermklasse(breedte, grofAanwijzer)` achter `useSchermklasse()` | breedte, `pointer: coarse` | `telefoon`, `tablet`, `laptop` | grenzen 767, 768, 1023, 1024 |
 | `magCodeAanvragen(aanvragen, nu)` | tijdstippen van aanvragen voor één adres | boolean | precies 5 binnen 60 minuten mag, de zesde niet; oude aanvragen tellen niet |
 
@@ -148,7 +148,7 @@ Het bouwplan noemt geen auth-routes; voorstel:
 
 ### Functiecatalogus
 
-| Sleutel | Niveau | Pakket | Recht | Helpartikel |
+| Sleutel | Startindeling: aan vanaf | Pakket | Recht | Helpartikel |
 |---|---|---|---|---|
 | `auth.toestellen` | Beginner | Starter | iedereen | "Dealtrace op je telefoon en offline" |
 | `schil.onderbalk` | Beginner | Starter | iedereen | "Dealtrace op je telefoon en offline" |
@@ -158,7 +158,7 @@ Pakket: het bouwplan legt per functie geen pakket vast; voorstel Starter.
 
 ### AI-stappen en integraties
 
-Geen AI. Integratie: Supabase Auth (mailverzending van de code). Mock: in de mock-modus logt de server de code in de console en accepteert hij `000000` alleen als `NODE_ENV` test is. Niet vastgelegd in het bouwplan; voorstel.
+Geen AI. Integratie: Supabase Auth (mailverzending van de code). Lokaal (13.5): Supabase draait via de Supabase CLI in Docker (`supabase start`) en de mails met de code komen in de lokale mailbox Inbucket op `http://localhost:54324`; op de telefoon in hetzelfde wifi-netwerk test je met `pnpm dev --host`. Mock: in de mock-modus logt de server de code in de console en accepteert hij `000000` alleen als `NODE_ENV` test is. Niet vastgelegd in het bouwplan; voorstel. De e2e-tests (`pnpm test:e2e`) lezen de code uit Inbucket of gebruiken de mock.
 
 ### Hergebruik uit DealDrive
 
@@ -201,5 +201,5 @@ Hoofdstuk 19 geldt volledig. Specifiek voor deze prompt:
 
 - De sprint-1-toestand "een accountmanager logt in met een code op zijn telefoon en ziet de onderbalk" is bevestigd op ten minste één echte iPhone en één echte Android, met schermafbeeldingen in het sprintverslag.
 - De nieuwe tokens en componenten (kop, onderbalk, schuifvenster, actiebalk, strook) staan in het designsysteem met uitleg en verwijzing naar ADR-019.
-- `docs/HOE-HET-WERKT.md` beschrijft inloggen met code, TOTP, sessies en de schil per breedte.
+- `docs/HOE-HET-WERKT.md` beschrijft inloggen met code, TOTP, sessies en de schil per breedte; de README beschrijft het lokaal inloggen: `pnpm dev`, `supabase start`, `pnpm seed` en de code ophalen in Inbucket (`http://localhost:54324`).
 - Testgebruikers zijn fictief (bijvoorbeeld medewerkers van Testbedrijf Voltvast uit Bijlage C); geen echte e-mailadressen in seeds of tests.

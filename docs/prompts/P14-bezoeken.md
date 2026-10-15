@@ -9,7 +9,7 @@
 
 ## Lees eerst
 
-- `Bouwplan-Dealtrace.md`: 0.2 (B9), 2.2, 3.2, 4.3 (rijen F10 en F18), 5.2, 6.1, 7.2, 8.5.2 (alleen om de gedeelde kern te kennen; het telefoonscherm bouwt P30), 8.13, F09 (Plan een afspraak), F10 volledig, F15 (landing en capaciteit), F16 (afspraakmatrix, offertematrix), F18 volledig, F25 (branches, terugkomregel met kanaal bezoek), 10.2 (rijen `accounts`, `klaargezet_voor`, `kans_overslaan`), 12, 13.4, 15.2 (locatie), 16.2, 19, 21 (risico kansen onbetrouwbaar), 22 (vraag 7), ADR-016, Bijlage A, Bijlage B (rij Bezoeken en gebieden).
+- `Bouwplan-Dealtrace.md`: 0.2 (B9, B17), 2.2, 3.2, 4.3 (rijen F10 en F18), 5.2, 6.1, 7.2, 8.5.2 (alleen om de gedeelde kern te kennen; het telefoonscherm bouwt P30), 8.13, F09 (Plan een afspraak), F10 volledig, F15 (landing en capaciteit), F16 (afspraakmatrix), F18 volledig, F25 (branches, terugkomregel met kanaal bezoek), 10.2 (rijen `accounts`, `klaargezet_voor`, `kans_overslaan`), 12, 13.4, 15.2 (locatie), 16.2, 19, 21 (risico kansen onbetrouwbaar), 22 (vraag 7), ADR-016, Bijlage A, Bijlage B (rij Bezoeken en gebieden).
 - DealDrive op commit 75bee61: `app/pages/bezoeken.vue` (heette `route.vue`), `app/components/RouteList.vue`, `app/components/MiniMap.vue`, `app/composables/useGeoNL.ts`, `shared/gebieden.ts`, `app/pages/instellingen/gebieden.vue`, `app/pages/bezoek-analyse.vue`, `server/api/gebieden/analyse.get.ts`, `shared/dexKansen.ts` (gaten van 75 minuten, omweg 25 km).
 
 ## Deel 1: Functioneel (wat en waarom)
@@ -39,7 +39,7 @@ Je bouwt de bezoekdag van de buitendienst op `/bezoeken` met route, kaart en kan
 
 1. **Kop**: kicker "BEZOEKEN · VANDAAG · REGIO OOST", titel naar aantal ("3 bezoeken op de planning."), knoppen "+ Bezoek" (geel), "Filters" (periode), "Agenda", "Hulp". Rechts de dagstatistiek: "Bezoeken 3 · Klantcontact 3u 30 · Rijtijd 1u 50 · 142 km".
 2. **Kaart en route** (twee kolommen): kaart met genummerde stops op adres, de route als lijn, startpunt (thuis of kantoor) en eindpunt, volgend bezoek rood pulserend, kansen als gele punten. Rechts de routelijst: tijd en duur, "VOLGENDE", soort, account, contact, adres, reistijd naar de volgende stop, knoppen "Navigeer", "Bel", "Pitstop".
-3. **Kansen langs de route** (hoofdblok): kop "KANSEN LANGS DE ROUTE · 9", titel "Prospects en kansen vlak bij je bezoeken", filters (Bron, Klasse, "Alleen mijn accounts" standaard aan, "Alleen prospects" standaard aan, Maximale omrijtijd 10, 20, 30 minuten, Aantal 4, 10, alles), schakelaar "Toon ook ongeplande prospects in dit gebied" (Expert). Per kans: rangnummer, naam met klasse- en fasepil, bron ("Open bezoektaak", "Hete aanleiding: vacature monteur (Indeed, 9 okt)", "Offerte wacht op opvolging", "Bezoekritme achter: klasse A, 120 dagen niet geweest", "Klaargezet door Sanne (binnendienst)", "Ongeplande prospect in doelgroep Bouw"), afstand en omrijtijd ("12 min omrijden, tussen stop 2 en 3"), beste moment ("45 min vrij tussen 11:30 en 13:00"), primair contact met rol, laatste contact, scoreopbouw bij hover ("bezoektaak +100 · hete aanleiding +20 · 12 min omrijden -12"). Acties: "+ Tussenstop" (geel), "Eerst bellen", "Inloopbezoek", "Overslaan" (met reden), "Navigeer". Een schatting draagt het label "schatting".
+3. **Kansen langs de route** (hoofdblok): kop "KANSEN LANGS DE ROUTE · 9", titel "Prospects en kansen vlak bij je bezoeken", filters (Bron, Klasse, "Alleen mijn accounts" standaard aan, "Alleen prospects" standaard aan, Maximale omrijtijd 10, 20, 30 minuten, Aantal 4, 10, alles), schakelaar "Toon ook ongeplande prospects in dit gebied" (Expert). Per kans: rangnummer, naam met klasse- en fasepil, bron ("Open bezoektaak", "Hete aanleiding: vacature monteur (Indeed, 9 okt)", "Bezoekritme achter: klasse A, 120 dagen niet geweest", "Klaargezet door Sanne (binnendienst)", "Ongeplande prospect in doelgroep Bouw"), afstand en omrijtijd ("12 min omrijden, tussen stop 2 en 3"), beste moment ("45 min vrij tussen 11:30 en 13:00"), primair contact met rol, laatste contact, scoreopbouw bij hover ("bezoektaak +100 · hete aanleiding +20 · 12 min omrijden -12"). Acties: "+ Tussenstop" (geel), "Eerst bellen", "Inloopbezoek", "Overslaan" (met reden), "Navigeer". Een schatting draagt het label "schatting".
 4. **Bellijst naast je bezoeken** (Gevorderd): Top 5 of Top 10, zonder de accounts die je vandaag bezoekt; variant "Bellen voor morgen" met prospects in de regio van morgen.
 5. **Te plannen bezoeken** (Gevorderd): open bezoektaken (ritme, regel, handmatig, uit de binnendienst), oudste eerst, met "+ Plan bezoek".
 6. **Bezoek afronden**: opent het venster "Rond af" uit P13 met de uitkomsten van de meetingsoort.
@@ -50,7 +50,7 @@ Maximale aantal kansen: Beginner ziet de top 3 (8.11), Gevorderd alle met filter
 
 **`/instellingen/gebieden`** (beheerder): blok "Je week" met vijf dagkaarten (regio, tellers klanten, prospects, nooit bezocht, langer dan 90 dagen niet bezocht); per regio naam, postcodereeksen ("3701-3799, 3800-3829"), plaatsen (vangnet), eigenaren (buitendienst en binnendienstpartner), regiodag per persoon (even en oneven weken mogelijk); synoniemen voor plaatsnamen ("Den Bosch" is "'s-Hertogenbosch"); knop "Voorstel uit je accounts" (groepeert op het eerste cijfer van de postcode). Overlap wordt bij invoer geblokkeerd. Niet vastgelegd in het bouwplan; voorstel meldtekst: "Postcode 3750 valt al in Regio Midden. Haal hem daar eerst weg of kies een andere reeks."
 
-**`/analyse/regio`** ("Waar laat je potentie liggen?", Gevorderd; accountmanager eigen accounts, salesmanager team): cijfers "Accounts in beeld", "Stil of nooit bezocht", "Nog niet benaderde prospects", "Open dealwaarde in stille accounts", "Bezocht in 90 dagen" (doel 80 procent); tabel per regio (regiodag, klanten, prospects, nog niet benaderd, open deals, dekking als balk, stil en nooit), altijd een rij "Zonder regio"; kaartweergave met punten per status; per regio een lijst (nooit bezocht boven, dan langst stil, dan dealwaarde) met "+ Afspraak" en "Klaarzetten voor regiodag".
+**`/analyse/regio`** ("Waar laat je potentie liggen?", Gevorderd; accountmanager eigen accounts, salesmanager team): cijfers "Accounts in beeld", "Stil of nooit bezocht", "Nog niet benaderde prospects", "Gekwalificeerde prospects zonder contact in 60 dagen", "Bezocht in 90 dagen" (doel 80 procent); tabel per regio (regiodag, klanten, prospects, nog niet benaderd, dekking als balk, stil en nooit), altijd een rij "Zonder regio"; kaartweergave met punten per status; per regio een lijst (nooit bezocht boven, dan langst stil, dan klasse) met "+ Afspraak" en "Klaarzetten voor regiodag".
 
 **Mijn instellingen**: "Thuisbasis voor routes" (adres), "Kaartapp voor navigeren" (Google Maps, Apple Kaarten, Waze; 8.6).
 
@@ -71,7 +71,6 @@ Maximale aantal kansen: Beginner ziet de top 3 (8.11), Gevorderd alle met filter
 |---|---|---|
 | Open bezoektaak van jou | +100 | elke open bezoektaak, niet alleen de top acht |
 | Klaargezet door de binnendienst voor deze dag of regio | +90 | |
-| Offerte die volgens de offertematrix een bezoek vraagt | +80 | |
 | Hete aanleiding in de laatste 30 dagen | +20 tot +40 naar relevantie | |
 | Bezoekritme achter volgens de afspraakmatrix | +1 per dag achter, maximaal +30 | klasse bekend |
 | Ongeplande prospect in een actieve doelgroep (laag aan) | +10 | status nieuw of in reis, geen afkoelperiode op bezoek |
@@ -102,7 +101,7 @@ Kansen: Bron, Klasse, "Alleen mijn accounts", "Alleen prospects", Maximale omrij
 ### Helpartikelen
 
 - "Bezoeken en kansen langs de route" (Dagelijks werk) en "Gebieden en regiodagen" (Plannen en sturen), F21.
-- "Je week plannen: belblokken en regiodagen" (leerpad Gevorderd).
+- "Je week plannen: belblokken en regiodagen": Niet vastgelegd in het bouwplan; voorstel: gewoon artikel (Plannen en sturen), samen met P10. Er zijn geen leerpaden per niveau (B19).
 - New business: "Je regiodag plannen", "Binnenlopen langs de route".
 
 ## Deel 2: Technisch (hoe)
@@ -165,7 +164,7 @@ Geen. Kansen zijn deterministisch, zonder kosten (zoals `dexKansen.ts`).
 
 Sleutels niet vastgelegd in het bouwplan; voorstel:
 
-| Sleutel | Niveau | Pakket | Recht | Helpartikel |
+| Sleutel | Startindeling: aan vanaf | Pakket | Recht | Helpartikel |
 |---|---|---|---|---|
 | `bezoeken.route` | Beginner | Starter | afspraken lezen | "Bezoeken en kansen langs de route" |
 | `bezoeken.kansenAlle` (alle kansen en filters) | Gevorderd | Starter | prospects lezen | idem |
@@ -203,7 +202,7 @@ Sleutels niet vastgelegd in het bouwplan; voorstel:
 11. Kansenberekening voor 600 accounts en 6 stops onder 800 ms (13.4).
 12. Telefoon (8.15, 8.16): op 375, 390 en 412 px stuurt `/bezoeken` door naar `/onderweg`; "Klaarzetten voor buitendienst" op de compacte accountkaart heeft tikdoelen van minimaal 44 px; geen horizontale scroll op `/analyse/regio`.
 13. Offline (8.8): "Overslaan" en "Klaarzetten" gaan in de wachtrij en komen na herstel één keer aan; routeberekening is offline niet mogelijk en de laatst bekende route blijft staan.
-14. Niveaus: als Beginner ziet de gebruiker de route en de top drie kansen, zonder bellijst en te plannen bezoeken (vergrendeld met uitleg); als Gevorderd alle kansen met filters en de regio-analyse; als Expert ook eigen bronnen, straal en start- en eindadres. Getest per niveau.
+14. Niveaus: als Beginner ziet de gebruiker de route en de top drie kansen, zonder bellijst en te plannen bezoeken ("Nog niet aangezet" met uitleg); als Gevorderd alle kansen met filters en de regio-analyse; als Expert ook eigen bronnen, straal en start- en eindadres. Getest per niveau.
 15. Cross-tenant: `kans_overslaan` en `klaargezet_voor` van organisatie A zijn onzichtbaar voor B; de routedienstcache bevat geen klantgegevens.
 
 ## Definition of Done
