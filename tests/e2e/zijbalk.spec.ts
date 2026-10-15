@@ -47,7 +47,7 @@ test.describe('zijbalk per niveau', () => {
 
   test('founder zonder organisatie komt op Platformbeheer', async ({ page }) => {
     await login(page, 'u-founder')
-    await expect(page).toHaveURL(/\/platform$/)
+    await expect(page).toHaveURL(/\/platform\/klanten$/)
     await expect(page.locator('.sb-nav .sb-link')).toHaveCount(1)
   })
 })

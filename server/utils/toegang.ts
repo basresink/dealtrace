@@ -16,11 +16,12 @@ export function gelijk(a: string, b: string): boolean {
 }
 
 /** Wat ontbreekt er online nog aan de instellingen? Leeg is in orde. */
-export function ontbrekendeInstellingen(config: { online?: boolean; toegangswachtwoord?: string; sessieGeheim?: string }): string[] {
+export function ontbrekendeInstellingen(config: { online?: boolean; toegangswachtwoord?: string; sessieGeheim?: string; orgWisselGeheim?: string }): string[] {
   if (!config.online) return []
   const mist: string[] = []
   if (!config.toegangswachtwoord) mist.push('TOEGANGSWACHTWOORD')
   if (!config.sessieGeheim || config.sessieGeheim === STANDAARD_GEHEIM) mist.push('SESSIE_GEHEIM')
+  if (!config.orgWisselGeheim || config.orgWisselGeheim.startsWith('lokaal-')) mist.push('ORG_WISSEL_SECRET')
   return mist
 }
 

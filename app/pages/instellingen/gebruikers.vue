@@ -57,9 +57,26 @@ async function archiveer(g: Gebruiker) {
 
 // Toevoegen (beheerder)
 const nieuw = reactive({ open: false, naam: '', email: '', rol: 'accountmanager', werkplek: 'binnendienst', teamId: '' })
+// Seats en stand van de leverancier (F23): binnen de seats zelf toevoegen, anders aanvragen.
+const { data: abonnement, refresh: herlaadAbonnement } = beheerder.value
+  ? await useFetch<any>('/api/instellingen/abonnement')
+  : { data: ref(null), refresh: async () => {} }
+const { data: aanvragen, refresh: herlaadAanvragen } = beheerder.value
+  ? await useFetch<any[]>('/api/instellingen/gebruikersaanvragen', { default: () => [] })
+  : { data: ref<any[]>([]), refresh: async () => {} }
+const zelfToevoegen = computed(() => abonnement.value?.gebruikersStand === 'zelf' && (abonnement.value?.seats ?? 0) > (abonnement.value?.gebruikers ?? 0))
+const openAanvragen = computed(() => (aanvragen.value ?? []).filter((a: any) => a.status === 'open'))
 async function voegToe() {
   try {
+    if (!zelfToevoegen.value) {
+      await $fetch('/api/instellingen/gebruikersaanvragen', { method: 'POST', body: { naam: nieuw.naam, email: nieuw.email, rol: nieuw.rol, werkplek: nieuw.werkplek, teamId: nieuw.teamId || null } })
+      toast.toon(`Aanvraag voor ${nieuw.naam} verstuurd naar Dealtrace.`)
+      Object.assign(nieuw, { open: false, naam: '', email: '' })
+      await herlaadAanvragen()
+      return
+    }
     await $fetch('/api/gebruikers', { method: 'POST', body: { naam: nieuw.naam, email: nieuw.email, rol: nieuw.rol, werkplek: nieuw.werkplek, teamId: nieuw.teamId || null } })
+    await herlaadAbonnement()
     toast.toon(`${nieuw.naam} is uitgenodigd.`)
     Object.assign(nieuw, { open: false, naam: '', email: '' })
     await herlaadGebruikers()
@@ -84,7 +101,7 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
   <div>
     <PaginaKop kicker="Instellingen · Gebruikers" titel="Gebruikers en teams" :uitleg="beheerder ? 'Wie werkt in Dealtrace, op welk niveau en in welk team.' : 'De mensen in je teams en hun niveau.'" helpartikel="gebruikers-en-niveaus">
       <template #acties>
-        <button v-if="beheerder && tab === 'gebruikers'" type="button" class="dd-actie dd-actie--primair" data-test="gebruiker-toevoegen" @click="nieuw.open = !nieuw.open"><Icoon naam="Plus" class="dd-actie-icoon" />Gebruiker toevoegen</button>
+        <button v-if="beheerder && tab === 'gebruikers'" type="button" class="dd-actie dd-actie--primair" data-test="gebruiker-toevoegen" @click="nieuw.open = !nieuw.open"><Icoon naam="Plus" class="dd-actie-icoon" />{{ zelfToevoegen ? 'Gebruiker toevoegen' : 'Gebruiker aanvragen' }}</button>
       </template>
     </PaginaKop>
     <section class="section section--laatste">
@@ -102,10 +119,14 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
               <label class="veld"><span class="veld-label">Rol</span><select v-model="nieuw.rol" class="invoer"><option value="accountmanager">Accountmanager</option><option value="salesmanager">Salesmanager</option><option value="beheerder">Beheerder</option></select></label>
               <label class="veld"><span class="veld-label">Werkplek</span><select v-model="nieuw.werkplek" class="invoer"><option v-for="w in WERKPLEKKEN" :key="w" :value="w">{{ WERKPLEK_LABEL[w] }}</option></select></label>
               <label class="veld"><span class="veld-label">Team</span><select v-model="nieuw.teamId" class="invoer"><option value="">Geen team</option><option v-for="t in teams" :key="t.id" :value="t.id">{{ t.naam }}</option></select></label>
-              <button type="submit" class="dd-actie dd-actie--primair">Uitnodigen</button>
+              <button type="submit" class="dd-actie dd-actie--primair" data-test="nieuwe-gebruiker-verstuur">{{ zelfToevoegen ? 'Uitnodigen' : 'Aanvragen' }}</button>
             </div>
-            <p class="veld-uitleg">Het niveau wordt het standaardniveau van je organisatie. Dat pas je daarna hieronder aan.</p>
+            <p class="veld-uitleg">{{ zelfToevoegen ? 'Het niveau wordt het standaardniveau van je organisatie. Dat pas je daarna hieronder aan.' : `Dealtrace handelt je aanvraag af${abonnement?.seats ? ` (${abonnement.gebruikers} van ${abonnement.seats} seats in gebruik)` : ''}.` }}</p>
           </form>
+          <div v-if="openAanvragen.length" class="kaart mt-16" data-test="open-aanvragen">
+            <span class="veld-label">Aangevraagd bij Dealtrace</span>
+            <ul class="schakel-lijst"><li v-for="a in openAanvragen" :key="a.id" class="schakel-rij"><span>{{ a.data.naam }} · {{ a.data.email }}</span><span class="pil pil--geel">open</span></li></ul>
+          </div>
 
           <LegeStaat v-if="!actief.length" titel="Nog geen gebruikers." tekst="Voeg je eerste collega toe." />
           <div v-else class="tabel-wrap mt-16">

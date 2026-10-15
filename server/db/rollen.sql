@@ -24,6 +24,34 @@ grant execute on function current_org_id() to dealtrace_app;
 grant execute on function dealtrace_sessie_gebruiker(text) to dealtrace_app;
 grant execute on function dealtrace_ontwikkel_gebruikers() to dealtrace_app;
 
+-- ---------------------------------------------------------------------------
+-- P02: platformtabellen en de rol dealtrace_platform
+-- ---------------------------------------------------------------------------
+-- De app zelf: geen platformaudit en geen gezondheid; aanvragen alleen indienen
+-- en lezen; toegangsverzoeken alleen lezen en beslissen.
+revoke all on platform_audit, org_gezondheid from dealtrace_app;
+revoke update, delete on gebruikersaanvragen from dealtrace_app;
+revoke insert, delete on toegangsverzoeken from dealtrace_app;
+
+-- dealtrace_platform: platformtabellen wel, klantdata niet.
+grant usage on schema public to dealtrace_platform;
+grant select, insert, update on organisations, users, teams, org_settings, gebruikersaanvragen,
+  toegangsverzoeken, org_gezondheid to dealtrace_platform;
+grant select, insert on platform_audit to dealtrace_platform;
+grant insert on audit_events, notificaties to dealtrace_platform;
+grant select on functies_per_niveau to dealtrace_platform;
+grant execute on function current_org_id() to dealtrace_platform;
+
+-- De app is lid van dealtrace_platform maar erft niets: alleen na een
+-- expliciete "set local role dealtrace_platform" (requireFounder).
+alter role dealtrace_app noinherit;
+grant dealtrace_platform to dealtrace_app;
+
+revoke execute on function dealtrace_platform_tellingen() from public;
+grant execute on function dealtrace_platform_tellingen() to dealtrace_platform;
+revoke execute on function dealtrace_meld_founders(text, text, text) from public;
+grant execute on function dealtrace_meld_founders(text, text, text) to dealtrace_app;
+
 -- Supabase: de standaardrollen anon en authenticated mogen niets in public.
 -- Dealtrace praat alleen via de eigen server met de database, nooit via de
 -- automatische REST-API van Supabase. Lokaal bestaan deze rollen niet.

@@ -6,7 +6,7 @@ const { toon } = useToast()
 const ongelezen = useState<number>('ongelezen', () => 0)
 
 async function telOngelezen() {
-  if (!me.value?.organisatie) return
+  if (!me.value) return
   try {
     const lijst = await $fetch<{ gelezenOp: string | null }[]>('/api/notificaties')
     ongelezen.value = lijst.filter((n) => !n.gelezenOp).length
@@ -27,6 +27,7 @@ onMounted(async () => {
   <div class="app-shell" :class="{ 'app-shell--ingeklapt': ingeklapt }">
     <Zijbalk :ingeklapt="ingeklapt" @inklap="ingeklapt = !ingeklapt" />
     <main id="inhoud" class="app-shell-main">
+      <WerkInBalk />
       <OfflineStrook />
       <slot />
     </main>
@@ -34,5 +35,6 @@ onMounted(async () => {
     <ZoekVenster />
     <ConflictVenster />
     <ToastStapel />
+    <HerbevestigVenster />
   </div>
 </template>

@@ -5,15 +5,35 @@ import { boolean, integer, jsonb, pgTable, primaryKey, text, timestamp } from 'd
 
 const ts = (naam: string) => timestamp(naam, { withTimezone: true, mode: 'string' })
 
+/** Contract en abonnement (F23); Stripe komt in P24. */
+export interface Contract {
+  status?: 'proef' | 'actief' | 'opgezegd'
+  seats?: number
+  prijs?: number
+  start?: string
+  looptijdMaanden?: number
+  opzegtermijnMaanden?: number
+  proefTot?: string
+  proefMeldingOp?: string
+}
+
+export interface OrganisatieData {
+  toegangLeverancier?: 'altijd' | 'na_toestemming'
+  gebruikersStand?: 'aanvragen' | 'zelf'
+  contact?: { naam?: string; email?: string; telefoon?: string; adres?: string }
+  startset?: Record<string, string>
+  [k: string]: unknown
+}
+
 export const organisations = pgTable('organisations', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   pakket: text('pakket').notNull(),
   features: jsonb('features').$type<{ aan?: string[]; uit?: string[] }>().notNull(),
-  contract: jsonb('contract').notNull(),
+  contract: jsonb('contract').$type<Contract>().notNull(),
   stripeCustomerId: text('stripe_customer_id'),
   status: text('status').notNull(),
-  data: jsonb('data').$type<Record<string, unknown>>().notNull(),
+  data: jsonb('data').$type<OrganisatieData>().notNull(),
   createdAt: ts('created_at').notNull(),
   updatedAt: ts('updated_at').notNull(),
 })
@@ -118,4 +138,53 @@ export const persoonlijkeInstellingen = pgTable('persoonlijke_instellingen', {
   organisationId: text('organisation_id').notNull(),
   data: jsonb('data').$type<Record<string, unknown>>().notNull(),
   updatedAt: ts('updated_at').notNull(),
+})
+
+// P02: platform
+export const gebruikersaanvragen = pgTable('gebruikersaanvragen', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  aangevraagdDoor: text('aangevraagd_door').notNull(),
+  data: jsonb('data').$type<{ naam: string; email: string; rol: string; niveau?: string; werkplek?: string; teamId?: string | null }>().notNull(),
+  status: text('status').notNull().default('open'),
+  afgehandeldDoor: text('afgehandeld_door'),
+  afgehandeldOp: ts('afgehandeld_op'),
+  aangevraagdOp: ts('aangevraagd_op').defaultNow().notNull(),
+})
+
+export const orgGezondheid = pgTable('org_gezondheid', {
+  organisationId: text('organisation_id').primaryKey(),
+  stand: text('stand').notNull(),
+  redenen: text('redenen').array().notNull(),
+  gebruikers: integer('gebruikers').notNull(),
+  metLogin: integer('met_login').notNull(),
+  laatstActief: ts('laatst_actief'),
+  berekendOp: ts('berekend_op').defaultNow().notNull(),
+})
+
+export const platformAudit = pgTable('platform_audit', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  actorId: text('actor_id').notNull(),
+  actieveOrganisatie: text('actieve_organisatie'),
+  handeling: text('handeling').notNull(),
+  object: text('object'),
+  voor: jsonb('voor'),
+  na: jsonb('na'),
+  reden: text('reden'),
+  ip: text('ip'),
+  op: ts('op').defaultNow().notNull(),
+})
+
+export const toegangsverzoeken = pgTable('toegangsverzoeken', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  founderId: text('founder_id').notNull(),
+  founderNaam: text('founder_naam').notNull(),
+  reden: text('reden').notNull(),
+  modus: text('modus').notNull(),
+  status: text('status').notNull().default('open'),
+  aangevraagdOp: ts('aangevraagd_op').defaultNow().notNull(),
+  geldigTot: ts('geldig_tot').notNull(),
+  beslotenDoor: text('besloten_door'),
+  beslotenOp: ts('besloten_op'),
 })

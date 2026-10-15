@@ -23,6 +23,14 @@ export default defineEventHandler(async (event) => {
   if (!(WERKPLEKKEN as readonly string[]).includes(werkplek)) throw createError({ statusCode: 400, statusMessage: 'Onbekend werkplekprofiel' })
 
   return metOrganisatie(organisatie.id, async (tx) => {
+    // Seats en stand van de leverancier (F23, open vraag 3): zelf toevoegen kan
+    // alleen in de stand "zelf" en binnen de seats; anders een aanvraag.
+    const [org] = await tx.select().from(schema.organisations).where(eq(schema.organisations.id, organisatie.id))
+    const stand = org?.data?.gebruikersStand ?? 'aanvragen'
+    const seats = org?.contract?.seats ?? 0
+    const actief = (await tx.select({ id: schema.users.id, status: schema.users.status }).from(schema.users)).filter((u) => u.status !== 'gearchiveerd').length
+    if (stand !== 'zelf') throw createError({ statusCode: 409, statusMessage: 'Gebruikers vraag je aan bij Dealtrace', data: { aanvragen: true } })
+    if (actief >= seats) throw createError({ statusCode: 409, statusMessage: `Alle ${seats} seats zijn in gebruik. Vraag een extra gebruiker aan.`, data: { aanvragen: true } })
     const [instelling] = await tx.select().from(schema.orgSettings).where(eq(schema.orgSettings.key, 'niveaus'))
     const standaard = ((instelling?.value as any)?.standaardNiveauNieuweGebruiker as string) ?? 'beginner'
     let niveau = b.niveau && (NIVEAUS as readonly string[]).includes(b.niveau) ? b.niveau : standaard

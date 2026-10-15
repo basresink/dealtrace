@@ -359,3 +359,17 @@
 @media (max-width: 767px) {
   .app-shell .sb-link, .app-shell .sb-zoek, .app-shell .sb-bel, .app-shell .sb-slotgroep-kop { min-height: 44px; }
 }
+
+/* P02: gele balk "Je werkt in …" (13.3 flow 4) */
+.werkin-balk { position: sticky; top: 0; z-index: var(--z-sticky, 20); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 8px var(--pagina-marge, 32px); background: var(--yellow); color: var(--ink); border-bottom: 1px solid var(--ink); }
+.werkin-tekst { margin: 0; font-size: var(--fs-body); min-width: 0; overflow-wrap: anywhere; }
+.werkin-acties { display: flex; flex-wrap: wrap; gap: 8px; }
+.werkin-knop { min-height: 44px; padding: 0 14px; border: 1px solid var(--ink); border-radius: var(--radius); background: transparent; color: var(--ink); font: 600 13px/1 var(--font-sans, inherit); cursor: pointer; }
+.werkin-knop--terug { background: var(--ink); color: var(--yellow); }
+@media (max-width: 767px) { .werkin-balk { padding: 8px var(--mob-marge, 16px); } .werkin-acties, .werkin-knop { width: 100%; } .werkin-knop { flex: 1; } }
+.pil--stand-gezond { background: var(--green-soft, #e6f4ea); color: var(--green, #1e7b34); }
+.pil--stand-let_op { background: var(--yellow); color: var(--ink); }
+.pil--stand-risico { background: var(--red, #c62828); color: #fff; }
+.pil--stand-leeg { background: var(--grijs-soft, #eee); color: var(--muted); }
+.veld--rij { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.fo-blok .schakel-naam { font-size: var(--fs-body); }

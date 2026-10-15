@@ -43,7 +43,8 @@ Open <http://localhost:3000>. Je ziet een lijst testgebruikers; klik er een aan 
 | Eva Ervaren | Accountmanager | Expert | Binnendienst |
 | Joost Stuurman | Salesmanager | Expert | Binnendienst |
 | Mira Beheer | Beheerder | Expert | Binnendienst |
-| Testfounder | Founder | | |
+| Testfounder Dealtrace | Founder (Platformbeheer) | | |
+| Tom Tweede (Testorganisatie Tweede) | Beheerder | Expert | Binnendienst |
 
 Alle data is fictief (e-mailadressen op `.test`). Gebruik nooit echte klantdata.
 
@@ -102,6 +103,7 @@ Zonder installatie op je laptop: de app draait op Netlify, de database op Supaba
 | `DATABASE_APP_WACHTWOORD` | het nieuwe wachtwoord uit die regel |
 | `SESSIE_GEHEIM` | een lange willekeurige reeks letters en cijfers (minstens 32 tekens) |
 | `TOEGANGSWACHTWOORD` | het wachtwoord dat jij en je testers invullen om de site te openen |
+| `ORG_WISSEL_SECRET` | nog een lange willekeurige reeks (minstens 32 tekens), voor "Werk in deze organisatie" |
 
 3. Klik op **Deploy**. Elke deploy werkt de database bij; de fictieve testdata komt er alleen de eerste keer in.
 

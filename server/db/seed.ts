@@ -34,12 +34,23 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
 
     // Organisaties
     await client.query(
-      `insert into organisations (id, name, pakket, data) values ($1, $2, 'compleet', $3)
-       on conflict (id) do update set name = excluded.name, data = excluded.data`,
-      [org.id, org.naam, { werkgebied: org.werkgebied, omschrijving: org.omschrijving }],
+      `insert into organisations (id, name, pakket, data, contract) values ($1, $2, 'compleet', $3, $4)
+       on conflict (id) do update set name = excluded.name, data = excluded.data, contract = excluded.contract`,
+      [org.id, org.naam,
+        { werkgebied: org.werkgebied, omschrijving: org.omschrijving, gebruikersStand: 'zelf', toegangLeverancier: 'altijd',
+          contact: { naam: 'Testgebruiker Mira Beheer', email: 'mira@voltvast.test' } },
+        { status: 'actief', seats: 9, prijs: 450, start: '2026-01-01', looptijdMaanden: 12, opzegtermijnMaanden: 1 }],
+    )
+    // Tweede organisatie: proef, aanvragen via Dealtrace, toegang alleen na toestemming.
+    const proefTot = new Date(Date.now() + 10 * 24 * 3600 * 1000).toISOString().slice(0, 10)
+    await client.query(
+      `insert into organisations (id, name, pakket, data, contract) values ('org-tweede', 'Testorganisatie Tweede', 'plus', $1, $2)
+       on conflict (id) do update set data = excluded.data, contract = excluded.contract, pakket = excluded.pakket`,
+      [{ gebruikersStand: 'aanvragen', toegangLeverancier: 'na_toestemming' },
+        { status: 'proef', seats: 3, start: new Date().toISOString().slice(0, 10), proefTot, looptijdMaanden: 12, opzegtermijnMaanden: 1 }],
     )
     await client.query(
-      `insert into organisations (id, name, pakket, data) values ('org-tweede', 'Testorganisatie Tweede', 'starter', '{}')
+      `insert into organisations (id, name, pakket, status, data) values ('org-dealtrace', 'Dealtrace', 'compleet', 'systeem', '{}')
        on conflict (id) do nothing`,
     )
 
@@ -76,7 +87,7 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
       `insert into users (id, organisation_id, email, name, role, niveau, team_id, werkplek)
        values ('u-t1', 'org-tweede', 'beheer@tweede.test', 'Testgebruiker Tom Tweede', 'beheerder', 'expert', 'team-tweede', 'binnendienst'),
               ('u-t2', 'org-tweede', 'am@tweede.test', 'Testgebruiker Tess Tweede', 'accountmanager', 'beginner', 'team-tweede', 'buitendienst'),
-              ('u-founder', null, 'founder@dealtrace.test', 'Testfounder Dealtrace', 'founder', 'expert', null, 'binnendienst')
+              ('u-founder', 'org-dealtrace', 'founder@dealtrace.test', 'Testfounder Dealtrace', 'founder', 'expert', null, 'binnendienst')
        on conflict (id) do nothing`,
     )
 

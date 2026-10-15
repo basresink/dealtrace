@@ -143,12 +143,33 @@ export const FUNCTIES: readonly Functie[] = [
   },
   {
     sleutel: 'nav.platform', naam: 'Platformbeheer', pakket: 'starter', rollen: ['founder'], helpartikel: 'platformbeheer', startNiveau: 'beginner',
-    zijbalk: { groep: 'Beheer', route: '/platform', icoon: 'Server' },
+    zijbalk: { groep: 'Beheer', route: '/platform/klanten', icoon: 'Server' },
     uitleg: { watHetDoet: 'Organisaties, abonnementen en features per niveau.', totDieTijd: 'Geen.' },
   },
   {
     sleutel: 'gebruikers.niveau', naam: 'Niveau van gebruikers kiezen', pakket: 'starter', rollen: MANAGERS, helpartikel: 'gebruikers-rollen-niveaus', startNiveau: 'beginner',
     uitleg: { watHetDoet: 'Het niveau van een gebruiker kiezen: Beginner, Gevorderd of Expert.', totDieTijd: 'Geen.' },
+  },
+  // P02: platform (alleen founder, geen regels in functies_per_niveau) en de spiegel voor de beheerder.
+  {
+    sleutel: 'platform.klanten', naam: 'Klanten', pakket: 'starter', rollen: ['founder'], helpartikel: '', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Alle organisaties met gezondheid, pakket en gebruikers.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'platform.werkIn', naam: 'Werken in een organisatie', pakket: 'starter', rollen: ['founder'], helpartikel: '', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Met reden, modus en tijdslimiet werken in een organisatie.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'instellingen.abonnement', naam: 'Abonnement', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'abonnement-verbruik-ai-credits', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Je pakket in gewone woorden, seats in gebruik en je contract.', totDieTijd: 'Vraag je beheerder.' },
+  },
+  {
+    sleutel: 'instellingen.audit', naam: 'Audit en toegang leverancier', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'als-dealtrace-meekijkt', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Wie wat wijzigde, ook de leverancier, en of de leverancier mag meekijken.', totDieTijd: 'Vraag je beheerder.' },
+  },
+  {
+    sleutel: 'instellingen.gebruikersAanvragen', naam: 'Gebruikers aanvragen', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'gebruikers-rollen-niveaus', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Een gebruiker aanvragen als je seats vol zijn of de leverancier toevoegt.', totDieTijd: 'Vraag je beheerder.' },
   },
   {
     sleutel: 'mij.toonMinder', naam: 'Toon minder', pakket: 'starter', rollen: 'iedereen', helpartikel: 'niveau-en-functies', startNiveau: 'beginner',
@@ -166,6 +187,8 @@ export function functie(sleutel: string): Functie | undefined {
 export function startindeling(): Omit<FunctieRegel, 'organisationId'>[] {
   const regels: Omit<FunctieRegel, 'organisationId'>[] = []
   for (const f of FUNCTIES) {
+    // Founderfuncties hangen niet af van een niveau (P02).
+    if (f.rollen !== 'iedereen' && f.rollen.length === 1 && f.rollen[0] === 'founder') continue
     const vanaf = NIVEAUS.indexOf(f.startNiveau)
     for (const n of NIVEAUS) regels.push({ functie: f.sleutel, niveau: n, aan: NIVEAUS.indexOf(n) >= vanaf })
   }

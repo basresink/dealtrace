@@ -10,7 +10,7 @@ import { rolMag } from '../../../shared/permissions'
 import { SYNCBARE_TABELLEN, isSyncbareTabel } from '../../../shared/syncTabellen'
 import { pasPatchToe } from '../../../shared/wisPatch'
 import { metOrganisatie, schema } from '../../utils/db'
-import { vereisOrganisatie } from '../../utils/sessie'
+import { vereisSessie } from '../../utils/sessie'
 
 interface Mutatie {
   idempotentieSleutel: string
@@ -29,7 +29,11 @@ type Resultaat =
 const NOTIFICATIE_VELDEN = new Set(['gelezenOp', 'verborgenOp'])
 
 export default defineEventHandler(async (event) => {
-  const { gebruiker, organisatie } = await vereisOrganisatie(event)
+  // De syncbare tabellen zijn nu alleen eigen gegevens van de gebruiker (meldingen,
+  // persoonlijke instellingen): die staan in zijn eigen organisatie. Klantdata
+  // die later syncbaar wordt, gebruikt de actieve organisatie (en valt onder meekijken).
+  const { gebruiker } = await vereisSessie(event)
+  const organisatie = { id: gebruiker.organisationId! }
   const { mutaties } = await readBody<{ mutaties?: Mutatie[] }>(event)
   if (!Array.isArray(mutaties) || mutaties.length > 200) throw createError({ statusCode: 400, statusMessage: 'Geef tussen 1 en 200 mutaties' })
 

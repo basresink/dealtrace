@@ -6,13 +6,15 @@ if (!functie('nav.instellingen')?.beschikbaar) throw createError({ statusCode: 4
 const rol = computed(() => me.value?.gebruiker.rol)
 const beheerder = computed(() => rol.value === 'beheerder')
 
-const GROEPEN = computed(() => [
+type Kaart = { titel: string; tekst: string; link?: string; toon: boolean }
+const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
   {
     naam: 'Organisatie',
     kaarten: [
       { titel: 'Organisatie', tekst: 'Naam, land en start van het verkoopjaar.', link: '/instellingen/organisatie', toon: beheerder.value },
       { titel: 'Werkdagen en feestdagen', tekst: 'Welke dagen telt Dealtrace als werkdag.', link: '/instellingen/organisatie#werkdagen', toon: beheerder.value },
-      { titel: 'Abonnement en AI-credits', tekst: 'Pakket, seats en credits. Beheert de leverancier.', toon: beheerder.value },
+      { titel: 'Abonnement', tekst: 'Je pakket in gewone woorden, seats en contract.', link: '/instellingen/abonnement', toon: beheerder.value },
+      { titel: 'Audit en toegang leverancier', tekst: 'Wie wat wijzigde, en wanneer Dealtrace mag meekijken.', link: '/instellingen/audit', toon: beheerder.value },
     ],
   },
   {
@@ -38,7 +40,7 @@ const GROEPEN = computed(() => [
       { titel: 'DealDrive', tekst: 'Overdracht na de eerste afspraak.', toon: beheerder.value },
     ],
   },
-].map((g) => ({ ...g, kaarten: g.kaarten.filter((k) => k.toon) })).filter((g) => g.kaarten.length))
+] as { naam: string; kaarten: Kaart[] }[]).map((g) => ({ ...g, kaarten: g.kaarten.filter((k) => k.toon) })).filter((g) => g.kaarten.length))
 useHead({ title: 'Instellingen · Dealtrace' })
 </script>
 

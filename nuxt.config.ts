@@ -19,6 +19,8 @@ export default defineNuxtConfig({
     // Verbinding van de app: de beperkte rol dealtrace_app (valt onder RLS).
     databaseUrl: process.env.DATABASE_URL || 'postgresql://dealtrace_app:dealtrace_app@127.0.0.1:5432/dealtrace',
     sessieGeheim: process.env.SESSIE_GEHEIM || 'lokaal-ontwikkelgeheim-niet-voor-productie-gebruiken',
+    // Eigen geheim voor het werk-in-cookie van de founder (P02); halfjaarlijks roteren.
+    orgWisselGeheim: process.env.ORG_WISSEL_SECRET || 'lokaal-orgwissel-niet-voor-productie-gebruiken',
     authModus: process.env.AUTH_MODUS || 'ontwikkel', // 'ontwikkel' tot P27 inloggen met code bouwt
     aiProvider: process.env.AI_PROVIDER || 'mock',
     anthropicSleutel: process.env.ANTHROPIC_API_KEY || '',

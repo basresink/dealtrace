@@ -12,8 +12,11 @@ export function useAutoBewaar(bewaar: (waarde: any) => Promise<unknown>, wacht =
       try {
         await bewaar(waarde)
         status.value = 'Opgeslagen'
-      } catch {
+      } catch (e: any) {
         status.value = 'Opslaan mislukt'
+        // Bijvoorbeeld de meekijktekst als de founder alleen meekijkt.
+        const t = e?.data?.statusMessage ?? e?.statusMessage
+        if (t) useToast().toon(t, 'fout')
       }
     }, wacht)
   }

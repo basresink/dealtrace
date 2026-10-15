@@ -1,10 +1,13 @@
 // GET /api/notificaties: eigen meldingen, nieuwste eerst, zonder verborgen.
 import { and, desc, eq, isNull } from 'drizzle-orm'
 import { metOrganisatie, schema } from '../../utils/db'
-import { vereisOrganisatie } from '../../utils/sessie'
+import { vereisSessie } from '../../utils/sessie'
 
 export default defineEventHandler(async (event) => {
-  const { gebruiker, organisatie } = await vereisOrganisatie(event)
+  // Meldingen zijn van de gebruiker zelf: altijd in de eigen organisatie, ook als
+  // de founder in een andere organisatie werkt.
+  const { gebruiker } = await vereisSessie(event)
+  const organisatie = { id: gebruiker.organisationId! }
   return metOrganisatie(organisatie.id, (tx) =>
     tx.select({
       id: schema.notificaties.id, soort: schema.notificaties.soort, titel: schema.notificaties.titel,

@@ -9,5 +9,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
   } catch {
     return navigateTo('/login')
   }
-  if (!geladen.organisatie && to.path !== '/platform') return navigateTo('/platform')
+  // Founder buiten een organisatie: Platformbeheer, en verder alleen meldingen.
+  if (!geladen.organisatie && !to.path.startsWith('/platform') && to.path !== '/meldingen') return navigateTo('/platform/klanten')
 })

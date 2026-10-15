@@ -122,6 +122,8 @@ export function scopeVoor(rol: Rol, onderdeel: string, actie: Actie, opties: { i
   if (!isOnderdeel(onderdeel)) return 'geen'
   if (rol === 'founder') {
     if (onderdeel === 'platform' || onderdeel === 'gebruikers') return 'alles'
+    // Eigen meldingen en persoonlijke instellingen heeft iedereen, ook de founder.
+    if (onderdeel === 'notificaties' || onderdeel === 'persoonlijk') return MATRIX[onderdeel].beheerder[actie] ?? 'geen'
     return opties.ingestapt && actie === 'lezen' ? 'alles' : 'geen'
   }
   return MATRIX[onderdeel][rol][actie] ?? 'geen'

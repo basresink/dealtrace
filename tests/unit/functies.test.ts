@@ -83,8 +83,10 @@ describe('beschikbaar (4.2)', () => {
     expect(aanVoorNiveau('nav.vandaag', 'beginner', org, [])).toBe(false)
   })
 
-  it('elke functie heeft een helpartikel en een startregel per niveau', () => {
-    for (const f of FUNCTIES) expect(f.helpartikel).toBeTruthy()
-    expect(startindeling()).toHaveLength(FUNCTIES.length * 3)
+  it('elke functie heeft een helpartikel en een startregel per niveau, behalve founderfuncties (P02)', () => {
+    const alleenFounder = (f: (typeof FUNCTIES)[number]) => f.rollen !== 'iedereen' && f.rollen.every((r) => r === 'founder')
+    for (const f of FUNCTIES) if (!alleenFounder(f)) expect(f.helpartikel).toBeTruthy()
+    expect(startindeling()).toHaveLength(FUNCTIES.filter((f) => !alleenFounder(f)).length * 3)
+    expect(startindeling().some((r) => r.functie.startsWith('platform.') || r.functie === 'nav.platform')).toBe(false)
   })
 })

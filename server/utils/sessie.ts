@@ -10,7 +10,9 @@ import { eq, or, isNull } from 'drizzle-orm'
 import { sql } from 'drizzle-orm'
 import { beschikbaar, type Weigerreden } from '../../shared/functies'
 import type { FunctieRegel, GebruikerContext, Niveau, OrganisatieContext, Pakket, Rol, Werkplek } from '../../shared/types'
+import type { WerkIn } from '../../shared/werkIn'
 import { gebruikDb, metOrganisatie, schema } from './db'
+import { leesWerkIn } from './werkIn'
 
 export const SESSIE_COOKIE = 'dt_sessie'
 const GELDIG_DAGEN = 30
@@ -19,8 +21,19 @@ function sleutel(): Uint8Array {
   return new TextEncoder().encode(useRuntimeConfig().sessieGeheim as string)
 }
 
-export async function maakSessie(event: H3Event, gebruikerId: string) {
-  const token = await new SignJWT({ sub: gebruikerId })
+/**
+ * Sessie-inhoud. `aal`: verificatieniveau (aal2 na tweestapsverificatie, P27);
+ * `hb`: moment van de laatste herbevestiging (TOTP) voor gevaarlijke acties;
+ * `act`: laatste activiteit, voor de founder vervalt de sessie na 12 uur stilte.
+ */
+export interface SessieInhoud { sub: string; aal: 'aal1' | 'aal2'; hb?: string; act?: number }
+
+export const PLATFORM_STIL_MS = 12 * 3600 * 1000
+
+export async function maakSessie(event: H3Event, gebruikerId: string, extra: Partial<Omit<SessieInhoud, 'sub'>> = {}) {
+  const inhoud: Record<string, unknown> = { aal: 'aal1', act: Date.now(), ...extra }
+  const token = await new SignJWT(inhoud)
+    .setSubject(gebruikerId)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(`${GELDIG_DAGEN}d`)
@@ -32,6 +45,17 @@ export async function maakSessie(event: H3Event, gebruikerId: string) {
     path: '/',
     maxAge: GELDIG_DAGEN * 24 * 3600,
   })
+}
+
+export async function leesSessieInhoud(event: H3Event): Promise<SessieInhoud | null> {
+  const token = getCookie(event, SESSIE_COOKIE)
+  if (!token) return null
+  try {
+    const { payload } = await jwtVerify(token, sleutel())
+    return { sub: String(payload.sub), aal: payload.aal === 'aal2' ? 'aal2' : 'aal1', hb: payload.hb as string | undefined, act: payload.act as number | undefined }
+  } catch {
+    return null
+  }
 }
 
 export function wisSessie(event: H3Event) {
@@ -50,19 +74,15 @@ export interface Context {
   /** null voor de founder buiten een organisatie. */
   organisatie: (OrganisatieContext & { naam: string }) | null
   stand: FunctieRegel[]
+  sessie: SessieInhoud
+  /** Founder die in een organisatie werkt; gebruiker is dan de founder met de rechten van een beheerder. */
+  werkIn?: WerkIn & { organisatieNaam: string }
+  /** De echte rol, ook als de founder in een organisatie werkt. */
+  echteRol: Rol
 }
 
-async function leesGebruiker(event: H3Event): Promise<SessieGebruiker | null> {
-  const token = getCookie(event, SESSIE_COOKIE)
-  if (!token) return null
-  let id: string
-  try {
-    const { payload } = await jwtVerify(token, sleutel())
-    id = String(payload.sub)
-  } catch {
-    return null
-  }
-  const res = await gebruikDb().execute(sql`select * from dealtrace_sessie_gebruiker(${id})`)
+async function leesGebruiker(event: H3Event, sessie: SessieInhoud): Promise<SessieGebruiker | null> {
+  const res = await gebruikDb().execute(sql`select * from dealtrace_sessie_gebruiker(${sessie.sub})`)
   const r = res.rows[0] as Record<string, any> | undefined
   if (!r) return null
   const data = (r.data ?? {}) as schema.GebruikerData
@@ -106,20 +126,40 @@ export async function leesOrganisatie(organisationId: string) {
 /** De context van het verzoek; 401 zonder geldige sessie. */
 export async function vereisSessie(event: H3Event): Promise<Context> {
   if (event.context.dealtrace) return event.context.dealtrace as Context
-  const gebruiker = await leesGebruiker(event)
+  const sessie = await leesSessieInhoud(event)
+  if (!sessie) throw createError({ statusCode: 401, statusMessage: 'Niet ingelogd' })
+  const gebruiker = await leesGebruiker(event, sessie)
   if (!gebruiker) throw createError({ statusCode: 401, statusMessage: 'Niet ingelogd' })
+
   let ctx: Context
-  if (!gebruiker.organisationId) {
-    ctx = { gebruiker, organisatie: null, stand: [] }
+  if (gebruiker.rol === 'founder') {
+    // Platformsessies vervallen na 12 uur stilte (15.3); daarna opnieuw inloggen.
+    const nu = Date.now()
+    if (!sessie.act || nu - sessie.act > PLATFORM_STIL_MS) {
+      wisSessie(event)
+      throw createError({ statusCode: 401, statusMessage: 'Je platformsessie is verlopen. Log opnieuw in.' })
+    }
+    if (nu - sessie.act > 5 * 60 * 1000) await maakSessie(event, gebruiker.id, { aal: sessie.aal, hb: sessie.hb, act: nu })
+    const werkIn = await leesWerkIn(event, gebruiker.id)
+    if (werkIn) {
+      const { organisatie, stand } = await leesOrganisatie(werkIn.organisatieId)
+      ctx = {
+        gebruiker: { ...gebruiker, rol: 'beheerder', niveau: 'expert', teamId: null },
+        organisatie, stand, sessie, echteRol: 'founder',
+        werkIn: { ...werkIn, organisatieNaam: organisatie.naam },
+      }
+    } else {
+      ctx = { gebruiker, organisatie: null, stand: [], sessie, echteRol: 'founder' }
+    }
   } else {
-    const { organisatie, stand } = await leesOrganisatie(gebruiker.organisationId)
-    ctx = { gebruiker, organisatie, stand }
+    const { organisatie, stand } = await leesOrganisatie(gebruiker.organisationId!)
+    ctx = { gebruiker, organisatie, stand, sessie, echteRol: gebruiker.rol }
   }
   event.context.dealtrace = ctx
   return ctx
 }
 
-/** Context binnen een organisatie; de founder buiten een organisatie krijgt 403 (instappen is P02). */
+/** Context binnen een organisatie; de founder buiten een organisatie krijgt 403. */
 export async function vereisOrganisatie(event: H3Event) {
   const ctx = await vereisSessie(event)
   if (!ctx.organisatie) throw createError({ statusCode: 403, statusMessage: 'Werk eerst in een organisatie (Platformbeheer)' })
