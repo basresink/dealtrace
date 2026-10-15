@@ -5,7 +5,7 @@
 import { CONTACTROL_LABEL, type ContactRol } from '~~/shared/contactgegevens'
 import { STATUS_LABEL, STATUS_PIL, datumKort, fasePil, klasseKort, telLink, toonTelefoon } from '~/utils/accountWeergave'
 const route = useRoute()
-const { functie } = useMe()
+const { functie, me } = useMe()
 if (!functie('prospects.kaart')?.beschikbaar) throw createError({ statusCode: 403, statusMessage: 'Geen toegang' })
 const toast = useToast()
 const { data: a, refresh } = await useFetch<any>(() => `/api/accounts/${route.params.id}`)
@@ -77,6 +77,9 @@ const SOORT: Record<string, string> = { gebeld: 'Gebeld', mail: 'Mail', notitie:
 const notities = computed(() => a.value.tijdlijn.filter((x: any) => x.soort === 'notitie'))
 const momenten = computed(() => a.value.tijdlijn.filter((x: any) => x.soort !== 'notitie').slice(0, 3))
 useHead({ title: computed(() => `${a.value?.naam ?? 'Account'} · Dealtrace`) })
+// P14: de binnendienst zet een prospect klaar voor de regiodag van een collega van de buitendienst.
+const klaarOpen = ref(false)
+const kanKlaarzetten = computed(() => !!functie('bezoeken.klaarzetten')?.beschikbaar && me.value?.gebruiker.werkplek !== 'buitendienst')
 </script>
 
 <template>
@@ -118,6 +121,7 @@ useHead({ title: computed(() => `${a.value?.naam ?? 'Account'} · Dealtrace`) })
           </div>
           <div class="toolbar-buttons">
             <button v-if="aiAan" type="button" class="dd-act ai-knop" data-test="vraag-ai" @click="openAi({ accountId: a.id, label: a.naam })"><Icoon naam="Sparkles" class="dd-actie-icoon" />Vraag AI</button>
+            <button v-if="kanKlaarzetten" type="button" class="dd-actie dd-actie--secundair" data-test="klaarzetten-knop" @click="klaarOpen = true"><Icoon naam="MapPin" class="dd-actie-icoon" />Klaarzetten voor buitendienst</button>
             <button type="button" class="dd-actie dd-actie--secundair" data-test="info-knop" @click="infoOpen = true"><Icoon naam="Info" class="dd-actie-icoon" />Info</button>
             <button type="button" class="dd-actie dd-actie--secundair" data-test="contacten-knop" @click="contactenOpen = true"><Icoon naam="Users" class="dd-actie-icoon" />Contacten {{ a.contacten.filter((c: any) => c.status !== 'vertrokken').length }}</button>
             <a v-if="belNummer" class="dd-actie dd-actie--primair alleen-groot" :href="telLink(belNummer)"><Icoon naam="Phone" class="dd-actie-icoon" />Bel</a>
@@ -239,5 +243,6 @@ useHead({ title: computed(() => `${a.value?.naam ?? 'Account'} · Dealtrace`) })
     <InfoFlyout :open="infoOpen" :account="a" @sluit="infoOpen = false" @gewijzigd="refresh" @verwijder="verwijderOpen = true" />
     <ContactenFlyout :open="contactenOpen" :account="{ id: a.id, naam: a.naam }" :contacten="a.contacten" @sluit="contactenOpen = false" @gewijzigd="refresh" />
     <BevestigVenster :open="verwijderOpen" :titel="`${a.naam} verwijderen?`" tekst="Het account en zijn contacten worden verwijderd. De activiteitenlog blijft bewaard." bevestig="Verwijderen" @geannuleerd="verwijderOpen = false" @bevestigd="verwijder" />
+    <KlaarzetFlyout :open="klaarOpen" :account="a ? { id: a.id, naam: a.naam } : null" @sluit="klaarOpen = false" />
   </div>
 </template>

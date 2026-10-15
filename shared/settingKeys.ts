@@ -17,6 +17,9 @@ export const SETTING_KEYS = [
   'helpVerborgen', // artikel-id's van platformartikelen die de beheerder verbergt (P09)
   'prospectplanning', // PlanningInstelling uit shared/planning.ts (P12)
   'agendaKoppeling', // {aan: boolean}: de beheerder zet de agendakoppeling aan (P13)
+  'gebieden', // Regio[] uit shared/gebieden.ts: reeksen, plaatsen, eigenaren, regiodagen (P14)
+  'plaatsSynoniemen', // {"den bosch": "'s-hertogenbosch"}: eigen synoniemen voor plaatsnamen (P14)
+  'kansRegels', // KansRegels uit shared/route.ts: gewichten, maximale omrijtijd, aantal (P14)
   'dagritme', // DagInstelling en SignaalInstelling uit shared/dag.ts en shared/signalen.ts (P32)
   // Van de leverancier:
   'pakket',

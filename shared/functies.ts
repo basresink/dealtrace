@@ -468,6 +468,43 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'instellingen.meetingsoorten', naam: 'Meetingsoorten en uitkomsten', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'meetingsoorten-en-uitkomsten-inrichten', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Soorten afspraken met duur, agendapunten en uitkomsten met gevolg beheren.', totDieTijd: 'De startset van zes meetingsoorten.' },
   },
+  // P14: bezoeken, kansen langs de route en gebieden (F10, F18).
+  {
+    sleutel: 'bezoeken.route', naam: 'Route en kansen langs de route', pakket: 'starter', rollen: 'iedereen', helpartikel: 'bezoeken-en-kansen-langs-de-route', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Je route van vandaag met kaart, en de beste kansen vlak bij je bezoeken.', totDieTijd: 'Je bezoeken staan in je agenda.' },
+  },
+  {
+    sleutel: 'bezoeken.kansenAlle', naam: 'Alle kansen met filters', pakket: 'starter', rollen: 'iedereen', helpartikel: 'bezoeken-en-kansen-langs-de-route', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Alle kansen langs de route, met filters op bron, klasse, omrijtijd en aantal.', totDieTijd: 'Je ziet de drie beste kansen.' },
+  },
+  {
+    sleutel: 'bezoeken.bellijst', naam: 'Bellijst naast je bezoeken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'bezoeken-en-kansen-langs-de-route', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Wie je tussen de bezoeken door belt, zonder de accounts die je vandaag bezoekt.', totDieTijd: 'Je bellijst staat bij Belblokken.' },
+  },
+  {
+    sleutel: 'bezoeken.teplannen', naam: 'Te plannen bezoeken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'bezoeken-en-kansen-langs-de-route', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Open bezoektaken, oudste eerst, om in te plannen.', totDieTijd: 'Je bezoektaken staan bij Acties.' },
+  },
+  {
+    sleutel: 'bezoeken.periode', naam: 'Periodefilter op bezoeken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'bezoeken-en-kansen-langs-de-route', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Je route van morgen of een andere dag bekijken.', totDieTijd: 'Je ziet de route van vandaag.' },
+  },
+  {
+    sleutel: 'bezoeken.klaarzetten', naam: 'Klaarzetten voor buitendienst', pakket: 'starter', rollen: 'iedereen', helpartikel: 'bezoeken-en-kansen-langs-de-route', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een prospect klaarzetten voor de regiodag van een collega; hij verschijnt daar als kans.', totDieTijd: 'Je maakt een taak voor je collega.' },
+  },
+  {
+    sleutel: 'bezoeken.eigenRegels', naam: 'Eigen kansregels en startadres', pakket: 'plus', rollen: 'iedereen', helpartikel: 'bezoeken-en-kansen-langs-de-route', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Ongeplande prospects in het gebied tonen, start- en eindadres per dag kiezen.', totDieTijd: 'De standaardregels gelden.' },
+  },
+  {
+    sleutel: 'regio.analyse', naam: 'Regio-analyse', pakket: 'starter', rollen: 'iedereen', helpartikel: 'gebieden-en-regiodagen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Waar je potentie laat liggen: dekking, stil en nooit bezocht per regio.', totDieTijd: 'Je ziet je accounts bij Prospects.' },
+  },
+  {
+    sleutel: 'instellingen.gebieden', naam: 'Gebieden en regiodagen', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'gebieden-en-regiodagen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Regio\'s op postcode, eigenaren, regiodagen en synoniemen voor plaatsnamen.', totDieTijd: 'Accounts hebben nog geen regio.' },
+  },
   // P33: AI-assistent en credits (F26, 11.4). Op alle niveaus; de credits begrenzen, niet het niveau.
   {
     sleutel: 'assistent.chat', naam: 'AI-assistent', pakket: 'starter', rollen: 'iedereen', helpartikel: 'chatten-met-de-ai-assistent', startNiveau: 'beginner',
@@ -812,7 +849,7 @@ export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | u
 
 /** De feature (hoofdstuk 7, F01 tot en met F26) waar een functie bij hoort, voor het raster van de founder. */
 const FEATURE_GROEPEN: [RegExp, string][] = [
-  [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
+  [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^bezoeken\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],

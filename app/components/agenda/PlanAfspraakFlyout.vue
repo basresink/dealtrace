@@ -2,7 +2,7 @@
 // Plan een afspraak (F09): klant, contactpersoon (beslissers eerst), meetingsoort (vult duur en
 // agenda), vorm, datum, start, duur, voor wie (Gevorderd: een collega met diens vrije momenten),
 // locatie, herinnering, aanleiding en beschrijving. Op de telefoon een schuifvenster van onderen.
-const props = defineProps<{ open: boolean; account?: { id: string; naam: string } | null; taskId?: string | null; aanleiding?: string | null; voorWie?: string | null }>()
+const props = defineProps<{ open: boolean; account?: { id: string; naam: string } | null; taskId?: string | null; aanleiding?: string | null; voorWie?: string | null; voorstel?: { datum?: string; start?: string; duurMin?: number; vorm?: string; soort?: string } | null }>()
 const emit = defineEmits<{ sluit: []; gepland: [id: string] }>()
 const { functie, me } = useMe()
 const toast = useToast()
@@ -26,8 +26,11 @@ watch(() => props.open, async (o) => {
   const [m, a]: any[] = await Promise.all([$fetch('/api/meetingsoorten'), voorCollega.value ? $fetch('/api/agenda', { query: { van: vandaag(), tot: vandaag() } }).catch(() => null) : null])
   soorten.value = (m.soorten ?? []).filter((s: any) => s.actief)
   collegas.value = (a?.gebruikers ?? []).filter((u: any) => u.id !== me.value?.gebruiker.id)
-  const eerste = soorten.value.find((s) => s.slug === 'kennismaking') ?? soorten.value.find((s) => s.type === 'klant')
+  const eerste = soorten.value.find((s) => s.slug === (props.voorstel?.soort ?? 'kennismaking')) ?? soorten.value.find((s) => s.type === 'klant')
   if (eerste) f.meetingsoortId = eerste.id
+  // Een voorstel (tussenstop, P14): datum, start in het gat, duur en vorm.
+  const v = props.voorstel
+  if (v) { await nextTick(); Object.assign(f, v.datum ? { datum: v.datum } : {}, v.start ? { start: v.start } : {}, v.duurMin ? { duurMin: v.duurMin } : {}, v.vorm ? { vorm: v.vorm } : {}) }
 }, { immediate: true })
 watch(soort, (s) => { if (s) { f.duurMin = s.duurMin; f.vorm = s.vorm; f.herinneringMin = s.data?.herinneringMin ?? 15 } })
 watch(klant, async (k) => {

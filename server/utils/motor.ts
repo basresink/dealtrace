@@ -7,6 +7,8 @@ import { bandScore } from '../../shared/bandKwalificatie'
 import { motorRun, type MotorGebruiker, type MotorUitvoer, type StartActiviteit } from '../../shared/motor'
 import { fase as zoekFase } from '../../shared/reis'
 import type { MotorAccount, Regel, RegelData } from '../../shared/regelPatronen'
+import { regiodagenVoor, type Regio } from '../../shared/gebieden'
+import { nlMoment } from '../../shared/datum'
 import { BELMATRIX_STANDAARD, CAPACITEIT_STANDAARD, klasseCode, leesMatrix, type Klasse } from '../../shared/ritmematrix'
 import { leadOnderhoud } from './leads'
 import { benaderdDitJaar, leesPlanning, POGING_SOORTEN, potentieVan, vensterVan, verkoopjaar } from '../../shared/planning'
@@ -149,6 +151,7 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
   return {
     invoer: {
       nu, regels, accounts, gebruikers, laatst, open, bezetting, ritmeVan, belmatrix: bel.matrix, capaciteit, werkdagen, startactiviteiten: start, regelLog,
+      regiodagen: regiodagenVoor(((await instelling(tx, 'gebieden')) as Regio[] | undefined) ?? [], nlMoment(nu).datum, 28, (werkdagen?.feestdagen as string[] | undefined) ?? []),
       beheerderId: gebruikers.find((g) => g.rol === 'beheerder' && g.status !== 'gearchiveerd')?.id ?? null,
       accountIds, aiToegestaan: org_?.pakket === 'plus' || org_?.pakket === 'compleet',
     },

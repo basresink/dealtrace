@@ -1,5 +1,6 @@
 // PUT /api/accounts/:id: patch; null wist (gat 10). Eigenaar alleen salesmanager en
 // beheerder, klasse vanaf Gevorderd. account_kind en status klant zijn niet te zetten (B17).
+import { geocodeerOntbrekend, wijsRegiosToe } from '../../../utils/bezoeken'
 import { eq } from 'drizzle-orm'
 import { normaliseerTelefoon } from '../../../../shared/contactgegevens'
 import { normaliseerDomein } from '../../../../shared/ontdubbelen'
@@ -45,7 +46,11 @@ export default defineEventHandler(async (event) => {
       data.customFields = pasEigenVeldenToe(a.data?.customFields, b.customFields, velden, { rol: ctx.gebruiker.rol, eigenaar: a.ownerId === ctx.gebruiker.id }, data.herkomst, ctx.gebruiker.id)
     }
     set.data = data
+    // P14: een nieuw adres krijgt een nieuw punt en een nieuwe regio (terugval op postcode of plaats).
+    const adresAnders = ('plaats' in b && (b.plaats || null) !== a.city) || ('postcode' in b && (b.postcode || null) !== a.postcode) || ('adres' in b && b.adres !== (a.data as any)?.adres)
+    if (adresAnders) { set.lat = null; set.lng = null }
     await tx.update(schema.accounts).set(set).where(eq(schema.accounts.id, id))
+    if (adresAnders) { await geocodeerOntbrekend(tx); await wijsRegiosToe(tx) }
     await herbereken(tx, id)
     if ('eigenaarId' in b || 'klasse' in b) {
       await schrijfAudit(tx, { organisationId: ctx.organisatie.id, actorId: ctx.gebruiker.id, action: 'eigenaarId' in b ? 'account.eigenaar' : 'account.klasse', resourceType: 'accounts', resourceId: id, changes: { eigenaarId: b.eigenaarId, klasse: b.klasse } })

@@ -6,7 +6,9 @@ import { rolMag } from '../../../shared/permissions'
 import { KANALEN } from '../../../shared/nbStatus'
 import { AGENT_INSTELLINGEN } from '../../../shared/mandaat'
 import { valideerMatrix } from '../../../shared/ritmematrix'
+import { overlap, valideerRegios, type Regio } from '../../../shared/gebieden'
 import { schrijfAudit } from '../../utils/audit'
+import { wijsRegiosToe } from '../../utils/bezoeken'
 import { metOrganisatie, schema } from '../../utils/db'
 import { vereisOrganisatie } from '../../utils/sessie'
 
@@ -39,6 +41,14 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  if (key === 'gebieden') {
+    // P14: regio's controleren; overlap wordt bij invoer geblokkeerd (gat 45).
+    const regios = (Array.isArray(value) ? value : []) as Regio[]
+    const fouten = valideerRegios(regios)
+    if (!Array.isArray(value) || fouten.length) throw createError({ statusCode: 422, statusMessage: fouten[0] ?? 'Geef een lijst met regio\'s' })
+    const o = overlap(regios)
+    if (o.length) throw createError({ statusCode: 409, statusMessage: o[0]!.tekst })
+  }
   return metOrganisatie(organisatie.id, async (tx) => {
     const [oud] = await tx.select().from(schema.orgSettings).where(and(eq(schema.orgSettings.organisationId, organisatie.id), eq(schema.orgSettings.key, key)))
     await tx.insert(schema.orgSettings)
@@ -48,6 +58,7 @@ export default defineEventHandler(async (event) => {
       organisationId: organisatie.id, actorId: gebruiker.id, action: 'instelling.wijzigen',
       resourceType: 'org_settings', resourceId: key, changes: { van: oud?.value ?? null, naar: value },
     })
+    if (key === 'gebieden' || key === 'plaatsSynoniemen') await wijsRegiosToe(tx)
     return { key, value }
   })
 })

@@ -11,9 +11,13 @@ import { rolMag } from '../../../shared/permissions'
 import { SYNCBARE_TABELLEN, isSyncbareTabel } from '../../../shared/syncTabellen'
 import { pasPatchToe } from '../../../shared/wisPatch'
 import { metOrganisatie, schema } from '../../utils/db'
-import { ACCOUNT_MUTATIESOORTEN, AFSPRAAK_MUTATIESOORTEN, INZICHT_MUTATIESOORTEN, SIGNAAL_MUTATIESOORTEN, TAAK_MUTATIESOORTEN } from '../../../shared/syncTabellen'
+import { ACCOUNT_MUTATIESOORTEN, AFSPRAAK_MUTATIESOORTEN, KANS_MUTATIESOORTEN, INZICHT_MUTATIESOORTEN, SIGNAAL_MUTATIESOORTEN, TAAK_MUTATIESOORTEN } from '../../../shared/syncTabellen'
 import { besluit } from '../../utils/dagritme'
 import { planAfspraak, rondAfAfspraak } from '../../utils/agenda'
+import { klaarzetten } from '../../utils/bezoeken'
+import { OVERSLA_REDENEN } from '../../../shared/route'
+import { nlMoment, plusDagen } from '../../../shared/datum'
+import { sql } from 'drizzle-orm'
 import { AFWIJS_REDENEN, uitstellen } from '../../../shared/taken'
 import { magTaak, rondAf } from '../../utils/taken'
 import { isNeeReden } from '../../../shared/nbStatus'
@@ -46,7 +50,7 @@ export default defineEventHandler(async (event) => {
   const { mutaties } = await readBody<{ mutaties?: Mutatie[] }>(event)
   if (!Array.isArray(mutaties) || mutaties.length > 200) throw createError({ statusCode: 400, statusMessage: 'Geef tussen 1 en 200 mutaties' })
   // Klantdata (accounts) gebruikt de actieve organisatie en de functierechten.
-  const KLANTDATA = new Set(['accounts', 'tasks', 'signals', 'appointments'])
+  const KLANTDATA = new Set(['accounts', 'tasks', 'signals', 'appointments', 'kans_overslaan', 'klaargezet_voor'])
   const klant = mutaties.some((m) => KLANTDATA.has(m?.tabel)) ? await vereisOrganisatie(event) : null
 
   const resultaten: Resultaat[] = []
@@ -124,6 +128,21 @@ export default defineEventHandler(async (event) => {
           if (e instanceof ReisFout) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 404 ? 404 : 422, reden: e.message }
           if (e?.statusCode && [400, 403, 404, 409, 422].includes(e.statusCode)) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 409 ? 422 : e.statusCode, reden: e.message }
           throw e
+        }
+      } else if (m.tabel === 'kans_overslaan' || m.tabel === 'klaargezet_voor') {
+        // P14: overslaan en klaarzetten, ook offline; recordId is het account.
+        const p = (m.patch ?? {}) as Record<string, any>
+        if (!(KANS_MUTATIESOORTEN as readonly string[]).includes(p.soort)) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Alleen kans.overslaan en kans.klaarzetten mogen via de wachtrij' }
+        if (p.soort === 'kans.overslaan') {
+          if (!klant || !kan(klant, 'bezoeken.route')) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Functie niet beschikbaar' }
+          if (!OVERSLA_REDENEN.includes(p.reden)) return { status: 'geweigerd', recordId: m.recordId, code: 422, reden: 'Kies een reden om over te slaan' }
+          await tx.execute(sql`insert into kans_overslaan (organisation_id, gebruiker_id, account_id, tot, reden) values (${klant.organisatie.id}, ${gebruiker.id}, ${m.recordId}, ${plusDagen(nlMoment(new Date()).datum, 7)}, ${p.reden})`)
+        } else {
+          if (!klant || !kan(klant, 'bezoeken.klaarzetten')) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Functie niet beschikbaar' }
+          try { await klaarzetten(tx, klant.organisatie.id, { id: gebruiker.id, naam: klant.gebruiker.naam }, m.recordId, { voorGebruiker: String(p.voorGebruiker ?? ''), regioId: p.regioId ?? null, datum: p.datum ?? null, reden: String(p.reden ?? '').slice(0, 300) }) } catch (e: any) {
+            if (e?.statusCode && [400, 404].includes(e.statusCode)) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode, reden: e.message }
+            throw e
+          }
         }
       } else if (m.tabel === 'signaal_besluiten') {
         // P32: Gedaan, Later of Weg; recordId is de signaalsleutel. Het besluit telt op de dag waarop het viel.

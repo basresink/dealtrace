@@ -934,3 +934,41 @@ html.zonlicht body { color: #000; }
 .dd-act--geel { background: var(--yellow); border-color: var(--yellow); color: var(--ink); font-weight: 700; }
 .dd-act--geel:hover { background: var(--yellow-dark); border-color: var(--yellow-dark); }
 .ag-leeg { margin: 0 0 12px; }
+
+/* P14: kaart van de dag (SVG), routelijst en kansen. */
+.kaart-schets { border: 1px solid var(--border); background: var(--surface); min-height: 240px; }
+.kaart-schets svg { display: block; width: 100%; height: auto; }
+.ks-lijn { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-dasharray: 6 4; }
+.ks-start { fill: var(--wit); stroke: var(--ink); stroke-width: 3; }
+.ks-stop circle { fill: var(--ink); }
+.ks-stop text, .ks-kans text { font: 700 11px var(--font-sans); fill: var(--yellow); pointer-events: none; }
+.ks-stop--volgende circle { fill: var(--red); animation: ks-puls 1.6s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+.ks-stop--volgende text { fill: var(--wit); }
+.ks-kans { cursor: pointer; }
+.ks-kans circle { fill: var(--yellow); stroke: var(--ink); stroke-width: 1.5; }
+.ks-kans text { fill: var(--ink); }
+.ks-extra { opacity: .8; }
+.ks-extra--groen { fill: var(--green); } .ks-extra--rood { fill: var(--red); } .ks-extra--grijs { fill: var(--muted-light); } .ks-extra--blauw { fill: var(--blue); }
+@keyframes ks-puls { 0% { transform: scale(1); } 50% { transform: scale(1.18); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .ks-stop--volgende circle { animation: none; } }
+.bz-stat { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--fs-klein); color: var(--ink-soft); }
+.bz-stat strong { color: var(--ink); }
+.bz-raster { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 1023px) { .bz-raster { grid-template-columns: 1fr; } }
+.bz-stop { border: 1px solid var(--border); background: var(--wit); padding: 12px; display: grid; gap: 4px; }
+.bz-stop--volgende { border-color: var(--red); box-shadow: inset 3px 0 0 var(--red); }
+.bz-reis { font-size: var(--fs-meta); color: var(--muted); padding: 4px 12px; }
+.bz-kans { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; border: 1px solid var(--border); background: var(--wit); padding: 12px; }
+.bz-kans-nr { width: 32px; height: 32px; border-radius: 50%; background: var(--yellow); display: grid; place-items: center; font-weight: 700; }
+.bz-filters { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: end; margin: 12px 0; }
+.bz-filters .veld { min-width: 140px; }
+.bz-opbouw { font-size: var(--fs-meta); color: var(--muted); }
+.bz-week { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
+.bz-week a { border: 1px solid var(--border); background: var(--wit); padding: 8px; text-decoration: none; color: inherit; font-size: var(--fs-meta); min-height: 44px; }
+.bz-week a.bz-week--nu { border-color: var(--ink); box-shadow: inset 0 -3px 0 var(--yellow); }
+.stat-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.ra-tabel { max-width: 100%; overflow-x: auto; }
+.ra-balk { display: inline-block; width: 80px; height: 8px; background: var(--surface); vertical-align: middle; }
+.ra-balk span { display: block; height: 100%; background: var(--green); }
+.alleen-telefoon { display: none; }
+@media (max-width: 767px) { .alleen-telefoon { display: block; } .bz-week { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

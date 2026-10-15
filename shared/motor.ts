@@ -42,6 +42,8 @@ export interface MotorInvoer {
   belmatrix?: Matrix
   capaciteit?: { binnendienst: number; buitendienst: number }
   werkdagen?: WerkdagInstelling
+  /** Regiodagen per gebruiker (P14): taken voor de buitendienst landen op de regiodag van het account. */
+  regiodagen?: { gebiedId: string; gebruikerId: string; datum: string }[]
   startactiviteiten?: Map<string, StartActiviteit[]>
   /** Leerlus: per regel de afloop van voorstellen van de laatste 30 dagen. */
   regelLog?: Map<string, { status: string; op: string }[]>
@@ -149,7 +151,7 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
   const accounts = inv.accountIds ? inv.accounts.filter((a) => inv.accountIds!.includes(a.id)) : inv.accounts
   const gebruiker = new Map(inv.gebruikers.map((g) => [g.id, g]))
   const blokken: { start: string }[] = []
-  const regiodagen: { gebiedId: string; datum: string }[] = []
+  const regiodagenVan = (owner: string | null | undefined) => (inv.regiodagen ?? []).filter((r) => r.gebruikerId === owner)
 
   const regels = [...inv.regels].filter((r) => r.actief && (r.motor === 'regel' || inv.aiToegestaan))
     .sort((a, b) => ['hoog', 'middel', 'laag'].indexOf(a.prioriteit) - ['hoog', 'middel', 'laag'].indexOf(b.prioriteit) || (a.code ?? a.naam).localeCompare(b.code ?? b.naam))
@@ -202,7 +204,7 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
         })
       } else {
         const g = gebruiker.get(owner)
-        const landing = landingsmoment({ termijnWerkdagen: regel.data.gevolg.termijnWerkdagen, gebiedId: a.gebiedId }, { werkplek: g?.werkplek ?? 'binnendienst' }, blokken, regiodagen, nu, inv.werkdagen)
+        const landing = landingsmoment({ termijnWerkdagen: regel.data.gevolg.termijnWerkdagen, gebiedId: a.gebiedId }, { werkplek: g?.werkplek ?? 'binnendienst' }, blokken, regiodagenVan(a.ownerId), nu, inv.werkdagen)
         const vervolg = regel.data.trigger.patroon === 'hercontact-vervolg' && a.ritme
         taken.push({
           regelId: regel.id, onderwerp: sleutel, accountId: a.id, ownerId: owner,
@@ -230,7 +232,7 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
           const k = `start|${sleutel}`
           if (inv.open.has(k) || inv.laatst.has(k) || nieuwOpen.has(k)) continue
           nieuwOpen.add(k)
-          const landing = landingsmoment({ termijnWerkdagen: s.termijnWerkdagen, gebiedId: a.gebiedId }, { werkplek: g?.werkplek ?? 'binnendienst' }, blokken, regiodagen, nu, inv.werkdagen)
+          const landing = landingsmoment({ termijnWerkdagen: s.termijnWerkdagen, gebiedId: a.gebiedId }, { werkplek: g?.werkplek ?? 'binnendienst' }, blokken, regiodagenVan(a.ownerId), nu, inv.werkdagen)
           const actionType = s.actiesoort === 'bellen' || s.actiesoort === 'bezoek' ? s.actiesoort : s.actiesoort === 'mail' ? 'mailen' : 'taak'
           taken.push({
             regelId: 'start', onderwerp: sleutel, accountId: a.id, ownerId: owner, title: `${s.naam}: ${a.naam}`, actionType, priority: 'middel',

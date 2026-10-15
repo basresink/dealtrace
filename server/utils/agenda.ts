@@ -10,6 +10,7 @@ import { gebruikDb } from './db'
 import { ontsleutel, versleutel } from './geheimen'
 import { meldGebeurtenis, pauzeer, ReisFout, zetNee } from './reis'
 import { rondAf } from './taken'
+import { kansenRond } from './bezoeken'
 
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
 type Rij = Record<string, any>
@@ -226,8 +227,10 @@ export async function zetAfspraakStatus(tx: Tx, org: string, afspraakId: string,
   const eerste = !!ap!.account_id && ap!.type === 'klant' && !!ap!.soort_data?.eersteAfspraak && isEersteAfspraak(alle.map((x) => ({ id: x.id, accountId: x.account_id, status: x.status, start: new Date(x.start_at).toISOString(), meetingsoortType: x.type })), ap!.account_id, ap!.id)
   await tx.execute(sql`update appointments set status = ${status}, updated_at = now(), versie = versie + 1 where id = ${ap!.id}`)
   if (eerste && ap!.account_id) await meldGebeurtenis(tx, { accountId: ap!.account_id, gebeurtenis: 'afspraak-niet-verschenen', door, nu, zonderMotor: true }).catch((e) => { if (!(e instanceof ReisFout)) throw e })
-  // De vervangende kansen levert P14; het inzicht staat nu al bij de eigenaar.
-  await tx.execute(sql`insert into signals (organisation_id, account_id, owner_id, type, title, relevance_score, status, bron, data) values (${org}, ${ap!.account_id}, ${ap!.owner_id}, 'gat-in-agenda', ${`Gat in je agenda: ${ap!.account_naam ?? 'afspraak'} ${status === 'geannuleerd' ? 'geannuleerd' : 'niet verschenen'}`}, 70, 'nieuw', 'intern', ${JSON.stringify({ waarom: 'Er is tijd vrijgekomen. Kansen in de buurt volgen met de routeplanner.', afspraakId: ap!.id })}::jsonb)`)
+  // Het inzicht "Gat in je agenda" met de top drie kansen rond die plek (P14) en "Plan vervangend bezoek".
+  const kansen = await kansenRond(tx, ap!.owner_id, ap!.account_id, new Date(ap!.start_at), new Date(ap!.end_at), nu).catch(() => [])
+  const waarom = kansen.length ? `Er is tijd vrijgekomen. In de buurt: ${kansen.map((k) => `${k.naam} (${k.omrij} min)`).join(', ')}.` : 'Er is tijd vrijgekomen. Er staan nu geen kansen in de buurt.'
+  await tx.execute(sql`insert into signals (organisation_id, account_id, owner_id, type, title, relevance_score, status, bron, data) values (${org}, ${ap!.account_id}, ${ap!.owner_id}, 'gat-in-agenda', ${`Gat in je agenda: ${ap!.account_naam ?? 'afspraak'} ${status === 'geannuleerd' ? 'geannuleerd' : 'niet verschenen'}`}, 70, 'nieuw', 'intern', ${JSON.stringify({ waarom, afspraakId: ap!.id, kansen })}::jsonb)`)
   await schrijfAudit(tx, { organisationId: org, actorId: door, action: `afspraak.${status}`, resourceType: 'appointments', resourceId: ap!.id, changes: { eerste } })
   return { status, eerste }
 }

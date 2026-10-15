@@ -1,6 +1,7 @@
 // Leadgenerator (F02). Bovenaan het tabblad Importeren: kolomherkenning, validatie per
 // rij, dubbelen in het bestand, terugdraaien en veroudering. Daaronder de leadstroom.
 // Ontdubbelen tegen het bestand staat in shared/ontdubbelen.ts (één plek, ook voor "+ Prospect").
+import { afstandKm } from './route'
 import { geldigEmail, geldigePostcode, normaliseerTelefoon } from './contactgegevens'
 import { valideerWaarde, type VeldDefinitie } from './eigenVelden'
 import { dice, normaliseerDomein, normaliseerNaam } from './ontdubbelen'
@@ -244,12 +245,8 @@ export function klasseUitMedewerkers(n: number | null | undefined, klassen: Klas
 }
 const codeVan = (id: string | null, klassen: Klasse[]) => (id ? klasseCode(klassen.find((k) => k.id === id) ?? { id, naam: id }) : null)
 
-/** Afstand in kilometers tussen twee punten (haversine). */
-export function afstandKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
-  const r = (x: number) => (x * Math.PI) / 180
-  const h = Math.sin(r(b.lat - a.lat) / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(r(b.lng - a.lng) / 2) ** 2
-  return 2 * 6371 * Math.asin(Math.sqrt(h))
-}
+// De afstand (haversine) staat één keer, in shared/route.ts.
+export { afstandKm }
 
 const STOPWOORDEN = new Set(['voor', 'naar', 'met', 'zijn', 'heeft', 'van', 'een', 'het', 'die', 'dat', 'deze', 'door', 'werkt', 'bedrijf', 'bedrijven'])
 /** Trefwoorden uit een aanleiding: woorden van vier letters of meer, als stam van zes letters. */

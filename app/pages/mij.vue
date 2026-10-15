@@ -41,6 +41,13 @@ async function toonMinder(sleutel: string, tonen: boolean) {
 }
 const g = computed(() => me.value!.gebruiker)
 
+// Routes (P14): thuisbasis voor routes en de kaartapp voor navigeren.
+const thuisbasis = ref(((me.value?.gebruiker as any)?.route?.thuisbasis ?? '') as string)
+const kaartapp = ref(((me.value?.gebruiker as any)?.route?.kaartapp ?? 'google') as string)
+async function bewaarRoute(veld: 'thuisbasis' | 'kaartapp') {
+  try { await $fetch('/api/mij/route', { method: 'PUT', body: veld === 'thuisbasis' ? { thuisbasis: thuisbasis.value } : { kaartapp: kaartapp.value } }); toast.toon(veld === 'thuisbasis' ? 'Thuisbasis bewaard.' : 'Kaartapp bewaard.') } catch (e) { toast.toon(foutTekst(e), 'fout') }
+}
+
 // Gekoppelde agenda (P13): Microsoft 365 of Google; de beheerder zet de koppeling aan.
 const { data: agenda, refresh: herlaadAgenda } = await useFetch<any>('/api/koppelingen/agenda', { default: () => null })
 const route = useRoute()
@@ -89,6 +96,11 @@ useHead({ title: 'Mijn instellingen · Dealtrace' })
             <ul v-if="ai.eigen.perSoort.length" class="schakel-lijst"><li v-for="s in ai.eigen.perSoort" :key="s.soort" class="schakel-rij"><span>{{ s.soort }}</span><span class="meta tnum">{{ s.handelingen }} keer · {{ s.credits }} credits</span></li></ul>
           </article>
           <MijnToestellen />
+          <article class="kaart" data-test="mijn-routes">
+            <header class="kaart-kop"><h2 class="kaart-titel">Routes en navigeren</h2></header>
+            <label class="veld"><span class="veld-label">Thuisbasis voor routes</span><input v-model="thuisbasis" class="invoer" placeholder="Adres, postcode of plaats" data-test="thuisbasis" @change="bewaarRoute('thuisbasis')"><span class="veld-uitleg">Je route begint en eindigt hier. Je locatie zelf bewaart Dealtrace niet.</span></label>
+            <label class="veld mt-16"><span class="veld-label">Kaartapp voor navigeren</span><select v-model="kaartapp" class="invoer" data-test="kaartapp" @change="bewaarRoute('kaartapp')"><option value="google">Google Maps</option><option value="apple">Apple Kaarten</option><option value="waze">Waze</option></select></label>
+          </article>
           <article v-if="agenda" id="agenda" class="kaart" data-test="gekoppelde-agenda">
             <header class="kaart-kop"><h2 class="kaart-titel">Gekoppelde agenda</h2></header>
             <p class="kaart-meta">Wat in je agenda staat, telt mee als bezet. Afspraken uit Dealtrace komen erin, met een Teams- of Meet-link bij online.</p>
