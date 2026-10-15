@@ -1,8 +1,8 @@
 // P02: platformscheiding, werken in een organisatie, spiegel voor de beheerder.
 import { existsSync } from 'node:fs'
 import { expect, request as pwRequest, test } from '@playwright/test'
-import { SignJWT } from 'jose'
 import { apiLogin, login } from './hulp'
+import { totpCode } from '../../server/utils/totp'
 
 if (existsSync('.env')) process.loadEnvFile('.env')
 const MEEKIJK = 'Je kijkt mee in deze organisatie; schakel over naar wijzigen om iets aan te passen.'
@@ -18,9 +18,11 @@ test.describe('platform API', () => {
   })
 
   test('founder zonder tweestapsverificatie krijgt 401', async ({ baseURL }) => {
-    const geheim = new TextEncoder().encode(process.env.SESSIE_GEHEIM || 'lokaal-ontwikkelgeheim-niet-voor-productie-gebruiken')
-    const token = await new SignJWT({ aal: 'aal1', act: Date.now() }).setSubject('u-founder').setProtectedHeader({ alg: 'HS256' }).setExpirationTime('1h').sign(geheim)
-    const ctx = await pwRequest.newContext({ baseURL, extraHTTPHeaders: { cookie: `dt_sessie=${token}` } })
+    // Na de mailcode, zonder de TOTP-stap (P27): een halve sessie.
+    const ctx = await pwRequest.newContext({ baseURL })
+    await ctx.post('/api/auth/code', { data: { email: 'founder@dealtrace.test' } })
+    const code = (await (await ctx.get('/api/auth/testcode?email=founder@dealtrace.test')).json()).code
+    expect((await (await ctx.post('/api/auth/verifieer', { data: { email: 'founder@dealtrace.test', code } })).json()).totpNodig).toBe(true)
     expect((await ctx.get('/api/platform/klanten')).status()).toBe(401)
     await ctx.dispose()
   })
@@ -42,7 +44,7 @@ test.describe('platform API', () => {
     expect(sync.status()).toBe(403)
 
     expect((await request.post('/api/platform/werk-in/modus', { data: { modus: 'wijzigen', reden: 'Ticket 1042 fix' } })).status()).toBe(428)
-    expect((await request.post('/api/sessie/herbevestig', { data: { code: '123456' } })).status()).toBe(200)
+    expect((await request.post('/api/sessie/herbevestig', { data: { code: totpCode('JBSWY3DPEHPK3PXP') } })).status()).toBe(200)
     expect((await request.post('/api/platform/werk-in/modus', { data: { modus: 'wijzigen', reden: 'Ticket 1042 fix' } })).status()).toBe(200)
     expect((await request.get('/api/settings')).status()).toBe(200)
 
@@ -71,7 +73,7 @@ test.describe('platform API', () => {
     const r = await request.post('/api/platform/werk-in', { data: { organisatieId: 'org-tweede', reden: 'Ticket 2002', modus: 'wijzigen' } })
     // "Ook wijzigen" vraagt eerst herbevestiging.
     expect(r.status()).toBe(428)
-    await request.post('/api/sessie/herbevestig', { data: { code: '123456' } })
+    await request.post('/api/sessie/herbevestig', { data: { code: totpCode('JBSWY3DPEHPK3PXP') } })
     const v = await request.post('/api/platform/werk-in', { data: { organisatieId: 'org-tweede', reden: 'Ticket 2002', modus: 'wijzigen' } })
     expect(v.status()).toBe(202)
     expect((await (await request.get('/api/me')).json()).werkIn).toBeNull()

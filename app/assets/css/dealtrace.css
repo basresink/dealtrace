@@ -927,7 +927,7 @@ textarea:focus-visible {
   min-width: 0;
   background: var(--bg);
 }
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .app-shell { --sidebar-w: var(--sidebar-w-smal); }
 }
 /* In een kader (voorbeeldpagina, mock-up): de zijbalk staat absoluut in
@@ -1340,7 +1340,7 @@ textarea:focus-visible {
   margin-left: 6px;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .app-sidebar { width: var(--sidebar-w); overflow: visible; }
   .app-sidebar .sb-merk { flex-direction: column; justify-content: center; gap: 10px; padding: 14px 0 12px; }
   .app-sidebar .sb-merk-link { flex: 0 0 auto; justify-content: center; }

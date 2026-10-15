@@ -134,6 +134,9 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
     await client.query(`update users set data = data || $2 where id = $1 and not (data ? 'thuisbasis')`, ['u-01', JSON.stringify({ thuisbasis: { lat: 53.22, lng: 6.57, plaats: 'Groningen' } })])
     await client.query(`update users set data = data || $2 where id = $1 and not (data ? 'thuisbasis')`, ['u-05', JSON.stringify({ thuisbasis: { lat: 52.16, lng: 5.39, plaats: 'Amersfoort' } })])
 
+    // P27: de founder heeft een vaste, fictieve TOTP-sleutel voor tests (alleen lokaal en in de testomgeving).
+    await client.query(`update users set data = data || $2 where id = $1 and not (data ? 'totp')`, ['u-founder', JSON.stringify({ totp: { geheim: versleutel({ geheim: 'JBSWY3DPEHPK3PXP' }), aan: true, op: '2026-01-01' } })])
+
     await client.query('commit')
     log(`Startdata geladen: ${org.naam} met ${gebruikers.length} gebruikers, ${p03.accounts} accounts en ${p03.contacten} contacten, Testorganisatie Tweede en een founder.`)
   } catch (e) {

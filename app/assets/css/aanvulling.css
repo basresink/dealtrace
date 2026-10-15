@@ -753,3 +753,52 @@
   .plan-rij .dd-act { flex: 1; min-height: 48px; justify-content: center; }
 }
 .hoofdletter::first-letter { text-transform: uppercase; }
+
+/* P27: inloggen met code */
+.login-stap { max-width: 420px; }
+.login-stap .dd-act--primair { width: 100%; justify-content: center; min-height: 48px; }
+.code-invoer { font-size: 28px; letter-spacing: 0.4em; text-align: center; font-variant-numeric: tabular-nums; }
+.totp-geheim { font-size: 16px; word-break: break-all; }
+.mt-48 { margin-top: 48px; }
+
+/* P27: de mobiele schil (8.3, ADR-019). Kleiner dan 768 px compacte kop (56 px) en onderbalk
+   (64 px plus de veilige zone); geen zijbalk en geen icoonstrook. */
+:root { --kop-h: 56px; --onderbalk-h: 64px; --onderbalk-veilig: calc(var(--onderbalk-h) + env(safe-area-inset-bottom, 0px)); }
+.mobiele-kop, .onderbalk { display: none; }
+@media (max-width: 767px) {
+  .app-shell { padding-left: 0; padding-bottom: var(--onderbalk-veilig); }
+  .app-sidebar { display: none; }
+  .mobiele-kop { position: sticky; top: 0; z-index: var(--z-overlay); display: flex; align-items: center; justify-content: space-between; gap: 8px; height: var(--kop-h); padding: 0 8px 0 16px; background: var(--wit); border-bottom: 1px solid var(--border); }
+  .mk-titel { font-size: 16px; font-weight: 700; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mk-terug { display: flex; align-items: center; gap: 4px; min-height: 44px; background: none; border: 0; font: inherit; font-size: 16px; font-weight: 700; color: var(--ink); padding: 0; cursor: pointer; }
+  .mk-knoppen { display: flex; gap: 2px; }
+  .mk-knop { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: none; border: 0; color: var(--ink); cursor: pointer; }
+  .mk-teller { position: absolute; top: 4px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
+  .onderbalk { position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--z-overlay); display: grid; grid-template-columns: repeat(5, 1fr); height: var(--onderbalk-veilig); padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--ink); }
+  .ob-tab { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: var(--onderbalk-h); background: none; border: 0; color: var(--wit-85); font: inherit; font-size: 11px; text-decoration: none; cursor: pointer; }
+  .ob-tab--aan { color: var(--yellow); }
+  .ob-tab--aan::before { content: ''; position: absolute; top: 0; left: 20%; right: 20%; height: 3px; background: var(--yellow); }
+  /* De plakkende actiebalk (P03) staat boven de onderbalk, schermbreed. */
+  .actiebalk { left: 0 !important; bottom: var(--onderbalk-veilig) !important; }
+  .actiebalk ~ * { scroll-margin-bottom: 120px; }
+  .toast-stack { bottom: calc(var(--onderbalk-veilig) + 8px) !important; }
+  .offline-strook { position: sticky; top: var(--kop-h); z-index: 4; min-height: 28px; }
+  /* Schuifvenster van onderen tot 92 procent van de schermhoogte, met een greep bovenin. */
+  .fo-overlay .fo-panel { max-height: 92vh; }
+  .fo-overlay .fo-panel .fo-head { position: relative; padding-top: 18px; }
+  .fo-overlay .fo-panel .fo-head::before { content: ''; position: absolute; top: 6px; left: 50%; width: 40px; height: 4px; margin-left: -20px; border-radius: 2px; background: var(--border); }
+  .meer-venster .meer-groep { padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .meer-kop { margin: 8px 0 4px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .meer-kop--knop { background: none; border: 0; padding: 0; font: inherit; font-size: 12px; cursor: pointer; display: flex; gap: 6px; align-items: center; }
+  .meer-item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0 4px; color: var(--ink); text-decoration: none; background: none; border: 0; font: inherit; text-align: left; cursor: pointer; }
+  .meer-item .meta { margin-left: auto; font-size: 12px; }
+  .meer-item--slot { color: var(--muted); }
+}
+/* Handschoenmodus en zonlichtmodus (Mijn instellingen, blok Telefoon). */
+html.handschoen { --touch-target-min: 54px; }
+html.handschoen .ob-tab, html.handschoen .ab-knop, html.handschoen .dd-act { min-height: 54px; }
+html.zonlicht { --muted: #000; --wit-85: #fff; --border: #000; }
+html.zonlicht body { color: #000; }
+@media (max-width: 767px) { body { font-size: max(15px, 1em); } }
+.install-vraag { position: fixed; left: 16px; right: 16px; bottom: calc(var(--onderbalk-veilig) + 8px); z-index: var(--z-overlay); }
+@media (min-width: 768px) and (max-width: 1023px) { .app-sidebar .sb-inklap { display: none; } }

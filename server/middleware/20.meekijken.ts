@@ -5,7 +5,7 @@ import { vereisSessie } from '../utils/sessie'
 import { WERK_IN_COOKIE } from '../utils/werkIn'
 
 // Eigen meldingen van de founder zijn geen klantdata.
-const VRIJ = ['/api/platform/', '/api/sessie/', '/api/mij/gezien', '/api/notificaties/']
+const VRIJ = ['/api/platform/', '/api/sessie/', '/api/auth/', '/api/mij/gezien', '/api/mij/toestellen', '/api/notificaties/']
 
 export default defineEventHandler(async (event) => {
   if (!event.path.startsWith('/api/')) return

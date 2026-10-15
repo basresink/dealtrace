@@ -33,7 +33,13 @@ pnpm seed                   # fictieve testdata: Testbedrijf Voltvast
 pnpm dev
 ```
 
-Open <http://localhost:3000>. Je ziet een lijst testgebruikers; klik er een aan om in te loggen. Inloggen met een code per mail komt in P27.
+Open <http://localhost:3000>. Inloggen gaat met een code per mail (geen wachtwoorden):
+
+1. Vul het e-mailadres van een testgebruiker in, bijvoorbeeld `sanne@voltvast.test`, en klik **Stuur mij een code**.
+2. Lokaal verstuurt Dealtrace geen echte mail: de mail-mock bewaart de code. Haal hem op met <http://localhost:3000/api/auth/testcode?email=sanne@voltvast.test> (alleen in `AUTH_MODUS=ontwikkel`, nooit online). Gebruik je de Supabase CLI met `RESEND_API_KEY` leeg, dan geldt hetzelfde; een echte mail gaat alleen uit met `RESEND_API_KEY` en nooit naar `.test`-adressen.
+3. De founder (`founder@dealtrace.test`) vult daarna een code uit zijn authenticator in. De fictieve testsleutel is `JBSWY3DPEHPK3PXP`; voeg hem toe aan een authenticator-app.
+
+In de ontwikkelmodus staat onder het inlogformulier ook een lijst testgebruikers: klik er een aan om direct in te loggen. Op je telefoon in hetzelfde wifi-netwerk test je met `pnpm dev --host`.
 
 | Testgebruiker | Rol | Niveau | Werkplek |
 |---|---|---|---|

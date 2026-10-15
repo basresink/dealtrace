@@ -70,6 +70,7 @@ useHead({ title: 'Mijn instellingen · Dealtrace' })
             <p class="kaart-meta">Je eigen varianten van de belscripts van je team.</p>
             <div class="reis-knoppen mt-16"><NuxtLink to="/instellingen/mijn-scripts" class="dd-act">Naar mijn scripts</NuxtLink></div>
           </article>
+          <MijnToestellen />
           <article class="kaart">
             <header class="kaart-kop"><h2 class="kaart-titel">Meldingen</h2></header>
             <ul class="schakel-lijst">

@@ -5,9 +5,17 @@ import type { H3Event } from 'h3'
 import { sql } from 'drizzle-orm'
 import { HERBEVESTIG_MS } from '../../shared/werkIn'
 import { gebruikDb, schema } from './db'
-import { vereisSessie, type Context } from './sessie'
+import { leesSessieInhoud, vereisSessie, type Context } from './sessie'
 
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
+
+/** Een halve sessie (na de mailcode, vóór TOTP) van de founder. */
+export async function halveFounder(event: H3Event): Promise<boolean> {
+  const s = await leesSessieInhoud(event)
+  if (!s?.half) return false
+  const r = await gebruikDb().execute(sql`select role from dealtrace_sessie_gebruiker(${s.sub})`)
+  return (r.rows[0] as any)?.role === 'founder'
+}
 
 /** Founder met tweestapsverificatie (aal2); anders 404 (geen founder) of 401 (geen aal2). */
 export async function requireFounder(event: H3Event): Promise<Context> {
@@ -15,6 +23,8 @@ export async function requireFounder(event: H3Event): Promise<Context> {
   try {
     ctx = await vereisSessie(event)
   } catch {
+    // Founder na de mailcode zonder TOTP-stap (halve sessie, P27): 401.
+    if (await halveFounder(event)) throw createError({ statusCode: 401, statusMessage: 'Tweestapsverificatie vereist' })
     throw createError({ statusCode: 404, statusMessage: 'Niet gevonden' })
   }
   if (ctx.echteRol !== 'founder') throw createError({ statusCode: 404, statusMessage: 'Niet gevonden' })

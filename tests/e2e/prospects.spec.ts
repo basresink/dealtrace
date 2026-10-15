@@ -35,8 +35,11 @@ test.describe('prospects', () => {
     await page.getByTestId('sc-achternaam').fill(naam)
     await page.getByTestId('sc-rol').selectOption('champion')
     await page.getByTestId('sc-toevoegen').click()
+    // Escape sluit het bovenste venster (P27); twee keer sluit ook de contactenflyout.
     await page.keyboard.press('Escape')
-    await page.locator('.fo-sluit').first().click()
+    await page.waitForTimeout(200)
+    if (await page.locator('.fo-overlay').count()) await page.keyboard.press('Escape')
+    await expect(page.locator('.fo-overlay')).toHaveCount(0)
     await expect(page.locator('[data-rol="champion"]')).toContainText(naam)
   })
 

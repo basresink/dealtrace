@@ -1,14 +1,16 @@
 // Sessie en context per verzoek (bouwplan 13.1, 15.3).
 //
-// Tot P27 (inloggen met een code per mail) is er alleen de ontwikkelmodus: op
-// /login kies je een testgebruiker. De sessie is een ondertekende httpOnly-cookie
-// met het gebruikers-id; alles wat daarna nodig is, haalt de server zelf op.
+// Inloggen met een code per mail (P27); in de ontwikkelmodus kun je ook een testgebruiker
+// kiezen. De sessie is een ondertekende httpOnly-cookie met het gebruikers-id en het
+// toestel; een ingetrokken toestel maakt de sessie ongeldig. Alles wat daarna nodig is,
+// haalt de server zelf op.
 
 import type { H3Event } from 'h3'
 import { SignJWT, jwtVerify } from 'jose'
 import { eq, or, isNull } from 'drizzle-orm'
 import { sql } from 'drizzle-orm'
 import { beschikbaar, type Weigerreden } from '../../shared/functies'
+import { toestelLabel } from '../../shared/inloggen'
 import type { FunctieRegel, GebruikerContext, Niveau, OrganisatieContext, Pakket, Rol, Werkplek } from '../../shared/types'
 import type { WerkIn } from '../../shared/werkIn'
 import { gebruikDb, metOrganisatie, schema } from './db'
@@ -26,7 +28,7 @@ function sleutel(): Uint8Array {
  * `hb`: moment van de laatste herbevestiging (TOTP) voor gevaarlijke acties;
  * `act`: laatste activiteit, voor de founder vervalt de sessie na 12 uur stilte.
  */
-export interface SessieInhoud { sub: string; aal: 'aal1' | 'aal2'; hb?: string; act?: number }
+export interface SessieInhoud { sub: string; aal: 'aal1' | 'aal2'; hb?: string; act?: number; tid?: string; half?: boolean }
 
 export const PLATFORM_STIL_MS = 12 * 3600 * 1000
 
@@ -52,10 +54,22 @@ export async function leesSessieInhoud(event: H3Event): Promise<SessieInhoud | n
   if (!token) return null
   try {
     const { payload } = await jwtVerify(token, sleutel())
-    return { sub: String(payload.sub), aal: payload.aal === 'aal2' ? 'aal2' : 'aal1', hb: payload.hb as string | undefined, act: payload.act as number | undefined }
+    const inhoud: SessieInhoud = { sub: String(payload.sub), aal: payload.aal === 'aal2' ? 'aal2' : 'aal1', hb: payload.hb as string | undefined, act: payload.act as number | undefined, tid: payload.tid as string | undefined, half: payload.half === true }
+    if (!inhoud.tid) return null
+    // Een ingetrokken toestel ("Uitloggen op alle toestellen") maakt de sessie ongeldig.
+    const [t] = await gebruikDb().select().from(schema.gebruikerToestellen).where(eq(schema.gebruikerToestellen.id, inhoud.tid))
+    if (!t || t.ingetrokkenOp || t.gebruikerId !== inhoud.sub) return null
+    if (Date.now() - Date.parse(t.laatstGezien) > 10 * 60_000) await gebruikDb().update(schema.gebruikerToestellen).set({ laatstGezien: new Date().toISOString() }).where(eq(schema.gebruikerToestellen.id, t.id))
+    return inhoud
   } catch {
     return null
   }
+}
+
+/** Een nieuw toestel bij een geslaagde inlog. */
+export async function maakToestel(event: H3Event, gebruiker: { id: string; organisationId: string | null }): Promise<string> {
+  const [t] = await gebruikDb().insert(schema.gebruikerToestellen).values({ gebruikerId: gebruiker.id, organisationId: gebruiker.organisationId, label: toestelLabel(getHeader(event, 'user-agent')) }).returning({ id: schema.gebruikerToestellen.id })
+  return t!.id
 }
 
 export function wisSessie(event: H3Event) {
@@ -127,7 +141,7 @@ export async function leesOrganisatie(organisationId: string) {
 export async function vereisSessie(event: H3Event): Promise<Context> {
   if (event.context.dealtrace) return event.context.dealtrace as Context
   const sessie = await leesSessieInhoud(event)
-  if (!sessie) throw createError({ statusCode: 401, statusMessage: 'Niet ingelogd' })
+  if (!sessie || sessie.half) throw createError({ statusCode: 401, statusMessage: 'Niet ingelogd' })
   const gebruiker = await leesGebruiker(event, sessie)
   if (!gebruiker) throw createError({ statusCode: 401, statusMessage: 'Niet ingelogd' })
 
@@ -139,7 +153,7 @@ export async function vereisSessie(event: H3Event): Promise<Context> {
       wisSessie(event)
       throw createError({ statusCode: 401, statusMessage: 'Je platformsessie is verlopen. Log opnieuw in.' })
     }
-    if (nu - sessie.act > 5 * 60 * 1000) await maakSessie(event, gebruiker.id, { aal: sessie.aal, hb: sessie.hb, act: nu })
+    if (nu - sessie.act > 5 * 60 * 1000) await maakSessie(event, gebruiker.id, { aal: sessie.aal, hb: sessie.hb, act: nu, tid: sessie.tid })
     const werkIn = await leesWerkIn(event, gebruiker.id)
     if (werkIn) {
       const { organisatie, stand } = await leesOrganisatie(werkIn.organisatieId)

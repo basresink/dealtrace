@@ -9,6 +9,10 @@ samenvatting: Waar je begint, wat de zijbalk laat zien en hoe je je eerste taken
 
 Dealtrace helpt je nieuwe klanten te vinden en een eerste afspraak te maken. Je hoeft niet alles tegelijk te leren: je ziet de functies die bij jouw niveau horen.
 
+## Inloggen
+
+Dealtrace heeft geen wachtwoord. Vul je e-mailadres in en tik **Stuur mij een code**. Je krijgt een code van zes cijfers per mail; hij is 10 minuten geldig. Op je telefoon stelt het toetsenbord de code vaak al voor. Daarna blijf je 30 dagen ingelogd op dat toestel.
+
 ## Zo begin je
 
 1. Open **Vandaag**. Daar staat wat je nu doet en waarom.
@@ -22,6 +26,10 @@ Dealtrace helpt je nieuwe klanten te vinden en een eerste afspraak te maken. Je 
 - **Werk**: je acties, belblokken of bezoeken en campagnes.
 - **Prospects**: je prospects, contacten en inzichten.
 - **Nog niet aangezet**: functies die later voor je aangaan. Klik erop voor uitleg.
+
+## Op je telefoon
+
+Op de telefoon staat onderin de **onderbalk** met vijf tabs, afgestemd op je werk: voor de binnendienst Vandaag, Belblok, Acties en Prospects, voor de buitendienst Vandaag, Route, Bellen en Prospects. Onder **Meer** vind je de rest. Lees "Dealtrace op je telefoon en offline".
 
 ## Hulp nodig?
 

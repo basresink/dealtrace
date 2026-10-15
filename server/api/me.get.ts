@@ -51,6 +51,8 @@ export default defineEventHandler(async (event) => {
       niveau: gebruiker.niveau,
       werkplek: gebruiker.werkplek,
       verborgen: gebruiker.verborgen,
+      eigenPortefeuille: gebruiker.rol !== 'salesmanager' || (gebruiker.data as any)?.eigenPortefeuille === true,
+      totpAan: !!(gebruiker.data as any)?.totp?.aan,
     },
     echteRol,
     werkIn: werkIn ? { organisatie: werkIn.organisatieNaam, organisatieId: werkIn.organisatieId, modus: werkIn.modus, reden: werkIn.reden, resterendMs: werkIn.resterendMs, resterend: resterendTekst(werkIn.resterendMs) } : null,

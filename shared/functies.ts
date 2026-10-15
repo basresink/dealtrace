@@ -422,6 +422,23 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'bellen.handsfree', naam: 'Handsfree bellen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-belmodus', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'Dealtrace leest naam, reden en opening voor terwijl je rijdt.', totDieTijd: 'Je leest het script zelf op het scherm.' },
   },
+  // P27: inloggen met code en de mobiele schil (F24, hoofdstuk 8).
+  {
+    sleutel: 'auth.toestellen', naam: 'Toestellen en sessies', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Zien waar je bent ingelogd en uitloggen op één of alle toestellen.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'schil.onderbalk', naam: 'Onderbalk', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Op de telefoon vijf tabs per werkplek en Meer voor de rest.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'schil.handschoenmodus', naam: 'Handschoenmodus', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Grotere knoppen op de telefoon.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'schil.zonlichtmodus', naam: 'Zonlichtmodus', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Meer contrast buiten in de zon.', totDieTijd: 'Geen.' },
+  },
   // P12: prospectplanning en terugkomregels (F13, F25).
   {
     sleutel: 'planning.jaar', naam: 'Jaarplanning', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospectplanning', startNiveau: 'gevorderd',
@@ -681,7 +698,7 @@ const FEATURE_GROEPEN: [RegExp, string][] = [
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],
-  [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^leads\.|^koppeling\.kvk|^onderweg\.kvk/, 'F02 Leadgenerator'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
+  [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^auth\.|^schil\./, 'F24 Inloggen en telefoon'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^leads\.|^koppeling\.kvk|^onderweg\.kvk/, 'F02 Leadgenerator'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
 ]
 export function featureGroep(sleutel: string): string {
   return FEATURE_GROEPEN.find(([r]) => r.test(sleutel))?.[1] ?? 'Overig'

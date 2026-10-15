@@ -1,8 +1,2 @@
-import { wisSessie } from '../../utils/sessie'
-import { wisWerkIn } from '../../utils/werkIn'
-
-export default defineEventHandler((event) => {
-  wisSessie(event)
-  wisWerkIn(event)
-  return { ok: true }
-})
+// POST /api/sessie/uitloggen: hetzelfde als /api/auth/uitloggen (dit toestel).
+export { default } from '../auth/uitloggen.post'

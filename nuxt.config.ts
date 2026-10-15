@@ -12,6 +12,15 @@ export default defineNuxtConfig({
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         { name: 'theme-color', content: '#0a0a0a' },
+        // PWA (P27, 8.14): één manifest, staand, iOS-meta's.
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black' },
+        { name: 'apple-mobile-web-app-title', content: 'Dealtrace' },
+      ],
+      link: [
+        { rel: 'manifest', href: '/manifest.webmanifest' },
+        { rel: 'apple-touch-icon', href: '/iconen/dealtrace-180.png' },
       ],
     },
   },

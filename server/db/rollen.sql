@@ -117,3 +117,6 @@ grant execute on function dealtrace_zoektekst(text) to dealtrace_app, dealtrace_
 -- P10: de startset van belscripts laadt de platformrol; versies zijn een log.
 grant select, insert on belscripts, belscript_versies to dealtrace_platform;
 revoke update, delete on belscript_versies from dealtrace_app;
+
+-- P28: versies van het verkoopverhaal zijn een log.
+revoke update, delete on vv_versies from dealtrace_app;

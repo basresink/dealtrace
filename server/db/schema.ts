@@ -744,3 +744,28 @@ export const kvkCache = pgTable('kvk_cache', {
   profiel: jsonb('profiel').$type<import('../utils/bronnen/kvk').KvkProfiel>().notNull(),
   opgehaaldOp: ts('opgehaald_op').defaultNow().notNull(),
 })
+
+// P27: inloggen met code en toestellen.
+export const inlogAanvragen = pgTable('inlog_aanvragen', {
+  id: integer('id').primaryKey(),
+  emailHash: text('email_hash').notNull(),
+  op: ts('op').defaultNow().notNull(),
+})
+export const inlogCodes = pgTable('inlog_codes', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  emailHash: text('email_hash').notNull(),
+  codeHash: text('code_hash').notNull(),
+  verlooptOp: ts('verloopt_op').notNull(),
+  gebruiktOp: ts('gebruikt_op'),
+  pogingen: integer('pogingen').notNull().default(0),
+  op: ts('op').defaultNow().notNull(),
+})
+export const gebruikerToestellen = pgTable('gebruiker_toestellen', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id'),
+  gebruikerId: text('gebruiker_id').notNull(),
+  label: text('label').notNull(),
+  aangemaaktOp: ts('aangemaakt_op').defaultNow().notNull(),
+  laatstGezien: ts('laatst_gezien').defaultNow().notNull(),
+  ingetrokkenOp: ts('ingetrokken_op'),
+})

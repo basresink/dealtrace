@@ -7,7 +7,7 @@ import {
   PanelLeft, Pencil, Phone, Plus, RefreshCw, Route, ScrollText, Search, Server, Settings, Sparkles, SquareCheck,
   UserCog, UserPlus, Users, UsersRound, WifiOff, X, Bell,
   Globe, Mail, MessageCircle, Navigation, Ellipsis, ArrowLeft, ArrowRight, Trash2, GripVertical, Download, Merge, LayoutList, LayoutGrid,
-  List, ArrowUpDown, Star, Ban, Link, Linkedin, Info, Save, UserX, Bookmark, PhoneOff, Briefcase, Clock, StickyNote, Pause, CircleX, CircleDot,
+  List, ArrowUpDown, Star, Ban, Link, Linkedin, Info, Save, UserX, Bookmark, PhoneOff, Briefcase, Clock, StickyNote, Pause, CircleX, CircleDot, Mic,
 } from 'lucide-vue-next'
 
 const ICONEN = {
@@ -16,7 +16,7 @@ const ICONEN = {
   PanelLeft, Pencil, Phone, Plus, RefreshCw, Route, ScrollText, Search, Server, Settings, Sparkles, SquareCheck,
   UserCog, UserPlus, Users, UsersRound, WifiOff, X, Bell,
   Globe, Mail, MessageCircle, Navigation, Ellipsis, ArrowLeft, ArrowRight, Trash2, GripVertical, Download, Merge, LayoutList, LayoutGrid,
-  List, ArrowUpDown, Star, Ban, Link, Linkedin, Info, Save, UserX, Bookmark, PhoneOff, Briefcase, Clock, StickyNote, Pause, CircleX, CircleDot,
+  List, ArrowUpDown, Star, Ban, Link, Linkedin, Info, Save, UserX, Bookmark, PhoneOff, Briefcase, Clock, StickyNote, Pause, CircleX, CircleDot, Mic,
 } as const
 
 const props = defineProps<{ naam: string; grootte?: number }>()
