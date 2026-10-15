@@ -90,7 +90,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
             <p v-if="a.soort.doel">{{ a.soort.doel }}</p>
             <ol class="mt-8"><li v-for="p in a.soort.agenda" :key="p.punt">{{ p.punt }}<span v-if="p.verplicht" class="meta"> · verplicht</span></li></ol>
           </article>
-          <article class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Pitstop</h3><button v-if="functie('spraak.voorlezen')?.beschikbaar && vl.kan()" type="button" class="dd-act" :aria-pressed="vl.spreekt.value" data-test="af-lees-voor" @click="leesBriefing"><Icoon :naam="vl.spreekt.value ? 'VolumeX' : 'Volume2'" />{{ vl.spreekt.value ? 'Stop' : 'Lees voor' }}</button></header><p class="meta">Pitstop volgt.</p></article>
+          <article class="fo-blok" data-test="af-pitstop"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Pitstop</h3></header><BriefingPaneel v-if="functie('briefing.lezen')?.beschikbaar && a.account" onderwerp="afspraak" :id="a.id" /><p v-else class="meta">Een briefing hoort bij een afspraak met een klant.</p></article>
           <article v-if="a.verslag?.tekst" class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Verslag</h3></header><p>{{ a.verslag.tekst }}</p></article>
           <article v-if="afronden" class="fo-blok" data-test="rond-af">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Rond af</h3></header>

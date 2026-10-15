@@ -6,6 +6,7 @@ const ingeklapt = useCookie<boolean>('dt_ingeklapt', { default: () => false, max
 const { me } = useMe()
 const { toon } = useToast()
 const ongelezen = useState<number>('ongelezen', () => 0)
+const concepten = useState<number>('conceptenTeller', () => 0)
 useSchermklasse()
 
 // Het bovenste schuifvenster sluit met Escape of door omlaag te vegen over de kop.
@@ -26,6 +27,8 @@ async function telOngelezen() {
   try {
     const lijst = await $fetch<{ gelezenOp: string | null }[]>('/api/notificaties')
     ongelezen.value = lijst.filter((n) => !n.gelezenOp).length
+    // P18: concepten die op je goedkeuring wachten, bij de bel en onder Meer.
+    if (me.value.functies?.find((f: any) => f.sleutel === 'concepten.inbox')?.beschikbaar) concepten.value = (await $fetch<{ concepten: unknown[] }>('/api/concepten', { query: { status: 'klaar' } })).concepten.length
   } catch { /* offline: teller blijft staan */ }
 }
 

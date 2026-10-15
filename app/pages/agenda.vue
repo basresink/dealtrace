@@ -92,6 +92,7 @@ if (import.meta.client && route.query.melding === 'gekoppeld') toast.toon('Agend
     <PaginaKop kicker="Start · Agenda" :titel="kop" uitleg="Je afspraken, belblokken en wat er in je gekoppelde agenda staat." helpartikel="agenda">
       <template #acties>
         <button type="button" class="dd-actie dd-actie--primair" data-test="plan-afspraak-knop" @click="plan()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+        <NuxtLink v-if="functie('briefing.bewerken')?.beschikbaar" to="/briefings" class="dd-actie dd-actie--secundair" data-test="briefings-knop"><Icoon naam="ScrollText" class="dd-actie-icoon" />Briefings</NuxtLink>
       </template>
     </PaginaKop>
     <section class="section">

@@ -69,6 +69,10 @@ De koppeling met je CRM komt in een volgende versie.
 
 Na een eerste afspraak met vervolg draag je een account over aan DealDrive. Bij **Instellingen**, **Koppelingen** zie je de stand: **uit**, **mock** (de testomgeving) of gekoppeld. De stand zet de leverancier. Staat de koppeling uit, dan krijg je bij overdragen een overdrachtstaak met de briefing om te mailen of te downloaden; de status van het account wordt wel Overgedragen.
 
+## Mail
+
+De beheerder koppelt de mail van de organisatie bij **Instellingen**, **Mail koppelen**: verzendadres, mailserver, poort, gebruikersnaam en wachtwoord. Tik eerst **Test**: Dealtrace controleert of het domein SPF, DKIM en DMARC heeft en of de mailserver de verbinding aanneemt. Pas daarna kun je **Opslaan**. Het wachtwoord wordt versleuteld bewaard en nooit meer getoond. Zonder mailkoppeling verstuur je concepten via je eigen mailapp.
+
 ## Je agenda koppelen
 
 Met een gekoppelde agenda van Microsoft 365 of Google telt wat daarin staat mee als bezet: bij vrije momenten voor een afspraak, bij het advies voor een belblok en bij het vullen van je dag. Afspraken die je in Dealtrace plant, komen in je agenda, met een Teams- of Meet-link als de afspraak online is.

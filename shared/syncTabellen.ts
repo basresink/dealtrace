@@ -27,6 +27,10 @@ export const SYNCBARE_TABELLEN = {
   contacts: 'prospects',
   // P16: een kolomwissel op het campagnebord (campagne.kolom), ook offline; recordId = campagne-id:account-id.
   campagne_items: 'campagnes',
+  // P18: een concept goedkeuren of verwerpen (concept.besluit, recordId = concept-id) en eigen briefingtekst
+  // (briefing.tekst, recordId = onderwerp:id:blok). Versturen wacht op verbinding.
+  concepten: 'taken',
+  briefing_teksten: 'taken',
 } as const
 
 export const ACCOUNT_MUTATIESOORTEN = ['account.nee', 'account.pauzeer'] as const
@@ -36,6 +40,7 @@ export const SIGNAAL_MUTATIESOORTEN = ['signaal.besluit'] as const
 export const AFSPRAAK_MUTATIESOORTEN = ['afspraak.nieuw', 'afspraak.afronden', 'bezoek.afronden', 'inloop.vastleggen'] as const
 export const SPRAAK_MUTATIESOORTEN = ['spraak.opdracht', 'contact.uitVisitekaartje'] as const
 export const CAMPAGNE_MUTATIESOORTEN = ['campagne.kolom'] as const
+export const CONCEPT_MUTATIESOORTEN = ['concept.besluit', 'briefing.tekst'] as const
 export const KANS_MUTATIESOORTEN = ['kans.overslaan', 'kans.klaarzetten'] as const
 
 export type SyncbareTabel = keyof typeof SYNCBARE_TABELLEN

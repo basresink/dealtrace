@@ -31,6 +31,8 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
       { titel: 'Accountmatrix en ritmes', tekst: 'Klassen, belmatrix, afspraakmatrix en capaciteit.', link: '/instellingen/ritme', toon: true },
       { titel: 'Verkoopverhaal', tekst: 'Verhaal, belofte, branches, concurrenten, winpunten en terugkomregels.', link: '/instellingen/verkoopverhaal', toon: !!functie('verkoopverhaal.inrichten')?.beschikbaar },
       { titel: 'Gebieden en regiodagen', tekst: 'Regio\'s op postcode, eigenaren, regiodagen en synoniemen voor plaatsnamen.', link: '/instellingen/gebieden', toon: !!functie('instellingen.gebieden')?.beschikbaar },
+      { titel: 'Mail koppelen', tekst: 'De SMTP van de organisatie, met test en controle op SPF, DKIM en DMARC.', link: '/instellingen/mail', toon: !!functie('koppeling.mail')?.beschikbaar },
+      { titel: 'Mailsjablonen', tekst: 'Sjablonen per kanaal met variabelen.', link: '/instellingen/mailsjablonen', toon: !!functie('instellingen.mailsjablonen')?.beschikbaar },
       { titel: 'Normen per fase', tekst: 'Conversie- en doorlooptijdnormen voor de funnel.', link: '/instellingen/funnel-normen', toon: !!functie('instellingen.funnelNormen')?.beschikbaar },
       { titel: 'Campagnesoorten', tekst: 'Welke campagnesoorten je verkopers kunnen kiezen.', link: '/instellingen/campagnesoorten', toon: !!functie('instellingen.campagnesoorten')?.beschikbaar },
       { titel: 'Meetingsoorten en uitkomsten', tekst: 'Soorten afspraken met duur, agendapunten en uitkomsten met gevolg.', link: '/instellingen/meetingsoorten', toon: !!functie('instellingen.meetingsoorten')?.beschikbaar },

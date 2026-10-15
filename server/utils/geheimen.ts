@@ -1,10 +1,10 @@
 // Geheimen van koppelingen (12): AES-256-GCM met een sleutel uit GEHEIMEN_SLEUTEL, anders
 // afgeleid (HKDF) van het sessiegeheim. Ontsleutelde waarden blijven op de server en gaan
 // nooit naar de client of een log; GET-endpoints melden alleen of een sleutel bestaat.
-import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from 'node:crypto'
+import { createCipheriv, createDecipheriv, createHmac, hkdfSync, randomBytes } from 'node:crypto'
 
 /** Eén sleutel per doel (15.3): agenda-tokens delen hun geheim niet met koppelingen of AI-sleutels. */
-export type GeheimDoel = 'koppelingen' | 'agenda'
+export type GeheimDoel = 'koppelingen' | 'agenda' | 'mail' | 'afmelden'
 function sleutel(doel: GeheimDoel = 'koppelingen'): Buffer {
   const eigen = process.env.GEHEIMEN_SLEUTEL
   const basis = eigen || process.env.SESSIE_GEHEIM || 'lokaal-ontwikkelgeheim-niet-voor-productie-gebruiken'
@@ -29,4 +29,9 @@ export function ontsleutel(tekst: string | null | undefined, doel: GeheimDoel = 
   } catch {
     return null
   }
+}
+
+/** Een ondertekende waarde (bijvoorbeeld de afmeldlink): HMAC met een eigen sleutel per doel. */
+export function onderteken(waarde: string, doel: GeheimDoel = 'afmelden'): string {
+  return createHmac('sha256', sleutel(doel)).update(waarde).digest('base64url').slice(0, 32)
 }

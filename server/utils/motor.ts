@@ -18,6 +18,7 @@ import { vulBelblokken } from './bellen'
 import { achterstandPerAccount, sluitAf } from './campagnes'
 import { verstuurWachtrij } from './overdracht'
 import { bouwFunnelStand } from './funnel'
+import { automatischVoorbereiden } from './briefing'
 
 type Tx = Parameters<Parameters<ReturnType<typeof import('./db').gebruikDb>['transaction']>[0]>[0]
 type RegelRij = typeof schema.activityRules.$inferSelect
@@ -226,6 +227,10 @@ export async function draaiMotor(tx: Tx, org: string, opties: RunOpties) {
       // Overdracht (P17): de wachtrij naar DealDrive en de afgeleide funnelstand van vandaag.
       await verstuurWachtrij(tx, nu)
       await bouwFunnelStand(tx, org, nlMoment(nu).datum)
+      // Pitstop (P18): automatisch voorbereiden voor regels die dat vragen, hooguit 10 per run.
+      const voorbereid = await automatischVoorbereiden(tx, org, nu.toISOString(), nu)
+      const vs = uit.stappen.find((s) => s.stap === 'automatisch voorbereiden')
+      if (vs) Object.assign(vs, { status: 'gedaan', toelichting: `${voorbereid} ${voorbereid === 1 ? 'concept' : 'concepten'} klaargezet` })
     }
   } catch (e) {
     fouten.push((e as Error).message)

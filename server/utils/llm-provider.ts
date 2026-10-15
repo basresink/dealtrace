@@ -13,10 +13,21 @@ import { mockOpdracht } from '../../shared/spraakOpdracht'
 type Tx = Parameters<Parameters<ReturnType<typeof import('./db').gebruikDb>['transaction']>[0]>[0]
 
 export const MOCK_FIXTURES: Record<string, unknown[]> = {}
+/** Pitstop-mock (P18): waarom, hoe (één winpunt met één bewijs), één vraag; je-vorm, binnen de lengtegrens. */
+function mockPitstop(m: any) {
+  const w = m.winpunt ? `${m.winpunt.titel}: ${String(m.winpunt.bewijs ?? m.winpunt.omschrijving).replace(/\.$/, "")}` : 'een levering per bouwfase'
+  const waarom = m.aanleiding ? `Ik zag dat ${String(m.aanleiding).replace(/\.$/, '').replace(/^./, (c: string) => c.toLowerCase())}.` : 'Ik zie dat jullie planning vaak om materiaal draait.'
+  const vraag = 'Past een kwartier volgende week om te kijken of dit jullie monteurs tijd scheelt?'
+  if (m.type === 'mail') return { onderwerp: m.winpunt?.titel ?? 'Levering per bouwfase', tekst: `${waarom} Wij helpen jullie met ${w}. ${vraag}`, ...(m.winpunt ? { winpuntId: m.winpunt.id } : {}) }
+  if (m.type === 'linkedin') return { tekst: `${waarom} ${w}. ${vraag}`, ...(m.winpunt ? { winpuntId: m.winpunt.id } : {}) }
+  if (m.type === 'belscript') return { tekst: `Opening: ${waarom}\nWinpunt: ${w}.\nVraag: ${vraag}${(m.bezwaren ?? []).length ? `\nAls je hoort: "${m.bezwaren[0].bezwaar}" Antwoord: ${m.bezwaren[0].antwoord}` : ''}`, ...(m.winpunt ? { winpuntId: m.winpunt.id } : {}) }
+  return { blokken: { opening: `${waarom} ${vraag}`, winpunt: w }, ...(m.winpunt ? { winpuntId: m.winpunt.id } : {}) }
+}
 /** Mock die uit het materiaal een geldig antwoord maakt, voor soorten zonder vaste fixture. */
 export const MOCK_GENERATOREN: Record<string, (materiaal: any) => unknown> = {
   // Opzet van een belscript: de opbouw van het startscript voor dit doel, met de kernzin van het verhaal.
   concept: (m) => m?.campagneWinpunt ? (() => { const w = (m.winpunten ?? []).find((x: any) => x.faseId === m.faseId) ?? m.winpunten?.[0]; return { winpuntId: w?.id ?? '', motivatie: `Past bij deze fase: ${w?.titel ?? 'het eerste winpunt'} sluit aan op wat prospects in de laatste gesprekken vroegen.` } })()
+    : m?.pitstop ? mockPitstop(m)
     : m?.campagneBoodschap ? { onderwerp: m.winpunt?.titel ?? 'Even voorstellen', tekst: `${m.verhaal ?? 'Wij helpen installateurs met een betrouwbare levering.'}${m.winpunt ? ` ${m.winpunt.titel}: ${m.winpunt.omschrijving}` : ''} Zullen we een kwartier kijken of dit bij jullie past?`, stijlscore: 8 }
     : m?.opzet ? {
     naam: `${m.opzet.doelLabel} (opzet)`,

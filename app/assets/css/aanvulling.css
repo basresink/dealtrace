@@ -1132,3 +1132,24 @@ html.zonlicht body { color: #000; }
 .ov-stand { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 @media (max-width: 767px) { .ov-tegels { grid-template-columns: 1fr; } }
 .mb-16 { margin-bottom: var(--kaart-gap); }
+
+/* P18: briefing, Pitstop en concepten. */
+.bf { display: flex; flex-direction: column; gap: 10px; }
+.bf-kop { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: space-between; }
+.bf-regels { margin: 0; padding-left: 18px; font-size: var(--fs-meta); }
+.bf-blok { padding: 8px 0; border-top: 1px solid var(--border); }
+.bf-blok-kop { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
+.bf-blok-titel { margin: 0; font-size: var(--fs-meta); font-weight: 800; }
+.bf-herkomst { font-size: var(--fs-label); padding: 1px 6px; border: 1px solid var(--border); color: var(--muted); }
+.bf-herkomst--ai { border-color: var(--purple); color: var(--purple); }
+.bf-herkomst--eigen { border-color: var(--ink); color: var(--ink); }
+.bf-tekst { margin: 4px 0 0; white-space: pre-line; font-size: var(--fs-meta); }
+.bf-pitstop, .bf-doel { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+.cn-lijst { display: flex; flex-direction: column; gap: var(--kaart-gap); }
+.cn-kaart { display: flex; flex-direction: column; gap: 8px; }
+.cn-kop { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.cn-tekst { white-space: pre-line; margin: 0; }
+.cn-blokken { margin: 0; } .cn-blokken dt { font-weight: 700; font-size: var(--fs-label); } .cn-blokken dd { margin: 0 0 6px; }
+.cn-acties .dd-act { min-height: 44px; }
+.cn-noot { margin: 0; }
+.bf-rij { text-align: left; font: inherit; color: var(--ink); cursor: pointer; } .bf-rij:hover { border-color: var(--ink); }

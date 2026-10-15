@@ -14,6 +14,7 @@ import { rondAf } from './taken'
 import { voerAiStapUit } from './llm-provider'
 import { eigenTeams } from './gebruikers'
 import type { JsonSchema } from '../../shared/aiStap'
+import { stijlScore } from '../../shared/schrijver'
 
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
 type Rij = Record<string, any>
@@ -280,8 +281,10 @@ export async function boodschap(tx: Tx, org: string, gebruiker: any, k: { kanaal
   const belofte = (stand.teksten ?? []).find((t) => t.sleutel === 'kernbelofte' && (t.brancheId === k.brancheId || !t.brancheId))?.tekst ?? null
   const materiaal = { campagneBoodschap: true, kanaal: k.kanaal, toon: k.toon, verhaal, belofte, winpunt: winpunt ? { titel: winpunt.titel, omschrijving: winpunt.omschrijving } : null }
   let r = await voerAiStapUit<{ onderwerp?: string; tekst: string; stijlscore: number }>(tx, org, { soort: 'concept', prompt: 'Schrijf een eerste bericht: waarom, hoe, vraag. Eén winpunt met één bewijs. Je-vorm, geen gedachtestreepjes. Geef een stijlscore van 0 tot 10.', schema: BOODSCHAP_SCHEMA, materiaal, gebruiker, boekAls: 'schrijver' }, nu)
-  if (r.ok && r.antwoord.stijlscore < 7) r = await voerAiStapUit(tx, org, { soort: 'concept', prompt: 'Opnieuw, korter en concreter.', schema: BOODSCHAP_SCHEMA, materiaal, gebruiker, boekAls: 'schrijver' }, nu)
+  // De stijlscore rekent de Schrijver zelf uit (shared/schrijver.ts, gat 16); onder 7 één keer opnieuw.
+  if (r.ok && stijlScore(r.antwoord.tekst).score < 7) r = await voerAiStapUit(tx, org, { soort: 'concept', prompt: `Opnieuw, korter en concreter. Vermijd: ${stijlScore(r.antwoord.tekst).vermeden.join(', ') || 'jargon'}.`, schema: BOODSCHAP_SCHEMA, materiaal, gebruiker, boekAls: 'schrijver' }, nu)
   if (!r.ok) return null
+  r.antwoord.stijlscore = stijlScore(r.antwoord.tekst).score
   const versies = await rijen(tx, sql`select onderdeel, versie from vv_sublagen where status = 'bevestigd'`)
   return { ...r.antwoord, vvVersies: Object.fromEntries(versies.map((x) => [x.onderdeel, x.versie])) }
 }

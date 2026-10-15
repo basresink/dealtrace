@@ -96,6 +96,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
           <article v-if="t.agent" class="fo-blok" data-test="agent-blok">
             <p class="taak-meta">Door {{ agentDef(t.agent)?.naam ?? t.agent }}<template v-if="me?.gebruiker.niveau === 'expert' && t.mandaat"> · mandaat <span class="pil" :class="`pil--mandaat-${t.mandaat}`">{{ t.mandaat }}</span></template><template v-if="t.executorStatus"> · {{ STATUS_LABEL[t.executorStatus] }}</template></p>
           </article>
+          <article v-if="t.account && functie('briefing.lezen')?.beschikbaar && t.status !== 'klaar'" class="fo-blok" data-test="taak-pitstop"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Briefing en Pitstop</h3></header><BriefingPaneel onderwerp="taak" :id="t.id" ingeklapt /></article>
           <article v-if="t.concept" class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Concept</h3></header><p v-if="t.concept.onderwerp"><strong>{{ t.concept.onderwerp }}</strong></p><p>{{ t.concept.tekst }}</p>
             <button v-if="t.executorStatus === 'concept-klaar'" type="button" class="dd-act dd-act--primair mt-8" data-test="concept-goedkeuren" @click="keurGoed">Goedkeuren en versturen</button>
           </article>

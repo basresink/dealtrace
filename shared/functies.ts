@@ -629,6 +629,43 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'instellingen.funnelNormen', naam: 'Normen per fase', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'funnel', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Conversie- en doorlooptijdnormen per fase van de funnel.', totDieTijd: 'De standaardnormen gelden.' },
   },
+  // P18: briefings, Pitstop, Schrijver en mail (F11, 11.5, 8.5.7, 12).
+  {
+    sleutel: 'briefing.lezen', naam: 'Briefing lezen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'briefing-en-pitstop', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Voor elk gesprek een briefing met de juiste soort, ook zonder AI-credits.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'briefing.bewerken', naam: 'Briefing bewerken en delen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'briefing-en-pitstop', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Eigen tekst per blok, het overzicht van je briefings en de volledige printbare briefing.', totDieTijd: 'Je leest de berekende briefing.' },
+  },
+  {
+    sleutel: 'briefing.soortVastzetten', naam: 'Briefingsoort vastzetten', pakket: 'plus', rollen: 'iedereen', helpartikel: 'briefing-en-pitstop', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'De soort briefing per gesprek zelf kiezen en vastzetten.', totDieTijd: 'Dealtrace kiest de soort.' },
+  },
+  {
+    sleutel: 'pitstop.maken', naam: 'Pitstop', pakket: 'plus', rollen: 'iedereen', helpartikel: 'briefing-en-pitstop', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'De Schrijver maakt per taak of afspraak een concept: belscript, mail, LinkedIn-bericht of bezoekbriefing. Jij keurt goed.', totDieTijd: 'Je gebruikt de berekende briefing.' },
+  },
+  {
+    sleutel: 'pitstop.opnieuw', naam: 'Pitstop opnieuw maken', pakket: 'plus', rollen: 'iedereen', helpartikel: 'briefing-en-pitstop', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een nieuw concept laten schrijven, met een andere toon.', totDieTijd: 'Je past het concept zelf aan.' },
+  },
+  {
+    sleutel: 'concepten.inbox', naam: 'Concepten goedkeuren', pakket: 'starter', rollen: 'iedereen', helpartikel: 'concepten-goedkeuren-en-versturen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Alles wat agents klaarzetten op één plek, met goedkeuren, aanpassen en verwerpen.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'mail.versturen', naam: 'Mail versturen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'concepten-goedkeuren-en-versturen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Een goedgekeurde mail versturen via de mail van de organisatie, binnen consent en afkoelperiode.', totDieTijd: 'Je verstuurt via je eigen mailapp.' },
+  },
+  {
+    sleutel: 'koppeling.mail', naam: 'Mail koppelen', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'koppelingen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'De SMTP van de organisatie koppelen, met test en controle op SPF, DKIM en DMARC.', totDieTijd: 'Mail gaat via de mailapp van de gebruiker.' },
+  },
+  {
+    sleutel: 'instellingen.mailsjablonen', naam: 'Mailsjablonen', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'concepten-goedkeuren-en-versturen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Sjablonen per kanaal met variabelen, voor campagnes en concepten.', totDieTijd: 'De Schrijver schrijft zonder sjabloon.' },
+  },
   // P33: AI-assistent en credits (F26, 11.4). Op alle niveaus; de credits begrenzen, niet het niveau.
   {
     sleutel: 'assistent.chat', naam: 'AI-assistent', pakket: 'starter', rollen: 'iedereen', helpartikel: 'chatten-met-de-ai-assistent', startNiveau: 'beginner',
@@ -973,7 +1010,7 @@ export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | u
 
 /** De feature (hoofdstuk 7, F01 tot en met F26) waar een functie bij hoort, voor het raster van de founder. */
 const FEATURE_GROEPEN: [RegExp, string][] = [
-  [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^campagnes\.|^instellingen\.campagnesoorten/, 'F12 Campagnes'], [/^(funnel|overdracht)\.|^instellingen\.funnelNormen/, 'F17 Funnel en overdracht'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
+  [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^campagnes\.|^instellingen\.campagnesoorten/, 'F12 Campagnes'], [/^(funnel|overdracht)\.|^instellingen\.funnelNormen/, 'F17 Funnel en overdracht'], [/^(briefing|pitstop|concepten|mail)\.|^koppeling\.mail|^instellingen\.mailsjablonen/, 'F11 Briefings, Pitstop en mail'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],

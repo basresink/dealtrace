@@ -15,6 +15,8 @@ const route = useRoute()
 const slotOpen = useCookie<boolean>('dt_slotgroep', { default: () => false, maxAge: 60 * 60 * 24 * 365 })
 const menuOpen = ref(false)
 const ongelezen = useState<number>('ongelezen', () => 0)
+const concepten = useState<number>('conceptenTeller', () => 0)
+const conceptenAan = computed(() => !!me.value?.functies?.find((f: any) => f.sleutel === 'concepten.inbox')?.beschikbaar)
 
 const zijbalk = computed(() => me.value?.zijbalk)
 const gebruikerRol = computed(() => {
@@ -97,6 +99,10 @@ async function uitloggen() {
       <NuxtLink class="sb-bel" :class="{ 'sb-bel--actief': isActief('/meldingen') }" to="/meldingen">
         <span class="sb-bel-icoon"><Icoon naam="Bell" /><span v-if="ongelezen" class="sb-bel-teller tnum">{{ ongelezen > 9 ? '9+' : ongelezen }}</span></span>
         <span class="sb-bel-tekst">Meldingen</span>
+      </NuxtLink>
+      <NuxtLink v-if="conceptenAan" class="sb-bel" :class="{ 'sb-bel--actief': isActief('/concepten') }" to="/concepten" data-test="sb-concepten">
+        <span class="sb-bel-icoon"><Icoon naam="Inbox" /><span v-if="concepten" class="sb-bel-teller tnum">{{ concepten > 9 ? '9+' : concepten }}</span></span>
+        <span class="sb-bel-tekst">Concepten</span>
       </NuxtLink>
       <NuxtLink class="sb-bel" :class="{ 'sb-bel--actief': isActief('/help') }" to="/help">
         <span class="sb-bel-icoon"><Icoon naam="CircleHelp" /></span><span class="sb-bel-tekst">Helpcenter</span>

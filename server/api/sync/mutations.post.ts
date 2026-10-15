@@ -11,11 +11,12 @@ import { rolMag } from '../../../shared/permissions'
 import { SYNCBARE_TABELLEN, isSyncbareTabel } from '../../../shared/syncTabellen'
 import { pasPatchToe } from '../../../shared/wisPatch'
 import { metOrganisatie, schema } from '../../utils/db'
-import { ACCOUNT_MUTATIESOORTEN, AFSPRAAK_MUTATIESOORTEN, CAMPAGNE_MUTATIESOORTEN, KANS_MUTATIESOORTEN, SPRAAK_MUTATIESOORTEN, INZICHT_MUTATIESOORTEN, SIGNAAL_MUTATIESOORTEN, TAAK_MUTATIESOORTEN } from '../../../shared/syncTabellen'
+import { ACCOUNT_MUTATIESOORTEN, AFSPRAAK_MUTATIESOORTEN, CAMPAGNE_MUTATIESOORTEN, CONCEPT_MUTATIESOORTEN, KANS_MUTATIESOORTEN, SPRAAK_MUTATIESOORTEN, INZICHT_MUTATIESOORTEN, SIGNAAL_MUTATIESOORTEN, TAAK_MUTATIESOORTEN } from '../../../shared/syncTabellen'
 import { besluit } from '../../utils/dagritme'
 import { planAfspraak, rondAfAfspraak } from '../../utils/agenda'
 import { klaarzetten } from '../../utils/bezoeken'
 import { draagOver } from '../../utils/overdracht'
+import { besluit as conceptBesluit, bewaarTekst } from '../../utils/briefing'
 import { kolomWissel, laad as laadCampagne, magWijzigen as magCampagne } from '../../utils/campagnes'
 import { KOLOMMEN } from '../../../shared/campagnes'
 import { bezoekAfronden, legInloopVast } from '../../utils/onderweg'
@@ -55,7 +56,7 @@ export default defineEventHandler(async (event) => {
   const { mutaties } = await readBody<{ mutaties?: Mutatie[] }>(event)
   if (!Array.isArray(mutaties) || mutaties.length > 200) throw createError({ statusCode: 400, statusMessage: 'Geef tussen 1 en 200 mutaties' })
   // Klantdata (accounts) gebruikt de actieve organisatie en de functierechten.
-  const KLANTDATA = new Set(['accounts', 'tasks', 'signals', 'appointments', 'kans_overslaan', 'klaargezet_voor', 'spraak_concepten', 'contacts', 'campagne_items'])
+  const KLANTDATA = new Set(['accounts', 'tasks', 'signals', 'appointments', 'kans_overslaan', 'klaargezet_voor', 'spraak_concepten', 'contacts', 'campagne_items', 'concepten', 'briefing_teksten'])
   const klant = mutaties.some((m) => KLANTDATA.has(m?.tabel)) ? await vereisOrganisatie(event) : null
 
   const resultaten: Resultaat[] = []
@@ -186,6 +187,25 @@ export default defineEventHandler(async (event) => {
         } catch (e: any) {
           if (e instanceof ReisFout) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 404 ? 404 : 422, reden: e.message }
           if (e?.statusCode && [400, 403, 404, 409, 422].includes(e.statusCode)) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 409 ? 422 : e.statusCode, reden: e.message }
+          throw e
+        }
+      } else if (m.tabel === 'concepten' || m.tabel === 'briefing_teksten') {
+        // P18: een concept goedkeuren of verwerpen kan offline; versturen wacht op verbinding (8.8).
+        const p = (m.patch ?? {}) as Record<string, any>
+        if (!(CONCEPT_MUTATIESOORTEN as readonly string[]).includes(p.soort)) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Alleen concept.besluit en briefing.tekst mogen via de wachtrij' }
+        try {
+          if (p.soort === 'concept.besluit') {
+            if (!klant || !kan(klant, 'concepten.inbox')) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Functie niet beschikbaar' }
+            if (!['goedkeuren', 'verwerpen'].includes(p.besluit)) return { status: 'geweigerd', recordId: m.recordId, code: 422, reden: 'Kies goedkeuren of verwerpen' }
+            await conceptBesluit(tx, klant.gebruiker, m.recordId, { besluit: p.besluit, tekst: typeof p.tekst === 'string' ? p.tekst : null, onderwerp: typeof p.onderwerp === 'string' ? p.onderwerp : null })
+          } else {
+            if (!klant || !kan(klant, 'briefing.bewerken')) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Functie niet beschikbaar' }
+            const [onderwerp, id, blok] = m.recordId.split(':')
+            if (!['afspraak', 'taak'].includes(onderwerp ?? '') || !id || !blok || blok === '_soort') return { status: 'geweigerd', recordId: m.recordId, code: 422, reden: 'Onbekend blok' }
+            await bewaarTekst(tx, klant.organisatie.id, gebruiker.id, { soort: onderwerp as 'afspraak' | 'taak', id }, blok, String(p.tekst ?? '').slice(0, 2000))
+          }
+        } catch (e: any) {
+          if (e?.statusCode && [400, 403, 404, 409].includes(e.statusCode)) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 409 ? 422 : e.statusCode, reden: e.message }
           throw e
         }
       } else if (m.tabel === 'kans_overslaan' || m.tabel === 'klaargezet_voor') {
