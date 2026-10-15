@@ -6,7 +6,7 @@ import { UITKOMST_LABEL, verwerkUitkomst, type Ritme, type RitmeStand, type Uitk
 export const ACTIETYPES = ['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht', 'taak'] as const
 export const ACTIE_LABEL: Record<string, string> = { bellen: 'BEL', mailen: 'MAIL', linkedin: 'LINKEDIN', bezoek: 'BEZOEK', bericht: 'BERICHT', taak: 'TAAK', geen: 'TAAK' }
 export const CONTACT_ACTIES = new Set(['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht'])
-export const HERKOMST_LABEL: Record<string, string> = { regel: 'Uit regel', inzicht: 'Uit inzicht', campagne: 'Campagne', ritme: 'Ritme', handmatig: 'Handmatig', startactiviteit: 'Uit regel' }
+export const HERKOMST_LABEL: Record<string, string> = { regel: 'Uit regel', inzicht: 'Uit inzicht', campagne: 'Campagne', ritme: 'Ritme', handmatig: 'Handmatig', startactiviteit: 'Uit regel', agent: 'Agent' }
 export const AFWIJS_REDENEN = ['Niet relevant', 'Al bekend', 'Verkeerd account', 'Te oud'] as const
 export const PRIO_VOLGORDE: Record<string, number> = { urgent: 0, hoog: 1, middel: 2, laag: 3 }
 const KANAAL_ACTIVITEIT: Record<string, { soort: string; kanaal: string }> = {

@@ -6,6 +6,8 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const { functie } = useMe()
+const waaromNiet = ref<any[] | null>(null)
+async function laadWaaromNiet() { if (!waaromNiet.value) waaromNiet.value = await $fetch<any[]>('/api/agents/tegengehouden').catch(() => []) }
 const { rondAf, versie } = useAfronden()
 const motorVersie = useState('motorVersie', () => 0)
 const tab = computed(() => (route.query.tab === 'inzichten' ? 'inzichten' : 'taken'))
@@ -137,6 +139,14 @@ useHead({ title: 'Acties · Dealtrace' })
           <div class="stat-card"><span class="stat-label">Deze week</span><span class="stat-num tnum">{{ inz.tellers.week ?? 0 }}</span></div>
           <div class="stat-card"><span class="stat-label">Totaal open</span><span class="stat-num tnum">{{ inz.tellers.open ?? 0 }}</span></div>
         </div>
+        <details v-if="functie('agents.waaromNiet')?.beschikbaar" class="kaart mt-16" data-test="waarom-niet" @toggle="laadWaaromNiet">
+          <summary class="kaart-titel">Waarom niet?</summary>
+          <p class="kaart-meta mt-8">Wat de Bewaker vandaag bij je accounts tegenhield, met de reden.</p>
+          <p v-if="waaromNiet && !waaromNiet.length" class="kaart-meta mt-8">De Bewaker heeft vandaag niets tegengehouden.</p>
+          <ul v-else-if="waaromNiet" class="schakel-lijst mt-8">
+            <li v-for="r in waaromNiet" :key="r.id" class="schakel-rij"><span><strong>{{ r.reden }}</strong><br><span class="meta">{{ r.handeling }}<template v-if="r.account"> · {{ r.account }}</template></span></span></li>
+          </ul>
+        </details>
         <LegeStaat v-if="!inz.inzichten.length" class="mt-16" titel="Er zijn geen nieuwe inzichten bij je prospects." tekst="De motor en de agents melden hier wat er speelt." />
         <div class="ak-blokken mt-16" data-test="inzichten">
           <article v-for="i in inz.inzichten" :key="i.id" class="kaart inzicht-kaart" :data-test="`inzicht-${i.id}`">

@@ -9,6 +9,7 @@ import { fase as zoekFase } from '../../shared/reis'
 import type { MotorAccount, Regel, RegelData } from '../../shared/regelPatronen'
 import { BELMATRIX_STANDAARD, CAPACITEIT_STANDAARD, klasseCode, leesMatrix, type Klasse } from '../../shared/ritmematrix'
 import { schema } from './db'
+import { draai as draaiPlanner } from './agents/planner'
 
 type Tx = Parameters<Parameters<ReturnType<typeof import('./db').gebruikDb>['transaction']>[0]>[0]
 type RegelRij = typeof schema.activityRules.$inferSelect
@@ -181,6 +182,7 @@ export async function draaiMotor(tx: Tx, org: string, opties: RunOpties) {
     uit = motorRun(invoer)
     uit.waarschuwingen.unshift(...waarschuwingen)
     await schrijfMotorUitvoer(tx, org, uit, nu)
+    await draaiPlanner(tx, org, uit, nu)
   } catch (e) {
     fouten.push((e as Error).message)
     throw e
@@ -190,5 +192,5 @@ export async function draaiMotor(tx: Tx, org: string, opties: RunOpties) {
       geschoven: uit!?.geschoven.reduce((s, g) => s + g.aantal, 0) ?? 0, fouten: [...fouten, ...(uit!?.waarschuwingen ?? [])], stappen: uit!?.stappen ?? [],
     }).where(eq(schema.ruleRuns.id, run!.id))
   }
-  return { runId: run!.id, taken: uit.taken.length, inzichten: uit.inzichten.length, geraakt: uit.geraakt, geschoven: uit.geschoven, stappen: uit.stappen, waarschuwingen: uit.waarschuwingen }
+  return { runId: run!.id, tegengehouden: uit.tegengehouden.length, taken: uit.taken.length, inzichten: uit.inzichten.length, geraakt: uit.geraakt, geschoven: uit.geschoven, stappen: uit.stappen, waarschuwingen: uit.waarschuwingen }
 }

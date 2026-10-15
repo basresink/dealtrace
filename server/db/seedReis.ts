@@ -15,6 +15,16 @@ export async function seedReis(client: Pick<pg.Client, 'query'>, orgId: string, 
   ] as const) {
     await client.query(`insert into org_settings (organisation_id, key, value) values ($1, $2, $3) on conflict (organisation_id, key) do nothing`, [o, key, JSON.stringify(value)])
   }
+  // Vast geval voor de Bewaker (P08): een fictieve prospect in br-02 op nee met reden
+  // "Geen behoefte" en een lopende afkoelperiode voor mail en bellen.
+  const neeOp = new Date(Date.now() - 10 * 864e5).toISOString()
+  const bewakerTerug = new Date(Date.parse(neeOp) + 180 * 864e5).toISOString().slice(0, 10)
+  await client.query(`insert into accounts (id, organisation_id, name, account_kind, owner_id, nb_status, city, nb_bron, fase_sinds, vv_branche_id, terug_op, data)
+    values ('acc-bewaker', $1, 'Installatiebedrijf Rietkraag BV', 'prospect', 'u-03', 'nee', 'Zwolle', 'handmatig', $2, 'br-02', $3, $4) on conflict (id) do nothing`,
+    [orgId, neeOp, bewakerTerug, JSON.stringify({
+      nee: { reden: 'Geen behoefte', op: neeOp, door: 'u-03', afkoeling: { ...AFKOELING_STANDAARD, mail: 60 } },
+      terugkom: { datum: bewakerTerug, regelId: null, reden: 'Geen behoefte', aanpak: null, kanaal: 'bellen' },
+    })])
   await zorgVoorReizen(client)
   await zorgVoorRegels(client)
   await zorgVoorRitmes(client, RITMES_STARTSET)

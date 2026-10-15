@@ -6,9 +6,14 @@ import { NEE_REDENEN } from '~~/shared/nbStatus'
 import { UITKOMST_CODES, UITKOMST_LABEL } from '~~/shared/hercontact'
 import { ACTIE_LABEL, CONTACT_ACTIES, HERKOMST_LABEL, vervalLabel } from '~~/shared/taken'
 import { fasePil, telLink } from '~/utils/accountWeergave'
+import { agentDef } from '~~/shared/mandaat'
 const props = defineProps<{ open: boolean; taakId: string | null; basis?: any; volgende?: boolean }>()
 const emit = defineEmits<{ sluit: []; klaar: [volgende: boolean, id: string]; gewijzigd: [] }>()
-const { functie } = useMe()
+const { functie, me } = useMe()
+const STATUS_LABEL: Record<string, string> = { 'concept-klaar': 'concept wacht op je goedkeuring', goedgekeurd: 'goedgekeurd, wordt verstuurd', uitgevoerd: 'uitgevoerd', tegengehouden: 'tegengehouden door de Bewaker' }
+async function keurGoed() {
+  try { const r: any = await $fetch(`/api/tasks/${t.value.id}/goedkeuren`, { method: 'POST', body: {} }); toast.toon(r.executorStatus === 'uitgevoerd' ? 'Goedgekeurd en verstuurd.' : `Goedgekeurd. ${r.reden ?? 'Hij gaat later de deur uit.'}`); emit('gewijzigd'); t.value = await $fetch(`/api/tasks/${t.value.id}`) } catch (e) { toast.toon(foutTekst(e), 'fout') }
+}
 const toast = useToast()
 const { rondAf } = useAfronden()
 const t = ref<any>(null)
@@ -77,7 +82,12 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
             <p v-if="t.aanleiding">{{ t.aanleiding }}</p>
             <p v-if="t.waarom" class="mt-8" data-test="waarom"><strong>Waarom krijg ik dit?</strong> {{ t.waarom }}<template v-if="t.regel"> <NuxtLink v-if="functie('regels.lezen')?.beschikbaar" :to="`/instellingen/regels`" class="tekst-link">Bekijk de regel</NuxtLink></template></p>
           </article>
-          <article v-if="t.concept" class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Concept</h3></header><p>{{ t.concept.tekst }}</p></article>
+          <article v-if="t.agent" class="fo-blok" data-test="agent-blok">
+            <p class="taak-meta">Door {{ agentDef(t.agent)?.naam ?? t.agent }}<template v-if="me?.gebruiker.niveau === 'expert' && t.mandaat"> · mandaat <span class="pil" :class="`pil--mandaat-${t.mandaat}`">{{ t.mandaat }}</span></template><template v-if="t.executorStatus"> · {{ STATUS_LABEL[t.executorStatus] }}</template></p>
+          </article>
+          <article v-if="t.concept" class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Concept</h3></header><p v-if="t.concept.onderwerp"><strong>{{ t.concept.onderwerp }}</strong></p><p>{{ t.concept.tekst }}</p>
+            <button v-if="t.executorStatus === 'concept-klaar'" type="button" class="dd-act dd-act--primair mt-8" data-test="concept-goedkeuren" @click="keurGoed">Goedkeuren en versturen</button>
+          </article>
           <article v-if="t.account" class="fo-blok">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Klant in context</h3></header>
             <p class="taak-meta">Score {{ t.account.score }}<template v-if="t.account.fase?.accent"> · {{ t.account.fase.accent }}</template></p>

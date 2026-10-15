@@ -53,6 +53,8 @@ export interface GebruikerData {
   niveauHistorie?: { van: string; naar: string; op: string; door: string; reden?: string }[]
   verborgen?: string[]
   nieuwTot?: Record<string, string>
+  /** Eigen mandaat per agent (Expert), binnen het organisatiemaximum (P08). */
+  mandaat?: Record<string, { mandaat: 'A' | 'B' | 'C' | 'D'; dagplafond?: number | null }>
 }
 
 export const users = pgTable('users', {
@@ -527,4 +529,29 @@ export const hercontactritmes = pgTable('hercontactritmes', {
   data: jsonb('data').$type<{ stappen: import('../../shared/hercontact').RitmeStap[]; parkeerDagen: number; werkplek?: 'binnendienst' | 'buitendienst' | 'alle' }>().notNull(),
   createdAt: ts('created_at').defaultNow().notNull(),
   updatedAt: ts('updated_at').defaultNow().notNull(),
+})
+
+// P08: agents en mandaten (0008_agents.sql)
+export const agentRuns = pgTable('agent_runs', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  agent: text('agent').notNull(),
+  handeling: text('handeling').notNull(),
+  mandaatNiveau: text('mandaat_niveau').notNull(),
+  gebruikerId: text('gebruiker_id'),
+  accountId: text('account_id'),
+  contactId: text('contact_id'),
+  taskId: text('task_id'),
+  uitkomst: text('uitkomst').notNull(),
+  reden: text('reden'),
+  bronnen: jsonb('bronnen').$type<unknown[]>().notNull().default([]),
+  kosten: jsonb('kosten').$type<{ soort: string; credits: number; cent?: number } | null>(),
+  op: ts('op').defaultNow().notNull(),
+})
+
+export const platformAgentmaxima = pgTable('platform_agentmaxima', {
+  agent: text('agent').primaryKey(),
+  maxMandaat: text('max_mandaat').notNull(),
+  gewijzigdDoor: text('gewijzigd_door'),
+  gewijzigdOp: ts('gewijzigd_op').defaultNow().notNull(),
 })

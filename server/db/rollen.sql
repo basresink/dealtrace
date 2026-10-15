@@ -104,3 +104,8 @@ revoke update, delete on rule_runs from dealtrace_app;
 grant update (eind_op, geraakt, taken, inzichten, geschoven, fouten, stappen) on rule_runs to dealtrace_app;
 -- P07: de startset van ritmes laadt de platformrol.
 grant select, insert on hercontactritmes to dealtrace_platform;
+-- P08: agent_runs alleen toevoegen; platformmaxima alleen via de platformrol.
+revoke update, delete on agent_runs from dealtrace_app;
+revoke insert, update, delete on platform_agentmaxima from dealtrace_app;
+grant select, insert, update, delete on platform_agentmaxima to dealtrace_platform;
+grant select on agent_runs to dealtrace_platform;

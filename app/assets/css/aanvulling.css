@@ -535,3 +535,15 @@
   .taak-kaart .taak-rechts { grid-column: 2; }
   .afrond-strook { bottom: 16px; width: calc(100% - 96px); justify-content: space-between; }
 }
+
+/* P08: mandaatpillen (14): A zwart met geel, B geel met inkt, C wit met inktrand, D gestippeld. */
+.pil--mandaat-A { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.pil--mandaat-B { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+.pil--mandaat-C { background: var(--wit, #fff); color: var(--ink); border: 1px solid var(--ink); }
+.pil--mandaat-D { background: transparent; color: var(--ink); border: 1px dashed var(--ink); }
+.pauzestrook { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mandaat-uitleg { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.mandaat-uitleg li { list-style: none; display: flex; gap: 8px; align-items: flex-start; }
+.agents-tabel select, .agents-tabel input { min-height: 44px; }
+.agents-tabel .invoer--smal { width: 90px; }
+.tabel-schuif { overflow-x: auto; max-width: 100%; }

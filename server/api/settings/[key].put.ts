@@ -4,6 +4,7 @@ import { and, eq } from 'drizzle-orm'
 import { isSettingKey, isVerborgen } from '../../../shared/settingKeys'
 import { rolMag } from '../../../shared/permissions'
 import { KANALEN } from '../../../shared/nbStatus'
+import { AGENT_INSTELLINGEN } from '../../../shared/mandaat'
 import { valideerMatrix } from '../../../shared/ritmematrix'
 import { schrijfAudit } from '../../utils/audit'
 import { metOrganisatie, schema } from '../../utils/db'
@@ -13,6 +14,7 @@ export default defineEventHandler(async (event) => {
   const { gebruiker, organisatie } = await vereisOrganisatie(event)
   const key = getRouterParam(event, 'key') ?? ''
   if (isVerborgen(key)) throw createError({ statusCode: 403, statusMessage: 'Deze instelling beheert de leverancier' })
+  if ((AGENT_INSTELLINGEN as readonly string[]).includes(key)) throw createError({ statusCode: 403, statusMessage: 'Mandaten en pauze zet je op de pagina Agents en mandaten' })
   if (!isSettingKey(key)) throw createError({ statusCode: 400, statusMessage: 'Onbekende instelling' })
   if (!rolMag(gebruiker.rol, 'instellingen', 'schrijven')) throw createError({ statusCode: 403, statusMessage: 'Alleen de beheerder wijzigt instellingen' })
   const { value } = await readBody<{ value: unknown }>(event)

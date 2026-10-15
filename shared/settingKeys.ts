@@ -19,10 +19,11 @@ export const SETTING_KEYS = [
   'aiCredits',
   'features',
   'platformprompts',
+  'agentmaxima', // platformmaxima per agent; staan in platform_agentmaxima, de sleutel is gereserveerd (P08)
 ] as const
 export type SettingKey = typeof SETTING_KEYS[number]
 
-export const VERBORGEN_KEYS: readonly SettingKey[] = ['pakket', 'aiCredits', 'features', 'platformprompts']
+export const VERBORGEN_KEYS: readonly SettingKey[] = ['pakket', 'aiCredits', 'features', 'platformprompts', 'agentmaxima']
 
 export function isSettingKey(v: unknown): v is SettingKey {
   return typeof v === 'string' && (SETTING_KEYS as readonly string[]).includes(v)

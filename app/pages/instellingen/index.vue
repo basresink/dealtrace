@@ -36,6 +36,12 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
     ],
   },
   {
+    naam: 'Data en AI',
+    kaarten: [
+      { titel: 'Agents en mandaten', tekst: 'Wat de agents zelf mogen, de Bewaker en de knop Agents pauzeren.', link: '/instellingen/agents', toon: !!functie('agents.lezen')?.beschikbaar || beheerder.value },
+    ],
+  },
+  {
     naam: 'Koppelingen',
     kaarten: [
       { titel: 'Agenda en mail', tekst: 'Microsoft 365 en Google.', toon: beheerder.value },

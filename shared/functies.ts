@@ -385,6 +385,27 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'ritme.beheer', naam: 'Ritmes beheren', pakket: 'starter', rollen: MANAGERS, helpartikel: 'hercontactritme', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'De stappen en parkeerduur van de ritmes aanpassen.', totDieTijd: 'Geen.' },
   },
+  // P08: agents en mandaten (11.3, F14).
+  {
+    sleutel: 'agents.lezen', naam: 'Agents en mandaten lezen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'agents-en-mandaten', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Zien welke agents er zijn, met welk mandaat, en wat de Bewaker vandaag tegenhield.', totDieTijd: 'Je ziet bij elke taak van een agent wie het deed.' },
+  },
+  {
+    sleutel: 'agents.eigenMandaat', naam: 'Eigen mandaat', pakket: 'plus', rollen: 'iedereen', helpartikel: 'agents-en-mandaten', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Je eigen mandaat en dagplafond per agent zetten, binnen wat de organisatie toestaat.', totDieTijd: 'Het mandaat van de organisatie geldt.' },
+  },
+  {
+    sleutel: 'agents.beheer', naam: 'Mandaten beheren', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'agents-en-mandaten', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Mandaten per agent zetten, dagplafonds en de knop Agents pauzeren.', totDieTijd: 'Vraag je beheerder.' },
+  },
+  {
+    sleutel: 'agents.waaromNiet', naam: 'Waarom niet?', pakket: 'plus', rollen: 'iedereen', helpartikel: 'agents-en-mandaten', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Zien welke handelingen de Bewaker bij je accounts tegenhield, met de reden.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'verbruik.lezen', naam: 'AI-verbruik lezen', pakket: 'starter', rollen: ['salesmanager'], helpartikel: 'abonnement-verbruik-ai-credits', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De AI-credits die de agents deze maand verbruikten.', totDieTijd: 'Vraag je beheerder.' },
+  },
   // P02: platform (alleen founder, geen regels in functies_per_niveau) en de spiegel voor de beheerder.
   {
     sleutel: 'platform.klanten', naam: 'Klanten', pakket: 'starter', rollen: ['founder'], helpartikel: '', startNiveau: 'beginner',

@@ -8,6 +8,7 @@ import {
   ACTIESOORT_LABEL, cadansVerstreken, evaluateTrigger, regelLevertRuis, ruleTargetsAccount, vulSjabloon, waaromTekst,
   type MotorAccount, type Regel,
 } from './regelPatronen'
+import { bewaakTaken, type Tegengehouden } from './planner'
 import { BELMATRIX_STANDAARD, CAPACITEIT_STANDAARD, geldendeCel, intervalDagen, type Matrix } from './ritmematrix'
 
 export interface MotorGebruiker { id: string; naam: string; rol: string; werkplek: 'binnendienst' | 'buitendienst'; niveau: string; teamId: string | null; status?: string }
@@ -58,6 +59,8 @@ export interface MotorUitvoer {
   geschoven: { ownerId: string; aantal: number; naar: string }[]
   stappen: { stap: string; status: 'gedaan' | 'overgeslagen'; toelichting?: string }[]
   waarschuwingen: string[]
+  /** Wat de Bewaker tegenhield (geen taak, wel een regel in agent_runs). */
+  tegengehouden: Tegengehouden[]
 }
 
 const RITME_PATRONEN = new Set(['ritme', 'hercontact-vervolg'])
@@ -238,8 +241,11 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
     }
   }
 
+  // Bewaker: elke geplande contacttaak vooraf getoetst (afkoeling, wachtend, bel-me-niet).
+  const { toegestaan, tegengehouden } = bewaakTaken(taken, new Map(accounts.map((a) => [a.id, a])), nu)
+
   // Planner: capaciteit per uitvoerder per dag.
-  const { geland, geschoven } = verdeelCapaciteit(taken, inv.gebruikers, inv.capaciteit ?? CAPACITEIT_STANDAARD, inv.bezetting, inv.werkdagen)
+  const { geland, geschoven } = verdeelCapaciteit(toegestaan, inv.gebruikers, inv.capaciteit ?? CAPACITEIT_STANDAARD, inv.bezetting, inv.werkdagen)
   const perPersoon = new Map<string, { aantal: number; naar: string }>()
   for (const t of geschoven) {
     const p = perPersoon.get(t.ownerId) ?? { aantal: 0, naar: t.due }
@@ -266,10 +272,12 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
     stappen: [
       { stap: 'campagne-afsluiter', status: 'overgeslagen', toelichting: 'Campagnes komen later' },
       { stap: 'regels', status: 'gedaan', toelichting: `${regels.length} regels, ${taken.length} taken, ${inzichten.length} inzichten` },
+      { stap: 'bewaker', status: 'gedaan', toelichting: `${tegengehouden.length} tegengehouden` },
       { stap: 'planner', status: 'gedaan', toelichting: `${geschoven.length} taken doorgeschoven` },
       { stap: 'belblokvuller', status: 'overgeslagen', toelichting: 'Belblokken komen later' },
       { stap: 'automatisch voorbereiden', status: 'overgeslagen', toelichting: 'Briefings komen later' },
     ],
     waarschuwingen,
+    tegengehouden,
   }
 }
