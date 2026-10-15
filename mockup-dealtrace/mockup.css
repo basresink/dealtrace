@@ -990,3 +990,5 @@ html[data-werkplek='buitendienst'] [data-werkplek='binnendienst'] { display: non
 .creditmeter { display: grid; gap: 8px; }
 .creditmeter-cijfer { font-family: var(--font-serif); font-size: 32px; font-weight: 700; line-height: 1; font-feature-settings: "tnum"; }
 .creditmeter .voortgang { height: 10px; }
+/* Rasterkolommen mogen smaller worden dan een brede tabel; de tabel scrolt dan in zijn eigen kader. */
+.raster > * { min-width: 0; }

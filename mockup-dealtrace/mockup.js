@@ -458,7 +458,8 @@
         '<p class="subtitle">Deze functie hoort bij ' + groot(min) + '. Wil je hem gebruiken, bespreek het dan met je salesmanager.</p>' +
         '<article class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Wat het doet</h3></header><p class="fo-tekst">' + it.wat + '</p></article>' +
         '<article class="fo-blok fo-blok--accent"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Tot die tijd</h3></header><p class="fo-tekst">' + it.tot + '</p></article>' +
-        '<div class="toolbar-buttons mt-16"><a class="dd-actie dd-actie--primair" href="helpcenter.html">' + ic('book', 'dd-actie-icoon') + 'Lees hoe het werkt</a></div></div></div></section>';
+        '<div class="toolbar-buttons mt-16"><a class="dd-actie dd-actie--primair" href="helpcenter.html">' + ic('book', 'dd-actie-icoon') + 'Lees hoe het werkt</a>' +
+        '<button type="button" class="dd-actie dd-actie--secundair" data-ai>' + ic('sparkles', 'dd-actie-icoon') + 'Vraag AI</button></div></div></div></section>';
     }
     if (html) {
       secties.forEach(function (s) { s.hidden = true; });
@@ -777,7 +778,12 @@
     var fo = h && document.getElementById(h);
     if (fo && fo.classList.contains('fo-overlay')) fo.hidden = false;
     var tabKnop = h && document.querySelector('[data-tab-knop="' + h + '"]');
-    if (tabKnop) tabKnop.click();
+    if (tabKnop) {
+      tabKnop.click();
+      /* Het tabblad staat open; haal de hash weg zodat de browser niet naar het paneel springt. */
+      try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) { /* file: zonder history */ }
+      window.scrollTo(0, 0);
+    }
   }
 
   plaatsSprite();
