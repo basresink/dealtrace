@@ -37,6 +37,6 @@ describe('foutmelding', () => {
     expect(melding).not.toContain('GeheimXYZ')
   })
   it('meldt een ontbrekende @', () => {
-    expect(() => normaliseerUrl('postgresql://postgres.abc', 'X')).toThrow(/geen @/)
+    expect(() => normaliseerUrl('postgresql://postgres.abc:wachtwoord', 'X')).toThrow(/geen @/)
   })
 })
