@@ -93,3 +93,7 @@ end $$;
 -- P03: index voor filterbare eigen velden (alleen de app, alleen via de functie).
 revoke execute on function dealtrace_index_eigen_veld(text, text, text, text) from public;
 grant execute on function dealtrace_index_eigen_veld(text, text, text, text) to dealtrace_app;
+
+-- P05: de reisgeschiedenis is alleen toevoegen voor de app.
+revoke update, delete on reisgeschiedenis from dealtrace_app;
+grant select, insert on reistemplates, activiteitstemplates to dealtrace_platform;

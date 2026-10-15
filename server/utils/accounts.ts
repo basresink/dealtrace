@@ -32,7 +32,7 @@ export async function accountRijen(tx: Tx, soort: 'prospect' | 'klant', zichtbar
   for (const c of contacten) (perAccount.get(c.accountId) ?? perAccount.set(c.accountId, []).get(c.accountId)!).push(c)
   return accounts.map((a) => ({
     id: a.id, name: a.name, city: a.city, klasse: a.klasse, ownerId: a.ownerId, ownerTeamId: a.ownerId ? teams.get(a.ownerId) ?? null : null,
-    nbStatus: a.nbStatus, score: a.score, aanleiding: a.data?.aanleiding ?? null, laatsteContactOp: a.laatsteContactOp, faseSinds: a.faseSinds,
+    nbStatus: a.nbStatus, score: a.score, aanleiding: a.data?.aanleiding ?? null, laatsteContactOp: a.laatsteContactOp, faseSinds: a.faseSinds, faseId: a.faseId, reisId: a.reisId,
     telefoon: a.data?.telefoon ?? null, email: a.data?.email ?? null,
     contacten: sorteerContacten((perAccount.get(a.id) ?? []).map((c) => ({ id: c.id, naam: `${c.firstName ?? ''} ${c.lastName}`.trim(), rol: c.rol, status: c.status, email: c.email, telefoon: c.data?.telefoon ?? null, mobiel: c.data?.mobiel ?? null, updatedAt: c.updatedAt }))),
     cf: zichtbareCustomFields(a.data?.customFields, zichtbareVelden),

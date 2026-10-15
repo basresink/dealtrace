@@ -4,6 +4,8 @@
 // Elk onderdeel is idempotent; "Startset aanvullen" draait alles opnieuw.
 import { sql } from 'drizzle-orm'
 import type { alsPlatform } from './platform'
+import { AFKOELING_STANDAARD } from '../../shared/nbStatus'
+import { STANDAARD_ACTIVITEITEN, STANDAARDREIS_NAAM, standaardReisData, standaardReisId } from '../../shared/reis'
 
 type Tx = Parameters<Parameters<typeof alsPlatform>[0]>[0]
 
@@ -35,6 +37,21 @@ export const STARTSET: StartsetOnderdeel[] = [
     async voerUit(tx, org) {
       await tx.execute(sql`insert into teams (id, organisation_id, naam)
         select ${`${org}-team`}, ${org}, 'Team 1' where not exists (select 1 from teams where organisation_id = ${org})`)
+    },
+  },
+  {
+    sleutel: 'reis',
+    naam: 'Standaardreis met startactiviteiten en afkoelperiodes (P05)',
+    async voerUit(tx, org) {
+      const id = standaardReisId(org)
+      await tx.execute(sql`insert into reistemplates (id, organisation_id, naam, versie, status, is_standaard, data)
+        select ${id}, ${org}, ${STANDAARDREIS_NAAM}, 1, 'actief', true, ${JSON.stringify(standaardReisData())}::jsonb
+        where not exists (select 1 from reistemplates where organisation_id = ${org} and is_standaard)`)
+      await tx.execute(sql`insert into activiteitstemplates (organisation_id, reistemplate_id, fase_id, versie, data)
+        select ${org}, ${id}, x->>'faseId', 1, x from jsonb_array_elements(${JSON.stringify(STANDAARD_ACTIVITEITEN)}::jsonb) x
+        where exists (select 1 from reistemplates where id = ${id}) and not exists (select 1 from activiteitstemplates where reistemplate_id = ${id})`)
+      await tx.execute(sql`insert into org_settings (organisation_id, key, value) values (${org}, 'afkoeling', ${JSON.stringify(AFKOELING_STANDAARD)}::jsonb)
+        on conflict (organisation_id, key) do nothing`)
     },
   },
 ]

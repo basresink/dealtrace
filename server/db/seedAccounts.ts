@@ -34,7 +34,7 @@ export async function seedAccounts(client: pg.Client, org: { id: string }, bron:
         { waarde: 'zonnepanelen', label: 'Zonnepanelen', kleur: 'geel' }] })],
   )
 
-  type A = { id: string; name: string; kind: string; klasse: string | null; owner: string | null; status: string; city: string; postcode?: string; kvk?: string; domein?: string; lat?: number; lng?: number; data: any }
+  type A = { id: string; name: string; kind: string; klasse: string | null; owner: string | null; status: string; city: string; postcode?: string; kvk?: string; domein?: string; lat?: number; lng?: number; branche?: string | null; leverancier?: string | null; gebied?: string | null; data: any }
   type C = { id: string; accountId: string; first: string; last: string; email: string | null; rol: string; status: string; data: any }
   const accounts: A[] = []
   const contacten: C[] = []
@@ -44,7 +44,7 @@ export async function seedAccounts(client: pg.Client, org: { id: string }, bron:
     const segment = a.id.startsWith('pr-08') || a.id.startsWith('pr-09') || a.id.startsWith('pr-10') ? 'woningcorporatie' : a.id.startsWith('pr-11') || a.id.startsWith('pr-12') ? 'zonnepanelen' : 'installateur'
     accounts.push({
       id: a.id, name: a.naam, kind: a.account_kind, klasse: a.klasse, owner: a.owner_id, status: a.account_kind === 'klant' ? 'klant' : a.nb_status,
-      city: a.plaats, postcode: a.postcode, kvk: a.kvk, domein: a.domein, lat: a.lat, lng: a.lng,
+      city: a.plaats, postcode: a.postcode, kvk: a.kvk, domein: a.domein, lat: a.lat, lng: a.lng, branche: a.vv_branche_id ?? null, leverancier: a.huidige_leverancier_id ?? null, gebied: a.gebied_id ?? null,
       data: { website: `https://${a.domein}`, telefoon: `+3133${String(1000000 + Number(a.kvk.slice(-4))).slice(-7)}`, provincie: a.provincie, sbi: a.sbi,
         customFields: { aantal_monteurs: a.aantal_monteurs, segment }, herkomst: { 'cf.aantal_monteurs': { bron: 'import', op: '2026-09-01' } },
         ...(a.id === 'pr-01' ? { aanleiding: { tekst: 'Plant woningbouw in Hoogland', op: new Date(nu.getTime() - 3 * 864e5).toISOString(), heet: true, bron: 'notitie' } } : {}),
@@ -90,11 +90,11 @@ export async function seedAccounts(client: pg.Client, org: { id: string }, bron:
     const lc = laatsteContact((momenten[a.id] ?? []).map((m) => ({ soort: m.soort, op: m.op, status: 'afgerond' })), nu)
     const s = berekenScore({ nu, contacten: cs, laatsteContactOp: lc, aanleidingen: a.data.aanleiding ? [a.data.aanleiding] : [] })
     await client.query(
-      `insert into accounts (id, organisation_id, name, account_kind, klasse, owner_id, nb_status, score, laatste_contact_op, city, postcode, kvk, domein, lat, lng, nb_bron, fase_sinds, data)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'seed', now() - interval '12 days', $16)
+      `insert into accounts (id, organisation_id, name, account_kind, klasse, owner_id, nb_status, score, laatste_contact_op, city, postcode, kvk, domein, lat, lng, nb_bron, fase_sinds, data, vv_branche_id, huidige_leverancier_id, gebied_id)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'seed', now() - interval '12 days', $16, $17, $18, $19)
        on conflict (id) do nothing`,
       [a.id, org.id, a.name, a.kind, a.klasse, a.owner, a.status, s.score, lc, a.city, a.postcode ?? null, a.kvk ?? null, a.domein ?? null, a.lat ?? null, a.lng ?? null,
-        JSON.stringify({ ...a.data, scoreOpbouw: s.opbouw })],
+        JSON.stringify({ ...a.data, scoreOpbouw: s.opbouw }), a.branche ?? null, a.leverancier ?? null, a.gebied ?? null],
     )
     for (const m of momenten[a.id] ?? []) {
       await client.query(`insert into activiteiten (organisation_id, account_id, soort, kanaal, uitkomst, door, op, data) select $1,$2,$3,$4,$5,$6,$7,'{}' where not exists (select 1 from activiteiten where account_id = $2 and op = $7)`,

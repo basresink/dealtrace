@@ -35,3 +35,6 @@ export function toonTelefoon(n: string | null | undefined): string {
   const m = /^\+31(6)(\d{4})(\d{4})$/.exec(n) ?? /^\+31(\d{2})(\d{3})(\d{4})$/.exec(n)
   return m ? `+31 ${m[1]} ${m[2]} ${m[3]}` : n
 }
+
+/** Pil in de kleur van de reisfase (tokens via de pilvarianten). */
+export const fasePil = (kleur: string | null | undefined) => `pil--${kleur || 'grijs'}`

@@ -6,7 +6,12 @@
 export const SYNCBARE_TABELLEN = {
   notificaties: 'notificaties',
   persoonlijke_instellingen: 'persoonlijk',
+  // P05: alleen de mutatiesoorten account.nee en account.pauzeer, zodat "Zet nee"
+  // offline kan (8.8). Een fasewissel gaat nooit rechtstreeks, alleen via het meldpunt.
+  accounts: 'prospects',
 } as const
+
+export const ACCOUNT_MUTATIESOORTEN = ['account.nee', 'account.pauzeer'] as const
 
 export type SyncbareTabel = keyof typeof SYNCBARE_TABELLEN
 

@@ -5,6 +5,7 @@ import { normaliseerDomein, zoekDuplicaat } from '../../../shared/ontdubbelen'
 import { schrijfAudit } from '../../utils/audit'
 import { effectiefNiveau, eigenVeldenVoor, herbereken, kan } from '../../utils/accounts'
 import { metOrganisatie, schema } from '../../utils/db'
+import { alsDoelgroepAccount, alsHttpFout, instapVelden, laadInstapContext, schrijfInstap } from '../../utils/reis'
 import { vereisFunctie } from '../../utils/sessie'
 import { pasEigenVeldenToe } from '../../utils/velden'
 
@@ -31,12 +32,17 @@ export default defineEventHandler(async (event) => {
     for (const k of ['naam', 'plaats', 'telefoon', 'website']) if ((b as any)[k]) herkomst[k] = { bron: 'hand', op, door: ctx.gebruiker.id }
     const customFields = pasEigenVeldenToe({}, b.customFields, velden, { rol: ctx.gebruiker.rol, eigenaar: true }, herkomst, ctx.gebruiker.id)
     const id = crypto.randomUUID()
-    await tx.insert(schema.accounts).values({
+    const rij = {
       id, organisationId: ctx.organisatie.id, name: naam, accountKind: 'prospect', nbStatus: 'nieuw', ownerId: ctx.gebruiker.id,
       klasse: kan(ctx, 'prospects.klasseZetten') ? b.klasse || null : null, city: b.plaats?.trim() || null, postcode: b.postcode?.trim().toUpperCase() || null,
       kvk: b.kvk?.replace(/\D/g, '') || null, domein, nbBron: 'hand',
       data: { telefoon, website: b.website?.trim() || undefined, linkedin: b.linkedin?.trim() || undefined, adres: b.adres?.trim() || undefined, customFields, herkomst },
-    })
+    }
+    // Instap in de reis (F05): kiesReis op doelgroep, anders de standaardreis; fase Gevonden.
+    let iv: ReturnType<typeof instapVelden>
+    try { iv = instapVelden(await laadInstapContext(tx), alsDoelgroepAccount({ ...rij, gebiedId: null, vvBrancheId: null }), 'lead-overgenomen') } catch (e) { alsHttpFout(e) }
+    await tx.insert(schema.accounts).values({ ...rij, reisId: iv.reisId, faseId: iv.faseId, doelgroepId: iv.doelgroepId, faseSinds: op })
+    await schrijfInstap(tx, ctx.organisatie.id, [{ accountId: id, reisId: iv.reisId, faseId: iv.faseId, versie: iv.versie }], 'lead-overgenomen', ctx.gebruiker.id)
     const s = await herbereken(tx, id)
     await schrijfAudit(tx, { organisationId: ctx.organisatie.id, actorId: ctx.gebruiker.id, action: 'account.aanmaken', resourceType: 'accounts', resourceId: id, changes: { naam } })
     return { id, naam, score: s?.score ?? 0, mogelijkDuplicaat: d.soort === 'mogelijk' ? d.match : null }

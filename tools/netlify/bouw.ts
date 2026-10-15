@@ -9,6 +9,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { seed } from '../../server/db/seed'
 import { seedAccounts } from '../../server/db/seedAccounts'
+import { seedReis } from '../../server/db/seedReis'
 import { normaliseerUrl, verbindingsopties } from '../../shared/verbinding'
 
 const beheer = process.env.DATABASE_URL_BEHEER
@@ -49,6 +50,8 @@ else {
     await c2.query('commit')
     console.log(`Testdata aangevuld: ${r.accounts} accounts en ${r.contacten} contacten.`)
   } else console.log('Testdata staat er al; seed overgeslagen.')
+  // P05: verkoopverhaal, afkoeling en fases aanvullen (idempotent).
+  await seedReis(c2, 'org-voltvast', JSON.parse(readFileSync(join(import.meta.dirname, '../../seed/voltvast.json'), 'utf8')))
   await c2.end()
 }
 

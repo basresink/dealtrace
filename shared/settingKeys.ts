@@ -7,6 +7,7 @@ export const SETTING_KEYS = [
   'werkdagen', // WerkdagInstelling
   'niveaus', // {iedereenAlles, standaardNiveauNieuweGebruiker}
   'klassen', // [{id, naam, omschrijving, tabblad}] (F03, gat 2)
+  'afkoeling', // {bellen, mail, linkedin, whatsapp, bezoek, kaart} in dagen (7.2, P05)
   // Van de leverancier:
   'pakket',
   'aiCredits',

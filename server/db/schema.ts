@@ -222,12 +222,17 @@ export interface AccountData {
   provincie?: string
   aanleiding?: { tekst: string; heet?: boolean; op: string; bron?: string }
   dossier?: { op?: string; criteria?: number; kernfeiten?: string[] }
-  band?: Partial<Record<'behoefte' | 'autoriteit' | 'noodzaak' | 'draagvlak', { ja: boolean; bron?: string }>>
+  band?: Partial<Record<'behoefte' | 'autoriteit' | 'noodzaak' | 'draagvlak', { ja: boolean; bron?: string; op?: string }>>
   herkomst?: Record<string, { bron: string; op: string; door?: string }>
   customFields?: Record<string, unknown>
   samengevoegdUit?: string[]
   scoreOpbouw?: unknown
   verwijderd?: boolean
+  /** P05: nee met reden en afkoelperiode per kanaal; wachtend tot een datum; lopende terugkomregel. */
+  nee?: import('../../shared/nbStatus').NeeGegevens | null
+  wachtendTot?: string | null
+  pauzeReden?: string | null
+  terugkom?: { datum: string; regelId?: string | null; reden?: string | null; aanpak?: string | null; kanaal?: string | null } | null
   [k: string]: unknown
 }
 
@@ -357,4 +362,71 @@ export const onderdrukkingslijst = pgTable('onderdrukkingslijst', {
   emailHash: text('email_hash').notNull(),
   op: ts('op').defaultNow().notNull(),
   bron: text('bron').notNull().default('afgemeld'),
+})
+
+// P05: doelgroepen, prospectreis en reisgeschiedenis (0005_reis_status.sql)
+export const doelgroepen = pgTable('doelgroepen', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  naam: text('naam').notNull(),
+  status: text('status').notNull().default('concept'),
+  prioriteit: integer('prioriteit').notNull().default(10),
+  versie: integer('versie').notNull().default(1),
+  data: jsonb('data').$type<import('../../shared/reis').DoelgroepData>().notNull().default({}),
+  createdAt: ts('created_at').defaultNow().notNull(),
+  updatedAt: ts('updated_at').defaultNow().notNull(),
+})
+
+export const reistemplates = pgTable('reistemplates', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  naam: text('naam').notNull(),
+  doelgroepId: text('doelgroep_id'),
+  versie: integer('versie').notNull().default(1),
+  status: text('status').notNull().default('concept'),
+  isStandaard: boolean('is_standaard').notNull().default(false),
+  bron: jsonb('bron').$type<{ reisId?: string; versie?: number }>().notNull().default({}),
+  eigenaarId: text('eigenaar_id'),
+  data: jsonb('data').$type<import('../../shared/reis').ReisData>().notNull(),
+  createdAt: ts('created_at').defaultNow().notNull(),
+  updatedAt: ts('updated_at').defaultNow().notNull(),
+})
+
+export const activiteitstemplates = pgTable('activiteitstemplates', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  reistemplateId: text('reistemplate_id').notNull(),
+  faseId: text('fase_id').notNull(),
+  versie: integer('versie').notNull().default(1),
+  data: jsonb('data').$type<import('../../shared/reis').ActiviteitTemplate>().notNull(),
+})
+
+export const prospectreizen = pgTable('prospectreizen', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  reistemplateId: text('reistemplate_id').notNull(),
+  templateVersie: integer('template_versie').notNull().default(1),
+  accountId: text('account_id').notNull(),
+  faseId: text('fase_id').notNull(),
+  nbStatus: text('nb_status').notNull(),
+  faseSinds: ts('fase_sinds').defaultNow().notNull(),
+  gestartOp: ts('gestart_op').defaultNow().notNull(),
+  afgerondOp: ts('afgerond_op'),
+  data: jsonb('data').$type<Record<string, unknown>>().notNull().default({}),
+})
+
+export const reisgeschiedenis = pgTable('reisgeschiedenis', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  accountId: text('account_id').notNull(),
+  prospectreisId: text('prospectreis_id'),
+  versie: integer('versie').notNull().default(1),
+  vanFaseId: text('van_fase_id'),
+  naarFaseId: text('naar_fase_id'),
+  vanStatus: text('van_status'),
+  naarStatus: text('naar_status'),
+  gebeurtenis: text('gebeurtenis').notNull(),
+  door: text('door').notNull(),
+  op: ts('op').defaultNow().notNull(),
+  reden: text('reden'),
 })

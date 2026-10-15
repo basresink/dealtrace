@@ -5,6 +5,7 @@ import { filterTellers, filtersUitQuery, pasFiltersToe, sorteer, type Sortering 
 import { accountRijen, effectiefNiveau, eigenVeldenVoor, kan } from '../../utils/accounts'
 import { metOrganisatie, schema } from '../../utils/db'
 import { eigenTeams } from '../../utils/gebruikers'
+import { terugkomControleLui } from '../../utils/reis'
 import { vereisFunctie } from '../../utils/sessie'
 
 const PER_PAGINA = 25
@@ -19,10 +20,15 @@ export default defineEventHandler(async (event) => {
   // Beginner: zoeken, klasse, status en "Van mij" (F03).
   if (!alleFilters) { filters.aanleiding = []; filters.laatsteContact = []; filters.bereikbaarheid = [] }
   if (!filterVelden) filters.cf = {}
+  const reisFilter = kan(ctx, 'reis.overzicht')
+  if (!reisFilter) filters.fase = []
   const niveau = effectiefNiveau(ctx)
   const sortering = (['naam', 'laatsteContact', 'score', 'klasse', 'dagenInFase'].includes(q.sort) ? q.sort : 'score') as Sortering
 
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
+    if (soort === 'prospect') await terugkomControleLui(tx, ctx.organisatie.id)
+    const [standaard] = reisFilter ? await tx.select().from(schema.reistemplates).where(sql`${schema.reistemplates.isStandaard}`) : []
+    const fases = standaard ? standaard.data.fases.map((f) => ({ id: f.id, label: f.label, kleur: f.kleur })) : []
     const velden = await eigenVeldenVoor(tx, 'account', niveau)
     const rijen = await accountRijen(tx, soort, velden)
     const teamIds = ctx.gebruiker.rol === 'salesmanager' ? await eigenTeams(tx, ctx.gebruiker.id) : ctx.gebruiker.teamId ? [ctx.gebruiker.teamId] : []
@@ -32,6 +38,7 @@ export default defineEventHandler(async (event) => {
     const filterbaar = filterVelden ? velden.filter((v) => v.data.filterbaar && ['keuzelijst', 'meerkeuze', 'janee'].includes(v.type)) : []
     const mogelijk: Record<string, string[]> = {
       status: soort === 'klant' ? ['klant'] : ['nieuw', 'in reis', 'wachtend', 'nee', 'gescoord'],
+      ...(reisFilter && soort === 'prospect' ? { fase: fases.map((f) => f.id) } : {}),
       klasse: [...klassen.map((k) => k.id), 'geen'],
       ...(alleFilters ? { aanleiding: ['met'], laatsteContact: ['nooit', '30', '90'], bereikbaarheid: ['zonderTelefoon', 'zonderEmail', 'zonderBeslisser'] } : {}),
       ...Object.fromEntries(filterbaar.map((v) => [`cf.${v.sleutel}`, v.type === 'janee' ? ['ja', 'nee'] : (v.data.opties ?? []).map((o: any) => o.waarde)])),
@@ -46,8 +53,9 @@ export default defineEventHandler(async (event) => {
       meer: resultaat.length > pagina * PER_PAGINA,
       tellers: filterTellers(rijen, filters, fctx, mogelijk),
       klassen,
+      fases,
       eigenVelden: filterbaar.map((v) => ({ sleutel: v.sleutel, naam: v.naam, type: v.type, opties: v.data.opties ?? [] })),
-      kan: { alleFilters, filterVelden, weergaven: kan(ctx, 'prospects.weergaven'), opgeslagen: kan(ctx, 'prospects.opgeslagenFilters'), export: kan(ctx, 'prospects.export') },
+      kan: { alleFilters, filterVelden, weergaven: kan(ctx, 'prospects.weergaven'), opgeslagen: kan(ctx, 'prospects.opgeslagenFilters'), export: kan(ctx, 'prospects.export'), reisFilter },
     }
   })
 })

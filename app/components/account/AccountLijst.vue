@@ -32,11 +32,12 @@ function wissel(groep: string, waarde: string) {
 }
 const eigenaar = computed(() => String(route.query.eigenaar ?? 'mij'))
 const sort = computed(() => String(route.query.sort ?? 'score'))
-const actieveFilters = computed(() => ['status', 'klasse', 'aanleiding', 'laatsteContact', 'bereikbaarheid', ...Object.keys(route.query).filter((k) => k.startsWith('cf.'))].reduce((s, k) => s + lijst(k).length, 0))
+const actieveFilters = computed(() => ['status', 'fase', 'klasse', 'aanleiding', 'laatsteContact', 'bereikbaarheid', ...Object.keys(route.query).filter((k) => k.startsWith('cf.'))].reduce((s, k) => s + lijst(k).length, 0))
 const teller = (groep: string, w: string) => data.value.tellers?.[groep]?.[w] ?? 0
 const groepen = computed(() => {
   const g: { sleutel: string; label: string; waarden: { w: string; label: string }[] }[] = []
   if (props.soort === 'prospect') g.push({ sleutel: 'status', label: 'Status', waarden: ['nieuw', 'in reis', 'wachtend', 'nee', 'gescoord'].map((w) => ({ w, label: STATUS_LABEL[w]! })) })
+  if (props.soort === 'prospect' && data.value.kan?.reisFilter) g.push({ sleutel: 'fase', label: 'Reis en fase', waarden: (data.value.fases ?? []).map((f: any) => ({ w: f.id, label: f.label })) })
   g.push({ sleutel: 'klasse', label: 'Klasse', waarden: [...(data.value.klassen ?? []).map((k: any) => ({ w: k.id, label: k.naam.split('·')[0].trim() })), { w: 'geen', label: 'Geen klasse' }] })
   if (data.value.kan?.alleFilters) {
     g.push({ sleutel: 'aanleiding', label: 'Aanleiding', waarden: [{ w: 'met', label: 'Met aanleiding' }] })

@@ -34,6 +34,8 @@ export interface Functie {
     /** Extra label bij Beginner, zoals "meedoen" of "lezen" (6.1). */
     beginnerLabel?: string
   }
+  /** Rollen voor wie de functie los van het niveau aanstaat (bijvoorbeeld Prospectreizen voor de salesmanager). */
+  altijdVoor?: readonly Rol[]
   /** Tekst voor de uitlegflyout als de functie niet aanstaat (6.1). */
   uitleg: { watHetDoet: string; totDieTijd: string }
 }
@@ -107,7 +109,7 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Het verkoopverhaal van je organisatie: verhaal, belofte, concurrenten, winpunten.', totDieTijd: 'Niets; Richting is voor iedereen te lezen.' },
   },
   {
-    sleutel: 'nav.reizen', naam: 'Prospectreizen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospectreis', startNiveau: 'expert',
+    sleutel: 'nav.reizen', naam: 'Prospectreizen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'doelgroepen-en-reizen', startNiveau: 'expert', altijdVoor: MANAGERS,
     zijbalk: { groep: 'Plannen', route: '/reizen', icoon: 'Route' },
     uitleg: { watHetDoet: 'Een eigen prospectreis per doelgroep bouwen, met fases, overgangen en startactiviteiten.', totDieTijd: 'Je werkt met de standaardreis die je salesmanager heeft gekozen.' },
   },
@@ -244,6 +246,55 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'import.teamVerdelen', naam: 'Import verdelen over het team', pakket: 'starter', rollen: ['salesmanager', 'beheerder'], helpartikel: 'importeren', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'De nieuwe accounts gelijk verdelen over het team.', totDieTijd: 'Geen.' },
   },
+  // P05: prospectreis, statusmachine en terugkomregels
+  {
+    sleutel: 'reis.zien', naam: 'Reis en fase op de kaart', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-prospectreis-en-fases', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Reis, fase, status en dagen in fase op de accountkaart.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'reis.kwalificeer', naam: 'Kwalificeer', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-prospectreis-en-fases', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Een account na het dossier kwalificeren, zodat het in de reis komt.', totDieTijd: 'Vraag je manager.' },
+  },
+  {
+    sleutel: 'account.nee', naam: 'Zet nee', pakket: 'starter', rollen: 'iedereen', helpartikel: 'nee-met-reden-en-afkoelperiode', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Een nee vastleggen met reden, afkoelperiode en terugkomdatum.', totDieTijd: 'Vraag je manager.' },
+  },
+  {
+    sleutel: 'reis.faseCorrigeren', naam: 'Fase corrigeren', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-prospectreis-en-fases', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een account met een reden in de juiste fase zetten.', totDieTijd: 'De fase schuift mee met je uitkomsten.' },
+  },
+  {
+    sleutel: 'reis.geschiedenis', naam: 'Reisgeschiedenis', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-prospectreis-en-fases', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Per account zien wanneer het van fase wisselde, door wie en waarom.', totDieTijd: 'De tijdlijn laat de belangrijkste momenten zien.' },
+  },
+  {
+    sleutel: 'reis.overzicht', naam: 'Reis bekijken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-prospectreis-en-fases', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De reis van je doelgroep met aantallen per fase, alleen lezen.', totDieTijd: 'Je ziet de fase op de kaart.' },
+  },
+  {
+    sleutel: 'account.terugOpAanpassen', naam: 'Terugkomdatum aanpassen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'nee-met-reden-en-afkoelperiode', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De terugkomdatum van een account met een reden verschuiven.', totDieTijd: 'De datum volgt de terugkomregel.' },
+  },
+  {
+    sleutel: 'reis.verplaatsen', naam: 'Verplaats naar reis', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-prospectreis-en-fases', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een account met een reden naar een andere reis verplaatsen (eigen accounts; de salesmanager alle).', totDieTijd: 'Vraag je salesmanager.' },
+  },
+  {
+    sleutel: 'doelgroepen.beheren', naam: 'Doelgroepen beheren', pakket: 'starter', rollen: MANAGERS, helpartikel: 'doelgroepen-en-reizen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Doelgroepen maken met branches, filters, prioriteit en ambitietoets.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'reis.accentBijstellen', naam: 'Accenten bijstellen', pakket: 'starter', rollen: MANAGERS, helpartikel: 'doelgroepen-en-reizen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Het Pitstop-accent per fase van de standaardreis bijstellen.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'reis.standaardTerug', naam: 'Standaard terugzetten', pakket: 'starter', rollen: MANAGERS, helpartikel: 'doelgroepen-en-reizen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Fases, accenten, overgangen en startactiviteiten van een reis terugzetten naar de standaard.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'instellingen.afkoeling', naam: 'Afkoelperiodes', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'nee-met-reden-en-afkoelperiode', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'De afkoelperiode per kanaal na een nee instellen.', totDieTijd: 'Geen.' },
+  },
   // P02: platform (alleen founder, geen regels in functies_per_niveau) en de spiegel voor de beheerder.
   {
     sleutel: 'platform.klanten', naam: 'Klanten', pakket: 'starter', rollen: ['founder'], helpartikel: '', startNiveau: 'beginner',
@@ -345,7 +396,7 @@ export function beschikbaar(
   if (!pakketBevat(organisatie, f)) return { ok: false, reden: 'pakket' }
   if (organisatie.iedereenAlles) return { ok: true }
   // Managers en beheerders hebben de functies van hun rol altijd aan (4.1).
-  if (f.rollen !== 'iedereen') return { ok: true }
+  if (f.rollen !== 'iedereen' || f.altijdVoor?.includes(gebruiker.rol)) return { ok: true }
   if (!aanVoorNiveau(sleutel, gebruiker.niveau, organisatie, stand)) return { ok: false, reden: 'niveau' }
   return { ok: true }
 }

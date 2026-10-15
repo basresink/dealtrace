@@ -3,6 +3,7 @@
 // (aanmaken, samenvoegen volgens bronprioriteit, onderdrukking, herkomst).
 import { createHash } from 'node:crypto'
 import { eq } from 'drizzle-orm'
+import { alsDoelgroepAccount, instapVelden, laadInstapContext, schrijfInstap } from './reis'
 import { dubbelInBestand, valideerImportRij, type ImportDoel, type ImportRij } from '../../shared/leadGenerator'
 import { magOverschrijven, type Bron } from '../../shared/herkomst'
 import { contactDuplicaat, zoekDuplicaat } from '../../shared/ontdubbelen'
@@ -156,7 +157,16 @@ export async function verwerk(tx: Tx, opties: {
   // Dubbele rijen in het bestand worden één account: hun contacten gaan naar het account van de eerste rij.
   for (const regel of opties.regels) if (regel.categorie === 'dubbelInBestand' && regel.dubbelVan && accountVoorRij.has(regel.dubbelVan) && !accountVoorRij.has(regel.rij)) accountVoorRij.set(regel.rij, accountVoorRij.get(regel.dubbelVan)!)
 
+  // Instap in de reis (F05): kiesReis per account, fase Gevonden, meldpunt `import`.
+  const instapContext = await laadInstapContext(tx)
+  const instap: { accountId: string; reisId: string; faseId: string | null; versie: number }[] = []
+  for (const a of nieuweAccounts) {
+    const iv = instapVelden(instapContext, alsDoelgroepAccount({ klasse: null, postcode: a.postcode ?? null, gebiedId: null, nbBron: 'import', vvBrancheId: null, data: a.data as any }), 'import')
+    Object.assign(a, { reisId: iv.reisId, faseId: iv.faseId, doelgroepId: iv.doelgroepId, faseSinds: nu })
+    instap.push({ accountId: a.id!, reisId: iv.reisId, faseId: iv.faseId, versie: iv.versie })
+  }
   for (let i = 0; i < nieuweAccounts.length; i += 500) await tx.insert(schema.accounts).values(nieuweAccounts.slice(i, i + 500))
+  await schrijfInstap(tx, opties.organisatieId, instap, 'import', opties.gebruikerId)
 
   for (const [rij, accountId] of accountVoorRij) {
     const c = perRij.get(rij)?.contact

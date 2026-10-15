@@ -14,6 +14,8 @@ export interface AccountRij {
   aanleiding?: { tekst: string; heet?: boolean; op: string } | null
   laatsteContactOp: string | null
   faseSinds?: string | null
+  faseId?: string | null
+  reisId?: string | null
   contacten: { rol: string; status: string; telefoon?: string | null; mobiel?: string | null; email?: string | null }[]
   cf: Record<string, unknown>
   telefoon?: string | null
@@ -24,6 +26,8 @@ export interface Filters {
   q?: string
   eigenaar?: 'mij' | 'team' | 'iedereen'
   status?: string[]
+  /** Reis en fase (P05): fase-id's. */
+  fase?: string[]
   klasse?: string[]
   aanleiding?: string[]
   laatsteContact?: string[]
@@ -34,7 +38,7 @@ export interface Filters {
 
 export interface FilterContext { gebruikerId: string; teamIds: string[]; nu: Date }
 
-type Groep = 'status' | 'klasse' | 'aanleiding' | 'laatsteContact' | 'bereikbaarheid'
+type Groep = 'status' | 'fase' | 'klasse' | 'aanleiding' | 'laatsteContact' | 'bereikbaarheid'
 const DAG = 24 * 3600 * 1000
 
 function voldoetWaarde(a: AccountRij, groep: Groep | `cf.${string}`, w: string, ctx: FilterContext): boolean {
@@ -46,6 +50,7 @@ function voldoetWaarde(a: AccountRij, groep: Groep | `cf.${string}`, w: string, 
   }
   switch (groep) {
     case 'status': return a.nbStatus === w
+    case 'fase': return a.faseId === w
     case 'klasse': return w === 'geen' ? !a.klasse : a.klasse === w
     case 'aanleiding': return w === 'met' ? !!a.aanleiding : true
     case 'laatsteContact': {
@@ -66,7 +71,7 @@ function voldoetWaarde(a: AccountRij, groep: Groep | `cf.${string}`, w: string, 
 
 function groepen(f: Filters): [Groep | `cf.${string}`, string[]][] {
   const g: [Groep | `cf.${string}`, string[]][] = []
-  for (const k of ['status', 'klasse', 'aanleiding', 'laatsteContact', 'bereikbaarheid'] as Groep[]) if (f[k]?.length) g.push([k, f[k]!])
+  for (const k of ['status', 'fase', 'klasse', 'aanleiding', 'laatsteContact', 'bereikbaarheid'] as Groep[]) if (f[k]?.length) g.push([k, f[k]!])
   for (const [k, v] of Object.entries(f.cf ?? {})) if (v.length) g.push([`cf.${k}`, v])
   return g
 }
@@ -137,7 +142,7 @@ export function filtersUitQuery(q: Record<string, unknown>): Filters {
   const f: Filters = {
     q: typeof q.q === 'string' ? q.q : undefined,
     eigenaar: (['mij', 'team', 'iedereen'] as const).find((e) => e === q.eigenaar) ?? 'mij',
-    status: lijst(q.status), klasse: lijst(q.klasse), aanleiding: lijst(q.aanleiding),
+    status: lijst(q.status), fase: lijst(q.fase), klasse: lijst(q.klasse), aanleiding: lijst(q.aanleiding),
     laatsteContact: lijst(q.laatsteContact), bereikbaarheid: lijst(q.bereikbaarheid), cf: {},
   }
   for (const [k, v] of Object.entries(q)) if (k.startsWith('cf.')) f.cf![k.slice(3)] = lijst(v)
@@ -148,7 +153,7 @@ export function filtersNaarQuery(f: Filters): Record<string, string> {
   const q: Record<string, string> = {}
   if (f.q) q.q = f.q
   if (f.eigenaar && f.eigenaar !== 'mij') q.eigenaar = f.eigenaar
-  for (const k of ['status', 'klasse', 'aanleiding', 'laatsteContact', 'bereikbaarheid'] as const) if (f[k]?.length) q[k] = f[k]!.join(',')
+  for (const k of ['status', 'fase', 'klasse', 'aanleiding', 'laatsteContact', 'bereikbaarheid'] as const) if (f[k]?.length) q[k] = f[k]!.join(',')
   for (const [k, v] of Object.entries(f.cf ?? {})) if (v.length) q[`cf.${k}`] = v.join(',')
   return q
 }

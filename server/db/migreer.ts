@@ -11,6 +11,7 @@ import pg from 'pg'
 import { verbindingsopties } from '../../shared/verbinding'
 import { APP_WACHTWOORD, BEHEER_URL, isLokaal } from './omgeving'
 import { startindeling } from '../../shared/functies'
+import { zorgVoorReizen } from './reisStart'
 
 const MAP = join(import.meta.dirname, 'migrations')
 
@@ -51,6 +52,9 @@ export async function migreer(url = BEHEER_URL, opties: { opnieuw?: boolean; sti
       nieuw += res.rowCount ?? 0
     }
     log(`Features per niveau: ${nieuw} nieuwe startregels.`)
+    // P05: standaardreis per organisatie en een fase voor prospects zonder reis.
+    const r = await zorgVoorReizen(client)
+    if (r.reizen || r.accounts) log(`Prospectreis: ${r.reizen} standaardreizen, ${r.accounts} accounts in een fase gezet.`)
   } finally {
     await client.end()
   }

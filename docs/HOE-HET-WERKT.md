@@ -96,6 +96,21 @@ Leadgenerator, tabblad Importeren: een wizard in vier stappen (bestand, kolommen
 - **Herkomst**: elk veld krijgt `{bron: 'import', op, door, batchId}`.
 - **Terugdraaien**: alleen accounts zonder activiteit en zonder wijziging met de hand; samengevoegde accounts krijgen hun oude waarden terug. Een tweede keer geeft 409.
 
+## Prospectreis, status en terugkomregels (P05)
+
+De reisfase zegt waar een account staat; de status zegt of het nu bewerkt wordt. Ze veranderen altijd samen en op één plek.
+
+- **Standaardreis**: tien fases in vijf hoofdfases (Vinden, Bewerken, Verbinden, Overgedragen, Verloren), tot en met de eerste afspraak en de overdracht. De definitie staat één keer in `shared/reis.ts`; elke organisatie krijgt hem als echte rij in `reistemplates` (met startactiviteiten in `activiteitstemplates`), via de startset en na elke migratie (`server/db/reisStart.ts`).
+- **Status** (`shared/nbStatus.ts`, `volgendeStatus`): nieuw, in reis, wachtend, nee, gescoord, overgedragen. Overgedragen blijft overgedragen; terugkomen gaat alleen via een terugkomregel.
+- **Meldpunt** (`POST /api/reis/gebeurtenis`, `server/utils/reis.ts`): de enige plek waar fase, reis en status veranderen. In één transactie: `volgendeFase`, `volgendeStatus`, de inschrijving in `prospectreizen`, een regel in `reisgeschiedenis`, een activiteit en een auditregel. Zonder wissel alleen een activiteit. De database weigert elke andere update van `fase_id`, `reis_id` of `nb_status` (trigger `dealtrace_alleen_via_meldpunt`); `PUT /api/accounts/:id` met een fase geeft 400.
+- **Melders per gebeurtenis**: `import` (import, P04) en `lead-overgenomen` (handmatig aanmaken nu, leadgenerator in P11) bij binnenkomst; `gekwalificeerd` (knop Kwalificeer of BAND minimaal 3 van 4); `handmatig` (Fase corrigeren, reden verplicht, vanaf Gevorderd); `heropvolging` (dagelijkse terugkomcontrole). De melders voor `dossier-compleet` (P19), `eerste-contact` en `gesprek-gevoerd` (P07), de afspraken (P13) en `overgedragen` (P17) komen later; tot dan kun je ze via het meldpunt testen. Een tweede `eerste-afspraak-gepland` binnen dezelfde inschrijving verandert niets (gat 3).
+- **Toewijzing**: `kiesReis` neemt de eerste actieve doelgroep op prioriteit (1 eerst) waarin het account past en die een eigen reis heeft; anders de standaardreis. Een account zit in hoogstens één actieve reis; na een eindfase start heropvolging een nieuwe inschrijving.
+- **Zet nee**: vaste reden ("Anders" vraagt een toelichting), afkoelperiode per kanaal (bellen 90, mail 60, LinkedIn 90, WhatsApp 180, bezoek 180, kaart 365 dagen; instelbaar onder Instellingen, Redenen voor nee) en een terugkomdatum uit de terugkomregel. De afkoelperiode is de ondergrens: een datum erbinnen schuift op. "Niet geschikt" is 365 dagen voor elk kanaal. `magBenaderen` controleert dit voor elke poging. Het account gaat naar de fase Verloren (na een gehouden eerste afspraak via `geen-vervolg`).
+- **Terugkomregels**: tot Richting (P28) staan de regels, de mapping van reden naar regel en de concurrenten in `org_settings` onder `verkoopverhaal` (uit Bijlage C). Zonder regel geldt de afkoelperiode van bellen.
+- **Terugkomcontrole**: accounts op nee of wachtend met een terugkomdatum vandaag of eerder krijgen `heropvolging` en staan daarna in Gekwalificeerd met status in reis. Hij draait lui, hooguit eens per uur per organisatie, bij het openen van de prospectlijst of een accountkaart. Een tweede run doet niets, want de terugkomdatum is dan leeg.
+- **Offline**: "Zet nee" en "Pauzeer tot" mogen via de wachtrij (`accounts` met de soorten `account.nee` en `account.pauzeer`); de idempotentiesleutel zorgt dat het precies één keer aankomt. Een fasewissel via de wachtrij wordt geweigerd.
+- **Wie wat**: Beginner ziet fasepil, status en dagen in fase, en kan kwalificeren en nee zetten. Gevorderd: Fase corrigeren, reisgeschiedenis, filter Reis en fase, de reis alleen lezen, terugkomdatum aanpassen en eigen accounts verplaatsen. Expert en salesmanager: `/reizen`. Salesmanager: doelgroepen en accenten. Beheerder (en salesmanager): Standaard terugzetten.
+
 ## Waar staat wat
 
 | Map | Inhoud |

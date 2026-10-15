@@ -6,12 +6,17 @@ import { telOpenTaken } from '../../../../shared/score'
 import { contactUit, effectiefNiveau, eigenVeldenVoor, kan, zichtbareCustomFields } from '../../../utils/accounts'
 import { metOrganisatie, schema } from '../../../utils/db'
 import { eigenTeams } from '../../../utils/gebruikers'
+import { fase as zoekFase, verblijfOverschreden } from '../../../../shared/reis'
+import { afkoelingTot, KANALEN, magBenaderen } from '../../../../shared/nbStatus'
+import { terugkomTekst } from '../../../../shared/verkoopverhaal'
+import { terugkomControleLui, verkoopverhaal } from '../../../utils/reis'
 import { vereisFunctie } from '../../../utils/sessie'
 
 export default defineEventHandler(async (event) => {
   const ctx = await vereisFunctie(event, 'prospects.kaart')
   const id = getRouterParam(event, 'id')!
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
+    await terugkomControleLui(tx, ctx.organisatie.id)
     const [a] = await tx.select().from(schema.accounts).where(eq(schema.accounts.id, id))
     if (!a) throw createError({ statusCode: 404, statusMessage: 'Account onbekend' })
     const niveau = effectiefNiveau(ctx)
@@ -27,6 +32,25 @@ export default defineEventHandler(async (event) => {
     const magVerwijderen = kan(ctx, 'prospects.verwijderen') && (ctx.gebruiker.rol === 'beheerder' || (!!eigenaarTeam && teams.includes(eigenaarTeam)) || a.ownerId === ctx.gebruiker.id)
     const primair = primairContact(contacten)
     const fase = a.faseSinds ? Math.floor((Date.now() - Date.parse(a.faseSinds)) / 864e5) : null
+    // P05: reis, fase, status, dagen in fase en een lopende terugkomregel.
+    const reizen = await tx.select({ id: schema.reistemplates.id, naam: schema.reistemplates.naam, data: schema.reistemplates.data, status: schema.reistemplates.status, isStandaard: schema.reistemplates.isStandaard }).from(schema.reistemplates)
+    const reis = reizen.find((r) => r.id === a.reisId)
+    const f = reis ? zoekFase(reis.data, a.faseId) : undefined
+    const nu = new Date()
+    const vv = a.accountKind === 'prospect' ? await verkoopverhaal(tx) : null
+    const regel = a.terugRegelId ? vv?.terugkomregels.find((r) => r.id === a.terugRegelId) ?? null : null
+    const eigen = a.ownerId === ctx.gebruiker.id
+    const manager = ctx.gebruiker.rol === 'salesmanager' || ctx.gebruiker.rol === 'beheerder'
+    const reisInfo = reis ? {
+      id: reis.id, naam: reis.naam,
+      fase: f ? { id: f.id, label: f.label, kleur: f.kleur, hoofdfase: f.hoofdfase, accent: f.accent, verwachtVerblijfDagen: f.verwachtVerblijfDagen ?? null, eind: f.eind ?? null, overschreden: verblijfOverschreden(a, f, nu) } : null,
+      fases: reis.data.fases.map((x) => ({ id: x.id, label: x.label, kleur: x.kleur, hoofdfase: x.hoofdfase })),
+    } : null
+    const terugkom = a.terugOp ? {
+      datum: a.terugOp, reden: a.data?.terugkom?.reden ?? regel?.reden ?? null, aanpak: a.data?.terugkom?.aanpak ?? regel?.aanpak ?? null, kanaal: a.data?.terugkom?.kanaal ?? null,
+      tekst: terugkomTekst(a.terugOp, { reden: a.data?.terugkom?.reden ?? regel?.reden ?? '', aanpak: a.data?.terugkom?.aanpak ?? regel?.aanpak ?? '' }),
+    } : null
+    const benaderen = Object.fromEntries(KANALEN.map((k) => [k, magBenaderen(a, k, nu)]))
     const momenten = acts.filter((x) => ['gebeld', 'mail', 'bericht', 'afspraak', 'bezoek'].includes(x.soort))
     const laatste = (s: string[]) => momenten.find((m) => s.includes(m.soort))?.op ?? null
     return {
@@ -44,12 +68,24 @@ export default defineEventHandler(async (event) => {
       stuur: { laatsteActie: acts[0]?.op ?? null, laatsteCall: laatste(['gebeld']), laatsteBezoek: laatste(['bezoek', 'afspraak']) },
       openTaken: telOpenTaken([], { accountId: id }),
       tijdlijn: acts.map((x) => ({ id: x.id, soort: x.soort, kanaal: x.kanaal, uitkomst: x.uitkomst, op: x.op, door: x.door ? namen.get(x.door) ?? x.door : null, tekst: (x.data as any)?.tekst ?? null, contactId: x.contactId })),
+      reis: reisInfo, terugkom, nee: a.data?.nee ? { ...a.data.nee, tot: Object.fromEntries(KANALEN.map((k) => [k, afkoelingTot(a.data!.nee, k)])) } : null, wachtendTot: a.data?.wachtendTot ?? null, benaderen,
+      reizen: kan(ctx, 'reis.verplaatsen') ? reizen.filter((r) => r.status === 'actief' && r.id !== a.reisId).map((r) => ({ id: r.id, naam: r.naam })) : [],
+      concurrenten: vv?.concurrenten ?? [],
       klassen: ((klasseRij?.value as any[]) ?? []).filter((k) => !k.tabblad || k.tabblad === (a.accountKind === 'klant' ? 'Klanten' : 'Prospects')),
       gebruikers: gebruikers.filter((u) => u.status !== 'gearchiveerd').map((u) => ({ id: u.id, naam: u.naam })),
       kan: {
         klasse: kan(ctx, 'prospects.klasseZetten'), eigenaar: kan(ctx, 'prospects.eigenaarWijzigen'), verwijderen: magVerwijderen,
         samenvoegen: kan(ctx, 'prospects.samenvoegen'), scoreOpbouw: kan(ctx, 'prospects.scoreOpbouw'), voorstellen: kan(ctx, 'eigenVelden.voorstellen'),
         verhuizen: kan(ctx, 'contacten.verhuizen'),
+        reis: kan(ctx, 'reis.zien') && a.accountKind === 'prospect',
+        kwalificeer: kan(ctx, 'reis.kwalificeer') && a.nbStatus === 'nieuw' && ['gevonden', 'dossier-compleet'].includes(a.faseId ?? ''),
+        faseCorrigeren: kan(ctx, 'reis.faseCorrigeren') && a.accountKind === 'prospect',
+        geschiedenis: kan(ctx, 'reis.geschiedenis'),
+        reisBekijken: kan(ctx, 'reis.overzicht'),
+        nee: kan(ctx, 'account.nee') && ['nieuw', 'in reis', 'wachtend', 'gescoord'].includes(a.nbStatus),
+        pauzeer: kan(ctx, 'account.nee') && ['nieuw', 'in reis'].includes(a.nbStatus),
+        verplaatsen: kan(ctx, 'reis.verplaatsen') && (eigen || manager) && a.accountKind === 'prospect',
+        terugOp: kan(ctx, 'account.terugOpAanpassen') && !!a.terugOp,
       },
     }
   })

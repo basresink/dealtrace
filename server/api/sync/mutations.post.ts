@@ -10,7 +10,11 @@ import { rolMag } from '../../../shared/permissions'
 import { SYNCBARE_TABELLEN, isSyncbareTabel } from '../../../shared/syncTabellen'
 import { pasPatchToe } from '../../../shared/wisPatch'
 import { metOrganisatie, schema } from '../../utils/db'
-import { vereisSessie } from '../../utils/sessie'
+import { ACCOUNT_MUTATIESOORTEN } from '../../../shared/syncTabellen'
+import { isNeeReden } from '../../../shared/nbStatus'
+import { kan } from '../../utils/accounts'
+import { ReisFout, pauzeer, zetNee } from '../../utils/reis'
+import { vereisOrganisatie, vereisSessie } from '../../utils/sessie'
 
 interface Mutatie {
   idempotentieSleutel: string
@@ -24,7 +28,7 @@ interface Mutatie {
 type Resultaat =
   | { status: 'ok'; recordId: string; versie: number }
   | { status: 'conflict'; recordId: string; serverVersie: number; serverStand: unknown }
-  | { status: 'geweigerd'; recordId: string; code: 403 | 400 | 404; reden: string }
+  | { status: 'geweigerd'; recordId: string; code: 403 | 400 | 404 | 422; reden: string }
 
 const NOTIFICATIE_VELDEN = new Set(['gelezenOp', 'verborgenOp'])
 
@@ -36,10 +40,13 @@ export default defineEventHandler(async (event) => {
   const organisatie = { id: gebruiker.organisationId! }
   const { mutaties } = await readBody<{ mutaties?: Mutatie[] }>(event)
   if (!Array.isArray(mutaties) || mutaties.length > 200) throw createError({ statusCode: 400, statusMessage: 'Geef tussen 1 en 200 mutaties' })
+  // Klantdata (accounts) gebruikt de actieve organisatie en de functierechten.
+  const klant = mutaties.some((m) => m?.tabel === 'accounts') ? await vereisOrganisatie(event) : null
 
   const resultaten: Resultaat[] = []
   for (const m of mutaties) {
-    resultaten.push(await metOrganisatie(organisatie.id, async (tx): Promise<Resultaat> => {
+    const orgId = m?.tabel === 'accounts' && klant ? klant.organisatie.id : organisatie.id
+    resultaten.push(await metOrganisatie(orgId, async (tx): Promise<Resultaat> => {
       if (!m?.idempotentieSleutel || !m.recordId) return { status: 'geweigerd', recordId: m?.recordId ?? '', code: 400, reden: 'idempotentieSleutel en recordId zijn verplicht' }
 
       // Al verwerkt? Dan hetzelfde antwoord, zonder iets opnieuw te doen.
@@ -54,7 +61,24 @@ export default defineEventHandler(async (event) => {
       const huidigeVersie = rec?.version ?? 0
 
       let resultaat: Resultaat
-      if (m.tabel === 'notificaties') {
+      if (m.tabel === 'accounts') {
+        // Alleen "Zet nee" en "Pauzeer tot", via dezelfde regels als de knoppen.
+        const p = (m.patch ?? {}) as Record<string, any>
+        if (!(ACCOUNT_MUTATIESOORTEN as readonly string[]).includes(p.soort)) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Alleen account.nee en account.pauzeer mogen via de wachtrij' }
+        if (!klant || !kan(klant, 'account.nee')) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Functie niet beschikbaar' }
+        const op = p.op && !Number.isNaN(Date.parse(p.op)) ? new Date(p.op) : new Date()
+        try {
+          if (p.soort === 'account.nee') {
+            if (!isNeeReden(p.reden) || (p.reden === 'Anders' && !String(p.toelichting ?? '').trim())) return { status: 'geweigerd', recordId: m.recordId, code: 422, reden: 'Reden ontbreekt of is onbekend' }
+            await zetNee(tx, m.recordId, { reden: p.reden, toelichting: p.toelichting, verlorenAan: p.verlorenAan ?? null, terugOp: p.terugOp, afkoeling: p.afkoeling }, gebruiker.id, op)
+          } else {
+            await pauzeer(tx, m.recordId, String(p.tot ?? ''), p.reden ?? null, gebruiker.id, op)
+          }
+        } catch (e) {
+          if (e instanceof ReisFout) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 404 ? 404 : 422, reden: e.message }
+          throw e
+        }
+      } else if (m.tabel === 'notificaties') {
         const [n] = await tx.select().from(schema.notificaties).where(eq(schema.notificaties.id, m.recordId))
         if (!n) return { status: 'geweigerd', recordId: m.recordId, code: 404, reden: 'Melding onbekend' }
         if (!rolMag(gebruiker.rol, onderdeel, 'schrijven', { eigen: n.gebruikerId === gebruiker.id })) {
@@ -85,11 +109,11 @@ export default defineEventHandler(async (event) => {
 
       const versie = huidigeVersie + 1
       await tx.insert(schema.serverRecords)
-        .values({ key: sleutel, organisationId: organisatie.id, version: versie, updatedAt: new Date().toISOString(), updatedBy: gebruiker.id })
+        .values({ key: sleutel, organisationId: orgId, version: versie, updatedAt: new Date().toISOString(), updatedBy: gebruiker.id })
         .onConflictDoUpdate({ target: schema.serverRecords.key, set: { version: versie, updatedAt: new Date().toISOString(), updatedBy: gebruiker.id } })
       resultaat = { status: 'ok', recordId: m.recordId, versie }
       await tx.insert(schema.mutaties).values({
-        id: m.idempotentieSleutel, organisationId: organisatie.id, userId: gebruiker.id, tabel: m.tabel, op: m.op ?? 'patch',
+        id: m.idempotentieSleutel, organisationId: orgId, userId: gebruiker.id, tabel: m.tabel, op: m.op ?? 'patch',
         recordId: m.recordId, resultaat, appliedAt: new Date().toISOString(),
       })
       return resultaat

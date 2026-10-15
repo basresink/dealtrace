@@ -16,6 +16,9 @@ export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')!
   const b = await readBody<Record<string, any>>(event)
   if ('accountKind' in b || 'soort' in b || b.status === 'klant') throw createError({ statusCode: 400, statusMessage: 'Dealtrace maakt geen klant van een prospect; dat gebeurt in DealDrive of je CRM' })
+  if (['faseId', 'fase_id', 'reisId', 'reis_id', 'status', 'nbStatus', 'nb_status', 'terugOp'].some((k) => k in b)) {
+    throw createError({ statusCode: 400, statusMessage: 'Fase en status veranderen alleen via het meldpunt (Kwalificeer, Fase corrigeren, Zet nee)' })
+  }
   if ('klasse' in b && !kan(ctx, 'prospects.klasseZetten')) weigerFunctie('prospects.klasseZetten', 'niveau')
   if ('eigenaarId' in b && !kan(ctx, 'prospects.eigenaarWijzigen')) throw createError({ statusCode: 403, statusMessage: 'Alleen een salesmanager of beheerder wijzigt de eigenaar' })
   if (b.telefoon) {

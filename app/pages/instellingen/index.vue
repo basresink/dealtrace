@@ -29,7 +29,8 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
     kaarten: [
       { titel: 'Belscripts', tekst: 'Templates voor binnendienst en buitendienst.', toon: beheerder.value },
       { titel: 'Eigen velden', tekst: 'Extra velden op prospects en contacten.', link: '/instellingen/eigen-velden', toon: beheerder.value },
-      { titel: 'Prospectreizen', tekst: 'Standaardreis en reizen op maat.', toon: beheerder.value },
+      { titel: 'Prospectreizen', tekst: 'Doelgroepen, de standaardreis en reizen op maat.', link: '/reizen', toon: beheerder.value },
+      { titel: 'Redenen voor nee en terugkomregels', tekst: 'Vaste redenen, afkoelperiode per kanaal en terugkomregels.', link: '/instellingen/nee-redenen', toon: beheerder.value },
     ],
   },
   {

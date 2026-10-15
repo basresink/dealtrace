@@ -12,6 +12,7 @@ import pg from 'pg'
 import { verbindingsopties } from '../../shared/verbinding'
 import { seedAccounts } from './seedAccounts'
 import { BEHEER_URL } from './omgeving'
+import { seedReis } from './seedReis'
 
 interface SeedGebruiker {
   id: string; naam: string; rol: string; team: string | null; werkplek: string; niveau: string; email: string
@@ -122,6 +123,8 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
     }
 
     const p03 = await seedAccounts(client, org, voltvast)
+
+    await seedReis(client, org.id, voltvast)
 
     await client.query('commit')
     log(`Startdata geladen: ${org.naam} met ${gebruikers.length} gebruikers, ${p03.accounts} accounts en ${p03.contacten} contacten, Testorganisatie Tweede en een founder.`)

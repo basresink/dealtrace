@@ -448,3 +448,32 @@
 .voortgang { height: 6px; background: var(--surface, #eee); overflow: hidden; border-radius: 3px; }
 .voortgang span { display: block; height: 100%; width: 40%; background: var(--ink); animation: voortgang 1.2s infinite ease-in-out; }
 @keyframes voortgang { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+
+/* P05: reis op de kaart, reisgeschiedenis, Zet nee als schuifvenster op de telefoon */
+.reis-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.reis-pil-knop { cursor: pointer; border: 0; font-family: inherit; }
+.reis-pil-knop:disabled { cursor: default; }
+.reis-pil-knop { min-height: 32px; }
+.meta--oranje { color: var(--oranje, #c2410c); font-weight: 600; }
+.reis-terug { font-size: var(--fs-body); }
+.reis-historie { list-style: none; margin: 0; padding: 0; }
+.reis-historie-rij { display: grid; gap: 2px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.reis-historie-reden { font-style: italic; overflow-wrap: anywhere; }
+.nee-redenen { display: grid; gap: 8px; border: 0; margin: 0; padding: 0; }
+.nee-reden { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; background: var(--wit); }
+.nee-reden--actief { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); font-weight: 600; }
+.reis-knoppen { display: flex; flex-wrap: wrap; gap: 8px; }
+.reis-knoppen .dd-act { min-height: 44px; }
+.fasebord { display: grid; grid-template-columns: repeat(5, minmax(160px, 1fr)); gap: 12px; overflow-x: auto; }
+.fasebord-kolom { display: grid; align-content: start; gap: 8px; }
+.fasekaart { padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--wit); }
+.fasekaart-accent { margin-top: 8px; padding: 8px; background: var(--yellow-soft, #fff7cc); border-left: 3px solid var(--yellow); }
+.stroom-pijl { font-size: var(--fs-label); color: var(--muted); }
+@media (max-width: 767px) {
+  .fo-panel--schuif { position: fixed; left: 0; right: 0; bottom: 0; top: auto; max-width: none; max-height: 88vh; border-radius: 16px 16px 0 0; display: flex; flex-direction: column; }
+  .fo-panel--schuif .fo-body { overflow-y: auto; }
+  .fo-panel--schuif .fo-foot .dd-act { min-height: 44px; }
+}
+.band-lijst { display: grid; gap: 0; list-style: none; padding: 0; }
+.band-rij .schakel-naam { min-height: 40px; font-weight: 400; }
+.ak-stuur-breed { grid-column: span 2; }
