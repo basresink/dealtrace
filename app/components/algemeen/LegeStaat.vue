@@ -7,5 +7,6 @@ defineProps<{ kicker?: string; titel: string; tekst?: string }>()
     <span v-if="kicker" class="lege-staat-kicker">{{ kicker }}</span>
     <p class="lege-staat-titel">{{ titel }}</p>
     <p v-if="tekst" class="lege-staat-tekst">{{ tekst }}</p>
+    <slot />
   </div>
 </template>

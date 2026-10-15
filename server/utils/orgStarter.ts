@@ -1,7 +1,8 @@
 // Startset voor een nieuwe organisatie (F23). Register waar elke prompt zijn
-// onderdeel aan toevoegt: klassen, reis, regels, belscripts, ritmes, meetingsoorten,
+// onderdeel aan toevoegt: klassen, reis, regels, belscripts, ritmes, meetingsoorten, campagnesoorten,
 // campagnesoorten, redenen voor nee, signaalregels, eigen velden, help-artikelen.
 // Elk onderdeel is idempotent; "Startset aanvullen" draait alles opnieuw.
+import { CAMPAGNESOORTEN_START } from '../../shared/campagnes'
 import { sql } from 'drizzle-orm'
 import type { alsPlatform } from './platform'
 import { schema } from './db'
@@ -91,10 +92,19 @@ export const STARTSET: StartsetOnderdeel[] = [
   },
   {
     sleutel: 'meetingsoorten',
-    naam: 'Zes meetingsoorten met uitkomsten (P13)',
+    naam: 'Meetingsoorten met uitkomsten (P13, P30)',
     async voerUit(tx, org) {
       for (const m of MEETINGSOORTEN_START) {
         await tx.execute(sql`insert into meetingsoorten (organisation_id, slug, naam, type, duur_min, vorm, data) values (${org}, ${m.slug}, ${m.naam}, ${m.type}, ${m.duurMin}, ${m.vorm}, ${JSON.stringify(m.data)}::jsonb) on conflict (organisation_id, slug) do nothing`)
+      }
+    },
+  },
+  {
+    sleutel: 'campagnesoorten',
+    naam: 'Acht campagnesoorten (P16)',
+    async voerUit(tx, org) {
+      for (const c of CAMPAGNESOORTEN_START) {
+        await tx.execute(sql`insert into campagnesoorten (organisation_id, sleutel, groep, naam, data) values (${org}, ${c.sleutel}, ${c.groep}, ${c.naam}, ${JSON.stringify(c)}::jsonb) on conflict (organisation_id, sleutel) do nothing`)
       }
     },
   },

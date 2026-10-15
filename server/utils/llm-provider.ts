@@ -16,7 +16,9 @@ export const MOCK_FIXTURES: Record<string, unknown[]> = {}
 /** Mock die uit het materiaal een geldig antwoord maakt, voor soorten zonder vaste fixture. */
 export const MOCK_GENERATOREN: Record<string, (materiaal: any) => unknown> = {
   // Opzet van een belscript: de opbouw van het startscript voor dit doel, met de kernzin van het verhaal.
-  concept: (m) => m?.opzet ? {
+  concept: (m) => m?.campagneWinpunt ? (() => { const w = (m.winpunten ?? []).find((x: any) => x.faseId === m.faseId) ?? m.winpunten?.[0]; return { winpuntId: w?.id ?? '', motivatie: `Past bij deze fase: ${w?.titel ?? 'het eerste winpunt'} sluit aan op wat prospects in de laatste gesprekken vroegen.` } })()
+    : m?.campagneBoodschap ? { onderwerp: m.winpunt?.titel ?? 'Even voorstellen', tekst: `${m.verhaal ?? 'Wij helpen installateurs met een betrouwbare levering.'}${m.winpunt ? ` ${m.winpunt.titel}: ${m.winpunt.omschrijving}` : ''} Zullen we een kwartier kijken of dit bij jullie past?`, stijlscore: 8 }
+    : m?.opzet ? {
     naam: `${m.opzet.doelLabel} (opzet)`,
     blokken: (m.opzet.voorbeeld ?? []).map((b: any) => ({ soort: b.soort, tekst: b.soort === 'opening' && m.kernzin ? `Goedemorgen {contact.voornaam}, met {gebruiker.voornaam} van {organisatie.naam}. ${m.kernzin}` : b.tekst })),
   } : { tekst: 'Mock-antwoord voor concept' },

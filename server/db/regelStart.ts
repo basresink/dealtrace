@@ -66,3 +66,11 @@ export async function zorgVoorVerkoopverhaal(client: pg.Client): Promise<number>
   for (const o of orgs) await laadStartsetBevestigd(db as any, o.id, vv, 'systeem')
   return orgs.length
 }
+
+/** P16: de acht startsoorten voor campagnes in elke organisatie; bestaande soorten blijven zoals ze zijn. */
+export async function zorgVoorCampagnesoorten(client: Pick<pg.Client, 'query'>, startset: { sleutel: string; groep: string; naam: string }[]): Promise<number> {
+  const orgs = (await client.query(`select o.id from organisations o where o.status <> 'systeem'`)).rows as { id: string }[]
+  let n = 0
+  for (const o of orgs) for (const s of startset) n += (await client.query(`insert into campagnesoorten (organisation_id, sleutel, groep, naam, data) values ($1, $2, $3, $4, $5) on conflict (organisation_id, sleutel) do nothing`, [o.id, s.sleutel, s.groep, s.naam, JSON.stringify(s)])).rowCount ?? 0
+  return n
+}

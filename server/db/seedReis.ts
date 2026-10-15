@@ -1,6 +1,7 @@
 // P05-testdata: afkoelperiodes, terugkomregels (tot P28 in org_settings), de
 // standaardreis met fases, en een reden en terugkomdatum voor accounts op nee of
 // wachtend. Idempotent; draait in de seed en bij elke Netlify-build.
+import { CAMPAGNESOORTEN_START } from '../../shared/campagnes'
 import type pg from 'pg'
 import { AFKOELING_STANDAARD, afkoelingVoorNee } from '../../shared/nbStatus'
 import { drizzle } from 'drizzle-orm/node-postgres'
@@ -8,7 +9,7 @@ import { terugkomDatum, verkoopverhaalUitSeed } from '../../shared/verkoopverhaa
 import { laadStartsetBevestigd } from '../utils/vvProjectie'
 import * as schema from './schema'
 import { zorgVoorReizen } from './reisStart'
-import { zorgVoorBelscripts, zorgVoorMeetingsoorten, zorgVoorRegels, zorgVoorRitmes } from './regelStart'
+import { zorgVoorBelscripts, zorgVoorMeetingsoorten, zorgVoorCampagnesoorten, zorgVoorRegels, zorgVoorRitmes } from './regelStart'
 import { STARTSET_SCRIPTS } from '../../shared/belscripts'
 import { MEETINGSOORTEN_START } from '../../shared/agenda'
 import { RITMES_STARTSET, kiesRitme, startRitme, type Ritme } from '../../shared/hercontact'
@@ -49,6 +50,7 @@ export async function seedReis(client: Pick<pg.Client, 'query'>, orgId: string, 
   await zorgVoorRitmes(client, RITMES_STARTSET)
   await zorgVoorBelscripts(client, STARTSET_SCRIPTS)
   await zorgVoorMeetingsoorten(client, MEETINGSOORTEN_START)
+  await zorgVoorCampagnesoorten(client, CAMPAGNESOORTEN_START)
   // Prospects in Gekwalificeerd lopen in een hercontactritme (P07), poging 1 is nu aan de beurt.
   const ritmes = (await client.query(`select id, naam, bron, status, data from hercontactritmes where organisation_id = $1`, [orgId])).rows
     .map((r: any) => ({ id: r.id, naam: r.naam, bron: r.bron, status: r.status, werkplek: r.data.werkplek, stappen: r.data.stappen, parkeerDagen: r.data.parkeerDagen })) as Ritme[]

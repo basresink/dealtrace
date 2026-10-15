@@ -5,6 +5,7 @@
 // 3. functies_per_niveau krijgt de startindeling uit shared/functies.ts voor functies
 //    die nog geen regel hebben; bestaande regels (door de founder gewijzigd) blijven staan.
 
+import { CAMPAGNESOORTEN_START } from '../../shared/campagnes'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import pg from 'pg'
@@ -12,7 +13,7 @@ import { verbindingsopties } from '../../shared/verbinding'
 import { APP_WACHTWOORD, BEHEER_URL, isLokaal } from './omgeving'
 import { startindeling } from '../../shared/functies'
 import { zorgVoorReizen } from './reisStart'
-import { zorgVoorBelscripts, zorgVoorMeetingsoorten, zorgVoorVerkoopverhaal, zorgVoorRegels, zorgVoorRitmes } from './regelStart'
+import { zorgVoorBelscripts, zorgVoorMeetingsoorten, zorgVoorCampagnesoorten, zorgVoorVerkoopverhaal, zorgVoorRegels, zorgVoorRitmes } from './regelStart'
 import { MEETINGSOORTEN_START } from '../../shared/agenda'
 import { STARTSET_SCRIPTS } from '../../shared/belscripts'
 import { zorgVoorHelp } from './helpStart'
@@ -70,6 +71,8 @@ export async function migreer(url = BEHEER_URL, opties: { opnieuw?: boolean; sti
     const nScripts = await zorgVoorBelscripts(client, STARTSET_SCRIPTS)
     if (nScripts) log(`Belscripts: startset geladen voor ${nScripts} organisaties.`)
     // P28: het leesmodel van het verkoopverhaal voor organisaties met het oude verhaal.
+    const nCs = await zorgVoorCampagnesoorten(client, CAMPAGNESOORTEN_START)
+    if (nCs) log(`Campagnesoorten: ${nCs} startsoorten aangevuld.`)
     const nMs = await zorgVoorMeetingsoorten(client, MEETINGSOORTEN_START)
     if (nMs) log(`Meetingsoorten: ${nMs} soorten uit de startset aangevuld.`)
     const nVv = await zorgVoorVerkoopverhaal(client as any)

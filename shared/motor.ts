@@ -272,7 +272,7 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
     taken: geland, inzichten, updates, geraakt,
     geschoven: [...perPersoon].map(([ownerId, p]) => ({ ownerId, aantal: p.aantal, naar: p.naar })),
     stappen: [
-      { stap: 'campagne-afsluiter', status: 'overgeslagen', toelichting: 'Campagnes komen later' },
+      { stap: 'campagne-afsluiter', status: 'overgeslagen', toelichting: 'Alleen bij een geplande of handmatige run' },
       { stap: 'regels', status: 'gedaan', toelichting: `${regels.length} regels, ${taken.length} taken, ${inzichten.length} inzichten` },
       { stap: 'bewaker', status: 'gedaan', toelichting: `${tegengehouden.length} tegengehouden` },
       { stap: 'planner', status: 'gedaan', toelichting: `${geschoven.length} taken doorgeschoven` },

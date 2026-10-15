@@ -31,6 +31,7 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
       { titel: 'Accountmatrix en ritmes', tekst: 'Klassen, belmatrix, afspraakmatrix en capaciteit.', link: '/instellingen/ritme', toon: true },
       { titel: 'Verkoopverhaal', tekst: 'Verhaal, belofte, branches, concurrenten, winpunten en terugkomregels.', link: '/instellingen/verkoopverhaal', toon: !!functie('verkoopverhaal.inrichten')?.beschikbaar },
       { titel: 'Gebieden en regiodagen', tekst: 'Regio\'s op postcode, eigenaren, regiodagen en synoniemen voor plaatsnamen.', link: '/instellingen/gebieden', toon: !!functie('instellingen.gebieden')?.beschikbaar },
+      { titel: 'Campagnesoorten', tekst: 'Welke campagnesoorten je verkopers kunnen kiezen.', link: '/instellingen/campagnesoorten', toon: !!functie('instellingen.campagnesoorten')?.beschikbaar },
       { titel: 'Meetingsoorten en uitkomsten', tekst: 'Soorten afspraken met duur, agendapunten en uitkomsten met gevolg.', link: '/instellingen/meetingsoorten', toon: !!functie('instellingen.meetingsoorten')?.beschikbaar },
       { titel: 'Belscripts', tekst: 'Standaardscripts voor het belpaneel, met versies en resultaten.', link: '/instellingen/belscripts', toon: true },
       { titel: 'Eigen velden', tekst: 'Extra velden op prospects en contacten.', link: '/instellingen/eigen-velden', toon: beheerder.value },

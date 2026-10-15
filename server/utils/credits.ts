@@ -34,6 +34,9 @@ export async function platformCredits(tx: Tx): Promise<{ prijzen: Partial<Record
 
 /** De maandrij: toegekend = credits per gebruiker maal actieve gebruikers, verhoogd als er gebruikers bijkomen, nooit verlaagd. */
 async function maandRij(tx: Tx, org: string, nu: Date) {
+  // Eerst het slot van de organisatie, dan de maandrij: zo nemen stand() en reserveer() de sloten in
+  // dezelfde volgorde en wachten twee transacties nooit op elkaar (deadlock bij de eerste rij van de maand).
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`credits:${org}`}))`)
   const [o] = await rijen(tx, sql`select pakket from organisations where id = ${org}`)
   const pakket = (o?.pakket ?? 'starter') as Pakket
   const { perGebruiker } = await platformCredits(tx)

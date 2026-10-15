@@ -11,10 +11,12 @@ import { rolMag } from '../../../shared/permissions'
 import { SYNCBARE_TABELLEN, isSyncbareTabel } from '../../../shared/syncTabellen'
 import { pasPatchToe } from '../../../shared/wisPatch'
 import { metOrganisatie, schema } from '../../utils/db'
-import { ACCOUNT_MUTATIESOORTEN, AFSPRAAK_MUTATIESOORTEN, KANS_MUTATIESOORTEN, SPRAAK_MUTATIESOORTEN, INZICHT_MUTATIESOORTEN, SIGNAAL_MUTATIESOORTEN, TAAK_MUTATIESOORTEN } from '../../../shared/syncTabellen'
+import { ACCOUNT_MUTATIESOORTEN, AFSPRAAK_MUTATIESOORTEN, CAMPAGNE_MUTATIESOORTEN, KANS_MUTATIESOORTEN, SPRAAK_MUTATIESOORTEN, INZICHT_MUTATIESOORTEN, SIGNAAL_MUTATIESOORTEN, TAAK_MUTATIESOORTEN } from '../../../shared/syncTabellen'
 import { besluit } from '../../utils/dagritme'
 import { planAfspraak, rondAfAfspraak } from '../../utils/agenda'
 import { klaarzetten } from '../../utils/bezoeken'
+import { kolomWissel, laad as laadCampagne, magWijzigen as magCampagne } from '../../utils/campagnes'
+import { KOLOMMEN } from '../../../shared/campagnes'
 import { bezoekAfronden, legInloopVast } from '../../utils/onderweg'
 import { bewaarConcept, bewaarVisitekaartje, leesEnBewaarVisitekaartje, verwerkOfflineOpdracht } from '../../utils/spraak'
 import { OVERSLA_REDENEN } from '../../../shared/route'
@@ -52,7 +54,7 @@ export default defineEventHandler(async (event) => {
   const { mutaties } = await readBody<{ mutaties?: Mutatie[] }>(event)
   if (!Array.isArray(mutaties) || mutaties.length > 200) throw createError({ statusCode: 400, statusMessage: 'Geef tussen 1 en 200 mutaties' })
   // Klantdata (accounts) gebruikt de actieve organisatie en de functierechten.
-  const KLANTDATA = new Set(['accounts', 'tasks', 'signals', 'appointments', 'kans_overslaan', 'klaargezet_voor', 'spraak_concepten', 'contacts'])
+  const KLANTDATA = new Set(['accounts', 'tasks', 'signals', 'appointments', 'kans_overslaan', 'klaargezet_voor', 'spraak_concepten', 'contacts', 'campagne_items'])
   const klant = mutaties.some((m) => KLANTDATA.has(m?.tabel)) ? await vereisOrganisatie(event) : null
 
   const resultaten: Resultaat[] = []
@@ -153,6 +155,24 @@ export default defineEventHandler(async (event) => {
           else await leesEnBewaarVisitekaartje(tx, klant.organisatie.id, { id: gebruiker.id, niveau: klant.gebruiker.niveau }, m.recordId, String(p.bijlageId ?? ''), op)
         } catch (e: any) {
           if (e?.statusCode && [400, 403, 404, 410, 413, 422].includes(e.statusCode)) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 410 || e.statusCode === 413 ? 422 : e.statusCode, reden: e.message }
+          throw e
+        }
+      } else if (m.tabel === 'campagne_items') {
+        // P16: een kolomwissel op het campagnebord; dezelfde regels als online, de taak via rondAf (gat 38).
+        const p = (m.patch ?? {}) as Record<string, any>
+        if (!(CAMPAGNE_MUTATIESOORTEN as readonly string[]).includes(p.soort)) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Alleen campagne.kolom mag via de wachtrij' }
+        if (!klant || !kan(klant, 'campagnes.meedoen')) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Functie niet beschikbaar' }
+        const [campagneId, accountId] = m.recordId.split(':')
+        if (!campagneId || !accountId || !KOLOMMEN.includes(p.kolom)) return { status: 'geweigerd', recordId: m.recordId, code: 422, reden: 'Onbekende kolom' }
+        const op = p.op && !Number.isNaN(Date.parse(p.op)) ? new Date(p.op) : new Date()
+        try {
+          const c = await laadCampagne(tx, campagneId)
+          const [it] = (await tx.execute(sql`select eigenaar_id from campagne_items where campagne_id = ${campagneId} and account_id = ${accountId}`)).rows as any[]
+          if (it?.eigenaar_id !== gebruiker.id && !(await magCampagne(tx, klant.gebruiker, c))) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Dit account is van een collega' }
+          await kolomWissel(tx, klant.organisatie.id, gebruiker.id, campagneId, accountId, { kolom: p.kolom, uitkomst: p.uitkomst ?? null, reden: p.reden ?? null, toelichting: p.toelichting ?? null, laterOp: p.laterOp ?? null, winpuntUitgevoerd: typeof p.winpuntUitgevoerd === 'boolean' ? p.winpuntUitgevoerd : null, sleutel: m.idempotentieSleutel }, op)
+        } catch (e: any) {
+          if (e instanceof ReisFout) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 404 ? 404 : 422, reden: e.message }
+          if (e?.statusCode && [400, 403, 404, 409, 422].includes(e.statusCode)) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 409 ? 422 : e.statusCode, reden: e.message }
           throw e
         }
       } else if (m.tabel === 'kans_overslaan' || m.tabel === 'klaargezet_voor') {

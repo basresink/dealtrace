@@ -563,6 +563,43 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'meldingen.perSoort', naam: 'Meldingsregels per soort', pakket: 'starter', rollen: 'iedereen', helpartikel: 'meldingen-instellen', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Je eigen dagplafond en stille uren per soort melding.', totDieTijd: 'De standaard: zes per dag, stil van 19:00 tot 07:00 en in het weekend.' },
   },
+  // P16: campagnes (F12). Meedoen voor iedereen; maken vanaf Gevorderd; alle soorten, tussendoelen en mailreeks op mandaat B voor Expert.
+  {
+    sleutel: 'campagnes.meedoen', naam: 'Meedoen aan campagnes', pakket: 'starter', rollen: 'iedereen', helpartikel: 'campagnes', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Taken uit een campagne uitvoeren en het campagnebord lezen.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'campagnes.maken', naam: 'Campagne maken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-campagne-opzetten', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een campagne uit de acht startsoorten opzetten met de wizard, het bord gebruiken en taken spreiden over je belblokken.', totDieTijd: 'Je doet mee aan campagnes van je salesmanager.' },
+  },
+  {
+    sleutel: 'campagnes.alleSoorten', naam: 'Alle campagnesoorten', pakket: 'plus', rollen: 'iedereen', helpartikel: 'een-campagne-opzetten', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Naast de acht startsoorten alle soorten in vijf groepen, met zoeken.', totDieTijd: 'Je kiest uit de acht startsoorten.' },
+  },
+  {
+    sleutel: 'campagnes.tussendoelen', naam: 'Tussendoelen in een campagne', pakket: 'plus', rollen: 'iedereen', helpartikel: 'een-campagne-opzetten', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Tussendoelen uit de reis naast het einddoel van de campagne.', totDieTijd: 'De campagne heeft één einddoel.' },
+  },
+  {
+    sleutel: 'campagnes.dynamisch', naam: 'Dynamische doelgroep', pakket: 'plus', rollen: 'iedereen', helpartikel: 'een-campagne-opzetten', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Nieuwe accounts uit de doelgroep komen er tijdens de looptijd vanzelf bij.', totDieTijd: 'Je voegt accounts toe met + Accounts.' },
+  },
+  {
+    sleutel: 'campagnes.mailreeksB', naam: 'Mailreeks door de Verzender', pakket: 'plus', rollen: 'iedereen', helpartikel: 'een-campagne-opzetten', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Mail 2 en verder binnen een goedgekeurde campagne verstuurt de Verzender zelf (mandaat B), met dagplafond en afmeldlink.', totDieTijd: 'Elke mail staat als concept klaar en je verstuurt hem zelf.' },
+  },
+  {
+    sleutel: 'campagnes.boodschapAI', naam: 'Boodschap en winpunt met AI', pakket: 'plus', rollen: 'iedereen', helpartikel: 'een-campagne-opzetten', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een winpuntvoorstel en een boodschap per kanaal met stijlscore, uit het bevestigde verkoopverhaal.', totDieTijd: 'Je kiest het winpunt en gebruikt de vaste scripttekst.' },
+  },
+  {
+    sleutel: 'campagnes.team', naam: 'Campagnes van het team', pakket: 'starter', rollen: ['salesmanager', 'beheerder'], helpartikel: 'een-campagne-opzetten', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Activeren boven capaciteit, verdelen over verkopers en resultaat per campagne.', totDieTijd: 'Vraag je salesmanager.' },
+  },
+  {
+    sleutel: 'instellingen.campagnesoorten', naam: 'Campagnesoorten', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'een-campagne-opzetten', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Campagnesoorten aan en uit zetten.', totDieTijd: 'De acht startsoorten staan aan.' },
+  },
   // P33: AI-assistent en credits (F26, 11.4). Op alle niveaus; de credits begrenzen, niet het niveau.
   {
     sleutel: 'assistent.chat', naam: 'AI-assistent', pakket: 'starter', rollen: 'iedereen', helpartikel: 'chatten-met-de-ai-assistent', startNiveau: 'beginner',
@@ -907,7 +944,7 @@ export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | u
 
 /** De feature (hoofdstuk 7, F01 tot en met F26) waar een functie bij hoort, voor het raster van de founder. */
 const FEATURE_GROEPEN: [RegExp, string][] = [
-  [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
+  [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^campagnes\.|^instellingen\.campagnesoorten/, 'F12 Campagnes'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],

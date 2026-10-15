@@ -127,7 +127,7 @@ export interface MotorAccount {
   contactNaam?: string | null
   gebeurtenissen?: { id: string; gebeurtenis: string; naarFaseId: string | null; op: string }[]
   afspraken?: { id: string; eerste: boolean; status: 'gepland' | 'gehouden' | 'geannuleerd' | 'niet-verschenen'; op: string; overgedragen?: boolean; uitkomst?: string | null }[]
-  campagnes?: { id: string; achterstand: number }[]
+  campagnes?: { id: string; achterstand: number; naam?: string }[]
   ritme?: { actief: boolean; volgendePogingOp?: string | null; poging?: number; van?: number; kanaal?: string | null } | null
   signalen?: { id: string; soort: string; op: string; extern: boolean }[]
   tussendoelen?: { id: string; gehaaldOp: string }[]
@@ -197,7 +197,8 @@ export function evaluateTrigger(regel: Pick<Regel, 'data'>, a: MotorAccount, nu:
     }
     case 'campagne-achterstand': {
       const ca = (a.campagnes ?? []).find((x) => x.achterstand >= Number(p.marge))
-      return ca ? { vuurt: true, reden: `De campagne loopt ${ca.achterstand} punten achter`, bewijs: [`campagne ${ca.id}`], sleutel: `${a.id}:${ca.id}` } : nee()
+      // Eén inzicht per campagne (niet per account), met het advies "Begin hier" op het bord.
+      return ca ? { vuurt: true, reden: `De campagne ${ca.naam ? `${ca.naam} ` : ''}loopt ${ca.achterstand} punten achter. Begin met de drie accounts onder Begin hier`, bewijs: [`campagne ${ca.id}`], sleutel: `campagne:${ca.id}` } : nee()
     }
     case 'hercontact-vervolg': {
       const r = a.ritme

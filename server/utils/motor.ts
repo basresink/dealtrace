@@ -15,6 +15,7 @@ import { benaderdDitJaar, leesPlanning, POGING_SOORTEN, potentieVan, vensterVan,
 import { schema } from './db'
 import { draai as draaiPlanner } from './agents/planner'
 import { vulBelblokken } from './bellen'
+import { achterstandPerAccount, sluitAf } from './campagnes'
 
 type Tx = Parameters<Parameters<ReturnType<typeof import('./db').gebruikDb>['transaction']>[0]>[0]
 type RegelRij = typeof schema.activityRules.$inferSelect
@@ -68,6 +69,8 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
   const ritmeDefs = await tx.select().from(schema.hercontactritmes)
   const contacten = ids.length ? await tx.select({ accountId: schema.contacts.accountId, first: schema.contacts.firstName, last: schema.contacts.lastName, rol: schema.contacts.rol, status: schema.contacts.status, data: schema.contacts.data }).from(schema.contacts).where(accountIds?.length ? inArray(schema.contacts.accountId, ids) : sql`true`) : []
 
+  // Campagnes (P16): achterstand per account uit de ene tempofunctie, voor SR11.
+  const campagnes = await achterstandPerAccount(tx, nu)
   const accounts: MotorAccount[] = accountRijen.map((a) => {
     const k = klassen.find((x) => x.id === a.klasse)
     const reis = reizen.find((r) => r.id === a.reisId)
@@ -77,7 +80,7 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
     const owner = a.ownerId ? perGebruiker.get(a.ownerId) : undefined
     return {
       id: a.id, naam: a.name, type: a.accountKind as 'prospect' | 'klant', nbStatus: a.nbStatus, reisId: a.reisId, faseId: a.faseId, faseSinds: a.faseSinds,
-      verwachtVerblijfDagen: f?.eind ? null : f?.verwachtVerblijfDagen ?? null, doelgroepId: a.doelgroepId, campagneIds: [], klasse: a.klasse,
+      verwachtVerblijfDagen: f?.eind ? null : f?.verwachtVerblijfDagen ?? null, doelgroepId: a.doelgroepId, campagneIds: (campagnes.get(a.id) ?? []).map((c) => c.id), campagnes: campagnes.get(a.id) ?? [], klasse: a.klasse,
       klasseCode: k ? klasseCode(k) : null, ownerId: a.ownerId, ownerTeamId: owner?.teamId ?? null, ownerWerkplek: owner?.werkplek ?? null, gebiedId: a.gebiedId,
       aangemaaktOp: a.createdAt, laatsteContactOp: a.laatsteContactOp, terugOp: a.terugOp, dossierOp: (a.data?.dossier as any)?.op ?? null,
       bandScore: bandScore(a.data?.band as any), belMeNiet: !!primair?.data?.belMeNiet, nee: a.data?.nee ?? null, wachtendTot: a.data?.wachtendTot ?? null,
@@ -197,8 +200,12 @@ export async function draaiMotor(tx: Tx, org: string, opties: RunOpties) {
   let uit: MotorUitvoer
   const fouten: string[] = []
   try {
+    // Campagne-afsluiter (P16): eerst, zodat een afgelopen campagne geen achterstand meer geeft.
+    const afgesloten = opties.soort !== 'gebeurtenis' ? await sluitAf(tx, nu) : null
     const { invoer, waarschuwingen } = await laadMotorInvoer(tx, org, nu, opties.accountIds)
     uit = motorRun(invoer)
+    const afsluiter = uit.stappen.find((s) => s.stap === 'campagne-afsluiter')
+    if (afsluiter && afgesloten !== null) Object.assign(afsluiter, { status: 'gedaan', toelichting: `${afgesloten} ${afgesloten === 1 ? 'campagne' : 'campagnes'} afgerond` })
     uit.waarschuwingen.unshift(...waarschuwingen)
     await schrijfMotorUitvoer(tx, org, uit, nu)
     await draaiPlanner(tx, org, uit, nu)

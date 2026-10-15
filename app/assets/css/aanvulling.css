@@ -1014,3 +1014,76 @@ html.zonlicht body { color: #000; }
 @keyframes sp-golf { to { height: 26px; } }
 @media (prefers-reduced-motion: reduce) { .sp-golf span { animation: none; height: 14px; } }
 .sp-checks { list-style: none; padding: 0; margin: 8px 0 0; font-size: var(--fs-meta); color: var(--green); display: grid; gap: 2px; }
+
+/* P16: campagnes. Kaarten met tempopil en voortgang (verwacht als streep), wizard, bord met zes kolommen. */
+.cp-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.cp-kaarten { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--kaart-gap); }
+.cp-kaart { display: flex; flex-direction: column; gap: 8px; padding: 16px; background: var(--wit); border: 1px solid var(--border); color: var(--ink); text-decoration: none; }
+.cp-kaart:hover, .cp-kaart:focus-visible { border-color: var(--ink); }
+.cp-kaart-kop { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.cp-soort { font-size: var(--fs-label); font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.cp-naam { margin: 0; font-family: var(--font-serif); font-size: var(--fs-body); font-weight: 700; overflow-wrap: anywhere; }
+.cp-meta { font-size: var(--fs-meta); color: var(--muted); }
+.cp-cijfers { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: var(--fs-label); font-weight: 600; font-feature-settings: "tnum"; }
+.cp-voortgang { position: relative; height: 8px; background: var(--bg); border: 1px solid var(--border); }
+.cp-balk { height: 100%; background: var(--ink); }
+.cp-verwacht { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--red); }
+.tempo { display: inline-block; padding: 2px 8px; font-size: var(--fs-label); font-weight: 700; border: 1px solid currentColor; }
+.tempo--voor { color: var(--green); }
+.tempo--op { color: var(--ink); }
+.tempo--achter { color: var(--red); }
+.cp-stappen { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; padding: 0; list-style: none; counter-reset: none; }
+.cp-stappen button { min-height: 44px; padding: 6px 12px; background: var(--wit); border: 1px solid var(--border); font: inherit; font-size: var(--fs-meta); color: var(--muted); cursor: pointer; }
+.cp-stappen button:disabled { cursor: default; }
+.cp-stappen .is-actief button { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.cp-stappen .is-klaar button { color: var(--ink); }
+.cp-stap { display: flex; flex-direction: column; gap: 12px; }
+.cp-groot { margin: 0; font-size: var(--fs-body); }
+.cp-overgeslagen { margin: 0; padding-left: 18px; font-size: var(--fs-meta); color: var(--muted); }
+.cp-soorten { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.cp-soortkaart { display: flex; flex-direction: column; gap: 4px; min-height: 44px; padding: 12px; text-align: left; background: var(--wit); border: 1px solid var(--border); font: inherit; color: var(--ink); cursor: pointer; }
+.cp-soortkaart:hover { border-color: var(--ink); }
+.cp-soortkaart.is-gekozen { border: 2px solid var(--ink); background: var(--yellow-licht); }
+.cp-tonen { display: flex; flex-wrap: wrap; gap: 6px; }
+.cp-doel { display: flex; gap: 6px; }
+.cp-doel .invoer:first-child { max-width: 90px; }
+.cp-wizard-voet { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+.cp-kiezer { display: flex; flex-direction: column; gap: 8px; }
+.cp-treffers { margin: 0; padding: 0; list-style: none; border: 1px solid var(--border); background: var(--wit); }
+.cp-treffer { display: block; width: 100%; min-height: 44px; padding: 8px 12px; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--border); font: inherit; cursor: pointer; }
+.cp-treffer:hover { background: var(--bg); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.keuze { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: var(--fs-meta); }
+.cp-kop { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.cp-kop > div { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.cp-kop .cp-voortgang { align-self: stretch; }
+.cp-begin { margin: 8px 0 0; padding-left: 20px; }
+.cp-begin li { margin: 4px 0; }
+.cp-werkbalk { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.cp-zoek { max-width: 260px; }
+.kanban--campagne { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.cp-kol--gespot { border-top: 4px solid var(--muted); }
+.cp-kol--benaderd { border-top: 4px solid var(--blue); }
+.cp-kol--in-gesprek { border-top: 4px solid var(--yellow); }
+.cp-kol--afspraak { border-top: 4px solid var(--green); }
+.cp-kol--geparkeerd { border-top: 4px solid var(--orange); }
+.cp-kol--afgewezen { border-top: 4px solid var(--red); }
+.cp-kaart-regel { display: flex; align-items: flex-start; gap: 8px; }
+.cp-kaart-regel .kanban-kaart-titel { min-width: 0; margin-bottom: 6px; font-size: var(--fs-meta); color: var(--ink); text-decoration: none; overflow-wrap: break-word; hyphens: manual; }
+.cp-initialen { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 26px; height: 26px; font-size: 11px; font-weight: 800; color: var(--wit); background: var(--muted); }
+.cp-initialen--blauw { background: var(--blue); }
+.cp-initialen--groen { background: var(--green); }
+.cp-initialen--geel { background: var(--yellow-dark); }
+.cp-initialen--oranje { background: var(--orange); }
+.cp-initialen--paars { background: var(--purple); }
+.cp-verplaats { max-width: 120px; font-size: var(--fs-label); }
+.cp-groep { border: 1px solid var(--border); background: var(--wit); margin-bottom: 8px; }
+.cp-groep > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; font-weight: 700; cursor: pointer; }
+.cp-groep .rij { gap: 8px; }
+@media (max-width: 1100px) { .kanban--campagne { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 767px) {
+  .kanban--campagne { grid-template-columns: 1fr; }
+  .cp-kaarten { grid-template-columns: 1fr; }
+  .cp-zoek { max-width: none; flex: 1 1 100%; }
+  .cp-groep .rij { flex-wrap: wrap; }
+}

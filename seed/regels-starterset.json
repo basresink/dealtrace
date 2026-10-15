@@ -398,7 +398,7 @@
   "naam": "Campagne loopt achter",
   "categorie": "Kwaliteit",
   "motor": "regel",
-  "cadansDagen": 7,
+  "cadansDagen": 2,
   "prioriteit": "middel",
   "data": {
    "omschrijving": "Een campagne loopt achter op het tempo.",
@@ -420,7 +420,7 @@
     "actiesoort": "geen",
     "uitvoerderrol": "salesmanager",
     "termijnWerkdagen": 3,
-    "taaksjabloon": "Campagne loopt achter bij {account}",
+    "taaksjabloon": "Campagne loopt achter",
     "belscriptId": null,
     "automatischVoorbereiden": false,
     "signaaltype": null,

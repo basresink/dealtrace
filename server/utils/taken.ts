@@ -1,5 +1,6 @@
 // Taken en inzichten op de server (F06, F13). `rondAf` is het enige afrondpad: flyout,
 // lijst, vegen, bulk en de offline wachtrij komen hier allemaal uit (gat 11).
+import { kolomUitUitkomst } from '../../shared/campagnes'
 import { and, eq, inArray, sql } from 'drizzle-orm'
 import { afrondTekst, type RitmeStand } from '../../shared/hercontact'
 import { rondTaakAf, type AfrondInvoer } from '../../shared/taken'
@@ -66,7 +67,7 @@ export async function rondAf(tx: Tx, taakId: string, invoer: AfrondInvoer & { ac
     const [v] = await tx.insert(schema.tasks).values({
       organisationId: t.organisationId, ownerId: t.ownerId, accountId: t.accountId, contactId: t.contactId, signalId: t.signalId, ruleId,
       onderwerp: r.ritme?.volgende ? `${t.accountId}:poging-${r.ritme.volgende.stap}` : t.onderwerp, actionType: r.vervolgtaak.actionType, title: r.vervolgtaak.title,
-      priority: r.vervolgtaak.priority, dueDate: r.vervolgtaak.due, executor: t.executor, data: { ...r.vervolgtaak.data, waarom: (t.data as any)?.waarom }, createdAt: tijd, updatedAt: tijd,
+      priority: r.vervolgtaak.priority, dueDate: r.vervolgtaak.due, executor: t.executor, campaignId: t.campaignId, data: { ...r.vervolgtaak.data, waarom: (t.data as any)?.waarom, ...((t.data as any)?.campagneId ? { campagneId: (t.data as any).campagneId } : {}) }, createdAt: tijd, updatedAt: tijd,
     }).returning({ id: schema.tasks.id })
     vervolgId = v!.id
   }
@@ -79,6 +80,8 @@ export async function rondAf(tx: Tx, taakId: string, invoer: AfrondInvoer & { ac
     if (r.later) await pauzeer(tx, a.id, r.later, 'Gesproken, later', door, nu).catch((e) => { if (!(e instanceof ReisFout)) throw e })
     await draaiMotor(tx, t.organisationId, { soort: 'gebeurtenis', door, accountIds: [a.id], nu })
   }
+  // P16: een taak uit een campagne zet het item op het bord in de kolom van de uitkomst (gat 38).
+  if (t.campaignId && t.accountId) await volgItem(tx, t.campaignId, t.accountId, r.taakPatch.uitkomst, r.ritme?.actie === 'parkeren', vervolgId)
   const [na] = a ? await tx.select({ nbStatus: schema.accounts.nbStatus }).from(schema.accounts).where(eq(schema.accounts.id, a.id)) : []
   const resultaat: AfrondUitkomst = {
     taakId: t.id, status: 'klaar', tekst: r.ritme ? afrondTekst(r.ritme) : r.vervolgtaak ? `Afgerond. Volgende keer ${new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Amsterdam' }).format(new Date(r.vervolgtaak.due))}.` : 'Afgerond.',
@@ -86,6 +89,14 @@ export async function rondAf(tx: Tx, taakId: string, invoer: AfrondInvoer & { ac
   }
   await tx.update(schema.tasks).set({ data: sql`jsonb_set(${schema.tasks.data}, '{afronding,resultaat}', ${JSON.stringify(resultaat)}::jsonb)` }).where(eq(schema.tasks.id, t.id))
   return resultaat
+}
+
+/** Het campagne-item volgt de taak: kolom uit de uitkomst, poging erbij, de volgende taak als volgende stap. */
+async function volgItem(tx: Tx, campagneId: string, accountId: string, uitkomst: string | null, laatstePoging: boolean, vervolgId: string | null) {
+  const kolom = kolomUitUitkomst(uitkomst, laatstePoging)
+  const [v] = vervolgId ? await tx.select({ due: schema.tasks.dueDate, titel: schema.tasks.title }).from(schema.tasks).where(eq(schema.tasks.id, vervolgId)) : []
+  await tx.execute(sql`update campagne_items set poging = poging + 1, kolom = coalesce(${kolom}, kolom), einddoel_gehaald = einddoel_gehaald or ${kolom === 'afspraak'},
+    volgende_stap = ${v?.titel ?? null}, volgende_op = ${v?.due ?? null}, updated_at = now() where campagne_id = ${campagneId} and account_id = ${accountId}`)
 }
 
 export async function takenVan(tx: Tx, ids: string[]): Promise<TaakRij[]> {
