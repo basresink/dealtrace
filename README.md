@@ -75,6 +75,40 @@ Daarna gewoon `pnpm db:migrate`, `pnpm seed` en `pnpm dev`.
 - **`pnpm db:up` faalt**: Docker Desktop draait niet. Start het en probeer opnieuw.
 - **Inloggen lukt niet na een reset**: wis de cookies van localhost of log uit via het gebruikersmenu.
 
+## Online zetten met Netlify en Supabase
+
+Zonder installatie op je laptop: de app draait op Netlify, de database op Supabase (allebei gratis te proberen).
+
+**Wachtwoorden:** gebruik overal alleen letters en cijfers (geen @, #, / of %), anders breken de verbindingsregels.
+
+### 1. Supabase
+
+1. Maak een account op <https://supabase.com> en kies **New project**. Regio: **Central EU (Frankfurt)**. Bedenk een databasewachtwoord en bewaar het.
+2. Klik bovenaan op **Connect**. Kies bij *Method* **Session pooler** en kopieer de regel. Die ziet eruit als
+   `postgresql://postgres.abcdefgh:[YOUR-PASSWORD]@aws-0-eu-central-1.pooler.supabase.com:5432/postgres`.
+   Vervang `[YOUR-PASSWORD]` door je databasewachtwoord. Dit is **DATABASE_URL_BEHEER**.
+3. Maak daarvan **DATABASE_URL** voor de app: vervang `postgres.` door `dealtrace_app.`, het wachtwoord door een nieuw wachtwoord (dat wordt **DATABASE_APP_WACHTWOORD**) en de poort `5432` door `6543`:
+   `postgresql://dealtrace_app.abcdefgh:NieuwWachtwoord123@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`
+
+### 2. Netlify
+
+1. Maak een account op <https://netlify.com> en kies **Add new project**, **Import an existing project**, **GitHub**, repository **basresink/dealtrace**, branch **main**. De rest vult `netlify.toml` zelf in.
+2. Zet bij **Environment variables**:
+
+| Naam | Waarde |
+|---|---|
+| `DATABASE_URL_BEHEER` | de Session pooler-regel uit Supabase (scope: alleen *Builds*) |
+| `DATABASE_URL` | de regel met `dealtrace_app.` en poort `6543` |
+| `DATABASE_APP_WACHTWOORD` | het nieuwe wachtwoord uit die regel |
+| `SESSIE_GEHEIM` | een lange willekeurige reeks letters en cijfers (minstens 32 tekens) |
+| `TOEGANGSWACHTWOORD` | het wachtwoord dat jij en je testers invullen om de site te openen |
+
+3. Klik op **Deploy**. Elke deploy werkt de database bij; de fictieve testdata komt er alleen de eerste keer in.
+
+Open daarna de link van Netlify, vul het toegangswachtwoord in en kies een testgebruiker. Elke push naar `main` zet automatisch een nieuwe versie online.
+
+De automatische REST-API van Supabase kan niets met de Dealtrace-tabellen: de migratie ontneemt de rollen `anon` en `authenticated` alle rechten.
+
 ## Hoe het werkt
 
 Zie `docs/HOE-HET-WERKT.md` voor rol, niveau, werkplek, features per niveau en de rechtenmatrix.

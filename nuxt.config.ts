@@ -22,6 +22,10 @@ export default defineNuxtConfig({
     authModus: process.env.AUTH_MODUS || 'ontwikkel', // 'ontwikkel' tot P27 inloggen met code bouwt
     aiProvider: process.env.AI_PROVIDER || 'mock',
     anthropicSleutel: process.env.ANTHROPIC_API_KEY || '',
+    // Online (Netlify) staat de hele site achter één toegangswachtwoord, tot P27
+    // inloggen met een code per mail bouwt. Lokaal is het leeg en dus uit.
+    toegangswachtwoord: process.env.TOEGANGSWACHTWOORD || '',
+    online: process.env.NETLIFY === 'true' || process.env.DEALTRACE_ONLINE === 'true',
     public: {
       authModus: process.env.AUTH_MODUS || 'ontwikkel',
     },

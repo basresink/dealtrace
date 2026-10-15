@@ -23,3 +23,41 @@ revoke insert, delete on organisations from dealtrace_app;
 grant execute on function current_org_id() to dealtrace_app;
 grant execute on function dealtrace_sessie_gebruiker(text) to dealtrace_app;
 grant execute on function dealtrace_ontwikkel_gebruikers() to dealtrace_app;
+
+-- Supabase: de standaardrollen anon en authenticated mogen niets in public.
+-- Dealtrace praat alleen via de eigen server met de database, nooit via de
+-- automatische REST-API van Supabase. Lokaal bestaan deze rollen niet.
+do $$
+declare r text;
+begin
+  foreach r in array array['anon', 'authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = r) then
+      execute format('revoke all on all tables in schema public from %I', r);
+      execute format('revoke all on all sequences in schema public from %I', r);
+      execute format('revoke all on all functions in schema public from %I', r);
+      execute format('alter default privileges in schema public revoke all on tables from %I', r);
+      execute format('alter default privileges in schema public revoke all on sequences from %I', r);
+      execute format('alter default privileges in schema public revoke all on functions from %I', r);
+    end if;
+  end loop;
+end $$;
+-- Functies zijn standaard voor iedereen uitvoerbaar; alleen de app-rol mag ze.
+revoke execute on function dealtrace_sessie_gebruiker(text) from public;
+revoke execute on function dealtrace_ontwikkel_gebruikers() from public;
+grant execute on function dealtrace_sessie_gebruiker(text) to dealtrace_app;
+grant execute on function dealtrace_ontwikkel_gebruikers() to dealtrace_app;
+
+-- Beheerregel voor de eigenaar van de tabellen. Alle tabellen hebben FORCE ROW
+-- LEVEL SECURITY, dus ook de eigenaar valt onder RLS. Lokaal is de eigenaar
+-- superuser en merkt dat niet; op Supabase is postgres geen superuser. Deze regel
+-- geldt alleen voor de rol die migreert en seedt, nooit voor dealtrace_app.
+do $$
+declare t text;
+begin
+  for t in select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
+           where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity loop
+    if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = t and policyname = 'beheer_eigenaar') then
+      execute format('create policy beheer_eigenaar on %I to %I using (true) with check (true)', t, current_user);
+    end if;
+  end loop;
+end $$;

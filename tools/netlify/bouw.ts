@@ -1,0 +1,30 @@
+// Build op Netlify: eerst de database bijwerken, dan de app bouwen.
+// - Migraties zijn idempotent en draaien bij elke deploy.
+// - De fictieve testdata komt er alleen in als de database nog leeg is, zodat
+//   wat je online wijzigt bij een volgende deploy blijft staan.
+import { spawnSync } from 'node:child_process'
+import pg from 'pg'
+import { migreer } from '../../server/db/migreer'
+import { seed } from '../../server/db/seed'
+import { verbindingsopties } from '../../shared/verbinding'
+
+const beheer = process.env.DATABASE_URL_BEHEER
+if (!beheer) {
+  console.error('DATABASE_URL_BEHEER ontbreekt. Zet hem bij Netlify onder Environment variables.')
+  process.exit(1)
+}
+if (!process.env.DATABASE_APP_WACHTWOORD || process.env.DATABASE_APP_WACHTWOORD === 'dealtrace_app') {
+  console.error('Zet DATABASE_APP_WACHTWOORD bij Netlify op een eigen, sterk wachtwoord.')
+  process.exit(1)
+}
+
+await migreer(beheer)
+const c = new pg.Client(verbindingsopties(beheer))
+await c.connect()
+const { rows } = await c.query(`select count(*)::int as n from organisations where id = 'org-voltvast'`)
+await c.end()
+if (rows[0].n === 0) await seed(beheer)
+else console.log('Testdata staat er al; seed overgeslagen.')
+
+const r = spawnSync('pnpm', ['exec', 'nuxt', 'build'], { stdio: 'inherit', env: process.env })
+process.exit(r.status ?? 1)

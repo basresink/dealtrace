@@ -8,6 +8,7 @@
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import pg from 'pg'
+import { verbindingsopties } from '../../shared/verbinding'
 import { APP_WACHTWOORD, BEHEER_URL, isLokaal } from './omgeving'
 import { startindeling } from '../../shared/functies'
 
@@ -15,7 +16,7 @@ const MAP = join(import.meta.dirname, 'migrations')
 
 export async function migreer(url = BEHEER_URL, opties: { opnieuw?: boolean; stil?: boolean } = {}) {
   const log = (t: string) => { if (!opties.stil) console.log(t) }
-  const client = new pg.Client({ connectionString: url })
+  const client = new pg.Client(verbindingsopties(url))
   await client.connect()
   try {
     if (opties.opnieuw) {

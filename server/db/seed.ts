@@ -9,6 +9,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import pg from 'pg'
+import { verbindingsopties } from '../../shared/verbinding'
 import { BEHEER_URL } from './omgeving'
 
 interface SeedGebruiker {
@@ -26,7 +27,7 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
   const log = (t: string) => { if (!opties.stil) console.log(t) }
   const voltvast = JSON.parse(readFileSync(join(import.meta.dirname, '../../seed/voltvast.json'), 'utf8'))
   const org = voltvast.organisatie
-  const client = new pg.Client({ connectionString: url })
+  const client = new pg.Client(verbindingsopties(url))
   await client.connect()
   try {
     await client.query('begin')

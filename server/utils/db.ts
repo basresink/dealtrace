@@ -8,6 +8,7 @@ import { sql } from 'drizzle-orm'
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
 import pg from 'pg'
 import * as schema from '../db/schema'
+import { isLokaleUrl, verbindingsopties } from '../../shared/verbinding'
 
 export type Db = NodePgDatabase<typeof schema>
 type Tx = Parameters<Parameters<Db['transaction']>[0]>[0]
@@ -18,7 +19,9 @@ let db: Db | undefined
 export function gebruikDb(): Db {
   if (!db) {
     const url = useRuntimeConfig().databaseUrl as string
-    pool = new pg.Pool({ connectionString: url, max: 10 })
+    // Online (Netlify) draait elke functie kort: weinig verbindingen per functie,
+    // via de pooler van Supabase.
+    pool = new pg.Pool({ ...verbindingsopties(url), max: isLokaleUrl(url) ? 10 : 2, idleTimeoutMillis: 10_000 })
     db = drizzle(pool, { schema })
   }
   return db

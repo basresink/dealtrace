@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "nuxt dev --port 3000",
     "build": "nuxt build",
+    "build:netlify": "tsx tools/netlify/bouw.ts",
     "preview": "nuxt preview --port 3000",
     "postinstall": "nuxt prepare",
     "db:up": "docker compose up -d db",

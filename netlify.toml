@@ -1,0 +1,8 @@
+# Netlify: zie README, "Online zetten met Netlify en Supabase".
+[build]
+  command = "pnpm build:netlify"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  PNPM_FLAGS = "--frozen-lockfile"
