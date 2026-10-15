@@ -1,6 +1,6 @@
 # Bouwplan Dealtrace
 
-> Versie 1.1 · 14 oktober 2026 · new business voor actieve accountmanagers binnendienst en buitendienst
+> Versie 1.2 · 15 oktober 2026 · new business voor actieve accountmanagers binnendienst en buitendienst
 >
 > **Waarvoor dit document is.** Dit bouwplan bundelt alle documenten in deze repository tot één ontwerp. Het is de bron voor de functionele en technische bouwprompts van Dealtrace: elk hoofdstuk in deel C is zo opgebouwd dat je er direct een functionele prompt (wat en waarom) en een technische prompt (datamodel, regels, endpoints, acceptatie) van kunt maken.
 >
@@ -23,7 +23,7 @@
 | B | 6 | Informatiearchitectuur en navigatie |
 | B | 7 | Het new business-proces: fases, statussen en prospectreis |
 | B | 8 | Mobiel en onderweg |
-| C | 9 | Featurecatalogus (25 features, elk met functionele en technische uitwerking) |
+| C | 9 | Featurecatalogus (26 features, elk met functionele en technische uitwerking) |
 | D | 10 | Datamodel |
 | D | 11 | AI-architectuur en agents |
 | D | 12 | Integraties: CRM, KvK, Datacollectief, mail, agenda, DealDrive |
@@ -71,7 +71,7 @@ Deze beslissingen gaan voor alles wat in de bronnen anders staat.
 |---|---|---|
 | B1 | De productnaam is **Dealtrace** | Overal Dealtrace in plaats van "DealDrive New Business" (lost open vraag 1 van het architectuurplan op) |
 | B2 | Dealtrace is voor **actieve accountmanagers binnendienst en buitendienst** die new business doen, met **salesmanagers** voor controle, analyse en coaching | Twee werkplekprofielen (binnendienst en buitendienst) en een volwaardige managerlaag (hoofdstuk 3, 5 en feature F20) |
-| B3 | De gebruiker groeit in **drie niveaus: Beginner, Gevorderd, Expert**. De beginner krijgt de basisfuncties, gevorderd meer, expert alles | Niveaumodel met functiematrix, vergrendelde functies met uitleg en een groeipad (hoofdstuk 4) |
+| B3 | De gebruiker werkt in **drie niveaus: Beginner, Gevorderd, Expert**. De beginner krijgt de basisfuncties, gevorderd meer, expert alles | Niveaumodel met een startindeling van de functies en functies die nog niet aanstaan met uitleg (hoofdstuk 4); zie ook B18 en B19 |
 | B4 | **Geen aparte HQ**. Alle founder- en beheerfuncties zitten in de app zelf, achter de juiste rol | Eén app, één domein, één build; platformbeheer als afgeschermde sectie (feature F23 en ADR-011) |
 | B5 | **Standaard belscript-templates** die je in Instellingen maakt en die de gebruiker kiest | Feature F08 |
 | B6 | **Eigen velden** (custom fields) toevoegen | Feature F19 |
@@ -85,6 +85,10 @@ Deze beslissingen gaan voor alles wat in de bronnen anders staat.
 | B14 | **Het aantal sprints volgt de inhoud** (de bronnen noemden 8 en 10) | Twaalf sprints van twee weken (hoofdstuk 17); na elke sprint stelt de founder vast of de volgende zo blijft |
 | B15 | **Het stijlbestand is leidend** | `designsysteem/dealdrive-designsysteem.css`: hoeken 2 px, 32 px boven en onder een sectie, 16 px tussen en in kaarten (hoofdstuk 14); waar `dealdrive-leadgeneratie-stijl.css` iets anders zegt (hoeken tot 4 px), geldt het designsysteem |
 | B16 | **SalesDNA-sublagen** zijn de bron van het verkoopverhaal | Feature F25 met één leesmodel (ADR-017), terugkomregels naast hercontactritmes (ADR-018), webhooks en suggesties terug (hoofdstuk 12), startset Voltvast (Bijlage C) |
+| B17 | **Dealtrace loopt tot en met de eerste afspraak.** Geen pipeline, deals en offertes in de app; de pipeline wordt de **funnel van de prospectreis** | Drie fases tot en met de eerste afspraak (7.1); status `overgedragen` in plaats van `klant`; F17 wordt Funnel van de prospectreis; na de eerste afspraak gaat het account over naar DealDrive, het CRM of een collega; offertematrix, offertebriefing, deals en offertes vervallen (ADR-021) |
+| B18 | **Het niveau ontstaat door het aanzetten van functies.** Welke functie bij welk niveau hoort, hangt af van wat in de bouw werkt | Een niveau is een voorinstelling van schakelaars per functie; de salesmanager of beheerder zet functies extra aan; de indeling in 4.3 is een startindeling die per sprint wordt vastgesteld (4.1, 4.2, ADR-012) |
+| B19 | **Geen groeipad** | Geen criteria, geen niveauvoorstellen, geen voortgangsbalken en geen leerpaden per niveau; een functie aanzetten is een besluit van de salesmanager |
+| B20 | **Iedere gebruiker kan chatten met AI** om ondersteund te worden; het abonnement bepaalt via **credits** hoeveel | Nieuwe feature F26 AI-assistent; credits per pakket per maand (11.4, F23, ADR-022) |
 
 ### 0.3 Wat dit plan wijzigt ten opzichte van het architectuurplan
 
@@ -92,7 +96,9 @@ Deze beslissingen gaan voor alles wat in de bronnen anders staat.
 |---|---|---|
 | Naam | DealDrive New Business (werknaam) | Dealtrace |
 | Gebruiker | Hunter new business | Actieve accountmanager die naast een bestaande portefeuille new business doet, in twee profielen: binnendienst en buitendienst |
-| Complexiteit | Eén interface voor iedereen | Drie gebruikersniveaus die functies stapsgewijs vrijgeven |
+| Complexiteit | Eén interface voor iedereen | Drie gebruikersniveaus als voorinstellingen van functies die aanstaan (B18), zonder groeipad (B19) |
+| Scope | Van naam tot klant, met deals en offertes | Van naam tot en met de eerste afspraak; daarna overdracht (B17) |
+| AI-hulp | Agents per taak | Plus een AI-assistent waarmee iedere gebruiker chat, met credits per abonnement (B20) |
 | SalesDNA | Bron via webhooks, verplicht voor de volle werking | Blijft de voorkeursbron per sublaag, maar Dealtrace werkt volledig met een eigen inrichting in dezelfde vorm: golden circle, bedrijfsverhaal, ambitie en visie, waarde en belofte, concurrenten, branches, winpunten en terugkomregels; per onderdeel een actieve bron (F25) |
 | Beheer | Beheer (superuser) als aparte route, HQ-input beschrijft een founder-console | Eén app: "Platformbeheer" als afgeschermde sectie voor de rol founder |
 | Prospectreis | Eén starterset van elf fases | Standaardreis plus maatwerkreizen per doelgroep, met een editor en versies |
@@ -126,19 +132,20 @@ De bronnen zijn op verschillende momenten geschreven en spreken elkaar op punten
 | Onderdeel | Waarde |
 |---|---|
 | **Product** | Dealtrace |
-| **Categorie** | Werkplek voor new business: van onbekende naam naar klant, met een vast proces, een ritme en AI die voorbereidt |
+| **Categorie** | Werkplek voor new business: van onbekende naam tot en met de eerste afspraak, met een vast proces, een ritme en AI die voorbereidt |
 | **Primaire gebruikers** | Accountmanager binnendienst (belt en mailt vanachter het bureau), accountmanager buitendienst (bezoekt op locatie, belt tussendoor) |
 | **Sturende gebruiker** | Salesmanager: richt doelgroepen, reizen en campagnes in, controleert de uitvoering, analyseert resultaten en coacht |
 | **Inrichting** | Beheerder van de klantorganisatie (gebruikers, instellingen, koppelingen, belscripts, eigen velden) |
 | **Platform** | Founder: organisaties, abonnementen, facturen, AI-koppeling, prompts en roadmap, binnen dezelfde app |
 | **Kernbelofte** | "Open Dealtrace 's ochtends en je weet welke prospect je vandaag belt, mailt of bezoekt, waarom, met welk script of welke opening, en wat je doet als hij niet reageert." |
-| **Drie fases** | 1. Vinden en kwalificeren · 2. Bewerken op ritme · 3. Verbinden: afspraak, offerte, klant |
+| **Drie fases** | 1. Vinden en kwalificeren · 2. Bewerken op ritme · 3. Verbinden: tot en met de eerste afspraak, daarna overdracht. Geen offerte en geen klant in Dealtrace (B17) |
 | **Vijf lagen** | Doelgroep, prospectreis (template met versies), campagne, uitvoering per account, activiteitenlog |
-| **Drie niveaus** | Beginner (werken met wat klaarstaat), Gevorderd (zelf plannen en campagnes draaien), Expert (alles, inclusief eigen reizen, regels en agents) |
+| **Drie niveaus** | Beginner (werken met wat klaarstaat), Gevorderd (zelf plannen en campagnes draaien), Expert (alles, inclusief eigen reizen, regels en agents). Een niveau ontstaat door functies extra aan te zetten; de indeling wordt tijdens de bouw vastgesteld (B18). Geen groeipad (B19) |
+| **AI-assistent** | Iedere gebruiker chat met AI voor ondersteuning, binnen de credits van het abonnement (F26) |
 | **Drie harde principes** | Geen bewijs, geen inzicht · AI handelt nooit buiten zijn mandaat en verstuurt nooit een eerste bericht zonder goedkeuring · template en uitvoering gescheiden |
 | **Stack** | Nuxt 4, Vue 3.5, Nitro, TypeScript strict, Postgres (Supabase EU) met RLS, offline-first PWA met mobiele schil, inloggen met een code per mail, Netlify, Claude via de Anthropic API met mock-provider |
 | **Hergebruik** | Ongeveer 60 procent van de logica komt uit DealDrive: opslaglaag, sync, rechten, motor, journey-engine, AI-beoordeling, Pitstop, campagnes, belblokken, leadgenerator, gebieden, huisstijl |
-| **Omvang** | 12 sprints van twee weken tot een complete eerste versie (hoofdstuk 17), 25 features, 32 bouwprompts |
+| **Omvang** | 12 sprints van twee weken tot een complete eerste versie (hoofdstuk 17), 26 features, 33 bouwprompts |
 
 ### 1.1 Wat Dealtrace is, in zeven zinnen
 
@@ -152,7 +159,7 @@ De bronnen zijn op verschillende momenten geschreven en spreken elkaar op punten
 
 ### 1.2 Wat Dealtrace niet is
 
-Geen tweede CRM voor bestaande klanten (dat blijft DealDrive of het eigen CRM), geen tool die zelf eerste berichten verstuurt zonder goedkeuring, geen LinkedIn-automaat, geen plek waar winpunten worden verzonnen (ook in de eigen inrichting stelt AI alleen vragen), en geen losse beheerconsole naast de app.
+Geen tweede CRM voor bestaande klanten (dat blijft DealDrive of het eigen CRM), geen pipeline- of offertetool (na de eerste afspraak gaat het account over naar DealDrive of het CRM), geen tool die zelf eerste berichten verstuurt zonder goedkeuring, geen LinkedIn-automaat, geen plek waar winpunten worden verzonnen (ook in de eigen inrichting stelt AI alleen vragen), en geen losse beheerconsole naast de app.
 
 ---
 
@@ -179,9 +186,9 @@ Geen tweede CRM voor bestaande klanten (dat blijft DealDrive of het eigen CRM), 
 | Hoofdkanaal | Telefoon en e-mail, LinkedIn als ondersteuning | Bezoek, telefoon onderweg, e-mail na het bezoek |
 | Werkeenheid | Belblok (60 tot 120 minuten) met bellijst en belscript | Bezoekdag per regio met route, kansen langs de route en een bellijst voor tussendoor |
 | Scherm | Desktop, twee schermen, toetsenbord | Telefoon of tablet, onderweg, slechte verbinding (offline nodig) |
-| Typische uitkomst | Afspraak voor de buitendienst of online kennismaking, terugbelafspraak, nee met reden | Kennismaking, inventarisatie, offerteaanvraag, nieuwe contactpersoon |
+| Typische uitkomst | Afspraak voor de buitendienst of online kennismaking, terugbelafspraak, nee met reden | Eerste afspraak gehouden met vervolg en overdracht, nieuwe contactpersoon, nee met reden |
 | Wat AI vooral doet | Bellijst ordenen, belscript invullen per account, mailconcept na het gesprek | Bezoekbriefing (Pitstop), kansen in de buurt, verslag uit spraak of aantekeningen |
-| Samenwerking | Plant afspraken in de agenda van de buitendienst (overdracht met briefing) | Geeft opvolging terug aan de binnendienst (terugbellen, offerte nabellen) |
+| Samenwerking | Plant afspraken in de agenda van de buitendienst (overdracht met briefing) | Geeft opvolging terug aan de binnendienst (terugbellen, no-show opnieuw inplannen) |
 
 Dealtrace kent daarom een **werkplekprofiel** per gebruiker (`binnendienst`, `buitendienst`, `hybride`). Het profiel bepaalt de standaardindeling van Vandaag, de volgorde in de zijbalk en de mobiele onderbalk; het beperkt geen functies.
 
@@ -196,7 +203,7 @@ Dealtrace kent daarom een **werkplekprofiel** per gebruiker (`binnendienst`, `bu
 | Lege staat die uitlegt | Elke lege lijst zegt in één zin wat er niet is en waarom; de handeling staat al in de paginakop, alleen bij een filter staat er "Toon alles" |
 | Maximaal zeven items in beeld | Vandaag toont maximaal 8 taken en 4 prioriteiten met "nog N meer" |
 | Hulp waar je bent | Elk scherm heeft een hulpknop die het bijbehorende helpartikel opent in een flyout |
-| Vergrendeld met uitleg | Een functie boven je niveau staat in de groep "Nog te ontgrendelen" of als knop met slot, en opent een uitleg met wat hij doet en hoe je hem vrijspeelt; nooit een uitgeschakelde knop zonder uitleg |
+| Niet aangezet met uitleg | Een functie die nog niet voor je aanstaat, staat in de groep "Nog niet aangezet" of als knop met slot, en opent een uitleg met wat hij doet en wie hem kan aanzetten; nooit een uitgeschakelde knop zonder uitleg |
 
 ### 2.4 Anti-patronen die we afwijzen
 
@@ -221,7 +228,7 @@ Een rol bepaalt wat je **mag** (rechten op data en instellingen). Het niveau (ho
 
 | Rol | Wie | Doet | Ziet |
 |---|---|---|---|
-| `accountmanager` | Accountmanager binnendienst of buitendienst | Voert de dagelijkse new business uit: bellen, mailen, bezoeken, afspraken, offertes; neemt leads over; keurt AI-concepten goed | Eigen Vandaag, alle prospects van de organisatie (filter "Van mij" standaard aan), campagnes waarin hij werkt, eigen resultaten |
+| `accountmanager` | Accountmanager binnendienst of buitendienst | Voert de dagelijkse new business uit: bellen, mailen, bezoeken, eerste afspraken en de overdracht daarna; neemt leads over; keurt AI-concepten goed | Eigen Vandaag, alle prospects van de organisatie (filter "Van mij" standaard aan), campagnes waarin hij werkt, eigen resultaten |
 | `salesmanager` | Leidinggevende van een of meer teams | Richt doelgroepen, reizen, campagnes en belscripts in; controleert de uitvoering, analyseert en coacht; keurt templateversies en AI-verbetervoorstellen goed | Alles van de eigen teams, plus het managerdeel (Team, Coaching, Analyse, Audit) |
 | `beheerder` | Inrichter van de klantorganisatie (vaak de salesmanager of een salesoperations-medewerker) | Gebruikers, rollen, niveaus, instellingen, eigen velden, koppelingen, belscript-templates, agentmandaten, abonnement en facturen van de eigen organisatie | Instellingen en alle data van de organisatie |
 | `founder` | Het team achter Dealtrace (niet uitdeelbaar, alleen via de database of door een andere founder) | Organisaties aanmaken en beheren, abonnementen en facturen, AI-koppeling en platformprompts, roadmap, instappen bij een organisatie met audit | Platformbeheer, en een organisatie alleen na expliciet instappen |
@@ -249,7 +256,7 @@ Niveaus `geen`, `eigen`, `team`, `alles`; acties lezen, schrijven, verwijderen, 
 | Doelgroepen en prospectreizen | lezen; maatwerkreis maken als Expert (eigen concept) | lezen, schrijven, activeren | alles | alleen na instappen |
 | Campagnes | lezen alles, schrijven eigen, verwijderen eigen | alles in team | alles | alleen na instappen |
 | Taken en inzichten | lezen alles, schrijven alles, verwijderen eigen | alles in team | alles | alleen na instappen |
-| Afspraken, deals, offertes | lezen alles, schrijven alles, verwijderen eigen | alles in team | alles | alleen na instappen |
+| Afspraken en overdrachten | lezen alles, schrijven alles, verwijderen eigen | alles in team | alles | alleen na instappen |
 | Activiteitenlog | lezen alles, toevoegen | lezen | lezen | lezen na instappen |
 | Belscript-templates | lezen en kiezen; persoonlijke kopie als Gevorderd | lezen, schrijven, activeren voor team | alles | platformsjablonen |
 | Eigen velden | waarden invullen | waarden invullen | definities beheren | alleen na instappen |
@@ -268,38 +275,47 @@ Niveaus `geen`, `eigen`, `team`, `alles`; acties lezen, schrijven, verwijderen, 
 
 ### 4.1 Waarom niveaus
 
-Een accountmanager die new business niet gewend is, raakt de weg kwijt in een tool met 25 features. Een ervaren hunter wil juist alles kunnen inrichten. Dealtrace lost dat op met drie niveaus:
+Een accountmanager die new business niet gewend is, raakt de weg kwijt in een tool met 26 features. Een ervaren hunter wil juist alles kunnen inrichten. Dealtrace lost dat op met drie niveaus. **Een niveau is een set functies die aanstaat**: de Beginner werkt met de basisfuncties, en een gebruiker wordt Gevorderd of Expert doordat de salesmanager of beheerder extra functies voor hem aanzet (beslissing B18).
 
 | Niveau | Voor wie | Belofte | Wat de gebruiker doet |
 |---|---|---|---|
-| **Beginner** | Nieuw in Dealtrace of nieuw in new business | "Alles staat klaar. Jij belt, bezoekt en rondt af." | Werkt de taken op Vandaag af, voert belblokken uit met een gekozen script, plant afspraken, bezoekt, legt uitkomsten vast, keurt concepten goed |
-| **Gevorderd** | Werkt zelfstandig en wil zelf sturen | "Jij plant je eigen week en je eigen acties." | Plus: zelf leads zoeken en importeren, belblokken en routes plannen, campagnes maken uit standaardsoorten, pipeline en offertes, inzichten omzetten in taken, eigen scriptvarianten |
+| **Beginner** | Nieuw in Dealtrace of nieuw in new business | "Alles staat klaar. Jij belt, bezoekt en rondt af." | Werkt de taken op Vandaag af, voert belblokken uit met een gekozen script, plant afspraken, bezoekt, legt uitkomsten vast, keurt concepten goed, vraagt de AI-assistent om hulp |
+| **Gevorderd** | Werkt zelfstandig en wil zelf sturen | "Jij plant je eigen week en je eigen acties." | Plus: zelf leads zoeken en importeren, belblokken en routes plannen, campagnes maken uit standaardsoorten, de funnel van de prospectreis lezen, inzichten omzetten in taken, eigen scriptvarianten |
 | **Expert** | Ervaren new business-verkoper of teamleider | "Jij bouwt het proces." | Plus: eigen prospectreis per doelgroep, eigen regels, agents instellen, alle campagnesoorten en mailreeksen, koppelingen en bulkbronnen, geavanceerde analyse |
 
-Rol en niveau zijn los: een salesmanager is minimaal Gevorderd en standaard Expert; een beheerder is standaard Expert. Een accountmanager start standaard als Beginner, tenzij de beheerder bij het uitnodigen een ander niveau kiest.
+Rol en niveau zijn los: een salesmanager en een beheerder hebben standaard alle functies aan. Een accountmanager start standaard als Beginner, tenzij de beheerder bij het uitnodigen een ander niveau kiest.
 
-### 4.2 Hoe een functie beschikbaar wordt
+**De indeling is voorlopig.** Welke functie bij welk niveau hoort, hangt sterk af van wat in de bouw goed werkt. De matrix in 4.3 is de startindeling; na elke sprint stelt de founder de indeling van de functies uit die sprint vast. Omdat een niveau alleen een set schakelaars is, verschuift een functie naar een ander niveau zonder code te wijzigen: het is een regel in de functiecatalogus.
 
-Een functie is zichtbaar en bruikbaar als aan alle drie voorwaarden is voldaan:
+### 4.2 Een niveau ontstaat door functies aan te zetten
+
+Elke functie in de catalogus heeft een schakelaar per gebruiker. Een niveau is een voorinstelling van die schakelaars.
 
 ```
 beschikbaar(functie, gebruiker) =
      pakketBevat(organisatie.pakket, functie)          // wat de organisatie afneemt
-  && niveauMinimaal(gebruiker.niveau, functie.niveau)  // of de gebruiker eraan toe is
   && rolMag(gebruiker.rol, functie.recht)              // rechten
-  || ontgrendeldVoor(gebruiker, functie)               // uitzondering door beheerder of salesmanager
+  && staatAan(gebruiker, functie)                      // de schakelaar van deze gebruiker
+
+staatAan(gebruiker, functie) =
+     functie in voorinstelling(gebruiker.niveau)       // de set van het gekozen niveau
+  || functie in gebruiker.extraAan                     // los aangezet door salesmanager of beheerder
+  && functie niet in gebruiker.uitgezet                // los uitgezet
 ```
 
 - **Pakket** is het plafond van de organisatie (zie F23). Een functie buiten het pakket toont "Onderdeel van Plus" met een link naar het abonnement (alleen voor de beheerder).
-- **Niveau** is het plafond van de gebruiker. Een functie boven het niveau toont een vergrendelde regel: "Dit is een functie voor Gevorderd. Je salesmanager kan hem voor je vrijgeven." met de knop "Lees hoe het werkt" (helpartikel).
-- **Uitzondering**: de salesmanager of beheerder kan per gebruiker losse functies ontgrendelen zonder het niveau te verhogen (bijvoorbeeld een Beginner die al wel zelf leads mag importeren).
-- **Niveaus uit**: een organisatie kan in Instellingen kiezen voor "Iedereen ziet alles". Dan is iedereen Expert en verdwijnt het groeipad.
+- **Niveau kiezen.** De salesmanager of beheerder kiest bij de gebruiker Beginner, Gevorderd of Expert. Dat zet in één keer de schakelaars van die voorinstelling aan.
+- **Losse functies aanzetten.** Daarnaast kan de salesmanager of beheerder per gebruiker losse functies aan- of uitzetten, bijvoorbeeld een Beginner die al wel zelf leads mag importeren. Het scherm toont dan "Beginner + 2 functies".
+- **Het niveau volgt de schakelaars.** Staan alle functies van de volgende voorinstelling aan, dan toont Dealtrace dat niveau; er is geen aparte niveau-instelling naast de schakelaars.
+- **Niet aangezet.** Een functie die niet aanstaat, toont een rustige regel: "Deze functie staat nog niet voor je aan. Je salesmanager kan hem aanzetten." met de knoppen "Lees hoe het werkt" (helpartikel) en "Vraag je salesmanager" (wordt een verzoek bij de salesmanager, F20).
+- **Alles aan**: een organisatie kan in Instellingen kiezen voor "Iedereen ziet alles". Dan staan voor iedereen alle functies uit het pakket aan.
+- **Geen groeipad** (beslissing B19). Dealtrace rekent geen criteria uit, doet geen niveauvoorstellen en toont geen voortgangsbalken. Wanneer iemand een functie krijgt, is een besluit van de salesmanager.
 
-Eén pure functie `shared/functies.ts` bevat de catalogus (sleutel, naam, niveau, pakket, recht, helpartikel) en `beschikbaar()`. Server en client gebruiken hem allebei; de server weigert een endpoint van een functie die niet beschikbaar is (403 met `{functie, reden: 'niveau'|'pakket'|'rol'}`).
+Eén pure functie `shared/functies.ts` bevat de catalogus (sleutel, naam, startniveau, pakket, recht, helpartikel) en `beschikbaar()`. Server en client gebruiken hem allebei; de server weigert een endpoint van een functie die niet beschikbaar is (403 met `{functie, reden: 'pakket'|'rol'|'uit'}`).
 
-### 4.3 Functiematrix per niveau
+### 4.3 Startindeling van de functies per niveau
 
-De kolom "Rol" noemt de minimale rol; leeg betekent iedere gebruiker.
+De kolom "Rol" noemt de minimale rol; leeg betekent iedere gebruiker. Dit is de startindeling (zie 4.1): de founder stelt per sprint vast of een functie zo blijft.
 
 | Feature | Beginner | Gevorderd | Expert | Rol |
 |---|---|---|---|---|
@@ -311,7 +327,7 @@ De kolom "Rol" noemt de minimale rol; leeg betekent iedere gebruiker.
 | F06 Acties | Taken afronden, uitstellen, nieuwe taak | Plus: inzichten beoordelen en omzetten in een taak, bulkacties | Plus: eigen taaksjablonen | |
 | F07 Belblokken | Belblok uitvoeren met de klaargezette bellijst | Belblokken zelf plannen, bellijst samenstellen en ordenen | Vaste blokken per week, eigen vulregels | |
 | F08 Belscripts | Een script kiezen uit de templates; AI vult het per account in | Persoonlijke variant maken (kopie van een template) | Scripts vergelijken op resultaat, varianten testen | Templates maken: salesmanager of beheerder |
-| F09 Agenda en meetings | Afspraken plannen, meetingsoort kiezen, uitkomst vastleggen | Plus: weekritme, afspraken voor een collega plannen | Plus: eigen agenda-indeling en sjablonen | |
+| F09 Agenda en meetings | Afspraken plannen, meetingsoort kiezen, uitkomst vastleggen, overdragen na de eerste afspraak | Plus: weekritme, afspraken voor een collega plannen | Plus: eigen agenda-indeling en sjablonen | |
 | F10 Bezoeken en kansen langs de route | Bezoeken van de dag, kansen langs de route bekijken, bellijst naast de bezoeken | Route plannen, kansen toevoegen aan de dag, periodefilter | Eigen afstands- en kansregels, regiodagen plannen | |
 | F11 Briefings en Pitstop | Briefing lezen vóór een gesprek of bezoek | Briefing opnieuw laten maken, bewerken, delen met een collega | Eigen briefingsoorten | |
 | F12 Campagnes | Taken uit een campagne uitvoeren | Campagne maken uit de acht standaardsoorten, bord, voortgang | Alle soorten, mailreeksen, tussendoelen, Verzender op mandaat B | Activeren boven capaciteit: salesmanager |
@@ -319,52 +335,37 @@ De kolom "Rol" noemt de minimale rol; leeg betekent iedere gebruiker.
 | F14 AI-agents en inzichten | Inzichten lezen | Inzichten beoordelen, bronnen per account aanvullen | Agents instellen binnen het mandaat, eigen onderwerpen voor de Waarnemer | Mandaten: beheerder |
 | F15 Regels | Geen | Regels lezen | Persoonlijke regel maken; teamregels voorstellen | Teamregels: salesmanager |
 | F16 Accountmatrix | Klasse zien | Klasse zetten | Matrix voorstellen | Matrix: beheerder |
-| F17 Pipeline en offertes | Deal zien als hij er is | Deals en offertes maken en opvolgen | Forecast en eigen pipeline-indeling | |
+| F17 Funnel van de prospectreis | Eigen funnel: hoeveel accounts per fase en waar het stokt | Plus: funnel per doelgroep en campagne, conversie en doorlooptijd per fase | Plus: vergelijken van reizen en versies, eigen weergaven | Teamfunnel: salesmanager |
 | F18 Gebieden en regio | Eigen gebied zien | Regio-analyse | Gebieden voorstellen | Gebieden: beheerder |
 | F19 Eigen velden | Waarden invullen | Filteren en sorteren op eigen velden | Eigen velden voorstellen | Definities: beheerder |
 | F20 Manager: controle, analyse, coaching | Eigen resultaten en doelen | Plus: eigen trend en vergelijking met het team | Plus: zelfanalyse met AI-coach | Teamdeel: salesmanager |
-| F21 Helpcenter | Alles lezen; leerpad Beginner | Leerpad Gevorderd | Leerpad Expert | Artikelen beheren: founder en beheerder |
+| F21 Helpcenter | Alles lezen | Alles lezen | Alles lezen | Artikelen beheren: founder en beheerder |
 | F22 Instellingen | Eigen profiel en meldingen | Plus: eigen belblokken en werkplekindeling | Plus: persoonlijke regels en scripts | Organisatie-instellingen: beheerder |
 | F23 Platformbeheer | Geen | Geen | Geen | Founder |
 | F24 Meldingen, zoeken, mobiel | Alles | Alles | Alles | |
+| F25 Verkoopverhaal en Richting | Lezen; kernzin en belofte in script en concept | Plus: varianten kiezen, huidige leverancier zetten | Plus: varianten, bezwaren en bewijs voorstellen | Inrichten: beheerder en salesmanager |
+| F26 AI-assistent | Chatten binnen de credits van de organisatie | idem | idem | Credits verdelen: beheerder |
 
-### 4.4 Het groeipad
-
-Dealtrace stelt een hoger niveau voor zodra de gebruiker eraan toe is; een mens beslist.
-
-| Overgang | Criteria (allemaal, standaardwaarden instelbaar per organisatie) | Wie bevestigt |
-|---|---|---|
-| Beginner naar Gevorderd | minimaal 20 werkdagen actief · minimaal 80 procent van de taken afgerond op de dag zelf over de laatste 4 weken · minimaal 100 uitkomsten vastgelegd · leerpad Beginner afgerond (5 artikelen, zie F21) | Salesmanager |
-| Gevorderd naar Expert | minimaal 60 werkdagen als Gevorderd · minimaal 2 eigen campagnes afgerond met een uitkomst · conversie prospect naar afspraak minimaal op teamgemiddelde · leerpad Gevorderd afgerond | Salesmanager |
-| Terug naar een lager niveau | alleen handmatig, met een reden; nooit automatisch | Salesmanager of beheerder |
-
-Werking:
-
-1. Een nachtelijke job (`niveauVoorstel`, pure functie plus telling uit de activiteitenlog) bepaalt per gebruiker of de criteria gehaald zijn.
-2. Is dat zo, dan krijgt de salesmanager een inzicht "Sanne is klaar voor Gevorderd" met de cijfers; knoppen "Verhoog niveau", "Nog niet" (met reden, voorstel komt na 20 werkdagen terug).
-3. De gebruiker zelf ziet in zijn profiel "Jouw niveau" met de voortgang per criterium (balkjes) en de knop "Vraag het volgende niveau aan" (wordt een taak voor de salesmanager).
-4. Na een verhoging krijgt de gebruiker een welkomstvenster met de drie belangrijkste nieuwe functies en het leerpad van het nieuwe niveau; de nieuwe menu-items hebben één week de pil "Nieuw".
-
-### 4.5 Hoe het niveau zichtbaar is
+### 4.4 Hoe het niveau zichtbaar is
 
 | Plek | Beginner | Gevorderd | Expert |
 |---|---|---|---|
-| Zijbalk | 10 items, groep "Nog te ontgrendelen" ingeklapt (zie 6.1) | 14 items | 15 items (alle) |
+| Zijbalk | 10 items, groep "Nog niet aangezet" ingeklapt (zie 6.1) | 14 items | 15 items (alle) |
 | Paginakop | primaire knop, "Hulp", subtitel met één zin uitleg over wat je hier doet | plus werkbalk met Weergave en Filters | plus Sortering, opgeslagen weergaven, Download; subtitel met de stand van zaken |
 | Flyouts | basisvelden; geavanceerde blokken ingeklapt achter "Meer" | alle velden | alle velden plus herkomst per veld, regelcode en mandaatletter |
 | Taal | volle woorden ("Kwalificatie 3 van 4 ingevuld"), geen interne codes | codes in meta | codes zichtbaar |
-| Vergrendelde knop met betekenis op de pagina | secundaire knop met slot-icoon, opent de uitlegflyout (nooit uitgeschakeld zonder uitleg) | idem | n.v.t. |
-| Blok dat later komt | hoogstens één lege staat per pagina onderaan met kicker "Bij Gevorderd" | idem | n.v.t. |
-| Gebruikersblok in de zijbalk | "ACCOUNTMANAGER · BEGINNER" | "ACCOUNTMANAGER · GEVORDERD" | "ACCOUNTMANAGER · EXPERT" |
-| Vandaag | kaart "Jouw niveau" onderaan met voortgang naar het volgende niveau | idem | geen kaart |
+| Knop van een functie die niet aanstaat | secundaire knop met slot-icoon, opent de uitlegflyout (nooit uitgeschakeld zonder uitleg) | idem | n.v.t. |
+| Blok van een functie die niet aanstaat | hoogstens één lege staat per pagina onderaan met kicker "Nog niet aangezet" | idem | n.v.t. |
+| Gebruikersblok in de zijbalk | "ACCOUNTMANAGER · BEGINNER" (of "BEGINNER + 2") | "ACCOUNTMANAGER · GEVORDERD" | "ACCOUNTMANAGER · EXPERT" |
 
-Ontwerpregels: niveau en vergrendeling gebruiken alleen bestaande tokens (`--wit-30`, `--wit-55`, `--muted`, gestippelde pil), nooit rood of geel. Een niveau is geen rang: het woord verschijnt alleen in het gebruikersblok, het profiel en bij de salesmanager, niet naast een naam in lijsten. Na een verhoging volgt een toast ("Gevorderd ontgrendeld. Leadgenerator en Prospectplanning staan nu in je menu.") en de nieuwe items houden één week de pil "nieuw". In Mijn instellingen kan een gebruiker met "Toon minder" zelf een niveau lager kiezen, nooit hoger.
+Ontwerpregels: niveau en "niet aangezet" gebruiken alleen bestaande tokens (`--wit-30`, `--wit-55`, `--muted`, gestippelde pil), nooit rood of geel. Een niveau is geen rang: het woord verschijnt alleen in het gebruikersblok, het profiel en bij de salesmanager, niet naast een naam in lijsten. Zet de salesmanager een functie aan, dan volgt een toast ("Leadgenerator staat nu voor je aan.") met een link naar het helpartikel, en het nieuwe menu-item houdt één week de pil "nieuw". In Mijn instellingen kan een gebruiker met "Toon minder" zelf functies verbergen, nooit extra aanzetten.
 
-### 4.6 Gegevens
+### 4.5 Gegevens
 
-- `users.niveau` (`beginner` | `gevorderd` | `expert`), `users.data.werkplek` (`binnendienst` | `buitendienst` | `hybride`), `users.data.ontgrendeld[]` (functiesleutels), `users.data.niveauHistorie[] {van, naar, op, door, reden}`.
-- `org_settings.niveaus = { aan: boolean, criteria: {...}, standaardNiveauNieuweGebruiker }`.
-- Audit bij elke wijziging van niveau of ontgrendeling.
+- `users.niveau` (`beginner` | `gevorderd` | `expert`, de gekozen voorinstelling), `users.data.werkplek` (`binnendienst` | `buitendienst` | `hybride`), `users.data.extraAan[]` en `users.data.uitgezet[]` (functiesleutels), `users.data.schakelHistorie[] {functie, aan, op, door, reden?}`.
+- `org_settings.niveaus = { iedereenAlles: boolean, voorinstellingen: {beginner: [...], gevorderd: [...], expert: [...]}, standaardNiveauNieuweGebruiker }`; de voorinstellingen komen uit de functiecatalogus en zijn per organisatie aan te passen door de beheerder.
+- `functie_verzoeken: id, organisation_id, gebruiker_id, functie, status ('open'|'aangezet'|'afgewezen'), reden?, op, besloten_door?`.
+- Audit bij elke wijziging van niveau of schakelaar.
 
 ---
 
@@ -391,7 +392,7 @@ Ontwerpregels: niveau en vergrendeling gebruiken alleen bestaande tokens (`--wit
 | Onderweg | Bezoek 1: Pitstop openen op de telefoon, na afloop uitkomst kiezen en een verslag inspreken of typen | F09, F11 |
 | Tussen bezoeken | Een kans langs de route: onaangekondigd binnenlopen of bellen vanuit de auto (bellijst naast bezoeken), uitkomst vastleggen | F10 |
 | Lunch | Taken van Vandaag op de telefoon afronden, offline als er geen bereik is | F01, F24 |
-| Einde dag | Verslagen nakijken (AI-notulist), offerteaanvraag aanmaken, terugbeltaken naar de binnendienst | F09, F17 |
+| Einde dag | Verslagen nakijken (AI-notulist), eerste afspraken overdragen met briefing, terugbeltaken naar de binnendienst | F09, F17 |
 | Wekelijks | Regiodag plannen voor volgende week met kansen per gebied, weekstart | F10, F18, F20 |
 
 ### 5.3 Salesmanager
@@ -401,7 +402,7 @@ Ontwerpregels: niveau en vergrendeling gebruiken alleen bestaande tokens (`--wit
 | Maandag 08:30 | Weekoverleg met een vooraf gevulde agenda: tempo per persoon, prospectmix, campagnes, geparkeerde accounts, coachingpunten | F20 |
 | Dagelijks (10 min) | Controle: wie ligt achter op norm, welke taken blijven liggen, welke campagnes lopen achter, welke concepten wachten op goedkeuring | F20 |
 | Wekelijks | Eén-op-één per accountmanager: coachingkaart met cijfers, beluisterde of gelezen gesprekken, afspraken | F20 |
-| Maandelijks | AI-verbetervoorstel per doelgroep beoordelen, scripts vergelijken, niveauvoorstellen, nieuwe campagnes | F05, F08, F20 |
+| Maandelijks | AI-verbetervoorstel per doelgroep beoordelen, scripts vergelijken, de funnel per doelgroep bespreken, nieuwe campagnes | F05, F08, F17, F20 |
 | Per kwartaal | Doelgroepen en reizen herzien, prospectmix en normen bijstellen | F05, F13 |
 
 ---
@@ -420,7 +421,7 @@ De zijbalk is de schil van het designsysteem (zwart, 240 px, inklapbaar naar 64 
 | Werk | Belblokken | `/belblokken` | ● | ● | ● | |
 | Werk | Bezoeken | `/bezoeken` | ● | ● | ● | |
 | Werk | Campagnes | `/campagnes` | meedoen | ● | ● | |
-| Werk | Pipeline | `/pipeline` | | ● | ● | |
+| Werk | Funnel | `/funnel` | | ● | ● | |
 | Prospects | Prospects | `/prospects` | ● | ● | ● | |
 | Prospects | Contacten | `/contacten` | ● | ● | ● | |
 | Prospects | Leadgenerator | `/leadgenerator` | | ● | ● | |
@@ -439,7 +440,7 @@ De zijbalk is de schil van het designsysteem (zwart, 240 px, inklapbaar naar 64 
 
 Een Beginner heeft 10 items en de hele navigatie past zonder scrollen op 900 px hoogte. Het werkplekprofiel bepaalt de volgorde binnen "Werk": binnendienst zet Belblokken boven Bezoeken, buitendienst andersom.
 
-**Vergrendelde items.** Wat boven het niveau ligt, staat niet tussen de gewone items maar samen in één ingeklapte groep onderaan de navigatie: "Nog te ontgrendelen" met een grijze teller. Uitgeklapt staan de items met `aria-disabled="true"`, tekst `--wit-30` en een slot-icoon van 14 px; ze blijven focusbaar. Een klik opent een smalle flyout (480 px) met kicker "Gevorderd · vergrendeld", "Wat het doet" (twee zinnen), "Wanneer het opengaat" (de criteria uit 4.4 als bewijsregels met voortgang), "Tot die tijd" (wat Dealtrace alvast voor je doet) en de knop "Vraag je salesmanager". De groep onthoudt per gebruiker of hij open of dicht staat. Een directe link naar een vergrendelde pagina toont de paginakop met kicker "Vergrendeld" en dezelfde uitleg; nooit een foutpagina.
+**Items die niet aanstaan.** Wat niet voor je aanstaat, staat niet tussen de gewone items maar samen in één ingeklapte groep onderaan de navigatie: "Nog niet aangezet" met een grijze teller. Uitgeklapt staan de items met `aria-disabled="true"`, tekst `--wit-30` en een slot-icoon van 14 px; ze blijven focusbaar. Een klik opent een smalle flyout (480 px) met kicker "Gevorderd · nog niet aangezet", "Wat het doet" (twee zinnen), "Tot die tijd" (wat Dealtrace alvast voor je doet), "Lees hoe het werkt" en de knop "Vraag je salesmanager" (een verzoek om de functie aan te zetten). De groep onthoudt per gebruiker of hij open of dicht staat. Een directe link naar een pagina die niet aanstaat, toont de paginakop met kicker "Nog niet aangezet" en dezelfde uitleg; nooit een foutpagina.
 
 ### 6.2 Mobiel
 
@@ -447,10 +448,11 @@ Op een telefoon (kleiner dan 768 px) vervangen een compacte kop en een onderbalk
 
 ### 6.3 Globale elementen
 
-- **Globale zoek** (toets `/` of Ctrl K): prospects, contacten, campagnes, helpartikelen; resultaten gegroepeerd, vergrendelde functies met slot.
+- **Globale zoek** (toets `/` of Ctrl K): prospects, contacten, campagnes, helpartikelen; resultaten gegroepeerd, functies die niet aanstaan met slot.
 - **Snelle acties** in de paginakop van Vandaag: "+ Taak", "+ Afspraak", "+ Prospect", "AI".
 - **Meldingen**: bel onderaan de zijbalk met teller (F24).
 - **Hulp**: knop "Hulp" in elke paginakop; opent het artikel van dat scherm in een flyout (F21).
+- **AI-assistent**: knop "Vraag AI" in elke paginakop; opent de chat met de context van het scherm, binnen de credits van de organisatie (F26).
 - **Organisatie-wissel**: alleen voor de founder, bovenaan de zijbalk, met een gele banner zolang hij in een andere organisatie is ingestapt (F23).
 
 ---
@@ -463,7 +465,9 @@ Op een telefoon (kleiner dan 768 px) vervangen een compacte kop en een onderbalk
 |---|---|---|---|---|---|
 | **1. Vinden en kwalificeren** | Van naam naar gekwalificeerde prospect | Lead uit de leadgenerator, import, CRM, KvK, Datacollectief, beurs, referral of signaal | Gebeurtenis `gekwalificeerd` | Leadronde, dossier met bewijs, buying committee, klasse, BAND, kanaalkeuze | Dagen tot dossier compleet, kwalificatiegraad |
 | **2. Bewerken op ritme** | Van gekwalificeerd naar gesprek | `gekwalificeerd` | `eerste-afspraak-gepland` | Belblokken met script, campagnes, pogingen volgens het hercontactritme, bezoeken en kansen langs de route, winpunt in elke boodschap, parkeren en terughalen | Pogingen tot afspraak, conversie naar afspraak |
-| **3. Verbinden** | Van gesprek naar klant | `eerste-afspraak-gepland` | `deal-gewonnen` (overdracht) of `deal-verloren` | Meetings van een vaste soort met uitkomst, offerte en opvolging, BAND compleet, bezwaren | Afspraak naar offerte, offerte naar klant, doorlooptijd |
+| **3. Verbinden** | Van geplande naar gehouden eerste afspraak, en de overdracht | `eerste-afspraak-gepland` | `overgedragen` (na een gehouden eerste afspraak met vervolg) of nee met reden | Afspraak bevestigen, briefing en Pitstop, no-show opvangen, eerste afspraak houden en afronden met uitkomst en verslag, overdracht naar DealDrive, het CRM of een collega | Geplande naar gehouden afspraken (no-show), gehouden naar overgedragen, doorlooptijd |
+
+Dealtrace stopt bij de eerste afspraak (B17). Deals, offertes en de klantrelatie horen in DealDrive of het CRM; de funnel van de prospectreis (F17) laat zien hoe accounts door deze drie fases stromen.
 
 ### 7.2 Statusmachine per account
 
@@ -477,12 +481,12 @@ lead overgenomen / import
       │ nieuw │ ─────────────▶ │ in reis │ ───────────────────────────────▶ │ wachtend │
       └───────┘                └─────────┘ ◀─────────────────────────────── └──────────┘
           │                      │   │       terugkomdatum of nieuwe aanleiding
-     niet geschikt               │   │ afspraak, offerte, onderhandeling
+     niet geschikt               │   │ eerste afspraak gepland
           ▼                      │   ▼
-      ┌───────┐  nee met reden   │ ┌──────────┐  deal gewonnen  ┌───────┐
-      │  nee  │ ◀────────────────┘ │ gescoord │ ──────────────▶ │ klant │ ──▶ overdracht
-      └───────┘ ◀───────────────── └──────────┘                 └───────┘
-                   deal verloren
+      ┌───────┐  nee met reden   │ ┌──────────┐  gehouden, vervolg  ┌──────────────┐
+      │  nee  │ ◀────────────────┘ │ gescoord │ ──────────────────▶ │ overgedragen │ ──▶ DealDrive, CRM of collega
+      └───────┘ ◀───────────────── └──────────┘                     └──────────────┘
+              geen vervolg na de eerste afspraak
 ```
 
 | Status | Betekenis | Komt erin door | Gaat eruit door |
@@ -491,8 +495,8 @@ lead overgenomen / import
 | `in reis` | Wordt actief bewerkt | kwalificatie, terugkomst uit wachtend of nee | laatste poging zonder reactie, nee, afspraak |
 | `wachtend` | Geparkeerd met terugkomdatum, of gepauzeerd tot een datum | laatste poging zonder resultaat, "gesproken, later" | terugkomdatum, nieuwe aanleiding |
 | `nee` | Afgewezen met reden en afkoelperiode per kanaal | uitkomst "niet geschikt" of "geen interesse" | terugkomdatum of nieuwe aanleiding |
-| `gescoord` | Eerste afspraak tot en met onderhandeling | `eerste-afspraak-gepland` | `deal-gewonnen` of `deal-verloren` |
-| `klant` | Deal gewonnen, overgedragen | `deal-gewonnen`, handmatige promotie | n.v.t.; een verloren klant komt terug als winback-kandidaat |
+| `gescoord` | Eerste afspraak gepland, nog niet gehouden of nog niet afgerond | `eerste-afspraak-gepland` | `overgedragen`, nee (geen vervolg), of terug naar in reis (no-show of geannuleerd) |
+| `overgedragen` | Eerste afspraak gehouden met vervolg en overgedragen | `overgedragen` | n.v.t.; komt het account later terug uit DealDrive of het CRM (verloren deal, slapende klant), dan via een terugkomregel als winback-kandidaat |
 
 Vaste redenen voor nee: "Geen behoefte", "Tevreden met huidige leverancier", "Geen budget", "Verkeerd moment", "Niet de beslisser", "Niet geschikt", "Anders" (toelichting verplicht). Standaard afkoelperiode per kanaal: bellen 90 dagen, mail 60, LinkedIn 90, WhatsApp 180, bezoek 180, kaart 365; instelbaar per organisatie.
 
@@ -512,7 +516,7 @@ Elke taak, elk belgesprek en elk bezoek wordt afgerond met een uitkomst. De uitk
 
 Regels: idempotent op `(itemId, stap)` zodat offline afronden bij synchronisatie niet dubbel telt; een account zit nooit in twee ritmes; een poging overslaan kan niet zonder uitkomst; elke taak toont "poging n van m", het kanaal, wat er de vorige keer gebeurde en het winpunt.
 
-**Terugkomregel na nee, verlies of slapen (F25, ADR-018).** Een nee, een geparkeerd account of een verloren deal krijgt naast de reden een terugkomregel uit het verkoopverhaal: terugkomdatum, kanaal, rol en aanpak ("Terug op 14 januari 2027 · Beslissing uitgesteld · e-mail met nieuwe aanleiding"). De afkoelperiode per kanaal blijft de ondergrens: een terugkomdatum binnen de afkoelperiode schuift op naar het einde ervan. Op de terugkomdatum start de motor het hercontactritme uit de regel; de binnendienst krijgt telefoon en mail, de buitendienst een bezoek op de eerstvolgende regiodag.
+**Terugkomregel na nee, verlies of slapen (F25, ADR-018).** Een nee, een geparkeerd account of een account dat uit DealDrive of het CRM terugkomt (verloren deal, slapende klant) krijgt naast de reden een terugkomregel uit het verkoopverhaal: terugkomdatum, kanaal, rol en aanpak ("Terug op 14 januari 2027 · Beslissing uitgesteld · e-mail met nieuwe aanleiding"). De afkoelperiode per kanaal blijft de ondergrens: een terugkomdatum binnen de afkoelperiode schuift op naar het einde ervan. Op de terugkomdatum start de motor het hercontactritme uit de regel; de binnendienst krijgt telefoon en mail, de buitendienst een bezoek op de eerstvolgende regiodag.
 
 ### 7.4 Vijf lagen
 
@@ -553,7 +557,7 @@ DealDrive heeft een mobiele assistent, Dex, als **aparte build** uit dezelfde re
 2. **Eén rekenkern.** Focus, tip, signaal, dagstapels, kansen, route en recap komen uit pure functies in `shared/` en rekenen op telefoon en laptop gegarandeerd hetzelfde.
 3. **Eén schrijflaag met offline wachtrij.** Elke handeling onderweg gaat via `POST /api/sync/mutations` met een idempotentiesleutel; offline staat hij in IndexedDB met zichtbare status.
 4. **Mijn is eigenaar.** Alle stapels tonen standaard het werk van de ingelogde gebruiker; de teamweergave is een aparte keuze voor de salesmanager.
-5. **Eén venster per soort.** Een account, contact, afspraak, taak of deal opent op de telefoon als schuifvenster van onderen en op de laptop als flyout rechts; het is dezelfde component met dezelfde velden.
+5. **Eén venster per soort.** Een account, contact, afspraak of taak opent op de telefoon als schuifvenster van onderen en op de laptop als flyout rechts; het is dezelfde component met dezelfde velden.
 6. **De duim beslist.** Alles wat je onderweg vaak doet, zit in de onderste helft van het scherm; de kop is alleen voor zoeken, inspreken en meldingen.
 7. **Rijden is geen werkmoment.** Tijdens het rijden leest Dealtrace voor en luistert het; er is geen scherm dat aandacht vraagt. Bellen gaat via de carkit van het toestel.
 8. **Push vanaf het begin.** Herinneringen, de dagstart op een zelfgekozen tijd, de briefing 30 minuten voor een afspraak en een signaal met hoge urgentie komen als pushmelding, met stille uren.
@@ -593,7 +597,7 @@ Het designsysteem kent onder 768 px alleen een icoonstrook van 64 px. Op een tel
 
 `/bellen` is de enkele bellijst van vandaag (belacties uit de motor, terugbelverzoeken en de bellijst naast je bezoeken); `/belblokken` is het blok met belmodus en script (F07).
 
-**Meer** opent een schuifvenster met de overige items uit de zijbalk van je niveau, in dezelfde groepen en volgorde als op de laptop (6.1): Agenda, Acties of Bezoeken (wat niet in de onderbalk staat), Concepten, Inzichten, Campagnes, Pipeline, Richting, Mijn resultaten, Helpcenter, Mijn instellingen, Uitloggen. Vergrendelde items staan onderaan in de ingeklapte groep "Nog te ontgrendelen", net als op de laptop. Beheerpagina's (Instellingen, Platformbeheer) staan er met de toevoeging "Beter op een groot scherm" en openen wel.
+**Meer** opent een schuifvenster met de overige items uit de zijbalk van je niveau, in dezelfde groepen en volgorde als op de laptop (6.1): Agenda, Acties of Bezoeken (wat niet in de onderbalk staat), Concepten, Inzichten, Campagnes, Funnel, Richting, AI-assistent, Mijn resultaten, Helpcenter, Mijn instellingen, Uitloggen. Items die niet aanstaan, staan onderaan in de ingeklapte groep "Nog niet aangezet", net als op de laptop. Beheerpagina's (Instellingen, Platformbeheer) staan er met de toevoeging "Beter op een groot scherm" en openen wel.
 
 ### 8.5 De schermen op 390 px
 
@@ -607,7 +611,7 @@ Doel: in één blik zien waar de dag knelt, en de eerste zet doen zonder te scro
 2. **Focuskaart** (de eerste zet): tijd, wat, waarom in één zin, en één primaire knop ("Navigeer naar Bakker Bouw", "Bel Marieke de Vries", "Leg het verslag vast"). Uit `kiesFocus` (8.13).
 3. **Signaal** (Gevorderd en Expert): één kaart met bron, bewijs in één regel en de knoppen "Gedaan", "Later", "Weg".
 4. **Telstrip**: vier tegels in één rij van 72 px hoog: Afspraken, Bellen, Acties, Kansen, met aantal en rood als er achterstand is. Een tik springt naar de stapel.
-5. **Stapels** met de handeling in de regel: afspraken (met "Navigeer" en "Pitstop"), belacties (met "Bel" en "Uitkomst"), acties (met "Afgehandeld"), deals zonder vervolgstap (met "Vervolgstap toevoegen").
+5. **Stapels** met de handeling in de regel: afspraken (met "Navigeer" en "Pitstop"), belacties (met "Bel" en "Uitkomst"), acties (met "Afgehandeld"), eerste afspraken die nog bevestigd of overgedragen moeten worden (met "Bevestig" of "Overdragen").
 6. **Kansen in je dag**: hooguit drie, met "+ Tussenstop" (buitendienst) of "Bel" (binnendienst), en "Alle kansen →".
 7. Na 16:00 verschijnt bovenaan de kaart **Recap** ("2 gesprekken zonder verslag").
 
@@ -634,9 +638,9 @@ Doel: na een bezoek binnen een minuut de uitkomst en het verslag vastleggen, bij
 Opent als schuifvenster vanuit de route, de aankomstmelding (8.6) of de focuskaart.
 
 1. Kop: account en tijd ("Bakker Bouw · 10:45 tot 11:30").
-2. **Uitkomst**: de knoppen van de meetingsoort (bijvoorbeeld "Interesse, vervolg", "Offerte gevraagd", "Geen interesse", "Andere contactpersoon") als grote tegels in twee kolommen.
+2. **Uitkomst**: de knoppen van de meetingsoort (bijvoorbeeld "Vervolg afgesproken", "Later terugkomen", "Geen interesse", "Andere contactpersoon") als grote tegels in twee kolommen.
 3. **Verslag**: één groot veld met de microfoonknop als primaire invoer ("Spreek je verslag in"), typen als terugval, en "Foto" (whiteboard, visitekaartje, situatie).
-4. **Volgende stap**: voorgesteld door de reis of uit het verslag ("Offerte sturen voor 21 okt"), aan te passen met datum en soort.
+4. **Volgende stap en overdracht**: bij een eerste afspraak met vervolg de vraag "Overdragen?" met DealDrive, het CRM of een collega (F17); anders de volgende stap uit de reis of het verslag ("Terugbellen op 21 okt"), aan te passen met datum en soort.
 5. **Nieuwe contactpersoon** (ingeklapt): naam, functie, telefoon, of "Scan visitekaartje".
 6. Plakkende knop "Bewaar bezoek".
 
@@ -663,7 +667,7 @@ Doel: alles wat je onderweg over een prospect nodig hebt op één scherm, met é
 2. **Waarom nu**: de reden van de motor of het sterkste inzicht, met bron.
 3. **Contacten**: per persoon rol, telefoon (tikbaar), mail; de beslisser bovenaan.
 4. **Laatste drie contactmomenten** met kanaal, datum en uitkomst.
-5. **Open taken en deals**.
+5. **Open taken en afspraken**.
 6. **Pitstop** (ingeklapt): de briefing in vijf regels, met "Lees voor".
 7. Tabs onder de vouw: Tijdlijn, Inzichten, Eigen velden, Details.
 8. Plakkende actiebalk: "Bellen", "Mail", "WhatsApp", "Navigeer".
@@ -672,7 +676,7 @@ Doel: alles wat je onderweg over een prospect nodig hebt op één scherm, met é
 
 Doel: één zin wordt één concept op het juiste account, en na goedkeuren een echte taak, notitie of afspraak (in Dex bleef het een concept; in Dealtrace niet).
 
-Opent vanuit de microfoon in de kop. Staat je op een accountkaart of in een bezoek, dan is dat account al gekozen. Je zegt bijvoorbeeld "Bel Marieke volgende week dinsdag over de offerte" of "Noteer dat de DGA in september terug is". Dealtrace toont het concept (soort, account, persoon, titel, datum, checks) met "Bewaar" en "Aanpassen". Bij twijfel over het account vraagt het welke van twee namen je bedoelt.
+Opent vanuit de microfoon in de kop. Staat je op een accountkaart of in een bezoek, dan is dat account al gekozen. Je zegt bijvoorbeeld "Bel Marieke volgende week dinsdag over de projectschouw" of "Noteer dat de DGA in september terug is". Dealtrace toont het concept (soort, account, persoon, titel, datum, checks) met "Bewaar" en "Aanpassen". Bij twijfel over het account vraagt het welke van twee namen je bedoelt.
 
 Tikken: microfoon (1), praten, "Bewaar" (2).
 
@@ -723,9 +727,9 @@ Een buitendienstdag moet ook lukken met een uur zonder bereik.
 **Wat vooraf op de telefoon staat.** Bij het openen van de app met verbinding, en elke ochtend om 06:00 als de app in de achtergrond mag verversen, haalt Dealtrace het **dagpakket** op:
 
 - Vandaag en morgen: afspraken, taken, belacties, kansen langs de route en de route met reistijden.
-- De accountkaarten (inclusief contacten, laatste tien contactmomenten, open taken, deals, Pitstop) van alle accounts in de route van vandaag en morgen, van de kansen langs de route en van de bellijst.
+- De accountkaarten (inclusief contacten, laatste tien contactmomenten, open taken en afspraken, Pitstop) van alle accounts in de route van vandaag en morgen, van de kansen langs de route en van de bellijst.
 - De belscripts die je gebruikt, de meetingsoorten met uitkomsten, de redenen voor nee.
-- De helpartikelen van het leerpad van je niveau.
+- De helpartikelen van de functies die voor je aanstaan.
 - De statische kaart van de route van vandaag.
 
 Doel: hooguit 5 MB per dag (zonder foto's). De voortgang staat in Mijn instellingen onder "Offline": "Klaar voor vandaag · 23 accounts · 3,1 MB · bijgewerkt 07:42".
@@ -793,9 +797,9 @@ Het niveau bepaalt wat beschikbaar is (4.2); de mobiele schil volgt dat zonder i
 
 **Binnendienst.** Werkt vooral op de laptop. Op de telefoon: Vandaag met de belstapel bovenaan, de bellijst en belblokken met "Hoe ging het?", acties, de compacte accountkaart, concepten goedkeuren, en "Klaarzetten voor buitendienst" vanaf de accountkaart. Werkplek Kantoor, dus zonder route en zonder "In de buurt".
 
-**Salesmanager.** Op de telefoon: Team (wie heeft gesprekken zonder verslag, welke deals zonder vervolg, wie loopt achter op het ritme), coachingsnotities voorbereiden en de coachingskaart tijdens een rit naast een verkoper (F20), meldingen en concepten van het team die op zijn goedkeuring wachten. Analyse met grafieken staat er alleen-lezen, met "Open op laptop" voor het filterwerk.
+**Salesmanager.** Op de telefoon: Team (wie heeft gesprekken zonder verslag, welke eerste afspraken nog niet zijn overgedragen, wie loopt achter op het ritme), coachingsnotities voorbereiden en de coachingskaart tijdens een rit naast een verkoper (F20), meldingen en concepten van het team die op zijn goedkeuring wachten. Analyse met grafieken staat er alleen-lezen, met "Open op laptop" voor het filterwerk.
 
-**Bewust niet op de telefoon** (wel te openen, met de melding "Beter op een groot scherm"): Instellingen, Platformbeheer, de reiseditor, de regeleditor, import en de leadgenerator in bulk, campagnes opzetten, offertes opbouwen.
+**Bewust niet op de telefoon** (wel te openen, met de melding "Beter op een groot scherm"): Instellingen, Platformbeheer, de reiseditor, de regeleditor, import en de leadgenerator in bulk, campagnes opzetten.
 
 ### 8.13 Hergebruik uit Dex en DealDrive
 
@@ -814,7 +818,7 @@ Het niveau bepaalt wat beschikbaar is (4.2); de mobiele schil volgt dat zonder i
 | `/api/dex/*` (dagactie, kaart, aanmaken, verslag-extract, signaalstand) | `POST /api/sync/mutations` en de feature-endpoints | Geen tweede schrijfweg |
 | `nuxt.config.ts` hook `pages:extend` met `DEALDRIVE_APP` | vervalt | Eén build |
 
-De getallen uit de Dex-kern zijn het startpunt en per organisatie instelbaar: werkdag 08:00 tot 18:00, een gat telt vanaf 75 minuten, omweg hooguit 25 km of 20 minuten, contractvenster 90 dagen, deal zonder vervolg na 7 dagen stilte, koopsignaal hooguit 14 dagen oud met relevantie 60, dagplafond 4 signaalbesluiten, stilte na Weg 1 dag, Later 3 dagen, Gedaan 30 dagen, vervolghorizon 90 dagen.
+De getallen uit de Dex-kern zijn het startpunt en per organisatie instelbaar: werkdag 08:00 tot 18:00, een gat telt vanaf 75 minuten, omweg hooguit 25 km of 20 minuten, contractvenster 90 dagen (voor bestaande klanten in de route), account in reis zonder volgende stap na 7 dagen stilte, koopsignaal hooguit 14 dagen oud met relevantie 60, dagplafond 4 signaalbesluiten, stilte na Weg 1 dag, Later 3 dagen, Gedaan 30 dagen, vervolghorizon 90 dagen.
 
 ### 8.14 Technisch
 
@@ -919,7 +923,7 @@ Schermteksten staan tussen aanhalingstekens en zijn de bedoelde tekst in de app.
 | F14 | AI-agents voor interne en externe bronnen | iedereen (lezen), expert (inrichten) | 10 |
 | F15 | Activity selling-regels (de motor) | beheerder, salesmanager | 4 |
 | F16 | Accountmatrix en ritmes | beheerder | 4 |
-| F17 | Pipeline, deals en offertes | gevorderd | 9 |
+| F17 | Funnel van de prospectreis | iedereen | 9 |
 | F18 | Gebieden en regio-analyse | buitendienst, beheerder | 8 |
 | F19 | Eigen velden | beheerder | 2 |
 | F20 | Salesmanager: controle, analyse en coaching | salesmanager | 11 |
@@ -928,6 +932,7 @@ Schermteksten staan tussen aanhalingstekens en zijn de bedoelde tekst in de app.
 | F23 | Platformbeheer in de app (geen aparte HQ) | founder | 1 en 12 |
 | F24 | Meldingen, zoeken, mobiel en offline | iedereen | 1 en 12 |
 | F25 | Verkoopverhaal en Richting (SalesDNA-sublagen) | iedereen (lezen), beheerder en salesmanager (inrichten) | 3 en 11 |
+| F26 | AI-assistent: chatten met AI, credits per abonnement | iedereen | 5 en 12 |
 
 ---
 
@@ -948,12 +953,12 @@ Schermteksten staan tussen aanhalingstekens en zijn de bedoelde tekst in de app.
 
 **Opbouw van boven naar beneden**
 
-1. **Kop.** Groet met naam ("Goedemorgen, Sanne."), datum en weeknummer als kicker ("VANDAAG · DINSDAG 13 OKTOBER · WEEK 42"), een samenvattende regel ("6 taken · 3 uit campagnes · koude norm 3 van 5 deze maand · volgende koude actie 10:00"). Rechts "+ Taak" (geel), "+ Afspraak", "+ Prospect", "AI".
+1. **Kop.** Groet met naam ("Goedemorgen, Sanne."), datum en weeknummer als kicker ("VANDAAG · DINSDAG 13 OKTOBER · WEEK 42"), een samenvattende regel ("6 taken · 3 uit campagnes · koude norm 3 van 5 deze maand · volgende koude actie 10:00"). Rechts "+ Taak" (geel), "+ Afspraak", "+ Prospect", "Vraag AI" (F26).
 2. **Aanleiding van de dag.** Eén kaart met het belangrijkste inzicht voor een van jouw accounts (ongelezen, relevantie 85 of hoger, jonger dan 48 uur wint), met bron, citaat en de knoppen "Maak taak" en "Open kaart".
 3. **Drie kolommen.**
    - "TAKEN n": maximaal 8, eerst achterstallig, dan vandaag, dan hoog en urgent; per taak tijd, account, actiesoort als label ("BEL", "MAIL", "LINKEDIN", "BEZOEK", "TAAK"), regel "poging 2 van 5 · vorige: voicemail", winpunt of script, label "AI" als er een concept klaarstaat. "nog N meer →" naar Acties.
    - "AFSPRAKEN n": vandaag, met meetingsoort, plaats of "online", link "Pitstop →".
-   - "PRIO n": maximaal 4: nieuwe aanleidingen (trigger), offertes die op opvolging wachten, geparkeerde accounts die vandaag terugkomen, partnerleads te laat.
+   - "PRIO n": maximaal 4: nieuwe aanleidingen (trigger), eerste afspraken die nog bevestigd of overgedragen moeten worden, geparkeerde accounts die vandaag terugkomen, partnerleads te laat.
 4. **Werkblok** (volgt het werkplekprofiel):
    - Binnendienst: "BELBLOK 10:00 tot 11:00 · 6 gesprekken · 48 min" met "Start belblok" (geel) en "Vul aan".
    - Buitendienst: "BEZOEKDAG · REGIO OOST · 3 bezoeken · 4 kansen langs de route" met "Open route" (geel).
@@ -1007,7 +1012,7 @@ Schermteksten staan tussen aanhalingstekens en zijn de bedoelde tekst in de app.
 | **Import** | Een eigen lijst uit Excel of CSV (beurs, gekochte lijst, netwerk, oude offertes) | Bestaande lijsten in één keer binnenhalen | Gevorderd |
 | **CRM-koppeling** | Bestaande klanten en prospects uit HubSpot, Salesforce, Microsoft Dynamics, Pipedrive of AFAS (eerst HubSpot), in twee richtingen | Ontdubbelen tegen het CRM, profiel bepalen, overgenomen leads terugschrijven | 10 |
 
-Een Beginner gebruikt de leadgenerator niet zelf; hij krijgt overgenomen leads van zijn salesmanager of van een automatische ronde als taak op Vandaag. Met een ontgrendeling kan hij wel "Neem over" en "Niet relevant" gebruiken.
+Een Beginner gebruikt de leadgenerator niet zelf; hij krijgt overgenomen leads van zijn salesmanager of van een automatische ronde als taak op Vandaag. Zet de salesmanager die functie voor hem aan, dan kan hij wel "Neem over" en "Niet relevant" gebruiken.
 
 **Route en navigatie:** `/leadgenerator` (groep Prospects). Tabbladen: "Zoeken", "Importeren", "Koppelingen", "Rondes en verbruik".
 
@@ -1139,7 +1144,7 @@ lead_verbruik: organisation_id, maand, soort ('ronde'|'dossier'|'kvk'|'datacolle
 
 #### Functioneel
 
-**Kern.** Een account is een bedrijf. Prospect of klant is een eigenschap, geen aparte tabel en geen aparte route; promoveren is een veldwijziging met audit. De prospectlijst is voor de binnendienst de bellijst en voor de buitendienst de selectie per regio; de accountkaart is het dossier voor en na elk gesprek.
+**Kern.** Een account is een bedrijf. Prospect of klant is een eigenschap, geen aparte tabel en geen aparte route; klanten komen uit DealDrive of het CRM (voor kansen langs de route en winback), Dealtrace promoveert zelf niet; een wijziging is een veldwijziging met audit. De prospectlijst is voor de binnendienst de bellijst en voor de buitendienst de selectie per regio; de accountkaart is het dossier voor en na elk gesprek.
 
 | Wie | Wat | Niveau |
 |---|---|---|
@@ -1185,22 +1190,22 @@ Sortering: "Naam", "Laatste contact", "Score", "Klasse", "Dagen in fase", "Afsta
 3. Contactstrip: website, telefoon (bellink), LinkedIn.
 4. Stuurstrip, alleen lezen: "Laatste actie", "Laatste call", "Laatste bezoek", "Reis", "Ritme: poging 3 van 5 · volgende do 16 okt · bellen".
 5. Knoppen: "Info", "Contacten 3", "Briefing" (zwart), "Bel", "+ Taak", "+ Afspraak".
-6. Statstrook: "Open acties" (n achterstallig rood), "Inzichten" (n ongezien), "Open offertes", "Open deals", "Laatste contact", "Eigenaar".
+6. Statstrook: "Open acties" (n achterstallig rood), "Inzichten" (n ongezien), "Eerstvolgende afspraak", "Volgende stap", "Laatste contact", "Eigenaar".
 7. Strook nieuwste aanleiding.
 8. Blokken in drie kolommen: "Dossier" (datum, aantal criteria, kernfeiten, "Dossier vernieuwen · kost 1 dossier"), "Kwalificatie BAND 3/4" (Behoefte, Autoriteit, Noodzaak, Draagvlak, elk met bron), "Ritme" (stand, "Zet nee", "Pauzeer tot", "Verplaats naar reis").
 9. Buying committee (F04).
-10. Tabbladen: "Tijdlijn", "Taken", "Contacten", "Notities", "Deals" (Gevorderd), en achter "Meer": "Inzichten", "E-mails", "Afspraken", "Verslagen", "Campagnes", "Activiteitenlog", "Eigen velden".
+10. Tabbladen: "Tijdlijn", "Taken", "Contacten", "Notities", "Reis", en achter "Meer": "Inzichten", "E-mails", "Afspraken", "Verslagen", "Campagnes", "Activiteitenlog", "Eigen velden".
 11. Mobiel: vaste balk onderin "Bellen" en "Mail".
 
 **Flyout Nieuwe prospect** ("Wie ga je erbij zetten?"): Bedrijfsnaam (verplicht) met direct een dubbelcheck ("Bedoel je Teeuwen Bouw B.V. in Houten? Al in je bestand."), "Zoek in KvK" (vult officiële naam, KvK, SBI, adres, medewerkers), Klasse (voorstel uit medewerkers), adres, telefoon, website, LinkedIn, eigen velden per sectie, doelgroep en reis (voorstel). Knop "Prospect aanmaken"; toast "Teeuwen Bouw staat erbij." en de kaart opent. Een Beginner ziet alleen naam, plaats, telefoon, website en "Zoek in KvK".
 
-**Zet nee**: keuzelijst met de vaste redenen (7.2), toelichting (verplicht bij "Anders"), terugkomdatum (voorstel volgens reden), afkoelperiode per kanaal (voorgevuld). Bevestiging "Teeuwen Bouw staat op nee tot 13 januari 2027."
+**Zet nee**: keuzelijst met de vaste redenen (7.2), bij "Tevreden met huidige leverancier" de vraag "Bij wie?" (keuze uit de concurrenten, F25, wordt "Verloren aan"), toelichting (verplicht bij "Anders"), terugkomdatum (voorstel volgens reden), afkoelperiode per kanaal (voorgevuld). Bevestiging "Teeuwen Bouw staat op nee tot 13 januari 2027."
 
-**Promoveren tot klant**: altijd met bevestiging, wie en wanneer gelogd, gebeurtenis `deal-gewonnen` of `handmatig-klant`, en optioneel overdracht naar DealDrive of het CRM (F17).
+**Overdragen**: na een gehouden eerste afspraak met vervolg; altijd met bevestiging, wie en wanneer gelogd, gebeurtenis `overgedragen`, en overdracht naar DealDrive, het CRM of een collega (F17). Dealtrace maakt geen klant van een prospect; dat gebeurt in DealDrive of het CRM.
 
 **Regels**
 
-- **Score** (0 tot 100, met zichtbare opbouw bij hover en in de Info-flyout): versheid van aanleidingen 30, bereikbaarheid (beslisser met nummer, e-mail) 25, fit met de doelgroep (criteria uit het dossier) 20, momentum (recente uitkomsten, open deal) 15, recentheid van contact 10. Een nieuw account krijgt geen vaste 50 meer maar de berekende waarde.
+- **Score** (0 tot 100, met zichtbare opbouw bij hover en in de Info-flyout): versheid van aanleidingen 30, bereikbaarheid (beslisser met nummer, e-mail) 25, fit met de doelgroep (criteria uit het dossier) 20, momentum (recente uitkomsten, geplande afspraak) 15, recentheid van contact 10. Een nieuw account krijgt geen vaste 50 meer maar de berekende waarde.
 - **Laatste contact**: jongste moment uit verzonden of ontvangen mail, afgeronde bel-, mail-, bericht- en afspraaktaken, gehouden afspraken; open taken en toekomstige afspraken tellen niet; import fabriceert geen contactmoment. Eén functie voor lijst, sortering en kaart.
 - **Primair contact**: eerste beslisser of champion, anders iemand met telefoonnummer, anders de eerste.
 - Verwijderen: alleen salesmanager en beheerder; contactpersonen gaan mee, activiteitenlog blijft met "account verwijderd".
@@ -1243,7 +1248,7 @@ Sortering: "Naam", "Laatste contact", "Score", "Klasse", "Dagen in fase", "Afsta
 - Ontbrekende rollen als grijze vakken met "Nog niet gevonden" en de actie "Zoek via Datacollectief" (Expert) of "Vraag in je volgende gesprek" (zet een vraag in het belscript).
 - "Stel voor met AI" (Gevorderd): de Profielbouwer leest dossier, website, verslagen en ingevoerde LinkedIn-informatie en stelt rollen voor; nooit een naam zonder bron.
 
-**Contactkaart**: portret of initialen, naam, functie, bedrijf (link), telefoon en mobiel als bellink, LinkedIn; stuurstrip van het account met expliciet label ("Account · laatste call"); statstrook; tabbladen "Tijdlijn", "Taken", "Notities", "Afspraken", "Verslagen", "Deals"; voetnoten naar account-items zonder dit contact ("Daarnaast 2 open taken op accountniveau"). Knop "Briefing →" kiest de soort die bij het volgende gesprek past (F11).
+**Contactkaart**: portret of initialen, naam, functie, bedrijf (link), telefoon en mobiel als bellink, LinkedIn; stuurstrip van het account met expliciet label ("Account · laatste call"); statstrook; tabbladen "Tijdlijn", "Taken", "Notities", "Afspraken", "Verslagen"; voetnoten naar account-items zonder dit contact ("Daarnaast 2 open taken op accountniveau"). Knop "Briefing →" kiest de soort die bij het volgende gesprek past (F11).
 
 **Toestemming en voorkeur**: per contact "E-mail" en "WhatsApp" met status onbekend, ja, nee, datum en bron; "Voorkeurskanaal"; "Bel me niet" (blokkeert bellen en zet het nummer op de bel-me-niet-lijst van de organisatie).
 
@@ -1292,7 +1297,7 @@ Sortering: "Naam", "Laatste contact", "Score", "Klasse", "Dagen in fase", "Afsta
 
 **De standaardreis**
 
-Elf fases in vijf hoofdfases, met een accent per fase. De hoofdfase is verplicht bij elke fase, ook in maatwerk, zodat rapportage over reizen heen vergelijkbaar blijft.
+Tien fases in vijf hoofdfases, met een accent per fase; de reis eindigt bij de eerste afspraak en de overdracht (B17). De hoofdfase is verplicht bij elke fase, ook in maatwerk, zodat rapportage over reizen heen vergelijkbaar blijft.
 
 | Hoofdfase | Fase | Pitstop-accent | Verwacht verblijf |
 |---|---|---|---|
@@ -1301,14 +1306,13 @@ Elf fases in vijf hoofdfases, met een accent per fase. De hoofdfase is verplicht
 | Bewerken | Gekwalificeerd | Kennismaken: één reden voor contact, geen pitch. | 10 dagen |
 | Bewerken | Benaderd | Verwijs naar het eerdere contact en stel één vraag. | 21 dagen |
 | Bewerken | In gesprek | Onderscheid benoemen en vergelijkingscriteria opvragen. | 21 dagen |
-| Verbinden | Eerste afspraak | Behoefte, beslisser, noodzaak, draagvlak toetsen. | 14 dagen |
-| Verbinden | Offerte uit | Bezwaren over prijs, voorwaarden en timing voor zijn. | 14 dagen |
-| Verbinden | Onderhandeling | Eén besluitvraag; wat is nodig om te tekenen. | 14 dagen |
-| Klant | Klant | Onboarding: eerste 30 dagen, eerste order. | eindfase |
+| Verbinden | Afspraak gepland | Bevestigen, voorbereiden: wie zit erbij, wat wil je weten, welk winpunt. | tot de afspraak |
+| Verbinden | Afspraak gehouden | Behoefte, beslisser, noodzaak, draagvlak toetsen; vervolg afspreken. | 2 dagen |
+| Overgedragen | Overgedragen | Overdracht met briefing; de deal ontstaat in DealDrive of het CRM. | eindfase |
 | Verloren | Verloren | Heropvolging over drie maanden, zonder druk. | eindfase |
 | Verloren | Geparkeerd | Alleen bij een nieuwe aanleiding. | tot terugkomdatum |
 
-Kleuren per hoofdfase: Vinden zwart, Bewerken geel, Verbinden paars en oranje, Klant groen, Verloren rood en grijs.
+Kleuren per hoofdfase: Vinden zwart, Bewerken geel, Verbinden paars en oranje, Overgedragen groen, Verloren rood en grijs.
 
 Overgangen van de standaardreis (elke fase is bereikbaar en elke fase heeft een uitweg):
 
@@ -1319,15 +1323,15 @@ Overgangen van de standaardreis (elke fase is bereikbaar en elke fase heeft een 
 | Dossier compleet | Gekwalificeerd | Gekwalificeerd |
 | Gekwalificeerd | Eerste contact | Benaderd |
 | Benaderd | Gesprek gevoerd | In gesprek |
-| Gekwalificeerd, Benaderd, In gesprek | Eerste afspraak gepland | Eerste afspraak |
-| Eerste afspraak | Offerte verstuurd | Offerte uit |
-| Offerte uit | Onderhandeling gestart | Onderhandeling |
-| Offerte uit, Onderhandeling | Deal gewonnen | Klant |
-| Eerste afspraak, Offerte uit, Onderhandeling | Deal verloren | Verloren |
+| Gekwalificeerd, Benaderd, In gesprek | Eerste afspraak gepland | Afspraak gepland |
+| Afspraak gepland | Eerste afspraak gehouden | Afspraak gehouden |
+| Afspraak gepland | Niet verschenen of geannuleerd | In gesprek (opnieuw inplannen) |
+| Afspraak gehouden | Overgedragen | Overgedragen |
+| Afspraak gehouden | Geen vervolg (nee met reden) | Verloren |
 | Elke fase in Bewerken | Geparkeerd (laatste poging zonder reactie) | Geparkeerd |
 | Geparkeerd, Verloren | Heropvolging (terugkomdatum of nieuwe aanleiding) | Gekwalificeerd |
 
-Gebeurtenissencatalogus (vast; alleen gebeurtenissen die de app echt meldt zijn kiesbaar): `lead-overgenomen`, `import`, `dossier-compleet`, `gekwalificeerd`, `eerste-contact`, `gesprek-gevoerd`, `eerste-afspraak-gepland`, `offerte-verstuurd`, `onderhandeling-gestart`, `deal-gewonnen`, `deal-verloren`, `geparkeerd`, `heropvolging`, `handmatig`. Elke gebeurtenis heeft een vaste melder in de code (tabel in het technische deel).
+Gebeurtenissencatalogus (vast; alleen gebeurtenissen die de app echt meldt zijn kiesbaar): `lead-overgenomen`, `import`, `dossier-compleet`, `gekwalificeerd`, `eerste-contact`, `gesprek-gevoerd`, `eerste-afspraak-gepland`, `eerste-afspraak-gehouden`, `afspraak-niet-verschenen`, `overgedragen`, `geen-vervolg`, `geparkeerd`, `heropvolging`, `handmatig`. Elke gebeurtenis heeft een vaste melder in de code (tabel in het technische deel).
 
 Startactiviteiten per fase en rol (startset, vuren bij "fase betreden"):
 
@@ -1337,8 +1341,8 @@ Startactiviteiten per fase en rol (startset, vuren bij "fase betreden"):
 | Dossier compleet | Kwalificeren met BAND-vragen in een belblok | Kwalificeren bij bezoek in de regio als het account in een regiodag valt |
 | Gekwalificeerd | Eerste belpoging met het script "Koude acquisitie beslisser" | Kans langs de route op de volgende regiodag, anders een belpoging |
 | Benaderd | Opvolgpoging volgens het hercontactritme | idem |
-| Eerste afspraak | Briefing maken en afspraak bevestigen (mail) | Pitstop klaarzetten op de dag van het bezoek |
-| Offerte uit | Nabellen volgens de offertematrix | Nabellen of bezoek volgens de offertematrix |
+| Afspraak gepland | Briefing maken en afspraak bevestigen (mail) | Pitstop klaarzetten op de dag van het bezoek |
+| Afspraak gehouden | Overdracht klaarzetten als de binnendienst de afspraak maakte | Afspraak afronden met verslag en overdragen binnen 24 uur |
 | Geparkeerd | Geen; terugkomtaak op de terugkomdatum | idem |
 
 **Maatwerkreis per doelgroep**
@@ -1347,10 +1351,10 @@ Een expert of salesmanager maakt een eigen reis, bijvoorbeeld "Installatiebedrij
 
 1. Klik in `/reizen` op "+ Nieuwe reis". Kies "Vanuit de standaardreis", "Vanuit een bestaande reis" of "Leeg".
 2. Tabblad **Doelgroep**: kies een bestaande doelgroep of maak er een (branches, omvang of klassen, gebieden, bron, eigen-veldfilters, uitsluitingen). Een live teller toont "214 accounts vallen in deze doelgroep, waarvan 37 al in een andere reis". Bij overlap met een andere doelgroep kies je de prioriteit.
-3. Tabblad **Fases**: fasekaarten zoals in DealDrive (volgnummer, naam, kleur met voorbeeldpil, omschrijving, Pitstop-accent in een geel blok), aangevuld met hoofdfase (verplicht), verwacht verblijf in dagen, markering "Instapfase" en "Eindfase gewonnen" of "Eindfase verloren". Knoppen ↑ ↓ en ×. "+ Fase" voegt achteraan toe.
+3. Tabblad **Fases**: fasekaarten zoals in DealDrive (volgnummer, naam, kleur met voorbeeldpil, omschrijving, Pitstop-accent in een geel blok), aangevuld met hoofdfase (verplicht), verwacht verblijf in dagen, markering "Instapfase" en "Eindfase overgedragen" of "Eindfase verloren". Knoppen ↑ ↓ en ×. "+ Fase" voegt achteraan toe.
 4. Tabblad **Overgangen**: rijen "vanuit fase + gebeurtenis → naar fase", optioneel met een voorwaarde (klasse, kanaal, rol). "+ Overgang".
 5. Tabblad **Activiteiten**: per fase en per rol de startactiviteiten (actiesoort, belscript, termijn, uitvoerder) en de standaardactiviteiten met verwacht resultaat. Dit zijn regels van de motor met patroon "fase betreden", gebonden aan deze reis.
-6. Tabblad **Ritme**: optioneel een eigen hercontactritme, belmatrix of offertematrix voor deze reis; leeg betekent de instellingen van de organisatie.
+6. Tabblad **Ritme**: optioneel een eigen hercontactritme of belmatrix voor deze reis; leeg betekent de instellingen van de organisatie.
 7. Tabblad **Stroom**: de reis als diagram (kolommen per hoofdfase, fases als blokken, overgangen als pijlen met gebeurtenislabel), met waarschuwingen in rood.
 8. Knop **"Controleer"** toont de validatie; knop **"Droogloop"** laat zien hoeveel accounts in welke fase belanden en hoeveel taken de startactiviteiten bij publicatie maken.
 9. Knop **"Publiceer"** (geel). Een expert-accountmanager kan alleen "Vraag publicatie aan" (wordt een taak voor de salesmanager); de salesmanager publiceert.
@@ -1365,7 +1369,7 @@ Een expert of salesmanager maakt een eigen reis, bijvoorbeeld "Installatiebedrij
 **Validatie (anders dan DealDrive, waar bijna alles mag)**
 
 - Naam verplicht, uniek binnen de reis; geen overgang naar dezelfde fase.
-- Minstens één instapfase, één eindfase gewonnen en één eindfase verloren.
+- Minstens één instapfase, één eindfase overgedragen en één eindfase verloren.
 - Waarschuwing "Fase onbereikbaar" (geen overgang ernaartoe en geen instapfase) en "Doodlopende fase" (geen uitgaande overgang en geen eindfase); publiceren kan pas als beide opgelost zijn.
 - Informatie "Gebeurtenis zonder overgang" per fase.
 - Fase verwijderen vraagt een vervangende fase; regels, overgangen en accounts worden echt omgezet. Nooit meer een kaal technisch id op een kaart.
@@ -1382,7 +1386,7 @@ Een expert of salesmanager maakt een eigen reis, bijvoorbeeld "Installatiebedrij
 
 Onder de bedrijfsnaam een stuurstrip met "Laatste actie", "Laatste call", "Laatste bezoek", "Reis" (naam) en de fasepil in de kleur van de fase, de statuspil en "12 dagen in fase" (oranje als het verwachte verblijf overschreden is). Klik op de fasepil opent de reisgeschiedenis. Knop "Fase corrigeren" (Gevorderd) vraagt fase en reden en meldt gebeurtenis `handmatig`.
 
-**Uit het verkoopverhaal (F25).** Een doelgroep kiest een of meer branches uit het leesmodel (primair eerst) en beantwoordt bij aanmaken "Past deze doelgroep bij onze ambitie?" (ja, deels, nee) met de ambitiezin erbij. Elke SalesDNA-fase koppelt aan een hoofdfase van de reis (`vv_fasen.reis_hoofdfase`); de winpunten van die fase verschijnen in de reisfase. Sjablonen "Overstappers van <concurrent>" en "Niets doen" voor slapende prospects.
+**Uit het verkoopverhaal (F25).** Een doelgroep kiest een of meer branches uit het leesmodel (primair eerst) en beantwoordt bij aanmaken "Past deze doelgroep bij onze ambitie?" (ja, deels, nee) met de ambitiezin erbij. Elke SalesDNA-fase koppelt aan een hoofdfase van de reis (`vv_fasen.reis_hoofdfase`); de winpunten van die fase verschijnen in de reisfase. SalesDNA-fases na de eerste afspraak (soort offerte en klantrelatie) koppelen aan de hoofdfase Overgedragen: hun winpunten staan op `/richting` en in de overdrachtsbriefing, maar Dealtrace bewerkt ze niet (B17). Sjablonen "Overstappers van <concurrent>" en "Niets doen" voor slapende prospects.
 
 #### Technisch
 
@@ -1395,9 +1399,9 @@ doelgroepen: id, organisation_id, naam, status ('concept'|'actief'|'gearchiveerd
 reistemplates: id, organisation_id, naam, doelgroep_id (null = standaardreis), versie int,
                status ('concept'|'actief'|'gepauzeerd'|'gearchiveerd'), is_standaard boolean,
                bron {reisId?, versie?}, eigenaar_id, data jsonb
-  data: fases [{id, hoofdfase, label, omschrijving, volgorde, kleur, accent, verwachtVerblijfDagen?, instap?, eind?: 'gewonnen'|'verloren'}],
+  data: fases [{id, hoofdfase, label, omschrijving, volgorde, kleur, accent, verwachtVerblijfDagen?, instap?, eind?: 'overgedragen'|'verloren'}],
         overgangen [{id, vanFaseId, gebeurtenis, naarFaseId, voorwaarde?, prioriteit}],
-        overschrijvingen {hercontactRitmeId?, belmatrix?, afspraakmatrix?, offertematrix?}
+        overschrijvingen {hercontactRitmeId?, belmatrix?, afspraakmatrix?}
 activiteitstemplates: id, organisation_id, reistemplate_id, fase_id, versie int, data jsonb
   data: naam, rol ('binnendienst'|'buitendienst'|'alle'), actiesoort, belscriptId?, termijnWerkdagen, uitvoerder,
         waarom {bron: 'golden_circle'|'winpunt'|'belofte', ref}, verwachtResultaat {omschrijving, maat, drempel},
@@ -1433,9 +1437,10 @@ reisgeschiedenis: id, organisation_id, account_id, prospectreis_id, versie, van_
 | `eerste-contact` | Eerste afgeronde poging met uitkomst anders dan geen reactie |
 | `gesprek-gevoerd` | Uitkomst "Gesproken" (later, afspraak) |
 | `eerste-afspraak-gepland` | Alleen de eerste afspraak met een prospect (volgende afspraken melden niets) |
-| `offerte-verstuurd` | Offerte op status verstuurd |
-| `onderhandeling-gestart` | Deal naar fase onderhandeling of knop op de deal |
-| `deal-gewonnen`, `deal-verloren` | Deal op gewonnen of verloren, ook via slepen op de kanban |
+| `eerste-afspraak-gehouden` | "Rond af" van de eerste afspraak met een uitkomst (F09) |
+| `afspraak-niet-verschenen` | Eerste afspraak op status niet verschenen of geannuleerd |
+| `overgedragen` | Overdracht naar DealDrive, het CRM of een collega (F17) |
+| `geen-vervolg` | Uitkomst zonder vervolg na de eerste afspraak, met reden voor nee |
 | `geparkeerd`, `heropvolging` | `hercontact.verwerkUitkomst` en de regel `geparkeerd-terug` of `trigger-heractivatie` |
 | `handmatig` | "Fase corrigeren" met verplichte reden |
 
@@ -1572,7 +1577,7 @@ Het Pitstop-accent van de fase gaat mee in elke voorbereiding (belscript-invulli
 **Regels**
 
 - **Rangorde** (één functie voor belblokken, bezoeken en de vuller): open beltaken eerst met `1000 + urgentie × 10 + prioriteit × 20 + score` (urgentie achterstallig 100, vandaag 80, later 50, zonder datum 40; prioriteit urgent 4, hoog 3, middel 2, laag 1); daarna aanvulling zonder beltaak `score + min(20, aanleidingen × 5) + min(15, open taken × 4) + 15 bij hete aanleiding of 5 bij waarschuwing`. Prospects zonder historie doen mee.
-- **Soort stuurt de vulling**: een blok "Koude acquisitie" vult uit prospects in reis met status nieuw of gekwalificeerd, prospectplanning (venster open, nog niet benaderd) en campagnes van soort bellen; "Opvolging en ritme" uit lopende hercontactpogingen en offerte-opvolging; "Gemengd" volgens de ingestelde verhouding. Zo verdringt opvolging nooit het nieuwe werk.
+- **Soort stuurt de vulling**: een blok "Koude acquisitie" vult uit prospects in reis met status nieuw of gekwalificeerd, prospectplanning (venster open, nog niet benaderd) en campagnes van soort bellen; "Opvolging en ritme" uit lopende hercontactpogingen en eerste afspraken die bevestigd moeten worden; "Gemengd" volgens de ingestelde verhouding. Zo verdringt opvolging nooit het nieuwe werk.
 - **Duur per gesprek**: 8 minuten, 12 bij urgent, plus 2 bij score 70 of meer, plus 2 bij meer dan één taak; na 20 gesprekken leert de schatting van de werkelijke gemiddelde duur van de gebruiker.
 - **Marge** een kwart van de gesprekstijd, naar boven afgerond op 5 minuten; blokduur gesprekstijd plus marge naar boven afgerond op een half uur, minimaal 30 minuten.
 - **Wat niet past** schuift naar het eerstvolgende vaste blok; zonder vast blok blijft het in de bellijst.
@@ -1662,7 +1667,7 @@ Een variabele zonder waarde toont in het belpaneel een gele markering "onbekend"
 
 - Kop: kicker "INSTELLINGEN · VERKOOP", titel "Belscripts", subtitel "Standaardscripts die je team kiest in het belpaneel. AI vult per account de aanleiding en het winpunt in." Rechtsboven "+ Nieuw script" (geel) en "Kopieer uit startset".
 - Statkaarten (klikbaar als filter): "Actief" (aantal), "Concept", "Gebruikt in 30 dagen" (gesprekken), "Beste conversie" (naam en percentage).
-- Filters: Doel (Koude acquisitie, Opvolging, Aanleiding, Offerte nabellen, Winback, Afspraak bevestigen, Anders), Reisfase, Doelgroep, Team, Status (Concept, Actief, Gearchiveerd).
+- Filters: Doel (Koude acquisitie, Opvolging, Aanleiding, Winback, Afspraak bevestigen, Anders), Reisfase, Doelgroep, Team, Status (Concept, Actief, Gearchiveerd).
 - Tabel met kolommen: "Naam", "Doel", "Reisfase", "Doelgroepen", "Teams", "Versie", "Status", "Gesprekken 30 d", "Naar afspraak", "Laatst gewijzigd". Rij klikken opent de editor.
 - Lege staat: "Er zijn nog geen belscripts. Begin met de startset van zes scripts." met de knop "Kopieer uit startset".
 
@@ -1703,7 +1708,6 @@ Een variabele zonder waarde toont in het belpaneel een gele markering "onbekend"
 | Langs de receptie | Koude acquisitie | Poortwachterblok, naam van de juiste persoon vragen, terugbelmoment afspreken |
 | Opvolging na mail of LinkedIn | Opvolging | Verwijzen naar het eerdere bericht, één vraag, afspraak |
 | Bellen met een aanleiding | Aanleiding | Trigger als opening (vacature, verhuizing, jubileum, nieuwe directeur), winpunt dat erbij past |
-| Offerte nabellen | Offerte nabellen | Beslismoment, bezwaren over prijs en timing, besluitvraag |
 | Ex-klant terugwinnen | Winback | Wat is er veranderd, erkenning van het vertrek, nieuwe reden |
 
 **Uit het verkoopverhaal (F25).** Nieuwe variabelen `{verhaal.kernzin}`, `{verhaal.branche}`, `{visie.kernzin}`, `{belofte.branche}`, `{waarde}`, `{winpunt.naam}`, `{argument}`, `{bewijs.klant}`, `{concurrent.naam}`, `{concurrent.zoZegJeHet}`. Het blok "Opening" gebruikt de kernzin van de branche (terugval algemeen); "Waarom wij" de belofte; "Bezwaren" krijgt per concurrent een bezwaar uit "Als de klant zegt" met `argumentRef` naar de concurrentregel. Validatie bij publiceren: elke verwezen concurrent en elk winpunt bestaat; een script dat een verdwenen winpunt of concurrent noemt, gaat op "Controleren".
@@ -1792,19 +1796,20 @@ Spraakherkenning die automatisch het volgende blok kiest; automatisch bellen (di
 
 **Routes**: `/agenda` (dag, week, maand; met belblokken, regiodagen en conflicten), `/agenda?weergave=meetings` (de lijst "Wie moet ik spreken").
 
-**Meetingsoorten** (startset; een organisatie kan ze aanpassen in Instellingen): "Kennismaking" (30 minuten, online of bezoek, agenda: aanleiding, situatie, behoefte, vervolg), "Inventarisatie" (60 minuten, bezoek), "Demo" (45 minuten), "Offertebespreking" (45 minuten), "Belafspraak" (15 minuten), "Terugbelafspraak" (10 minuten), "Weekoverleg new business" (intern, 30 minuten). Elke soort heeft doel, duur, standaardlocatie, agendapunten, voorbereiding en **uitkomsten met gevolg**:
+**Meetingsoorten** (startset; een organisatie kan ze aanpassen in Instellingen): "Kennismaking" (30 minuten, online of bezoek, agenda: aanleiding, situatie, behoefte, vervolg), "Inventarisatie" (60 minuten, bezoek), "Demo" (45 minuten), "Belafspraak" (15 minuten), "Terugbelafspraak" (10 minuten), "Weekoverleg new business" (intern, 30 minuten). Elke soort heeft doel, duur, standaardlocatie, agendapunten, voorbereiding en **uitkomsten met gevolg**:
 
 | Soort | Uitkomsten (code: gevolg) |
 |---|---|
-| Kennismaking | `vervolg-inventarisatie`: nieuwe afspraak Inventarisatie binnen 14 dagen · `offerte-aanvraag`: deal in fase Behoefte · `later`: wachtend tot datum · `geen-match`: nee met reden |
-| Inventarisatie | `offerte`: deal naar Voorstel en taak "Offerte maken" · `demo`: afspraak Demo · `geen-vervolg`: nee met reden |
-| Offertebespreking | `akkoord`: deal gewonnen · `aanpassen`: taak "Offerte aanpassen" · `bedenktijd`: belafspraak over 5 werkdagen · `afgewezen`: deal verloren met reden |
+| Kennismaking, Inventarisatie, Demo (als eerste afspraak) | `vervolg`: "Overdragen?" met DealDrive, het CRM of een collega, plus de afgesproken vervolgstap in de overdracht (F17) · `later`: wachtend tot datum met terugkomtaak · `andere-contactpersoon`: nieuw contact en een nieuwe poging · `geen-vervolg`: nee met reden en terugkomregel |
+| Belafspraak, Terugbelafspraak | `afspraak`: eerste afspraak plannen · `later`: wachtend tot datum · `geen-interesse`: nee met reden |
+
+Dealtrace heeft geen meetingsoorten voor offertes of onderhandeling (B17); die afspraken horen in DealDrive of het CRM.
 
 **Plan een afspraak** (flyout, overal dezelfde): Klant, Contactpersoon (beslissers eerst), Meetingsoort (verplicht; vult titel, duur en agenda), Vorm (Bezoek, Online, Telefoon), Datum, Start, Duur, Voor wie (jij of een collega; bij een collega toont de flyout diens vrije momenten en regiodag), Locatie (adres van het account voorgevuld bij bezoek) of meetinglink (Teams of Google Meet via de agendakoppeling), Herinnering (standaard per soort, bijvoorbeeld 15 minuten bij een belafspraak), Aanleiding, Beschrijving. Knop "Plan afspraak". Na opslaan: toast, de afspraakflyout opent, gebeurtenis `eerste-afspraak-gepland` als het de eerste is, en de taak waaruit je plande wordt aan de afspraak gekoppeld en bij afronden gesloten.
 
 **Afspraakflyout**: kicker met soort en status ("KENNISMAKING · GEPLAND"), wanneer, wie, locatie of link, "Klant in context", "Wie zit erbij" (buying committee), "Doel en agenda" (agendapunten van de soort), "Pitstop" (F11), "Verslag". Na afloop: **"Rond af"** (geel) opent één venster met uitkomst (knoppen van de soort), verslag (typen, plakken, inspreken of bestand), per agendapunt "besproken" of "niet besproken" (voorgevuld door de Notulist), volgende stap (voorgesteld uit het gevolg van de uitkomst). Eén handeling zet status, stuurvelden, gevolg, verslag en taken.
 
-**Wie is er aan de beurt?** (Gevorderd): maximaal acht voorstellen uit de ritmes (belmatrix, afspraakmatrix met regiodag, offerte-opvolging) én voor new business: "Eerste gesprek nog niet ingepland" (prospect met contact en positieve uitkomst maar zonder afspraak), "No-show opnieuw inplannen". Per voorstel een vormadvies ("Belafspraak", "Online", "Fysiek · dinsdag Regio Oost", "Taak in belblok") en één knop.
+**Wie is er aan de beurt?** (Gevorderd): maximaal acht voorstellen uit de ritmes (belmatrix, afspraakmatrix met regiodag) én voor new business: "Eerste gesprek nog niet ingepland" (prospect met contact en positieve uitkomst maar zonder afspraak), "No-show opnieuw inplannen". Per voorstel een vormadvies ("Belafspraak", "Online", "Fysiek · dinsdag Regio Oost", "Taak in belblok") en één knop.
 
 **Regels**: een afspraak met status "niet verschenen" of "geannuleerd" geeft een inzicht "Gat in je agenda" met drie vervangende kansen (F10); intern overleg telt nooit als klantcontact; "eerste afspraak" is alleen de eerste niet-geannuleerde afspraak met dat account.
 
@@ -1815,11 +1820,11 @@ Spraakherkenning die automatisch het volgende blok kiest; automatisch bellen (di
 #### Technisch
 
 - `appointments` met `meetingsoort_id`, `uitkomst_code`, `uitkomst_op`, `owner_id`, `gepland_door`, `data { agenda[], verslag {tekst, bron, perAgendapunt[], openVragen[], voorgesteldeUitkomst}, herinnering, externalIds {google?, outlook?} }`.
-- `meetingsoorten: id, organisation_id, slug, naam, type ('klant'|'intern'), duur_min, vorm, data {doel, agenda[{punt, verplicht}], voorbereiding[], uitkomsten [{code, label, gevolg {type, meetingsoortId?, termijnDagen?, faseId?, dealFase?}}]}`.
-- Pure functie `meetingUitkomst(afspraak, soort, code)` geeft de mutaties (afspraak, deal, taak, gebeurtenis, status).
+- `meetingsoorten: id, organisation_id, slug, naam, type ('klant'|'intern'), duur_min, vorm, data {doel, agenda[{punt, verplicht}], voorbereiding[], uitkomsten [{code, label, gevolg {type, meetingsoortId?, termijnDagen?, faseId?, overdragen?}}]}`.
+- Pure functie `meetingUitkomst(afspraak, soort, code)` geeft de mutaties (afspraak, taak, gebeurtenis, status, overdracht).
 - Agendakoppeling (Gevorderd, beheerder schakelt in): Microsoft 365 en Google via OAuth, lezen van bezetting voor adviezen en schrijven van afspraken en belblokken; tokens versleuteld per gebruiker.
 - Endpoints: sync op `appointments`; `POST /api/afspraken/:id/afronden {uitkomst, verslag, agendapunten}`; `GET /api/agenda?van=&tot=&gebruiker=`; `GET /api/agenda/vrij?gebruiker=&regio=`.
-- Acceptatie: de uitkomst "vervolg-inventarisatie" maakt de vervolgafspraak met de juiste soort en termijn; een afspraak die de binnendienst voor de buitendienst plant staat in diens agenda met briefing; de tweede afspraak met een account meldt geen `eerste-afspraak-gepland`.
+- Acceptatie: de uitkomst "vervolg" na een eerste afspraak meldt `eerste-afspraak-gehouden` en vraagt "Overdragen?"; een afspraak die de binnendienst voor de buitendienst plant staat in diens agenda met briefing; de tweede afspraak met een account meldt geen `eerste-afspraak-gepland`.
 - Hergebruik: `agenda.vue`, `AfspraakFlyout.vue`, `NieuweAfspraakFlyout.vue`, `AfspraakAnalyseFlyout.vue`, `useAfspraakDetail.ts`, `useNieuweAfspraak.ts`.
 
 ---
@@ -1848,7 +1853,7 @@ Spraakherkenning die automatisch het volgende blok kiest; automatisch bellen (di
 2. **Kaart en route** (twee kolommen): kaart met genummerde stops op adres (echte geocodering), de route als lijn, startpunt (thuis of kantoor) en eindpunt, volgend bezoek rood pulserend, kansen als gele punten. Rechts de routelijst per dag: tijd en duur, "VOLGENDE", soort, account, contact, adres, reistijd naar de volgende stop, knoppen "Navigeer" (Google Maps of Waze), "Bel", "Pitstop".
 3. **Kansen langs de route** (hoofdblok, direct onder of naast de route):
    - Kop "KANSEN LANGS DE ROUTE · 9", titel "Prospects en kansen vlak bij je bezoeken", filters (Bron, Klasse, "Alleen mijn accounts" standaard aan, "Alleen prospects" standaard aan, Maximale omrijtijd 10, 20, 30 minuten, Aantal 4, 10, alles), schakelaar "Toon ook ongeplande prospects in dit gebied".
-   - Per kans: rangnummer, naam met klasse- en fasepil, **bron** ("Open bezoektaak", "Hete aanleiding: vacature monteur (Indeed, 9 okt)", "Offerte wacht op opvolging", "Bezoekritme achter: klasse A, 120 dagen niet geweest", "Klaargezet door Sanne (binnendienst)", "Ongeplande prospect in doelgroep Bouw"), **afstand en omrijtijd** ("12 min omrijden, tussen stop 2 en 3"), **beste moment** ("45 min vrij tussen 11:30 en 13:00"), primair contact met rol, laatste contact, de **scoreopbouw** bij hover ("bezoektaak +100 · hete aanleiding +20 · 12 min omrijden −12").
+   - Per kans: rangnummer, naam met klasse- en fasepil, **bron** ("Open bezoektaak", "Hete aanleiding: vacature monteur (Indeed, 9 okt)", "Bezoekritme achter: klasse A, 120 dagen niet geweest", "Klaargezet door Sanne (binnendienst)", "Ongeplande prospect in doelgroep Bouw"), **afstand en omrijtijd** ("12 min omrijden, tussen stop 2 en 3"), **beste moment** ("45 min vrij tussen 11:30 en 13:00"), primair contact met rol, laatste contact, de **scoreopbouw** bij hover ("bezoektaak +100 · hete aanleiding +20 · 12 min omrijden −12").
    - Acties per kans: "+ Tussenstop" (geel), "Eerst bellen", "Inloopbezoek", "Overslaan" (met reden; de kans komt een week niet terug), "Navigeer".
 4. **Bellijst naast je bezoeken** (Gevorderd): Top 5 of Top 10 voor reistijd en lege momenten, zonder de accounts die je vandaag bezoekt; variant "Bellen voor morgen": prospects in de regio van morgen om er een tussenstop van te maken.
 5. **Te plannen bezoeken**: open bezoektaken (ritme, regel, handmatig, uit de binnendienst), oudste eerst, met "+ Plan bezoek" (de taak wordt aan de afspraak gekoppeld en sluit bij afronden).
@@ -1860,7 +1865,6 @@ Spraakherkenning die automatisch het volgende blok kiest; automatisch bellen (di
 |---|---|---|
 | Open bezoektaak van jou | +100 | elke open bezoektaak, niet alleen de top acht |
 | Klaargezet door de binnendienst voor deze dag of regio | +90 | |
-| Offerte die volgens de offertematrix een bezoek vraagt | +80 | |
 | Hete aanleiding (trigger) in de laatste 30 dagen | +20 tot +40 naar relevantie | |
 | Bezoekritme achter volgens de afspraakmatrix | +1 per dag achter, maximaal +30 | klasse bekend |
 | Ongeplande prospect in een actieve doelgroep (laag aan) | +10 | status nieuw of in reis, geen afkoelperiode op bezoek |
@@ -1913,13 +1917,13 @@ Spraakherkenning die automatisch het volgende blok kiest; automatisch bellen (di
 
 #### Functioneel
 
-**Kern.** Drie lagen voorbereiding: de **briefing** (regels, gratis, altijd beschikbaar), de **Pitstop** (AI-concept op een taak, afspraak of deal, ter goedkeuring) en de **verslaganalyse** (grondstof voor de volgende briefing). Een briefing maak je niet aan; hij verschijnt omdat er een afspraak of taak is.
+**Kern.** Drie lagen voorbereiding: de **briefing** (regels, gratis, altijd beschikbaar), de **Pitstop** (AI-concept op een taak of afspraak, ter goedkeuring) en de **verslaganalyse** (grondstof voor de volgende briefing). Een briefing maak je niet aan; hij verschijnt omdat er een afspraak of taak is.
 
 | Wie | Wat | Niveau |
 |---|---|---|
 | Accountmanager | Snelle briefing vanuit afspraak of taak met automatisch gekozen soort; na het gesprek "doel gehaald" en volgende stap | Beginner |
 | Accountmanager | Overzicht met filters, soortkiezer, eigen tekst per blok, volledige printbare briefing, Pitstop opnieuw maken | Gevorderd |
-| Accountmanager | Soort vastzetten per gesprek, offertebriefing met bezwaren, eigen briefingsoort | Expert |
+| Accountmanager | Soort vastzetten per gesprek, eigen briefingsoort | Expert |
 
 **Soorten voor new business**
 
@@ -1928,25 +1932,25 @@ Spraakherkenning die automatisch het volgende blok kiest; automatisch bellen (di
 | Eerste gesprek | nog geen gesprek met een beslisser | Bedrijf in drie zinnen · Waarom nu (aanleiding met bron) · Wie zit er tegenover je (rol, wat je weet) · Wie ontbreekt nog (buying committee) · Openingsvraag (golden circle en aanleiding) · Winpunt en één bewijs · Doel van dit gesprek |
 | Behoefte, probleem, oplossing | 1 of 2 gesprekken gevoerd | Pijnpunt (uit het vorige verslag) · Huidige situatie · Gewenste situatie · Onze oplossing en winpunt · Te verwachten bezwaren met antwoord · Doel |
 | Verdieping | 3 of meer gesprekken of fase In gesprek | Samenvatting vorige gesprekken · BAND met wat er ontbreekt · Stakeholders · Vergelijkingscriteria · Doel |
-| Offerte | fase Offerte uit of meetingsoort Offertebespreking | Stand van de offerte (verstuurd, gelezen) · Verwachte bezwaren gewogen · Beslismoment · Onderhandelruimte · Doel |
+| Overdracht | eerste afspraak gehouden met vervolg | Wie het account is en waarom nu · Wat er in het eerste gesprek is gezegd (verslag) · Buying committee en BAND · Afgesproken vervolgstap en datum · Bezwaren en concurrent · Winpunt dat aansloeg · Reisgeschiedenis in vijf regels |
 | Bezoek (buitendienst) | meetingsoort met vorm bezoek | Als eerste gesprek plus: adres, parkeren, wie je bij de receptie vraagt, wat je meeneemt |
 
 De soort volgt eerst de meetingsoort, dan de fase in de reis, dan het aantal gesprekken; een gebruiker kan hem vastzetten (Expert).
 
 **Opbouw**: per blok een herkomstlabel ("Berekend", "Door AI geschreven", "Eigen tekst") met de volgorde eigen tekst wint van AI, AI van berekend; eigen tekst wordt per gesprek bewaard. Na het gesprek vraagt de briefing "Doel gehaald?" (Ja, Deels, Nee) en "Volgende stap", wat de coaching voedt (F20).
 
-**Pitstop** (op taak, afspraak en deal): knop "Bereid voor" maakt het concept dat bij de actiesoort past (belscript via het gekozen template F08, mailconcept, LinkedIn-bericht, bezoekbriefing, dealvoorbereiding) met het Pitstop-accent van de fase, het winpunt, de top drie bezwaren uit de waarde en de open vragen uit het vorige verslag. Statussen: wacht, bezig, klaar ter goedkeuring, goedgekeurd, mislukt. Tekst onder het concept: "De agent voert niets uit. Jij keurt goed en belt, mailt of bezoekt zelf." Automatisch voorbereiden per regel (maximaal 10 per motorrun) staat in F15.
+**Pitstop** (op taak en afspraak): knop "Bereid voor" maakt het concept dat bij de actiesoort past (belscript via het gekozen template F08, mailconcept, LinkedIn-bericht, bezoekbriefing) met het Pitstop-accent van de fase, het winpunt, de top drie bezwaren uit de waarde en de open vragen uit het vorige verslag. Statussen: wacht, bezig, klaar ter goedkeuring, goedgekeurd, mislukt. Tekst onder het concept: "De agent voert niets uit. Jij keurt goed en belt, mailt of bezoekt zelf." Automatisch voorbereiden per regel (maximaal 10 per motorrun) staat in F15.
 
-**Uit het verkoopverhaal (F25).** Briefing "Eerste gesprek": onderdeel "Ons verhaal voor deze branche" (verhaal, belofte en waarde van de branche). Briefing "Offerte": de kernbelofte als voorgestelde offertekop en "Wanneer we verliezen" van de huidige leverancier als risico. Pitstop bouwt het eerste bericht in vier stappen: voor wie, welk probleem, welk resultaat, waarom geloofwaardig (één bewijs). Op de telefoon is de Pitstop voorleesbaar en komt hij 30 minuten vooraf als push (8.10).
+**Uit het verkoopverhaal (F25).** Briefing "Eerste gesprek": onderdeel "Ons verhaal voor deze branche" (verhaal, belofte en waarde van de branche). Briefing "Overdracht": de kernbelofte van de branche en "Wanneer we verliezen" van de huidige leverancier als risico voor de collega die het account overneemt. Pitstop bouwt het eerste bericht in vier stappen: voor wie, welk probleem, welk resultaat, waarom geloofwaardig (één bewijs). Op de telefoon is de Pitstop voorleesbaar en komt hij 30 minuten vooraf als push (8.10).
 
 #### Technisch
 
 - Geen aparte briefingtabel: berekend live; eigen tekst in `briefing_teksten: organisation_id, onderwerp ('afspraak'|'taak'), onderwerp_id, blok, tekst, door, op`; AI-versies in `agent_runs` met `draft`.
-- Pure functies: `kiesBriefingSoort(context)`, `vulBriefing(soort, context)` (geen AI), `gewogenBezwaren(offerte, account)`.
-- Endpoints: `GET /api/briefing?afspraak=|taak=|account=`, `PUT /api/briefing/tekst`, `POST /api/agent/prepare {taskId|appointmentId|dealId}`.
+- Pure functies: `kiesBriefingSoort(context)`, `vulBriefing(soort, context)` (geen AI), `gewogenBezwaren(account)`.
+- Endpoints: `GET /api/briefing?afspraak=|taak=|account=`, `PUT /api/briefing/tekst`, `POST /api/agent/prepare {taskId|appointmentId}`.
 - AI: Pitstop met de promptketen (platform, organisatie, code), schema per concepttype, lengtegrenzen (belscript 150 woorden, mail 120, LinkedIn 80, WhatsApp 60, kaart 40), stijlcheck (11.5).
 - Acceptatie: elke ingang kiest dezelfde soort voor hetzelfde gesprek; achterstallige taken krijgen ook een briefing; zonder AI-bundel werkt de briefing volledig met berekende tekst.
-- Hergebruik: `briefings.vue`, `BriefingFlyout.vue`, `BriefingOverviewFlyout.vue`, `OfferteBriefingFlyout.vue`, `accounts/[id]/briefing.vue`, `useQuickBriefing.ts`, `agentExecutor.ts`.
+- Hergebruik: `briefings.vue`, `BriefingFlyout.vue`, `BriefingOverviewFlyout.vue`, `accounts/[id]/briefing.vue`, `useQuickBriefing.ts`, `agentExecutor.ts`.
 
 
 ---
@@ -1984,7 +1988,7 @@ De soort volgt eerst de meetingsoort, dan de fase in de reis, dan het aantal ges
 - Taken uit een campagne krijgen titel "{werkwoord} {account} ({campagne})", het script of concept, `campaignId`, eigenaar uit de verdeling, en een vervaldatum **gespreid** over de looptijd (binnendienst: in de koude belblokken, maximaal het aantal plekken per blok; buitendienst: op de regiodag van het account).
 - **Tempo** (één functie voor scherm en motor): voortgang = items met einddoel gehaald / items; verwacht = verstreken looptijd / totale looptijd; doelpercentage uit het doel; "Voor op schema" bij 5 punten of meer boven verwacht, "Op schema" tot 10 punten eronder, anders "Achter op schema". Tempo alleen met einddatum en minstens één account.
 - **Achterstand**: de motor maakt een inzicht "Campagne loopt achter" bij 10 procentpunten of meer achterstand (cadans 2 dagen), met het advies "Begin hier".
-- **Afsluiter**: na de einddatum gaat een actieve campagne naar "Afgerond" met een samenvatting (bereikt, gesprekken, afspraken, deals, pipelinewaarde, conversie, winpunt uitgevoerd).
+- **Afsluiter**: na de einddatum gaat een actieve campagne naar "Afgerond" met een samenvatting (bereikt, gesprekken, afspraken gepland en gehouden, overgedragen, conversie, winpunt uitgevoerd).
 - **Mailreeks**: de eerste mail aan een contact en elke mail aan een beslisser zijn per stuk goed te keuren (mandaat C); mail 2 en verder binnen een goedgekeurde campagne mag de Verzender zelf versturen (mandaat B, Expert, als de organisatie dat aanzet), met dagplafond 40 per gebruiker, afmeldlink, stop bij een antwoord of bounce.
 - Bij afronden van een item de vraag "Is het winpunt uitgevoerd?" (ja of nee); de norm is 90 procent.
 
@@ -2064,7 +2068,7 @@ De soort volgt eerst de meetingsoort, dan de fase in de reis, dan het aantal ges
 
 | Soort | Bron | Wat de agent eruit haalt | Agent |
 |---|---|---|---|
-| Intern | Eigen Dealtrace-data: accounts, contacten, activiteitenlog, uitkomsten, afspraken, deals | Stilte ("45 dagen geen contact"), patronen ("3 keer voicemail, probeer mail"), dossier verloopt, deal onvoldoende gekwalificeerd, campagne loopt achter | Waarnemer (intern), Coach |
+| Intern | Eigen Dealtrace-data: accounts, contacten, activiteitenlog, uitkomsten, afspraken | Stilte ("45 dagen geen contact"), patronen ("3 keer voicemail, probeer mail"), dossier verloopt, afspraak gepland bij een onvoldoende gekwalificeerd account, campagne loopt achter | Waarnemer (intern), Coach |
 | Intern | Gespreksverslagen en notities | Koopsignalen, bezwaren, open vragen, toezeggingen, wie er nog ontbreekt in het buying committee | Notulist, Profielbouwer |
 | Intern | Gekoppeld CRM (HubSpot e.d.) | Klantstatus, laatste order, contracteinde, verloren klanten (winback) | Waarnemer (intern) |
 | Intern | Kennisbank van de organisatie (cases, productinfo, prijslijst, playbooks) | Passend bewijs en argument bij een winpunt, antwoord op een bezwaar | Schrijver |
@@ -2116,7 +2120,7 @@ Elk inzicht toont: bron (soort en naam), datum, letterlijk citaat, link, relevan
 
 #### Functioneel
 
-**Kern.** De regelset bepaalt welk werk Dealtrace zelf klaarzet. Elke regel is een als-dan-afspraak: als er bij een account, offerte, deal, lead of campagne iets waar is, dan maakt de motor een inzicht of een taak, met prioriteit, actiesoort, uitvoerderrol en een reden met bewijs.
+**Kern.** De regelset bepaalt welk werk Dealtrace zelf klaarzet. Elke regel is een als-dan-afspraak: als er bij een account, afspraak, lead of campagne iets waar is, dan maakt de motor een inzicht of een taak, met prioriteit, actiesoort, uitvoerderrol en een reden met bewijs.
 
 | Wie | Wat | Niveau |
 |---|---|---|
@@ -2134,7 +2138,7 @@ Elk inzicht toont: bron (soort en naam), datum, letterlijk citaat, link, relevan
 |---|---|
 | Wat en wanneer | Categorie, Subcategorie, Omschrijving, Activiteit (Inzicht of Taak), Cadans, Prioriteit |
 | Sturing | Bron (Intern, Extern), Specifieke bron, Triggerpatroon met parameters, Motor (Regel of AI), Afbakening: accounttype, status, reis en fase, doelgroep, campagne, klasse |
-| Gevolg | Actiesoort (Bellen, Mailen, LinkedIn, Bezoek, Bericht, Geen), Uitvoerderrol (Binnendienst, Buitendienst, Eigenaar, Salesmanager), Termijn ("binnen 24 uur", "binnen 3 werkdagen"), Taaksjabloon met `{account}`, `{contact}`, `{offerte}`, Belscript (bij bellen), Automatisch voorbereiden, Signaaltype, Verwacht resultaat |
+| Gevolg | Actiesoort (Bellen, Mailen, LinkedIn, Bezoek, Bericht, Geen), Uitvoerderrol (Binnendienst, Buitendienst, Eigenaar, Salesmanager), Termijn ("binnen 24 uur", "binnen 3 werkdagen"), Taaksjabloon met `{account}`, `{contact}`, `{afspraak}`, Belscript (bij bellen), Automatisch voorbereiden, Signaaltype, Verwacht resultaat |
 
 Onder het paneel: live voorbeeld "Zo verschijnt hij in de takenlijst" met een voorbeeldprospect, en **droogloop** "Deze regel raakt nu 214 accounts en maakt bij de volgende run 38 taken" met de verdeling per persoon. Een regel die meer dan 50 taken per persoon zou maken vraagt bevestiging.
 
@@ -2149,8 +2153,8 @@ Onder het paneel: live voorbeeld "Zo verschijnt hij in de takenlijst" met een vo
 | Te lang in fase | dagen in fase boven het verwachte verblijf | marge |
 | Lead verlopen | dossier ouder dan N dagen | dagen (30) |
 | Jaarplanning-venster | venster voorbij en niet benaderd dit verkoopjaar | geen |
-| Offerte verstuurd | offerte verstuurd zonder opvolgtaak | werkdagen (3) |
-| Deal onvoldoende gekwalificeerd | open deal boven bedrag, ouder dan N dagen, BAND 1 of minder | bedrag, dagen |
+| Afspraak niet overgedragen | eerste afspraak gehouden zonder overdracht of uitkomst | werkdagen (1) |
+| Afspraak onvoldoende gekwalificeerd | eerste afspraak gepland bij een account met BAND 1 of minder | dagen vooraf (2) |
 | Campagne-achterstand | tempo N punten achter | marge (10) |
 | Hercontact-vervolg | volgende poging in een ritme is aan de beurt | geen |
 | Geparkeerd terug | terugkomdatum bereikt | geen |
@@ -2160,12 +2164,12 @@ Onder het paneel: live voorbeeld "Zo verschijnt hij in de takenlijst" met een vo
 
 Cadans: Dagelijks 1, 2 dagen, 3 dagen, Wekelijks 7, 2 weken 14, Maandelijks 30, 2 maanden 61, Kwartaal 91, Half jaar 182, Jaarlijks 365, Continu. AI-regels minimaal wekelijks.
 
-**Starterset** (elke regel draait; "Starterset terugzetten" laadt precies deze set): SR01 nieuwe lead zonder dossier · SR02 dossier verloopt · SR03 gekwalificeerd, nog geen contact (inactiviteit 7 dagen, ook zonder datum, bellen, binnendienst) · SR04 belritme prospect (ritme, matrix) · SR05 bezoekritme A en B (buitendienst, op regiodag) · SR06 contact-stilte 45 dagen · SR07 jaarplanningsvenster voorbij · SR08 afspraak gehad, geen vervolg · SR09 offerte opvolgen · SR10 deal onvoldoende gekwalificeerd · SR11 campagne loopt achter · SR12 deal gewonnen: overdracht · SR13 deal verloren: heropvolging over 90 dagen · SR14 AI-kansanalyse A en B · SR15 vacatures · SR16 nieuws · SR17 hercontact-vervolg · SR18 geparkeerd terug · SR19 trigger-heractivatie (jubileum, vacature, directiewissel, verhuizing, subsidie) · SR20 partner te laat · SR21 tussendoel gehaald · SR22 te lang in fase · SR23 KvK-mutatie bij prospect in reis.
+**Starterset** (elke regel draait; "Starterset terugzetten" laadt precies deze set): SR01 nieuwe lead zonder dossier · SR02 dossier verloopt · SR03 gekwalificeerd, nog geen contact (inactiviteit 7 dagen, ook zonder datum, bellen, binnendienst) · SR04 belritme prospect (ritme, matrix) · SR05 bezoekritme A en B (buitendienst, op regiodag) · SR06 contact-stilte 45 dagen · SR07 jaarplanningsvenster voorbij · SR08 afspraak gehad, geen vervolg · SR09 eerste afspraak bevestigen · SR10 afspraak onvoldoende gekwalificeerd · SR11 campagne loopt achter · SR12 afspraak gehouden: overdracht · SR13 no-show: opnieuw inplannen · SR14 AI-kansanalyse A en B · SR15 vacatures · SR16 nieuws · SR17 hercontact-vervolg · SR18 geparkeerd terug · SR19 trigger-heractivatie (jubileum, vacature, directiewissel, verhuizing, subsidie) · SR20 partner te laat · SR21 tussendoel gehaald · SR22 te lang in fase · SR23 KvK-mutatie bij prospect in reis.
 
 **Regels van de motor**
 
 - Draait elk uur per organisatie, direct na een gebeurtenis voor dat ene account, en op "Draai motor nu"; open sessies zien het resultaat binnen 3 minuten.
-- Cadanspoort per regel en onderwerp; ontdubbelen van open inzichten (bijwerken zonder terug naar ongelezen); offertes en deals krijgen één opvolging per onderwerp.
+- Cadanspoort per regel en onderwerp; ontdubbelen van open inzichten (bijwerken zonder terug naar ongelezen); een afspraak krijgt één opvolging per onderwerp.
 - **Capaciteit**: per uitvoerder een dagplafond (standaard binnendienst 40 beltaken, buitendienst 6 bezoeken per regiodag); wat erboven valt schuift naar de volgende werkdag en wordt gemeld.
 - **Landing**: taken voor de binnendienst krijgen als vervaldatum het eerstvolgende passende belblok, taken voor de buitendienst de regiodag van het account.
 - **Eigenaar**: accounteigenaar, anders de uitvoerderrol van het gebied, anders de salesmanager van het team.
@@ -2186,7 +2190,7 @@ Cadans: Dagelijks 1, 2 dagen, 3 dagen, Wekelijks 7, 2 weken 14, Maandelijks 30, 
 
 #### Functioneel
 
-**Kern.** Eén pagina waar de organisatie vastlegt hoeveel aandacht elk account verdient: accountklassen, segmenten, belmatrix, afspraakmatrix, offertematrix en afkoelperiodes. De matrix is de inrichting, de regels zijn de uitvoering. Voor new business is het hercontactritme (F13) de reeks pogingen tot een afspraak; de belmatrix regelt het onderhoudsritme daarna. Beide staan op dezelfde pagina, met de regel "nooit twee ritmes tegelijk op één account".
+**Kern.** Eén pagina waar de organisatie vastlegt hoeveel aandacht elk account verdient: accountklassen, segmenten, belmatrix, afspraakmatrix en afkoelperiodes. De matrix is de inrichting, de regels zijn de uitvoering. Voor new business is het hercontactritme (F13) de reeks pogingen tot een afspraak; de belmatrix regelt het onderhoudsritme daarna. Beide staan op dezelfde pagina, met de regel "nooit twee ritmes tegelijk op één account".
 
 **Route**: `/instellingen/ritme`. Iedereen kan meekijken ("Je kunt meekijken. Alleen een beheerder wijzigt de inrichting."); Gevorderd ziet "Wat betekent dit voor mij": hoeveel belmomenten en bezoeken de matrix deze week van hem verwacht, tegen zijn capaciteit.
 
@@ -2196,55 +2200,88 @@ Cadans: Dagelijks 1, 2 dagen, 3 dagen, Wekelijks 7, 2 weken 14, Maandelijks 30, 
 2. **Segmenten**: regels op velden, inclusief eigen velden en matrixvelden; leden met teller.
 3. **Belmatrix**: per accounttype (prospect, klant) en klasse het aantal per maand, kwartaal, halfjaar en jaar; afgeleid ritme ("12×/jaar = elke 4 weken"); "niet ingesteld" en "bewust uit (0)" zichtbaar verschillend. Standaard prospect A en B maandelijks, C per kwartaal, D per halfjaar; klant A maandelijks, B per kwartaal, C per halfjaar, D jaarlijks.
 4. **Afspraakmatrix**: per klasse meeting (online) en bezoek; standaard A per kwartaal, B per halfjaar, C jaarlijks, D bezoek jaarlijks.
-5. **Offertematrix**: per waardeklasse kanaal, uitvoerderrol (binnendienst, buitendienst, salesmanager, directie), opvolgtermijn in werkdagen en toelichting; standaard €0 mail binnendienst 5 werkdagen, €10.000 bellen 3, €50.000 bezoek buitendienst 5, €100.000 salesmanager belt binnen 2. Contracten altijd face-to-face.
-6. **Afkoelperiodes en consent**: per kanaal de afkoelperiode na een nee en het frequentieplafond (maximaal één bericht per kanaal per 3 werkdagen buiten het ritme).
-7. **Overschrijven per reis**: een reis (F05) kan een eigen belmatrix, offertematrix of ritme gebruiken; deze pagina toont welke reizen afwijken.
+5. **Afkoelperiodes en consent**: per kanaal de afkoelperiode na een nee en het frequentieplafond (maximaal één bericht per kanaal per 3 werkdagen buiten het ritme).
+6. **Overschrijven per reis**: een reis (F05) kan een eigen belmatrix of ritme gebruiken; deze pagina toont welke reizen afwijken.
 
 **Regels**: interval = 365 / jaartotaal, afgerond, minimaal 1 dag; een ingevulde matrix levert zelfstandig taken op (geen losse ritmeregel nodig); afrekening per account, niet als som per klasse, en met hetzelfde kanaal dat de motor voorschrijft.
 
 #### Technisch
 
-- Instellingssleutels `accountklassen`, `belmatrix`, `afspraakmatrix`, `offerteOpvolging`, `afkoeling`, `frequentieplafond`; zonder instelling geldt de standaard, een kapotte instelling laat de motor nooit omvallen.
-- Pure functies: `jaartotaal`, `intervalDagen`, `ritmeLabel`, `klasseVoorOmvang(medewerkers, klassen)`, `offerteProfiel(bedrag, matrix, soort)`, `ritmeAfrekening(accounts, activiteiten, periode)`.
-- Hergebruik: `shared/ritmematrix.ts`, `shared/offerteOpvolging.ts`, `instellingen/accountritme`-pagina van DealDrive.
+- Instellingssleutels `accountklassen`, `belmatrix`, `afspraakmatrix`, `afkoeling`, `frequentieplafond`; zonder instelling geldt de standaard, een kapotte instelling laat de motor nooit omvallen.
+- Pure functies: `jaartotaal`, `intervalDagen`, `ritmeLabel`, `klasseVoorOmvang(medewerkers, klassen)`, `ritmeAfrekening(accounts, activiteiten, periode)`.
+- Hergebruik: `shared/ritmematrix.ts`, `instellingen/accountritme`-pagina van DealDrive.
 
 ---
 
-### F17 Pipeline, deals en offertes
+### F17 Funnel van de prospectreis
+
+**Beslissing B17.** Dealtrace stopt bij de eerste afspraak. Pipeline, deals en offertes zitten niet in de app; die horen in DealDrive of het CRM van de klant. In plaats van de pipeline komt de **funnel van de prospectreis**: hoeveel accounts er in elke fase van de reis staan, hoeveel er doorstromen naar de volgende fase, hoe lang dat duurt en waar ze uitvallen, tot en met de eerste afspraak en de overdracht.
 
 #### Functioneel
 
-**Kern.** Van eerste afspraak naar klant. Een deal ontstaat bij een offerteaanvraag of een inventarisatie met vervolg; offertes hangen aan een deal; de offertematrix bepaalt de opvolging; een gewonnen deal maakt de prospect klant en start de overdracht.
+**Kern.** "Waar lekt mijn new business weg?" De funnel leest alleen de reisgeschiedenis en de activiteitenlog; er is niets apart in te vullen.
 
 | Wie | Wat | Niveau |
 |---|---|---|
-| Accountmanager | Deal zien op de kaart als hij er is | Beginner |
-| Accountmanager | Deals en offertes maken, kanban, opvolging, BAND per deal | Gevorderd |
-| Accountmanager | Forecast, eigen pipeline-indeling | Expert |
+| Accountmanager | Eigen funnel: aantallen per fase, de fase waar het meest stokt, doorklikken naar de accounts | Beginner |
+| Accountmanager | Plus: funnel per doelgroep, reis en campagne; conversie en doorlooptijd per fase; uitval met reden | Gevorderd |
+| Accountmanager | Plus: reizen en reisversies naast elkaar, eigen weergaven, Download CSV | Expert |
+| Salesmanager | Funnel per team en per persoon naast elkaar; vergelijking met de vorige periode | rol |
 
-**Routes**: `/pipeline` (Kanban of Lijst, met offertes als tabblad).
+**Route**: `/funnel`. Op de telefoon dezelfde route met een verticale funnel (één fase per rij).
 
-- Kop: "9 kansen in beeld.", subtitel "Slepen naar Gewonnen maakt de prospect klant en start de overdracht." Statkaarten: Aantal kansen, Pipelinewaarde, Gewogen waarde, Tot sluiting deze maand.
-- Kanban: Kwalificatie 25 procent, Behoefte 40, Voorstel 60, Onderhandeling 80, Gewonnen, Verloren. Kaart met account, waarde, kans, sluitdatum, BAND-pil, eigenaar.
-- **Dealflyout**: waarde, kans, gewogen, sluitdatum, account, contactpersonen, BAND (gespiegeld met het account), offertes met "+ Offerte" (titel, bedrag, geldig tot, pdf uploaden), eigen velden, Pitstop "Dealvoorbereiding". Knoppen "Markeer gewonnen" (bevestiging "… wordt klant"), "Markeer verloren" met reden (Prijs, Timing, Concurrent, Geen budget, Geen besluit, Anders), "Heropen".
-- **Offertes**: tabel met status (Concept, Verstuurd, Gelezen, Besproken, Goedgekeurd, Verloren, Vervallen), urgentie ("VERLOPEN", "3 D RESTEREN", "NIET GELEZEN"), bedrag, geldig tot, opvolging volgens de matrix, statusknop.
+**Opbouw van de pagina**
+
+1. **Kop**: kicker "FUNNEL · DEZE MAAND", titel als zin ("Van 214 prospects kwamen er 11 tot een eerste afspraak."), keuzes Periode (deze maand, kwartaal, verkoopjaar, eigen periode), Doelgroep, Reis, Campagne, Persoon of team (salesmanager), Kanaal.
+2. **De funnel** (horizontaal op de laptop, verticaal op de telefoon), per fase van de reis gegroepeerd in de hoofdfases Vinden, Bewerken en Verbinden:
+
+   | Fase | Wat de balk toont |
+   |---|---|
+   | Gevonden | aantal accounts dat in de periode binnenkwam |
+   | Dossier compleet | aantal en conversie vanaf Gevonden |
+   | Gekwalificeerd | aantal en conversie |
+   | Benaderd | aantal, gemiddeld aantal pogingen |
+   | In gesprek | aantal, aandeel beslisser bereikt |
+   | Afspraak gepland | aantal eerste afspraken |
+   | Afspraak gehouden | aantal, aandeel no-show |
+   | Overgedragen | aantal overgedragen aan DealDrive, het CRM of een collega |
+
+   Per fase: aantal, conversie naar de volgende fase in procent, gemiddelde doorlooptijd in dagen, en een oranje markering bij de fase met de laagste conversie ten opzichte van de norm ("Hier stokt het: van Benaderd naar In gesprek 18 procent, norm 30 procent").
+3. **Uitval**: naast elke fase het aantal accounts dat daar naar nee, geparkeerd of afgekoeld ging, met de top drie redenen ("Tevreden met huidige leverancier 14 · Geen budget 6 · Verkeerd moment 5"). Bij een gekoppeld verkoopverhaal ook "Verloren aan" per concurrent (F25).
+4. **Pogingen tot afspraak**: bij welke poging de eerste afspraak ontstaat (1, 2, 3, 4, 5 of later), zodat zichtbaar is wat er gebeurt als iemand na twee pogingen stopt.
+5. **Lijst**: een klik op een fase of uitvalreden opent de accounts die daar staan, met fase sinds, laatste poging en volgende stap; vanuit de lijst kun je een taak maken of het account openen.
+
+**Klikpaden**
+
+1. Zien waar het stokt: open Funnel; de oranje fase staat bovenaan in de kop ("Hier stokt het"); klik erop voor de accounts.
+2. Een campagne beoordelen: kies de campagne; de funnel toont alleen de accounts uit die campagne, met afspraken en uitval.
+3. Een reis vergelijken (Expert): kies twee reizen of twee versies; de funnels staan naast elkaar (minimaal 20 accounts per reis of versie, anders de melding "Te weinig accounts om te vergelijken").
+
+**De overdracht na de eerste afspraak**
+
+- Na een gehouden eerste afspraak kies je bij "Rond af" (F09) de uitkomst. Bij een uitkomst met vervolg (zoals "Vervolg afgesproken") vraagt Dealtrace "Overdragen?" met de keuze waarheen: DealDrive, het CRM, of een collega (bijvoorbeeld de accountmanager die de klantrelatie gaat dragen).
+- De overdracht stuurt account, contacten, buying committee, dossier, reisgeschiedenis, het verslag van de eerste afspraak, de afgesproken vervolgstap en de overdrachtsbriefing (F11) mee; de deal en een eventuele offerte maakt het ontvangende systeem.
+- Het account krijgt status `overgedragen` en fase "Overgedragen" en verdwijnt uit de actieve reis. Zonder koppeling maakt Dealtrace een overdrachtstaak en een overdrachtsbriefing die je kunt mailen of downloaden.
+- Komt een account uit DealDrive of het CRM terug (verloren deal, slapende klant), dan komt het via de terugkomregels (F25) als winback-kandidaat terug in een reis.
 
 **Regels**
 
-- Fasewissel zet de kans, de historie, en bij gewonnen of verloren de sluitdatum en de gebeurtenis.
-- **Deal gewonnen**: in één transactie account naar klant, status klant, fase "Klant", overdrachtstaak, en (als ingericht) **overdracht** naar DealDrive of het CRM met account, contacten, deal, offertes, dossier, brief en reisgeschiedenis; antwoord met het externe id. Toast "Teeuwen Bouw is klant. De overdracht staat klaar."
-- **Deal verloren**: fase Verloren, heropvolgtaak over 90 dagen met uitkomst "weer actief" (terug naar Gekwalificeerd) of "definitief weg" (Geparkeerd).
-- Offertestatus alleen vooruit; "Verstuurd" meldt `offerte-verstuurd` en start de opvolging; vervallen na geldig tot.
-- Na een gewonnen deal: vraag "Mag dit een bewijs worden?" (wordt een klantcase-voorstel voor de kennisbank of SalesDNA).
-
-**Uit het verkoopverhaal (F25).** "Markeer verloren" vraagt de reden; die mapt via `vv_redenmapping` op een terugkomreden en zet de terugkomdatum. Bij reden "Concurrent" de vraag "Verloren aan" (keuze uit de concurrenten). Per deal "Winpunt ingezet" en "gebeurd"; bij winnen en verliezen de redenen met winpunten eerst.
+- De funnel telt accounts die in de periode een fase bereikten, op basis van `reisgeschiedenis`; een account dat een fase overslaat, telt in de overgeslagen fases niet mee.
+- Normen per fase (conversie en doorlooptijd) staan in Instellingen en hebben een standaard per reis.
+- Standaardscope is "mijn"; de salesmanager heeft een teamschakelaar.
+- Elke grafiek is klikbaar naar de onderliggende lijst; elk overzicht heeft "Download CSV" (Expert en salesmanager).
 
 #### Technisch
 
-- `deals`, `quotes` als in hoofdstuk 10; instellingen `dealStages`, `pipelines`, `offerteOpvolging`.
-- Pure functies: `verplaatsDeal`, `gewogenWaarde`, `offerteUrgentie`, `overdrachtPakket(account)`.
-- Endpoints: sync op `deals` en `quotes`; `POST /api/quotes/:id/status`; `POST /api/deals/:id/gewonnen`; `POST /api/integraties/overdracht/:accountId`; `POST /api/motor/offertes-sweep` (dagelijks).
-- Hergebruik: `pipeline.vue`, `DealFlyout.vue`, `NieuweDealFlyout.vue`, `offertes.vue`, `useDealStages.ts`, `useDealStageChange.ts`, `usePipelines.ts`.
+- Geen eigen invoertabellen; afgeleide tabel `nb_funnel_stand` (per dag, organisatie, reis, versie, doelgroep, campagne, gebruiker, fase: binnengekomen, doorgestroomd, uitgevallen per reden, doorlooptijd) uit `reisgeschiedenis` en `activiteiten`, nachtelijk en bij opvragen voor de lopende dag.
+- `overdrachten: id, organisation_id, account_id, naar ('dealdrive'|'crm'|'collega'), naar_gebruiker_id?, extern_id?, status ('klaar'|'verstuurd'|'bevestigd'|'mislukt'), pakket jsonb, op, door`.
+- Pure functies (`shared/funnel.ts`): `funnelStand(geschiedenis, periode, filters)`, `conversie(van, naar)`, `doorlooptijd(geschiedenis, fase)`, `stokpunt(stand, normen)`, `pogingTotAfspraak(activiteiten)`; `overdrachtPakket(account)`.
+- Endpoints: `GET /api/funnel?periode=&reis=&doelgroep=&campagne=&gebruiker=&team=`, `GET /api/funnel/accounts?fase=&reden=`, `POST /api/accounts/:id/overdragen {naar, naarGebruikerId?}`.
+- Gebeurtenissen: `eerste-afspraak-gehouden` en `overgedragen` (F05).
+- Prestatiebudget: funnel van een organisatie met 10.000 accounts en een kwartaal geschiedenis onder 1 seconde.
+- Acceptatie: een account dat van Gevonden naar Afspraak gepland gaat, telt in elke tussenliggende fase die het bereikte; de som van doorgestroomd en uitgevallen per fase klopt met het aantal dat binnenkwam min wat er nog staat; de overdracht naar DealDrive geeft een extern id terug en zet het account op `overgedragen`; zonder koppeling ontstaat een overdrachtstaak met briefing.
+- Hergebruik: de trechter uit de analysepagina's van DealDrive als vorm; `pipeline.vue`, `DealFlyout.vue` en `offertes.vue` worden **niet** overgenomen.
+- Buiten scope: deals, offertes, pipelinewaarde, kans op winst, forecast van omzet.
 
 ---
 
@@ -2264,7 +2301,7 @@ Cadans: Dagelijks 1, 2 dagen, 3 dagen, Wekelijks 7, 2 weken 14, Maandelijks 30, 
 
 **Gebiedsindeling**: blok "Je week" met vijf dagkaarten (regio, tellers klanten, prospects, nooit bezocht, langer dan 90 dagen niet bezocht); per regio naam, postcodereeksen ("3701-3799, 3800-3829"), plaatsen (vangnet), **eigenaren** (buitendienst en binnendienstpartner; nieuwe prospects in die regio krijgen automatisch die eigenaren), regiodag per persoon (twee buitendienstmedewerkers kunnen hetzelfde gebied op verschillende dagen rijden; even en oneven weken mogelijk); overlap wordt bij invoer geblokkeerd met een duidelijke melding; synoniemen voor plaatsnamen ("Den Bosch" is "'s-Hertogenbosch"); "Voorstel uit je accounts" groepeert op het eerste cijfer van de postcode.
 
-**Regio-analyse** ("Waar laat je potentie liggen?"): cijfers "Accounts in beeld", "Stil of nooit bezocht", "Nog niet benaderde prospects", "Open dealwaarde in stille accounts", "Bezocht in 90 dagen" (doel 80 procent); tabel per regio (regiodag, klanten, prospects, nog niet benaderd, open deals, dekking als balk, stil en nooit), altijd een rij "Zonder regio"; kaartweergave met punten per status; per regio een lijst (nooit bezocht boven, dan langst stil, dan dealwaarde) met "+ Afspraak" en "Klaarzetten voor regiodag".
+**Regio-analyse** ("Waar laat je potentie liggen?"): cijfers "Accounts in beeld", "Stil of nooit bezocht", "Nog niet benaderde prospects", "Gekwalificeerde prospects zonder contact in 60 dagen", "Bezocht in 90 dagen" (doel 80 procent); tabel per regio (regiodag, klanten, prospects, nog niet benaderd, open deals, dekking als balk, stil en nooit), altijd een rij "Zonder regio"; kaartweergave met punten per status; per regio een lijst (nooit bezocht boven, dan langst stil, dan dealwaarde) met "+ Afspraak" en "Klaarzetten voor regiodag".
 
 **Regels**: indeling postcode (Nederlandse vier cijfers) gaat voor plaats; buitenlandse postcodes vallen nooit in een Nederlandse reeks; tellingen via één bronfunctie; taken en kansen voor de buitendienst landen op de regiodag (F10, F15).
 
@@ -2295,7 +2332,7 @@ Cadans: Dagelijks 1, 2 dagen, 3 dagen, Wekelijks 7, 2 weken 14, Maandelijks 30, 
 
 **Opbouw**
 
-- Kop: "Eigen velden", subtitel "Velden die jullie zelf nodig hebben, bovenop de standaard." Knop "+ Veld" (geel). Tabbladen per object: **Account**, **Contact**, **Deal**, **Campagne**, **Afspraak**.
+- Kop: "Eigen velden", subtitel "Velden die jullie zelf nodig hebben, bovenop de standaard." Knop "+ Veld" (geel). Tabbladen per object: **Account**, **Contact**, **Campagne**, **Afspraak**.
 - Per object de secties (Account: Adres, Bereik, Stamgegevens, Kwalificatie, Contract en order, plus eigen secties met "+ Sectie"); per sectie de velden als lijst met sleepgreep, naam, type, verplicht, zichtbaar voor, gebruikt in (filters, regels, scripts), aantal ingevuld.
 - **Veldflyout**:
 
@@ -2358,13 +2395,14 @@ Cadans: Dagelijks 1, 2 dagen, 3 dagen, Wekelijks 7, 2 weken 14, Maandelijks 30, 
 - **Tabel per persoon**: naam met niveau en werkplek, taken op de dag afgerond (procent), achterstallig, pogingen (gedaan tegen norm), gesprekken en beslisser bereikt, afspraken (tegen doel), koude norm ("koud 3 van 5"), belblokken gepland en gehouden, bezoeken en kansen langs de route omgezet, concepten die wachten op goedkeuring, tempo-pil. Klik op een cel opent de onderliggende lijst.
 - **Aandachtspunten** (maximaal vijf, uitgerekend): "Mark stopt gemiddeld na 2,1 pogingen (team 4,3)", "Sanne heeft 14 taken achterstallig", "3 campagnes lopen achter", "6 geparkeerde accounts komen deze week terug", "Eva heeft deze week geen belblok gehouden".
 - **Werkverdeling**: accounts per persoon per fase en status, met "Verplaats" (bulk, met reden en audit).
-- **Goedkeuringen**: campagnes boven capaciteit, conceptversies van reizen en scripts, niveauvoorstellen, roadmapwensen van het team.
+- **Goedkeuringen**: campagnes boven capaciteit, conceptversies van reizen en scripts, verzoeken om een functie aan te zetten ("Aanzetten" of "Nog niet" met reden), roadmapwensen van het team.
+- **Functies per persoon**: per accountmanager het niveau en de functies die aanstaan, met "Functies aanzetten" (schakelaars per functie, of een niveau als voorinstelling kiezen); elke wijziging met audit (4.2).
 
 **Coaching** (wekelijks per persoon)
 
 - **Coachingkaart per accountmanager** (`/coaching/:gebruiker`):
-  - Kop met naam, niveau, werkplek, voortgang naar het volgende niveau.
-  - **Cijfers tegen norm en team** (laatste 4 weken met trend): activiteit (pogingen per dag, belblokken), bereik (gesproken, beslisser bereikt), conversie (gesprek naar afspraak, afspraak naar offerte, offerte naar klant), discipline (pogingen tot afspraak, taken op de dag, winpunt uitgevoerd, briefing geopend vóór gesprek), kwaliteit (AI-concept ongewijzigd of aangepast, doel gehaald per gesprek).
+  - Kop met naam, niveau en functies die aanstaan, werkplek, en de knop "Functies aanzetten".
+  - **Cijfers tegen norm en team** (laatste 4 weken met trend): activiteit (pogingen per dag, belblokken), bereik (gesproken, beslisser bereikt), conversie (gesprek naar afspraak, afspraak gepland naar gehouden, gehouden naar overgedragen), discipline (pogingen tot afspraak, taken op de dag, winpunt uitgevoerd, briefing geopend vóór gesprek), kwaliteit (AI-concept ongewijzigd of aangepast, doel gehaald per gesprek).
   - **Trechter van deze persoon** naast die van het team: waar valt het weg?
   - **Gesprekken om te bespreken**: de Coach-agent kiest drie gesprekken of bezoeken van de afgelopen week (een goede, een verloren, een met een bezwaar dat vaker terugkomt) met verslag, uitkomst en script; de manager kan zelf kiezen.
   - **Coachingpunten**: maximaal drie, uitgerekend en door de Coach voorgesteld met onderbouwing ("Bij koude acquisitie sluit je 2 van de 10 gesprekken met een afspraak; het team 4 van de 10. In 6 gesprekken werd het afsluitblok van het script niet gebruikt."), elk met een gekoppeld helpartikel uit de new business-academie (F21).
@@ -2377,13 +2415,13 @@ Cadans: Dagelijks 1, 2 dagen, 3 dagen, Wekelijks 7, 2 weken 14, Maandelijks 30, 
 
 | Tabblad | Inhoud |
 |---|---|
-| Trechter | per doelgroep en reis: accounts per fase, conversie tussen fases, doorlooptijd per fase, waar het stokt; forecast nieuwe klanten dit kwartaal uit conversie en capaciteit |
+| Funnel | de funnel van de prospectreis (F17) per team, doelgroep en reis; verwachting eerste afspraken dit kwartaal uit conversie en capaciteit |
 | Activiteit | pogingen, gesprekken, afspraken per kanaal en per persoon; afspraken per poging (bij welke poging ontstaat de afspraak) |
 | Campagnes | per campagne en soort: bereik, afspraken, conversie, kosten per afspraak; vergelijken van campagnes met dezelfde soort |
 | Scripts | per belscript en versie: gesprekken, afspraken, duur, top bezwaren (minimaal 30 gesprekken) |
 | Regels en agents | per regel acceptatie en opbrengst; per agent overname van concepten, blokkades per reden, kosten |
 | Reizen | per reisversie conversie per fase (minimaal 20 accounts per versie); het maandelijkse verbetervoorstel van de Coach met "Accepteer", "Wijs af", "Later" |
-| Bronnen | per leadbron (AI-zoeker, KvK, Datacollectief, import, CRM): leads, overgenomen, afspraken, klanten, kosten per klant |
+| Bronnen | per leadbron (AI-zoeker, KvK, Datacollectief, import, CRM): leads, overgenomen, eerste afspraken, overgedragen, kosten per eerste afspraak |
 | Regio | dekking en potentie per gebied (F18) |
 | Prospectmix | afgesproken verdeling koud, warm, referral, winback tegen werkelijk, per persoon, met campagnevoorstel bij achterstand |
 
@@ -2400,7 +2438,7 @@ Elke grafiek is klikbaar naar de onderliggende lijst; elk tabblad heeft "Downloa
 - Coachingnotities hebben twee soorten: "Afspraak" (zichtbaar voor de accountmanager) en "Privé" (alleen managers van dat team).
 - De Coach-agent stelt voor, de manager beslist; een coachingpunt verschijnt nooit bij de accountmanager zonder dat de manager het deelt.
 
-**Uit het verkoopverhaal (F25).** Norm "Nieuwe gesprekken in primair of hoog": gezond twee derde of meer, aandacht de helft tot twee derde, risico minder dan de helft. Winpunt uitgevoerd tegen norm 90 procent; rapport "Verloren aan" en "Gewonnen van" per concurrent en branche; ambitiedoelen als voortgangsbalk; na een nieuwe bevestigde verhaalversie de oefening "Vertel ons verhaal in twee minuten" in de coachingkaart; de wekelijkse bundel suggesties naar SalesDNA vrijgeven.
+**Uit het verkoopverhaal (F25).** Norm "Nieuwe gesprekken in primair of hoog": gezond twee derde of meer, aandacht de helft tot twee derde, risico minder dan de helft. Winpunt uitgevoerd tegen norm 90 procent; rapport "Verloren aan" (nee met een concurrent) per concurrent en branche; ambitiedoelen als voortgangsbalk; na een nieuwe bevestigde verhaalversie de oefening "Vertel ons verhaal in twee minuten" in de coachingkaart; de wekelijkse bundel suggesties naar SalesDNA vrijgeven.
 
 **Op de telefoon (8.12).** Team en coaching zijn op de telefoon bruikbaar; analyse met grafieken alleen lezen.
 
@@ -2417,51 +2455,43 @@ Elke grafiek is klikbaar naar de onderliggende lijst; elk tabblad heeft "Downloa
 
 ### F21 Helpcenter: hoe werkt Dealtrace en new business-academie
 
-**Beslissing B10.** Een helpcenter met twee collecties: **"Hoe werkt Dealtrace"** (per scherm en feature) en **"New business"** (hoe win je nieuwe klanten). Het is ook het leermiddel van het niveaumodel: elk niveau heeft een leerpad, en de coaching verwijst naar artikelen.
+**Beslissing B10.** Een helpcenter met twee collecties: **"Hoe werkt Dealtrace"** (per scherm en feature) en **"New business"** (hoe win je nieuwe klanten). Elke functie heeft een artikel; zet de salesmanager een functie aan, dan krijgt de gebruiker dat artikel als eerste uitleg, en de coaching verwijst naar artikelen. Er zijn geen leerpaden per niveau (B19).
 
 #### Functioneel
 
 **Routes**: `/help` (startpagina), `/help/:collectie/:artikel`, en de flyout "Hulp" vanuit elke paginakop.
 
-**Startpagina**: zoekveld ("Waar kunnen we je mee helpen?"), drie blokken: "Jouw leerpad" (artikelen van je niveau met voortgang), "Hoe werkt Dealtrace" (categorieën), "New business" (categorieën), plus "Nieuw en bijgewerkt" en "Stel je vraag" (AI-antwoord uit de artikelen, met bronnen).
+**Startpagina**: zoekveld ("Waar kunnen we je mee helpen?"), drie blokken: "Voor jou" (de artikelen van functies die net voor je zijn aangezet en "Aan de slag"), "Hoe werkt Dealtrace" (categorieën), "New business" (categorieën), plus "Nieuw en bijgewerkt" en "Vraag AI" (de AI-assistent, F26).
 
 **Artikelpagina**: titel, leestijd, niveau-pil, categorie, inhoud (tekst, schermafbeeldingen, korte video, stappen), "Probeer het" (knop die het scherm opent waar het over gaat), "Was dit nuttig?" (ja of nee met reden), gerelateerde artikelen, laatst bijgewerkt.
 
-**Contextuele hulp**: de knop "Hulp" in elke paginakop opent het artikel van dat scherm in een flyout (560 px). Vergrendelde functies linken naar hun artikel. Lege staten kunnen een link "Lees hoe het werkt" hebben.
+**Contextuele hulp**: de knop "Hulp" in elke paginakop opent het artikel van dat scherm in een flyout (560 px). Functies die niet aanstaan, linken naar hun artikel. Lege staten kunnen een link "Lees hoe het werkt" hebben.
 
-**AI-vraag** ("Stel je vraag"): antwoordt alleen uit de artikelen van het helpcenter (en, als de organisatie dat aanzet, uit de eigen kennisbank), met citaten en links naar de artikelen; geen antwoord zonder bron ("Daar staat nog niets over in het helpcenter. Je vraag is doorgestuurd.") en de vraag komt bij de beheerder of founder als signaal voor een nieuw artikel.
+**Vraag AI**: de AI-assistent (F26) beantwoordt vragen over Dealtrace uit de artikelen van het helpcenter (en, als de organisatie dat aanzet, uit de eigen kennisbank), met citaten en links naar de artikelen; geen antwoord zonder bron ("Daar staat nog niets over in het helpcenter. Je vraag is doorgestuurd.") en de vraag komt bij de beheerder of founder als signaal voor een nieuw artikel. Een vraag kost credits van de organisatie (F26).
 
-**Leerpaden en het groeipad**
-
-| Leerpad | Artikelen (verplicht voor het volgende niveau) |
-|---|---|
-| Beginner | Je eerste dag in Dealtrace · Vandaag lezen en afronden · Een belblok uitvoeren met een script · Een afspraak plannen en afronden · Waarom vijf pogingen werken |
-| Gevorderd | Leads vinden en overnemen · Je week plannen: belblokken en regiodagen · Een campagne opzetten · Inzichten beoordelen · Bezwaren ombuigen |
-| Expert | Een eigen prospectreis bouwen · Regels die werk opleveren (en geen ruis) · Agents en mandaten · Je cijfers lezen en verbeteren · Scripts testen en verbeteren |
-
-Een artikel telt als gelezen na het openen en scrollen tot het einde (of na "Markeer als gelezen"); bij sommige artikelen een korte controlevraag (drie meerkeuzevragen).
+**Aan de slag**: vijf artikelen die elke nieuwe gebruiker als eerste ziet: Je eerste dag in Dealtrace · Vandaag lezen en afronden · Een belblok uitvoeren met een script · Een afspraak plannen, afronden en overdragen · Waarom vijf pogingen werken. Een artikel telt als gelezen na het openen en scrollen tot het einde (of na "Markeer als gelezen"); lezen is nergens een voorwaarde voor.
 
 **Collectie "Hoe werkt Dealtrace"** (één of meer artikelen per feature, F01 tot en met F24), bijvoorbeeld:
 
-- Aan de slag: Je eerste dag · Je werkplek: binnendienst of buitendienst · Je niveau en wat er komt · Meldingen instellen · Dealtrace op je telefoon en offline.
+- Aan de slag: Je eerste dag · Je werkplek: binnendienst of buitendienst · Je niveau en functies die aanstaan · Chatten met de AI-assistent · Meldingen instellen · Dealtrace op je telefoon en offline.
 - Dagelijks werk: Vandaag · Een taak afronden met een uitkomst · Wat betekent poging 3 van 5 · Concepten goedkeuren en versturen · De belmodus · Een belscript kiezen · Bezoeken en kansen langs de route · Een bezoek afronden met een verslag · Briefing en Pitstop.
 - Prospects: Een prospect toevoegen · De accountkaart lezen · Buying committee · Nee met reden en afkoelperiode · De prospectreis en fases · Leadgenerator · Importeren · KvK en Datacollectief.
-- Plannen en sturen: Belblokken · Prospectplanning · Hercontactritme · Campagnes · Pipeline en offertes · Gebieden en regiodagen.
-- Inrichten (beheerder): Gebruikers, rollen en niveaus · Belscripts maken · Eigen velden · Regels · Accountmatrix · Doelgroepen en reizen · Agents en mandaten · Koppelingen · Abonnement en verbruik.
+- Plannen en sturen: Belblokken · Prospectplanning · Hercontactritme · Campagnes · De funnel van je prospectreis · Gebieden en regiodagen.
+- Inrichten (beheerder): Gebruikers, rollen, niveaus en functies aanzetten · Belscripts maken · Eigen velden · Regels · Accountmatrix · Doelgroepen en reizen · Agents en mandaten · Koppelingen · Abonnement, verbruik en AI-credits.
 - Voor de salesmanager: Team controleren · Coachingsgesprek voorbereiden · Analyse lezen · Verbetervoorstellen beoordelen.
 
 **Collectie "New business"** (de academie; korte praktische artikelen, elk met "Zo doe je het in Dealtrace"):
 
 | Categorie | Artikelen |
 |---|---|
-| Fundament | Wat new business anders maakt dan accountmanagement · Je ideale klant bepalen · De prospectmix: koud, warm, referral, winback · Je pijplijn terugrekenen vanuit je doel |
+| Fundament | Wat new business anders maakt dan accountmanagement · Je ideale klant bepalen · De prospectmix: koud, warm, referral, winback · Je funnel terugrekenen vanuit je doel |
 | Voorbereiden | Een goede aanleiding vinden · Het buying committee in kaart · Je verhaal: waarom, hoe, wat · Eén winpunt per gesprek |
 | Bellen | De eerste 20 seconden · Langs de receptie · Een belscript gebruiken zonder als een script te klinken · Vragen stellen met BAND · Een voicemail die teruggebeld wordt · Om de afspraak vragen |
 | Bezwaren | De vijf bezwaren die je elke week hoort · "Stuur maar wat informatie" · "We hebben al een leverancier" · "Geen budget" · "Bel over een half jaar terug" |
 | Schrijven | De eerste mail: waarom, hoe, vraag · Een opvolgmail na een voicemail · LinkedIn: profielbezoek, connectie, bericht · Een kaartje dat opvalt |
 | Op pad | Je regiodag plannen · Binnenlopen langs de route · Het eerste bezoek · Inventariseren en doorvragen · Na het bezoek: binnen 24 uur opvolgen |
 | Volhouden | Waarom de vierde en vijfde poging het verschil maken · Nee is een datapunt · Parkeren en terughalen · Referrals vragen · Netwerken en beurzen |
-| Afsluiten | Van gesprek naar offerte · Een offerte opvolgen · Onderhandelen zonder korting · De overdracht naar de klantrelatie |
+| Van afspraak naar overdracht | De eerste afspraak voorbereiden · Doorvragen in het eerste gesprek · Een vervolg afspreken · Een goede overdracht · Een no-show opvangen |
 | Jezelf verbeteren | Je cijfers lezen · Een goede week · Feedback vragen aan je salesmanager |
 
 Elk new business-artikel heeft de vaste opbouw: "Waarom dit werkt" (een alinea), "Zo doe je het" (stappen), "Voorbeeld" (een kort voorbeeldgesprek of voorbeeldmail met verzonnen bedrijven), "Valkuilen" en "Zo doe je het in Dealtrace" (met "Probeer het").
@@ -2473,7 +2503,7 @@ Elk new business-artikel heeft de vaste opbouw: "Waarom dit werkt" (een alinea),
 - Editor: titel, collectie, categorie, niveau, samenvatting, inhoud in Markdown met afbeeldingen en video-link, gekoppelde schermen (route), gekoppelde features, controlevragen, status (concept, gepubliceerd), "Bekijk als Beginner".
 - Statistiek per artikel: gelezen, nuttig, niet nuttig met reden, zoektermen zonder resultaat.
 
-**Uit het verkoopverhaal (F25).** Artikelen "Ons verhaal", "Onze belofte", "Tegen wie we verkopen", "Eén winpunt per gesprek", "Wanneer we iemand terugbellen", met de inhoud uit het leesmodel van de eigen organisatie. **Mobiel**: artikelen "Dealtrace op je telefoon", "Een dag offline", "Inspreken in plaats van typen"; de artikelen van het leerpad staan in het dagpakket.
+**Uit het verkoopverhaal (F25).** Artikelen "Ons verhaal", "Onze belofte", "Tegen wie we verkopen", "Eén winpunt per gesprek", "Wanneer we iemand terugbellen", met de inhoud uit het leesmodel van de eigen organisatie. **Mobiel**: artikelen "Dealtrace op je telefoon", "Een dag offline", "Inspreken in plaats van typen"; de artikelen van de functies die voor je aanstaan, staan in het dagpakket.
 
 #### Technisch
 
@@ -2481,8 +2511,8 @@ Elk new business-artikel heeft de vaste opbouw: "Waarom dit werkt" (een alinea),
 - `help_gelezen: organisation_id, gebruiker_id, artikel_id, op, vragenGoed?`; `help_feedback: artikel_id, gebruiker_id, nuttig, reden?`; `help_zoekopdrachten: organisation_id, term, resultaten, op`.
 - Zoeken met Postgres full-text search (Nederlands, `to_tsvector('dutch', ...)`); de AI-vraag gebruikt dezelfde zoekresultaten als materiaal (geen aparte vectorindex nodig bij honderden artikelen) met bewijsplicht op citaten.
 - Startinhoud: de artikelen staan als Markdown in de repository (`content/help/`) en worden bij een release in de tabel geladen (platformlaag); dat maakt review via pull requests mogelijk.
-- Endpoints: `GET /api/help?zoek=&collectie=&niveau=`, `GET /api/help/:slug`, `POST /api/help/:id/gelezen`, `POST /api/help/:id/feedback`, `POST /api/help/vraag` (AI), `POST/PUT /api/help` (beheer).
-- Acceptatie: de hulpknop op elk scherm opent het juiste artikel; het leerpad telt gelezen artikelen voor het groeipad (4.4); de AI-vraag geeft nooit een antwoord zonder citaat uit een artikel; een eigen artikel van organisatie A is onzichtbaar voor B.
+- Endpoints: `GET /api/help?zoek=&collectie=&niveau=`, `GET /api/help/:slug`, `POST /api/help/:id/gelezen`, `POST /api/help/:id/feedback`, `POST /api/assistent/vraag` (AI, F26), `POST/PUT /api/help` (beheer).
+- Acceptatie: de hulpknop op elk scherm opent het juiste artikel; de AI-assistent geeft nooit een antwoord zonder citaat uit een artikel; een eigen artikel van organisatie A is onzichtbaar voor B.
 
 ---
 
@@ -2494,7 +2524,7 @@ Elk new business-artikel heeft de vaste opbouw: "Waarom dit werkt" (een alinea),
 
 | Groep | Onderdeel | Feature |
 |---|---|---|
-| Organisatie | Organisatie (naam, logo, land, verkoopjaar, werkdagen en feestdagen) · Gebruikers, rollen, teams en niveaus · Abonnement en facturen · Verbruik · Audit | F23 |
+| Organisatie | Organisatie (naam, logo, land, verkoopjaar, werkdagen en feestdagen) · Gebruikers, rollen, teams, niveaus en functies · Abonnement en facturen · Verbruik en AI-credits · Audit | F23, F26 |
 | Verkoop | Verkoopverhaal (acht onderdelen, eigen inrichting of SalesDNA per onderdeel, F25) · Doelgroepen · Prospectreizen · Belscripts · Mailsjablonen · Meetingsoorten en uitkomsten · Campagnesoorten · Redenen voor nee en terugkomregels | F05, F08, F09, F12, F25 |
 | Ritme en regels | Accountmatrix en ritmes · Hercontactritmes · Activity selling-regels · Gebieden · Capaciteit en dagplafonds | F13, F15, F16, F18 |
 | Data en AI | Eigen velden · Koppelingen (KvK, Datacollectief, CRM, agenda, mail, telefonie, DealDrive) · Agents en mandaten · Waarnemer en signaalregels · Agent-prompts (vanaf Plus) · Kanalen en consent · Bel-me-niet-lijst · Privacy en bewaartermijnen | F02, F14, F19 |
@@ -2503,7 +2533,7 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 
 **Verkoopverhaal**: de acht onderdelen uit F25 (golden circle, bedrijfsverhaal, ambitie en visie, waarde en belofte, branches, concurrenten, winpunten, terugkomregels), per onderdeel de bron (eigen inrichting of SalesDNA), statussen concept en bevestigd met versies, de mappings (branche naar SBI, SalesDNA-fase naar reisfase, verliesreden naar terugkomreden) en het stijlprofiel (toon, passende woorden, te vermijden woorden; door AI voorgesteld uit het verhaal). Inhoud per branche in plaats van per segment. Voor iedereen leesbaar op `/richting`.
 
-**Gebruikers**: lijst met naam, e-mail, rol, team, niveau (segmentknoppen Beginner, Gevorderd, Expert), werkplek, laatste inlog, status; "Gebruiker toevoegen" binnen de seats of "Gebruiker aanvragen" (afhankelijk van de stand die de founder zette, F23); archiveren; niveau verlagen vraagt bevestiging. Vangrails: niet jezelf, niet de laatste beheerder.
+**Gebruikers**: lijst met naam, e-mail, rol, team, niveau (segmentknoppen Beginner, Gevorderd, Expert als voorinstelling) met per functie een schakelaar ("Beginner + 2 functies"), werkplek, plafond voor AI-credits, laatste inlog, status; "Gebruiker toevoegen" binnen de seats of "Gebruiker aanvragen" (afhankelijk van de stand die de founder zette, F23); archiveren; niveau verlagen vraagt bevestiging. Vangrails: niet jezelf, niet de laatste beheerder.
 
 **Regels voor instellingen**: elke wijziging wordt per veld na 600 ms stilte bewaard met zichtbare status ("Opslaan…", "Opgeslagen", "Opslaan mislukt"); elke wijziging is een auditregel; sleutels die de leverancier beheert (pakket, bundel, functievlaggen, platformprompts) zijn nooit via deze pagina's te schrijven.
 
@@ -2526,7 +2556,7 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 | Onderdeel | Founder | Beheerder klant | Salesmanager | Accountmanager |
 |---|---|---|---|---|
 | Klanten (organisaties) en gebruikers | alle organisaties | eigen gebruikers, aanvragen | geen | geen |
-| Abonnement en pakket | zetten per klant | eigen pakket lezen, upgrade aanvragen | geen | geen |
+| Abonnement en pakket | zetten per klant, credits per pakket en extra credits | eigen pakket lezen, upgrade en extra credits aanvragen, credits verdelen | geen | eigen creditstand zien |
 | Facturen | alle facturen, marge | eigen facturen, betalen, factuurgegevens | geen | geen |
 | AI-verbruik en bundel | alle klanten, bundel en plafond zetten | eigen verbruik in handelingen | eigen organisatie lezen | geen |
 | AI-koppeling (LLM-connector) | platform en per klant | één leesregel ("Claude, verwerking in de EU") | geen | geen |
@@ -2555,11 +2585,11 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 5. In "Alleen meekijken" weigert de server elke schrijfactie in klantdata ("Je kijkt mee in deze organisatie; schakel over naar wijzigen om iets aan te passen."). Overschakelen vraagt opnieuw een reden.
 6. De beheerder van de klant krijgt bij elke start een melding met naam, reden en modus. Per organisatie instelbaar: "Toegang leverancier: altijd" of "Alleen na toestemming" (de beheerder keurt een verzoek eerst goed).
 
-**Abonnementen**: pakketten Starter, Plus, Compleet met per pakket de functies en de databronnen (AI-zoeker, KvK, Datacollectief, webonderzoek), seats en bundels; matrix "Welke inhoud?" met "Vergelijk met klant"; een pakketwissel vraagt bevestiging met wat de klant wint of verliest en wordt geaudit; prijzen per pakket en per seat als gegeven met geldig-vanaf; proefperiode met automatische afwaardering en melding 7 dagen vooraf. De beheerder ziet zijn pakket in gewone woorden, seats in gebruik, contract en "Upgrade aanvragen".
+**Abonnementen**: pakketten Starter, Plus, Compleet met per pakket de functies en de databronnen (AI-zoeker, KvK, Datacollectief, webonderzoek), seats, bundels en **AI-credits per gebruiker per maand** (F26); matrix "Welke inhoud?" met "Vergelijk met klant"; een pakketwissel vraagt bevestiging met wat de klant wint of verliest en wordt geaudit; prijzen per pakket en per seat als gegeven met geldig-vanaf; proefperiode met automatische afwaardering en melding 7 dagen vooraf. De beheerder ziet zijn pakket in gewone woorden, seats in gebruik, contract en "Upgrade aanvragen".
 
 **Facturen**: Stripe Billing als bron van abonnementen, seats, facturen en incasso (SEPA, iDEAL, kaart); betaalde facturen naar de boekhouding (Moneybird) als synchronisatie; meerwerk boven de bundel als factuurregel; achterstallig pauzeert automatisch AI-werk (niet de app); de founder ziet marge per klant (gefactureerd tegen AI- en datakosten). De beheerder ziet eigen facturen met pdf, betaalknop, factuuradres en btw-nummer.
 
-**AI-verbruik**: elke AI-aanroep in het logboek; bundel per pakket in handelingen (zoekrondes, dossiers, beoordelingen, webonderzoek, concepten, belscript-invullingen, Datacollectief-records, helpvragen); melding bij 80 procent, blokkade bij 100 ("Je maandbundel voor dossiers is op."); de founder ziet kosten in euro's per model en soort, de beheerder alleen handelingen.
+**AI-verbruik**: elke AI-aanroep in het logboek; bundel per pakket in handelingen (zoekrondes, dossiers, beoordelingen, webonderzoek, concepten, belscript-invullingen, Datacollectief-records) en de chatcredits van de AI-assistent; melding bij 80 procent, blokkade bij 100 ("Je maandbundel voor dossiers is op."); de founder ziet kosten in euro's per model en soort, de beheerder alleen handelingen.
 
 **AI-koppeling**: oplosketen (organisatie, platform, omgeving, mock); provider Claude als standaard (webonderzoek alleen via Claude vanwege de broncontrole), andere providers per functie mogelijk; sleutel versleuteld en schrijf-alleen; "Test verbinding"; verwerkingsregio en "geen training" vastgelegd per provider.
 
@@ -2592,10 +2622,10 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 **Meldingen**
 
 - Bel onderaan de zijbalk met rode teller; pagina `/meldingen` met rijen (kleurbalk per soort: kritiek rood, hete aanleiding paars, dagstart blauw, herinnering geel, inzicht groen), "Openen", "Markeer gelezen", "Verberg".
-- Soorten: herinnering (taak of afspraak), dagstart (zelfgekozen tijd, standaard 07:45 zoals in 8.10: afspraken, taken van vandaag, top 3 aanleidingen), nieuwe hete aanleiding bij een eigen account, concept klaar ter goedkeuring, afspraak gemaakt door een collega voor jou, kans klaargezet door de binnendienst, campagne loopt achter, niveauvoorstel en ontgrendeling, coachingafspraak gedeeld, leverancier werkt in je organisatie (beheerder), bundel op 80 procent (beheerder).
+- Soorten: herinnering (taak of afspraak), dagstart (zelfgekozen tijd, standaard 07:45 zoals in 8.10: afspraken, taken van vandaag, top 3 aanleidingen), nieuwe hete aanleiding bij een eigen account, concept klaar ter goedkeuring, afspraak gemaakt door een collega voor jou, kans klaargezet door de binnendienst, campagne loopt achter, functie voor je aangezet, coachingafspraak gedeeld, AI-credits op 80 procent, leverancier werkt in je organisatie (beheerder), bundel op 80 procent (beheerder).
 - Kanalen: in-app, e-mail, web-push (PWA); per soort aan of uit en stille uren in Mijn instellingen; tijdens een belblok met "meldingen stil" worden ze vastgehouden tot het einde.
 
-**Globaal zoeken** (Ctrl K of `/`): prospects, klanten, contacten, campagnes, deals, helpartikelen; per soort gegroepeerd met telling; pijltjes, Enter, Escape; accent- en hoofdletterongevoelig; vergrendelde functies met slot en uitleg.
+**Globaal zoeken** (Ctrl K of `/`): prospects, klanten, contacten, campagnes, helpartikelen; per soort gegroepeerd met telling; pijltjes, Enter, Escape; accent- en hoofdletterongevoelig; functies die niet aanstaan met slot en uitleg.
 
 **Mobiel en buitendienst**: zie hoofdstuk 8 (mobiele schil met onderbalk, schermen op 390 px, onderweg-functies, spraak, push en de offline dag). F24 levert de basis: PWA met installatievraag (iOS-uitleg), Web Push, de synchronisatiewachtrij en de offline-indicator.
 
@@ -2629,10 +2659,10 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 | Golden circle | L0.11 | waarom, hoe, wat | Opbouw van elke boodschap (11.5) |
 | Bedrijfsverhaal | L0.1 | "Wie zijn wij", kernzin, verhaal per branche | Opening van belscripts (F08), briefing "Eerste gesprek" (F11), oefening in coaching (F20) |
 | Ambitie en visie | L0.2 | ambitie, visie, missie; ambitiedoelen | Ambitietoets bij een doelgroep (F05), visievraag in scripts, voortgang in analyse (F20) |
-| Waarde en belofte | L0.4 | kernbelofte, waardestatement, algemeen en per branche | `{belofte}` in boodschappen en scripts, offertekop in de offertebriefing |
+| Waarde en belofte | L0.4 | kernbelofte, waardestatement, algemeen en per branche | `{belofte}` in boodschappen en scripts, in de overdrachtsbriefing |
 | Branches | L0.6 | naam, focus (primair, secundair), horizon (huidig, toekomstig), termijn, prioriteit | Doelgroepen (F05), leadgenerator via SBI (F02), weging in Vandaag en belblokken, norm in F20 |
-| Concurrenten | L0.8 | soort (direct, indirect, intern, niets doen), sterk, zwak, onderscheid, "Zo zeg je het", "Als de klant zegt", bewijs, "Wanneer we verliezen" | Huidige leverancier op de accountkaart (F03), bezwaren in scripts en belmodus (F07, F08), "Verloren aan" (F17), doelgroep "Overstappers van …" |
-| Winpunten | L2.1 | per fase: titel, omschrijving, waarom wij winnen, concurrenten, impact, bijlagen | Eén winpunt per bericht (11.5), Pitstop (F11), campagnes (F12), deals (F17), coaching (F20) |
+| Concurrenten | L0.8 | soort (direct, indirect, intern, niets doen), sterk, zwak, onderscheid, "Zo zeg je het", "Als de klant zegt", bewijs, "Wanneer we verliezen" | Huidige leverancier op de accountkaart (F03), bezwaren in scripts en belmodus (F07, F08), "Verloren aan" bij een nee (F03), doelgroep "Overstappers van …" |
+| Winpunten | L2.1 | per fase: titel, omschrijving, waarom wij winnen, concurrenten, impact, bijlagen | Eén winpunt per bericht (11.5), Pitstop (F11), campagnes (F12), eerste afspraken (F09), coaching (F20) |
 | Terugkomregels | L3.14 | twee lijsten (verloren, slapend): reden, termijn, kanaal, klassen, rollen, aanpak | Terugkomdatum na nee, verlies of slapen (F13, 7.4) |
 
 **Terugkomregel en hercontactritme zijn twee begrippen** (ADR-018). Een **hercontactritme** is de reeks pogingen bij geen reactie (dag 0, 3, 7, 12, 21, parkeren; F13). Een **terugkomregel** zegt wanneer en waarom je na een nee, een verlies of een slapende periode terugkomt ("Prijs te hoog: over een halfjaar, bezoek door de accountmanager, met een klantverhaal over de kosten van wachttijd"). Op de terugkomdatum start de regel een hercontactritme op het kanaal en bij de rol uit de regel.
@@ -2696,29 +2726,98 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 | Verhaal en belofte | Kernzin en belofte van zijn branche in script en concept; oefening "Vertel ons verhaal in twee minuten" na een nieuwe versie | Kanaalvariant kiezen; dekking zien bij een campagne | Persoonlijke variant voorstellen; resultaat per versie |
 | Concurrenten | Bezwaar aanklikken in de belmodus; "Zo zeg je het" bij een huidige leverancier | Huidige leverancier zetten en filteren; doelgroep "Overstappers van …"; concurrentiekaart; "Verloren aan" | Nieuw bezwaar of antwoord voorstellen; context per branche en regio |
 | Branches | Chip op het account | Filteren en plannen op branche; eigen aandeel primair zien | Branche-afleiding uit klantdata voorstellen |
-| Winpunten | Het winpunt dat script of campagne kiest, met één bewijs | Winpunt kiezen per campagne en bericht; "winpunt ingezet" per deal | Winpunt per branche en nieuw bewijs voorstellen |
+| Winpunten | Het winpunt dat script of campagne kiest, met één bewijs | Winpunt kiezen per campagne en bericht; "winpunt ingezet" per eerste afspraak | Winpunt per branche en nieuw bewijs voorstellen |
 | Terugkomen | Taak op de terugkomdatum met de aanpak; reden kiezen bij een nee | Terugkomdatum per account aanpassen met reden; slapende klanten als bellijst | Regel aan een pogingenreeks per campagne koppelen; opbrengst per reden |
 
 Alles wat een Expert aandraagt, is een voorstel aan de salesmanager. De beheerder koppelt SalesDNA, kiest per onderdeel de bron, vult de eigen inrichting en beheert de mappings (branche naar SBI, SalesDNA-fase naar reisfase, verliesreden naar terugkomreden). Bij een gespiegeld onderdeel is "Bewerken" niet zichtbaar en zegt Dealtrace "Wijzigen doe je in SalesDNA, Salesbasis, Branches."
 
-**Leerpad (F21).** Artikelen "Ons verhaal", "Onze belofte", "Tegen wie we verkopen", "Eén winpunt per gesprek", "Wanneer we iemand terugbellen".
+**Helpcenter (F21).** Artikelen "Ons verhaal", "Onze belofte", "Tegen wie we verkopen", "Eén winpunt per gesprek", "Wanneer we iemand terugbellen".
 
 #### Technisch
 
 - **Spiegel** (alleen geschreven door de webhook-ontvanger en de volledige synchronisatie): `salesdna_koppeling` (status, endpoint, geheim versleuteld, laatste event, laatste volledige sync, actieve sublagen), `salesdna_events` (event_id uniek, soort, onderwerp_id, versie, ontvangen_op, verwerkt_op, fout, payload_hash), `salesdna_sublagen` (onderwerp_id, status, versie, bevestigd_op, bijgewerkt_op, verouderd, verouderd_door, inhoud ongewijzigd), `salesdna_sublaag_versies`.
 - **Leesmodel `vv_*`** (kolom `bron` = `salesdna` of `eigen`, `extern_id` = SalesDNA `_id`): `vv_sublagen`, `vv_teksten` (sublaag, sleutel, branche_id of null, tekst, kernzin, versie), `vv_branches`, `vv_concurrenten`, `vv_fasen` (met `reis_hoofdfase`), `vv_winpunten` (met `context` en `weging`), `vv_terugkomregels` (lijst, reden, termijn, `termijn_dagen`, kanaal, klassen, rollen, aanpak, `hercontactritme_id`), `vv_eigen_opties`.
 - **Eigen aanvullingen** (altijd bewerkbaar): `vv_branche_mapping` (sbi_codes, doelgroep_ids, trefwoorden), `vv_concurrent_context`, `vv_winpunt_branche`, `vv_bewijs`, `vv_varianten`, `vv_ambitiedoelen`, `vv_redenmapping`.
-- **Gebruik**: `accounts.vv_branche_id`, `accounts.huidige_leverancier_id`, `accounts.terug_op`, `accounts.terug_regel_id`; `activiteiten.data.vv {versies, brancheId, winpuntId?, concurrentId?, varianten[]}`; `deals.data.verlorenAan`, `deals.data.winpuntIngezet[]`.
+- **Gebruik**: `accounts.vv_branche_id`, `accounts.huidige_leverancier_id`, `accounts.terug_op`, `accounts.terug_regel_id`; `activiteiten.data.vv {versies, brancheId, winpuntId?, concurrentId?, varianten[]}`; `accounts.data.neeAan` (concurrent bij een nee), `appointments.data.winpuntIngezet[]`.
 - **Afgeleid**: `nb_branche_stand`, `nb_winpunt_resultaten`, `nb_concurrent_resultaten`, `nb_terugkom_resultaten`; nachtelijke job.
 - **Uitgaand**: `salesdna_suggesties` (onderwerp_id, veld, regel_extern_id, soort, tekst, bewijs, status, verstuurd_op).
 - **Webhook-ontvanger** `POST /api/koppelingen/salesdna/webhook`: HMAC-SHA256 over de ruwe body (`X-SalesDNA-Signature`), `X-SalesDNA-Event-Id`, `X-SalesDNA-Tijd` hooguit 5 minuten verschil; idempotent op event_id en op (onderwerp_id, versie); 2xx binnen 5 seconden, verwerking in een job. Gebeurtenissen: `sublaag.bevestigd` (volledige inhoud), `sublaag.verouderd`, `sublaag.verouderd-gesloten`, `sublaag.leeg`, `sublaag.overgeslagen`, `ping`. Bij een gat in de versienummers een volledige synchronisatie.
-- **Projectie** `server/utils/vvProjectie.ts`: één functie per sublaag van spiegel naar leesmodel en één van eigen inrichting naar leesmodel; upsert op `extern_id`, verdwenen ids op `actief=false`, verwijzingen in accounts en deals blijven op id ("Verwijderd uit SalesDNA"); een nieuwe branche of fase zonder mapping maakt een taak voor de beheerder; scripts die een verdwenen winpunt of concurrent noemen gaan op "Controleren".
+- **Projectie** `server/utils/vvProjectie.ts`: één functie per sublaag van spiegel naar leesmodel en één van eigen inrichting naar leesmodel; upsert op `extern_id`, verdwenen ids op `actief=false`, verwijzingen in accounts en afspraken blijven op id ("Verwijderd uit SalesDNA"); een nieuwe branche of fase zonder mapping maakt een taak voor de beheerder; scripts die een verdwenen winpunt of concurrent noemen gaan op "Controleren".
 - **Pure functies** `shared/verkoopverhaal.ts`: `verhaalVoor(account, leesmodel)` met terugval per branche, `beloftevoor(account)`, `kiesWinpunt(account, fase, concurrent, weging)` (eerst "Tegen wie we hier winnen" plus huidige leverancier, dan impact, dan fase; weging onder de norm schuift naar achteren), `dekking(onderdeel)`, `terugkomDatum(reden, regels, nu)`, `kernzin(tekst)`.
 - **Suggesties**: wekelijkse job bundelt hooguit 10 per sublaag, namenfilter, vrijgave door de salesmanager, `POST {salesdna}/api/koppelingen/dealtrace/suggesties` met dezelfde HMAC; status terug via `suggestie.status`.
 - **Endpoints**: `GET /api/richting` (leesmodel met status, versies, dekking), `GET/PUT /api/instellingen/verkoopverhaal/:onderdeel`, `POST /api/instellingen/verkoopverhaal/:onderdeel/bevestig`, `POST /api/koppelingen/salesdna/koppel`, `POST /api/koppelingen/salesdna/sync`, `POST /api/koppelingen/salesdna/bron {onderdeel, bron}`.
 - **Startset**: de Voltvast-seed (Bijlage C) als `db/seed/voltvast.ts` en als fixture voor de webhook-mock; dezelfde seed als eigen inrichting en als spiegel moet overal hetzelfde resultaat geven.
 - **Acceptatie**: de tien testgevallen uit Bijlage C.9; een concept bewaart de gebruikte versies; een webhook met een ongeldige handtekening of een te oud tijdstip geeft 401 en verandert niets; een dubbel event verandert niets; zonder koppeling werkt alles met de eigen inrichting.
 - **Buiten scope**: schrijven in SalesDNA buiten suggesties; de tien weergaven, kaders, meekijkronde en Kwartaal check van SalesDNA.
+
+---
+
+### F26 AI-assistent: chatten met AI
+
+**Beslissing B20.** Iedere gebruiker kan chatten met AI om ondersteund te worden. Hoeveel er gechat kan worden, bepaalt het abonnement via een aantal credits.
+
+#### Functioneel
+
+**Kern.** "Help me, hier en nu." Een chat die weet op welk scherm je staat en bij welk account, en die antwoordt met wat Dealtrace weet: het helpcenter, het verkoopverhaal (F25), de gegevens van het account en je eigen werk. Hij legt uit, bereidt voor en stelt voor; hij voert niets uit.
+
+| Wie | Wat | Niveau |
+|---|---|---|
+| Iedere gebruiker | Chatten vanuit elk scherm; antwoorden met bron; een voorstel als concept laten klaarzetten | Beginner |
+| Beheerder | Credits van de organisatie zien en verdelen, een plafond per gebruiker zetten, extra credits aanvragen | rol |
+| Founder | Credits per pakket vastleggen, verbruik per organisatie zien | rol |
+
+**Waar je hem vindt**
+
+- Op de laptop: de knop "Vraag AI" (sparkle-icoon) in elke paginakop; de chat opent als flyout rechts (480 px) en blijft open terwijl je doorwerkt.
+- Op de telefoon: in de compacte kop naast de microfoon (8.3); de chat opent als schuifvenster. Inspreken werkt ook in de chat.
+- In het helpcenter vervangt de chat het blok "Stel je vraag" (F21).
+
+**Opbouw van de chat**
+
+1. Kop: "AI-assistent", de context als chip ("Bij: Brontsma Installatietechniek" of "Scherm: Belblokken"), te verwijderen met een kruisje, en rechts de stand van de credits ("412 credits over deze maand").
+2. Voorstellen bij een lege chat, passend bij het scherm: "Hoe begin ik dit gesprek?", "Welke bezwaren kan ik verwachten?", "Hoe werkt een belblok?", "Wat staat er vandaag voor mij klaar?".
+3. Gesprek: elk antwoord met bronnen als chips ("Helpcenter: Om de afspraak vragen", "Verhaal: kernzin Woningbouw", "Verslag 9 okt"); geen bron, geen bewering over een account.
+4. Acties onder een antwoord, altijd als concept en nooit uitgevoerd: "Zet als taak klaar", "Maak mailconcept", "Open het artikel", "Open het account".
+5. Invoer met "Inspreken" en "Verstuur"; onder de invoer: "De assistent voert niets uit. Jij beslist."
+
+**Wat de assistent mag gebruiken**
+
+- Het helpcenter (beide collecties) en de eigen artikelen van de organisatie.
+- Het bevestigde verkoopverhaal (F25): verhaal, belofte, concurrenten, winpunten, terugkomregels.
+- De gegevens die de gebruiker zelf mag zien (rechtenmatrix 3.3): het account en de contacten van het scherm, de reis, de laatste contactmomenten en verslagen, de eigen taken en afspraken. Nooit gegevens van een andere organisatie, nooit privénotities van een manager.
+- Geen internet, tenzij de vraag om webonderzoek gaat en de organisatie die bundel heeft (dan kost het meer credits en zegt de chat dat vooraf).
+
+**Credits**
+
+- Elk abonnement heeft een aantal **AI-credits per maand** per organisatie (startvoorstel, de prijzen stelt de founder vast, open vraag 24):
+
+  | Pakket | Credits per gebruiker per maand (samen in één pot per organisatie) |
+  |---|---|
+  | Starter | 200 |
+  | Plus | 600 |
+  | Compleet | 1.500 |
+
+- Een gewone vraag kost 1 credit; een vraag met accountgegevens of een lang antwoord 2 tot 5 credits; webonderzoek 10 credits. De chat toont vóór een dure vraag de kosten ("Dit kost ongeveer 10 credits. Doorgaan?").
+- De beheerder kan per gebruiker een plafond zetten en ziet het verbruik per gebruiker; bij 80 procent van de pot krijgen beheerder en gebruikers een melding; bij 0 stopt de chat met "De credits van deze maand zijn op. Je beheerder kan extra credits aanvragen." en blijft al het andere werken.
+- Extra credits vraagt de beheerder aan in Abonnement (F23); de founder zet ze direct of via de facturatie.
+- Credits van een maand vervallen aan het einde van de maand.
+
+**Regels**
+
+- De chat valt onder de vangrails van 11.2: bewijsplicht, namenfilter, geen privégegevens, schema op acties, nooit buiten mandaat.
+- Een gesprek wordt 30 dagen bewaard voor de gebruiker zelf en daarna verwijderd; de founder ziet alleen tellingen, geen inhoud.
+- Vragen zonder antwoord uit het helpcenter gaan als signaal naar de beheerder of founder voor een nieuw artikel (zoals in F21).
+
+#### Technisch
+
+- `ai_chats: id, organisation_id, gebruiker_id, context {route, accountId?, contactId?}, gemaakt_op, verloopt_op`; `ai_chat_berichten: id, chat_id, rol ('gebruiker'|'assistent'), tekst, bronnen jsonb, credits int, op`.
+- `ai_credits: organisation_id, maand, toegekend, extra, verbruikt`; `ai_credit_plafonds: organisation_id, gebruiker_id, plafond`; credits per pakket in `pakketprijzen` (F23).
+- Pure functies (`shared/credits.ts`): `creditsVoor(vraag, context, soort)`, `magVragen(organisatie, gebruiker, kosten)`, `creditsStand(organisatie, maand)`.
+- Endpoints: `POST /api/assistent/vraag {chatId?, tekst, context}` (streamend antwoord), `GET /api/assistent/chats`, `GET /api/assistent/credits`, `PUT /api/instellingen/credits/plafond`, `POST /api/abonnement/extra-credits`.
+- AI: Claude Haiku voor eenvoudige vragen en Claude Sonnet voor vragen met accountgegevens, gekozen door `creditsVoor`; materiaal via dezelfde zoekfunctie als het helpcenter plus het leesmodel `vv_*` en de accountcontext; schema voor acties (`taak`, `mailconcept`, `artikel`, `account`); mock-provider met vaste antwoorden.
+- Prestatiebudget: eerste woorden van het antwoord binnen 2 seconden.
+- Acceptatie: een gebruiker zonder recht op een account krijgt geen gegevens van dat account in een antwoord; bij 0 credits geeft de server 402 met de schermtekst en werkt de rest van de app door; een actie uit de chat maakt een concept en nooit een verstuurd bericht; elk antwoord over een account heeft een bron.
+- Hergebruik: `server/utils/llm-provider.ts`, `server/utils/aiVerbruik.ts`, `shared/aiBundel.ts` als basis voor de credits.
 
 ---
 
@@ -2756,7 +2855,7 @@ Alles wat een Expert aandraagt, is een voorstel aan de salesmanager. De beheerde
 | Salesobjecten | `signals` | `account_id`, `contact_id`, `rule_id`, `agent`, `type`, `relevance_score`, `confidence`, `status` |
 | Salesobjecten | `tasks` | `owner_id`, `account_id`, `contact_id`, `signal_id`, `rule_id`, `campaign_id`, `belblok_id`, `action_type`, `title`, `status`, `priority`, `due_date`, `uitkomst`, `later_op`, `executor`, `executor_status` |
 | Salesobjecten | `appointments` | `owner_id`, `gepland_door`, `account_id`, `meetingsoort_id`, `vorm`, `status`, `start_at`, `end_at`, `uitkomst_code` |
-| Salesobjecten | `deals`, `quotes` | zie F17 |
+| Salesobjecten | `overdrachten` | zie F17 |
 | Salesobjecten | `activiteiten` | `account_id`, `contact_id`, `task_id`, `campaign_id`, `uitvoerder` ('mens'|'ai'), `agent?`, `kanaal`, `soort`, `uitkomst`, `script_id?`, `op`, `data.vv` (gebruikte versies van het verkoopverhaal) |
 | Proces | `doelgroepen`, `reistemplates`, `activiteitstemplates`, `prospectreizen`, `reisgeschiedenis` | zie F05 |
 | Proces | `campagnes`, `campagnesoorten` | zie F12 |
@@ -2773,7 +2872,9 @@ Alles wat een Expert aandraagt, is een voorstel aan de salesmanager. De beheerde
 | Planning | `belblok_sessies`, `klaargezet_voor`, `kans_overslaan` | zie F07, F10 |
 | Koppelingen | `koppelingen`, `koppeling_runs` | zie F02, hoofdstuk 12 |
 | AI | `agent_runs`, `waarnemer_profielen`, `briefing_teksten` | zie hoofdstuk 11 |
-| Afgeleid | `nb_kpi_dag`, `nb_conversies`, `nb_script_resultaten`, `nb_regel_resultaten`, `nb_prospectmix_stand`, `nb_bezwaren`, `nb_branche_stand`, `nb_winpunt_resultaten`, `nb_concurrent_resultaten`, `nb_terugkom_resultaten` | dagelijkse en wekelijkse jobs |
+| AI-assistent | `ai_chats`, `ai_chat_berichten`, `ai_credits`, `ai_credit_plafonds` | zie F26 |
+| Platform | `functie_verzoeken` | zie 4.5 |
+| Afgeleid | `nb_funnel_stand`, `nb_kpi_dag`, `nb_conversies`, `nb_script_resultaten`, `nb_regel_resultaten`, `nb_prospectmix_stand`, `nb_bezwaren`, `nb_branche_stand`, `nb_winpunt_resultaten`, `nb_concurrent_resultaten`, `nb_terugkom_resultaten` | dagelijkse en wekelijkse jobs |
 
 ### 10.3 Relaties in één oogopslag
 
@@ -2784,7 +2885,7 @@ organisations ─┬─ users ── teams
                ├─ accounts ─┬─ contacts
                │            ├─ signals ── tasks ── activiteiten
                │            ├─ appointments ── meetingsoorten
-               │            ├─ deals ── quotes
+               │            ├─ overdrachten
                │            └─ leads (bron)
                ├─ campagnes ── items ── tasks
                ├─ belscripts (versies) ── activiteiten.script
@@ -2842,8 +2943,8 @@ Mandaatniveaus: **A** autonoom (doet het zelf, logt het, de mens ziet het achter
 | LinkedIn-assistent | Zet profielbezoek, connectie en bericht als taak klaar met tekst en knop | Concepten van de Schrijver | C en D; geen automatisering in het LinkedIn-account van de gebruiker |
 | Planner | Plant pogingen volgens het ritme, vult belblokken, landt taken op regiodagen, bewaakt capaciteit | Ritmes, matrices, agenda, gebieden | A |
 | Notulist | Maakt het verslag volgens de agenda van de meetingsoort, stelt de uitkomst voor | Aantekeningen, transcript, meetingsoort | A voor het verslag; uitkomst kiest de mens |
-| Coach | Verbetervoorstel per doelgroep, coachingpunten per persoon, niveauvoorstel | Activiteitenlog, conversies, verslagen | A voor voorstellen; de manager beslist |
-| Gids | Beantwoordt helpvragen uit het helpcenter | Help-artikelen, kennisbank van de organisatie | A, alleen lezen |
+| Coach | Verbetervoorstel per doelgroep, coachingpunten per persoon | Activiteitenlog, conversies, verslagen | A voor voorstellen; de manager beslist |
+| Gids | De AI-assistent (F26): beantwoordt vragen van gebruikers en zet concepten klaar | Help-artikelen, kennisbank van de organisatie, verkoopverhaal, de context van het scherm binnen de rechten van de gebruiker | A, alleen lezen en concepten |
 | Bewaker | Toetst elke handeling aan mandaat, consent, afkoeling, ritme, capaciteit, bundel en werkuren | Alle tabellen | A, kan alleen blokkeren en melden |
 
 **Mandaat per gebruikersniveau** (binnen het organisatiemaximum):
@@ -2871,11 +2972,11 @@ Mandaatniveaus: **A** autonoom (doet het zelf, logt het, de mens ziet het achter
 | Notulist | Claude Sonnet | 0 / 300 / 300 |
 | Brief en committee | Claude Sonnet | 0 / 500 / 500 |
 | Coach en verbetervoorstel | Claude Opus | 0 / 50 / 50 |
-| Helpvraag | Claude Haiku | 200 / 1.000 / 1.000 |
+| AI-assistent (chat, F26) | Claude Haiku of Sonnet, gekozen per vraag | in credits: 200 / 600 / 1.500 per gebruiker per maand, één pot per organisatie |
 | Datacollectief-records | n.v.t. (externe kosten) | 0 / 0 / volgens contract |
 | KvK-bevragingen | n.v.t. (externe kosten) | 0 / 500 / 2.000 |
 
-Modelnamen en prijzen worden vastgelegd in de tabel `llm_prijzen` met peildatum; de modelkeuze per soort staat in de AI-koppeling (F23) zodat wisselen zonder release kan. Een Beginner op Starter heeft dus geen AI-invulling van scripts: het script werkt met vaste teksten en terugvalzinnen (F08).
+Modelnamen en prijzen worden vastgelegd in de tabel `llm_prijzen` met peildatum; de modelkeuze per soort staat in de AI-koppeling (F23) zodat wisselen zonder release kan. De AI-assistent rekent in **credits** (een gewone vraag 1 credit, een vraag met accountgegevens 2 tot 5, webonderzoek 10); of ook de andere AI-soorten in credits worden uitgedrukt, is open vraag 26. Een Beginner op Starter heeft geen AI-invulling van scripts: het script werkt met vaste teksten en terugvalzinnen (F08).
 
 ### 11.5 Schrijven: de boodschap
 
@@ -2889,14 +2990,14 @@ Volgorde bij een eerste contact: waarom (uit de golden circle) → hoe (het winp
 |---|---|---|---|---|---|
 | **KvK API** (Zoeken, Basisprofiel, Vestigingsprofiel) | Bedrijven vinden en verrijken; KvK-nummer als ontdubbelsleutel; mutaties als signaal | lezen | REST met API-sleutel van de organisatie, kosten per bevraging; cache 30 dagen per KvK-nummer; maandelijkse controle op wijzigingen voor accounts in reis | beheerder | 7 |
 | **Datacollectief** | Selecties op doelgroep; contactpersonen met functie, direct nummer en e-mail; verrijking | lezen | API van Datacollectief met sleutel van de organisatie (of bestandsexport als terugval via de import); tegoed per record; herkomst `datacollectief` met datum | beheerder | 6 |
-| **CRM** (HubSpot eerst; Salesforce, Microsoft Dynamics, Pipedrive, AFAS via dezelfde adapter) | Ontdubbelen tegen het CRM, profiel uit klanten, overgenomen leads, uitkomsten en deals terugschrijven | beide | OAuth per organisatie, tokens versleuteld, veldtoewijzing, eigenaarsregel op e-mail, synchronisatie elk uur en op verzoek, webhooks waar beschikbaar; sessiecontrole op elk endpoint (gat 21 uit DealDrive) | beheerder | 8 |
+| **CRM** (HubSpot eerst; Salesforce, Microsoft Dynamics, Pipedrive, AFAS via dezelfde adapter) | Ontdubbelen tegen het CRM, profiel uit klanten, overgenomen leads, uitkomsten en eerste afspraken terugschrijven, overdracht na de eerste afspraak (het CRM maakt de deal) | beide | OAuth per organisatie, tokens versleuteld, veldtoewijzing, eigenaarsregel op e-mail, synchronisatie elk uur en op verzoek, webhooks waar beschikbaar; sessiecontrole op elk endpoint (gat 21 uit DealDrive) | beheerder | 8 |
 | **Agenda** (Microsoft 365, Google) | Bezetting voor belblok- en afspraakadviezen; afspraken en belblokken wegschrijven; Teams- en Meet-links | beide | OAuth per gebruiker | gebruiker, aan te zetten door beheerder | 8 |
 | **Mail** (SMTP van de organisatie of gekoppelde mailbox) | Concepten versturen, Verzender, herinneringen, afmeldlink | schrijven | SMTP met test-eerst-dan-opslaan, AES-256-GCM, SPF, DKIM en DMARC als voorwaarde; of Microsoft Graph en Gmail API via de agendakoppeling | beheerder | 9 |
 | **WhatsApp Business** | Berichten uit goedgekeurde sjablonen met opt-in | schrijven | provider (open vraag) | beheerder | 12 |
 | **Telefonie** (bijvoorbeeld Voys, Aircall) | Klik-om-te-bellen, gespreksduur terug | beide | adapter, optioneel | beheerder | na 12 |
 | **Routedienst** (OpenRouteService of Google Routes) | Geocodering, reistijden en omrijtijd voor kansen langs de route | lezen | API-sleutel van het platform, cache per paar punten | founder | 8 |
 | **SalesDNA** | De zeven sublagen plus golden circle als bron van het verkoopverhaal (F25); suggesties met bewijs terug naar kader 2 | beide | gesigneerde webhooks per organisatie (HMAC-SHA256, event-id, tijdvenster 5 minuten): `sublaag.bevestigd`, `sublaag.verouderd`, `sublaag.verouderd-gesloten`, `sublaag.leeg`, `sublaag.overgeslagen`, `ping`; volledige synchronisatie bij een gat in de versies; suggesties hooguit 10 per sublaag per week zonder namen; zonder koppeling de eigen inrichting | beheerder | 3 (spiegel), 11 (suggesties) |
-| **DealDrive** | Overdracht van een gewonnen klant; klantstatus terug voor winback | beide | HMAC met gedeeld geheim per organisatie | founder | 11 |
+| **DealDrive** | Overdracht na de eerste afspraak (DealDrive maakt de deal en de offerte); klantstatus en verloren deals terug voor winback | beide | HMAC met gedeeld geheim per organisatie | founder | 11 |
 | **Stripe** en **Moneybird** | Abonnement, seats, facturen, incasso; boekhouding | beide | Stripe Billing met webhook (idempotent op event-id); Moneybird-synchronisatie als job | founder | 12 |
 | **GitHub** | Roadmapwens naar issue en bouwketen | schrijven | token van het platform; workflow opent altijd een pull request | founder | 12 |
 | **Transcriptie** (EU-dienst, keuze in hoofdstuk 22) | Ingesproken verslagen en spraakopdrachten naar tekst (8.9) | lezen | adapter met mock; opname na transcriptie verwijderd | founder | 8 |
@@ -2931,7 +3032,7 @@ dealtrace/
     assets/css/dealtrace.css          designsysteem (enige globale stylesheet)
     components/                       schil, flyouts, lijstrijen, NB-componenten (ritmestrook, uitkomstraster, mandaatpil, bewijsregel)
     composables/                      use* per domein
-    pages/                            index, agenda, acties, belblokken, bezoeken, campagnes, pipeline, prospects, contacten,
+    pages/                            index, agenda, acties, belblokken, bezoeken, campagnes, funnel, prospects, contacten,
                                       leadgenerator, inzichten, planning, richting, reizen, resultaten, team, coaching, analyse,
                                       audit, help, roadmap, meldingen, instellingen/*, platform/*, partner/bevestig/[token]
   server/
@@ -2941,7 +3042,7 @@ dealtrace/
                                       routedienst, belscripts, hercontact, nbStatus, kansen, coaching, help
   shared/                             pure functies en types: functies (niveaucatalogus), reis, belblokken, belscripts,
                                       hercontact, nbStatus, leadGenerator, ontdubbelen, route, campagneTempo, ritmematrix,
-                                      offerteOpvolging, gebieden, datum (met feestdagen), settingKeys, syncTabellen
+                                      gebieden, datum (met feestdagen), settingKeys, syncTabellen
   content/help/                       help-artikelen in Markdown (platformlaag)
   netlify/functions/                  motor (elk uur), herinneringen (5 min), dagstart (15 min), dag (conversies, kpi,
                                       gezondheid, opruimen), week (bezwaren, waarnemer), maand (coach, verbetervoorstel)
@@ -2978,7 +3079,7 @@ Dealtrace gebruikt het designsysteem uit `designsysteem/` (stijlbestand `dealdri
 
 | Onderwerp | Regel |
 |---|---|
-| Kleur | Krantenpalet: `--ink #0a0a0a`, `--bg #fafaf7`, `--surface #f1f1ee`, `--border #e3e1da`, één accent `--yellow #fed800`; semantisch `--red #c0392b` (fout, urgent, verwijderen), `--green #1e7c4a` (gewonnen), `--blue #194c8f` (info, klant), `--orange #d97706` (let op), `--purple #4c1d95` (hete prospect). Kleuren altijd via `var()`. Geel nooit als kleine tekst op wit. |
+| Kleur | Krantenpalet: `--ink #0a0a0a`, `--bg #fafaf7`, `--surface #f1f1ee`, `--border #e3e1da`, één accent `--yellow #fed800`; semantisch `--red #c0392b` (fout, urgent, verwijderen), `--green #1e7c4a` (gelukt, overgedragen), `--blue #194c8f` (info, klant), `--orange #d97706` (let op), `--purple #4c1d95` (hete prospect). Kleuren altijd via `var()`. Geel nooit als kleine tekst op wit. |
 | Typografie | Source Serif 4 voor koppen en cijfers, Inter voor de rest; schaal 11, 12, 13, 14, 16, 18, 22, 32 px; niets onder 11 px; cijfers tabulair |
 | Vorm | Hoeken 2 px, geen schaduwen, diepte met randen; aanraakdoelen minimaal 44 px (handschoenmodus 54) |
 | Schil | Zwarte zijbalk 240 px (inklapbaar 64), Lucide-iconen, LIVE-strook, "Zoeken" met Ctrl K, groepen, meldingen en gebruikersmenu onderaan; op mobiel een icoonstrook van 64 px, geen onderbalk |
@@ -3068,8 +3169,8 @@ Authenticatie via Supabase met httpOnly-cookies; inloggen met een eenmalige code
 | Prospectmix binnen 10 procentpunten van de afspraak | elk kwartaal |
 | Coachingsgesprekken gehouden | één per accountmanager per twee weken |
 | Coachingafspraken gehaald | boven 60 procent |
-| Niveaugroei | elke Beginner binnen 3 maanden naar Gevorderd |
-| Nieuwe klanten uit new business | volgens ambitie |
+| Eerste afspraken uit new business | volgens ambitie |
+| Gehouden eerste afspraken overgedragen binnen 24 uur | boven 90 procent |
 | Kosten per afspraak (AI, data, tijd) | dalend per kwartaal |
 | Datakwaliteit | boven 95 procent van de actieve prospects met geldig nummer of e-mail |
 
@@ -3079,6 +3180,8 @@ Authenticatie via Supabase met httpOnly-cookies; inloggen met een eenmalige code
 |---|---|
 | AI-concept ongewijzigd of licht aangepast gebruikt | boven 60 procent |
 | Helpartikel nuttig | boven 80 procent |
+| Antwoord van de AI-assistent nuttig | boven 75 procent |
+| Organisaties die binnen hun AI-credits blijven | boven 90 procent |
 | Offline afgeronde pogingen correct verwerkt | boven 99 procent, nooit dubbel |
 | AI-antwoorden in één keer binnen het schema | boven 95 procent |
 | Playwright desktop groen bij elke commit | 100 procent |
@@ -3095,14 +3198,14 @@ Het aantal sprints volgt de inhoud (beslissing B14). Met het hoofdstuk Mobiel en
 | 2 | Prospects en data | Accounts en contacten, lijsten met tellers, accountkaart (ook op 390 px), buying committee, **eigen velden** met filters, import met ontdubbelen, datakwaliteit, herkomst per veld | F03, F04, F19, F02 (import) | 1.000 accounts geïmporteerd met duplicaten gevangen; een accountkaart is op de telefoon met één duim te bedienen |
 | 3 | Verkoopverhaal | **SalesDNA-sublagen**: bedrijfsverhaal (ook per branche), ambitie en visie, waarde en belofte, concurrenten, branches, winpunten, hercontactritme; eigen inrichting en spiegel via webhooks; pagina Richting; startset Voltvast als testdata | F25 | Een organisatie zonder SalesDNA vult haar verhaal in; een organisatie met SalesDNA ontvangt het via een webhook; beide tonen hetzelfde op Richting |
 | 4 | Reis, motor en ritme | Doelgroepen (gekoppeld aan branches), standaard prospectreis, statusmachine en nee met afkoelperiode, motor met editor en starterset, accountmatrix | F05 (standaard), F15, F16 | Een overgenomen account doorloopt de reis op echte gebeurtenissen; de motor maakt precies de verwachte taken |
-| 5 | Dag en hulp | Vandaag (desktop en telefoon), acties, hercontactritme-engine, Planner en Bewaker, helpcenter basis met leerpad Beginner, groeipad | F01, F06, F13 (ritme), F21 (basis) | Een account doorloopt vijf pogingen en parkeert; de hulpknop opent op elk scherm het juiste artikel |
+| 5 | Dag en hulp | Vandaag (desktop en telefoon), acties, hercontactritme-engine, Planner en Bewaker, helpcenter basis, AI-assistent met credits (basis), functies aanzetten per gebruiker | F01, F06, F13 (ritme), F21 (basis), F26 | Een account doorloopt vijf pogingen en parkeert; de hulpknop opent op elk scherm het juiste artikel |
 | 6 | Binnendienst | Belblokken en belmodus (ook op de telefoon), belscript-templates met AI-invulling uit het verkoopverhaal, prospectplanning | F07, F08, F13 (planning) | Een binnendienstmedewerker belt een blok van tien prospects met een gekozen script |
 | 7 | Leads | Leadgenerator met AI-zoeker, KvK en Datacollectief, profiel uit branches en klanten | F02 | Een KvK-selectie levert leads in vijf groepen; "Neem over" maakt een prospect met contactpersonen |
 | 8 | Buitendienst en onderweg | Agenda en meetingsoorten, bezoeken en kansen langs de route, gebieden en regiodagen, routedienst, **Onderweg-schermen**, inloopbezoek, spraak, offline bezoekdag, agendakoppeling | F09, F10, F18, 8 | Een buitendienstmedewerker werkt een hele dag op de telefoon, ook een uur zonder bereik, met drie bezoeken, twee tussenstops en drie ingesproken verslagen |
-| 9 | Verbinden en campagnes | Campagnes, pipeline en offertes, briefings en Pitstop, Schrijver met stijlcheck, mail versturen | F11, F12, F17 | Een koude belcampagne van 30 accounts loopt van Gespot tot Afspraak; een gewonnen deal maakt een klant |
+| 9 | Verbinden en campagnes | Campagnes, funnel van de prospectreis en overdracht na de eerste afspraak, briefings en Pitstop, Schrijver met stijlcheck, mail versturen | F11, F12, F17 | Een koude belcampagne van 30 accounts loopt van Gespot tot Afspraak; een gehouden eerste afspraak wordt overgedragen met briefing |
 | 10 | Agents en bronnen | Waarnemer, Verrijker, Profielbouwer, Notulist, signaalregels per doelgroep, concurrentsignalen, CRM-koppeling (HubSpot) | F14, F02 (CRM) | Een vacature wordt een inzicht met citaat en winpunt; leads worden tegen HubSpot ontdubbeld en teruggeschreven |
 | 11 | Sturen en maatwerk | Team, Coaching (ook op de telefoon), Analyse, Audit; Coach-agent; maatwerk prospectreizen; suggesties terug naar SalesDNA; overdracht naar DealDrive | F05 (maatwerk), F20 | Een salesmanager houdt een coachingsgesprek met kaart; een expert bouwt een eigen reis en de salesmanager publiceert hem |
-| 12 | Platform en afronding | Platformbeheer compleet (Stripe, Moneybird, AI-koppeling, prompts, roadmap, motor), helpcenter compleet met academie en AI-vraag, Web Push, WhatsApp, tests op echte toestellen, prestatiebudgetten | F21, F23, F24 | De eerste klantorganisatie draait een kwartaal met binnendienst en buitendienst; elke feature heeft een helpartikel en een telefoonweergave |
+| 12 | Platform en afronding | Platformbeheer compleet (Stripe, Moneybird, AI-koppeling, AI-credits en extra credits, prompts, roadmap, motor), helpcenter compleet met academie en AI-vraag, Web Push, WhatsApp, tests op echte toestellen, prestatiebudgetten | F21, F23, F24 | De eerste klantorganisatie draait een kwartaal met binnendienst en buitendienst; elke feature heeft een helpartikel en een telefoonweergave |
 
 Bezetting: één bouwer (Claude Code in sessies per bouwprompt) met de founder als productowner en reviewer; per sprint een adversariële review met minimaal twee controleurs op code, desktopbrowser en een echte telefoon vóór de commit naar `develop`.
 
@@ -3144,7 +3247,7 @@ Definition of Done (hoofdstuk 19).
 
 ### 18.3 Indeling van de prompts
 
-De nummers P01 tot en met P26 blijven gelijk aan versie 1.0, zodat de verwijzingen in Bijlage A kloppen; P27 tot en met P32 zijn nieuw. De volgorde is die van de sprints. Elke prompt staat uitgeschreven in `docs/prompts/`, met een functioneel en een technisch deel volgens 18.1 en 18.2.
+De nummers P01 tot en met P26 blijven gelijk aan versie 1.0, zodat de verwijzingen in Bijlage A kloppen; P27 tot en met P33 zijn nieuw. De volgorde is die van de sprints. Elke prompt staat uitgeschreven in `docs/prompts/`, met een functioneel en een technisch deel volgens 18.1 en 18.2.
 
 | Prompt | Sprint | Features | Bron in dit plan |
 |---|---|---|---|
@@ -3160,7 +3263,8 @@ De nummers P01 tot en met P26 blijven gelijk aan versie 1.0, zodat de verwijzing
 | P07 Taken, inzichten, Vandaag en hercontactritme | 5 | F01, F06, F13 ritme | F01, F06, F13 |
 | P32 Dagritme-kern en Vandaag op de telefoon | 5 | F01, hoofdstuk 8 | 8.5.1, 8.13 |
 | P08 Mandaten, Bewaker, Planner | 5 | 11.3 | 11 |
-| P09 Helpcenter basis en groeipad | 5 | F21 basis, 4.4 | F21, 4 |
+| P09 Helpcenter basis en functies aanzetten | 5 | F21 basis, 4.2 | F21, 4 |
+| P33 AI-assistent en credits | 5 | F26 | F26, 11.2, 11.4 |
 | P10 Belblokken, belmodus en belscripts | 6 | F07, F08 | F07, F08, F25, 8.5.4 |
 | P12 Prospectplanning en terugkomregels in de planning | 6 | F13 planning | F13, F25 |
 | P11 Leadgenerator, AI-zoeker en KvK | 7 | F02 | F02, 12 |
@@ -3170,7 +3274,7 @@ De nummers P01 tot en met P26 blijven gelijk aan versie 1.0, zodat de verwijzing
 | P30 Onderweg: route, bezoek afronden, inloop, in de buurt, offline dag | 8 | F10, hoofdstuk 8 | 8.5.2, 8.5.3, 8.6, 8.8 |
 | P31 Spraak, visitekaartje en onderweg-meldingen | 8 | F24, hoofdstuk 8 | 8.5.6, 8.6, 8.9, 8.10 |
 | P16 Campagnes | 9 | F12 | F12, F25 |
-| P17 Pipeline, deals, offertes, overdracht | 9 | F17 | F17, F25 |
+| P17 Funnel van de prospectreis en overdracht | 9 | F17 | F17, F09, F25 |
 | P18 Briefings, Pitstop, Schrijver, mail | 9 | F11 | F11, 11.5, 8.5.7 |
 | P19 Agents voor interne en externe bronnen | 10 | F14 | F14, 11 |
 | P20 CRM-koppeling | 10 | F02 CRM | F02, 12 |
@@ -3221,7 +3325,7 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 | 009 | Schema-validatie en bewijsplicht op elk AI-antwoord | aanvaard |
 | 010 | Light provenance (herkomst per veld) in plaats van volledige veldhistorie | aanvaard |
 | **011** | **Geen aparte HQ: platformbeheer in de app** | aanvaard (beslissing B4) |
-| **012** | **Drie gebruikersniveaus naast rollen** | aanvaard (beslissing B3) |
+| **012** | **Drie gebruikersniveaus naast rollen** | aanvaard (beslissing B3), **gewijzigd** door B18 en B19 |
 | **013** | **Maatwerk prospectreizen per doelgroep** | aanvaard (beslissing B8) |
 | **014** | **Belscripts als beheerde templates met AI-invulling** | aanvaard (beslissing B5) |
 | **015** | **Eén leadstroom met vijf bronnen** | aanvaard (beslissing B11) |
@@ -3230,6 +3334,8 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 | **018** | **Terugkomregels naast hercontactritmes** | aanvaard (beslissing B16) |
 | **019** | **Onderbalk op de telefoon, afwijking van het designsysteem** | aanvaard (beslissing B13) |
 | **020** | **Eén app voor telefoon en laptop, geen aparte telefoonbuild** | aanvaard (beslissingen B4 en B13) |
+| **021** | **Dealtrace stopt bij de eerste afspraak; funnel in plaats van pipeline** | aanvaard (beslissing B17) |
+| **022** | **AI-assistent voor iedere gebruiker, begrensd met credits per abonnement** | aanvaard (beslissing B20) |
 
 ### ADR-011 Geen aparte HQ: platformbeheer in de app
 
@@ -3240,12 +3346,12 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 - **Consequenties**: de scheiding zit volledig op de server: twee lagen op `/api/platform/**`, een aparte databaserol voor functies over organisaties heen, verplichte tweestapsverificatie, append-only platformaudit, bouwcheck `check:platform`, cross-tenanttests op platformscheiding.
 - **Heroverweging**: als een externe partij (reseller, supportbureau) platformtoegang nodig heeft; dan een supportrol zonder geld en prompts.
 
-### ADR-012 Drie gebruikersniveaus naast rollen
+### ADR-012 Drie gebruikersniveaus naast rollen (gewijzigd in versie 1.2)
 
-- **Beslissing**: een gebruiker heeft een rol (rechten), een niveau (Beginner, Gevorderd, Expert: welke functies hij gebruikt) en een werkplekprofiel (indeling). Beschikbaarheid is pakket en niveau en rol, of een losse ontgrendeling. Eén functiecatalogus op server en client.
-- **Argumenten**: een rustige start verhoogt adoptie; groei wordt zichtbaar en coachbaar; de salesmanager houdt grip; ervaren mensen worden niet afgeremd (startniveau te kiezen, losse ontgrendeling, "Iedereen ziet alles").
-- **Afgewezen**: alles voor iedereen (overweldigend voor beginners); niveaus als rechtenrol (verwart mogen met kunnen); automatisch verhogen zonder mens (voelt als spel, geen coaching).
-- **Consequenties**: elke functie heeft een niveau en een helpartikel; de server weigert functies boven het niveau; vergrendelde functies zijn zichtbaar met uitleg; het groeipad is een gesprek tussen accountmanager en salesmanager.
+- **Beslissing**: een gebruiker heeft een rol (rechten), een niveau (Beginner, Gevorderd, Expert) en een werkplekprofiel (indeling). Een niveau is een voorinstelling van schakelaars per functie; de salesmanager of beheerder zet functies extra aan of uit. Beschikbaarheid is pakket en rol en schakelaar. Eén functiecatalogus op server en client. Er is geen groeipad (B18, B19).
+- **Argumenten**: een rustige start verhoogt adoptie; de salesmanager houdt grip; ervaren mensen worden niet afgeremd (startniveau te kiezen, losse functies aanzetten, "Iedereen ziet alles"); welke functie bij welk niveau hoort, kan tijdens de bouw verschuiven zonder code te wijzigen.
+- **Afgewezen**: alles voor iedereen (overweldigend voor beginners); niveaus als rechtenrol (verwart mogen met kunnen); een groeipad met criteria en voorstellen (te vroeg om te weten wat werkt, voelt als een spel).
+- **Consequenties**: elke functie heeft een startniveau en een helpartikel; de server weigert functies die niet aanstaan; functies die niet aanstaan zijn zichtbaar met uitleg; de indeling in 4.3 wordt per sprint vastgesteld.
 
 ### ADR-013 Maatwerk prospectreizen per doelgroep
 
@@ -3297,6 +3403,21 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 - **Afgewezen**: een aparte telefoonapp of build; een native app in de eerste versie (later te heroverwegen voor achtergrondlocatie en CarPlay of Android Auto).
 - **Consequenties**: elke pagina heeft een telefoonweergave en wordt op 390 px getest; mobiele beperkingen van een PWA (geen locatie op de achtergrond) worden eerlijk benoemd in 8.6.
 
+
+### ADR-021 Dealtrace stopt bij de eerste afspraak
+
+- **Beslissing**: het proces in Dealtrace loopt tot en met de gehouden eerste afspraak en de overdracht. Pipeline, deals en offertes zitten niet in de app; de funnel van de prospectreis (F17) vervangt de pipeline. Na de eerste afspraak gaat het account over naar DealDrive, het CRM of een collega.
+- **Argumenten**: new business is het werk tot de eerste afspraak; deals en offertes hebben al een plek in DealDrive of het CRM; twee plekken voor dezelfde deal geven dubbel werk en verschillende cijfers; de funnel laat zien waar het tot de afspraak weglekt.
+- **Afgewezen**: een eigen pipeline met offertes (dubbel met DealDrive en het CRM); een alleen-lezen kopie van de pipeline (verouderd, verwarrend).
+- **Consequenties**: status `overgedragen` in plaats van `klant`; nieuwe gebeurtenissen `eerste-afspraak-gehouden`, `afspraak-niet-verschenen`, `overgedragen`, `geen-vervolg`; offertematrix, offertebriefing, meetingsoort Offertebespreking en de bijbehorende regels vervallen; accounts die uit DealDrive of het CRM terugkomen, komen via de terugkomregels terug.
+
+### ADR-022 AI-assistent voor iedere gebruiker, begrensd met credits
+
+- **Beslissing**: iedere gebruiker kan chatten met een AI-assistent (F26) die de context van het scherm kent; het abonnement bepaalt via credits per maand hoeveel. De assistent voert niets uit en zet alleen concepten klaar.
+- **Argumenten**: hulp op het moment dat je hem nodig hebt verlaagt de drempel voor beginners; credits maken de kosten voorspelbaar voor klant en leverancier; één pot per organisatie met een plafond per gebruiker geeft de beheerder grip.
+- **Afgewezen**: onbeperkt chatten (kosten onvoorspelbaar); chat alleen voor hogere niveaus (juist beginners hebben hem nodig).
+- **Consequenties**: credits per pakket in de prijstabel; meter en meldingen bij 80 procent; bij 0 credits stopt alleen de chat; vangrails van 11.2 gelden ook voor de chat.
+
 ---
 
 ## 21. Risico's
@@ -3304,7 +3425,10 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 | Risico | Impact | Maatregel |
 |---|---|---|
 | Accountmanagers stoppen na twee pogingen | lage conversie | ritme plant pogingen als taken; KPI pogingen tot afspraak; Coach signaleert; academie-artikel "Waarom de vierde poging" |
-| Beginners voelen zich beperkt | weerstand | niveaus als groei, niet als straf; startniveau kiesbaar; losse ontgrendeling; "Iedereen ziet alles" per organisatie |
+| Beginners voelen zich beperkt | weerstand | startniveau kiesbaar; losse functies aanzetten; "Iedereen ziet alles" per organisatie; de AI-assistent helpt meteen |
+| De indeling van functies per niveau klopt niet | te veel of te weinig voor beginners | indeling per sprint vaststellen (4.1); een functie verschuiven is een regel in de catalogus |
+| AI-credits zijn te snel op of te duur | ontevreden klanten of marge weg | kosten per vraag vooraf tonen, plafond per gebruiker, melding bij 80 procent, credits per pakket na de eerste drie klanten bijstellen |
+| Overdracht na de eerste afspraak blijft liggen | vervolg gaat verloren | regel "afspraak niet overgedragen" (F15), KPI overdracht binnen 24 uur, overdrachtsbriefing |
 | Salesmanager gebruikt het managerdeel niet | geen coaching | vooraf gevulde weekoverleg-agenda, coachingkaart in één klik, aandachtspunten uitgerekend |
 | Te veel AI-tekst, te weinig mens | reputatieschade | scripts als templates, stijlcheck, eerste contact per stuk goedkeuren, KPI overname |
 | Datacollectief of KvK-kosten lopen op | marge weg | plafond per bron, cache, kosten per bron in Analyse, pakketgrenzen |
@@ -3329,7 +3453,7 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 | # | Vraag | Voorstel | Wie | Wanneer |
 |---|---|---|---|---|
 | 1 | Inloggen met wachtwoord, eenmalige code per mail, of beide | **besloten (B12)**: eenmalige code per mail, TOTP erbij voor de founder | founder | gesloten |
-| 2 | Criteria voor het groeipad (dagen, percentages, leerpad) | waarden uit 4.4 als standaard, instelbaar per organisatie | founder met eerste salesmanager | sprint 5 |
+| 2 | Criteria voor het groeipad | **vervallen (B19)**: geen groeipad | founder | gesloten |
 | 3 | Mag een beheerder binnen de seats zelf gebruikers toevoegen | ja, met de stand per organisatie (F23) | founder | sprint 1 |
 | 4 | Is "Alleen meekijken" de standaard bij werken in een organisatie, en mag een klant "Alleen na toestemming" kiezen | ja en ja | founder | sprint 1 |
 | 5 | Datacollectief: API of bestandsexport, welk contract en welke velden | API met contract van de organisatie; import als terugval | founder | vóór sprint 7 |
@@ -3351,6 +3475,10 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 | 21 | Accountklassen en rollen van SalesDNA tegenover die van Dealtrace | mapping op naam met controlelijst | founder | sprint 3 |
 | 22 | Bijlagen van winpunten: alleen metadata of ook een tijdelijke downloadlink | eerst metadata | founder met SalesDNA | sprint 11 |
 | 23 | Opent SalesDNA een endpoint voor suggesties van buiten, met welke limiet | hooguit 10 per sublaag per week | founder met SalesDNA | vóór sprint 11 |
+| 24 | Aantal AI-credits per pakket en de prijs van extra credits | startvoorstel 200, 600 en 1.500 per gebruiker per maand; bijstellen na de eerste drie klanten | founder | vóór sprint 5 |
+| 25 | Welke functies horen definitief bij welk niveau | startindeling uit 4.3; per sprint vaststellen | founder met eerste salesmanager | elke sprint |
+| 26 | Worden alle AI-soorten (zoekrondes, dossiers, concepten) ook in credits uitgedrukt, of alleen de chat | eerst alleen de chat; daarna beslissen op basis van het verbruik | founder | vóór sprint 12 |
+| 27 | Overdracht naar DealDrive: het ontvangende endpoint bestaat nog niet in DealDrive | aparte opdracht voor DealDrive vóór sprint 11 | founder | vóór sprint 11 |
 
 ---
 
@@ -3358,20 +3486,24 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 
 - **Aanleiding (trigger)**: een gebeurtenis bij een bedrijf met bewijs (vacature, verhuizing, jubileum, nieuwe directeur) die een reden geeft om contact op te nemen.
 - **Afkoelperiode**: de periode per kanaal waarin een account na een nee niet benaderd wordt.
+- **AI-assistent**: de chat waarmee iedere gebruiker hulp vraagt aan AI, met de context van het scherm (F26).
 - **BAND**: kwalificatie op Behoefte, Autoriteit, Noodzaak en Draagvlak.
 - **Belblok**: een vast tijdvak in de agenda met een gevulde bellijst en een gekozen belscript.
 - **Belmodus**: het scherm waarin je een belblok gesprek na gesprek afwerkt.
 - **Belscript-template**: een in Instellingen gemaakt script met blokken, variabelen en bezwaren, dat AI per account invult.
 - **Bewaker**: de functie die elke agenthandeling toetst aan mandaat, consent, afkoeling, ritme, capaciteit en bundel.
 - **Buying committee**: wie bij een account beslist, beïnvloedt, blokkeert of gebruikt.
+- **Credits**: de eenheid waarin het abonnement bepaalt hoeveel er met de AI-assistent gechat kan worden.
 - **Dagpakket**: wat Dealtrace elke ochtend op de telefoon bewaart voor een dag offline: afspraken, route, accountkaarten, scripts en helpartikelen (8.8).
 - **Dekking**: hoeveel branches een eigen verhaal of belofte hebben ("2 van 4").
 - **Doelgroep**: de definitie van een groep bedrijven waarop een reis, campagne en leadronde draaien.
 - **Dossier**: het bewijs per criterium van een lead of prospect; verloopt na 30 dagen.
 - **Founder**: de rol van het team achter Dealtrace, met platformbeheer in de app.
-- **Gebruikersniveau**: Beginner, Gevorderd of Expert; bepaalt welke functies een gebruiker ziet en gebruikt.
+- **Functieschakelaar**: per gebruiker aan of uit voor een functie; een niveau is een voorinstelling van schakelaars.
+- **Funnel**: het overzicht van hoeveel accounts per fase van de prospectreis staan, doorstromen en uitvallen, tot en met de eerste afspraak (F17).
+- **Gebruikersniveau**: Beginner, Gevorderd of Expert; een voorinstelling van de functies die voor een gebruiker aanstaan, aan te vullen door functies extra aan te zetten.
 - **Hercontactritme**: wat je doet als een prospect niet reageert: pogingen, intervallen, kanalen en parkeerduur.
-- **Hoofdfase**: Vinden, Bewerken, Verbinden, Klant, Verloren.
+- **Hoofdfase**: Vinden, Bewerken, Verbinden, Overgedragen, Verloren.
 - **Kans langs de route**: een prospect of klant dicht bij de bezoeken van de dag met een reden om langs te gaan of te bellen.
 - **Kernzin**: de eerste, dragende zin van het bedrijfsverhaal, gebruikt als opening in scripts en berichten.
 - **Leesmodel**: de tabellen `vv_*` waaruit alle functies het verkoopverhaal lezen, gevuld uit SalesDNA of de eigen inrichting.
@@ -3379,13 +3511,14 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 - **Mogelijk verouderd**: label op een onderdeel van het verkoopverhaal waarvan een bron is gewijzigd; Dealtrace werkt door met de laatst bevestigde versie.
 - **Onderbalk**: de navigatie onderin op de telefoon met vijf tabs per werkplekprofiel.
 - **Onderweg**: de telefoonweergave van de route van de dag (`/onderweg`).
-- **Pitstop**: de AI-voorbereiding op een taak, afspraak of deal, altijd ter goedkeuring.
+- **Overdracht**: het doorzetten van een account na een gehouden eerste afspraak naar DealDrive, het CRM of een collega, met briefing.
+- **Pitstop**: de AI-voorbereiding op een taak of afspraak, altijd ter goedkeuring.
 - **Platformbeheer**: de afgeschermde sectie in de app voor de founder (geen aparte HQ).
 - **Prospectreis**: de fases die een account van een doelgroep doorloopt; standaard of maatwerk.
 - **Regiodag**: de vaste dag waarop een buitendienstmedewerker een regio bezoekt.
 - **Schuifvenster**: venster dat op de telefoon van onderen opschuift; op de laptop dezelfde inhoud als flyout.
 - **Soort concurrent**: direct, indirect, intern (de klant doet het zelf) of niets doen.
-- **Status**: nieuw, in reis, wachtend, nee, gescoord, klant.
+- **Status**: nieuw, in reis, wachtend, nee, gescoord, overgedragen.
 - **Terugkomregel**: wanneer, waarom, via welk kanaal en door wie je terugkomt na een nee, een verlies of een slapende periode; start een hercontactritme.
 - **Verkoopverhaal**: golden circle, bedrijfsverhaal, ambitie en visie, waarde en belofte, branches, concurrenten, winpunten en terugkomregels (F25).
 - **Werkplekprofiel**: binnendienst, buitendienst of hybride; bepaalt de indeling van de werkplek.
@@ -3399,6 +3532,7 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 |---|---|---|
 | 1.0 | 2026-10-14 | Eerste versie van het bouwplan uit alle documenten in deze repository, met de beslissingen B1 tot en met B11 van de opdrachtgever: productnaam Dealtrace, binnendienst en buitendienst, drie gebruikersniveaus, geen aparte HQ, belscript-templates, eigen velden, AI-agents voor interne en externe bronnen, standaard en maatwerk prospectreis, kansen langs de route, helpcenter met new business-academie, leadgenerator met import, CRM, KvK en Datacollectief |
 | 1.1 | 2026-10-14 | Beslissingen B12 tot en met B16 (inloggen met een code per mail, mobiel en onderweg, sprints naar inhoud, stijlbestand leidend, SalesDNA-sublagen) en de status van de bronnen (0.4); nieuw hoofdstuk 8 Mobiel en onderweg op basis van Dex in DealDrive; nieuwe feature F25 Verkoopverhaal en Richting met leesmodel, webhooks en terugkomregels, verwerkt in F01 tot en met F24; ADR-002 aangevuld, ADR-017 tot en met ADR-020; twaalf sprints; 32 bouwprompts, uitgeschreven in `docs/prompts/`; Bijlage A (checklist gaten DealDrive), Bijlage B (hergebruikkaart, commit 75bee61) en Bijlage C (startset Voltvast); nieuwe mockup in `mockup-dealtrace/` |
+| 1.2 | 2026-10-15 | Beslissingen B17 tot en met B20: Dealtrace loopt tot en met de eerste afspraak (geen pipeline, deals en offertes; F17 wordt Funnel van de prospectreis met overdracht; status `overgedragen`); het niveau ontstaat door het aanzetten van functies met een voorlopige startindeling; het groeipad en de leerpaden per niveau zijn verwijderd; nieuwe feature F26 AI-assistent met credits per abonnement; ADR-012 gewijzigd, ADR-021 en ADR-022 nieuw; prompt P33 |
 
 ---
 
@@ -3412,7 +3546,7 @@ DealDrive is de bron van ongeveer 60 procent van de logica. De featurebeschrijvi
 
 | # | Gat in DealDrive | Oplossing in Dealtrace | Feature | Prompt |
 |---|---|---|---|---|
-| 1 | Een gewonnen deal maakt de prospect geen klant | `deal-gewonnen` zet in één transactie type, status, fase, klasse-rij en audit | F17 | P17 |
+| 1 | Een gewonnen deal maakt de prospect geen klant | **Vervalt in Dealtrace (B17)**: geen deals; de overdracht na de eerste afspraak zet in één transactie status, fase en audit en stuurt het pakket naar DealDrive of het CRM | F17 | P17 |
 | 2 | `tier` naast `accountfase`; de leadgenerator schrijft het verkeerde veld | Eén klasseveld (`klasse`), ook bij "Neem over" | F02, F03 | P03, P11 |
 | 3 | `eerste-afspraak-gepland` vuurt bij elke afspraak | Alleen bij de eerste niet-geannuleerde afspraak | F05, F09 | P05, P13 |
 | 4 | Leadgenerator zonder server, leadstabel, webzoeker en bundelmeting; "Opnieuw uitzoeken" en "Toch uitzoeken" uitgeschakeld | Leadstabel, endpoints, vijf bronnen, bundel op de server, werkende knoppen | F02 | P11, P15, P20 |
@@ -3428,7 +3562,7 @@ DealDrive is de bron van ongeveer 60 procent van de logica. De featurebeschrijvi
 | 14 | AI-plafond standaard uit, alleen op de motor, geen melding bij 80 procent | Plafond op alle soorten, standaard aan, melding bij 80 procent | 11.4, F23 | P08, P24 |
 | 15 | Werkdagen zonder feestdagen | Nederlandse feestdagen in `shared/datum.ts` | alle | P01 |
 | 16 | Dubbele definities (twee journey-seeds, vier kopieën van offertestatussen, twee tempoformules) | Elke definitie één keer in `shared/` | alle | alle |
-| 17 | Geen schrijfpad voor de offertestatus; upload maakt geen offerte | Statusendpoint met historie; upload maakt een offerte | F17 | P17 |
+| 17 | Geen schrijfpad voor de offertestatus; upload maakt geen offerte | **Vervalt in Dealtrace (B17)**: geen offertes; blijft een gat in DealDrive | n.v.t. | n.v.t. |
 | 18 | Jaarplanning slaat niets op, geen motorregel, vaste startmaand, "benaderd" niet begrensd op het jaar | Regel `jaarplanning-venster`, instelbare startmaand, benaderd per verkoopjaar | F13 | P12 |
 | 19 | Web-beoordeling parst vrije tekst zonder schema | Schema afgedwongen met tool-use | F14 | P19 |
 | 20 | Inactiviteitsregel vuurt nooit voor een account zonder datum | `ookZonderDatum` met de aanmaakdatum als anker | F15 | P06 |
@@ -3443,7 +3577,7 @@ DealDrive is de bron van ongeveer 60 procent van de logica. De featurebeschrijvi
 |---|---|---|---|---|
 | 25 | Elk nieuw account krijgt vaste score 50; aanleiding alleen uit seed of import | Echte score met zichtbare opbouw | F03 | P03 |
 | 26 | Sortering "Laatste activiteit" gebruikt een ander veld dan de rij toont | Eén functie `laatsteContact` | F03 | P03 |
-| 27 | Promoveren vanuit Info zonder bevestiging en zonder melding | Altijd bevestiging en audit | F03 | P03 |
+| 27 | Promoveren vanuit Info zonder bevestiging en zonder melding | Dealtrace promoveert niet (B17); overdragen gaat altijd met bevestiging en audit | F03, F17 | P03, P17 |
 | 28 | Rol en "beslist mee" worden door drie formulieren verschillend gevuld | Eén rolbegrip | F04 | P03 |
 | 29 | Open taken tellen op contact- en accountkaart verschillend | Eén telregel | F04 | P03 |
 | 30 | Bellijst op Bezoeken sluit iedereen uit die je in de hele periode bezoekt | Alleen uitsluiten op dezelfde dag | F10 | P14 |
@@ -3486,7 +3620,7 @@ DealDrive is de bron van ongeveer 60 procent van de logica. De featurebeschrijvi
 | Instellingen | `shared/settingKeys.ts`, `server/utils/settingsStore.ts`, `server/utils/featureFlags.ts`, `shared/features.ts`, `server/utils/pakketten.ts` | Instellingen, pakketten, functievlaggen | aanpassen: functiecatalogus met niveau (4.2) |
 | Motor | `server/utils/ruleEngine.ts`, `server/utils/activityRulesStore.ts`, `server/utils/activitySellingWerkmap.ts`, `shared/activitySelling*.ts`, `app/composables/useActivitySellingRules.ts`, `app/pages/instellingen/activity-selling.vue`, `app/plugins/motorPoll.client.ts` | Regels en motor | aanpassen: nieuwe patronen, landing, capaciteit |
 | Reis | `server/utils/journeyEngine.ts`, `app/composables/useCustomerJourney.ts`, `app/pages/instellingen/customer-journey.vue`, `server/utils/faseAccent.ts` | Prospectreis | aanpassen: reis als object met versies |
-| Ritme | `shared/ritmematrix.ts`, `shared/offerteOpvolging.ts`, `shared/datum.ts`, `shared/periodeFilter.ts` | Matrices, werkdagen, periodes | letterlijk |
+| Ritme | `shared/ritmematrix.ts`, `shared/datum.ts`, `shared/periodeFilter.ts` | Matrices, werkdagen, periodes | letterlijk |
 | Belblokken | `shared/belblokken.ts`, `server/utils/belblokVuller.ts`, `app/composables/useBellijst.ts`, `app/composables/useBelblokken.ts`, `app/pages/belblokken.vue` | Belblokken | aanpassen: soort stuurt vulling, belmodus |
 | Leads | `shared/leadGenerator.ts`, `app/pages/generator.vue`, `app/pages/import.vue`, `server/utils/webBron.ts` | Leadgenerator en import | aanpassen: server, vijf bronnen |
 | Kwalificatie | `shared/bandKwalificatie.ts` | BAND | letterlijk |
@@ -3496,9 +3630,9 @@ DealDrive is de bron van ongeveer 60 procent van de logica. De featurebeschrijvi
 | Taken en inzichten | `app/pages/taken.vue`, `app/pages/inzichten.vue`, `app/components/TaakFlyout.vue`, `app/components/InzichtFlyout.vue`, `app/components/NieuweTaakFlyout.vue`, `app/components/VandaagPanel.vue`, `app/components/SwipeActions.vue`, `app/composables/useLongPress.ts` | Acties en Vandaag | aanpassen: uitkomsten, pogingen |
 | Agenda en meetings | `app/pages/agenda.vue`, `app/pages/meetings.vue`, `app/components/AfspraakFlyout.vue`, `app/components/NieuweAfspraakFlyout.vue`, `server/utils/calendarSync.ts`, `server/utils/calendarProviders.ts`, `server/utils/calendarCrypto.ts` | Agenda en agendakoppeling | aanpassen: meetingsoorten met uitkomst |
 | Mail | `server/utils/mailVersturen.ts`, `server/utils/mailProviders.ts`, `server/utils/mailConnectionStore.ts` | Concepten versturen, Verzender | aanpassen: consent, dagplafond |
-| Pipeline | `app/pages/pipeline.vue`, `app/pages/offertes.vue`, `app/components/DealFlyout.vue`, `app/components/NieuweDealFlyout.vue`, `app/composables/useDealStages.ts`, `app/composables/useDealStageChange.ts`, `app/composables/usePipelines.ts`, `shared/offerteStatus.ts` | Pipeline en offertes | aanpassen: overdracht |
+| Pipeline | `app/pages/pipeline.vue`, `app/pages/offertes.vue`, `app/components/DealFlyout.vue` en verwanten | **vervalt (B17)**: Dealtrace heeft geen pipeline en offertes; de funnel (F17) wordt nieuw gebouwd | niet overnemen |
 | AI | `server/utils/llm-provider.ts`, `server/utils/aiInsight.ts`, `server/utils/agentExecutor.ts`, `server/utils/promptBibliotheek.ts`, `server/utils/promptStandaarden.ts`, `shared/promptSlots.ts`, `server/utils/aiVerbruik.ts`, `shared/aiBundel.ts`, `server/utils/verslagAnalyse.ts`, `server/utils/autoVoorbereiding.ts`, `server/utils/briefingAi.ts` | AI-lagen, Pitstop, bundel | aanpassen: agents met mandaat, Bewaker |
-| Briefings | `app/pages/briefings.vue`, `app/components/BriefingFlyout.vue`, `app/components/OfferteBriefingFlyout.vue`, `shared/briefingBlokken.ts`, `app/composables/useQuickBriefing.ts` | Briefings | aanpassen: soorten voor new business |
+| Briefings | `app/pages/briefings.vue`, `app/components/BriefingFlyout.vue`, `shared/briefingBlokken.ts`, `app/composables/useQuickBriefing.ts` | Briefings | aanpassen: soorten voor new business |
 | Accounts en contacten | `app/pages/prospects/*`, `app/pages/contacten/*`, `app/pages/accounts/[id]/index.vue`, `app/components/AccountRow.vue`, `app/components/EditableField.vue`, `app/components/InlineEditChip.vue`, `app/composables/useCustomFields.ts`, `app/pages/instellingen/custom-fields.vue` | Prospects, contacten, eigen velden | aanpassen |
 | Platform | `app/pages/admin/*`, `server/api/superuser/*`, `server/utils/gebruikersAanvraagStore.ts`, `server/utils/featureRequestStore.ts`, `server/utils/github.ts`, `server/utils/llmInstellingen.ts`, `server/utils/orgStarter.ts` | Platformbeheer in de app | aanpassen: geen aparte build; `AdminShell.vue` en `impersonatieToken.ts` vervallen |
 | Meldingen en PWA | `app/components/NotificationBell.vue`, `app/pages/notificaties.vue`, `server/utils/pushVerzenden.ts`, `server/utils/reminderSweep.ts`, `server/utils/overzichtSweep.ts`, `app/components/MobileShell.vue`, `app/components/OfflineBanner.vue`, `app/components/InstallPrompt.vue`, `app/components/IOSInstallModal.vue` | Meldingen, push, PWA | letterlijk, plus mobiele schil uit hoofdstuk 8 |
@@ -3609,7 +3743,7 @@ Eigen opties: termijn "direct" (bron). Accountklassen leeg (bron), wat in Dealtr
 2. Prospect in br-01 met huidige leverancier cc-02: kernzin, belofte van br-01, winpunt wp-01, bezwaar "Online is het goedkoper." met antwoord.
 3. Fase Signaal: geen winpunt; Dealtrace toont het gat en gebruikt wp-01 als belofte.
 4. wp-02 onder de norm komt niet als eerste winpunt in een concept.
-5. Deal verloren met "Prijs": mapping naar "Prijs te hoog", bezoektaak over 182 dagen op de eerstvolgende regiodag.
+5. Een uit DealDrive of het CRM teruggekomen verloren deal met reden "Prijs": mapping naar "Prijs te hoog", bezoektaak over 182 dagen op de eerstvolgende regiodag.
 6. L0.6 met br-02 hernoemd: koppelingen blijven, namen veranderen overal.
 7. Alleen een gewijzigd blok in L0.4: geen verouderd-melding, wel nieuwe versie.
 8. `sublaag.verouderd` voor L0.8: label op `/richting`, concepten werken door met de laatste bevestigde versie.
