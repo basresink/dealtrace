@@ -209,8 +209,9 @@ export async function klaarzetten(tx: Tx, org: string, door: { id: string; naam:
   const id = crypto.randomUUID()
   await tx.execute(sql`insert into klaargezet_voor (id, organisation_id, account_id, van_gebruiker, voor_gebruiker, regio_id, datum, reden) values (${id}, ${org}, ${accountId}, ${door.id}, ${u!.id}, ${regioId}, ${datum}, ${k.reden})`)
   const naam = door.naam.replace(/^Testgebruiker /, '').split(' ')[0]
-  await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${crypto.randomUUID()}, ${org}, ${u!.id}, 'systeem', 'Klaargezet voor je regiodag',
-    ${`${naam} zette ${a!.name} voor je klaar${datum ? ` op ${new Date(`${datum}T12:00:00Z`).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })}` : ''}${k.reden ? `: ${k.reden}` : ''}.`}, ${`/bezoeken${datum ? `?datum=${datum}` : ''}`}, now(), '{}'::jsonb)`)
+  const { meld } = await import('./onderwegMeldingen')
+  await meld(tx, org, { soort: 'klaargezet', sleutel: `klaargezet:${id}`, gebruikerId: u!.id, titel: 'Klaargezet voor je regiodag',
+    tekst: `${naam} zette ${a!.name} voor je klaar${datum ? ` op ${new Date(`${datum}T12:00:00Z`).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })}` : ''}${k.reden ? `: ${k.reden}` : ''}.`, link: `/bezoeken${datum ? `?datum=${datum}` : ''}`, actie: 'Bekijk' }, nu)
   return { id, datum, regioId, tekst: `Klaargezet voor ${String(u!.name).replace(/^Testgebruiker /, '').split(' ')[0]}${datum ? `, ${new Date(`${datum}T12:00:00Z`).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })}` : ''}.` }
 }
 

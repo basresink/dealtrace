@@ -13,6 +13,14 @@ const werkBewaar = useAutoBewaar(bewaar('werkdagen'))
 watch(org, (v) => { if (!v.naam.trim()) { toast.toon('Naam is verplicht', 'fout'); return } orgBewaar.wijzig({ ...v }) }, { deep: true })
 watch(werk, (v) => werkBewaar.wijzig({ ...v, werkdagen: [...v.werkdagen] }), { deep: true })
 
+// P31: spraak (opnames bewaren, browserherkenning) en meldingsregels (dagplafond, stilte) per organisatie.
+const spraak = reactive({ opnamesBewaren: false, bewaartermijnDagen: 90, browserherkenning: false, ...(inst.value.spraak ?? {}) })
+const regels = reactive({ dagplafond: 6, stilVan: 19, stilTot: 7, weekendStil: true, ...(inst.value.meldingsregels ?? {}) })
+const spraakBewaar = useAutoBewaar(bewaar('spraak'))
+const regelsBewaar = useAutoBewaar(bewaar('meldingsregels'))
+watch(spraak, (v) => spraakBewaar.wijzig({ ...v }), { deep: true })
+watch(regels, (v) => regelsBewaar.wijzig({ ...v }), { deep: true })
+
 const DAGEN = [{ n: 1, l: 'Ma' }, { n: 2, l: 'Di' }, { n: 3, l: 'Wo' }, { n: 4, l: 'Do' }, { n: 5, l: 'Vr' }, { n: 6, l: 'Za' }, { n: 0, l: 'Zo' }]
 const MAANDEN = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december']
 function wisselDag(n: number) {
@@ -40,7 +48,7 @@ useHead({ title: 'Organisatie · Instellingen · Dealtrace' })
         </article>
       </div>
     </section>
-    <section id="werkdagen" class="section section--laatste">
+    <section id="werkdagen" class="section">
       <div class="container">
         <article class="kaart">
           <header class="kaart-kop"><h2 class="kaart-titel">Werkdagen en feestdagen</h2><span class="bewaar-status" :class="{ 'bewaar-status--fout': werkBewaar.status.value === 'Opslaan mislukt' }" aria-live="polite">{{ werkBewaar.status.value }}</span></header>
@@ -55,6 +63,27 @@ useHead({ title: 'Organisatie · Instellingen · Dealtrace' })
             </select>
             <span class="veld-uitleg">De overige Nederlandse feestdagen telt Dealtrace altijd als vrije dag.</span>
           </label>
+        </article>
+      </div>
+    </section>
+    <section id="spraak" class="section section--laatste">
+      <div class="container raster raster--2">
+        <article class="kaart" data-test="org-spraak">
+          <header class="kaart-kop"><h2 class="kaart-titel">Spraak</h2><span class="bewaar-status" aria-live="polite">{{ spraakBewaar.status.value }}</span></header>
+          <p class="kaart-meta">Opnames gaan alleen naar een transcriptiedienst in de EU. Na de transcriptie verdwijnt de opname, tenzij je hieronder bewaren aanzet. Transcripten blijven twaalf maanden.</p>
+          <p class="schakel-rij"><span>Opnames bewaren</span><Schakelaar :aan="spraak.opnamesBewaren" label="Opnames bewaren" @wissel="spraak.opnamesBewaren = $event" /></p>
+          <label v-if="spraak.opnamesBewaren" class="veld"><span class="veld-label">Bewaartermijn (dagen)</span><input v-model.number="spraak.bewaartermijnDagen" type="number" min="1" max="365" class="invoer"></label>
+          <p class="schakel-rij"><span>Snelle voorvertoning in de browser</span><Schakelaar :aan="spraak.browserherkenning" label="Snelle voorvertoning in de browser" @wissel="spraak.browserherkenning = $event" /></p>
+          <p class="veld-uitleg">Staat standaard uit. In Chrome loopt de voorvertoning via Google, buiten de EU.</p>
+        </article>
+        <article class="kaart" data-test="org-meldingsregels">
+          <header class="kaart-kop"><h2 class="kaart-titel">Meldingen voor onderweg</h2><span class="bewaar-status" aria-live="polite">{{ regelsBewaar.status.value }}</span></header>
+          <div class="formulier-raster">
+            <label class="veld"><span class="veld-label">Dagplafond</span><input v-model.number="regels.dagplafond" type="number" min="0" max="20" class="invoer"></label>
+            <label class="veld"><span class="veld-label">Stil vanaf</span><select v-model.number="regels.stilVan" class="invoer"><option v-for="h in 24" :key="h" :value="h - 1">{{ String(h - 1).padStart(2, '0') }}:00</option></select></label>
+            <label class="veld"><span class="veld-label">Stil tot</span><select v-model.number="regels.stilTot" class="invoer"><option v-for="h in 24" :key="h" :value="h - 1">{{ String(h - 1).padStart(2, '0') }}:00</option></select></label>
+          </div>
+          <p class="schakel-rij"><span>Stil in het weekend</span><Schakelaar :aan="regels.weekendStil" label="Stil in het weekend" @wissel="regels.weekendStil = $event" /></p>
         </article>
       </div>
     </section>

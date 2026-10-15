@@ -11,11 +11,12 @@ import { rolMag } from '../../../shared/permissions'
 import { SYNCBARE_TABELLEN, isSyncbareTabel } from '../../../shared/syncTabellen'
 import { pasPatchToe } from '../../../shared/wisPatch'
 import { metOrganisatie, schema } from '../../utils/db'
-import { ACCOUNT_MUTATIESOORTEN, AFSPRAAK_MUTATIESOORTEN, KANS_MUTATIESOORTEN, INZICHT_MUTATIESOORTEN, SIGNAAL_MUTATIESOORTEN, TAAK_MUTATIESOORTEN } from '../../../shared/syncTabellen'
+import { ACCOUNT_MUTATIESOORTEN, AFSPRAAK_MUTATIESOORTEN, KANS_MUTATIESOORTEN, SPRAAK_MUTATIESOORTEN, INZICHT_MUTATIESOORTEN, SIGNAAL_MUTATIESOORTEN, TAAK_MUTATIESOORTEN } from '../../../shared/syncTabellen'
 import { besluit } from '../../utils/dagritme'
 import { planAfspraak, rondAfAfspraak } from '../../utils/agenda'
 import { klaarzetten } from '../../utils/bezoeken'
 import { bezoekAfronden, legInloopVast } from '../../utils/onderweg'
+import { bewaarConcept, bewaarVisitekaartje, leesEnBewaarVisitekaartje, verwerkOfflineOpdracht } from '../../utils/spraak'
 import { OVERSLA_REDENEN } from '../../../shared/route'
 import { nlMoment, plusDagen } from '../../../shared/datum'
 import { sql } from 'drizzle-orm'
@@ -51,7 +52,7 @@ export default defineEventHandler(async (event) => {
   const { mutaties } = await readBody<{ mutaties?: Mutatie[] }>(event)
   if (!Array.isArray(mutaties) || mutaties.length > 200) throw createError({ statusCode: 400, statusMessage: 'Geef tussen 1 en 200 mutaties' })
   // Klantdata (accounts) gebruikt de actieve organisatie en de functierechten.
-  const KLANTDATA = new Set(['accounts', 'tasks', 'signals', 'appointments', 'kans_overslaan', 'klaargezet_voor'])
+  const KLANTDATA = new Set(['accounts', 'tasks', 'signals', 'appointments', 'kans_overslaan', 'klaargezet_voor', 'spraak_concepten', 'contacts'])
   const klant = mutaties.some((m) => KLANTDATA.has(m?.tabel)) ? await vereisOrganisatie(event) : null
 
   const resultaten: Resultaat[] = []
@@ -134,6 +135,24 @@ export default defineEventHandler(async (event) => {
         } catch (e: any) {
           if (e instanceof ReisFout) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 404 ? 404 : 422, reden: e.message }
           if (e?.statusCode && [400, 403, 404, 409, 422].includes(e.statusCode)) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 409 ? 422 : e.statusCode, reden: e.message }
+          throw e
+        }
+      } else if (m.tabel === 'spraak_concepten' || m.tabel === 'contacts') {
+        // P31: een bewaard concept wordt een echte taak, notitie of afspraak; een offline opname wordt
+        // bij verbinding getranscribeerd en klaargezet; een visitekaartje wordt een contact.
+        const p = (m.patch ?? {}) as Record<string, any>
+        if (!(SPRAAK_MUTATIESOORTEN as readonly string[]).includes(p.soort)) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Alleen spraak.opdracht en contact.uitVisitekaartje mogen via de wachtrij' }
+        const sleutelFunctie = p.soort === 'spraak.opdracht' ? 'spraak.opdracht' : 'contact.visitekaartje'
+        if (!klant || !kan(klant, sleutelFunctie)) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Functie niet beschikbaar' }
+        const op = p.op && !Number.isNaN(Date.parse(p.op)) ? new Date(p.op) : new Date()
+        try {
+          const uitgebreid = kan(klant, 'spraak.opdrachtUitgebreid')
+          if (p.soort === 'spraak.opdracht' && p.concept) await bewaarConcept(tx, klant.organisatie.id, { id: gebruiker.id, naam: klant.gebruiker.naam, rol: klant.gebruiker.rol, mag: { voorCollega: false } }, p.concept, { sleutel: m.idempotentieSleutel, uitgebreid }, op)
+          else if (p.soort === 'spraak.opdracht') await verwerkOfflineOpdracht(tx, klant.organisatie.id, { id: gebruiker.id, niveau: klant.gebruiker.niveau }, { bijlageId: String(p.bijlageId ?? ''), accountId: p.accountId ?? null, op, uitgebreid })
+          else if (p.contact) await bewaarVisitekaartje(tx, klant.organisatie.id, gebruiker.id, m.recordId, p.contact, p.samenvoegenMet ?? null, op)
+          else await leesEnBewaarVisitekaartje(tx, klant.organisatie.id, { id: gebruiker.id, niveau: klant.gebruiker.niveau }, m.recordId, String(p.bijlageId ?? ''), op)
+        } catch (e: any) {
+          if (e?.statusCode && [400, 403, 404, 410, 413, 422].includes(e.statusCode)) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 410 || e.statusCode === 413 ? 422 : e.statusCode, reden: e.message }
           throw e
         }
       } else if (m.tabel === 'kans_overslaan' || m.tabel === 'klaargezet_voor') {

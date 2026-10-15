@@ -21,6 +21,10 @@ export const SYNCBARE_TABELLEN = {
   // P14: een kans overslaan (recordId = account-id) en klaarzetten voor de buitendienst (recordId = account-id).
   kans_overslaan: 'prospects',
   klaargezet_voor: 'prospects',
+  // P31: een spraakopdracht bewaren (recordId = conceptsleutel) of een offline opname laten verwerken;
+  // een contact uit een visitekaartje (recordId = account-id).
+  spraak_concepten: 'taken',
+  contacts: 'prospects',
 } as const
 
 export const ACCOUNT_MUTATIESOORTEN = ['account.nee', 'account.pauzeer'] as const
@@ -28,6 +32,7 @@ export const TAAK_MUTATIESOORTEN = ['taak.afronden', 'taak.uitstellen'] as const
 export const INZICHT_MUTATIESOORTEN = ['inzicht.gelezen', 'inzicht.afwijzen'] as const
 export const SIGNAAL_MUTATIESOORTEN = ['signaal.besluit'] as const
 export const AFSPRAAK_MUTATIESOORTEN = ['afspraak.nieuw', 'afspraak.afronden', 'bezoek.afronden', 'inloop.vastleggen'] as const
+export const SPRAAK_MUTATIESOORTEN = ['spraak.opdracht', 'contact.uitVisitekaartje'] as const
 export const KANS_MUTATIESOORTEN = ['kans.overslaan', 'kans.klaarzetten'] as const
 
 export type SyncbareTabel = keyof typeof SYNCBARE_TABELLEN

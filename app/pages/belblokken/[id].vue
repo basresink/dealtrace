@@ -3,6 +3,7 @@
 // wachtrij. Elke uitkomst rondt af via rondTaakAf en opent direct het volgende gesprek (de
 // hele wachtrij is vooraf geladen). Na het laatste gesprek of "Stop blok" het blokresultaat.
 import { UITKOMST_KNOPPEN, uitkomstNaarCode, type KnopSleutel } from '~~/shared/belblokken'
+import { herkenAntwoord, spreekBelOpening } from '~~/shared/spreek'
 import { NEE_REDENEN } from '~~/shared/nbStatus'
 import type { ScriptStaat } from '~~/shared/belscripts'
 const route = useRoute()
@@ -56,14 +57,39 @@ async function stop() {
 }
 function leesVoor() {
   const i = huidig.value
-  if (!i || !window.speechSynthesis) return
+  if (!i) return
   const opening = document.querySelector('[data-test="blok-opening"] p, [data-test="blok-poortwachter"] p')?.textContent ?? ''
-  const u = new SpeechSynthesisUtterance(`${i.accountNaam}. ${i.contactNaam ?? ''}. ${i.reden}. ${opening}`)
-  u.lang = 'nl-NL'
-  window.speechSynthesis.cancel()
-  window.speechSynthesis.speak(u)
+  vl.lees(spreekBelOpening({ accountNaam: i.accountNaam, contactNaam: i.contactNaam, reden: i.reden, opening }))
 }
-function wisselHandsfree(aan: boolean) { handsfree.value = aan; if (aan) leesVoor(); else window.speechSynthesis?.cancel() }
+// Handsfree (P31): na het gesprek (de app komt terug in beeld) vraagt Dealtrace "Hoe ging het?" en
+// luistert vier seconden naar gesproken, niet bereikt of terugbellen.
+const vl = useVoorlezen()
+const opname = useOpname()
+const luistert = ref(false)
+let weg = false
+function zichtbaarheid() {
+  if (document.visibilityState === 'hidden') { weg = true; return }
+  if (!weg || !handsfree.value || !huidig.value) return
+  weg = false
+  vl.lees('Hoe ging het? Zeg gesproken, niet bereikt of terugbellen.', () => void luister())
+}
+async function luister() {
+  if (!opname.kan.value) return
+  try { await opname.start() } catch { return }
+  luistert.value = true
+  await new Promise((ok) => setTimeout(ok, 4000))
+  const idB = await opname.stop({ soort: 'belblok', id })
+  luistert.value = false
+  const t = idB ? await opname.tekstVan(idB) : { tekst: null }
+  const a = herkenAntwoord(t.tekst)
+  if (a === 'niet_bereikt') { vl.lees('Genoteerd: niet bereikt.'); await uitkomst('geen_gehoor') }
+  else if (a === 'terugbellen') { gekozenKnop.value = 'later'; vl.lees('Wanneer bel je terug? Kies de datum.') }
+  else if (a === 'gesproken') { vl.lees('Gesproken. Kies de uitkomst.'); toast.toon('Gesproken: kies de uitkomst.') }
+  else vl.lees('Dat verstond ik niet. Kies de uitkomst op het scherm.')
+}
+onMounted(() => document.addEventListener('visibilitychange', zichtbaarheid))
+onBeforeUnmount(() => document.removeEventListener('visibilitychange', zichtbaarheid))
+function wisselHandsfree(aan: boolean) { handsfree.value = aan; if (aan) leesVoor(); else vl.stop() }
 const LABEL: Record<string, string> = Object.fromEntries(UITKOMST_KNOPPEN.map((k) => [k.sleutel, k.label]))
 const datum = (iso: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short' }).format(new Date(iso))
 const bandTelling = (b: Record<string, { ja: boolean }>) => Object.values(b ?? {}).filter((x) => x?.ja).length

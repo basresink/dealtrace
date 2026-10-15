@@ -57,6 +57,7 @@ onBeforeUnmount(() => { window.removeEventListener('keydown', toets); document.r
     <HulpFlyout />
     <ZoekVenster />
     <AssistentChat />
+    <SpraakVenster />
     <ConflictVenster />
     <ToastStapel />
     <AfrondStrook />

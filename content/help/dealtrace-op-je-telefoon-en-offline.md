@@ -58,6 +58,12 @@ Je locatie gebruikt Dealtrace alleen op het moment dat je Route, In de buurt of 
 
 Hoe je een bezoek afrondt, lees je in "Een bezoek afronden met een verslag". Wat er offline kan, lees je in "Een dag offline".
 
+## Visitekaartje en handsfree
+
+Vanaf Gevorderd tik je op de accountkaart of in **Bezoek afronden** op **Scan visitekaartje**. Maak een foto; Dealtrace leest naam, functie, telefoon en e-mail en laat het contact zien. Staat die persoon er al, dan vraagt hij of je wilt samenvoegen. Tik **Bewaar contact**. Zonder verbinding wacht de foto en wordt hij gelezen zodra je weer verbinding hebt.
+
+In de belmodus zet je **Handsfree** aan. Dealtrace leest naam, reden en opening voor; je belt via je carkit. Kom je na het gesprek terug in de app, dan vraagt Dealtrace "Hoe ging het?". Zeg **gesproken**, **niet bereikt** of **terugbellen**.
+
 ## De kop
 
 Rechts in de kop staan **Zoeken**, **Inspreken** en **Meldingen**. Op een kaart, zoals een prospect, zie je links een terugknop.

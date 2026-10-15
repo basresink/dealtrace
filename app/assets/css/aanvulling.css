@@ -1007,3 +1007,10 @@ html.zonlicht body { color: #000; }
 .aankomst-kaart .dd-acties > * { min-height: 48px; }
 .ow-rood { color: var(--red); border-color: var(--red); font-weight: 700; }
 .knop-uit { opacity: .45; pointer-events: none; }
+.ba-mic--klein { min-height: 44px; width: auto; padding: 0 16px; font-size: var(--fs-klein); }
+/* P31: spraakopdracht. */
+.sp-golf { display: flex; gap: 4px; justify-content: center; height: 28px; align-items: center; margin-top: 8px; }
+.sp-golf span { width: 4px; height: 8px; background: var(--red); animation: sp-golf .9s ease-in-out infinite alternate; }
+@keyframes sp-golf { to { height: 26px; } }
+@media (prefers-reduced-motion: reduce) { .sp-golf span { animation: none; height: 14px; } }
+.sp-checks { list-style: none; padding: 0; margin: 8px 0 0; font-size: var(--fs-meta); color: var(--green); display: grid; gap: 2px; }

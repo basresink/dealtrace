@@ -530,6 +530,39 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'onderweg.aankomst', naam: 'Aankomstkaart', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'Open je de app bij een afspraak, dan staan Pitstop en Bezoek afronden bovenaan Vandaag.', totDieTijd: 'Je opent de afspraak via de route.' },
   },
+  // P31: spraak, visitekaartje en meldingen voor onderweg (8.5.6, 8.9, 8.10).
+  {
+    sleutel: 'spraak.inspreken', naam: 'Inspreken in tekstvelden', pakket: 'starter', rollen: 'iedereen', helpartikel: 'inspreken-in-plaats-van-typen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Een verslag of notitie inspreken; de tekst komt in het veld. Transcriptie in de EU, de opname verdwijnt daarna.', totDieTijd: 'Je typt je verslag.' },
+  },
+  {
+    sleutel: 'spraak.opdracht', naam: 'Spraakopdracht: taak en notitie', pakket: 'starter', rollen: 'iedereen', helpartikel: 'inspreken-in-plaats-van-typen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Eén ingesproken zin wordt een echte taak of notitie op het juiste account.', totDieTijd: 'Je maakt een taak met + Taak.' },
+  },
+  {
+    sleutel: 'spraak.opdrachtUitgebreid', naam: 'Spraakopdracht: afspraak en mail', pakket: 'starter', rollen: 'iedereen', helpartikel: 'inspreken-in-plaats-van-typen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Ook een afspraak of een mailconcept inspreken. Een mail verstuur je altijd zelf.', totDieTijd: 'Je spreekt taken en notities in.' },
+  },
+  {
+    sleutel: 'spraak.voorlezen', naam: 'Voorlezen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'inspreken-in-plaats-van-typen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Je dag, een briefing of de recap in een minuut voorgelezen.', totDieTijd: 'Je leest het zelf.' },
+  },
+  {
+    sleutel: 'spraak.handsfree', naam: 'Handsfree bellen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'In de belmodus leest Dealtrace de opening voor en vraagt na het gesprek "Hoe ging het?".', totDieTijd: 'Je kijkt op je scherm tussen de gesprekken.' },
+  },
+  {
+    sleutel: 'contact.visitekaartje', naam: 'Visitekaartje scannen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een foto van een visitekaartje wordt een contactpersoon, zonder overtypen en zonder dubbelen.', totDieTijd: 'Je typt de contactpersoon over.' },
+  },
+  {
+    sleutel: 'meldingen.onderweg', naam: 'Meldingen voor onderweg', pakket: 'starter', rollen: 'iedereen', helpartikel: 'meldingen-instellen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Vertrek, briefing, verslag, dagstart en recap als pushmelding, met stille uren en een dagplafond.', totDieTijd: 'Je ziet meldingen in de app.' },
+  },
+  {
+    sleutel: 'meldingen.perSoort', naam: 'Meldingsregels per soort', pakket: 'starter', rollen: 'iedereen', helpartikel: 'meldingen-instellen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Je eigen dagplafond en stille uren per soort melding.', totDieTijd: 'De standaard: zes per dag, stil van 19:00 tot 07:00 en in het weekend.' },
+  },
   // P33: AI-assistent en credits (F26, 11.4). Op alle niveaus; de credits begrenzen, niet het niveau.
   {
     sleutel: 'assistent.chat', naam: 'AI-assistent', pakket: 'starter', rollen: 'iedereen', helpartikel: 'chatten-met-de-ai-assistent', startNiveau: 'beginner',
@@ -874,7 +907,7 @@ export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | u
 
 /** De feature (hoofdstuk 7, F01 tot en met F26) waar een functie bij hoort, voor het raster van de founder. */
 const FEATURE_GROEPEN: [RegExp, string][] = [
-  [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
+  [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],

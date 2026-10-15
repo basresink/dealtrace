@@ -37,6 +37,8 @@ const F = { alleenMijn: true, alleenProspects: true, maxOmrij: 30, aantal: null,
 describe('bezoekdag', () => {
   it('de route van vandaag met drie stops, kansen uit alle open bezoektaken en de klaargezette kans (+90)', async () => {
     await inOrg(ORG, async (tx) => {
+      // De klaargezette kans geldt voor elke regio, zodat de test niet afhangt van de weekdag.
+      await tx.execute(sql`update klaargezet_voor set regio_id = null where id = 'kz-1'`)
       const d = await bezoekDag(tx, await lieke(tx), vandaag, F, nu)
       expect(d.stops).toHaveLength(3)
       expect(d.punten.length).toBe(5)

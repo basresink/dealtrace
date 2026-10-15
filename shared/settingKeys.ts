@@ -19,6 +19,8 @@ export const SETTING_KEYS = [
   'agendaKoppeling', // {aan: boolean}: de beheerder zet de agendakoppeling aan (P13)
   'gebieden', // Regio[] uit shared/gebieden.ts: reeksen, plaatsen, eigenaren, regiodagen (P14)
   'plaatsSynoniemen', // {"den bosch": "'s-hertogenbosch"}: eigen synoniemen voor plaatsnamen (P14)
+  'spraak', // {opnamesBewaren, bewaartermijnDagen, browserherkenning}: spraak per organisatie (P31)
+  'meldingsregels', // Partial<MeldingInstelling> uit shared/meldingsregels.ts: dagplafond en stilte (P31)
   'kansRegels', // KansRegels uit shared/route.ts: gewichten, maximale omrijtijd, aantal (P14)
   'dagritme', // DagInstelling en SignaalInstelling uit shared/dag.ts en shared/signalen.ts (P32)
   // Van de leverancier:

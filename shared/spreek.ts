@@ -52,3 +52,34 @@ export function spreekDag(dag: Dag, focus: Focus | null, groet: string, extra: {
 export function spreekRecap(r: Recap): string {
   return binnenPlafond([`${r.titel}`, ...r.regels, ...r.risicos.map((x) => `Let op: ${x}`), ...(r.week ? [r.week] : [])])
 }
+
+/** Briefing voor het oor (Pitstop in de auto): blokken zonder inhoud vallen weg. */
+export function spreekBriefing(b: { accountNaam: string; tijd?: string | null; contact?: string | null; doel?: string | null; punten?: (string | null | undefined)[] }): string {
+  return binnenPlafond([
+    `Briefing voor ${b.accountNaam}${b.tijd ? ` om ${b.tijd}` : ''}`,
+    ...(b.contact ? [`Je spreekt ${b.contact}`] : []),
+    ...(b.doel ? [`Doel: ${b.doel}`] : []),
+    ...(b.punten ?? []).filter((p): p is string => !!p && !!p.trim()),
+  ])
+}
+
+/** De opening van een belscript voor handsfree bellen: naam, reden en de eerste zin. */
+export function spreekBelOpening(b: { accountNaam: string; contactNaam?: string | null; reden?: string | null; opening?: string | null }): string {
+  return binnenPlafond([
+    `Volgende: ${b.contactNaam ? `${b.contactNaam} van ${b.accountNaam}` : b.accountNaam}`,
+    ...(b.reden ? [`Reden: ${b.reden}`] : []),
+    ...(b.opening ? [`Je opening: ${b.opening}`] : []),
+    'Zeg bel om te bellen',
+  ])
+}
+
+export type BelAntwoord = 'gesproken' | 'niet_bereikt' | 'terugbellen'
+/** "Hoe ging het?" na een handsfree gesprek: drie antwoorden, met varianten; anders null. */
+export function herkenAntwoord(tekst: string | null | undefined): BelAntwoord | null {
+  const t = String(tekst ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!t) return null
+  if (/terug ?bel|later bellen|bel (me|mij|ons) (later|terug)/.test(t)) return 'terugbellen'
+  if (/niet (bereikt|opgenomen|aangenomen|thuis)|geen (gehoor|reactie|antwoord)|voicemail|in gesprek/.test(t)) return 'niet_bereikt'
+  if (/gesproken|bereikt|gehad|goed gesprek|opgenomen/.test(t)) return 'gesproken'
+  return null
+}

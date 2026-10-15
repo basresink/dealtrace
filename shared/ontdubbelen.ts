@@ -114,3 +114,21 @@ export function voegContactenSamen<B extends ContactKandidaat & { telefoon?: str
   }
   return uit
 }
+
+/** Visitekaartje (P31): hoofdletters in namen, telefoon naar E.164, e-mail in kleine letters; lege velden weg. */
+export function normaliseerVisitekaartje(k: { naam?: string | null; functie?: string | null; bedrijf?: string | null; telefoon?: string | null; email?: string | null }, telefoonNaarE164: (t: string) => string | null): { voornaam: string | null; achternaam: string; functie: string | null; bedrijf: string | null; telefoon: string | null; email: string | null } {
+  const schoon = (s?: string | null) => (s ?? '').replace(/\s+/g, ' ').trim()
+  const tussen = new Set(['van', 'de', 'der', 'den', 'het', 'ter', 'ten', 'te', "'t"])
+  const delen = schoon(k.naam).split(' ').filter(Boolean).map((w, i) => (i > 0 && tussen.has(w.toLowerCase()) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()))
+  const email = schoon(k.email).toLowerCase()
+  return {
+    voornaam: delen.length > 1 ? delen[0]! : null, achternaam: delen.length > 1 ? delen.slice(1).join(' ') : delen[0] ?? '',
+    functie: schoon(k.functie) || null, bedrijf: schoon(k.bedrijf) || null,
+    telefoon: k.telefoon ? telefoonNaarE164(k.telefoon) : null, email: /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(email) ? email : null,
+  }
+}
+
+/** Is er al een contact bij dit account met dezelfde e-mail of hetzelfde nummer? */
+export function visitekaartjeDuplicaat<C extends { id: string; email?: string | null; telefoon?: string | null; mobiel?: string | null }>(nieuw: { email: string | null; telefoon: string | null }, bestaand: C[]): C | null {
+  return bestaand.find((c) => (nieuw.email && c.email?.toLowerCase() === nieuw.email) || (nieuw.telefoon && [c.telefoon, c.mobiel].includes(nieuw.telefoon))) ?? null
+}

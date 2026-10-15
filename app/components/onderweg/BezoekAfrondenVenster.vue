@@ -14,6 +14,8 @@ const f = reactive(leeg())
 const fotos = ref<{ id: string; url: string }[]>([])
 const opname = ref<{ id: string; seconden: number } | null>(null)
 const contactOpen = ref(false)
+const kaartje = ref(false)
+const { functie } = useMe()
 const bewaard = ref(false)
 watch(() => props.open, (o) => { if (o) { Object.assign(f, leeg()); fotos.value = []; opname.value = null; contactOpen.value = false; bewaard.value = false } })
 const tijd = (iso: string) => new Date(iso).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })
@@ -31,35 +33,6 @@ watch(() => f.uitkomst, () => {
 })
 const ongeldig = computed(() => !f.uitkomst || (nee.value && (!f.reden || (f.reden === 'Anders' && !f.toelichting.trim()))))
 
-// Opname (MediaRecorder): de opname gaat als bijlage in de uploadwachtrij; de transcriptie volgt (mock tot P31).
-let rec: MediaRecorder | null = null
-let stukken: Blob[] = []
-const neemtOp = ref(false)
-const seconden = ref(0)
-let teller: any
-const kanOpnemen = computed(() => import.meta.client && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== 'undefined')
-async function microfoon() {
-  if (neemtOp.value) { rec?.stop(); return }
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : ''
-    rec = new MediaRecorder(stream, mime ? { mimeType: mime, audioBitsPerSecond: 24000 } : { audioBitsPerSecond: 24000 })
-    stukken = []; seconden.value = 0
-    rec.ondataavailable = (e) => stukken.push(e.data)
-    rec.onstop = async () => {
-      clearInterval(teller); neemtOp.value = false
-      stream.getTracks().forEach((t) => t.stop())
-      const blob = new Blob(stukken, { type: rec?.mimeType || 'audio/webm' })
-      const id = await bijlagen.voegToe(blob, 'opname', { soort: 'appointments', id: props.afspraak!.id })
-      opname.value = { id, seconden: seconden.value }
-      if (navigator.onLine) {
-        try { await bijlagen.verstuur(); const r: any = await $fetch('/api/spraak/transcribeer', { method: 'POST', body: { bijlageId: id } }); f.verslag = [f.verslag, r.tekst].filter(Boolean).join('\n') } catch { toast.toon('De opname is bewaard; de tekst volgt later.', 'let-op') }
-      } else toast.toon('Opname bewaard op je telefoon. De tekst volgt zodra je verbinding hebt.', 'let-op')
-    }
-    rec.start(); neemtOp.value = true
-    teller = setInterval(() => seconden.value++, 1000)
-  } catch { toast.toon('Geen toegang tot de microfoon. Typ je verslag.', 'fout') }
-}
 async function foto(e: Event) {
   const bestand = (e.target as HTMLInputElement).files?.[0]
   if (!bestand) return
@@ -111,9 +84,9 @@ async function bewaar() {
           </article>
           <article class="fo-blok">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Verslag</h3></header>
-            <button v-if="kanOpnemen" type="button" class="ba-mic" :class="{ 'ba-mic--aan': neemtOp }" :aria-pressed="neemtOp" data-test="ba-mic" @click="microfoon"><Icoon :naam="neemtOp ? 'Square' : 'Mic'" />{{ neemtOp ? `Stop · ${seconden} s` : 'Spreek je verslag in' }}</button>
-            <p v-if="opname" class="meta mt-8">Opname van {{ opname.seconden }} seconden bewaard.</p>
-            <textarea v-model="f.verslag" class="invoer mt-8" rows="4" placeholder="Of typ je verslag" data-test="ba-verslag" />
+            <VerslagVeld v-model="f.verslag" :record="{ soort: 'appointments', id: afspraak.id }" groot placeholder="Of typ je verslag" @opname="(id) => (opname = { id, seconden: 0 })" />
+            <p v-if="opname" class="meta mt-8">Opname bewaard bij dit bezoek.</p>
+
             <label class="dd-act mt-8 ba-foto"><Icoon naam="Camera" />Foto<input type="file" accept="image/*" capture="environment" class="sr-only" data-test="ba-foto" @change="foto"></label>
             <div v-if="fotos.length" class="ba-fotos"><img v-for="x in fotos" :key="x.id" :src="x.url" alt="Foto bij dit bezoek"></div>
           </article>
@@ -140,7 +113,7 @@ async function bewaar() {
               <label class="veld"><span class="veld-label">Functie</span><input v-model="f.contactFunctie" class="invoer"></label>
               <label class="veld"><span class="veld-label">Telefoon</span><input v-model="f.contactTelefoon" class="invoer" type="tel" inputmode="tel"></label>
             </div>
-            <p class="meta mt-8">Visitekaartje scannen volgt binnenkort.</p>
+            <button v-if="afspraak.accountId && functie('contact.visitekaartje')?.beschikbaar" type="button" class="dd-act mt-8" data-test="ba-visitekaartje" @click="kaartje = true"><Icoon naam="Camera" />Scan visitekaartje</button>
           </details>
         </div>
         <footer class="fo-foot ba-voet">
@@ -149,4 +122,5 @@ async function bewaar() {
       </form>
     </div>
   </Teleport>
+  <VisitekaartjeVenster :open="kaartje" :account="afspraak?.accountId ? { id: afspraak.accountId, naam: afspraak.accountNaam ?? '' } : null" @sluit="kaartje = false" />
 </template>

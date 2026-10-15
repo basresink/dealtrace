@@ -4,6 +4,7 @@
 // 56 px), verslag, per agendapunt besproken of niet, en de volgende stap. Op de telefoon een
 // schuifvenster met de plakkende actiebalk Bellen, Mail, WhatsApp, Navigeer.
 import { NEE_REDENEN } from '~~/shared/nbStatus'
+import { spreekBriefing } from '~~/shared/spreek'
 const props = defineProps<{ open: boolean; afspraakId: string | null }>()
 const emit = defineEmits<{ sluit: []; gewijzigd: [] }>()
 const toast = useToast()
@@ -44,6 +45,13 @@ async function rondAf() {
 async function zetStatus(status: 'niet_verschenen' | 'geannuleerd') {
   try { await $fetch(`/api/afspraken/${a.value.id}/status`, { method: 'POST', body: { status } }); toast.toon(status === 'geannuleerd' ? 'Afspraak geannuleerd.' : 'Vastgelegd: niet verschenen.'); emit('gewijzigd'); await laad() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
+// Voorlezen (P31): de briefing voor het oor, hooguit een minuut.
+const { functie } = useMe()
+const vl = useVoorlezen()
+function leesBriefing() {
+  if (vl.spreekt.value) { vl.stop(); return }
+  vl.lees(spreekBriefing({ accountNaam: a.value.account?.naam ?? a.value.soort.naam, tijd: new Date(a.value.start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }), contact: a.value.wieZitErbij[0]?.naam ?? null, doel: a.value.soort.doel, punten: [a.value.briefing ?? a.value.aanleiding, ...a.value.soort.agenda.map((p: any) => p.punt)] }))
+}
 const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0, 10))
 </script>
 
@@ -79,7 +87,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
             <p v-if="a.soort.doel">{{ a.soort.doel }}</p>
             <ol class="mt-8"><li v-for="p in a.soort.agenda" :key="p.punt">{{ p.punt }}<span v-if="p.verplicht" class="meta"> · verplicht</span></li></ol>
           </article>
-          <article class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Pitstop</h3></header><p class="meta">Pitstop volgt.</p></article>
+          <article class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Pitstop</h3><button v-if="functie('spraak.voorlezen')?.beschikbaar && vl.kan()" type="button" class="dd-act" :aria-pressed="vl.spreekt.value" data-test="af-lees-voor" @click="leesBriefing"><Icoon :naam="vl.spreekt.value ? 'VolumeX' : 'Volume2'" />{{ vl.spreekt.value ? 'Stop' : 'Lees voor' }}</button></header><p class="meta">Pitstop volgt.</p></article>
           <article v-if="a.verslag?.tekst" class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Verslag</h3></header><p>{{ a.verslag.tekst }}</p></article>
           <article v-if="afronden" class="fo-blok" data-test="rond-af">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Rond af</h3></header>
@@ -92,7 +100,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
               <label class="veld mt-16"><span class="veld-label">Reden <span class="veld-verplicht">*</span></span><select v-model="f.reden" class="invoer" data-test="af-reden"><option value="" disabled>Kies een reden</option><option v-for="r in NEE_REDENEN" :key="r" :value="r">{{ r }}</option></select></label>
               <label v-if="f.reden === 'Anders'" class="veld mt-8"><span class="veld-label">Toelichting <span class="veld-verplicht">*</span></span><textarea v-model="f.toelichting" class="invoer" rows="2" /></label>
             </template>
-            <label class="veld mt-16"><span class="veld-label">Verslag</span><textarea v-model="f.verslag" class="invoer" rows="4" placeholder="Typ of plak je aantekeningen" data-test="af-verslag" /></label>
+            <div class="veld mt-16"><span class="veld-label">Verslag</span><VerslagVeld v-model="f.verslag" :record="{ soort: 'appointments', id: a.id }" placeholder="Typ of plak je aantekeningen" /></div>
             <div v-if="f.punten.length" class="mt-16"><span class="veld-label">Agendapunten</span>
               <ul class="schakel-lijst"><li v-for="p in f.punten" :key="p.punt" class="schakel-rij"><span>{{ p.punt }}</span><Schakelaar :aan="p.besproken" :label="p.besproken ? 'besproken' : 'niet besproken'" @wissel="p.besproken = $event" /></li></ul>
             </div>

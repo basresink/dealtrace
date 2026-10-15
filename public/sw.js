@@ -47,3 +47,19 @@ self.addEventListener('fetch', (e) => {
     })())
   }
 })
+
+// P31: pushmeldingen. Tikken opent de link; "gelezen" zet de app op de server bij openen.
+self.addEventListener('push', (e) => {
+  let d = {}
+  try { d = e.data ? e.data.json() : {} } catch { d = { titel: e.data ? e.data.text() : 'Dealtrace' } }
+  e.waitUntil(self.registration.showNotification(d.titel || 'Dealtrace', { body: d.tekst || '', tag: d.id, data: { link: d.link || '/', id: d.id }, icon: '/iconen/dealtrace-192.png', badge: '/iconen/dealtrace-192.png' }))
+})
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close()
+  const link = (e.notification.data && e.notification.data.link) || '/'
+  e.waitUntil((async () => {
+    const vensters = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+    for (const v of vensters) { if ('focus' in v) { await v.navigate(link).catch(() => undefined); return v.focus() } }
+    return self.clients.openWindow(link)
+  })())
+})

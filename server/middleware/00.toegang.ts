@@ -4,7 +4,7 @@ import { STANDAARD_GEHEIM, TOEGANG_COOKIE, gelijk, ontbrekendeInstellingen, toeg
 
 // /api/motor/run-all heeft een eigen geheim (x-motor-secret) voor de geplande functie; de
 // SalesDNA-webhook controleert zelf de HMAC-handtekening.
-const VRIJ = ['/toegang', '/_nuxt/', '/favicon.ico', '/robots.txt', '/manifest.webmanifest', '/iconen/', '/api/motor/run-all', '/api/motor/reminders-sweep', '/api/koppelingen/salesdna/webhook', '/api/koppelingen/salesdna/webhook/']
+const VRIJ = ['/toegang', '/_nuxt/', '/favicon.ico', '/robots.txt', '/manifest.webmanifest', '/iconen/', '/api/motor/run-all', '/api/motor/reminders-sweep', '/api/motor/onderweg-meldingen', '/api/koppelingen/salesdna/webhook', '/api/koppelingen/salesdna/webhook/']
 
 export default defineEventHandler((event) => {
   const config = useRuntimeConfig(event)

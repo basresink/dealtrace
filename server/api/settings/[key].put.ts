@@ -41,6 +41,15 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  if (key === 'spraak') {
+    const v = value as any
+    if (!v || typeof v !== 'object' || (v.bewaartermijnDagen != null && !(Number.isInteger(v.bewaartermijnDagen) && v.bewaartermijnDagen >= 1 && v.bewaartermijnDagen <= 365))) throw createError({ statusCode: 422, statusMessage: 'De bewaartermijn is 1 tot 365 dagen' })
+  }
+  if (key === 'meldingsregels') {
+    const v = value as any
+    const uur = (n: unknown) => Number.isInteger(n) && (n as number) >= 0 && (n as number) <= 23
+    if (!v || !(Number.isInteger(v.dagplafond) && v.dagplafond >= 0 && v.dagplafond <= 20) || !uur(v.stilVan) || !uur(v.stilTot)) throw createError({ statusCode: 422, statusMessage: 'Dagplafond 0 tot 20 en stille uren als heel uur' })
+  }
   if (key === 'gebieden') {
     // P14: regio's controleren; overlap wordt bij invoer geblokkeerd (gat 45).
     const regios = (Array.isArray(value) ? value : []) as Regio[]

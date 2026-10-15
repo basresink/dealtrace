@@ -8,6 +8,7 @@ import { voerAiKern, type AiProvider, type JsonSchema } from '../../shared/aiSta
 import { logAgentRun, toets, type Voorstel } from './agents/bewaker'
 import { boek, geefVrij, metCredits, reserveer, type ReserveerOpties, type Reservering } from './credits'
 import { mockGids } from './assistent'
+import { mockOpdracht } from '../../shared/spraakOpdracht'
 
 type Tx = Parameters<Parameters<ReturnType<typeof import('./db').gebruikDb>['transaction']>[0]>[0]
 
@@ -56,6 +57,10 @@ export const MOCK_GENERATOREN: Record<string, (materiaal: any) => unknown> = {
 }
 // De Gids (P33): hetzelfde antwoord voor een gewone vraag, een vraag met account en webonderzoek.
 for (const soort of ['assistent', 'assistentUitgebreid', 'webonderzoek']) MOCK_GENERATOREN[soort] = (m) => mockGids(m)
+// P31: spraakopdracht uit de zin en de lijst accounts; visitekaartje met een vast fictief kaartje.
+MOCK_GENERATOREN.spraakopdracht = (m) => mockOpdracht(String(m?.zin ?? ''), m?.accounts ?? [], new Date(m?.vandaag ?? Date.now()))
+export const MOCK_VISITEKAARTJES: Record<string, unknown> = {}
+MOCK_GENERATOREN.visitekaartje = (m) => MOCK_VISITEKAARTJES[m?.bijlageId] ?? { naam: 'peter KOK', functie: 'Hoofd inkoop', bedrijf: null, telefoon: '06 1234 5678', email: 'Peter.Kok@voorbeeld.test' }
 
 export const mockLog: { soort: string; prompt: string; materiaal: unknown }[] = []
 

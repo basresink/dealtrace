@@ -58,7 +58,8 @@ export function useSyncQueue() {
 
   async function voegToe(m: Omit<WachtendeMutatie, 'idempotentieSleutel' | 'pogingen' | 'aangemaakt' | 'nietVoor'>, opties: { uitstelMs?: number } = {}) {
     const sleutel = crypto.randomUUID()
-    await wachtrij().mutaties.add({ ...m, idempotentieSleutel: sleutel, pogingen: 0, aangemaakt: new Date().toISOString(), ...(opties.uitstelMs ? { nietVoor: new Date(Date.now() + opties.uitstelMs).toISOString() } : {}) })
+    // Een gewone kopie: reactieve objecten van Vue kunnen niet in IndexedDB.
+    await wachtrij().mutaties.add({ ...m, patch: JSON.parse(JSON.stringify(m.patch ?? {})), idempotentieSleutel: sleutel, pogingen: 0, aangemaakt: new Date().toISOString(), ...(opties.uitstelMs ? { nietVoor: new Date(Date.now() + opties.uitstelMs).toISOString() } : {}) })
     await tel()
     if (opties.uitstelMs) setTimeout(() => void verstuur(), opties.uitstelMs + 50)
     else void verstuur()
@@ -74,11 +75,14 @@ export function useSyncQueue() {
     return true
   }
 
+  // P31: eerst de bijlagen (opnames, foto's), zodat een mutatie die ernaar verwijst ze al vindt.
+  const bijlagen = import.meta.client ? useBijlagen() : null
   let bezig = false
   async function verstuur() {
     if (import.meta.server || bezig || !navigator.onLine) return
     bezig = true
     try {
+      await bijlagen?.verstuur().catch(() => undefined)
       const nu = new Date().toISOString()
       const lijst = (await wachtrij().mutaties.orderBy('aangemaakt').toArray()).filter((m) => !m.nietVoor || m.nietVoor <= nu)
       if (!lijst.length) return

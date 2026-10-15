@@ -103,6 +103,7 @@ useHead({ title: 'Mijn instellingen · Dealtrace' })
             <ul v-if="ai.eigen.perSoort.length" class="schakel-lijst"><li v-for="s in ai.eigen.perSoort" :key="s.soort" class="schakel-rij"><span>{{ s.soort }}</span><span class="meta tnum">{{ s.handelingen }} keer · {{ s.credits }} credits</span></li></ul>
           </article>
           <MijnToestellen />
+          <OnderwegMeldingen :pers="pers ?? null" />
           <article v-if="functie('onderweg.dagpakket')?.beschikbaar" class="kaart" data-test="mijn-offline">
             <header class="kaart-kop"><h2 class="kaart-titel">Offline</h2></header>
             <p class="kaart-meta" data-test="dagpakket-stand">{{ pakketStand }}</p>

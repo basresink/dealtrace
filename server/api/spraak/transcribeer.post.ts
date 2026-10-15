@@ -1,10 +1,12 @@
-// POST /api/spraak/transcribeer {bijlageId}: de mock van de transcriptie (P30). De echte transcriptie
-// op de server bouwt P31; tot dan komt er een vaste tekst terug met het label "voorbeeld".
-import { vereisOrganisatie } from '../../utils/sessie'
+// POST /api/spraak/transcribeer {bijlageId}: een opname omzetten naar tekst bij een EU-dienst
+// (P31). 413 boven 15 minuten, 502 bij een fout van de dienst; credits op: de opname wacht.
+import { metOrganisatie } from '../../utils/db'
+import { vereisFunctie } from '../../utils/sessie'
+import { transcribeer } from '../../utils/transcriptie'
 
 export default defineEventHandler(async (event) => {
-  await vereisOrganisatie(event)
+  const ctx = await vereisFunctie(event, 'spraak.inspreken')
   const b = await readBody<{ bijlageId?: string }>(event)
   if (!b?.bijlageId) throw createError({ statusCode: 400, statusMessage: 'Geen opname' })
-  return { tekst: 'Goed gesprek gehad. Ze willen een vervolg. Actiepunt: offerte via DealDrive voorbereiden.', mock: true }
+  return metOrganisatie(ctx.organisatie.id, (tx) => transcribeer(tx, ctx.organisatie.id, ctx.gebruiker.id, b.bijlageId!))
 })

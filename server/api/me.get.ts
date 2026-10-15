@@ -28,6 +28,11 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  // P31: de snelle voorvertoning in de browser alleen als de beheerder hem aanzette.
+  const browserherkenning = await metOrganisatie(organisatie.id, async (tx) => {
+    const [r] = await tx.select({ value: schema.orgSettings.value }).from(schema.orgSettings).where(eq(schema.orgSettings.key, 'spraak'))
+    return !!(r?.value as any)?.browserherkenning
+  })
   const team = await metOrganisatie(organisatie.id, async (tx) => {
     if (werkIn) return null
     await tx.update(schema.users).set({ laatsteInlog: new Date().toISOString() }).where(eq(schema.users.id, gebruiker.id))
@@ -57,7 +62,7 @@ export default defineEventHandler(async (event) => {
     },
     echteRol,
     werkIn: werkIn ? { organisatie: werkIn.organisatieNaam, organisatieId: werkIn.organisatieId, modus: werkIn.modus, reden: werkIn.reden, resterendMs: werkIn.resterendMs, resterend: resterendTekst(werkIn.resterendMs) } : null,
-    organisatie: { id: organisatie.id, naam: organisatie.naam, pakket: organisatie.pakket, iedereenAlles: organisatie.iedereenAlles },
+    organisatie: { id: organisatie.id, naam: organisatie.naam, pakket: organisatie.pakket, iedereenAlles: organisatie.iedereenAlles, browserherkenning },
     team,
     zijbalk: metPlatform(zijbalkVoor(gebruiker, organisatie, stand), werkIn ? platformItem : null),
     functies: catalogusVoor(gebruiker, organisatie, stand),
