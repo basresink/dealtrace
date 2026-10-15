@@ -121,3 +121,7 @@ revoke update, delete on belscript_versies from dealtrace_app;
 -- P28: versies van het verkoopverhaal zijn een log.
 revoke update, delete on vv_versies from dealtrace_app;
 revoke update, delete on salesdna_sublaag_versies from dealtrace_app;
+-- P33: prijs per handeling en credits per pakket alleen via de platformrol.
+revoke insert, update, delete on credit_instellingen from dealtrace_app;
+grant select, insert, update, delete on credit_instellingen to dealtrace_platform;
+grant select, insert, update on ai_credits, credit_aanvragen to dealtrace_platform;

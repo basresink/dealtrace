@@ -45,24 +45,76 @@ export const AGENT_STOP_ONDER = 0.1
  * Credits voor één handeling. Uitgebreide assistentvragen kosten 2 tot 5 naar lengte;
  * transcriptie 1 per begonnen minuut. Prijzen van de founder gaan voor.
  */
-export function creditsVoor(soort: AiSoort, context: { tekens?: number; seconden?: number; prijzen?: Partial<Record<AiSoort, number>> } = {}): number {
+export function creditsVoor(soort: AiSoort, context: { tekens?: number; seconden?: number; bronnen?: number; woorden?: number; prijzen?: Partial<Record<AiSoort, number>> } = {}): number {
   const basis = context.prijzen?.[soort] ?? AI_SOORT[soort].credits
-  if (soort === 'assistentUitgebreid' && context.tekens) return Math.min(5, Math.max(basis, Math.ceil(context.tekens / 2000)))
+  if (soort === 'assistentUitgebreid') {
+    // 2 met accountgegevens, plus 1 per bron boven de drie, plus 1 bij een antwoord boven 300 woorden; hooguit 5.
+    const extra = Math.max(0, (context.bronnen ?? 0) - 3) + ((context.woorden ?? 0) > 300 ? 1 : 0) + (context.tekens ? Math.max(0, Math.ceil(context.tekens / 2000) - basis) : 0)
+    return Math.min(Math.max(5, basis), basis + extra)
+  }
   if (soort === 'transcriptie') return basis * Math.max(1, Math.ceil((context.seconden ?? 60) / 60))
   return basis
 }
 
 export const soortAanIn = (soort: AiSoort, pakket: Pakket) => AI_SOORT[soort].pakketten.includes(pakket)
 
-export interface CreditsStand { pot: number; verbruikt: number; over: number; procentVerbruikt: number; letOp: boolean; op: boolean }
+export interface CreditsStand { pot: number; verbruikt: number; gereserveerd?: number; over: number; procentVerbruikt: number; letOp: boolean; op: boolean }
 
 /** De stand van de pot: pot is gebruikers maal het pakketbedrag plus extra credits, tenzij de founder een vaste pot zet. */
-export function creditsStand(i: { pakket: Pakket; gebruikers: number; extra?: number; vastePot?: number | null; verbruikt: number }): CreditsStand {
-  const pot = Math.max(0, i.vastePot ?? POT_PER_GEBRUIKER[i.pakket] * Math.max(0, i.gebruikers) + (i.extra ?? 0))
+export function creditsStand(i: { pakket: Pakket; gebruikers: number; extra?: number; vastePot?: number | null; verbruikt: number; gereserveerd?: number; toegekend?: number | null; perGebruiker?: number | null }): CreditsStand {
+  const pot = Math.max(0, i.vastePot ?? Math.max(i.toegekend ?? 0, potVoor(i.pakket, i.gebruikers, 0, i.perGebruiker)) + (i.extra ?? 0))
   const verbruikt = Math.max(0, i.verbruikt)
-  const over = Math.max(0, pot - verbruikt)
+  const gereserveerd = Math.max(0, i.gereserveerd ?? 0)
+  const over = Math.max(0, pot - verbruikt - gereserveerd)
   const procentVerbruikt = pot ? Math.min(100, Math.round((verbruikt / pot) * 1000) / 10) : 100
-  return { pot, verbruikt, over, procentVerbruikt, letOp: pot > 0 && verbruikt >= pot * LET_OP_VANAF, op: over <= 0 }
+  return { pot, verbruikt, gereserveerd, over, procentVerbruikt, letOp: pot > 0 && verbruikt >= pot * LET_OP_VANAF, op: over <= 0 }
+}
+
+/** De pot van een maand: credits per gebruiker van het pakket maal de actieve gebruikers, plus extra. */
+export function potVoor(pakket: Pakket, actieveGebruikers: number, extra = 0, perGebruiker?: number | null): number {
+  return Math.max(0, (perGebruiker ?? POT_PER_GEBRUIKER[pakket]) * Math.max(0, actieveGebruikers)) + Math.max(0, extra)
+}
+
+export const PLAFOND_TEKST = 'Je hebt je AI-credits voor deze maand gebruikt. Je beheerder kan je plafond verhogen.'
+export const AGENTGRENS_TEKST = 'Minder dan 10 procent AI-credits over: automatische AI staat stil.'
+export type Weigering = 'op' | 'plafond' | 'agentgrens' | 'pakket'
+/**
+ * De poort vóór elke AI-aanroep: pakket, pot, plafond van de gebruiker (alleen wat hij zelf vraagt)
+ * en de agentgrens (automatische AI stopt als na de aanroep minder dan 10 procent over is).
+ */
+export function magVragenVoor(i: { stand: CreditsStand; kosten: number; automatisch: boolean; plafond?: number | null; verbruiktGebruiker?: number; soort?: AiSoort; pakket?: Pakket }): { ja: true } | { ja: false; reden: Weigering; status: 402 | 403; tekst: string } {
+  if (i.soort && i.pakket && !soortAanIn(i.soort, i.pakket)) return { ja: false, reden: 'pakket', status: 403, tekst: `${AI_SOORT[i.soort].naam} zit niet in jullie pakket.` }
+  if (i.stand.over <= 0 || i.stand.over < i.kosten) return { ja: false, reden: 'op', status: 402, tekst: CREDITS_OP_TEKST }
+  if (!i.automatisch && i.plafond != null && (i.verbruiktGebruiker ?? 0) + i.kosten > i.plafond) return { ja: false, reden: 'plafond', status: 402, tekst: PLAFOND_TEKST }
+  if (i.automatisch && i.stand.over - i.kosten < i.stand.pot * AGENT_STOP_ONDER) return { ja: false, reden: 'agentgrens', status: 402, tekst: AGENTGRENS_TEKST }
+  return { ja: true }
+}
+
+/** Is er een melding nodig na deze boeking? 80 procent verbruikt of nog 10 procent over, één keer per maand. */
+export function meldingNodig(voor: CreditsStand, na: CreditsStand, vlaggen: { gemeld80?: boolean; gemeld10?: boolean }): '80' | '10' | null {
+  if (!na.pot) return null
+  const overNa = na.pot - na.verbruikt
+  if (!vlaggen.gemeld10 && overNa < na.pot * AGENT_STOP_ONDER && voor.pot - voor.verbruikt >= voor.pot * AGENT_STOP_ONDER) return '10'
+  if (!vlaggen.gemeld80 && na.verbruikt >= na.pot * LET_OP_VANAF && voor.verbruikt < voor.pot * LET_OP_VANAF) return '80'
+  return null
+}
+
+const WEB = /(website|webpagina|vacature|nieuws|op internet|online zoeken|zoek op|site van|linkedin)/i
+/** Welke soort een vraag aan de assistent is: met accountgegevens duurder, webonderzoek alleen op verzoek. */
+export function kiesAssistentSoort(vraag: string, context: { accountId?: string | null }, pakket: Pakket): { soort: AiSoort; nietInPakket?: boolean } {
+  if (WEB.test(vraag)) return soortAanIn('webonderzoek', pakket) ? { soort: 'webonderzoek' } : { soort: 'webonderzoek', nietInPakket: true }
+  return { soort: context.accountId ? 'assistentUitgebreid' : 'assistent' }
+}
+
+export interface Bron { soort: 'help' | 'verhaal' | 'account' | 'verslag' | 'taak' | 'web'; label: string; ref?: string | null; citaat?: string | null }
+/** Bewijsplicht (11.2): een bron met een citaat dat niet letterlijk in het materiaal staat, valt weg. */
+export function bronnenVoorAntwoord(materiaal: string[], bronnen: Bron[]): { geldig: Bron[]; afgewezen: Bron[] } {
+  const norm = (t: string) => t.replace(/\s+/g, ' ').trim().toLowerCase()
+  const alles = materiaal.map(norm)
+  const geldig: Bron[] = []
+  const afgewezen: Bron[] = []
+  for (const b of bronnen) (!b.citaat || alles.some((m) => m.includes(norm(b.citaat!))) ? geldig : afgewezen).push(b)
+  return { geldig, afgewezen }
 }
 
 /** Mag deze AI-handeling (van een gebruiker of agent)? Weigert vóór de aanroep. */

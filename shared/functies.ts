@@ -443,6 +443,27 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'verkoopverhaal.mappings', naam: 'Mappings verkoopverhaal', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'ons-verhaal', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Branche naar SBI, verliesreden naar terugkomreden en ambitiedoelen beheren.', totDieTijd: 'Vraag je beheerder.' },
   },
+  // P33: AI-assistent en credits (F26, 11.4). Op alle niveaus; de credits begrenzen, niet het niveau.
+  {
+    sleutel: 'assistent.chat', naam: 'AI-assistent', pakket: 'starter', rollen: 'iedereen', helpartikel: 'chatten-met-de-ai-assistent', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Vragen stellen bij elk scherm, met bronnen en voorstellen als concept.', totDieTijd: 'Zoek in het helpcenter.' },
+  },
+  {
+    sleutel: 'assistent.webonderzoek', naam: 'Webonderzoek door de assistent', pakket: 'compleet', rollen: 'iedereen', helpartikel: 'chatten-met-de-ai-assistent', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'De assistent zoekt op internet, na akkoord over de kosten.', totDieTijd: 'De assistent gebruikt alleen jullie eigen gegevens.' },
+  },
+  {
+    sleutel: 'credits.eigenVerbruik', naam: 'Eigen AI-verbruik', pakket: 'starter', rollen: 'iedereen', helpartikel: 'abonnement-verbruik-ai-credits', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Zien hoeveel AI-credits je deze maand gebruikte.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'credits.beheer', naam: 'AI-credits beheren', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'abonnement-verbruik-ai-credits', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Verbruik per soort en gebruiker, plafonds, dagplafonds voor agents en extra credits aanvragen.', totDieTijd: 'Vraag je beheerder.' },
+  },
+  {
+    sleutel: 'credits.verbruikLezen', naam: 'Verbruik van de organisatie lezen', pakket: 'starter', rollen: ['salesmanager', 'beheerder'], helpartikel: 'abonnement-verbruik-ai-credits', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Het AI-verbruik van de organisatie per soort en per gebruiker lezen.', totDieTijd: 'Je ziet je eigen verbruik.' },
+  },
   // P32: dagritme-kern en Vandaag op de telefoon (F01, hoofdstuk 8).
   {
     sleutel: 'vandaag.telefoon', naam: 'Vandaag op de telefoon', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'beginner',
@@ -753,7 +774,7 @@ export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | u
 
 /** De feature (hoofdstuk 7, F01 tot en met F26) waar een functie bij hoort, voor het raster van de founder. */
 const FEATURE_GROEPEN: [RegExp, string][] = [
-  [/^nav\./, 'Navigatie'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
+  [/^nav\./, 'Navigatie'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],

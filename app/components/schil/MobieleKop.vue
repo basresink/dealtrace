@@ -3,10 +3,12 @@
 // Inspreken en Meldingen. Geen logo en geen snelle acties.
 const route = useRoute()
 const router = useRouter()
-const { me } = useMe()
+const { me, functie } = useMe()
 const { open: zoekenOpen } = useZoeken()
 const ongelezen = useState<number>('ongelezen', () => 0)
 const inspreken = ref(false)
+const aiAan = computed(() => !!functie('assistent.chat')?.beschikbaar)
+const { openen: openAi } = useAssistent()
 const items = computed(() => [...(me.value?.zijbalk.groepen.flatMap((g) => g.items) ?? []), { naam: 'Mijn instellingen', route: '/mij' }, { naam: 'Meldingen', route: '/meldingen' }, { naam: 'Helpcenter', route: '/help' }, { naam: 'Prospects', route: '/accounts' }])
 const item = computed(() => {
   const p = route.path
@@ -24,6 +26,7 @@ const teller = computed(() => (ongelezen.value > 9 ? '9+' : String(ongelezen.val
     <h1 v-else class="mk-titel">{{ titel }}</h1>
     <div class="mk-knoppen">
       <button type="button" class="mk-knop" aria-label="Zoeken" data-test="mk-zoeken" @click="zoekenOpen = true"><Icoon naam="Search" :grootte="22" /></button>
+      <button v-if="aiAan" type="button" class="mk-knop" aria-label="Vraag AI" data-test="mk-ai" @click="openAi()"><Icoon naam="Sparkles" :grootte="22" /></button>
       <button type="button" class="mk-knop" aria-label="Inspreken" data-test="mk-inspreken" @click="inspreken = true"><Icoon naam="Mic" :grootte="22" /></button>
       <NuxtLink to="/meldingen" class="mk-knop" aria-label="Meldingen" data-test="mk-meldingen"><Icoon naam="Bell" :grootte="22" /><span v-if="ongelezen" class="mk-teller">{{ teller }}</span></NuxtLink>
     </div>

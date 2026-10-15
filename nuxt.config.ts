@@ -42,4 +42,7 @@ export default defineNuxtConfig({
     },
   },
   typescript: { strict: true },
+  // Zonder routetypes voor $fetch: met ruim 300 API-routes wordt de getypeerde route-matching te diep
+  // voor TypeScript (TS2589). Antwoorden typen we zelf waar het telt.
+  hooks: { 'nitro:init'(nitro) { nitro.hooks.hook('types:extend', (types: any) => { types.routes = {} }) } },
 })

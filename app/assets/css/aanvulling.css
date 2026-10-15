@@ -856,3 +856,30 @@ html.zonlicht body { color: #000; }
 .vt-recap summary { cursor: pointer; list-style: none; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; min-height: 28px; }
 .vt-recap summary::-webkit-details-marker { display: none; }
 .vt-recap-kort { font-size: 14px; color: var(--ink-soft); }
+
+/* P33: AI-assistent (F26). Flyout van 480 px op de laptop, schuifvenster op de telefoon. */
+.ai-chat { max-width: 480px; display: flex; flex-direction: column; }
+.ai-kop-regel { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+.chip-weg { border: 0; background: transparent; font: inherit; cursor: pointer; padding: 0 0 0 6px; min-width: 24px; }
+.ai-berichten { flex: 1; overflow-y: auto; display: grid; gap: 12px; align-content: start; }
+.ai-voorstellen { display: grid; gap: 8px; }
+.ai-voorstel { justify-content: flex-start; text-align: left; min-height: 44px; }
+.ai-bericht { padding: 10px 12px; border: 1px solid var(--border); background: var(--wit); }
+.ai-bericht--gebruiker { background: var(--surface); justify-self: end; max-width: 85%; }
+.ai-tekst { margin: 0; white-space: pre-line; font-size: max(15px, 1em); }
+.ai-bronnen, .ai-acties { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ai-bron { min-height: 32px; display: inline-flex; align-items: center; }
+.ai-acties .dd-act { min-height: 44px; }
+.ai-invoer { display: grid; gap: 6px; }
+.ai-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+.ai-form .dd-act { min-height: 44px; }
+@media (max-width: 767px) {
+  .ai-chat { position: fixed; left: 0; right: 0; bottom: 0; top: auto; max-width: none; height: 92vh; border-radius: 16px 16px 0 0; }
+  .ai-bron { min-height: 44px; }
+  .ai-knop { display: none; }
+}
+.pot-meter { position: relative; height: 14px; background: var(--surface); border: 1px solid var(--border); }
+.pot-vulling { height: 100%; background: var(--ink); }
+.pot-vulling--geel { background: var(--yellow); }
+.pot-vulling--rood { background: var(--rood, #c0392b); }
+.pot-streep { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--muted); }

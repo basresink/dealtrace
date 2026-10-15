@@ -48,11 +48,8 @@ const dagStart = (nu: Date) => nlTijdstip(nlMoment(nu).datum, 0).toISOString()
  * agent_runs; de leverancier kan in aiCredits een vaste pot of extra credits zetten.
  */
 export async function creditsStandVoor(tx: Tx, org: string, nu = new Date()): Promise<CreditsStand> {
-  const [o] = await tx.select({ pakket: schema.organisations.pakket }).from(schema.organisations).where(eq(schema.organisations.id, org))
-  const ai = (await instelling<{ vastePot?: number | null; extra?: number; verbruikt?: number }>(tx, 'aiCredits')) ?? {}
-  const n = ((await tx.execute(sql`select count(*)::int as n from users where status = 'actief' and role <> 'founder'`)).rows[0] as any)?.n ?? 0
-  const c = ((await tx.execute(sql`select coalesce(sum((kosten->>'credits')::int), 0)::int as c from agent_runs where kosten is not null and uitkomst = 'uitgevoerd' and op >= ${maandStart(nu)}`)).rows[0] as any)?.c ?? 0
-  return creditsStand({ pakket: (o?.pakket ?? 'starter') as Pakket, gebruikers: n, extra: ai.extra, vastePot: ai.vastePot ?? null, verbruikt: c + (ai.verbruikt ?? 0) })
+  const { stand } = await import('../credits')
+  return stand(tx, org, nu)
 }
 
 /** Credits die agents vandaag aan deze AI-soort verbruikten. */

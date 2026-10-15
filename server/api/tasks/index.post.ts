@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
     if (ownerId !== ctx.gebruiker.id && !(await magTaak(tx, ctx, ownerId))) throw createError({ statusCode: 403, statusMessage: 'Je wijst alleen taken toe binnen je team' })
     if (b?.accountId) { const [a] = await tx.select({ id: schema.accounts.id }).from(schema.accounts).where(eq(schema.accounts.id, b.accountId)); if (!a) throw createError({ statusCode: 422, statusMessage: 'Account onbekend' }) }
     const due = b?.dueDate && !Number.isNaN(Date.parse(b.dueDate)) ? new Date(b.dueDate).toISOString() : volgendWerkmoment(new Date(), werkdagen).toISOString()
-    const data: Record<string, unknown> = { herkomst: { bron: b?.signalId ? 'inzicht' : 'handmatig', actiesoort: actionType, uitvoerder: ownerId } }
+    const data: Record<string, unknown> = { herkomst: { bron: b?.signalId ? 'inzicht' : b?.herkomst === 'assistent' ? 'AI-assistent' : 'handmatig', actiesoort: actionType, uitvoerder: ownerId } }
     if (gevorderd && HERHALING.includes(b?.herhaling)) data.herhaling = { soort: b.herhaling, teller: 1, max: Math.min(52, Math.max(1, Number(b.herhalingMax) || 52)) }
     if (gevorderd && b?.herinnering?.minuten) data.herinnering = { minuten: Math.min(2880, Math.max(5, Number(b.herinnering.minuten))), kanaal: ['in-app', 'email', 'beide'].includes(b.herinnering.kanaal) ? b.herinnering.kanaal : 'in-app', verstuurd: false }
     if (gevorderd && b?.beschrijving) data.beschrijving = String(b.beschrijving).slice(0, 2000)

@@ -11,7 +11,9 @@ const props = defineProps<{
   werkbalk?: boolean
 }>()
 const emit = defineEmits<{ werkbalk: [actie: 'weergave' | 'filters' | 'sortering' | 'opgeslagen' | 'download'] }>()
-const { me } = useMe()
+const { me, functie } = useMe()
+const aiAan = computed(() => !!functie('assistent.chat')?.beschikbaar)
+const { openen: openAi } = useAssistent()
 const niveau = computed(() => (me.value?.organisatie?.iedereenAlles ? 'expert' : me.value?.gebruiker.niveau ?? 'beginner'))
 const subtitel = computed(() => (niveau.value === 'expert' && props.stand ? props.stand : props.uitleg))
 </script>
@@ -27,6 +29,7 @@ const subtitel = computed(() => (niveau.value === 'expert' && props.stand ? prop
         </div>
         <div class="toolbar-buttons">
           <slot name="acties" />
+          <button v-if="aiAan" type="button" class="dd-act ai-knop" data-test="vraag-ai" @click="openAi()"><Icoon naam="Sparkles" class="dd-actie-icoon" />Vraag AI</button>
           <template v-if="werkbalk && niveau !== 'beginner'">
             <button type="button" class="dd-actie dd-actie--secundair" @click="emit('werkbalk', 'weergave')">Weergave</button>
             <button type="button" class="dd-actie dd-actie--secundair" @click="emit('werkbalk', 'filters')"><Icoon naam="Filter" class="dd-actie-icoon" />Filters</button>

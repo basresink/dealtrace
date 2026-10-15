@@ -9,6 +9,12 @@ const { functie } = useMe()
 if (!functie('prospects.kaart')?.beschikbaar) throw createError({ statusCode: 403, statusMessage: 'Geen toegang' })
 const toast = useToast()
 const { data: a, refresh } = await useFetch<any>(() => `/api/accounts/${route.params.id}`)
+const { openen: openAi } = useAssistent()
+const aiAan = computed(() => !!useMe().functie('assistent.chat')?.beschikbaar)
+// De naam voor de contextchip van de assistent, ook als die vanuit de mobiele kop opent.
+const accountNaam = useState<string | null>('accountNaam', () => null)
+watch(() => a.value?.naam, (n) => { accountNaam.value = n ?? null }, { immediate: true })
+onBeforeUnmount(() => { accountNaam.value = null })
 if (!a.value) throw createError({ statusCode: 404, statusMessage: 'Account onbekend' })
 const infoOpen = ref(false)
 const contactenOpen = ref(false)
@@ -102,6 +108,7 @@ useHead({ title: computed(() => `${a.value?.naam ?? 'Account'} · Dealtrace`) })
             </div>
           </div>
           <div class="toolbar-buttons">
+            <button v-if="aiAan" type="button" class="dd-act ai-knop" data-test="vraag-ai" @click="openAi({ accountId: a.id, label: a.naam })"><Icoon naam="Sparkles" class="dd-actie-icoon" />Vraag AI</button>
             <button type="button" class="dd-actie dd-actie--secundair" data-test="info-knop" @click="infoOpen = true"><Icoon naam="Info" class="dd-actie-icoon" />Info</button>
             <button type="button" class="dd-actie dd-actie--secundair" data-test="contacten-knop" @click="contactenOpen = true"><Icoon naam="Users" class="dd-actie-icoon" />Contacten {{ a.contacten.filter((c: any) => c.status !== 'vertrokken').length }}</button>
             <a v-if="belNummer" class="dd-actie dd-actie--primair alleen-groot" :href="telLink(belNummer)"><Icoon naam="Phone" class="dd-actie-icoon" />Bel</a>

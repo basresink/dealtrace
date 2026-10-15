@@ -6,6 +6,8 @@ import { sql } from 'drizzle-orm'
 import { gebruikDb, metOrganisatie } from '../../utils/db'
 import { MotorBezig, draaiMotor } from '../../utils/motor'
 
+import { ruimOp } from '../../utils/credits'
+
 export default defineEventHandler(async (event) => {
   const geheim = process.env.MOTOR_SECRET ?? ''
   const gegeven = getHeader(event, 'x-motor-secret') ?? ''
@@ -18,6 +20,8 @@ export default defineEventHandler(async (event) => {
   const uit: Record<string, unknown> = {}
   for (const o of orgs) {
     try { uit[o.id] = await metOrganisatie(o.id, (tx) => draaiMotor(tx, o.id, { soort: 'uur' })) } catch (e) { uit[o.id] = { fout: e instanceof MotorBezig ? 'bezig' : (e as Error).message } }
+    // P33: vervallen reserveringen vrijgeven en gesprekken ouder dan 30 dagen verwijderen.
+    try { await metOrganisatie(o.id, (tx) => ruimOp(tx)) } catch { /* volgende ronde opnieuw */ }
   }
   return uit
 })

@@ -6,6 +6,9 @@ const route = useRoute()
 const router = useRouter()
 const zoek = ref(typeof route.query.zoek === 'string' ? route.query.zoek : '')
 const { data } = await useFetch<any>('/api/help', { query: computed(() => ({ zoek: route.query.zoek, collectie: route.query.collectie, niveau: route.query.niveau })), default: () => ({ artikelen: [], resultaten: null, voorJou: { nieuw: [], aanDeSlag: [], bijgewerkt: [] }, kan: {} }) })
+const { functie } = useMe()
+const aiAan = computed(() => !!functie('assistent.chat')?.beschikbaar)
+const { openen: openAi } = useAssistent()
 let timer: any
 watch(zoek, (z) => { clearTimeout(timer); timer = setTimeout(() => router.replace({ query: { ...route.query, zoek: z.trim() || undefined } }), 300) })
 const product = computed(() => CATEGORIEEN_PRODUCT.map((c) => ({ naam: c, artikelen: data.value.artikelen.filter((a: any) => a.collectie === 'product' && a.categorie === c) })).filter((c) => c.artikelen.length))
@@ -24,6 +27,8 @@ useHead({ title: 'Helpcenter · Dealtrace' })
         <template v-if="data.resultaten">
           <div class="mt-16" data-test="help-resultaten">
             <p v-if="!data.resultaten.length" class="kaart kaart--vlak">Daar staat nog niets over in het helpcenter. Probeer een ander woord of vraag het de AI-assistent.</p>
+            <article v-if="aiAan" class="kaart kaart--vlak mt-8" data-test="help-vraag-ai"><p>Vraag het de AI-assistent: hij zoekt in het helpcenter en noemt het artikel erbij.</p>
+              <button type="button" class="dd-act dd-act--primair mt-8" @click="openAi({ label: 'Helpcenter', route: '/help', accountId: null, vraag: zoek })"><Icoon naam="Sparkles" class="dd-actie-icoon" />Vraag AI</button></article>
             <div v-for="g in resultatenPerCollectie" :key="g.naam" class="mt-16">
               <span class="kicker kicker--streep">{{ g.naam }}</span>
               <ul class="help-lijst mt-8"><li v-for="a in g.artikelen" :key="a.id"><NuxtLink :to="`/help/${a.slug}`"><strong>{{ a.titel }}</strong></NuxtLink><span class="meta">{{ a.samenvatting }}</span></li></ul>

@@ -7,6 +7,7 @@ import { NIVEAU_LABEL, ROL_LABEL, WERKPLEK_LABEL, type Niveau, type Rol, type We
 const { me, laad, functie } = useMe()
 const { voegToe } = useSyncQueue()
 const toast = useToast()
+const { data: ai } = await useFetch<any>('/api/assistent/credits', { default: () => null })
 const { data: pers } = await useFetch<{ id: string; data: Record<string, any>; versie: number }>('/api/mij/instellingen')
 
 const SOORTEN = [
@@ -69,6 +70,11 @@ useHead({ title: 'Mijn instellingen · Dealtrace' })
             <header class="kaart-kop"><h2 class="kaart-titel">Mijn scripts</h2></header>
             <p class="kaart-meta">Je eigen varianten van de belscripts van je team.</p>
             <div class="reis-knoppen mt-16"><NuxtLink to="/instellingen/mijn-scripts" class="dd-act">Naar mijn scripts</NuxtLink></div>
+          </article>
+          <article v-if="ai" class="kaart" data-test="mijn-ai-verbruik">
+            <header class="kaart-kop"><h2 class="kaart-titel">Jouw AI-verbruik deze maand</h2></header>
+            <p class="kaart-meta">{{ ai.eigen.plafond != null ? `${ai.eigen.verbruikt} van ${ai.eigen.plafond} credits` : `${ai.eigen.verbruikt} credits` }} · de organisatie heeft er nog {{ ai.over }} over.</p>
+            <ul v-if="ai.eigen.perSoort.length" class="schakel-lijst"><li v-for="s in ai.eigen.perSoort" :key="s.soort" class="schakel-rij"><span>{{ s.soort }}</span><span class="meta tnum">{{ s.handelingen }} keer · {{ s.credits }} credits</span></li></ul>
           </article>
           <MijnToestellen />
           <article class="kaart">

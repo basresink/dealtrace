@@ -24,9 +24,10 @@
     "typecheck": "nuxt typecheck",
     "check:functies": "tsx tools/checks/check-functies.ts",
     "check:rechten": "tsx tools/checks/check-rechten.ts",
-    "check": "pnpm check:functies && pnpm check:rechten && pnpm check:platform && pnpm check:agents && pnpm test",
+    "check": "pnpm check:functies && pnpm check:rechten && pnpm check:platform && pnpm check:agents && pnpm check:credits && pnpm test",
     "check:platform": "tsx tools/checks/check-platform.ts",
-    "check:agents": "tsx tools/checks/check-agents.ts"
+    "check:agents": "tsx tools/checks/check-agents.ts",
+    "check:credits": "tsx tools/checks/check-credits.ts"
   },
   "dependencies": {
     "dexie": "^4.4.6",

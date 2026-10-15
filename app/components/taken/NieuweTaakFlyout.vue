@@ -2,7 +2,7 @@
 // Nieuwe taak ("Wat moet er gebeuren?", F06). Beginner: klant, titel, actiesoort,
 // vervaldatum. Gevorderd ook prioriteit, toegewezen aan, herhaling, herinnering en beschrijving.
 import { ACTIE_LABEL } from '~~/shared/taken'
-const props = defineProps<{ open: boolean; account?: { id: string; naam: string } | null; teamleden?: { id: string; naam: string }[]; actiesoort?: string }>()
+const props = defineProps<{ open: boolean; account?: { id: string; naam: string } | null; teamleden?: { id: string; naam: string }[]; actiesoort?: string; voorgevuld?: { accountId?: string | null; titel?: string; actiesoort?: string; aanleiding?: string } | null }>()
 const emit = defineEmits<{ sluit: []; gemaakt: [] }>()
 const { functie } = useMe()
 const toast = useToast()
@@ -12,12 +12,20 @@ const f = reactive(leeg())
 const klant = ref<{ id: string; naam: string } | null>(null)
 const zoek = ref('')
 const treffers = ref<any[]>([])
-watch(() => props.open, (o) => { if (o) { Object.assign(f, leeg(), props.actiesoort ? { actionType: props.actiesoort } : {}); klant.value = props.account ?? null; zoek.value = '' } })
+watch(() => props.open, async (o) => {
+  if (!o) return
+  const v = props.voorgevuld
+  Object.assign(f, leeg(), props.actiesoort ? { actionType: props.actiesoort } : {}, v?.titel ? { title: v.titel } : {}, v?.actiesoort ? { actionType: v.actiesoort } : {})
+  klant.value = props.account ?? null
+  zoek.value = ''
+  // Voorgevuld vanuit de AI-assistent: account, titel en aanleiding; pas Opslaan maakt de taak.
+  if (v?.accountId && !klant.value) { try { const a: any = await ($fetch as any)(`/api/accounts/${v.accountId}`); klant.value = { id: a.id, naam: a.naam } } catch { klant.value = null } }
+}, { immediate: true })
 let timer: any
 watch(zoek, (q) => { clearTimeout(timer); timer = setTimeout(async () => { treffers.value = q.length >= 2 ? await $fetch<any[]>('/api/accounts/kies', { query: { q } }) : [] }, 250) })
 async function maak() {
   try {
-    await $fetch('/api/tasks', { method: 'POST', body: { ...f, accountId: klant.value?.id, dueDate: f.dueDate ? new Date(f.dueDate).toISOString() : undefined, ownerId: f.ownerId || undefined, herhaling: f.herhaling || undefined, herinnering: f.herinnering ? { minuten: Number(f.herinnering), kanaal: 'in-app' } : undefined } })
+    await $fetch('/api/tasks', { method: 'POST', body: { ...f, accountId: klant.value?.id, dueDate: f.dueDate ? new Date(f.dueDate).toISOString() : undefined, ownerId: f.ownerId || undefined, herhaling: f.herhaling || undefined, herinnering: f.herinnering ? { minuten: Number(f.herinnering), kanaal: 'in-app' } : undefined, ...(props.voorgevuld ? { aanleiding: props.voorgevuld.aanleiding, herkomst: 'assistent' } : {}) } })
     toast.toon('Taak gemaakt.'); emit('gemaakt')
   } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
