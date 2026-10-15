@@ -80,6 +80,10 @@ useHead({ title: computed(() => `${a.value?.naam ?? 'Account'} · Dealtrace`) })
 // P14: de binnendienst zet een prospect klaar voor de regiodag van een collega van de buitendienst.
 const klaarOpen = ref(false)
 const kanKlaarzetten = computed(() => !!functie('bezoeken.klaarzetten')?.beschikbaar && me.value?.gebruiker.werkplek !== 'buitendienst')
+// P30: een account buiten het dagpakket bewaren voor offline.
+const dagpakket = useDagpakket()
+const inPakket = computed(() => !!dagpakket.account(String(route.params.id)))
+async function bewaarOffline() { await dagpakket.bewaarVoorOffline(String(route.params.id), a.value?.naam ?? ''); toast.toon('Bewaard voor offline.') }
 </script>
 
 <template>
@@ -121,6 +125,7 @@ const kanKlaarzetten = computed(() => !!functie('bezoeken.klaarzetten')?.beschik
           </div>
           <div class="toolbar-buttons">
             <button v-if="aiAan" type="button" class="dd-act ai-knop" data-test="vraag-ai" @click="openAi({ accountId: a.id, label: a.naam })"><Icoon naam="Sparkles" class="dd-actie-icoon" />Vraag AI</button>
+            <button v-if="!inPakket && functie('onderweg.dagpakket')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair alleen-telefoon" data-test="bewaar-offline" @click="bewaarOffline"><Icoon naam="Download" class="dd-actie-icoon" />Bewaar voor offline</button>
             <button v-if="kanKlaarzetten" type="button" class="dd-actie dd-actie--secundair" data-test="klaarzetten-knop" @click="klaarOpen = true"><Icoon naam="MapPin" class="dd-actie-icoon" />Klaarzetten voor buitendienst</button>
             <button type="button" class="dd-actie dd-actie--secundair" data-test="info-knop" @click="infoOpen = true"><Icoon naam="Info" class="dd-actie-icoon" />Info</button>
             <button type="button" class="dd-actie dd-actie--secundair" data-test="contacten-knop" @click="contactenOpen = true"><Icoon naam="Users" class="dd-actie-icoon" />Contacten {{ a.contacten.filter((c: any) => c.status !== 'vertrokken').length }}</button>
@@ -245,4 +250,5 @@ const kanKlaarzetten = computed(() => !!functie('bezoeken.klaarzetten')?.beschik
     <BevestigVenster :open="verwijderOpen" :titel="`${a.naam} verwijderen?`" tekst="Het account en zijn contacten worden verwijderd. De activiteitenlog blijft bewaard." bevestig="Verwijderen" @geannuleerd="verwijderOpen = false" @bevestigd="verwijder" />
     <KlaarzetFlyout :open="klaarOpen" :account="a ? { id: a.id, naam: a.naam } : null" @sluit="klaarOpen = false" />
   </div>
+  <OfflineAccount v-else :id="String(route.params.id)" />
 </template>

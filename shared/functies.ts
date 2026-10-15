@@ -505,6 +505,31 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'instellingen.gebieden', naam: 'Gebieden en regiodagen', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'gebieden-en-regiodagen', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Regio\'s op postcode, eigenaren, regiodagen en synoniemen voor plaatsnamen.', totDieTijd: 'Accounts hebben nog geen regio.' },
   },
+  // P30: onderweg op de telefoon (8.5.2, 8.5.3, 8.6, 8.8).
+  {
+    sleutel: 'onderweg.route', naam: 'Route op de telefoon', pakket: 'starter', rollen: 'iedereen', helpartikel: 'bezoeken-en-kansen-langs-de-route', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Je volgende stop, de tijdlijn van de dag en kansen als tussenrij, ook offline.', totDieTijd: 'Je bezoeken staan op Vandaag.' },
+  },
+  {
+    sleutel: 'onderweg.bezoekAfronden', naam: 'Bezoek afronden', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-bezoek-afronden-met-een-verslag', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Uitkomst, ingesproken verslag, foto en volgende stap in één venster, ook offline.', totDieTijd: 'Je rondt af in de agenda.' },
+  },
+  {
+    sleutel: 'onderweg.dagpakket', naam: 'Dagpakket voor offline', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-dag-offline', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Vandaag en morgen staan op je telefoon, zodat je ook zonder bereik verder kunt.', totDieTijd: 'Zonder verbinding zie je de laatst geladen schermen.' },
+  },
+  {
+    sleutel: 'onderweg.inDeBuurt', naam: 'In de buurt', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Prospects en klanten binnen 15 minuten van waar je nu bent, met de reden.', totDieTijd: 'Je ziet de kansen langs je route.' },
+  },
+  {
+    sleutel: 'onderweg.inloop', naam: 'Inloopbezoek', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een ongepland bezoek in drie tikken vastleggen.', totDieTijd: 'Je plant een afspraak en rondt hem af.' },
+  },
+  {
+    sleutel: 'onderweg.aankomst', naam: 'Aankomstkaart', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Open je de app bij een afspraak, dan staan Pitstop en Bezoek afronden bovenaan Vandaag.', totDieTijd: 'Je opent de afspraak via de route.' },
+  },
   // P33: AI-assistent en credits (F26, 11.4). Op alle niveaus; de credits begrenzen, niet het niveau.
   {
     sleutel: 'assistent.chat', naam: 'AI-assistent', pakket: 'starter', rollen: 'iedereen', helpartikel: 'chatten-met-de-ai-assistent', startNiveau: 'beginner',
@@ -849,7 +874,7 @@ export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | u
 
 /** De feature (hoofdstuk 7, F01 tot en met F26) waar een functie bij hoort, voor het raster van de founder. */
 const FEATURE_GROEPEN: [RegExp, string][] = [
-  [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^bezoeken\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
+  [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],

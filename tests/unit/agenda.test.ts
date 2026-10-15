@@ -8,8 +8,8 @@ const soort = (slug: string) => MEETINGSOORTEN_START.find((m) => m.slug === slug
 const nu = new Date('2026-10-20T08:00:00Z')
 
 describe('startset', () => {
-  it('zes meetingsoorten, geen offertebespreking, eerste afspraak alleen bij kennismaking, inventarisatie en demo', () => {
-    expect(MEETINGSOORTEN_START).toHaveLength(6)
+  it('zeven meetingsoorten (met Ongepland bezoek), geen offertebespreking, eerste afspraak alleen bij kennismaking, inventarisatie en demo', () => {
+    expect(MEETINGSOORTEN_START).toHaveLength(7)
     expect(MEETINGSOORTEN_START.some((m) => /offerte/i.test(m.naam))).toBe(false)
     expect(MEETINGSOORTEN_START.filter((m) => m.data.eersteAfspraak).map((m) => m.slug)).toEqual(['kennismaking', 'inventarisatie', 'demo'])
     expect(soort('weekoverleg').type).toBe('intern')

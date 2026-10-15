@@ -41,7 +41,9 @@ useHead({ title: 'Vandaag · Dealtrace' })
 
 <template>
   <div v-if="v">
+    <AankomstKaart deel="kaart" class="vt-alleen-telefoon" style="padding: 0 16px" />
     <VandaagTelefoon class="vt-alleen-telefoon" :t="v.telefoon" :kan="v.kan" @open="openTaak" @ververs="refresh()" />
+    <AankomstKaart deel="inloop" class="vt-alleen-telefoon" style="padding: 0 16px 16px" />
     <div class="vt-alleen-groot">
     <section class="section">
       <div class="container">

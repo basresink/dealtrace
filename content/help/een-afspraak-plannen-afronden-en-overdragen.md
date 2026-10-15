@@ -38,9 +38,9 @@ Die ene handeling zet de status, de reis, het verslag en de volgende stap:
 | Uitkomst | Wat er gebeurt |
 |---|---|
 | Vervolg afgesproken | Bij de eerste afspraak gaat de fase naar Afspraak gehouden en vraagt Dealtrace: **Overdragen?** Er staat een overdrachtstaak klaar met je verslag en de afgesproken vervolgstap. |
-| Later opnieuw | Het account wacht tot de datum die je kiest, met een terugkomtaak. |
+| Later terugkomen | Het account wacht tot de datum die je kiest, met een terugkomtaak. |
 | Andere contactpersoon | Er staat een taak klaar om de nieuwe contactpersoon te benaderen. |
-| Geen vervolg | Je kiest een reden. Het account gaat naar nee, met de afkoelperiode per kanaal en de terugkomregel. |
+| Geen interesse | Je kiest een reden. Het account gaat naar nee, met de afkoelperiode per kanaal en de terugkomregel. |
 
 Bij een belafspraak kies je **Afspraak gemaakt**, **Later opnieuw** of **Geen interesse**.
 

@@ -13,9 +13,9 @@ export interface Meetingsoort { id?: string; slug: string; naam: string; type: '
 
 const EERSTE: Uitkomst[] = [
   { code: 'vervolg', label: 'Vervolg afgesproken', gevolg: { type: 'gehouden', overdragen: true } },
-  { code: 'later', label: 'Later opnieuw', gevolg: { type: 'later', termijnDagen: 30 } },
+  { code: 'later', label: 'Later terugkomen', gevolg: { type: 'later', termijnDagen: 30 } },
   { code: 'andere-contactpersoon', label: 'Andere contactpersoon', gevolg: { type: 'contactpersoon' } },
-  { code: 'geen-vervolg', label: 'Geen vervolg', gevolg: { type: 'nee' } },
+  { code: 'geen-vervolg', label: 'Geen interesse', gevolg: { type: 'nee' } },
 ]
 const BEL: Uitkomst[] = [
   { code: 'afspraak', label: 'Afspraak gemaakt', gevolg: { type: 'afspraak', meetingsoortSlug: 'kennismaking' } },
@@ -24,13 +24,15 @@ const BEL: Uitkomst[] = [
 ]
 const AGENDA_KENNIS = [{ punt: 'Aanleiding', verplicht: true }, { punt: 'Situatie', verplicht: true }, { punt: 'Behoefte', verplicht: true }, { punt: 'Vervolg', verplicht: true }]
 
-/** De zes meetingsoorten van de startset (F09, F23). Geen offertebespreking (B17). */
+/** De meetingsoorten van de startset (F09, F23): zes uit P13 plus Ongepland bezoek (P30). Geen offertebespreking (B17). */
 export const MEETINGSOORTEN_START: Meetingsoort[] = [
   { slug: 'kennismaking', naam: 'Kennismaking', type: 'klant', duurMin: 30, vorm: 'online', data: { doel: 'Kennismaken en de behoefte verkennen.', standaardLocatie: 'online', agenda: AGENDA_KENNIS, voorbereiding: ['Lees het dossier en de aanleiding', 'Kies één winpunt'], uitkomsten: EERSTE, eersteAfspraak: true, herinneringMin: 30, kleur: 'geel' } },
   { slug: 'inventarisatie', naam: 'Inventarisatie', type: 'klant', duurMin: 60, vorm: 'bezoek', data: { doel: 'Ter plaatse de situatie en het project bekijken.', standaardLocatie: 'account', agenda: [...AGENDA_KENNIS, { punt: 'Rondgang', verplicht: false }], voorbereiding: ['Plan de route', 'Neem het leverplan mee'], uitkomsten: EERSTE, eersteAfspraak: true, herinneringMin: 60, kleur: 'paars' } },
   { slug: 'demo', naam: 'Demo', type: 'klant', duurMin: 45, vorm: 'online', data: { doel: 'Laten zien hoe het werkt in hun situatie.', standaardLocatie: 'online', agenda: [{ punt: 'Situatie', verplicht: true }, { punt: 'Demo', verplicht: true }, { punt: 'Vragen', verplicht: false }, { punt: 'Vervolg', verplicht: true }], voorbereiding: ['Zet de demo klaar met hun voorbeeld'], uitkomsten: EERSTE, eersteAfspraak: true, herinneringMin: 30, kleur: 'blauw' } },
   { slug: 'belafspraak', naam: 'Belafspraak', type: 'klant', duurMin: 15, vorm: 'telefoon', data: { doel: 'Een kort gesprek op een afgesproken moment.', standaardLocatie: null, agenda: [{ punt: 'Aanleiding', verplicht: true }, { punt: 'Vervolg', verplicht: true }], voorbereiding: ['Lees de laatste notitie'], uitkomsten: BEL, herinneringMin: 15, kleur: 'groen' } },
   { slug: 'terugbelafspraak', naam: 'Terugbelafspraak', type: 'klant', duurMin: 10, vorm: 'telefoon', data: { doel: 'Terugbellen zoals afgesproken.', standaardLocatie: null, agenda: [{ punt: 'Vraag van de klant', verplicht: true }], voorbereiding: [], uitkomsten: BEL, herinneringMin: 15, kleur: 'groen' } },
+  // P30: inloopbezoek langs de route; dezelfde uitkomsten als Kennismaking, telt niet als eerste afspraak.
+  { slug: 'ongepland-bezoek', naam: 'Ongepland bezoek', type: 'klant', duurMin: 30, vorm: 'bezoek', data: { doel: 'Binnenlopen langs de route.', standaardLocatie: 'account', agenda: [{ punt: 'Aanleiding', verplicht: false }, { punt: 'Vervolg', verplicht: true }], voorbereiding: [], uitkomsten: EERSTE, herinneringMin: 0, kleur: 'oranje' } },
   { slug: 'weekoverleg', naam: 'Weekoverleg new business', type: 'intern', duurMin: 30, vorm: 'online', data: { doel: 'De pijplijn van de week doornemen.', standaardLocatie: 'online', agenda: [{ punt: 'Cijfers', verplicht: false }, { punt: 'Wat knelt', verplicht: false }], voorbereiding: [], uitkomsten: [], herinneringMin: 10, kleur: 'grijs' } },
 ]
 

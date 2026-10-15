@@ -34,6 +34,7 @@ onMounted(async () => {
   document.addEventListener('touchstart', start, { passive: true })
   document.addEventListener('touchend', eind, { passive: true })
   useSyncQueue().start()
+  useBijlagen().start()
   await telOngelezen()
   // "Leadgenerator staat nu voor je aan." (4.4), één keer per functie.
   const nieuw = me.value?.nogTonen ?? []

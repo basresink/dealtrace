@@ -27,7 +27,7 @@ export const ACCOUNT_MUTATIESOORTEN = ['account.nee', 'account.pauzeer'] as cons
 export const TAAK_MUTATIESOORTEN = ['taak.afronden', 'taak.uitstellen'] as const
 export const INZICHT_MUTATIESOORTEN = ['inzicht.gelezen', 'inzicht.afwijzen'] as const
 export const SIGNAAL_MUTATIESOORTEN = ['signaal.besluit'] as const
-export const AFSPRAAK_MUTATIESOORTEN = ['afspraak.nieuw', 'afspraak.afronden'] as const
+export const AFSPRAAK_MUTATIESOORTEN = ['afspraak.nieuw', 'afspraak.afronden', 'bezoek.afronden', 'inloop.vastleggen'] as const
 export const KANS_MUTATIESOORTEN = ['kans.overslaan', 'kans.klaarzetten'] as const
 
 export type SyncbareTabel = keyof typeof SYNCBARE_TABELLEN

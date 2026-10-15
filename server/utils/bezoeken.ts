@@ -65,15 +65,16 @@ export interface Gebruiker { id: string; naam: string; werkplek: string; data: a
 /** De stops van een dag: bezoekafspraken uit de agenda en (oude) bezoektaken met een tijd. */
 async function stopsVan(tx: Tx, gebruikerId: string, dag: string) {
   const van = nlTijdstip(dag, 0).toISOString(); const tot = nlTijdstip(plusDagen(dag, 1), 0).toISOString()
-  const afs = await rijen(tx, sql`select ap.id, ap.account_id, ap.contact_id, ap.start_at, ap.end_at, ap.status, ap.task_id, m.naam as soort, a.name, a.city, a.lat, a.lng, a.geo_bron, a.data->>'adres' as adres
+  const afs = await rijen(tx, sql`select ap.id, ap.account_id, ap.contact_id, ap.start_at, ap.end_at, ap.status, ap.task_id, ap.data->>'verslagOp' as verslag_op, m.naam as soort, m.slug, a.name, a.city, a.lat, a.lng, a.geo_bron, a.fase_id, a.data->>'adres' as adres,
+      coalesce((select coalesce(c.data->>'mobiel', c.data->>'telefoon') from contacts c where c.id = ap.contact_id), (select coalesce(c.data->>'mobiel', c.data->>'telefoon') from contacts c where c.account_id = ap.account_id and c.status <> 'vertrokken' order by (c.rol = 'beslisser') desc limit 1), a.data->>'telefoon') as telefoon
     from appointments ap join meetingsoorten m on m.id = ap.meetingsoort_id left join accounts a on a.id = ap.account_id
     where ap.owner_id = ${gebruikerId} and ap.vorm = 'bezoek' and ap.status in ('gepland', 'afgerond') and ap.start_at >= ${van} and ap.start_at < ${tot}`)
-  const taken = await rijen(tx, sql`select t.id, t.account_id, t.contact_id, t.due_date, t.title, t.data, a.name, a.city, a.lat, a.lng, a.geo_bron, a.data->>'adres' as adres
+  const taken = await rijen(tx, sql`select t.id, t.account_id, t.contact_id, t.due_date, t.title, t.data, a.name, a.city, a.lat, a.lng, a.geo_bron, a.fase_id, a.data->>'adres' as adres, a.data->>'telefoon' as telefoon
     from tasks t left join accounts a on a.id = t.account_id
     where t.owner_id = ${gebruikerId} and t.action_type = 'bezoek' and t.status in ('open', 'bezig') and t.data->>'soort' = 'afspraak' and t.due_date >= ${van} and t.due_date < ${tot}`)
   const stops = [
-    ...afs.map((x) => ({ id: x.id, soort: 'afspraak' as const, titel: x.soort, accountId: x.account_id, contactId: x.contact_id, accountNaam: x.name, adres: [x.adres, x.city].filter(Boolean).join(', '), start: iso(x.start_at)!, eind: iso(x.end_at)!, status: x.status, taakId: x.task_id, punt: x.lat != null ? { lat: x.lat, lng: x.lng } : null, geoBron: x.geo_bron })),
-    ...taken.map((x) => ({ id: x.id, soort: 'taak' as const, titel: x.title, accountId: x.account_id, contactId: x.contact_id, accountNaam: x.name, adres: [x.adres, x.city].filter(Boolean).join(', '), start: iso(x.due_date)!, eind: new Date(Date.parse(iso(x.due_date)!) + (Number(x.data?.duurMinuten) || 60) * 60_000).toISOString(), status: 'gepland', taakId: x.id, punt: x.lat != null ? { lat: x.lat, lng: x.lng } : null, geoBron: x.geo_bron })),
+    ...afs.map((x) => ({ id: x.id, soort: 'afspraak' as const, titel: x.soort, accountId: x.account_id, contactId: x.contact_id, accountNaam: x.name, adres: [x.adres, x.city].filter(Boolean).join(', '), start: iso(x.start_at)!, eind: iso(x.end_at)!, status: x.status, taakId: x.task_id, punt: x.lat != null ? { lat: x.lat, lng: x.lng } : null, geoBron: x.geo_bron, soortSlug: x.slug as string | null, faseId: x.fase_id, telefoon: x.telefoon, plaats: x.city })),
+    ...taken.map((x) => ({ id: x.id, soort: 'taak' as const, titel: x.title, accountId: x.account_id, contactId: x.contact_id, accountNaam: x.name, adres: [x.adres, x.city].filter(Boolean).join(', '), start: iso(x.due_date)!, eind: new Date(Date.parse(iso(x.due_date)!) + (Number(x.data?.duurMinuten) || 60) * 60_000).toISOString(), status: 'gepland', taakId: x.id, punt: x.lat != null ? { lat: x.lat, lng: x.lng } : null, geoBron: x.geo_bron, soortSlug: null as string | null, faseId: x.fase_id, telefoon: x.telefoon, plaats: x.city })),
   ].sort((a, b) => a.start.localeCompare(b.start))
   return stops
 }

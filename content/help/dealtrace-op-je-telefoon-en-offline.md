@@ -44,6 +44,20 @@ Na 16:00 staat bovenaan **De dag in het kort**: gesprekken zonder verslag en wie
 
 Veeg op de groet naar links voor morgen, of tik op **Morgen**. Vanaf Gevorderd kies je ook een dag in de week.
 
+## Route
+
+Werk je buiten de deur, dan staat onder **Route** je dag: bovenaan de volgende stop met de vertrektijd (rood als je binnen 15 minuten moet vertrekken) en **Navigeer**, **Bel** en **Pitstop**. Daaronder de tijdlijn met de reistijd tussen de stops. Kansen staan er als gele tussenrij waar ze passen, met **+ Tussenstop** en **Overslaan**. Een afgeronde stop klapt in met een groen vinkje; een voorbije stop zonder verslag krijgt **Verslag vastleggen**.
+
+Vanaf Gevorderd zie je ook:
+
+- **In de buurt**: je prospects en klanten binnen 15 minuten van waar je nu bent, met de reden. Per regel Bel, Navigeer en **+ Inloop**.
+- **+ Inloop**: ben je ergens binnengelopen, tik **+ Inloop**, kies een van de drie dichtstbijzijnde accounts en het venster Bezoek afronden staat open.
+- **De aankomstkaart**: open je Dealtrace binnen 300 meter van een afspraak, van een kwartier voor de start tot het einde, dan staat bovenaan Vandaag "Je bent bij" met Pitstop en Bezoek afronden.
+
+Je locatie gebruikt Dealtrace alleen op het moment dat je Route, In de buurt of + Inloop opent. Hij wordt nergens bewaard en Dealtrace volgt je niet.
+
+Hoe je een bezoek afrondt, lees je in "Een bezoek afronden met een verslag". Wat er offline kan, lees je in "Een dag offline".
+
 ## De kop
 
 Rechts in de kop staan **Zoeken**, **Inspreken** en **Meldingen**. Op een kaart, zoals een prospect, zie je links een terugknop.

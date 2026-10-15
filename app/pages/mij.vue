@@ -41,6 +41,13 @@ async function toonMinder(sleutel: string, tonen: boolean) {
 }
 const g = computed(() => me.value!.gebruiker)
 
+// Offline (P30): de stand van het dagpakket, foto's en opnames alleen via wifi, en "Ververs nu".
+const dp = useDagpakket()
+const bijl = useBijlagen()
+onMounted(async () => { if (!dp.pakket.value) dp.pakket.value = await dp.uitOpslag() })
+const pakketStand = computed(() => { const p = dp.pakket.value; return p ? `Klaar voor vandaag · ${p.accounts.length} accounts · ${(p.grootte / 1024 / 1024).toLocaleString('nl-NL', { maximumFractionDigits: 1 })} MB · bijgewerkt ${new Date(p.gemaaktOp).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}` : 'Nog geen dagpakket op deze telefoon.' })
+async function ververs() { await dp.laad({ forceer: true }); toast.toon(dp.fout.value ?? 'Dagpakket bijgewerkt.', dp.fout.value ? 'fout' : 'succes') }
+
 // Routes (P14): thuisbasis voor routes en de kaartapp voor navigeren.
 const thuisbasis = ref(((me.value?.gebruiker as any)?.route?.thuisbasis ?? '') as string)
 const kaartapp = ref(((me.value?.gebruiker as any)?.route?.kaartapp ?? 'google') as string)
@@ -96,6 +103,13 @@ useHead({ title: 'Mijn instellingen · Dealtrace' })
             <ul v-if="ai.eigen.perSoort.length" class="schakel-lijst"><li v-for="s in ai.eigen.perSoort" :key="s.soort" class="schakel-rij"><span>{{ s.soort }}</span><span class="meta tnum">{{ s.handelingen }} keer · {{ s.credits }} credits</span></li></ul>
           </article>
           <MijnToestellen />
+          <article v-if="functie('onderweg.dagpakket')?.beschikbaar" class="kaart" data-test="mijn-offline">
+            <header class="kaart-kop"><h2 class="kaart-titel">Offline</h2></header>
+            <p class="kaart-meta" data-test="dagpakket-stand">{{ pakketStand }}</p>
+            <p class="schakel-rij"><span>Foto's en opnames alleen via wifi versturen</span><Schakelaar :aan="bijl.alleenWifi.value" label="Foto's en opnames alleen via wifi versturen" @wissel="bijl.zetAlleenWifi($event)" /></p>
+            <p v-if="bijl.wachtend.value" class="meta">{{ bijl.wachtend.value }} bijlagen wachten op verzending.</p>
+            <button type="button" class="dd-act mt-8" :disabled="dp.bezig.value" data-test="dagpakket-ververs" @click="ververs"><Icoon naam="RefreshCw" />Ververs nu</button>
+          </article>
           <article class="kaart" data-test="mijn-routes">
             <header class="kaart-kop"><h2 class="kaart-titel">Routes en navigeren</h2></header>
             <label class="veld"><span class="veld-label">Thuisbasis voor routes</span><input v-model="thuisbasis" class="invoer" placeholder="Adres, postcode of plaats" data-test="thuisbasis" @change="bewaarRoute('thuisbasis')"><span class="veld-uitleg">Je route begint en eindigt hier. Je locatie zelf bewaart Dealtrace niet.</span></label>

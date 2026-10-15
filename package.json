@@ -28,7 +28,7 @@
     "check:platform": "tsx tools/checks/check-platform.ts",
     "check:agents": "tsx tools/checks/check-agents.ts",
     "check:credits": "tsx tools/checks/check-credits.ts",
-    "test:route": "vitest run tests/unit/route.test.ts tests/unit/gebieden.test.ts"
+    "test:route": "vitest run tests/unit/route.test.ts tests/unit/gebieden.test.ts tests/unit/onderweg.test.ts"
   },
   "dependencies": {
     "dexie": "^4.4.6",

@@ -71,7 +71,7 @@ export async function migreer(url = BEHEER_URL, opties: { opnieuw?: boolean; sti
     if (nScripts) log(`Belscripts: startset geladen voor ${nScripts} organisaties.`)
     // P28: het leesmodel van het verkoopverhaal voor organisaties met het oude verhaal.
     const nMs = await zorgVoorMeetingsoorten(client, MEETINGSOORTEN_START)
-    if (nMs) log(`Meetingsoorten: startset voor ${nMs} organisaties.`)
+    if (nMs) log(`Meetingsoorten: ${nMs} soorten uit de startset aangevuld.`)
     const nVv = await zorgVoorVerkoopverhaal(client as any)
     if (nVv) log(`Verkoopverhaal: leesmodel uit de startset geladen voor ${nVv} organisaties.`)
     // P09: de platformartikelen van het helpcenter.

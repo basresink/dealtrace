@@ -99,7 +99,7 @@ export interface Kandidaat {
   bronnen: KansBron[]; contact?: { naam: string; rol: string | null } | null; laatsteContactOp?: string | null; taakId?: string | null
 }
 export interface KansFilters { ikId: string; alleenMijn: boolean; alleenProspects: boolean; maxOmrij: number; aantal: number | null; regioId?: string | null; bron?: BronSoort | null; klasse?: string | null; brancheId?: string | null; inRoute: Set<string>; overgeslagen: Set<string>; nu: Date }
-export interface Kans extends Omit<Kandidaat, 'punt'> { punt: Punt; omrij: number; tussen: string; schatting: boolean; moment: string | null; momentStart: string | null; score: number; opbouw: { label: string; punten: number }[]; rang: number }
+export interface Kans extends Omit<Kandidaat, 'punt'> { punt: Punt; omrij: number; tussen: string; schatting: boolean; moment: string | null; momentStart: string | null; na: number; score: number; opbouw: { label: string; punten: number }[]; rang: number }
 
 const tijd = (iso: string) => new Date(iso).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })
 
@@ -127,7 +127,7 @@ export function kansenLangsRoute(route: { punten: Punt[]; stops: RouteStop[]; ga
     const past = !!gat && gat.minuten >= regels.tijdslotMin + o.minuten
     const { score, opbouw } = kansScore(k.basisscore, k.bronnen, o.minuten, past, regels.gewichten)
     const tussen = route.stops.length === 0 ? 'vanaf je startpunt' : o.na === 0 ? 'voor stop 1' : o.na >= route.stops.length ? `na stop ${route.stops.length}` : `tussen stop ${o.na} en ${o.na + 1}`
-    uit.push({ ...k, punt: k.punt, omrij: o.minuten, tussen, schatting: o.schatting, moment: past && gat ? `${gat.minuten} min vrij tussen ${tijd(gat.start)} en ${tijd(gat.eind)}` : null, momentStart: past && gat ? new Date(Date.parse(gat.start) + o.minuten * 30_000).toISOString() : null, score, opbouw, rang: 0 })
+    uit.push({ ...k, punt: k.punt, omrij: o.minuten, tussen, schatting: o.schatting, moment: past && gat ? `${gat.minuten} min vrij tussen ${tijd(gat.start)} en ${tijd(gat.eind)}` : null, momentStart: past && gat ? new Date(Date.parse(gat.start) + o.minuten * 30_000).toISOString() : null, na: o.na, score, opbouw, rang: 0 })
   }
   uit.sort((a, b) => b.score - a.score || a.omrij - b.omrij || a.naam.localeCompare(b.naam))
   return (f.aantal ? uit.slice(0, f.aantal) : uit).map((k, i) => ({ ...k, rang: i + 1 }))
@@ -157,4 +157,60 @@ export function kaartLink(doel: { adres?: string | null; punt?: Punt | null }, a
   if (app === 'apple') return `https://maps.apple.com/?daddr=${q}`
   if (app === 'waze') return doel.punt ? `https://waze.com/ul?ll=${doel.punt.lat},${doel.punt.lng}&navigate=yes` : `https://waze.com/ul?q=${q}&navigate=yes`
   return `https://www.google.com/maps/dir/?api=1&destination=${q}`
+}
+
+// ── Onderweg (P30, 8.5.2): tijdlijn, vertrek, dichtstbijzijnd, aanwezig ────
+
+export type StopStatus = 'gepland' | 'onderweg' | 'bezig' | 'afgerond' | 'zonder-verslag'
+export interface DagStop { id: string; start: string; eind: string; status: 'gepland' | 'afgerond' | 'niet_verschenen' | 'geannuleerd' | string; punt: Punt | null; accountId?: string | null; [k: string]: unknown }
+export type TijdlijnRij<S, K> = { soort: 'stop'; stop: S; status: StopStatus; reistijdNaar: number | null } | { soort: 'kans'; kans: K }
+
+/** Vertrektijd naar een stop en of die rood is (vertrek binnen 15 minuten of al voorbij). */
+export function vertrekMoment(stop: { start: string }, reistijdMin: number, nu: Date): { vertrek: string; rood: boolean; minutenTotVertrek: number } {
+  const vertrek = Date.parse(stop.start) - reistijdMin * 60_000
+  const min = Math.round((vertrek - nu.getTime()) / 60_000)
+  return { vertrek: new Date(vertrek).toISOString(), rood: min <= 15, minutenTotVertrek: min }
+}
+
+/**
+ * De tijdlijn van de dag: geannuleerde stops vallen weg, per stop een status (een voorbije stop
+ * zonder afronding is "zonder-verslag"), de reistijd vanaf de vorige plek en kansen als tussenrij
+ * na de stop waarachter ze passen (`na`: 0 is voor de eerste stop).
+ */
+export function routeVanDag<S extends DagStop, K extends { na?: number | null }>(stops: S[], kansen: K[], reistijden: (number | null)[], nu: Date): TijdlijnRij<S, K>[] {
+  const actief = stops.filter((s) => s.status !== 'geannuleerd').sort((a, b) => a.start.localeCompare(b.start))
+  const t = nu.getTime()
+  const uit: TijdlijnRij<S, K>[] = []
+  const volgende = actief.find((s) => s.status === 'gepland' && Date.parse(s.eind) > t)
+  const kansNa = (i: number) => kansen.filter((k) => (k.na ?? actief.length) === i).forEach((k) => uit.push({ soort: 'kans', kans: k }))
+  kansNa(0)
+  actief.forEach((s, i) => {
+    const bezig = s.status === 'gepland' && Date.parse(s.start) <= t && Date.parse(s.eind) > t
+    const status: StopStatus = s.status === 'afgerond' ? 'afgerond' : s.status === 'niet_verschenen' ? 'afgerond' : bezig ? 'bezig' : Date.parse(s.eind) <= t ? 'zonder-verslag' : s === volgende && Date.parse(s.start) - t < 2 * 3600_000 ? 'onderweg' : 'gepland'
+    uit.push({ soort: 'stop', stop: s, status, reistijdNaar: reistijden[i] ?? null })
+    kansNa(i + 1)
+  })
+  return uit
+}
+
+/** De n dichtstbijzijnde accounts op hemelsbrede afstand; zonder punt telt niet mee. */
+export function dichtstbijzijnd<T extends { punt?: Punt | null; naam?: string }>(plek: Punt, accounts: T[], n: number): (T & { km: number })[] {
+  return accounts.filter((a) => a.punt).map((a) => ({ ...a, km: Math.round(afstandKm(plek, a.punt!) * 10) / 10 }))
+    .sort((a, b) => a.km - b.km || String(a.naam ?? '').localeCompare(String(b.naam ?? ''))).slice(0, n)
+}
+
+/** Aanwezig bij een afspraak: binnen 300 m, van 15 minuten voor de start tot het einde. */
+export function isAanwezig(plek: Punt, afspraak: { start: string; eind: string; punt: Punt | null }, nu: Date): boolean {
+  if (!afspraak.punt) return false
+  const t = nu.getTime()
+  if (t < Date.parse(afspraak.start) - 15 * 60_000 || t > Date.parse(afspraak.eind)) return false
+  return afstandKm(plek, afspraak.punt) <= 0.3
+}
+
+/** De maat van een verkleinde foto: de langste zijde hooguit `max`; kleiner blijft gelijk. */
+export function verkleinMaat(breedte: number, hoogte: number, max = 1600): { breedte: number; hoogte: number } {
+  const lang = Math.max(breedte, hoogte)
+  if (lang <= max) return { breedte, hoogte }
+  const f = max / lang
+  return { breedte: Math.round(breedte * f), hoogte: Math.round(hoogte * f) }
 }

@@ -15,6 +15,7 @@ import { ACCOUNT_MUTATIESOORTEN, AFSPRAAK_MUTATIESOORTEN, KANS_MUTATIESOORTEN, I
 import { besluit } from '../../utils/dagritme'
 import { planAfspraak, rondAfAfspraak } from '../../utils/agenda'
 import { klaarzetten } from '../../utils/bezoeken'
+import { bezoekAfronden, legInloopVast } from '../../utils/onderweg'
 import { OVERSLA_REDENEN } from '../../../shared/route'
 import { nlMoment, plusDagen } from '../../../shared/datum'
 import { sql } from 'drizzle-orm'
@@ -122,7 +123,13 @@ export default defineEventHandler(async (event) => {
         if (!klant || !kan(klant, 'agenda.basis')) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Functie niet beschikbaar' }
         const op = p.op && !Number.isNaN(Date.parse(p.op)) ? new Date(p.op) : new Date()
         try {
-          if (p.soort === 'afspraak.nieuw') await planAfspraak(tx, klant.organisatie.id, { id: gebruiker.id, naam: klant.gebruiker.naam, rol: klant.gebruiker.rol, mag: { voorCollega: kan(klant, 'agenda.voorCollega') } }, { ...p, id: m.recordId } as any, op)
+          if (p.soort === 'bezoek.afronden') {
+            // P30: recordId is de afspraak; idempotent op afspraak en uitkomst (en op de sleutel).
+            await bezoekAfronden(tx, klant.organisatie.id, gebruiker.id, { ...(p as any), afspraakId: m.recordId, uitkomst: String(p.uitkomst ?? ''), sleutel: m.idempotentieSleutel }, op)
+          } else if (p.soort === 'inloop.vastleggen') {
+            if (!kan(klant, 'onderweg.inloop')) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Functie niet beschikbaar' }
+            await legInloopVast(tx, klant.organisatie.id, gebruiker.id, { id: m.recordId, accountId: String(p.accountId ?? ''), tijd: p.tijd ?? null })
+          } else if (p.soort === 'afspraak.nieuw') await planAfspraak(tx, klant.organisatie.id, { id: gebruiker.id, naam: klant.gebruiker.naam, rol: klant.gebruiker.rol, mag: { voorCollega: kan(klant, 'agenda.voorCollega') } }, { ...p, id: m.recordId } as any, op)
           else await rondAfAfspraak(tx, klant.organisatie.id, m.recordId, gebruiker.id, { uitkomst: String(p.uitkomst ?? ''), verslag: p.verslag ?? null, agendapunten: p.agendapunten ?? [], laterOp: p.laterOp ?? null, reden: p.reden ?? null, toelichting: p.toelichting ?? null, verlorenAan: p.verlorenAan ?? null, vervolgstap: p.vervolgstap ?? null, sleutel: m.idempotentieSleutel }, op)
         } catch (e: any) {
           if (e instanceof ReisFout) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 404 ? 404 : 422, reden: e.message }

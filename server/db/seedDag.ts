@@ -13,9 +13,6 @@ export async function seedDag(client: pg.Client, orgId: string, nu = new Date())
   for (const [id, adres] of adressen) await client.query(`update accounts set data = data || $2 where id = $1 and organisation_id = $3`, [id, JSON.stringify({ adres }), orgId])
   const taken: [string, string, string, string, string, string, Record<string, unknown>][] = [
     // id, eigenaar, account, soort, titel, moment, data
-    ['dag-a1', 'u-05', 'pr-g39', 'bezoek', 'Eerste afspraak: kennismaking en projectschouw', om(10), { soort: 'afspraak', duurMinuten: 60 }],
-    ['dag-a2', 'u-05', 'pr-g44', 'bezoek', 'Afspraak: leverplan per bouwfase', om(13, 30), { soort: 'afspraak', duurMinuten: 60 }],
-    ['dag-a3', 'u-05', 'pr-10', 'bezoek', 'Afspraak: renovatieproject bespreken', om(15, 30), { soort: 'afspraak', duurMinuten: 45 }],
     ['dag-t1', 'u-05', 'pr-g39', 'taak', 'Afspraak bevestigen met Testinstallatie Leidingdal', om(9), {}],
     ['dag-b1', 'u-05', 'pr-08', 'bellen', 'Bel over de onderhoudsplanning', om(9, 0, plusDagen(vandaag, -1)), {}],
     ['dag-b2', 'u-05', 'pr-09', 'bellen', 'Bel: tweede poging na de mail', om(11), { poging: { n: 2, van: 4, kanaal: 'bellen', vorige: 'mail' } }],
@@ -34,6 +31,15 @@ export async function seedDag(client: pg.Client, orgId: string, nu = new Date())
   }
   // De terugkomregel hc-02 loopt vandaag af bij een account van Lieke.
   await client.query(`update accounts set terug_op = $2, data = data || $3 where id = 'pr-g09' and organisation_id = $1`, [orgId, vandaag, JSON.stringify({ terugkom: { regelId: 'hc-02', reden: 'Beslissing uitgesteld' } })])
+  // De drie bezoeken van vandaag staan als afspraak in de agenda (P13, P30), met de meetingsoort.
+  const vandaagAfs: [string, string, string, number, number, number][] = [['dag-a1', 'pr-g39', 'kennismaking', 10, 0, 60], ['dag-a2', 'pr-g44', 'inventarisatie', 13, 30, 60], ['dag-a3', 'pr-10', 'inventarisatie', 15, 30, 45]]
+  for (const [id, account, slug, uur, minuut, duur] of vandaagAfs) {
+    const ms = (await client.query(`select id from meetingsoorten where organisation_id = $1 and slug = $2`, [orgId, slug])).rows[0]?.id
+    if (!ms) continue
+    const start = nlTijdstip(vandaag, uur, minuut)
+    await client.query(`insert into appointments (id, organisation_id, owner_id, gepland_door, account_id, meetingsoort_id, vorm, status, start_at, end_at, data) values ($1, $2, 'u-05', 'u-05', $3, $4, 'bezoek', 'gepland', $5, $6, '{"herkomst": "seed"}') on conflict (id) do nothing`,
+      [id, orgId, account, ms, start.toISOString(), new Date(start.getTime() + duur * 60_000).toISOString()])
+  }
   // P13: afspraken in de agenda van Lieke. De kennismaking van morgen plande Sanne (u-03, binnendienst)
   // voor haar; de belafspraak overlapt hem, zodat een conflict te zien is.
   const soort = async (slug: string) => (await client.query(`select id from meetingsoorten where organisation_id = $1 and slug = $2`, [orgId, slug])).rows[0]?.id as string | undefined

@@ -1,6 +1,6 @@
 // Service worker van Dealtrace (P27, 8.14): statische bestanden 30 dagen uit de cache,
 // API-GET netwerk eerst met terugval op de laatst bekende versie. Schrijfacties gaan
-// nooit via de cache; die lopen via de wachtrij in de app (P01). Het dagpakket is P30.
+// nooit via de cache; die lopen via de wachtrij in de app (P01). Het dagpakket (P30) staat in IndexedDB.
 const STATISCH = 'dt-statisch-v1'
 const API = 'dt-api-v1'
 const DERTIG_DAGEN = 30 * 24 * 3600 * 1000
@@ -18,6 +18,8 @@ self.addEventListener('fetch', (e) => {
   if (url.origin !== location.origin) return
   if (url.pathname.startsWith('/api/')) {
     if (url.pathname.startsWith('/api/auth') || url.pathname.startsWith('/api/sessie')) return
+    // P30: een verzoek met je plek komt nooit in de cache; het dagpakket staat in IndexedDB.
+    if (url.pathname.startsWith('/api/onderweg/')) return
     e.respondWith((async () => {
       try {
         const res = await fetch(r)

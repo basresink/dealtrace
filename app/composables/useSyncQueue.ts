@@ -14,6 +14,8 @@ export interface WachtendeMutatie {
   patch: Record<string, unknown>
   pogingen: number
   aangemaakt: string
+  /** P30: niet versturen voor dit moment (venster "Ongedaan maken"). */
+  nietVoor?: string
 }
 
 export interface Conflict {
@@ -22,16 +24,23 @@ export interface Conflict {
   serverStand: unknown
 }
 
+export interface WachtendeBijlage { id: string; recordSoort: string; recordId: string; soort: 'foto' | 'opname' | 'visitekaartje'; mime: string; blob: Blob; aangemaakt: string; pogingen: number }
+
 class WachtrijDb extends Dexie {
   mutaties!: Table<WachtendeMutatie, string>
+  /** P30: het dagpakket per datum, bijlagen die nog moeten uploaden en accounts die je zelf bewaarde. */
+  dagpakket!: Table<{ datum: string; versie: string; pakket: any; op: string }, string>
+  bijlagen!: Table<WachtendeBijlage, string>
+  bewaard!: Table<{ id: string; naam: string }, string>
   constructor() {
     super('dealtrace')
     this.version(1).stores({ mutaties: 'idempotentieSleutel, aangemaakt' })
+    this.version(2).stores({ mutaties: 'idempotentieSleutel, aangemaakt', dagpakket: 'datum', bijlagen: 'id, aangemaakt', bewaard: 'id' })
   }
 }
 
 let db: WachtrijDb | null = null
-function wachtrij(): WachtrijDb {
+export function wachtrij(): WachtrijDb {
   if (!db) db = new WachtrijDb()
   return db
 }
@@ -47,10 +56,22 @@ export function useSyncQueue() {
     wachtend.value = await wachtrij().mutaties.count()
   }
 
-  async function voegToe(m: Omit<WachtendeMutatie, 'idempotentieSleutel' | 'pogingen' | 'aangemaakt'>) {
-    await wachtrij().mutaties.add({ ...m, idempotentieSleutel: crypto.randomUUID(), pogingen: 0, aangemaakt: new Date().toISOString() })
+  async function voegToe(m: Omit<WachtendeMutatie, 'idempotentieSleutel' | 'pogingen' | 'aangemaakt' | 'nietVoor'>, opties: { uitstelMs?: number } = {}) {
+    const sleutel = crypto.randomUUID()
+    await wachtrij().mutaties.add({ ...m, idempotentieSleutel: sleutel, pogingen: 0, aangemaakt: new Date().toISOString(), ...(opties.uitstelMs ? { nietVoor: new Date(Date.now() + opties.uitstelMs).toISOString() } : {}) })
     await tel()
-    void verstuur()
+    if (opties.uitstelMs) setTimeout(() => void verstuur(), opties.uitstelMs + 50)
+    else void verstuur()
+    return sleutel
+  }
+
+  /** "Ongedaan maken": haal een mutatie terug die nog niet verstuurd is. Geeft false als hij al weg is. */
+  async function trekIn(sleutel: string) {
+    const m = await wachtrij().mutaties.get(sleutel)
+    if (!m) return false
+    await wachtrij().mutaties.delete(sleutel)
+    await tel()
+    return true
   }
 
   let bezig = false
@@ -58,7 +79,8 @@ export function useSyncQueue() {
     if (import.meta.server || bezig || !navigator.onLine) return
     bezig = true
     try {
-      const lijst = await wachtrij().mutaties.orderBy('aangemaakt').toArray()
+      const nu = new Date().toISOString()
+      const lijst = (await wachtrij().mutaties.orderBy('aangemaakt').toArray()).filter((m) => !m.nietVoor || m.nietVoor <= nu)
       if (!lijst.length) return
       const { resultaten } = await $fetch<{ resultaten: any[] }>('/api/sync/mutations', {
         method: 'POST',
@@ -107,5 +129,5 @@ export function useSyncQueue() {
     void tel().then(verstuur)
   }
 
-  return { online, wachtend, vastgelopen, conflict, voegToe, verstuur, losConflictOp, start }
+  return { online, wachtend, vastgelopen, conflict, voegToe, trekIn, verstuur, losConflictOp, start }
 }
