@@ -1,6 +1,6 @@
 # Bouwplan Dealtrace
 
-> Versie 1.3 · 15 oktober 2026 · new business voor actieve accountmanagers binnendienst en buitendienst
+> Versie 1.4 · 15 oktober 2026 · new business voor actieve accountmanagers binnendienst en buitendienst
 >
 > **Waarvoor dit document is.** Dit bouwplan bundelt alle documenten in deze repository tot één ontwerp. Het is de bron voor de functionele en technische bouwprompts van Dealtrace: elk hoofdstuk in deel C is zo opgebouwd dat je er direct een functionele prompt (wat en waarom) en een technische prompt (datamodel, regels, endpoints, acceptatie) van kunt maken.
 >
@@ -87,7 +87,7 @@ Deze beslissingen gaan voor alles wat in de bronnen anders staat.
 | B15 | **Het stijlbestand is leidend** | `designsysteem/dealdrive-designsysteem.css`: hoeken 2 px, 32 px boven en onder een sectie, 16 px tussen en in kaarten (hoofdstuk 14); waar `dealdrive-leadgeneratie-stijl.css` iets anders zegt (hoeken tot 4 px), geldt het designsysteem |
 | B16 | **SalesDNA-sublagen** zijn de bron van het verkoopverhaal | Feature F25 met één leesmodel (ADR-017), terugkomregels naast hercontactritmes (ADR-018), webhooks en suggesties terug (hoofdstuk 12), startset Voltvast (Bijlage C) |
 | B17 | **Dealtrace loopt tot en met de eerste afspraak.** Geen pipeline, deals en offertes in de app; de pipeline wordt de **funnel van de prospectreis** | Drie fases tot en met de eerste afspraak (7.1); status `overgedragen` in plaats van `klant`; F17 wordt Funnel van de prospectreis; na de eerste afspraak gaat het account over naar DealDrive, het CRM of een collega; offertematrix, offertebriefing, deals en offertes vervallen (ADR-021) |
-| B18 | **Het niveau ontstaat door het aanzetten van functies.** Welke functie bij welk niveau hoort, hangt af van wat in de bouw werkt | Een niveau is een voorinstelling van schakelaars per functie; de salesmanager of beheerder zet functies extra aan; de indeling in 4.3 is een startindeling die per sprint wordt vastgesteld (4.1, 4.2, ADR-012) |
+| B18 | **Het niveau wordt bepaald door features aan en uit te zetten.** Welke functie bij welk niveau hoort, hangt af van wat in de bouw werkt; de founder regelt dat zelf. Geen schakelaars per gebruiker | Per niveau staat elke functie aan of uit in de functiecatalogus, te wijzigen in Platformbeheer; de salesmanager of beheerder kiest alleen het niveau van een gebruiker; de indeling in 4.3 is een startindeling (4.1, 4.2, ADR-012) |
 | B19 | **Geen groeipad** | Geen criteria, geen niveauvoorstellen, geen voortgangsbalken en geen leerpaden per niveau; een functie aanzetten is een besluit van de salesmanager |
 | B20 | **Iedere gebruiker kan chatten met AI** om ondersteund te worden; het abonnement bepaalt via **credits** hoeveel. **Credits gelden voor alle AI-onderdelen**, niet alleen de chat | Nieuwe feature F26 AI-assistent; één pot AI-credits per organisatie per maand voor chat, zoekrondes, dossiers, inzichten, concepten, scripts, verslagen, spraak en coach (11.4, F23, F26, ADR-022). Aantallen voorlopig zoals in 11.4 |
 | B21 | **De API met DealDrive wordt voorbereid**, nog niet werkend | Contract in `docs/api/dealdrive-koppeling.md` en `docs/api/dealdrive-koppeling.openapi.yaml`, mock-antwoorden in `seed/dealdrive-mock/`; Dealtrace bouwt zijn kant met een mock (P23), DealDrive bouwt de ontvangende kant later (hoofdstuk 12) |
@@ -98,7 +98,7 @@ Deze beslissingen gaan voor alles wat in de bronnen anders staat.
 |---|---|---|
 | Naam | DealDrive New Business (werknaam) | Dealtrace |
 | Gebruiker | Hunter new business | Actieve accountmanager die naast een bestaande portefeuille new business doet, in twee profielen: binnendienst en buitendienst |
-| Complexiteit | Eén interface voor iedereen | Drie gebruikersniveaus als voorinstellingen van functies die aanstaan (B18), zonder groeipad (B19) |
+| Complexiteit | Eén interface voor iedereen | Drie gebruikersniveaus; per niveau staan functies aan of uit (B18), zonder groeipad (B19) |
 | Scope | Van naam tot klant, met deals en offertes | Van naam tot en met de eerste afspraak; daarna overdracht (B17) |
 | AI-hulp | Agents per taak | Plus een AI-assistent waarmee iedere gebruiker chat, met credits per abonnement (B20) |
 | SalesDNA | Bron via webhooks, verplicht voor de volle werking | Blijft de voorkeursbron per sublaag, maar Dealtrace werkt volledig met een eigen inrichting in dezelfde vorm: golden circle, bedrijfsverhaal, ambitie en visie, waarde en belofte, concurrenten, branches, winpunten en terugkomregels; per onderdeel een actieve bron (F25) |
@@ -205,7 +205,7 @@ Dealtrace kent daarom een **werkplekprofiel** per gebruiker (`binnendienst`, `bu
 | Lege staat die uitlegt | Elke lege lijst zegt in één zin wat er niet is en waarom; de handeling staat al in de paginakop, alleen bij een filter staat er "Toon alles" |
 | Maximaal zeven items in beeld | Vandaag toont maximaal 8 taken en 4 prioriteiten met "nog N meer" |
 | Hulp waar je bent | Elk scherm heeft een hulpknop die het bijbehorende helpartikel opent in een flyout |
-| Niet aangezet met uitleg | Een functie die nog niet voor je aanstaat, staat in de groep "Nog niet aangezet" of als knop met slot, en opent een uitleg met wat hij doet en wie hem kan aanzetten; nooit een uitgeschakelde knop zonder uitleg |
+| Uit met uitleg | Een functie die voor jouw niveau uit staat, staat in de groep "Nog niet aangezet" of als knop met slot, en opent een uitleg met wat hij doet en bij welk niveau hij hoort; nooit een uitgeschakelde knop zonder uitleg |
 
 ### 2.4 Anti-patronen die we afwijzen
 
@@ -277,7 +277,7 @@ Niveaus `geen`, `eigen`, `team`, `alles`; acties lezen, schrijven, verwijderen, 
 
 ### 4.1 Waarom niveaus
 
-Een accountmanager die new business niet gewend is, raakt de weg kwijt in een tool met 26 features. Een ervaren hunter wil juist alles kunnen inrichten. Dealtrace lost dat op met drie niveaus. **Een niveau is een set functies die aanstaat**: de Beginner werkt met de basisfuncties, en een gebruiker wordt Gevorderd of Expert doordat de salesmanager of beheerder extra functies voor hem aanzet (beslissing B18).
+Een accountmanager die new business niet gewend is, raakt de weg kwijt in een tool met 26 features. Een ervaren hunter wil juist alles kunnen inrichten. Dealtrace lost dat op met drie niveaus. **Een niveau is een set functies die aanstaat**: de Beginner werkt met de basisfuncties, Gevorderd en Expert hebben meer functies aan. Welke functies dat zijn, regelt de founder door features per niveau aan en uit te zetten (beslissing B18).
 
 | Niveau | Voor wie | Belofte | Wat de gebruiker doet |
 |---|---|---|---|
@@ -287,33 +287,27 @@ Een accountmanager die new business niet gewend is, raakt de weg kwijt in een to
 
 Rol en niveau zijn los: een salesmanager en een beheerder hebben standaard alle functies aan. Een accountmanager start standaard als Beginner, tenzij de beheerder bij het uitnodigen een ander niveau kiest.
 
-**De indeling is voorlopig.** Welke functie bij welk niveau hoort, hangt sterk af van wat in de bouw goed werkt. De matrix in 4.3 is de startindeling; na elke sprint stelt de founder de indeling van de functies uit die sprint vast. Omdat een niveau alleen een set schakelaars is, verschuift een functie naar een ander niveau zonder code te wijzigen: het is een regel in de functiecatalogus.
+**De indeling is voorlopig.** Welke functie bij welk niveau hoort, hangt sterk af van wat in de bouw goed werkt. De matrix in 4.3 is de startindeling; na elke sprint stelt de founder de indeling van de functies uit die sprint vast. Een functie naar een ander niveau verschuiven is een feature aan- of uitzetten in Platformbeheer, zonder code te wijzigen.
 
-### 4.2 Een niveau ontstaat door functies aan te zetten
+### 4.2 Features aan en uit per niveau
 
-Elke functie in de catalogus heeft een schakelaar per gebruiker. Een niveau is een voorinstelling van die schakelaars.
+Elke functie in de catalogus staat per niveau **aan** of **uit**. Dat is de enige knop; er zijn geen schakelaars per gebruiker.
 
 ```
 beschikbaar(functie, gebruiker) =
-     pakketBevat(organisatie.pakket, functie)          // wat de organisatie afneemt
-  && rolMag(gebruiker.rol, functie.recht)              // rechten
-  && staatAan(gebruiker, functie)                      // de schakelaar van deze gebruiker
-
-staatAan(gebruiker, functie) =
-     functie in voorinstelling(gebruiker.niveau)       // de set van het gekozen niveau
-  || functie in gebruiker.extraAan                     // los aangezet door salesmanager of beheerder
-  && functie niet in gebruiker.uitgezet                // los uitgezet
+     pakketBevat(organisatie.pakket, functie)           // wat de organisatie afneemt
+  && rolMag(gebruiker.rol, functie.recht)               // rechten
+  && aanVoorNiveau(functie, gebruiker.niveau)           // de feature staat aan voor dit niveau
 ```
 
 - **Pakket** is het plafond van de organisatie (zie F23). Een functie buiten het pakket toont "Onderdeel van Plus" met een link naar het abonnement (alleen voor de beheerder).
-- **Niveau kiezen.** De salesmanager of beheerder kiest bij de gebruiker Beginner, Gevorderd of Expert. Dat zet in één keer de schakelaars van die voorinstelling aan.
-- **Losse functies aanzetten.** Daarnaast kan de salesmanager of beheerder per gebruiker losse functies aan- of uitzetten, bijvoorbeeld een Beginner die al wel zelf leads mag importeren. Het scherm toont dan "Beginner + 2 functies".
-- **Het niveau volgt de schakelaars.** Staan alle functies van de volgende voorinstelling aan, dan toont Dealtrace dat niveau; er is geen aparte niveau-instelling naast de schakelaars.
-- **Niet aangezet.** Een functie die niet aanstaat, toont een rustige regel: "Deze functie staat nog niet voor je aan. Je salesmanager kan hem aanzetten." met de knoppen "Lees hoe het werkt" (helpartikel) en "Vraag je salesmanager" (wordt een verzoek bij de salesmanager, F20).
+- **Features aan en uit.** De founder zet in Platformbeheer, op de pagina "Features per niveau", elke functie per niveau aan of uit (een raster met de functies als rijen en Beginner, Gevorderd en Expert als kolommen). Dat geldt voor alle organisaties; de founder kan voor één organisatie afwijken als dat nodig is. Elke wijziging heeft een auditregel en werkt direct, zonder release.
+- **Niveau kiezen.** De salesmanager of beheerder kiest bij een gebruiker alleen het niveau: Beginner, Gevorderd of Expert. Meer is er per gebruiker niet in te stellen.
+- **Uit voor dit niveau.** Een functie die uit staat, toont een rustige regel: "Deze functie hoort bij Gevorderd." met de knop "Lees hoe het werkt" (helpartikel). Er is geen verzoekknop: wie meer nodig heeft, bespreekt dat met de salesmanager.
 - **Alles aan**: een organisatie kan in Instellingen kiezen voor "Iedereen ziet alles". Dan staan voor iedereen alle functies uit het pakket aan.
-- **Geen groeipad** (beslissing B19). Dealtrace rekent geen criteria uit, doet geen niveauvoorstellen en toont geen voortgangsbalken. Wanneer iemand een functie krijgt, is een besluit van de salesmanager.
+- **Geen groeipad** (beslissing B19). Dealtrace rekent geen criteria uit, doet geen niveauvoorstellen en toont geen voortgangsbalken. Een hoger niveau is een besluit van de salesmanager.
 
-Eén pure functie `shared/functies.ts` bevat de catalogus (sleutel, naam, startniveau, pakket, recht, helpartikel) en `beschikbaar()`. Server en client gebruiken hem allebei; de server weigert een endpoint van een functie die niet beschikbaar is (403 met `{functie, reden: 'pakket'|'rol'|'uit'}`).
+Eén pure functie `shared/functies.ts` bevat de catalogus (sleutel, naam, pakket, recht, helpartikel) en `beschikbaar()`; de stand aan of uit per niveau komt uit de tabel `functies_per_niveau`. Server en client gebruiken hem allebei; de server weigert een endpoint van een functie die niet beschikbaar is (403 met `{functie, reden: 'pakket'|'rol'|'niveau'}`).
 
 ### 4.3 Startindeling van de functies per niveau
 
@@ -358,16 +352,16 @@ De kolom "Rol" noemt de minimale rol; leeg betekent iedere gebruiker. Dit is de 
 | Taal | volle woorden ("Kwalificatie 3 van 4 ingevuld"), geen interne codes | codes in meta | codes zichtbaar |
 | Knop van een functie die niet aanstaat | secundaire knop met slot-icoon, opent de uitlegflyout (nooit uitgeschakeld zonder uitleg) | idem | n.v.t. |
 | Blok van een functie die niet aanstaat | hoogstens één lege staat per pagina onderaan met kicker "Nog niet aangezet" | idem | n.v.t. |
-| Gebruikersblok in de zijbalk | "ACCOUNTMANAGER · BEGINNER" (of "BEGINNER + 2") | "ACCOUNTMANAGER · GEVORDERD" | "ACCOUNTMANAGER · EXPERT" |
+| Gebruikersblok in de zijbalk | "ACCOUNTMANAGER · BEGINNER" | "ACCOUNTMANAGER · GEVORDERD" | "ACCOUNTMANAGER · EXPERT" |
 
-Ontwerpregels: niveau en "niet aangezet" gebruiken alleen bestaande tokens (`--wit-30`, `--wit-55`, `--muted`, gestippelde pil), nooit rood of geel. Een niveau is geen rang: het woord verschijnt alleen in het gebruikersblok, het profiel en bij de salesmanager, niet naast een naam in lijsten. Zet de salesmanager een functie aan, dan volgt een toast ("Leadgenerator staat nu voor je aan.") met een link naar het helpartikel, en het nieuwe menu-item houdt één week de pil "nieuw". In Mijn instellingen kan een gebruiker met "Toon minder" zelf functies verbergen, nooit extra aanzetten.
+Ontwerpregels: niveau en "niet aangezet" gebruiken alleen bestaande tokens (`--wit-30`, `--wit-55`, `--muted`, gestippelde pil), nooit rood of geel. Een niveau is geen rang: het woord verschijnt alleen in het gebruikersblok, het profiel en bij de salesmanager, niet naast een naam in lijsten. Gaat een functie voor je aan (een hoger niveau of een feature die de founder aanzet), dan volgt een toast ("Leadgenerator staat nu voor je aan.") met een link naar het helpartikel, en het nieuwe menu-item houdt één week de pil "nieuw". In Mijn instellingen kan een gebruiker met "Toon minder" zelf functies verbergen, nooit extra aanzetten.
 
 ### 4.5 Gegevens
 
-- `users.niveau` (`beginner` | `gevorderd` | `expert`, de gekozen voorinstelling), `users.data.werkplek` (`binnendienst` | `buitendienst` | `hybride`), `users.data.extraAan[]` en `users.data.uitgezet[]` (functiesleutels), `users.data.schakelHistorie[] {functie, aan, op, door, reden?}`.
-- `org_settings.niveaus = { iedereenAlles: boolean, voorinstellingen: {beginner: [...], gevorderd: [...], expert: [...]}, standaardNiveauNieuweGebruiker }`; de voorinstellingen komen uit de functiecatalogus en zijn per organisatie aan te passen door de beheerder.
-- `functie_verzoeken: id, organisation_id, gebruiker_id, functie, status ('open'|'aangezet'|'afgewezen'), reden?, op, besloten_door?`.
-- Audit bij elke wijziging van niveau of schakelaar.
+- `users.niveau` (`beginner` | `gevorderd` | `expert`), `users.data.werkplek` (`binnendienst` | `buitendienst` | `hybride`), `users.data.niveauHistorie[] {van, naar, op, door}`.
+- `functies_per_niveau: functie, niveau, aan boolean, organisation_id (null = alle organisaties), gewijzigd_door, gewijzigd_op`; alleen de founder schrijft, via Platformbeheer.
+- `org_settings.niveaus = { iedereenAlles: boolean, standaardNiveauNieuweGebruiker }`.
+- Audit bij elke wijziging van een niveau of een feature.
 
 ---
 
@@ -442,7 +436,7 @@ De zijbalk is de schil van het designsysteem (zwart, 240 px, inklapbaar naar 64 
 
 Een Beginner heeft 10 items en de hele navigatie past zonder scrollen op 900 px hoogte. Het werkplekprofiel bepaalt de volgorde binnen "Werk": binnendienst zet Belblokken boven Bezoeken, buitendienst andersom.
 
-**Items die niet aanstaan.** Wat niet voor je aanstaat, staat niet tussen de gewone items maar samen in één ingeklapte groep onderaan de navigatie: "Nog niet aangezet" met een grijze teller. Uitgeklapt staan de items met `aria-disabled="true"`, tekst `--wit-30` en een slot-icoon van 14 px; ze blijven focusbaar. Een klik opent een smalle flyout (480 px) met kicker "Gevorderd · nog niet aangezet", "Wat het doet" (twee zinnen), "Tot die tijd" (wat Dealtrace alvast voor je doet), "Lees hoe het werkt" en de knop "Vraag je salesmanager" (een verzoek om de functie aan te zetten). De groep onthoudt per gebruiker of hij open of dicht staat. Een directe link naar een pagina die niet aanstaat, toont de paginakop met kicker "Nog niet aangezet" en dezelfde uitleg; nooit een foutpagina.
+**Items die niet aanstaan.** Wat niet voor je aanstaat, staat niet tussen de gewone items maar samen in één ingeklapte groep onderaan de navigatie: "Nog niet aangezet" met een grijze teller. Uitgeklapt staan de items met `aria-disabled="true"`, tekst `--wit-30` en een slot-icoon van 14 px; ze blijven focusbaar. Een klik opent een smalle flyout (480 px) met kicker "Gevorderd · nog niet aangezet", "Wat het doet" (twee zinnen), "Tot die tijd" (wat Dealtrace alvast voor je doet) en "Lees hoe het werkt". De groep onthoudt per gebruiker of hij open of dicht staat. Een directe link naar een pagina die niet aanstaat, toont de paginakop met kicker "Nog niet aangezet" en dezelfde uitleg; nooit een foutpagina.
 
 ### 6.2 Mobiel
 
@@ -2398,13 +2392,13 @@ Cadans: Dagelijks 1, 2 dagen, 3 dagen, Wekelijks 7, 2 weken 14, Maandelijks 30, 
 - **Tabel per persoon**: naam met niveau en werkplek, taken op de dag afgerond (procent), achterstallig, pogingen (gedaan tegen norm), gesprekken en beslisser bereikt, afspraken (tegen doel), koude norm ("koud 3 van 5"), belblokken gepland en gehouden, bezoeken en kansen langs de route omgezet, concepten die wachten op goedkeuring, tempo-pil. Klik op een cel opent de onderliggende lijst.
 - **Aandachtspunten** (maximaal vijf, uitgerekend): "Mark stopt gemiddeld na 2,1 pogingen (team 4,3)", "Sanne heeft 14 taken achterstallig", "3 campagnes lopen achter", "6 geparkeerde accounts komen deze week terug", "Eva heeft deze week geen belblok gehouden".
 - **Werkverdeling**: accounts per persoon per fase en status, met "Verplaats" (bulk, met reden en audit).
-- **Goedkeuringen**: campagnes boven capaciteit, conceptversies van reizen en scripts, verzoeken om een functie aan te zetten ("Aanzetten" of "Nog niet" met reden), roadmapwensen van het team.
-- **Functies per persoon**: per accountmanager het niveau en de functies die aanstaan, met "Functies aanzetten" (schakelaars per functie, of een niveau als voorinstelling kiezen); elke wijziging met audit (4.2).
+- **Goedkeuringen**: campagnes boven capaciteit, conceptversies van reizen en scripts, roadmapwensen van het team.
+- **Niveau per persoon**: per accountmanager het niveau, met "Wijzig niveau" (Beginner, Gevorderd, Expert); elke wijziging met audit (4.2).
 
 **Coaching** (wekelijks per persoon)
 
 - **Coachingkaart per accountmanager** (`/coaching/:gebruiker`):
-  - Kop met naam, niveau en functies die aanstaan, werkplek, en de knop "Functies aanzetten".
+  - Kop met naam, niveau, werkplek, en de knop "Wijzig niveau".
   - **Cijfers tegen norm en team** (laatste 4 weken met trend): activiteit (pogingen per dag, belblokken), bereik (gesproken, beslisser bereikt), conversie (gesprek naar afspraak, afspraak gepland naar gehouden, gehouden naar overgedragen), discipline (pogingen tot afspraak, taken op de dag, winpunt uitgevoerd, briefing geopend vóór gesprek), kwaliteit (AI-concept ongewijzigd of aangepast, doel gehaald per gesprek).
   - **Trechter van deze persoon** naast die van het team: waar valt het weg?
   - **Gesprekken om te bespreken**: de Coach-agent kiest drie gesprekken of bezoeken van de afgelopen week (een goede, een verloren, een met een bezwaar dat vaker terugkomt) met verslag, uitkomst en script; de manager kan zelf kiezen.
@@ -2464,7 +2458,7 @@ Elke grafiek is klikbaar naar de onderliggende lijst; elk tabblad heeft "Downloa
 
 **Routes**: `/help` (startpagina), `/help/:collectie/:artikel`, en de flyout "Hulp" vanuit elke paginakop.
 
-**Startpagina**: zoekveld ("Waar kunnen we je mee helpen?"), drie blokken: "Voor jou" (de artikelen van functies die net voor je zijn aangezet en "Aan de slag"), "Hoe werkt Dealtrace" (categorieën), "New business" (categorieën), plus "Nieuw en bijgewerkt" en "Vraag AI" (de AI-assistent, F26).
+**Startpagina**: zoekveld ("Waar kunnen we je mee helpen?"), drie blokken: "Voor jou" (de artikelen van functies die net voor je aan zijn gegaan en "Aan de slag"), "Hoe werkt Dealtrace" (categorieën), "New business" (categorieën), plus "Nieuw en bijgewerkt" en "Vraag AI" (de AI-assistent, F26).
 
 **Artikelpagina**: titel, leestijd, niveau-pil, categorie, inhoud (tekst, schermafbeeldingen, korte video, stappen), "Probeer het" (knop die het scherm opent waar het over gaat), "Was dit nuttig?" (ja of nee met reden), gerelateerde artikelen, laatst bijgewerkt.
 
@@ -2480,7 +2474,7 @@ Elke grafiek is klikbaar naar de onderliggende lijst; elk tabblad heeft "Downloa
 - Dagelijks werk: Vandaag · Een taak afronden met een uitkomst · Wat betekent poging 3 van 5 · Concepten goedkeuren en versturen · De belmodus · Een belscript kiezen · Bezoeken en kansen langs de route · Een bezoek afronden met een verslag · Briefing en Pitstop.
 - Prospects: Een prospect toevoegen · De accountkaart lezen · Buying committee · Nee met reden en afkoelperiode · De prospectreis en fases · Leadgenerator · Importeren · KvK en Datacollectief.
 - Plannen en sturen: Belblokken · Prospectplanning · Hercontactritme · Campagnes · De funnel van je prospectreis · Gebieden en regiodagen.
-- Inrichten (beheerder): Gebruikers, rollen, niveaus en functies aanzetten · Belscripts maken · Eigen velden · Regels · Accountmatrix · Doelgroepen en reizen · Agents en mandaten · Koppelingen · Abonnement, verbruik en AI-credits.
+- Inrichten (beheerder): Gebruikers, rollen en niveaus · Belscripts maken · Eigen velden · Regels · Accountmatrix · Doelgroepen en reizen · Agents en mandaten · Koppelingen · Abonnement, verbruik en AI-credits.
 - Voor de salesmanager: Team controleren · Coachingsgesprek voorbereiden · Analyse lezen · Verbetervoorstellen beoordelen.
 
 **Collectie "New business"** (de academie; korte praktische artikelen, elk met "Zo doe je het in Dealtrace"):
@@ -2536,7 +2530,7 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 
 **Verkoopverhaal**: de acht onderdelen uit F25 (golden circle, bedrijfsverhaal, ambitie en visie, waarde en belofte, branches, concurrenten, winpunten, terugkomregels), per onderdeel de bron (eigen inrichting of SalesDNA), statussen concept en bevestigd met versies, de mappings (branche naar SBI, SalesDNA-fase naar reisfase, verliesreden naar terugkomreden) en het stijlprofiel (toon, passende woorden, te vermijden woorden; door AI voorgesteld uit het verhaal). Inhoud per branche in plaats van per segment. Voor iedereen leesbaar op `/richting`.
 
-**Gebruikers**: lijst met naam, e-mail, rol, team, niveau (segmentknoppen Beginner, Gevorderd, Expert als voorinstelling) met per functie een schakelaar ("Beginner + 2 functies"), werkplek, plafond voor AI-credits, laatste inlog, status; "Gebruiker toevoegen" binnen de seats of "Gebruiker aanvragen" (afhankelijk van de stand die de founder zette, F23); archiveren; niveau verlagen vraagt bevestiging. Vangrails: niet jezelf, niet de laatste beheerder.
+**Gebruikers**: lijst met naam, e-mail, rol, team, niveau (segmentknoppen Beginner, Gevorderd, Expert), werkplek, plafond voor AI-credits, laatste inlog, status; "Gebruiker toevoegen" binnen de seats of "Gebruiker aanvragen" (afhankelijk van de stand die de founder zette, F23); archiveren; niveau verlagen vraagt bevestiging. Vangrails: niet jezelf, niet de laatste beheerder.
 
 **Regels voor instellingen**: elke wijziging wordt per veld na 600 ms stilte bewaard met zichtbare status ("Opslaan…", "Opgeslagen", "Opslaan mislukt"); elke wijziging is een auditregel; sleutels die de leverancier beheert (pakket, bundel, functievlaggen, platformprompts) zijn nooit via deze pagina's te schrijven.
 
@@ -2569,7 +2563,9 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 | Motor en platformstatus | alle runs | geen | geen | geen |
 | Audit | platformaudit | eigen auditlog inclusief wat de leverancier deed | eigen teams | geen |
 
-**Routes**: `/platform/klanten`, `/platform/abonnementen`, `/platform/facturen`, `/platform/verbruik`, `/platform/ai`, `/platform/prompts`, `/platform/help`, `/platform/roadmap`, `/platform/motor`, `/platform/audit`. Voor de beheerder: `/instellingen/gebruikers`, `/instellingen/abonnement`, `/instellingen/verbruik`, `/instellingen/prompts`, `/instellingen/audit`. Voor iedereen: `/roadmap`. Na inloggen landt de founder op `/platform/klanten` zolang hij niet in een organisatie werkt.
+**Routes**: `/platform/klanten`, `/platform/abonnementen`, `/platform/features`, `/platform/facturen`, `/platform/verbruik`, `/platform/ai`, `/platform/prompts`, `/platform/help`, `/platform/roadmap`, `/platform/motor`, `/platform/audit`. Voor de beheerder: `/instellingen/gebruikers`, `/instellingen/abonnement`, `/instellingen/verbruik`, `/instellingen/prompts`, `/instellingen/audit`. Voor iedereen: `/roadmap`. Na inloggen landt de founder op `/platform/klanten` zolang hij niet in een organisatie werkt.
+
+**Features per niveau** (`/platform/features`): een raster met alle functies uit de catalogus als rijen en Beginner, Gevorderd en Expert als kolommen; per cel aan of uit. Bovenaan de keuze "Alle organisaties" of één organisatie (afwijking, met een gele markering per afwijkende cel). Elke wijziging werkt direct, met een auditregel en de knop "Draai terug". Hiermee legt de founder per sprint de indeling uit 4.3 vast (B18).
 
 **Klanten**
 
@@ -2876,7 +2872,7 @@ Alles wat een Expert aandraagt, is een voorstel aan de salesmanager. De beheerde
 | Koppelingen | `koppelingen`, `koppeling_runs` | zie F02, hoofdstuk 12 |
 | AI | `agent_runs`, `waarnemer_profielen`, `briefing_teksten` | zie hoofdstuk 11 |
 | AI-assistent | `ai_chats`, `ai_chat_berichten`, `ai_credits`, `ai_credit_plafonds` | zie F26 |
-| Platform | `functie_verzoeken` | zie 4.5 |
+| Platform | `functies_per_niveau` | zie 4.5 |
 | Afgeleid | `nb_funnel_stand`, `nb_kpi_dag`, `nb_conversies`, `nb_script_resultaten`, `nb_regel_resultaten`, `nb_prospectmix_stand`, `nb_bezwaren`, `nb_branche_stand`, `nb_winpunt_resultaten`, `nb_concurrent_resultaten`, `nb_terugkom_resultaten` | dagelijkse en wekelijkse jobs |
 
 ### 10.3 Relaties in één oogopslag
@@ -3087,6 +3083,24 @@ dealtrace/
 | Leadronde | onder 60 s |
 | App-bundel (zonder platformdeel) | onder 400 kB gezipt |
 
+### 13.5 Lokaal bouwen
+
+Dealtrace wordt gebouwd en getest op een lokale ontwikkelomgeving; een server op internet is pas nodig voor staging en productie.
+
+| Onderdeel | Lokaal |
+|---|---|
+| Code | De repository `basresink/dealtrace` op de eigen computer (bijvoorbeeld `C:\Projecten\Dealtrace`), met Claude Code in die map |
+| App | Nuxt-ontwikkelserver: `pnpm dev` op `http://localhost:3000`; op de telefoon in hetzelfde wifi-netwerk via het IP-adres van de computer (`pnpm dev --host`) |
+| Database | Supabase lokaal via de Supabase CLI (`supabase start`, draait in Docker Desktop): Postgres met RLS, Auth met inloggen per code (de mails komen in de lokale mailbox Inbucket op `http://localhost:54324`), Storage |
+| Startdata | `pnpm seed` laadt de startset Voltvast (`seed/voltvast.json`) |
+| AI | Standaard de mock-provider (`AI_PROVIDER=mock`): geen sleutel, geen kosten, vaste antwoorden; met een eigen Anthropic-sleutel in `.env.local` kan het echt |
+| Koppelingen | KvK, Datacollectief, CRM, routedienst, transcriptie, SalesDNA en DealDrive draaien lokaal op hun mock (`seed/dealdrive-mock/`, `seed/webhooks/`) |
+| Geplande taken | Motor en sweeps met `pnpm motor` of de knop "Draai motor nu"; geen Netlify nodig |
+| Tests | `pnpm test` (unit en databasevrij), `pnpm test:db` (wegwerp-Postgres), `pnpm test:e2e` (Playwright, desktop en telefoonformaten) |
+| Benodigd | Node.js 22, pnpm, Docker Desktop, Git; op Windows bij voorkeur met WSL 2 |
+
+Regels: geheimen alleen in `.env.local` (nooit in git); `.env.example` noemt elke variabele met uitleg; de README beschrijft de stappen van nul tot een draaiende app in tien minuten; Netlify (staging op `develop`, productie op `main`) komt pas in beeld bij de eerste test met echte gebruikers.
+
 ---
 
 ## 14. Designsysteem en UI-patronen
@@ -3214,7 +3228,7 @@ Het aantal sprints volgt de inhoud (beslissing B14). Met het hoofdstuk Mobiel en
 | 2 | Prospects en data | Accounts en contacten, lijsten met tellers, accountkaart (ook op 390 px), buying committee, **eigen velden** met filters, import met ontdubbelen, datakwaliteit, herkomst per veld | F03, F04, F19, F02 (import) | 1.000 accounts geïmporteerd met duplicaten gevangen; een accountkaart is op de telefoon met één duim te bedienen |
 | 3 | Verkoopverhaal | **SalesDNA-sublagen**: bedrijfsverhaal (ook per branche), ambitie en visie, waarde en belofte, concurrenten, branches, winpunten, hercontactritme; eigen inrichting en spiegel via webhooks; pagina Richting; startset Voltvast als testdata | F25 | Een organisatie zonder SalesDNA vult haar verhaal in; een organisatie met SalesDNA ontvangt het via een webhook; beide tonen hetzelfde op Richting |
 | 4 | Reis, motor en ritme | Doelgroepen (gekoppeld aan branches), standaard prospectreis, statusmachine en nee met afkoelperiode, motor met editor en starterset, accountmatrix | F05 (standaard), F15, F16 | Een overgenomen account doorloopt de reis op echte gebeurtenissen; de motor maakt precies de verwachte taken |
-| 5 | Dag en hulp | Vandaag (desktop en telefoon), acties, hercontactritme-engine, Planner en Bewaker, helpcenter basis, AI-assistent met credits (basis), functies aanzetten per gebruiker | F01, F06, F13 (ritme), F21 (basis), F26 | Een account doorloopt vijf pogingen en parkeert; de hulpknop opent op elk scherm het juiste artikel |
+| 5 | Dag en hulp | Vandaag (desktop en telefoon), acties, hercontactritme-engine, Planner en Bewaker, helpcenter basis, AI-assistent met credits (basis), features aan en uit per niveau | F01, F06, F13 (ritme), F21 (basis), F26 | Een account doorloopt vijf pogingen en parkeert; de hulpknop opent op elk scherm het juiste artikel |
 | 6 | Binnendienst | Belblokken en belmodus (ook op de telefoon), belscript-templates met AI-invulling uit het verkoopverhaal, prospectplanning | F07, F08, F13 (planning) | Een binnendienstmedewerker belt een blok van tien prospects met een gekozen script |
 | 7 | Leads | Leadgenerator met AI-zoeker, KvK en Datacollectief, profiel uit branches en klanten | F02 | Een KvK-selectie levert leads in vijf groepen; "Neem over" maakt een prospect met contactpersonen |
 | 8 | Buitendienst en onderweg | Agenda en meetingsoorten, bezoeken en kansen langs de route, gebieden en regiodagen, routedienst, **Onderweg-schermen**, inloopbezoek, spraak, offline bezoekdag, agendakoppeling | F09, F10, F18, 8 | Een buitendienstmedewerker werkt een hele dag op de telefoon, ook een uur zonder bereik, met drie bezoeken, twee tussenstops en drie ingesproken verslagen |
@@ -3279,7 +3293,7 @@ De nummers P01 tot en met P26 blijven gelijk aan versie 1.0, zodat de verwijzing
 | P07 Taken, inzichten, Vandaag en hercontactritme | 5 | F01, F06, F13 ritme | F01, F06, F13 |
 | P32 Dagritme-kern en Vandaag op de telefoon | 5 | F01, hoofdstuk 8 | 8.5.1, 8.13 |
 | P08 Mandaten, Bewaker, Planner | 5 | 11.3 | 11 |
-| P09 Helpcenter basis en functies aanzetten | 5 | F21 basis, 4.2 | F21, 4 |
+| P09 Helpcenter basis en features per niveau | 5 | F21 basis, 4.2 | F21, 4 |
 | P33 AI-assistent en credits | 5 | F26 | F26, 11.2, 11.4 |
 | P10 Belblokken, belmodus en belscripts | 6 | F07, F08 | F07, F08, F25, 8.5.4 |
 | P12 Prospectplanning en terugkomregels in de planning | 6 | F13 planning | F13, F25 |
@@ -3364,8 +3378,8 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 
 ### ADR-012 Drie gebruikersniveaus naast rollen (gewijzigd in versie 1.2)
 
-- **Beslissing**: een gebruiker heeft een rol (rechten), een niveau (Beginner, Gevorderd, Expert) en een werkplekprofiel (indeling). Een niveau is een voorinstelling van schakelaars per functie; de salesmanager of beheerder zet functies extra aan of uit. Beschikbaarheid is pakket en rol en schakelaar. Eén functiecatalogus op server en client. Er is geen groeipad (B18, B19).
-- **Argumenten**: een rustige start verhoogt adoptie; de salesmanager houdt grip; ervaren mensen worden niet afgeremd (startniveau te kiezen, losse functies aanzetten, "Iedereen ziet alles"); welke functie bij welk niveau hoort, kan tijdens de bouw verschuiven zonder code te wijzigen.
+- **Beslissing**: een gebruiker heeft een rol (rechten), een niveau (Beginner, Gevorderd, Expert) en een werkplekprofiel (indeling). Per niveau staat elke functie aan of uit; de founder regelt dat in Platformbeheer, de salesmanager of beheerder kiest alleen het niveau van een gebruiker. Beschikbaarheid is pakket en rol en aan voor het niveau. Eén functiecatalogus op server en client. Er is geen groeipad (B18, B19).
+- **Argumenten**: een rustige start verhoogt adoptie; de salesmanager houdt grip; ervaren mensen worden niet afgeremd (startniveau te kiezen, "Iedereen ziet alles"); welke functie bij welk niveau hoort, kan tijdens de bouw verschuiven door een feature aan of uit te zetten, zonder code te wijzigen.
 - **Afgewezen**: alles voor iedereen (overweldigend voor beginners); niveaus als rechtenrol (verwart mogen met kunnen); een groeipad met criteria en voorstellen (te vroeg om te weten wat werkt, voelt als een spel).
 - **Consequenties**: elke functie heeft een startniveau en een helpartikel; de server weigert functies die niet aanstaan; functies die niet aanstaan zijn zichtbaar met uitleg; de indeling in 4.3 wordt per sprint vastgesteld.
 
@@ -3441,8 +3455,8 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 | Risico | Impact | Maatregel |
 |---|---|---|
 | Accountmanagers stoppen na twee pogingen | lage conversie | ritme plant pogingen als taken; KPI pogingen tot afspraak; Coach signaleert; academie-artikel "Waarom de vierde poging" |
-| Beginners voelen zich beperkt | weerstand | startniveau kiesbaar; losse functies aanzetten; "Iedereen ziet alles" per organisatie; de AI-assistent helpt meteen |
-| De indeling van functies per niveau klopt niet | te veel of te weinig voor beginners | indeling per sprint vaststellen (4.1); een functie verschuiven is een regel in de catalogus |
+| Beginners voelen zich beperkt | weerstand | startniveau kiesbaar; features per niveau aan en uit te zetten; "Iedereen ziet alles" per organisatie; de AI-assistent helpt meteen |
+| De indeling van functies per niveau klopt niet | te veel of te weinig voor beginners | indeling per sprint vaststellen (4.1); een functie verschuiven is een feature aan of uit zetten in Platformbeheer |
 | AI-credits zijn te snel op of te duur | ontevreden klanten of marge weg | kosten per vraag vooraf tonen, plafond per gebruiker, melding bij 80 procent, credits per pakket na de eerste drie klanten bijstellen |
 | Overdracht na de eerste afspraak blijft liggen | vervolg gaat verloren | regel "afspraak niet overgedragen" (F15), KPI overdracht binnen 24 uur, overdrachtsbriefing |
 | Salesmanager gebruikt het managerdeel niet | geen coaching | vooraf gevulde weekoverleg-agenda, coachingkaart in één klik, aandachtspunten uitgerekend |
@@ -3514,10 +3528,10 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 - **Dekking**: hoeveel branches een eigen verhaal of belofte hebben ("2 van 4").
 - **Doelgroep**: de definitie van een groep bedrijven waarop een reis, campagne en leadronde draaien.
 - **Dossier**: het bewijs per criterium van een lead of prospect; verloopt na 30 dagen.
+- **Features per niveau**: per niveau staat elke functie aan of uit; de founder regelt dat in Platformbeheer.
 - **Founder**: de rol van het team achter Dealtrace, met platformbeheer in de app.
-- **Functieschakelaar**: per gebruiker aan of uit voor een functie; een niveau is een voorinstelling van schakelaars.
 - **Funnel**: het overzicht van hoeveel accounts per fase van de prospectreis staan, doorstromen en uitvallen, tot en met de eerste afspraak (F17).
-- **Gebruikersniveau**: Beginner, Gevorderd of Expert; een voorinstelling van de functies die voor een gebruiker aanstaan, aan te vullen door functies extra aan te zetten.
+- **Gebruikersniveau**: Beginner, Gevorderd of Expert; bepaalt welke functies voor een gebruiker aanstaan, volgens de features per niveau.
 - **Hercontactritme**: wat je doet als een prospect niet reageert: pogingen, intervallen, kanalen en parkeerduur.
 - **Hoofdfase**: Vinden, Bewerken, Verbinden, Overgedragen, Verloren.
 - **Kans langs de route**: een prospect of klant dicht bij de bezoeken van de dag met een reden om langs te gaan of te bellen.
@@ -3550,6 +3564,7 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 | 1.1 | 2026-10-14 | Beslissingen B12 tot en met B16 (inloggen met een code per mail, mobiel en onderweg, sprints naar inhoud, stijlbestand leidend, SalesDNA-sublagen) en de status van de bronnen (0.4); nieuw hoofdstuk 8 Mobiel en onderweg op basis van Dex in DealDrive; nieuwe feature F25 Verkoopverhaal en Richting met leesmodel, webhooks en terugkomregels, verwerkt in F01 tot en met F24; ADR-002 aangevuld, ADR-017 tot en met ADR-020; twaalf sprints; 32 bouwprompts, uitgeschreven in `docs/prompts/`; Bijlage A (checklist gaten DealDrive), Bijlage B (hergebruikkaart, commit 75bee61) en Bijlage C (startset Voltvast); nieuwe mockup in `mockup-dealtrace/` |
 | 1.2 | 2026-10-15 | Beslissingen B17 tot en met B20: Dealtrace loopt tot en met de eerste afspraak (geen pipeline, deals en offertes; F17 wordt Funnel van de prospectreis met overdracht; status `overgedragen`); het niveau ontstaat door het aanzetten van functies met een voorlopige startindeling; het groeipad en de leerpaden per niveau zijn verwijderd; nieuwe feature F26 AI-assistent met credits per abonnement; ADR-012 gewijzigd, ADR-021 en ADR-022 nieuw; prompt P33 |
 | 1.3 | 2026-10-15 | B20 aangevuld: credits gelden voor alle AI-onderdelen (11.4 herschreven met credits per handeling); credits per pakket voorlopig vastgesteld; B21: API met DealDrive voorbereid in `docs/api/` met mock-antwoorden in `seed/dealdrive-mock/` |
+| 1.4 | 2026-10-15 | B18 vereenvoudigd: geen schakelaars per gebruiker; per niveau staan features aan of uit, door de founder te regelen op `/platform/features`; nieuw 13.5 Lokaal bouwen |
 
 ---
 
