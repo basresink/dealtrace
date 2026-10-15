@@ -40,3 +40,11 @@ export async function zorgVoorBelscripts(client: Pick<pg.Client, 'query'>, start
   }
   return orgs.length
 }
+
+/** P11: de SBI-mapping per branche (vv_branche_mapping) in een verkoopverhaal met de Voltvast-branches (tot P28). */
+export async function zorgVoorBrancheMapping(client: Pick<pg.Client, 'query'>): Promise<number> {
+  const vv = JSON.parse(readFileSync(join(import.meta.dirname, '../../seed/voltvast.json'), 'utf8')).verkoopverhaal
+  const mapping = (vv?.eigen_aanvullingen?.vv_branche_mapping ?? []).map((m: any) => ({ brancheId: m.branche_id, sbiCodes: m.sbi_codes ?? [], trefwoorden: m.trefwoorden ?? [] }))
+  const r = await client.query(`update org_settings set value = value || $1 where key = 'verkoopverhaal' and not (value ? 'brancheMapping') and value->'branches' @> '[{"id": "br-01"}]'`, [JSON.stringify({ brancheMapping: mapping })])
+  return r.rowCount ?? 0
+}

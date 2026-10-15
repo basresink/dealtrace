@@ -718,3 +718,21 @@
 .dd-act--vast { flex: 0 0 auto; width: auto; }
 .editor-blok .rijtje > .invoer, .editor-blok .rijtje > select { width: auto; flex: 1 1 160px; } .editor-blok .rijtje > .dd-act { flex: 0 0 auto; }
 @media (max-width: 767px) { .bel-rij { grid-template-columns: minmax(0, 1fr); } }
+
+/* P11: leadgenerator, bewijsregels per criterium (uit mockup-dealtrace/mockup.css) */
+.bewijs { display: flex; gap: 8px; padding: 4px 0; font-size: var(--fs-klein); }
+.bewijs .icoon, .bewijs svg { margin-top: 3px; flex: none; width: 16px; height: 16px; }
+.bewijs--ja svg { color: var(--green); }
+.bewijs--nee svg { color: var(--red); }
+.bewijs--onbekend svg { color: var(--muted); }
+.bewijs-bron { color: var(--muted); font-size: var(--fs-meta); }
+.bewijs-bron a { color: inherit; }
+.kvk-groep .dd-act { min-height: var(--touch-target-min); }
+@media (max-width: 767px) {
+  .stat-grid--6 { grid-template-columns: 1fr 1fr; }
+  article[data-lead] .kaart-kop { flex-wrap: wrap; }
+  article[data-lead] .kaart-kop .rijtje { min-width: 0; }
+}
+.kvk-groep .zoek-rij { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; }
+.kvk-groep .zoek-rij-detail { grid-column: 1; }
+.kvk-groep .zoek-rij .dd-act { grid-column: 2; grid-row: 1 / span 2; }

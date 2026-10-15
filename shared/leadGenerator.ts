@@ -1,9 +1,12 @@
-// Import (F02 tabblad Importeren): kolomherkenning, validatie per rij, dubbelen in
-// het bestand, terugdraaien en veroudering. Ontdubbelen tegen het bestand staat
-// in shared/ontdubbelen.ts (één plek, ook voor "+ Prospect").
+// Leadgenerator (F02). Bovenaan het tabblad Importeren: kolomherkenning, validatie per
+// rij, dubbelen in het bestand, terugdraaien en veroudering. Daaronder de leadstroom.
+// Ontdubbelen tegen het bestand staat in shared/ontdubbelen.ts (één plek, ook voor "+ Prospect").
 import { geldigEmail, geldigePostcode, normaliseerTelefoon } from './contactgegevens'
 import { valideerWaarde, type VeldDefinitie } from './eigenVelden'
 import { dice, normaliseerDomein, normaliseerNaam } from './ontdubbelen'
+import { creditsVoor, CREDITS_OP_TEKST, soortAanIn, type CreditsStand } from './credits'
+import { klasseCode, klasseVoorOmvang, type Klasse } from './ritmematrix'
+import type { Pakket } from './types'
 
 export const IMPORT_DOELEN = {
   naam: 'Bedrijfsnaam', kvk: 'KvK-nummer', website: 'Website of domein', adres: 'Adres', postcode: 'Postcode', plaats: 'Plaats',
@@ -151,3 +154,308 @@ export function moetControleren(contact: { bevestigdOp?: string | null; aangemaa
 }
 
 export { dice as sorensenDice, normaliseerNaam }
+
+// ── De leadstroom (F02, ADR-015): grenzen, criteria, groepen en ontdubbelen ─────
+// Elke bron (AI-zoeker, KvK, import, Datacollectief, CRM) levert dezelfde lead;
+// groepen, criteria en grenzen staan alleen hier (gat 16).
+
+export const GRENZEN = {
+  rondesPerDag: 10,
+  bedrijvenPerRonde: 25,
+  cacheUren: 24,
+  /** Passend: minstens zoveel keer ja bij minstens zoveel beoordeelde criteria (instelbaar). */
+  passendJa: 3,
+  passendBeoordeeld: 4,
+  /** Dossierhoudbaarheid (15.2): zacht wordt Verlopen, hard vervalt het bewijs. */
+  zachtDagen: 30,
+  hardDagen: 120,
+  opruimenNietOvergenomen: 60,
+  opruimenAfgewezen: 120,
+  kvkCacheDagen: 30,
+  zoekopdrachtenPerRonde: 3,
+} as const
+export const DOSSIER_GRENS = GRENZEN.zachtDagen
+
+/** KvK-bevragingen per maand per pakket (11.4); KvK is geen AI en telt niet in de credits. */
+export const KVK_PER_PAKKET: Record<Pakket, number> = { starter: 0, plus: 500, compleet: 2000 }
+export const DAGGRENS_TEKST = `Je daggrens van ${GRENZEN.rondesPerDag} zoekrondes is bereikt.`
+export const KVK_PLAFOND_TEKST = 'Het KvK-plafond van deze maand is bereikt.'
+export const KVK_NIET_GEKOPPELD = 'KvK is nog niet gekoppeld. Je beheerder plakt de KvK-sleutel bij Koppelingen.'
+
+export const LEAD_BRONNEN = ['ai', 'kvk', 'datacollectief', 'import', 'crm'] as const
+export type LeadBron = typeof LEAD_BRONNEN[number]
+export const BRON_LABEL: Record<LeadBron, string> = { ai: 'AI-zoeker', kvk: 'KvK', datacollectief: 'Datacollectief', import: 'Import', crm: 'CRM' }
+
+export const CRITERIA = ['klasse', 'branche', 'werkgebied', 'aanleiding', 'groei', 'bereikbaar'] as const
+export type Criterium = typeof CRITERIA[number]
+export const CRITERIUM_LABEL: Record<Criterium, string> = {
+  klasse: 'Klasse of omvang', branche: 'Branche', werkgebied: 'Werkgebied', aanleiding: 'Aanleiding', groei: 'Groeisignaal', bereikbaar: 'Bereikbaarheid',
+}
+
+/** Vaste volgorde; de eerste treffer wint, lege groepen zijn verborgen. */
+export const GROEP_VOLGORDE = ['alBekend', 'valtAf', 'verlopen', 'onbeoordeeld', 'passend'] as const
+export type LeadGroep = typeof GROEP_VOLGORDE[number]
+/** Volgorde op het scherm: wat je kunt doen eerst. */
+export const GROEP_WEERGAVE: LeadGroep[] = ['passend', 'onbeoordeeld', 'verlopen', 'valtAf', 'alBekend']
+export const GROEP_LABEL: Record<LeadGroep, string> = {
+  alBekend: 'Al in je bestand', valtAf: 'Valt af', verlopen: 'Verlopen', onbeoordeeld: 'Nog niet te beoordelen', passend: 'Passend',
+}
+
+export const AFWIJSREDENEN = ['Te klein', 'Verkeerde branche', 'Heeft al een leverancier', 'Buiten gebied', 'Geen budget', 'Anders'] as const
+
+export type Oordeel = 'ja' | 'nee' | 'onbekend'
+export interface Bewijs { criterium: Criterium; oordeel: Oordeel; zin: string; bron: string; url?: string | null; datum?: string | null }
+export interface LeadContact { naam: string; functie?: string | null; email?: string | null; telefoon?: string | null; linkedin?: string | null; bron: string; aanname?: boolean }
+export interface DossierZin { tekst: string; bron: string; url?: string | null; datum?: string | null }
+export interface LeadFeiten {
+  naam: string; kvk?: string | null; domein?: string | null; website?: string | null; plaats?: string | null; postcode?: string | null
+  adres?: string | null; lat?: number | null; lng?: number | null; medewerkers?: number | null; sbi?: string[]
+  contacten?: LeadContact[]
+  /** Bewijszinnen uit de zoekronde of het dossier. */
+  zinnen?: DossierZin[]
+  /** Oordelen van de Zoeker uit het dossier (aanleiding, groei, bereikbaarheid). */
+  dossierBewijs?: Bewijs[]
+  dossierOp?: string | null
+  herkomst?: Record<string, { bron: string; op: string; url?: string }>
+}
+
+export interface Werkgebied { postcodes?: string[]; straal?: { lat: number; lng: number; km: number } | null }
+export interface Zoekopdracht {
+  doelgroepId?: string | null; doelgroepNaam?: string | null; lijktOpKlanten?: boolean
+  /** Klassecodes, bijvoorbeeld ['B', 'C']. */
+  klassen?: string[]
+  omvang?: { min?: number | null; max?: number | null }
+  sbi?: string[]
+  brancheId?: string | null
+  werkgebied?: Werkgebied
+  aanleiding?: string
+  /** Zoeksjabloon "Overstappers van <concurrent>". */
+  concurrentId?: string | null
+}
+
+const DAG_MS = 864e5
+const dagenOud = (op: string | null | undefined, nu: Date) => (op ? (nu.getTime() - Date.parse(op)) / DAG_MS : 0)
+const schoonTekst = (t: string) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim()
+
+/** Klasse uit het aantal medewerkers met de klassen van de organisatie (één definitie met P06). */
+export function klasseUitMedewerkers(n: number | null | undefined, klassen: Klasse[]): string | null {
+  const eigen = klassen.filter((k) => k.tabblad !== 'Klanten')
+  return klasseVoorOmvang(n, eigen.length ? eigen : undefined)
+}
+const codeVan = (id: string | null, klassen: Klasse[]) => (id ? klasseCode(klassen.find((k) => k.id === id) ?? { id, naam: id }) : null)
+
+/** Afstand in kilometers tussen twee punten (haversine). */
+export function afstandKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+  const r = (x: number) => (x * Math.PI) / 180
+  const h = Math.sin(r(b.lat - a.lat) / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(r(b.lng - a.lng) / 2) ** 2
+  return 2 * 6371 * Math.asin(Math.sqrt(h))
+}
+
+const STOPWOORDEN = new Set(['voor', 'naar', 'met', 'zijn', 'heeft', 'van', 'een', 'het', 'die', 'dat', 'deze', 'door', 'werkt', 'bedrijf', 'bedrijven'])
+/** Trefwoorden uit een aanleiding: woorden van vier letters of meer, als stam van zes letters. */
+export function trefwoorden(aanleiding: string | null | undefined): string[] {
+  return [...new Set(schoonTekst(aanleiding ?? '').split(/[^a-z0-9]+/).filter((w) => w.length >= 4 && !STOPWOORDEN.has(w)).map((w) => w.slice(0, 6)))]
+}
+const GROEI = /vacature|werft|zoekt (?:\w+ )?(?:monteur|collega|medewerker)|nieuwe vestiging|nieuw pand|uitbrei|groei|overname|opent/i
+
+/**
+ * Zes oordelen met bewijs (F02). Onbekend is geen nee; elk oordeel draagt een bron en,
+ * waar het veroudert, een datum. Bewijs ouder dan de harde grens (120 dagen) vervalt.
+ */
+export function beoordeelLead(lead: LeadFeiten, z: Zoekopdracht, klassen: Klasse[], nu: Date): { bewijs: Bewijs[]; score: number; beoordeeld: number } {
+  const b: Bewijs[] = []
+  const bronVan = (veld: string, standaard: string) => lead.herkomst?.[veld]?.bron ?? standaard
+  // Klasse of omvang: de klassen van de organisatie, geen vaste standaard (gat 46).
+  if (lead.medewerkers == null) b.push({ criterium: 'klasse', oordeel: 'onbekend', zin: 'Aantal medewerkers onbekend', bron: bronVan('medewerkers', 'kvk') })
+  else {
+    const id = klasseUitMedewerkers(lead.medewerkers, klassen)
+    const code = codeVan(id, klassen)
+    const wil = (z.klassen ?? []).map((k) => k.toUpperCase())
+    const min = z.omvang?.min ?? null
+    const max = z.omvang?.max ?? null
+    const ok = (!wil.length || (!!code && wil.includes(code))) && (min == null || lead.medewerkers >= min) && (max == null || lead.medewerkers <= max)
+    b.push({ criterium: 'klasse', oordeel: ok ? 'ja' : 'nee', zin: `${lead.medewerkers} medewerkers${code ? `, klasse ${code}` : ''}${!ok && wil.length ? `; je zoekt klasse ${wil.join(' en ')}` : ''}`, bron: bronVan('medewerkers', 'kvk'), datum: lead.herkomst?.medewerkers?.op ?? null })
+  }
+  // Branche: SBI uit KvK tegen de doelgroep.
+  const sbi = lead.sbi ?? []
+  if (!sbi.length) b.push({ criterium: 'branche', oordeel: 'onbekend', zin: 'SBI-code onbekend', bron: bronVan('sbi', 'kvk') })
+  else if (!z.sbi?.length) b.push({ criterium: 'branche', oordeel: 'ja', zin: `SBI ${sbi.join(', ')}; geen branche gekozen`, bron: bronVan('sbi', 'kvk') })
+  else {
+    const hit = sbi.find((s) => z.sbi!.some((w) => s.startsWith(w) || w.startsWith(s)))
+    b.push({ criterium: 'branche', oordeel: hit ? 'ja' : 'nee', zin: hit ? `SBI ${hit} past bij je doelgroep` : `SBI ${sbi.join(', ')} valt buiten ${z.sbi.join(', ')}`, bron: bronVan('sbi', 'kvk') })
+  }
+  // Werkgebied: straal rond de thuisbasis of postcodegebieden (gat 46).
+  const wg = z.werkgebied
+  if (!wg?.straal && !wg?.postcodes?.length) b.push({ criterium: 'werkgebied', oordeel: 'onbekend', zin: 'Geen werkgebied gekozen', bron: 'zoekopdracht' })
+  else if (wg.straal && lead.lat != null && lead.lng != null) {
+    const km = Math.round(afstandKm(wg.straal, { lat: lead.lat, lng: lead.lng }))
+    b.push({ criterium: 'werkgebied', oordeel: km <= wg.straal.km ? 'ja' : 'nee', zin: km <= wg.straal.km ? `Ligt ${km} km van je thuisbasis` : `Ligt ${km} km van je thuisbasis; je straal is ${wg.straal.km} km`, bron: bronVan('adres', 'kvk') })
+  } else if (wg.postcodes?.length && lead.postcode) {
+    const pc = lead.postcode.replace(/\s/g, '')
+    const ok = wg.postcodes.some((p) => pc.startsWith(p.replace(/\s/g, '')))
+    b.push({ criterium: 'werkgebied', oordeel: ok ? 'ja' : 'nee', zin: ok ? `Postcode ${lead.postcode} ligt in je werkgebied` : `Postcode ${lead.postcode} valt buiten ${wg.postcodes.join(', ')}`, bron: bronVan('adres', 'kvk') })
+  } else b.push({ criterium: 'werkgebied', oordeel: 'onbekend', zin: 'Adres onbekend', bron: bronVan('adres', 'kvk') })
+
+  const vers = (d?: string | null) => !d || dagenOud(d, nu) <= GRENZEN.hardDagen
+  const dossierVers = vers(lead.dossierOp)
+  const zinnen = dossierVers ? (lead.zinnen ?? []).filter((x) => vers(x.datum)) : []
+  const vanDossier = (c: Criterium) => (dossierVers ? (lead.dossierBewijs ?? []).find((x) => x.criterium === c && vers(x.datum)) : undefined)
+  // Aanleiding: trefwoorden in een bewijszin.
+  const tw = trefwoorden(z.aanleiding)
+  const dA = vanDossier('aanleiding')
+  if (!tw.length) b.push({ criterium: 'aanleiding', oordeel: 'onbekend', zin: 'Geen aanleiding opgegeven', bron: 'zoekopdracht' })
+  else {
+    const zin = zinnen.find((x) => tw.some((w) => schoonTekst(x.tekst).includes(w)))
+    if (zin) b.push({ criterium: 'aanleiding', oordeel: 'ja', zin: zin.tekst, bron: zin.bron, url: zin.url ?? null, datum: zin.datum ?? null })
+    else if (dA) b.push(dA)
+    else b.push({ criterium: 'aanleiding', oordeel: 'onbekend', zin: `Geen bewijs voor "${z.aanleiding}"`, bron: 'dossier' })
+  }
+  // Groeisignaal: vacatures, nieuws, nieuwe vestiging.
+  const g = zinnen.find((x) => GROEI.test(x.tekst))
+  const dG = vanDossier('groei')
+  if (g) b.push({ criterium: 'groei', oordeel: 'ja', zin: g.tekst, bron: g.bron, url: g.url ?? null, datum: g.datum ?? null })
+  else b.push(dG ?? { criterium: 'groei', oordeel: 'onbekend', zin: 'Geen groeisignaal gevonden', bron: 'dossier' })
+  // Bereikbaarheid: een contactpersoon met functie en een nummer of e-mail (geen aanname).
+  const c = (lead.contacten ?? []).find((x) => x.functie && (x.telefoon || (x.email && !x.aanname)))
+  const dB = vanDossier('bereikbaar')
+  if (c) b.push({ criterium: 'bereikbaar', oordeel: 'ja', zin: `${c.naam} · ${c.functie}`, bron: c.bron })
+  else b.push(dB ?? { criterium: 'bereikbaar', oordeel: 'onbekend', zin: 'Nog geen contactpersoon met nummer of e-mail', bron: 'dossier' })
+
+  const score = b.filter((x) => x.oordeel === 'ja').length
+  return { bewijs: b, score, beoordeeld: b.filter((x) => x.oordeel !== 'onbekend').length }
+}
+
+/** Eén van de vijf groepen; de eerste treffer wint. */
+export function groepeerLead(lead: { alBekend?: boolean; bewijs: Bewijs[]; dossierOp?: string | null }, nu: Date, grens: { ja?: number; beoordeeld?: number } = {}): LeadGroep {
+  if (lead.alBekend) return 'alBekend'
+  if (lead.bewijs.some((x) => x.oordeel === 'nee')) return 'valtAf'
+  if (lead.dossierOp && dagenOud(lead.dossierOp, nu) > GRENZEN.zachtDagen) return 'verlopen'
+  const ja = lead.bewijs.filter((x) => x.oordeel === 'ja').length
+  const beoordeeld = lead.bewijs.filter((x) => x.oordeel !== 'onbekend').length
+  if (beoordeeld < (grens.beoordeeld ?? GRENZEN.passendBeoordeeld)) return 'onbeoordeeld'
+  return ja >= (grens.ja ?? GRENZEN.passendJa) ? 'passend' : 'onbeoordeeld'
+}
+
+/** "Dossier van vandaag", oranje na 30 dagen. */
+export function dossierLabel(op: string | null | undefined, nu: Date): { tekst: string; oranje: boolean } | null {
+  if (!op) return null
+  const d = Math.floor(dagenOud(op, nu))
+  return { tekst: d <= 0 ? 'Dossier van vandaag' : d === 1 ? 'Dossier van gisteren' : `Dossier van ${d} dagen geleden`, oranje: d > GRENZEN.zachtDagen }
+}
+
+/** Hash voor de 24-uursregel: volgorde van bronnen en SBI maakt niet uit. */
+export function zoekopdrachtHash(z: Zoekopdracht, bronnen: string[]): string {
+  const s = (a?: (string | null | undefined)[]) => [...new Set((a ?? []).filter(Boolean).map((x) => String(x).trim().toUpperCase()))].sort()
+  const canon = JSON.stringify([
+    z.doelgroepId ?? null, !!z.lijktOpKlanten, s(z.klassen), z.omvang?.min ?? null, z.omvang?.max ?? null, s(z.sbi), z.brancheId ?? null,
+    s(z.werkgebied?.postcodes), z.werkgebied?.straal ? [z.werkgebied.straal.lat, z.werkgebied.straal.lng, z.werkgebied.straal.km] : null,
+    schoonTekst(z.aanleiding ?? ''), z.concurrentId ?? null, s(bronnen),
+  ])
+  // cyrb53: klein en stabiel in browser en server.
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57
+  for (let i = 0; i < canon.length; i++) { const ch = canon.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677) }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16).padStart(14, '0')
+}
+
+export interface BrancheMapping { brancheId: string; sbiCodes: string[]; trefwoorden: string[] }
+/** SBI naar branche uit het verkoopverhaal; bij meer branches op één SBI beslist het trefwoord. */
+export function brancheUitSbi(sbi: string[] | null | undefined, mapping: BrancheMapping[], tekst = ''): string | null {
+  const codes = sbi ?? []
+  const kandidaten = mapping.filter((m) => m.sbiCodes.some((c) => codes.some((s) => s.startsWith(c))))
+  if (!kandidaten.length) return null
+  const t = schoonTekst(tekst)
+  return (kandidaten.find((m) => m.trefwoorden.some((w) => t.includes(schoonTekst(w))))
+    ?? kandidaten.find((m) => !m.trefwoorden.length) ?? kandidaten[0]!).brancheId
+}
+/** De SBI-codes en trefwoorden van een branche, voor de KvK-zoekvraag. */
+export function sbiVoorBranche(brancheId: string | null | undefined, mapping: BrancheMapping[]): { sbi: string[]; trefwoorden: string[] } {
+  const m = mapping.find((x) => x.brancheId === brancheId)
+  return { sbi: m?.sbiCodes ?? [], trefwoorden: m?.trefwoorden ?? [] }
+}
+
+/** Zoeksjabloon per concurrent van soort Direct (F25). */
+export function zoeksjablonen(concurrenten: { id: string; naam: string; soort: string }[]): { id: string; naam: string; concurrentId: string; aanleiding: string }[] {
+  return concurrenten.filter((c) => c.soort === 'Direct').map((c) => ({ id: `overstap-${c.id}`, naam: `Overstappers van ${c.naam}`, concurrentId: c.id, aanleiding: `klant van ${c.naam}` }))
+}
+
+/** "Lijkt op mijn klanten": top 3 SBI en top 6 postcodegebieden, alleen uit echte klanten (gat 46). */
+export function leidZoekopdrachtAf(accounts: { accountKind?: string | null; sbi?: string[] | null; postcode?: string | null }[]): { sbi: { code: string; aantal: number }[]; postcodes: string[]; aantalKlanten: number } {
+  const klanten = accounts.filter((a) => a.accountKind === 'klant')
+  const tel = <T extends string>(lijst: T[]) => { const m = new Map<T, number>(); for (const x of lijst) m.set(x, (m.get(x) ?? 0) + 1); return [...m].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])) }
+  return {
+    sbi: tel(klanten.flatMap((k) => k.sbi ?? [])).slice(0, 3).map(([code, aantal]) => ({ code, aantal })),
+    postcodes: tel(klanten.map((k) => (k.postcode ?? '').replace(/\s/g, '').slice(0, 2)).filter((p) => /^\d{2}$/.test(p))).slice(0, 6).map(([p]) => p),
+    aantalKlanten: klanten.length,
+  }
+}
+
+export interface RondeVerbruik { rondesVandaag: number; stand: CreditsStand | null; kvk: { gekoppeld: boolean; gebruikt: number; plafond: number } }
+/** Mag deze ronde? Op de server afgedwongen (429, 400, 403, 402). */
+export function magRonde(v: RondeVerbruik, pakket: Pakket, bronnen: string[]): { mag: boolean; status?: 400 | 402 | 403 | 429; reden?: string } {
+  if (v.rondesVandaag >= GRENZEN.rondesPerDag) return { mag: false, status: 429, reden: DAGGRENS_TEKST }
+  if (!bronnen.length) return { mag: false, status: 400, reden: 'Kies minstens één bron' }
+  if (bronnen.includes('kvk')) {
+    if (!v.kvk.gekoppeld) return { mag: false, status: 400, reden: KVK_NIET_GEKOPPELD }
+    if (v.kvk.gebruikt >= v.kvk.plafond) return { mag: false, status: 429, reden: KVK_PLAFOND_TEKST }
+  }
+  if (bronnen.includes('ai')) {
+    if (!soortAanIn('zoekronde', pakket)) return { mag: false, status: 403, reden: 'De AI-zoeker is onderdeel van Compleet' }
+    if (!v.stand || v.stand.over < creditsVoor('zoekronde')) return { mag: false, status: 402, reden: CREDITS_OP_TEKST }
+  }
+  return { mag: true }
+}
+
+/** "Niet relevant" stuurt de volgende ronde bij: wat vaker om dezelfde reden is afgewezen, komt niet terug. */
+export function bijsturing(afgewezen: { reden?: string | null; medewerkers?: number | null; sbi?: string[] | null; plaats?: string | null }[]): { maxTeKlein: number | null; sbiUit: string[]; plaatsenUit: string[] } {
+  const teKlein = afgewezen.filter((a) => a.reden === 'Te klein' && a.medewerkers != null).map((a) => a.medewerkers!)
+  const tel = (l: string[]) => { const m = new Map<string, number>(); for (const x of l) m.set(x, (m.get(x) ?? 0) + 1); return [...m].filter(([, n]) => n >= 2).map(([k]) => k) }
+  return {
+    maxTeKlein: teKlein.length >= 2 ? Math.max(...teKlein) : null,
+    sbiUit: tel(afgewezen.filter((a) => a.reden === 'Verkeerde branche').flatMap((a) => a.sbi ?? [])),
+    plaatsenUit: tel(afgewezen.filter((a) => a.reden === 'Buiten gebied' && a.plaats).map((a) => a.plaats!.toLowerCase())),
+  }
+}
+export function pastNaBijsturing(l: Pick<LeadFeiten, 'medewerkers' | 'sbi' | 'plaats'>, b: ReturnType<typeof bijsturing>): boolean {
+  if (b.maxTeKlein != null && l.medewerkers != null && l.medewerkers <= b.maxTeKlein) return false
+  if ((l.sbi ?? []).length && (l.sbi ?? []).every((s) => b.sbiUit.includes(s))) return false
+  if (l.plaats && b.plaatsenUit.includes(l.plaats.toLowerCase())) return false
+  return true
+}
+
+/** Sleutels om een lead terug te vinden (afgewezen komt nooit terug, ook niet op een ander toestel). */
+export function leadSleutels(l: Pick<LeadFeiten, 'naam' | 'kvk' | 'domein' | 'website' | 'postcode'>): string[] {
+  const d = normaliseerDomein(l.domein ?? l.website)
+  return [l.kvk ? `kvk:${l.kvk.replace(/\D/g, '')}` : '', d ? `dom:${d}` : '', `naam:${normaliseerNaam(l.naam)}|${(l.postcode ?? '').replace(/\s/g, '').toUpperCase()}`].filter(Boolean)
+}
+
+/** De Zoeker gebruikt alleen URL's uit de echte zoekresultaten. */
+export function alleenEchteUrls<T extends { url?: string | null }>(bedrijven: T[], resultaten: { url: string }[]): T[] {
+  const n = (u: string) => u.trim().replace(/\/+$/, '').toLowerCase()
+  const echt = new Set(resultaten.map((r) => n(r.url)))
+  return bedrijven.filter((b) => !!b.url && echt.has(n(b.url)))
+}
+
+/** Bewijs telt alleen als het citaat letterlijk in het materiaal staat, met een URL uit het materiaal. */
+export function controleerBewijs(bewijs: Bewijs[], materiaal: { url: string; tekst: string }[]): Bewijs[] {
+  return bewijs.filter((b) => {
+    const zin = schoonTekst(b.zin ?? '')
+    if (zin.length < 8) return false
+    const bron = b.url ? materiaal.filter((m) => m.url === b.url) : materiaal
+    return bron.some((m) => schoonTekst(m.tekst).includes(zin))
+  })
+}
+
+/** Geen verzonnen gegevens: een nummer of e-mail dat niet in het materiaal staat, vervalt; een patroon is een aanname (15.1). */
+export function controleerContacten(contacten: LeadContact[], materiaal: string): LeadContact[] {
+  const t = materiaal.toLowerCase()
+  const cijfers = t.replace(/\D/g, '')
+  return contacten.filter((c) => c.naam && t.includes(c.naam.toLowerCase().split(' ').at(-1)!)).map((c) => {
+    const uit: LeadContact = { ...c }
+    const tel = uit.telefoon?.replace(/\D/g, '') ?? ''
+    if (tel && !cijfers.includes(tel) && !cijfers.includes(tel.replace(/^31/, '0'))) uit.telefoon = null
+    if (uit.email && !t.includes(uit.email.toLowerCase())) { if (!uit.aanname) uit.email = null }
+    return uit
+  })
+}

@@ -8,6 +8,7 @@ import { motorRun, type MotorGebruiker, type MotorUitvoer, type StartActiviteit 
 import { fase as zoekFase } from '../../shared/reis'
 import type { MotorAccount, Regel, RegelData } from '../../shared/regelPatronen'
 import { BELMATRIX_STANDAARD, CAPACITEIT_STANDAARD, klasseCode, leesMatrix, type Klasse } from '../../shared/ritmematrix'
+import { leadOnderhoud } from './leads'
 import { schema } from './db'
 import { draai as draaiPlanner } from './agents/planner'
 import { vulBelblokken } from './bellen'
@@ -189,6 +190,8 @@ export async function draaiMotor(tx: Tx, org: string, opties: RunOpties) {
       const v = await vulBelblokken(tx, org, nu)
       const stap = uit.stappen.find((s) => s.stap === 'belblokvuller')
       if (stap) Object.assign(stap, { status: 'gedaan', toelichting: `${v.blokken} blokken, ${v.gesprekken} gesprekken` })
+      // Leadgenerator (F02): automatische rondes, opruimen en KvK-mutaties.
+      await leadOnderhoud(tx, org, nu)
     }
   } catch (e) {
     fouten.push((e as Error).message)

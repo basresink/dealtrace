@@ -1,180 +1,271 @@
 <script setup lang="ts">
-// Leadgenerator · tabblad Importeren (F02). De wizard in vier stappen: bestand,
-// kolommen koppelen, controle en ontdubbelen, bevestigen. Plus de importbatches.
-// Zoeken, koppelingen en rondes bouwt P11.
-import { IMPORT_DOELEN } from '~~/shared/leadGenerator'
-const { me, functie } = useMe()
+// Leadgenerator (F02): één leadstroom met de bronnen AI-zoeker en KvK, plus de tabbladen
+// Importeren (P04), Koppelingen en Rondes en verbruik. Het tabblad Zoeken staat hier: de
+// zoekopdracht in vakken, de groepen met bewijs en de meters. De beoordeling rekent met
+// dezelfde functies als de server, zodat een aangepaste zoekopdracht direct doorwerkt.
+import {
+  BRON_LABEL, CRITERIUM_LABEL, GROEP_LABEL, GROEP_WEERGAVE, beoordeelLead, dossierLabel, groepeerLead,
+  type LeadGroep, type Zoekopdracht,
+} from '~~/shared/leadGenerator'
+import { CREDITS_OP_TEKST, creditsVoor } from '~~/shared/credits'
+const { functie } = useMe()
 const toast = useToast()
-const kanImport = computed(() => functie('import.uitvoeren')?.beschikbaar)
-const nietAan = computed(() => !kanImport.value && functie('import.uitvoeren')?.reden === 'niveau')
-const kanTeam = computed(() => functie('import.teamVerdelen')?.beschikbaar)
-const { data: batches, refresh } = kanImport.value ? await useFetch<any[]>('/api/import', { default: () => [] }) : { data: ref<any[]>([]), refresh: async () => {} }
+const route = useRoute()
+const router = useRouter()
+const kanRonde = computed(() => !!functie('nav.leadgenerator')?.beschikbaar)
+const kanOvernemen = computed(() => !!functie('leads.overnemen')?.beschikbaar)
+const kanImport = computed(() => !!functie('import.uitvoeren')?.beschikbaar)
+const toegang = computed(() => kanRonde.value || kanOvernemen.value)
 
-const stap = ref(1)
-const bestand = ref<File | null>(null)
-const soort = ref<'bedrijven' | 'bedrijven_contacten'>('bedrijven_contacten')
-const label = ref('')
-const bezig = ref(false)
-const vb = ref<any>(null)
-const koppeling = ref<string[]>([])
-const controle = ref<any>(null)
-const keuzes = reactive<Record<string, string>>({})
-const eigenaar = ref<'vast' | 'team'>('vast')
-const klaar = ref<any>(null)
-const terug = ref<any>(null)
+type Tab = 'zoeken' | 'importeren' | 'koppelingen' | 'rondes'
+const TABS: { k: Tab; t: string }[] = [{ k: 'zoeken', t: 'Zoeken' }, { k: 'importeren', t: 'Importeren' }, { k: 'koppelingen', t: 'Koppelingen' }, { k: 'rondes', t: 'Rondes en verbruik' }]
+const tabs = computed(() => TABS.filter((t) => t.k === 'zoeken' || (kanRonde.value && (t.k !== 'importeren' || kanImport.value))))
+const tab = computed<Tab>(() => (tabs.value.find((t) => t.k === route.query.tab)?.k ?? 'zoeken'))
+const naarTab = (k: Tab) => router.replace({ query: { ...route.query, tab: k === 'zoeken' ? undefined : k } })
 
-function kies(e: Event) { bestand.value = (e.target as HTMLInputElement).files?.[0] ?? null }
-function sleep(e: DragEvent) { e.preventDefault(); bestand.value = e.dataTransfer?.files?.[0] ?? null }
-async function stap1() {
-  if (!bestand.value) return
-  if (bestand.value.size > 10 * 1024 * 1024) { toast.toon('Het bestand is groter dan 10 MB. Splits het in kleinere delen.', 'fout'); return }
-  bezig.value = true
-  try {
-    const fd = new FormData(); fd.append('bestand', bestand.value); fd.append('soort', soort.value); fd.append('label', label.value)
-    vb.value = await $fetch('/api/import/voorbeeld', { method: 'POST', body: fd })
-    koppeling.value = [...vb.value.koppeling]
-    stap.value = 2
-  } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
+const { data: context, refresh: verversContext } = toegang.value ? await useFetch<any>('/api/leads/context', { default: () => null }) : { data: ref<any>(null), refresh: async () => {} }
+const { data: lijst, refresh } = toegang.value ? await useFetch<any>('/api/leads', { query: computed(() => ({ ronde: route.query.ronde })), default: () => ({ ronde: null, zoekopdracht: null, leads: [] }) }) : { data: ref<any>({ leads: [] }), refresh: async () => {} }
+
+// De zoekopdracht: uit de laatste ronde, anders leeg. Aanpassen werkt direct door in de groepen.
+const leeg = (): Zoekopdracht => ({ doelgroepId: null, doelgroepNaam: null, lijktOpKlanten: false, klassen: [], sbi: [], brancheId: null, werkgebied: { postcodes: [], straal: null }, aanleiding: '', concurrentId: null })
+const z = reactive<Zoekopdracht>(leeg())
+const bronnen = ref<string[]>([])
+watch(() => lijst.value?.zoekopdracht, (w) => { Object.assign(z, leeg(), w ?? {}, { werkgebied: { postcodes: [], straal: null, ...(w?.werkgebied ?? {}) } }) }, { immediate: true })
+watch(() => [context.value, lijst.value?.ronde] as const, ([c, r]) => {
+  if (!c) return
+  const kies = (r?.bronnen ?? ['kvk', 'ai']).filter((b: string) => c.bronnen[b]?.beschikbaar)
+  bronnen.value = kies.length ? kies : ['kvk', 'ai'].filter((b) => c.bronnen[b]?.beschikbaar)
+}, { immediate: true })
+const paneel = ref(false)
+const postcodesTekst = computed({ get: () => (z.werkgebied?.postcodes ?? []).join(', '), set: (v: string) => { z.werkgebied = { ...z.werkgebied, postcodes: v.split(/[,\s]+/).filter(Boolean) } } })
+const straalAan = computed({ get: () => !!z.werkgebied?.straal, set: (v: boolean) => { const t = context.value?.thuisbasis; z.werkgebied = { ...z.werkgebied, straal: v && t ? { lat: t.lat, lng: t.lng, km: z.werkgebied?.straal?.km ?? 50 } : null } } })
+const straalKm = computed({ get: () => z.werkgebied?.straal?.km ?? 50, set: (v: number) => { if (z.werkgebied?.straal) z.werkgebied = { ...z.werkgebied, straal: { ...z.werkgebied.straal, km: Number(v) } } } })
+function kiesDoelgroep(id: string) {
+  const c = context.value
+  Object.assign(z, { doelgroepId: null, doelgroepNaam: null, lijktOpKlanten: false, concurrentId: null })
+  if (id === 'klanten') { Object.assign(z, { lijktOpKlanten: true, doelgroepNaam: 'Lijkt op mijn klanten', sbi: c.lijktOpKlanten.sbi.map((s: any) => s.code), werkgebied: { ...z.werkgebied, postcodes: c.lijktOpKlanten.postcodes } }); return }
+  const s = c.sjablonen.find((x: any) => x.id === id)
+  if (s) { Object.assign(z, { doelgroepNaam: s.naam, concurrentId: s.concurrentId, aanleiding: s.aanleiding }); return }
+  const d = c.doelgroepen.find((x: any) => x.id === id)
+  if (d) Object.assign(z, { doelgroepId: d.id, doelgroepNaam: d.naam, sbi: d.data.sbi ?? [], brancheId: d.data.brancheIds?.[0] ?? z.brancheId, klassen: (d.data.klassen ?? []).map((k: string) => codeVan(k)), werkgebied: { ...z.werkgebied, postcodes: d.data.postcodes ?? [] } })
 }
-const doelen = computed(() => [
-  ...Object.entries(IMPORT_DOELEN).filter(([k]) => soort.value === 'bedrijven_contacten' || !k.startsWith('contact')).map(([k, v]) => ({ k, v })),
-  ...(vb.value?.eigenVelden ?? []).map((v: any) => ({ k: `cf:${v.sleutel}`, v: `Eigen veld: ${v.naam}` })),
-])
-async function stap2() {
-  bezig.value = true
-  try {
-    controle.value = await $fetch('/api/import/controle', { method: 'POST', body: { batchId: vb.value.batchId, koppeling: koppeling.value } })
-    for (const k of Object.keys(keuzes)) delete keuzes[k]
-    for (const r of controle.value.regels) keuzes[r.rij] = r.keuze === 'samenvoegen' && r.match ? `samenvoegen:${r.match.id}` : r.keuze
-    stap.value = 3
-  } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
+const doelgroepKeuze = computed(() => (z.lijktOpKlanten ? 'klanten' : z.concurrentId ? `overstap-${z.concurrentId}` : z.doelgroepId ?? ''))
+function kiesBranche(id: string) {
+  z.brancheId = id || null
+  const b = context.value?.branches.find((x: any) => x.id === id)
+  z.sbi = b?.sbi ?? []
 }
-const openKeuzes = computed(() => Object.values(keuzes).filter((k) => k === 'kiezen').length)
-async function verwerk() {
-  bezig.value = true
+const codeVan = (id: string) => (context.value?.klassen ?? []).find((k: any) => k.id === id)?.naam?.match(/^\s*([A-Z0-9]{1,2})\s*·/)?.[1] ?? id
+const klasseCodes = computed(() => (context.value?.klassen ?? []).map((k: any) => codeVan(k.id)))
+function wisselKlasse(c: string) { z.klassen = z.klassen?.includes(c) ? z.klassen.filter((x) => x !== c) : [...(z.klassen ?? []), c] }
+function wisselBron(b: string) { bronnen.value = bronnen.value.includes(b) ? bronnen.value.filter((x) => x !== b) : [...bronnen.value, b] }
+
+// Beoordelen en groeperen met de huidige zoekopdracht (dezelfde functies als de server).
+const nu = new Date()
+const leads = computed(() => (lijst.value?.leads ?? []).map((l: any) => {
+  const b = beoordeelLead(l.feiten, z, context.value?.klassen ?? [], nu)
+  return { ...l, bewijs: b.bewijs, score: b.score, groep: groepeerLead({ alBekend: !!l.alBekend, bewijs: b.bewijs, dossierOp: l.dossierOp }, nu) as LeadGroep }
+}))
+const filter = ref<LeadGroep | null>(null)
+const groepen = computed(() => GROEP_WEERGAVE.map((g) => ({ g, leads: leads.value.filter((l: any) => l.groep === g) })).filter((x) => x.leads.length && (!filter.value || x.g === filter.value)))
+const telling = computed(() => Object.fromEntries(GROEP_WEERGAVE.map((g) => [g, leads.value.filter((l: any) => l.groep === g).length])))
+
+// Acties
+const bezig = ref<string | null>(null)
+const aiOp = computed(() => bronnen.value.includes('ai') && (context.value?.meters.credits ?? 0) < creditsVoor('zoekronde'))
+async function nieuweRonde() {
+  if (aiOp.value) { toast.toon(CREDITS_OP_TEKST, 'let-op'); return }
+  if (!bronnen.value.length) { toast.toon('Kies minstens één bron', 'let-op'); paneel.value = true; return }
+  bezig.value = 'ronde'
   try {
-    klaar.value = await $fetch('/api/import/verwerk', { method: 'POST', body: { batchId: vb.value.batchId, keuzes, eigenaar: { soort: eigenaar.value } } })
-    stap.value = 5
+    const r = await $fetch<any>('/api/leads/ronde', { method: 'POST', body: { zoekopdracht: z, bronnen: bronnen.value } })
+    toast.toon(r.bewaard ? `Bewaard resultaat van eerder vandaag: ${r.aantal} bedrijven, zonder kosten.` : `${r.aantal} bedrijven gevonden${r.credits ? `, ${r.credits} AI-credits` : ''}${r.kvk ? `, ${r.kvk} KvK-bevragingen` : ''}.`)
+    if (r.melding) toast.toon(r.melding, 'let-op')
+    paneel.value = false
+    await router.replace({ query: { ...route.query, ronde: r.rondeId } })
+    await Promise.all([refresh(), verversContext()])
+  } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = null }
+}
+async function dossier(l: any) {
+  bezig.value = l.id
+  try {
+    await $fetch(`/api/leads/${l.id}/dossier`, { method: 'POST' })
+    toast.toon(`Dossier van ${l.naam} is bijgewerkt.`)
+    await Promise.all([refresh(), verversContext()])
+  } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = null }
+}
+const afwijzen = ref<any>(null)
+const reden = ref('')
+async function wijsAf() {
+  const l = afwijzen.value
+  try {
+    await $fetch(`/api/leads/${l.id}/afwijzen`, { method: 'POST', body: { reden: reden.value } })
+    toast.toon('Reden bewaard. Dit bedrijf komt niet terug.')
+    afwijzen.value = null; reden.value = ''
     await refresh()
-  } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
+  } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
-function opnieuw() { stap.value = 1; bestand.value = null; label.value = ''; vb.value = null; controle.value = null; klaar.value = null }
-async function vraagTerug(b: any) { try { terug.value = { ...b, ...(await $fetch<any>(`/api/import/${b.id}/terugdraaien?proef=1`, { method: 'POST' })) } } catch (e) { toast.toon(foutTekst(e), 'fout') } }
-async function draaiTerug() {
-  const b = terug.value; terug.value = null
-  try { const r = await $fetch<any>(`/api/import/${b.id}/terugdraaien`, { method: 'POST' }); toast.toon(`${r.verwijderd} accounts verwijderd; ${r.bleven} bleven staan.`); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+const overnemen = ref<any>(null)
+async function overgenomen() { overnemen.value = null; await refresh() }
+
+const opslaan = ref(false)
+const opslaanNaam = ref('')
+const wekelijks = ref(false)
+async function bewaar() {
+  try {
+    await $fetch('/api/leads/zoekopdrachten', { method: 'POST', body: { naam: opslaanNaam.value, zoekopdracht: z, bronnen: bronnen.value, automatisch: wekelijks.value ? 'wekelijks' : 'uit' } })
+    toast.toon(wekelijks.value ? 'Bewaard als zoekopdracht. Draait elke week.' : 'Bewaard als zoekopdracht.')
+    opslaan.value = false; opslaanNaam.value = ''; wekelijks.value = false
+  } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
-const CAT: Record<string, string> = { alInBestand: 'Al in je bestand', mogelijk: 'Mogelijk dubbel', dubbelInBestand: 'Dubbel in het bestand', fouten: 'Met fouten', dealdriveKlant: 'Al klant in DealDrive', dealdriveProspect: 'Al prospect in DealDrive' }
-const STATUS: Record<string, string> = { concept: 'Concept', verwerkt: 'Verwerkt', teruggedraaid: 'Teruggedraaid' }
-const datum = (t: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(t))
+
+const branche = computed(() => context.value?.branches.find((b: any) => b.id === z.brancheId))
+const vakken = computed(() => {
+  const c = context.value
+  const wg = z.werkgebied
+  return [
+    { label: 'Doelgroep', waarde: z.doelgroepNaam || 'Geen doelgroep', herkomst: z.lijktOpKlanten ? `Uit je ${c?.lijktOpKlanten.aantalKlanten ?? 0} klanten` : z.concurrentId ? 'Zoeksjabloon uit het verkoopverhaal' : z.doelgroepId ? 'Doelgroep' : 'Kies een doelgroep' },
+    { label: 'Klasse of omvang', waarde: z.klassen?.length ? z.klassen.join(' en ') : 'Alle klassen', herkomst: z.doelgroepId ? 'uit de doelgroep' : 'jouw keuze' },
+    { label: 'Branche', waarde: z.sbi?.length ? z.sbi.join(' en ') : 'Alle branches', herkomst: z.lijktOpKlanten ? `Uit je ${c?.lijktOpKlanten.aantalKlanten ?? 0} klanten in deze klassen` : branche.value?.naam ?? 'verkoopverhaal' },
+    { label: 'Werkgebied', waarde: wg?.straal ? `${wg.straal.km} km rond ${c?.thuisbasis?.plaats ?? 'je thuisbasis'}` : wg?.postcodes?.length ? wg.postcodes.join(', ') : 'Overal', herkomst: wg?.straal ? 'straal rond je thuisbasis' : wg?.postcodes?.length ? 'postcodegebieden' : 'geen werkgebied' },
+    { label: 'Aanleiding', waarde: z.aanleiding || 'Geen', herkomst: 'jij' },
+    { label: 'Bronnen', waarde: bronnen.value.map((b) => BRON_LABEL[b as 'ai']).join(', ') || 'Geen', herkomst: 'Datacollectief niet gekoppeld' },
+  ]
+})
+const kicker = computed(() => `Leadgenerator · ${leads.value.length} gevonden`)
+const fmt = (n: number) => new Intl.NumberFormat('nl-NL').format(n)
+const datumKort = (d?: string | null) => (d ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short' }).format(new Date(d)) : '')
+const contactRegel = (l: any) => { const c = (l.feiten.contacten ?? [])[0]; return c ? `${c.naam}${c.functie ? ` · ${c.functie}` : ''}${c.functie && /eigenaar|directeur/i.test(c.functie) ? ' · beslisser' : ''}` : 'contactpersoon onbekend' }
+const alBekendTekst = (l: any) => (l.alBekend?.dealdrive ? `Al ${l.alBekend.dealdrive.soort} in DealDrive${l.alBekend.dealdrive.eigenaar ? ` · ${l.alBekend.dealdrive.eigenaar}` : ''}` : l.status === 'overgenomen' ? 'Overgenomen' : 'Gelijk aan een account in je bestand')
 useHead({ title: 'Leadgenerator · Dealtrace' })
 </script>
 
 <template>
   <div>
-    <NietAangezetKop v-if="nietAan" sleutel="import.uitvoeren" />
-    <template v-else-if="kanImport">
-      <PaginaKop kicker="Leadgenerator" titel="Leadgenerator" uitleg="Bedrijven die passen bij je doelgroep, met bewijs, bron en datum." helpartikel="importeren" />
-      <section class="section">
-        <div class="container">
-          <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm.</p>
-          <nav class="tabbalk" aria-label="Leadgenerator"><button type="button" class="tab tab--actief" aria-current="page">Importeren</button></nav>
-          <ol class="stappen mt-16" aria-label="Stappen">
-            <li v-for="(s, i) in ['Bestand', 'Kolommen koppelen', 'Controle en ontdubbelen', 'Bevestigen']" :key="s" :class="{ 'stap--actief': stap === i + 1, 'stap--klaar': stap > i + 1 }"><span class="stap-nr">{{ i + 1 }}</span>{{ s }}</li>
-          </ol>
-
-          <form v-if="stap === 1" class="kaart mt-16" data-test="stap-bestand" @submit.prevent="stap1">
-            <label class="sleepvak" @dragover.prevent @drop="sleep">
-              <input type="file" accept=".xlsx,.csv" class="sr-only" data-test="bestand" @change="kies">
-              <Icoon naam="Download" :grootte="24" />
-              <span>{{ bestand ? bestand.name : 'Sleep een Excel- of CSV-bestand hierheen, of klik om te kiezen' }}</span>
-              <span class="veld-uitleg">Hooguit 10.000 rijen en 10 MB.</span>
-            </label>
-            <div class="formulier-raster mt-16">
-              <div class="veld"><span class="veld-label">Wat staat erin</span>
-                <div class="keuzegroep" role="group"><button type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': soort === 'bedrijven' }" @click="soort = 'bedrijven'">Bedrijven</button><button type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': soort === 'bedrijven_contacten' }" @click="soort = 'bedrijven_contacten'">Bedrijven met contactpersonen</button></div>
-              </div>
-              <label class="veld"><span class="veld-label">Bron en label <span class="veld-verplicht">*</span></span><input v-model="label" class="invoer" required placeholder="Bijvoorbeeld Beurs Vakdagen 2026" data-test="label"></label>
-            </div>
-            <div class="dd-acties mt-16"><a class="dd-act" href="/voorbeeld-import.csv" download><Icoon naam="Download" class="dd-act-icoon" />Voorbeeldbestand</a><span class="dd-acties-vul" /><button type="submit" class="dd-act dd-act--primair" :disabled="!bestand || !label.trim() || bezig" data-test="volgende-1">Volgende</button></div>
-          </form>
-
-          <div v-else-if="stap === 2" class="kaart mt-16" data-test="stap-koppelen">
-            <p class="kaart-meta">{{ vb.aantalRijen }} rijen in {{ bestand?.name }}. Koppel elke kolom aan een veld; een kolom zonder veld wordt niet geïmporteerd.</p>
-            <div class="tabel-wrap mt-16">
-              <table class="tabel">
-                <thead><tr><th>Kolom in je bestand</th><th>Veld in Dealtrace</th><th>Voorbeeld</th></tr></thead>
-                <tbody><tr v-for="(k, i) in (vb.kolommen as string[])" :key="i">
-                  <td><strong>{{ k }}</strong></td>
-                  <td><select v-model="koppeling[i]" class="invoer invoer--klein" :aria-label="`Veld voor ${k}`" :data-kolom="k"><option value="">Niet importeren</option><option v-for="d in doelen" :key="d.k" :value="d.k">{{ d.v }}</option></select></td>
-                  <td class="meta">{{ vb.voorbeeld.slice(0, 3).map((r: string[]) => r[i]).filter(Boolean).join(' · ') }}</td>
-                </tr></tbody>
-              </table>
-            </div>
-            <p v-if="!koppeling.includes('naam')" class="veld-fout mt-16" role="alert">Koppel een kolom aan Bedrijfsnaam om verder te gaan.</p>
-            <div class="dd-acties mt-16"><button type="button" class="dd-act" @click="stap = 1">Terug</button><span class="dd-acties-vul" /><button type="button" class="dd-act dd-act--primair" :disabled="!koppeling.includes('naam') || bezig" data-test="volgende-2" @click="stap2">Volgende</button></div>
-          </div>
-
-          <div v-else-if="stap === 3" class="kaart mt-16" data-test="stap-controle">
-            <p class="rapport" data-test="rapport"><strong>{{ controle.nieuw }} nieuw</strong> · {{ controle.alInBestand }} al in je bestand<template v-if="controle.mogelijk"> · {{ controle.mogelijk }} mogelijk dubbel</template> · {{ controle.dubbelInBestand }} dubbel in het bestand · {{ controle.fouten }} met fouten<template v-if="controle.dealdriveKlant || controle.dealdriveProspect"> · {{ controle.dealdriveKlant }} al klant en {{ controle.dealdriveProspect }} al prospect in DealDrive</template></p>
-            <p v-if="controle.dealdriveMelding" class="veld-uitleg">{{ controle.dealdriveMelding }}</p>
-            <div v-if="controle.regels.length" class="tabel-wrap mt-16">
-              <table class="tabel tabel--kaarten" data-test="regels">
-                <thead><tr><th>Rij</th><th>Bedrijf</th><th>Wat</th><th>Keuze</th></tr></thead>
-                <tbody><tr v-for="r in controle.regels.slice(0, 300)" :key="r.rij" :data-rij="r.rij">
-                  <td class="tnum">{{ r.rij }}</td>
-                  <td>{{ r.naam }}<template v-if="r.match"><br><span class="meta">lijkt op {{ r.match.naam }}</span></template><template v-if="r.dealdrive"><br><span class="meta">{{ r.dealdrive.eigenaar }}</span></template></td>
-                  <td>{{ CAT[r.categorie] }}<ul v-if="r.fouten.length" class="veld-uitleg"><li v-for="f in r.fouten" :key="f.reden">{{ f.reden }}</li></ul></td>
-                  <td><select v-model="keuzes[r.rij]" class="invoer invoer--klein" :aria-label="`Keuze voor rij ${r.rij}`">
-                    <option v-if="keuzes[r.rij] === 'kiezen'" value="kiezen" disabled>Kies…</option>
-                    <option value="nieuw">Importeer als nieuw</option>
-                    <option v-if="r.match" :value="`samenvoegen:${r.match.id}`">Voeg samen met {{ r.match.naam }}</option>
-                    <option value="overslaan">Sla over</option>
-                  </select></td>
-                </tr></tbody>
-              </table>
-              <p v-if="controle.regels.length > 300" class="meta mt-8">De eerste 300 regels staan hier; de rest houdt de standaardkeuze.</p>
-            </div>
-            <div class="dd-acties mt-16"><button type="button" class="dd-act" @click="stap = 2">Terug</button><a v-if="controle.fouten" class="dd-act" :href="`/api/import/${vb.batchId}/fouten.csv`">Download foutenlijst</a><span class="dd-acties-vul" /><button type="button" class="dd-act dd-act--primair" :disabled="openKeuzes > 0" data-test="volgende-3" @click="stap = 4">{{ openKeuzes ? `Nog ${openKeuzes} keuzes` : 'Volgende' }}</button></div>
-          </div>
-
-          <div v-else-if="stap === 4" class="kaart mt-16" data-test="stap-bevestigen">
-            <div class="veld"><span class="veld-label">Eigenaar van de nieuwe accounts</span>
-              <div class="keuzegroep" role="group"><button type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': eigenaar === 'vast' }" @click="eigenaar = 'vast'">Vast: ik</button><button v-if="kanTeam" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': eigenaar === 'team' }" data-test="eigenaar-team" @click="eigenaar = 'team'">Gelijk verdelen over het team</button></div>
-            </div>
-            <p class="kaart-meta mt-16">Verrijken via KvK en Datacollectief, doelgroep en campagne komen in een volgende versie.</p>
-            <div class="dd-acties mt-16"><button type="button" class="dd-act" @click="stap = 3">Terug</button><span class="dd-acties-vul" /><button type="button" class="dd-act dd-act--primair" :disabled="bezig" data-test="importeren" @click="verwerk">{{ bezig ? 'Bezig met importeren…' : 'Importeren' }}</button></div>
-            <div v-if="bezig" class="voortgang mt-16" role="progressbar" aria-label="Importeren"><span /></div>
-          </div>
-
-          <div v-else-if="stap === 5" class="kaart mt-16" data-test="samenvatting">
-            <h2 class="kaart-titel">Import klaar</h2>
-            <p class="kaart-meta">{{ klaar.nieuw }} nieuw · {{ klaar.samengevoegd }} samengevoegd · {{ klaar.overgeslagen }} overgeslagen · {{ klaar.contacten }} contactpersonen<template v-if="klaar.verhuisd"> · {{ klaar.verhuisd }} verhuisd</template></p>
-            <div class="dd-acties mt-16"><NuxtLink class="dd-act dd-act--primair" to="/prospects/alle">Naar je prospects</NuxtLink><button type="button" class="dd-act" @click="opnieuw">Nog een bestand</button></div>
-          </div>
-        </div>
-      </section>
+    <NietAangezetKop v-if="!toegang" sleutel="nav.leadgenerator" />
+    <template v-else>
+      <PaginaKop :kicker="kicker" titel="Leadgenerator" uitleg="Bedrijven die passen bij je doelgroep, met bewijs, bron en datum." helpartikel="leadgenerator">
+        <template v-if="kanRonde && tab === 'zoeken'" #acties>
+          <button type="button" class="dd-act" data-test="zoekopdracht-aanpassen" @click="paneel = !paneel">Zoekopdracht aanpassen</button>
+          <button type="button" class="dd-act dd-act--primair" :disabled="bezig === 'ronde'" data-test="nieuwe-ronde" @click="nieuweRonde"><Icoon naam="Sparkles" class="dd-act-icoon" />{{ bezig === 'ronde' ? 'Bezig…' : 'Nieuwe ronde' }}</button>
+        </template>
+      </PaginaKop>
       <section class="section section--laatste">
         <div class="container">
-          <span class="kicker kicker--streep">Importbatches</span>
-          <LegeStaat v-if="!batches.filter((b) => b.status !== 'concept').length" titel="Nog geen imports." tekst="Start met een bestand uit Excel of CSV." />
-          <div v-else class="tabel-wrap mt-16">
-            <table class="tabel tabel--kaarten" data-test="batches">
-              <thead><tr><th>Datum</th><th>Bestand en label</th><th>Door</th><th>Aantallen</th><th>Status</th><th><span class="sr-only">Acties</span></th></tr></thead>
-              <tbody><tr v-for="b in batches.filter((x) => x.status !== 'concept')" :key="b.id" :data-batch="b.id">
-                <td class="tnum">{{ datum(b.op) }}</td>
-                <td><strong>{{ b.label }}</strong><br><span class="meta">{{ b.bestandsnaam }}</span></td>
-                <td>{{ b.door.replace(/^Testgebruiker /, '') }}</td>
-                <td class="meta">{{ b.aantallen.nieuw }} nieuw · {{ b.aantallen.samengevoegd }} samengevoegd · {{ b.aantallen.overgeslagen }} overgeslagen · {{ b.aantallen.fouten }} fouten</td>
-                <td>{{ STATUS[b.status] }}</td>
-                <td><button v-if="b.magTerugdraaien" type="button" class="dd-act" data-test="terugdraaien" @click="vraagTerug(b)">Draai import terug</button></td>
-              </tr></tbody>
-            </table>
+          <p class="alleen-groot-melding kaart kaart--geel" data-test="groot-scherm">Beter op een groot scherm. KvK opzoeken kan wel: tik op Zoeken.</p>
+          <nav v-if="tabs.length > 1" class="tabbalk" aria-label="Leadgenerator">
+            <button v-for="t in tabs" :key="t.k" type="button" class="tab" :class="{ 'tab--actief': tab === t.k }" :aria-current="tab === t.k ? 'page' : undefined" :data-test="`tab-${t.k}`" @click="naarTab(t.k)">{{ t.t }}</button>
+          </nav>
+
+          <div v-if="tab === 'zoeken'" class="mt-16" data-test="tab-zoeken">
+            <p v-if="aiOp" class="kaart kaart--geel" role="status" data-test="credits-op">{{ CREDITS_OP_TEKST }}</p>
+            <div class="stat-grid stat-grid--6" data-test="vakken">
+              <div v-for="v in vakken" :key="v.label" class="stat-card"><span class="stat-label">{{ v.label }}</span><span class="stat-value-tekst">{{ v.waarde }}</span><span class="stat-foot">{{ v.herkomst }}</span></div>
+            </div>
+
+            <div v-if="paneel && context" class="kaart mt-16" data-test="zoekpaneel">
+              <div class="formulier-raster">
+                <label class="veld"><span class="veld-label">Doelgroep</span>
+                  <select class="invoer" :value="doelgroepKeuze" data-test="zp-doelgroep" @change="kiesDoelgroep(($event.target as HTMLSelectElement).value)">
+                    <option value="">Geen doelgroep</option>
+                    <option value="klanten">Lijkt op mijn klanten</option>
+                    <optgroup v-if="context.doelgroepen.length" label="Doelgroepen"><option v-for="d in context.doelgroepen" :key="d.id" :value="d.id">{{ d.naam }}</option></optgroup>
+                    <optgroup v-if="context.sjablonen.length" label="Uit het verkoopverhaal"><option v-for="s in context.sjablonen" :key="s.id" :value="s.id">{{ s.naam }}</option></optgroup>
+                  </select>
+                </label>
+                <label class="veld"><span class="veld-label">Branche</span>
+                  <select class="invoer" :value="z.brancheId ?? ''" data-test="zp-branche" @change="kiesBranche(($event.target as HTMLSelectElement).value)">
+                    <option value="">Alle branches</option>
+                    <option v-for="b in context.branches" :key="b.id" :value="b.id">{{ b.naam }}{{ b.sbi.length ? ` (SBI ${b.sbi.join(', ')})` : '' }}</option>
+                  </select>
+                </label>
+                <div class="veld"><span class="veld-label">Klasse</span>
+                  <div class="keuzegroep" role="group" aria-label="Klasse"><button v-for="c in klasseCodes" :key="c" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': z.klassen?.includes(c) }" :data-test="`zp-klasse-${c}`" @click="wisselKlasse(c)">{{ c }}</button></div>
+                </div>
+                <label class="veld"><span class="veld-label">Postcodegebieden</span><input v-model.lazy="postcodesTekst" class="invoer" placeholder="Bijvoorbeeld 80, 97" data-test="zp-postcodes"></label>
+                <div class="veld"><span class="veld-label">Straal rond je thuisbasis</span>
+                  <label v-if="context.thuisbasis" class="vink"><input v-model="straalAan" type="checkbox" data-test="zp-straal"> {{ context.thuisbasis.plaats }}<input v-if="straalAan" v-model.number="straalKm" class="invoer invoer--klein" type="number" min="5" max="300" aria-label="Kilometers" style="width: 90px; margin-left: 8px"> <span v-if="straalAan">km</span></label>
+                  <span v-else class="veld-uitleg">Geen thuisbasis bekend.</span>
+                </div>
+                <label class="veld"><span class="veld-label">Aanleiding</span><input v-model="z.aanleiding" class="invoer" placeholder="Bijvoorbeeld werft servicemonteurs" maxlength="200" data-test="zp-aanleiding"></label>
+                <div class="veld"><span class="veld-label">Bronnen</span>
+                  <div class="rijtje">
+                    <label v-for="b in (['ai', 'kvk'] as const)" :key="b" class="vink" :title="context.bronnen[b].reden ?? ''"><input type="checkbox" :checked="bronnen.includes(b)" :disabled="!context.bronnen[b].beschikbaar" :data-test="`zp-bron-${b}`" @change="wisselBron(b)"> {{ BRON_LABEL[b] }}<span v-if="!context.bronnen[b].beschikbaar" class="meta"> · {{ context.bronnen[b].reden }}</span></label>
+                  </div>
+                </div>
+              </div>
+              <div class="dd-acties mt-16">
+                <button v-if="context.kan.opslaan" type="button" class="dd-act" data-test="bewaar-zoekopdracht" @click="opslaan = !opslaan">Bewaar als zoekopdracht</button>
+                <span class="dd-acties-vul" />
+                <button type="button" class="dd-act dd-act--primair" :disabled="bezig === 'ronde'" @click="nieuweRonde">Nieuwe ronde</button>
+              </div>
+              <form v-if="opslaan" class="rijtje mt-16" @submit.prevent="bewaar">
+                <input v-model="opslaanNaam" class="invoer" required placeholder="Naam van de zoekopdracht" aria-label="Naam van de zoekopdracht" data-test="zoekopdracht-naam">
+                <label v-if="context.kan.automatisch" class="vink"><input v-model="wekelijks" type="checkbox" data-test="wekelijks"> Elke week laten draaien</label>
+                <button type="submit" class="dd-act dd-act--primair" data-test="zoekopdracht-opslaan">Bewaar</button>
+              </form>
+            </div>
+
+            <LegeStaat v-if="!leads.length" class="mt-32" titel="Nog geen leads." tekst="Kies een doelgroep en start een ronde." />
+            <template v-else>
+              <div class="filter-groep mt-24" role="group" aria-label="Groepen">
+                <button v-for="g in GROEP_WEERGAVE.filter((x) => telling[x])" :key="g" type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter === g }" :data-test="`filter-${g}`" @click="filter = filter === g ? null : g">{{ GROEP_LABEL[g] }} <span class="pil-teller">{{ telling[g] }}</span></button>
+              </div>
+              <p v-if="!groepen.length" class="mt-16">Geen leads in deze groep. <button type="button" class="dd-tekstknop" @click="filter = null">Toon alles</button></p>
+              <div v-for="gr in groepen" :key="gr.g" :data-groep="gr.g">
+                <h2 class="kop-blok mt-32">{{ GROEP_LABEL[gr.g] }} <span class="pil-teller">{{ gr.leads.length }}</span></h2>
+                <div v-if="gr.g === 'alBekend'" class="lijst mt-12">
+                  <div v-for="l in gr.leads" :key="l.id" class="rij rij--compact" :data-lead="l.naam">
+                    <div class="rij-info"><h3 class="rij-titel">{{ l.naam }}</h3><div class="rij-sub">{{ l.plaats }} · {{ alBekendTekst(l) }}</div></div>
+                    <div class="rij-rechts">
+                      <span v-if="l.alBekend?.dealdrive" class="pil" :class="l.alBekend.dealdrive.soort === 'klant' ? 'pil--rood' : 'pil--blauw'" data-test="dd-pil">Al {{ l.alBekend.dealdrive.soort }} in DealDrive</span>
+                      <NuxtLink v-if="l.alBekend?.accountId" class="dd-act" :to="`/accounts/${l.alBekend.accountId}`" data-test="open-kaart">Open kaart</NuxtLink>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="stapel mt-12">
+                  <article v-for="l in gr.leads" :key="l.id" class="kaart" :data-lead="l.naam">
+                    <header class="kaart-kop">
+                      <div><h3 class="kaart-titel">{{ l.naam }}</h3><p class="meta">{{ l.plaats ?? 'plaats onbekend' }} · {{ contactRegel(l) }}</p></div>
+                      <div class="rijtje">
+                        <span class="pil pil--zwart">{{ l.bronLabel }}</span>
+                        <span v-if="l.klasse" class="klasse" :class="`klasse--${l.klasse.toLowerCase()}`">{{ l.klasse }}</span>
+                        <span v-if="dossierLabel(l.dossierOp, nu)" class="pil" :class="dossierLabel(l.dossierOp, nu)!.oranje ? 'pil--oranje' : 'pil--groen'">{{ dossierLabel(l.dossierOp, nu)!.tekst }}</span>
+                        <span class="cijfer" data-test="score">{{ l.score }}/6</span>
+                      </div>
+                    </header>
+                    <div v-for="b in l.bewijs" :key="b.criterium" class="bewijs" :class="`bewijs--${b.oordeel}`" :data-criterium="b.criterium">
+                      <Icoon :naam="b.oordeel === 'ja' ? 'CircleCheck' : b.oordeel === 'nee' ? 'CircleX' : 'CircleDot'" />
+                      <span>{{ CRITERIUM_LABEL[b.criterium as 'klasse'] }}: {{ b.zin }} <span class="bewijs-bron"><template v-if="b.url"><a :href="b.url" target="_blank" rel="noopener">{{ b.bron }}</a></template><template v-else>{{ b.bron }}</template>{{ b.datum ? `, ${datumKort(b.datum)}` : '' }}</span></span>
+                    </div>
+                    <div v-if="kanOvernemen || kanRonde" class="rijtje mt-12">
+                      <button v-if="kanOvernemen && gr.g !== 'verlopen'" type="button" class="dd-act" :class="{ 'dd-act--primair': gr.g === 'passend' }" data-test="neem-over" @click="overnemen = l">Neem over</button>
+                      <button v-if="kanRonde && gr.g === 'verlopen'" type="button" class="dd-act dd-act--primair" :disabled="bezig === l.id" data-test="opnieuw-uitzoeken" @click="dossier(l)">Opnieuw uitzoeken · Kost 10 credits</button>
+                      <button v-if="kanRonde && gr.g === 'onbeoordeeld'" type="button" class="dd-act" :disabled="bezig === l.id" data-test="toch-uitzoeken" @click="dossier(l)">Toch uitzoeken · 10 credits</button>
+                      <button v-if="kanOvernemen" type="button" class="dd-act" data-test="niet-relevant" @click="afwijzen = l; reden = ''">Niet relevant</button>
+                    </div>
+                    <form v-if="afwijzen?.id === l.id" class="kaart kaart--vlak mt-12" data-test="afwijs-paneel" @submit.prevent="wijsAf">
+                      <span class="veld-label">Waarom niet relevant?</span>
+                      <div class="keuzegroep keuzegroep--klein mt-8" role="radiogroup"><button v-for="r in context?.afwijsredenen ?? []" :key="r" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': reden === r }" :data-reden="r" @click="reden = r">{{ r }}</button></div>
+                      <div class="dd-acties mt-12"><button type="submit" class="dd-act dd-act--primair" :disabled="!reden" data-test="afwijzen-bevestig">Bewaar reden</button><button type="button" class="dd-act" @click="afwijzen = null">Annuleren</button></div>
+                    </form>
+                  </article>
+                </div>
+              </div>
+            </template>
+
+            <div v-if="context" class="stat-grid mt-32" data-test="meters">
+              <div class="stat-card"><span class="stat-label">AI-credits deze maand</span><span class="stat-num tnum" data-test="meter-credits">{{ fmt(context.meters.credits) }} over</span><span class="stat-foot">Een zoekronde kost 20, een dossier 10</span></div>
+              <div class="stat-card"><span class="stat-label">KvK-bevragingen</span><span class="stat-num tnum" data-test="meter-kvk">{{ fmt(context.meters.kvk.gebruikt) }} / {{ fmt(context.meters.kvk.plafond) }}</span><div class="voortgang"><span class="voortgang-vul" :style="{ width: `${context.meters.kvk.plafond ? Math.min(100, (context.meters.kvk.gebruikt / context.meters.kvk.plafond) * 100) : 0}%` }" /></div><span class="stat-foot">KvK is geen AI en telt niet in de credits</span></div>
+            </div>
           </div>
+
+          <LeadImport v-else-if="tab === 'importeren'" class="mt-16" />
+          <LeadKoppelingen v-else-if="tab === 'koppelingen'" class="mt-16" />
+          <LeadRondes v-else-if="tab === 'rondes'" class="mt-16" />
         </div>
       </section>
+      <NeemOverFlyout :lead="overnemen" :context="context" @sluit="overnemen = null" @klaar="overgenomen" />
     </template>
-    <section v-else class="section"><div class="container"><h1 class="title title--groot">Geen toegang</h1></div></section>
-    <BevestigVenster :open="!!terug" :titel="`Import ${terug?.label} terugdraaien?`" :tekst="terug ? `${terug.verwijderd} accounts zonder activiteit worden verwijderd; ${terug.bleven} accounts met activiteit blijven staan.` : ''" bevestig="Terugdraaien" @geannuleerd="terug = null" @bevestigd="draaiTerug" />
   </div>
 </template>

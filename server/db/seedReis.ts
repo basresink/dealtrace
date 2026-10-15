@@ -19,6 +19,9 @@ export async function seedReis(client: Pick<pg.Client, 'query'>, orgId: string, 
   // P10: teksten, winpunten en concurrenten aanvullen in een bestaand verkoopverhaal (tot P28).
   await client.query(`update org_settings set value = value || $2 where organisation_id = $1 and key = 'verkoopverhaal' and not (value ? 'winpunten')`,
     [orgId, JSON.stringify({ teksten: vv.teksten, winpunten: vv.winpunten, concurrenten: vv.concurrenten })])
+  // P11: SBI-mapping per branche voor de leadgenerator (tot P28).
+  await client.query(`update org_settings set value = value || $2 where organisation_id = $1 and key = 'verkoopverhaal' and not (value ? 'brancheMapping')`,
+    [orgId, JSON.stringify({ brancheMapping: vv.brancheMapping })])
   // Vast geval voor de Bewaker (P08): een fictieve prospect in br-02 op nee met reden
   // "Geen behoefte" en een lopende afkoelperiode voor mail en bellen.
   const neeOp = new Date(Date.now() - 10 * 864e5).toISOString()

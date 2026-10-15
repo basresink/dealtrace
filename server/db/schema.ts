@@ -653,3 +653,94 @@ export const belscriptInvullingen = pgTable('belscript_invullingen', {
   data: jsonb('data').notNull(),
   op: ts('op').defaultNow().notNull(),
 }, (t) => [primaryKey({ columns: [t.belscriptId, t.versie, t.accountId, t.contactId] })])
+
+// P11: leadgenerator, koppelingen en verbruik (F02).
+export interface LeadData extends Partial<import('../../shared/leadGenerator').LeadFeiten> {
+  bewijs?: import('../../shared/leadGenerator').Bewijs[]
+  score?: number
+  beoordeeld?: number
+  afwijsreden?: string | null
+  afgewezenDoor?: string | null
+  vvBrancheId?: string | null
+  /** Bronzin uit de zoekronde, met URL. */
+  bronzin?: string | null
+  url?: string | null
+  dealdrive?: { soort: 'klant' | 'prospect'; eigenaar?: string; accountId: string } | null
+}
+export const leadRondes = pgTable('lead_rondes', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  gebruikerId: text('gebruiker_id').notNull(),
+  zoekopdracht: jsonb('zoekopdracht').$type<import('../../shared/leadGenerator').Zoekopdracht>().notNull(),
+  hash: text('hash').notNull(),
+  bronnen: text('bronnen').array().notNull(),
+  aantal: integer('aantal').notNull().default(0),
+  automatisch: boolean('automatisch').notNull().default(false),
+  gestartOp: ts('gestart_op').defaultNow().notNull(),
+  kosten: jsonb('kosten').$type<{ credits?: number; kvk?: number; fout?: string }>().notNull().default({}),
+})
+export const leads = pgTable('leads', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  naam: text('naam').notNull(),
+  kvk: text('kvk'),
+  domein: text('domein'),
+  postcode: text('postcode'),
+  plaats: text('plaats'),
+  status: text('status').notNull().default('nieuw'),
+  bron: text('bron').notNull(),
+  bronRef: text('bron_ref'),
+  rondeId: text('ronde_id'),
+  gevondenDoor: text('gevonden_door'),
+  gevondenOp: ts('gevonden_op').defaultNow().notNull(),
+  dossierOp: ts('dossier_op'),
+  accountId: text('account_id'),
+  data: jsonb('data').$type<LeadData>().notNull().default({}),
+  updatedAt: ts('updated_at').defaultNow().notNull(),
+})
+export const koppelingen = pgTable('koppelingen', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  soort: text('soort').notNull(),
+  status: text('status').notNull().default('uit'),
+  geheimen: text('geheimen'),
+  instellingen: jsonb('instellingen').$type<{ plafond?: number | null; laatsteFout?: string | null; [k: string]: unknown }>().notNull().default({}),
+  getestOp: ts('getest_op'),
+  updatedAt: ts('updated_at').defaultNow().notNull(),
+})
+export const koppelingRuns = pgTable('koppeling_runs', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  koppelingId: text('koppeling_id'),
+  soort: text('soort').notNull(),
+  handeling: text('handeling').notNull(),
+  start: ts('start').defaultNow().notNull(),
+  eind: ts('eind'),
+  gelezen: integer('gelezen').notNull().default(0),
+  geschreven: integer('geschreven').notNull().default(0),
+  fouten: jsonb('fouten').$type<string[]>().notNull().default([]),
+})
+export const leadVerbruik = pgTable('lead_verbruik', {
+  organisationId: text('organisation_id').notNull(),
+  maand: text('maand').notNull(),
+  soort: text('soort').notNull(),
+  aantal: integer('aantal').notNull().default(0),
+  kostenCent: integer('kosten_cent').notNull().default(0),
+}, (t) => [primaryKey({ columns: [t.organisationId, t.maand, t.soort] })])
+export const leadZoekopdrachten = pgTable('lead_zoekopdrachten', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  gebruikerId: text('gebruiker_id').notNull(),
+  naam: text('naam').notNull(),
+  zoekopdracht: jsonb('zoekopdracht').$type<import('../../shared/leadGenerator').Zoekopdracht>().notNull(),
+  bronnen: text('bronnen').array().notNull(),
+  automatisch: text('automatisch').notNull().default('uit'),
+  doelgroepId: text('doelgroep_id'),
+  laatstOp: ts('laatst_op'),
+  createdAt: ts('created_at').defaultNow().notNull(),
+})
+export const kvkCache = pgTable('kvk_cache', {
+  kvk: text('kvk').primaryKey(),
+  profiel: jsonb('profiel').$type<import('../utils/bronnen/kvk').KvkProfiel>().notNull(),
+  opgehaaldOp: ts('opgehaald_op').defaultNow().notNull(),
+})

@@ -66,7 +66,7 @@ test.describe('import', () => {
 
   test('de wizard van bestand tot samenvatting', async ({ page }) => {
     await login(page, 'u-03')
-    await ga(page, '/leadgenerator')
+    await ga(page, '/leadgenerator?tab=importeren')
     const n = Date.now() % 100000
     const csv = schrijfCsv([KOP, ...Array.from({ length: 5 }, (_, i) => [`Testwizard ${n} ${i}`, '', '', `${1000 + ((n * 7 + i) % 8999)} AA`, 'Amersfoort', '', 'Ed', `Testwizard${n}${i}`, '', '', String(i + 3), ''])])
     await page.getByTestId('bestand').setInputFiles({ name: 'wizard.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) })

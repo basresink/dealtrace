@@ -40,6 +40,8 @@ export interface VerkoopverhaalStand {
   /** P10: teksten (kernzin, verhaal per branche, belofte) en winpunten voor de scripts. Tot P28 uit de seed. */
   teksten?: VerhaalTekst[]
   winpunten?: Winpunt[]
+  /** P11: SBI-codes en trefwoorden per branche (vv_branche_mapping), voor de leadgenerator. */
+  brancheMapping?: { brancheId: string; sbiCodes: string[]; trefwoorden: string[] }[]
 }
 
 /** Kanaal uit de regel ("Telefoon", "E-mail", "Bezoek") naar het kanaal van de afkoelperiode. */
@@ -114,6 +116,7 @@ export function verkoopverhaalUitSeed(vv: any): VerkoopverhaalStand {
     redenmapping: (vv?.eigen_aanvullingen?.vv_redenmapping ?? []).map((m: any) => ({ bronSoort: m.bron_soort, reden: m.dealtrace_reden, terugkomregelId: m.terugkomregel_id })),
     concurrenten: (vv?.vv_concurrenten ?? []).map((c: any) => ({ id: c.extern_id, naam: c.concurrent, soort: c.soort_label, zoZegJeHet: c.zoZegJeHet, alsDeKlantZegt: c.alsDeKlantZegt, bewijs: c.bewijs, onderscheid: c.onderscheid })),
     teksten: (vv?.vv_teksten ?? []).map((t: any) => ({ id: t.id, sublaag: t.sublaag, sleutel: t.sleutel, brancheId: t.branche_id ?? null, tekst: t.tekst, kernzin: t.kernzin ?? null })),
+    brancheMapping: (vv?.eigen_aanvullingen?.vv_branche_mapping ?? []).map((m: any) => ({ brancheId: m.branche_id, sbiCodes: m.sbi_codes ?? [], trefwoorden: m.trefwoorden ?? [] })),
     winpunten: (vv?.vv_winpunten ?? []).map((w: any) => ({
       id: w.extern_id, titel: w.titel, omschrijving: w.omschrijving, faseId: w.fase ?? null, weging: Number(w.weging ?? 1),
       onderNorm: !!w.context?.klantfeedback?.onder_norm, actief: w.actief !== false,

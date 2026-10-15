@@ -25,6 +25,32 @@ export const MOCK_GENERATOREN: Record<string, (materiaal: any) => unknown> = {
     }
     return { blokken, gekozenWinpuntId: m?.winpunt?.id ?? '', argumentRef: m?.winpunt?.id ?? '' }
   },
+  // Zoekronde (Zoeker): bedrijven uit de echte zoekresultaten; titels zijn "Naam | Plaats".
+  zoekronde: (m) => ({
+    bedrijven: (m?.zoekresultaten ?? []).slice(0, 25).map((r: any) => {
+      const [naam, plaats] = String(r.titel).split(' | ')
+      const kvk = (m.kvkFeiten ?? []).find((k: any) => k.naam === naam)?.kvk
+      return { naam, plaats: plaats ?? '', website: r.url, url: r.url, bronzin: r.fragment, ...(kvk ? { kvk } : {}) }
+    }),
+  }),
+  // Dossier (Zoeker): letterlijke zinnen van de pagina als bewijs en de contactpersonen die er staan.
+  dossier: (m) => {
+    const bewijs: any[] = []
+    const contacten: any[] = []
+    const vandaag = new Date().toISOString().slice(0, 10)
+    for (const p of m?.paginas ?? []) {
+      for (const zin of String(p.tekst).split(/(?<=\.)\s+/)) {
+        if (/werft|zoekt|vacature|nieuwe vestiging|breidt uit|bouwt|neemt .* over|opent/i.test(zin)) bewijs.push({ criterium: 'groei', oordeel: 'ja', zin: zin.replace(/\.$/, ''), bron: 'web', url: p.url, datum: vandaag })
+        const c = /([A-Z][a-z]+(?: (?:de|van|ter))? [A-Z][a-z]+), (eigenaar|directeur|bedrijfsleider|hoofd inkoop|operationeel directeur|projectleider)/.exec(zin)
+        if (c) {
+          const tel = /(0\d{1,3}[ \d]{6,10}\d)/.exec(zin)?.[1]
+          const mail = /([\w.]+@[\w.-]+\.test)/.exec(zin)?.[1]
+          contacten.push({ naam: c[1], functie: c[2], ...(tel ? { telefoon: tel } : {}), ...(mail ? { email: mail } : {}), bron: 'web' })
+        }
+      }
+    }
+    return { bewijs, contacten }
+  },
 }
 export const mockLog: { soort: string; prompt: string; materiaal: unknown }[] = []
 
@@ -51,6 +77,8 @@ export interface AiStap {
   agent?: string | null
   gebruiker?: Voorstel['gebruiker']
   accountId?: string | null
+  /** Een handeling van de gebruiker die toch als agentrun telt (credits), zonder de agentgrens van 10 procent. */
+  boekAls?: string | null
 }
 
 /**
@@ -69,6 +97,9 @@ export async function voerAiStapUit<T = unknown>(tx: Tx, org: string, stap: AiSt
     if (!v.mag) throw createError({ statusCode: v.status ?? 402, statusMessage: v.reden })
   }
   const uit = await voerAiKern<T>(provider, stap)
+  if (!stap.agent && stap.boekAls && uit.ok) {
+    await logAgentRun(tx, org, { agent: stap.boekAls, handeling: `ai:${stap.soort}`, mandaat: 'A', uitkomst: 'uitgevoerd', gebruikerId: stap.gebruiker?.id, accountId: stap.accountId, reden: null, kosten: { soort: stap.soort, credits } }, nu)
+  }
   if (stap.agent) {
     await logAgentRun(tx, org, {
       agent: stap.agent, handeling: `ai:${stap.soort}`, mandaat: 'A', uitkomst: uit.ok ? 'uitgevoerd' : 'fout', gebruikerId: stap.gebruiker?.id, accountId: stap.accountId,

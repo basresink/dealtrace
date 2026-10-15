@@ -422,6 +422,35 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'bellen.handsfree', naam: 'Handsfree bellen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-belmodus', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'Dealtrace leest naam, reden en opening voor terwijl je rijdt.', totDieTijd: 'Je leest het script zelf op het scherm.' },
   },
+  // P11: leadgenerator, AI-zoeker en KvK (F02).
+  {
+    sleutel: 'leads.overnemen', naam: 'Neem over', pakket: 'starter', rollen: 'iedereen', helpartikel: 'leadgenerator', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een gevonden lead overnemen als prospect met eerste taak, of afwijzen met een reden.', totDieTijd: 'Je salesmanager zet leads voor je klaar; ze staan als taak op Vandaag.' },
+  },
+  {
+    sleutel: 'leads.kvk', naam: 'Zoeken in KvK', pakket: 'plus', rollen: 'iedereen', helpartikel: 'kvk-en-datacollectief', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Bedrijven zoeken in het handelsregister op branche, plaats en postcode.', totDieTijd: 'Voeg een prospect met de hand toe.' },
+  },
+  {
+    sleutel: 'leads.aiZoeker', naam: 'AI-zoeker', pakket: 'compleet', rollen: 'iedereen', helpartikel: 'leadgenerator', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De Zoeker vindt bedrijven die passen bij je doelgroep, met bewijs, bron en datum.', totDieTijd: 'Zoek in KvK of importeer een lijst.' },
+  },
+  {
+    sleutel: 'leads.opgeslagen', naam: 'Opgeslagen zoekopdrachten', pakket: 'compleet', rollen: 'iedereen', helpartikel: 'leadgenerator', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Een zoekopdracht bewaren en later opnieuw draaien.', totDieTijd: 'Stel de zoekopdracht elke keer opnieuw samen.' },
+  },
+  {
+    sleutel: 'leads.automatisch', naam: 'Automatische rondes', pakket: 'compleet', rollen: 'iedereen', helpartikel: 'leadgenerator', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Een opgeslagen zoekopdracht elke week laten draaien.', totDieTijd: 'Start een ronde zelf.' },
+  },
+  {
+    sleutel: 'koppeling.kvk', naam: 'KvK koppelen', pakket: 'plus', rollen: ['beheerder'], helpartikel: 'koppelingen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'De KvK-sleutel van je organisatie plakken, testen en een maandplafond zetten.', totDieTijd: 'Vraag je beheerder.' },
+  },
+  {
+    sleutel: 'onderweg.kvkOpzoeken', naam: 'KvK opzoeken', pakket: 'plus', rollen: 'iedereen', helpartikel: 'kvk-en-datacollectief', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een bedrijf dat je passeert opzoeken in KvK en met één tik toevoegen.', totDieTijd: 'Voeg een prospect met de hand toe.' },
+  },
   // P09: helpcenter en niveaus (F21, 4.2).
   {
     sleutel: 'help.lezen', naam: 'Helpcenter', pakket: 'starter', rollen: 'iedereen', helpartikel: 'je-eerste-dag-in-dealtrace', startNiveau: 'beginner',
@@ -631,7 +660,7 @@ const FEATURE_GROEPEN: [RegExp, string][] = [
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\./, 'F13 Hercontactritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],
-  [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
+  [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^leads\.|^koppeling\.kvk|^onderweg\.kvk/, 'F02 Leadgenerator'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
 ]
 export function featureGroep(sleutel: string): string {
   return FEATURE_GROEPEN.find(([r]) => r.test(sleutel))?.[1] ?? 'Overig'

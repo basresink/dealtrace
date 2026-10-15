@@ -13,6 +13,7 @@ import { verbindingsopties } from '../../shared/verbinding'
 import { seedAccounts } from './seedAccounts'
 import { BEHEER_URL } from './omgeving'
 import { seedReis } from './seedReis'
+import { versleutel } from '../utils/geheimen'
 
 interface SeedGebruiker {
   id: string; naam: string; rol: string; team: string | null; werkplek: string; niveau: string; email: string
@@ -125,6 +126,13 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
     const p03 = await seedAccounts(client, org, voltvast)
 
     await seedReis(client, org.id, voltvast)
+
+    // P11: Voltvast heeft een (mock-)KvK-sleutel; Tweede niet, zodat "niet gekoppeld" te zien is.
+    // De buitendienst heeft een thuisbasis voor het werkgebied met een straal.
+    await client.query(`insert into koppelingen (organisation_id, soort, status, geheimen, instellingen, getest_op) values ($1, 'kvk', 'actief', $2, '{"plafond": null}', now())
+      on conflict (organisation_id, soort) do nothing`, [org.id, versleutel({ sleutel: 'kvk-mock-voltvast-sleutel' })])
+    await client.query(`update users set data = data || $2 where id = $1 and not (data ? 'thuisbasis')`, ['u-01', JSON.stringify({ thuisbasis: { lat: 53.22, lng: 6.57, plaats: 'Groningen' } })])
+    await client.query(`update users set data = data || $2 where id = $1 and not (data ? 'thuisbasis')`, ['u-05', JSON.stringify({ thuisbasis: { lat: 52.16, lng: 5.39, plaats: 'Amersfoort' } })])
 
     await client.query('commit')
     log(`Startdata geladen: ${org.naam} met ${gebruikers.length} gebruikers, ${p03.accounts} accounts en ${p03.contacten} contacten, Testorganisatie Tweede en een founder.`)
