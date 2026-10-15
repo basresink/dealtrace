@@ -1,6 +1,6 @@
 # Bouwplan Dealtrace
 
-> Versie 1.2 · 15 oktober 2026 · new business voor actieve accountmanagers binnendienst en buitendienst
+> Versie 1.3 · 15 oktober 2026 · new business voor actieve accountmanagers binnendienst en buitendienst
 >
 > **Waarvoor dit document is.** Dit bouwplan bundelt alle documenten in deze repository tot één ontwerp. Het is de bron voor de functionele en technische bouwprompts van Dealtrace: elk hoofdstuk in deel C is zo opgebouwd dat je er direct een functionele prompt (wat en waarom) en een technische prompt (datamodel, regels, endpoints, acceptatie) van kunt maken.
 >
@@ -61,6 +61,7 @@
 | `mockup/` | Klikbare mockup van de schermen (Vandaag, account, agents, belblokken, campagnes, wizard, bord, contacten, dashboard, hercontact, instellingen, inzichten, jaarplanning, kanalen) |
 | `DealDrive-features-voor-Dealtrace.docx/.pdf` | De gebundelde featurebeschrijvingen als Word- en pdf-bestand |
 | `bijlagen/SalesDNA-sublagen-voor-Dealtrace.docx` | De zeven SalesDNA-sublagen (bedrijfsverhaal, ambitie en visie, waarde en belofte, concurrenten, branches, winpunten, hercontact ritme) met velden, statussen, regels en de fictieve demo Testbedrijf Voltvast (F25, Bijlage C) |
+| `docs/api/` | Het voorbereide API-contract met DealDrive (B21) |
 | DealDrive `develop` (commit 75bee61) | De code van DealDrive, inclusief de telefoonapp Dex, als basis voor hergebruik (hoofdstuk 8, Bijlage B) |
 
 ### 0.2 Beslissingen van de opdrachtgever (14 oktober 2026)
@@ -88,7 +89,8 @@ Deze beslissingen gaan voor alles wat in de bronnen anders staat.
 | B17 | **Dealtrace loopt tot en met de eerste afspraak.** Geen pipeline, deals en offertes in de app; de pipeline wordt de **funnel van de prospectreis** | Drie fases tot en met de eerste afspraak (7.1); status `overgedragen` in plaats van `klant`; F17 wordt Funnel van de prospectreis; na de eerste afspraak gaat het account over naar DealDrive, het CRM of een collega; offertematrix, offertebriefing, deals en offertes vervallen (ADR-021) |
 | B18 | **Het niveau ontstaat door het aanzetten van functies.** Welke functie bij welk niveau hoort, hangt af van wat in de bouw werkt | Een niveau is een voorinstelling van schakelaars per functie; de salesmanager of beheerder zet functies extra aan; de indeling in 4.3 is een startindeling die per sprint wordt vastgesteld (4.1, 4.2, ADR-012) |
 | B19 | **Geen groeipad** | Geen criteria, geen niveauvoorstellen, geen voortgangsbalken en geen leerpaden per niveau; een functie aanzetten is een besluit van de salesmanager |
-| B20 | **Iedere gebruiker kan chatten met AI** om ondersteund te worden; het abonnement bepaalt via **credits** hoeveel | Nieuwe feature F26 AI-assistent; credits per pakket per maand (11.4, F23, ADR-022) |
+| B20 | **Iedere gebruiker kan chatten met AI** om ondersteund te worden; het abonnement bepaalt via **credits** hoeveel. **Credits gelden voor alle AI-onderdelen**, niet alleen de chat | Nieuwe feature F26 AI-assistent; één pot AI-credits per organisatie per maand voor chat, zoekrondes, dossiers, inzichten, concepten, scripts, verslagen, spraak en coach (11.4, F23, F26, ADR-022). Aantallen voorlopig zoals in 11.4 |
+| B21 | **De API met DealDrive wordt voorbereid**, nog niet werkend | Contract in `docs/api/dealdrive-koppeling.md` en `docs/api/dealdrive-koppeling.openapi.yaml`, mock-antwoorden in `seed/dealdrive-mock/`; Dealtrace bouwt zijn kant met een mock (P23), DealDrive bouwt de ontvangende kant later (hoofdstuk 12) |
 
 ### 0.3 Wat dit plan wijzigt ten opzichte van het architectuurplan
 
@@ -1111,7 +1113,7 @@ lead_verbruik: organisation_id, maand, soort ('ronde'|'dossier'|'kvk'|'datacolle
 
 | Route | Doel |
 |---|---|
-| `POST /api/leads/ronde {zoekopdracht, bronnen}` | Ronde starten; bundelcheck, hash 24 uur |
+| `POST /api/leads/ronde {zoekopdracht, bronnen}` | Ronde starten; creditcheck (11.4), hash 24 uur |
 | `GET /api/leads?ronde=&groep=` | Leads met groep en bewijs |
 | `POST /api/leads/:id/dossier` | Dossier opnieuw uitzoeken (kost 1 dossier) |
 | `POST /api/leads/:id/overnemen {eigenaar, reisId, eersteStap, campagneId?}` | Account maken, gebeurtenis `lead-overgenomen`, eerste taak |
@@ -1131,7 +1133,7 @@ lead_verbruik: organisation_id, maand, soort ('ronde'|'dossier'|'kvk'|'datacolle
 - "Neem over" maakt een account met klasse in het juiste veld, SBI, medewerkers, contactpersonen en bewijs, en een eerste taak volgens het werkplekprofiel.
 - Een import van 1.000 rijen met 50 duplicaten toont een correct ontdubbelrapport; terugdraaien verwijdert alleen accounts zonder activiteit.
 - Zonder KvK-sleutel is de bron KvK niet kiesbaar en zegt de koppelingenpagina wat er nodig is.
-- De bundel wordt op de server afgedwongen; de elfde ronde van een gebruiker op één dag geeft 429 met "Je daggrens van 10 zoekrondes is bereikt."
+- De AI-credits worden op de server afgedwongen (11.4); de elfde ronde van een gebruiker op één dag geeft 429 met "Je daggrens van 10 zoekrondes is bereikt."
 - Alle adapters hebben een mock; de Playwright-specs draaien zonder netwerk.
 
 **Hergebruik uit DealDrive**: `shared/leadGenerator.ts` (afleiden, matchregels, groepen), `webBron.ts` (webzoeker met bewijsplicht en houdbaarheid), `import.vue` (wizard en dubbelcheck), `server/api/integrations/hubspot/*` en `hubspot-mapper.ts` (OAuth en veldtoewijzing).
@@ -1686,7 +1688,7 @@ Een variabele zonder waarde toont in het belpaneel een gele markering "onbekend"
 1. De accountmanager start een belblok of opent een beltaak. Het belpaneel opent met links het script en rechts de accountgegevens (contact, laatste uitkomsten, aanleiding, eigen velden).
 2. Bovenaan het script staat de keuzelijst "Script" met het voorgestelde script voorgeselecteerd. De voorselectie volgt deze volgorde: script van de campagne, script van het belblok, script dat past bij doel, reisfase, doelgroep en rol van het contact, persoonlijke variant van de gebruiker van dat script, startscript van de organisatie.
 3. De gebruiker kan wisselen. De keuzelijst toont per script de naam, het doel en (vanaf Gevorderd) de conversie "28% naar afspraak". Wisselen wordt gelogd.
-4. AI vult bij het openen de blokken "Aanleiding", "Winpunt" en eventuele "AI vult aan"-zinnen in voor dit account en contact (één aanroep per gesprek, gecachet 24 uur per account en scriptversie). Elke AI-zin heeft een bronlink. Zonder AI-bundel toont het script de vaste tekst met de terugvalzinnen.
+4. AI vult bij het openen de blokken "Aanleiding", "Winpunt" en eventuele "AI vult aan"-zinnen in voor dit account en contact (één aanroep per gesprek, gecachet 24 uur per account en scriptversie). Elke AI-zin heeft een bronlink. Zonder AI-credits toont het script de vaste tekst met de terugvalzinnen.
 5. Tijdens het gesprek: de vragen zijn afvinkbaar met een kort invulveld; het antwoord wordt direct de waarde van het gekoppelde veld (BAND, eigen veld) met herkomst "belgesprek". Een bezwaar aanklikken klapt het antwoord uit en telt het bezwaar.
 6. Afronden: uitkomstknoppen onderaan (7.3). Bij "Gesproken, afspraak" opent het afspraakblok met de voorgestelde tijden; bij "Voicemail ingesproken" staat de voicemailtekst al klaar en wordt de opvolgmail als concept klaargezet.
 7. Na afronden: de activiteit wordt gelogd met scriptId, versie, gebruikte blokken, bezwaren en uitkomst; de volgende persoon in de bellijst opent.
@@ -1748,7 +1750,7 @@ belscript_versies: id, organisation_id, belscript_id, versie, data jsonb, geacti
 | `POST /api/belscripts/:id/activeer` | Nieuwe versie actief | salesmanager, beheerder |
 | `POST /api/belscripts/:id/kopie` | Persoonlijke variant | Gevorderd |
 | `POST /api/belscripts/:id/archiveer` | Archiveren | salesmanager, beheerder |
-| `POST /api/belscripts/invullen` | AI-invulling voor `{scriptId, accountId, contactId}` | iedere gebruiker, binnen de bundel |
+| `POST /api/belscripts/invullen` | AI-invulling voor `{scriptId, accountId, contactId}` | iedere gebruiker, binnen de AI-credits |
 | `POST /api/belscripts/opzet` | AI-opzet van een nieuw script uit doel, doelgroep, winpunten | salesmanager, beheerder |
 | `GET /api/belscripts/resultaten` | Vergelijking per script | salesmanager; eigen varianten vanaf Expert |
 
@@ -1760,7 +1762,7 @@ belscript_versies: id, organisation_id, belscript_id, versie, data jsonb, geacti
 | Opzet maken | doel, doelgroep, reisfase, golden circle, winpunten, top bezwaren | volledig script volgens het datamodel, status concept | Altijd concept; mens activeert |
 | Bezwaren ophalen | verslagen van de laatste 90 dagen in de doelgroep | `[{bezwaar, aantal, voorbeeldCitaat, antwoordVoorstel, argumentRef}]` | Antwoord zonder `argumentRef` wordt "geen bron in de waarde" |
 
-Soort in de AI-bundel: `belscript` (zie hoofdstuk 11).
+Soort in de AI-credits: `belscript`, 1 credit per invulling (11.4).
 
 **Acceptatiecriteria**
 
@@ -1769,7 +1771,7 @@ Soort in de AI-bundel: `belscript` (zie hoofdstuk 11).
 - Een gesprek met het script logt scriptId en versie; de rapportage telt het in de juiste versie.
 - Een nieuwe versie activeren tijdens een lopend belblok verandert het script in dat blok niet.
 - Een Beginner ziet geen knop "Maak persoonlijke variant"; een Gevorderde wel; de variant toont "Het origineel is gewijzigd" na een nieuwe versie van het origineel.
-- Zonder AI-sleutel (mock) en zonder bundel werkt het script met de vaste teksten en terugvalzinnen.
+- Zonder AI-sleutel (mock) en zonder credits werkt het script met de vaste teksten en terugvalzinnen.
 - Vergelijken onder 30 gesprekken toont "Te weinig gesprekken om te vergelijken".
 
 **Hergebruik uit DealDrive**
@@ -1949,7 +1951,7 @@ De soort volgt eerst de meetingsoort, dan de fase in de reis, dan het aantal ges
 - Pure functies: `kiesBriefingSoort(context)`, `vulBriefing(soort, context)` (geen AI), `gewogenBezwaren(account)`.
 - Endpoints: `GET /api/briefing?afspraak=|taak=|account=`, `PUT /api/briefing/tekst`, `POST /api/agent/prepare {taskId|appointmentId}`.
 - AI: Pitstop met de promptketen (platform, organisatie, code), schema per concepttype, lengtegrenzen (belscript 150 woorden, mail 120, LinkedIn 80, WhatsApp 60, kaart 40), stijlcheck (11.5).
-- Acceptatie: elke ingang kiest dezelfde soort voor hetzelfde gesprek; achterstallige taken krijgen ook een briefing; zonder AI-bundel werkt de briefing volledig met berekende tekst.
+- Acceptatie: elke ingang kiest dezelfde soort voor hetzelfde gesprek; achterstallige taken krijgen ook een briefing; zonder AI-credits werkt de briefing volledig met berekende tekst.
 - Hergebruik: `briefings.vue`, `BriefingFlyout.vue`, `BriefingOverviewFlyout.vue`, `accounts/[id]/briefing.vue`, `useQuickBriefing.ts`, `agentExecutor.ts`.
 
 
@@ -2101,7 +2103,7 @@ Elk inzicht toont: bron (soort en naam), datum, letterlijk citaat, link, relevan
 - Ouderdom: vacatures zacht 30 en hard 120 dagen, nieuws 90 en 365, website 30 en 90; boven hard geschrapt, boven zacht geen taakvoorstel.
 - Een inzicht met zekerheid onder 60 krijgt geen taakvoorstel.
 - Een trigger kan een account uit "wachtend" of "nee" terughalen (regel `trigger-heractivatie`), maar alleen als de afkoelperiode voor het voorgestelde kanaal voorbij is.
-- Kosten per bron vallen in de bundel (11.4); de Waarnemer volgt per run maximaal 25 accounts per regel.
+- Kosten per bron vallen in de AI-credits (11.4); de Waarnemer volgt per run maximaal 25 accounts per regel.
 
 **Uit het verkoopverhaal (F25).** De Waarnemer zoekt ook naar concurrentnamen in nieuws en vacatures; de Schrijver leest het leesmodel en bewaart de gebruikte versies; de Coach bundelt wekelijks de suggesties naar SalesDNA voor de salesmanager.
 
@@ -2277,6 +2279,7 @@ Cadans: Dagelijks 1, 2 dagen, 3 dagen, Wekelijks 7, 2 weken 14, Maandelijks 30, 
 - `overdrachten: id, organisation_id, account_id, naar ('dealdrive'|'crm'|'collega'), naar_gebruiker_id?, extern_id?, status ('klaar'|'verstuurd'|'bevestigd'|'mislukt'), pakket jsonb, op, door`.
 - Pure functies (`shared/funnel.ts`): `funnelStand(geschiedenis, periode, filters)`, `conversie(van, naar)`, `doorlooptijd(geschiedenis, fase)`, `stokpunt(stand, normen)`, `pogingTotAfspraak(activiteiten)`; `overdrachtPakket(account)`.
 - Endpoints: `GET /api/funnel?periode=&reis=&doelgroep=&campagne=&gebruiker=&team=`, `GET /api/funnel/accounts?fase=&reden=`, `POST /api/accounts/:id/overdragen {naar, naarGebruikerId?}`.
+- Koppeling met DealDrive: het contract (overdracht, ontdubbelen, terugmeldingen, ondertekening, foutcodes, veldtoewijzing naar de DealDrive-typen) staat in `docs/api/dealdrive-koppeling.md` en `docs/api/dealdrive-koppeling.openapi.yaml`; de adapter `server/utils/dealdriveAdapter.ts` heeft een uitvoering `http` en `mock` (fixtures in `seed/dealdrive-mock/`).
 - Gebeurtenissen: `eerste-afspraak-gehouden` en `overgedragen` (F05).
 - Prestatiebudget: funnel van een organisatie met 10.000 accounts en een kwartaal geschiedenis onder 1 seconde.
 - Acceptatie: een account dat van Gevonden naar Afspraak gepland gaat, telt in elke tussenliggende fase die het bereikte; de som van doorgestroomd en uitgevallen per fase klopt met het aantal dat binnenkwam min wat er nog staat; de overdracht naar DealDrive geeft een extern id terug en zet het account op `overgedragen`; zonder koppeling ontstaat een overdrachtstaak met briefing.
@@ -2539,7 +2542,7 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 
 #### Technisch
 
-- `org_settings (organisation_id, key) → value jsonb` met een vaste lijst sleutels in `shared/settingKeys.ts`; `VERBORGEN_KEYS` (pakket, aiBundel, features, platformprompts) worden aan de leeskant gefilterd en aan de schrijfkant geweigerd.
+- `org_settings (organisation_id, key) → value jsonb` met een vaste lijst sleutels in `shared/settingKeys.ts`; `VERBORGEN_KEYS` (pakket, aiCredits, features, platformprompts) worden aan de leeskant gefilterd en aan de schrijfkant geweigerd.
 - Eigen tabellen voor alles met versies of veel rijen: reizen, belscripts, eigen velden, meetingsoorten, hercontactritmes, regels, help-artikelen, koppelingen.
 - Endpoints: `GET /api/settings`, `PUT /api/settings/:key`, plus de endpoints per feature.
 
@@ -2558,7 +2561,7 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 | Klanten (organisaties) en gebruikers | alle organisaties | eigen gebruikers, aanvragen | geen | geen |
 | Abonnement en pakket | zetten per klant, credits per pakket en extra credits | eigen pakket lezen, upgrade en extra credits aanvragen, credits verdelen | geen | eigen creditstand zien |
 | Facturen | alle facturen, marge | eigen facturen, betalen, factuurgegevens | geen | geen |
-| AI-verbruik en bundel | alle klanten, bundel en plafond zetten | eigen verbruik in handelingen | eigen organisatie lezen | geen |
+| AI-verbruik en credits | alle klanten, credits per pakket, extra credits en prijs per handeling zetten | eigen verbruik in credits, plafond per gebruiker | eigen organisatie lezen | eigen verbruik |
 | AI-koppeling (LLM-connector) | platform en per klant | één leesregel ("Claude, verwerking in de EU") | geen | geen |
 | Agent-prompts | platformlaag, afwijkingen per klant | eigen laag (vanaf Plus) | geen | geen |
 | Help-artikelen | platformartikelen | eigen artikelen | geen | geen |
@@ -2589,7 +2592,7 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 
 **Facturen**: Stripe Billing als bron van abonnementen, seats, facturen en incasso (SEPA, iDEAL, kaart); betaalde facturen naar de boekhouding (Moneybird) als synchronisatie; meerwerk boven de bundel als factuurregel; achterstallig pauzeert automatisch AI-werk (niet de app); de founder ziet marge per klant (gefactureerd tegen AI- en datakosten). De beheerder ziet eigen facturen met pdf, betaalknop, factuuradres en btw-nummer.
 
-**AI-verbruik**: elke AI-aanroep in het logboek; bundel per pakket in handelingen (zoekrondes, dossiers, beoordelingen, webonderzoek, concepten, belscript-invullingen, Datacollectief-records) en de chatcredits van de AI-assistent; melding bij 80 procent, blokkade bij 100 ("Je maandbundel voor dossiers is op."); de founder ziet kosten in euro's per model en soort, de beheerder alleen handelingen.
+**AI-verbruik**: elke AI-aanroep in het logboek met de credits die hij kostte; per organisatie de pot AI-credits en het verbruik per soort en per gebruiker (11.4), los daarvan de externe databronnen (KvK, Datacollectief); melding bij 80 procent, blokkade bij 100 ("Je maandbundel voor dossiers is op."); de founder ziet kosten in euro's per model en soort, de beheerder alleen handelingen.
 
 **AI-koppeling**: oplosketen (organisatie, platform, omgeving, mock); provider Claude als standaard (webonderzoek alleen via Claude vanwege de broncontrole), andere providers per functie mogelijk; sleutel versleuteld en schrijf-alleen; "Test verbinding"; verwerkingsregio en "geen training" vastgelegd per provider.
 
@@ -2609,7 +2612,7 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 - **Audit**: `platform_audit` (append-only: actor, actieve organisatie, handeling, object, voor en na, reden, ip, tijd) plus een kopie in `audit_events` van de klant.
 - **Geheimen** per doel: `LLM_KEY_SECRET`, `ORG_WISSEL_SECRET`, `MOTOR_SECRET`, `STRIPE_WEBHOOK_SECRET`, `PLATFORM_HOOK_SECRET`, `GITHUB_TOKEN`, `MONEYBIRD_TOKEN`; rotatie elk half jaar.
 - **Bundel**: de platformschermen zitten in een eigen, lui geladen deel van de bundel met een routebewaker (gemak, geen beveiliging).
-- **Tests**: cross-tenant in de wegwerp-Postgres: een beheerder kan geen platformfunctie uitvoeren, kan pakket, bundel of prompts niet via de instellingen schrijven, en een founder in "Alleen meekijken" kan niets schrijven.
+- **Tests**: cross-tenant in de wegwerp-Postgres: een beheerder kan geen platformfunctie uitvoeren, kan pakket, credits of prompts niet via de instellingen schrijven, en een founder in "Alleen meekijken" kan niets schrijven.
 - Tabellen: `organisations` (met `pakket`, `features`, `contract`, `stripe_customer_id`), `pakketprijzen`, `facturen`, `gebruikersaanvragen`, `llm_connections`, `prompt_versies`, `feature_requests`, `org_gezondheid`, `platform_audit`.
 - Hergebruik uit DealDrive: `admin/index.vue` (klanten), `admin/abonnementen.vue`, `admin/facturen.vue`, `admin/prompts.vue`, `admin/roadmap.vue`, `server/api/superuser/*`, `promptBibliotheek.ts`, `llm-provider.ts`, `pakketten.ts`, `featureRequestStore.ts`, `github.ts`. Vervalt: `AdminShell.vue`, `impersonatieToken.ts`, `DEALDRIVE_APP=hq`, het tweede domein.
 
@@ -2785,11 +2788,11 @@ Alles wat een Expert aandraagt, is een voorstel aan de salesmanager. De beheerde
 - Het helpcenter (beide collecties) en de eigen artikelen van de organisatie.
 - Het bevestigde verkoopverhaal (F25): verhaal, belofte, concurrenten, winpunten, terugkomregels.
 - De gegevens die de gebruiker zelf mag zien (rechtenmatrix 3.3): het account en de contacten van het scherm, de reis, de laatste contactmomenten en verslagen, de eigen taken en afspraken. Nooit gegevens van een andere organisatie, nooit privénotities van een manager.
-- Geen internet, tenzij de vraag om webonderzoek gaat en de organisatie die bundel heeft (dan kost het meer credits en zegt de chat dat vooraf).
+- Geen internet, tenzij de vraag om webonderzoek gaat en de organisatie dat in haar pakket heeft (dan kost het meer credits en zegt de chat dat vooraf).
 
 **Credits**
 
-- Elk abonnement heeft een aantal **AI-credits per maand** per organisatie (startvoorstel, de prijzen stelt de founder vast, open vraag 24):
+- Elk abonnement heeft een aantal **AI-credits per maand** per organisatie, voor alle AI-onderdelen (voorlopig, open vraag 24):
 
   | Pakket | Credits per gebruiker per maand (samen in één pot per organisatie) |
   |---|---|
@@ -2797,8 +2800,8 @@ Alles wat een Expert aandraagt, is een voorstel aan de salesmanager. De beheerde
   | Plus | 600 |
   | Compleet | 1.500 |
 
-- Een gewone vraag kost 1 credit; een vraag met accountgegevens of een lang antwoord 2 tot 5 credits; webonderzoek 10 credits. De chat toont vóór een dure vraag de kosten ("Dit kost ongeveer 10 credits. Doorgaan?").
-- De beheerder kan per gebruiker een plafond zetten en ziet het verbruik per gebruiker; bij 80 procent van de pot krijgen beheerder en gebruikers een melding; bij 0 stopt de chat met "De credits van deze maand zijn op. Je beheerder kan extra credits aanvragen." en blijft al het andere werken.
+- De credits zijn dezelfde pot als voor alle andere AI in Dealtrace (11.4). Een gewone vraag kost 1 credit; een vraag met accountgegevens of een lang antwoord 2 tot 5 credits; webonderzoek 10 credits. De chat toont vóór een dure vraag de kosten ("Dit kost ongeveer 10 credits. Doorgaan?").
+- De beheerder kan per gebruiker een plafond zetten en ziet het verbruik per gebruiker; bij 80 procent van de pot krijgen beheerder en gebruikers een melding; bij 0 stopt alle AI, ook de chat, met "De AI-credits van deze maand zijn op. Je beheerder kan extra credits aanvragen."; al het werk zonder AI blijft werken.
 - Extra credits vraagt de beheerder aan in Abonnement (F23); de founder zet ze direct of via de facturatie.
 - Credits van een maand vervallen aan het einde van de maand.
 
@@ -2919,7 +2922,7 @@ organisations ─┬─ users ── teams
 | Nooit buiten mandaat | Verzenden, bellen, bezoeken zijn menselijke handelingen, tenzij een mandaat B expliciet geldt (alleen vervolgmails in een goedgekeurde campagne) |
 | Menselijke goedkeuring op templates | Een nieuwe versie van een reis, script of regel wordt pas actief na goedkeuring, met audit |
 | Meting van overname | Per concept: ongewijzigd, aangepast of verworpen; KPI per agent |
-| Plafond per soort | Bundel per organisatie per maand; blokkade vóór de aanroep; melding bij 80 procent |
+| Plafond in credits | Eén pot AI-credits per organisatie per maand (11.4); reservering en blokkade vóór de aanroep; melding bij 80 procent; agents stoppen bij 10 procent |
 | Geen privégegevens | Privémail en privémobiel worden gemaskeerd vóór de aanroep; alleen bedrijfsfeiten en functies |
 | Provider met zero-retention | Anthropic API zonder training, EU-verwerking waar beschikbaar, vastgelegd in de verwerkersovereenkomst |
 | Alleen bevestigd naar buiten | Scripts, boodschappen en briefings gebruiken alleen bevestigde versies van het verkoopverhaal (F25) en bewaren welke versie ze gebruikten |
@@ -2959,24 +2962,37 @@ Mandaatniveaus: **A** autonoom (doet het zelf, logt het, de mens ziet het achter
 
 **Hoe een agent werkt**: 1. voorstel (uit een regel, ritme, trigger of job) → 2. Bewaker `magHandelen(agent, handeling, account, contact, nu)` → 3. uitvoering: A en B direct met een rij in `activiteiten` en `agent_runs`, C als taak met concept, D als taak met voorbereiding. Elke agent is één module `server/utils/agents/<naam>.ts` met `draai(context)`, aangeroepen door de motor of een job.
 
-### 11.4 Modellen, kosten en bundel
+### 11.4 Modellen, kosten en credits
 
-| Soort | Model | Bundel Starter / Plus / Compleet per maand |
-|---|---|---|
-| Zoekronde | Claude Sonnet met websearch | 0 / 0 / 120 |
-| Dossier | Claude Sonnet met websearch | 0 / 0 / 240 |
-| Inzicht-beoordeling (intern) | Claude Sonnet | 0 / 8.000 / 8.000 |
-| Webonderzoek (extern) | Claude Sonnet met websearch | 0 / 0 / 3.000 |
-| Concept (Pitstop, boodschap) | Claude Sonnet | 0 / 1.500 / 1.500 |
-| Belscript-invulling | Claude Haiku of Sonnet | 0 / 3.000 / 3.000 |
-| Notulist | Claude Sonnet | 0 / 300 / 300 |
-| Brief en committee | Claude Sonnet | 0 / 500 / 500 |
-| Coach en verbetervoorstel | Claude Opus | 0 / 50 / 50 |
-| AI-assistent (chat, F26) | Claude Haiku of Sonnet, gekozen per vraag | in credits: 200 / 600 / 1.500 per gebruiker per maand, één pot per organisatie |
-| Datacollectief-records | n.v.t. (externe kosten) | 0 / 0 / volgens contract |
-| KvK-bevragingen | n.v.t. (externe kosten) | 0 / 500 / 2.000 |
+Alle AI in Dealtrace rekent in **AI-credits** (B20). Elke organisatie heeft één pot credits per maand; elke AI-handeling kost een vast aantal credits, ongeacht welk model erachter zit. Het pakket bepaalt welke AI-soorten aanstaan en hoe groot de pot is.
 
-Modelnamen en prijzen worden vastgelegd in de tabel `llm_prijzen` met peildatum; de modelkeuze per soort staat in de AI-koppeling (F23) zodat wisselen zonder release kan. De AI-assistent rekent in **credits** (een gewone vraag 1 credit, een vraag met accountgegevens 2 tot 5, webonderzoek 10); of ook de andere AI-soorten in credits worden uitgedrukt, is open vraag 26. Een Beginner op Starter heeft geen AI-invulling van scripts: het script werkt met vaste teksten en terugvalzinnen (F08).
+| Soort | Model | Credits per handeling | Aan in pakket |
+|---|---|---|---|
+| AI-assistent: gewone vraag (F26) | Claude Haiku | 1 | Starter, Plus, Compleet |
+| AI-assistent: vraag met accountgegevens of lang antwoord | Claude Sonnet | 2 tot 5 | Starter, Plus, Compleet |
+| AI-assistent of agent: webonderzoek | Claude Sonnet met websearch | 10 | Compleet |
+| Zoekronde leadgenerator | Claude Sonnet met websearch | 20 | Compleet |
+| Dossier | Claude Sonnet met websearch | 10 | Compleet |
+| Inzicht-beoordeling (intern) | Claude Sonnet | 1 | Plus, Compleet |
+| Concept (Pitstop, boodschap) | Claude Sonnet | 2 | Plus, Compleet |
+| Belscript-invulling | Claude Haiku of Sonnet | 1 | Plus, Compleet |
+| Notulist (verslaganalyse) | Claude Sonnet | 5 | Plus, Compleet |
+| Brief en buying committee | Claude Sonnet | 3 | Plus, Compleet |
+| Coach en verbetervoorstel | Claude Opus | 20 | Plus, Compleet |
+| Spraakopdracht en visitekaartje | Claude Haiku of Sonnet | 1 en 2 | Starter, Plus, Compleet |
+| Transcriptie van ingesproken verslagen | EU-transcriptiedienst | 1 per begonnen minuut | Starter, Plus, Compleet |
+
+**Pot per pakket** (voorlopig, open vraag 24): Starter 200, Plus 600 en Compleet 1.500 credits per gebruiker per maand, samen in één pot per organisatie. Externe databronnen zijn geen AI en vallen buiten de credits: KvK-bevragingen (0 / 500 / 2.000 per maand) en Datacollectief-records (volgens het contract van de organisatie).
+
+Regels:
+
+- `creditsVoor(soort, context)` in `shared/credits.ts` is de enige plek waar de prijs per handeling staat; de tabel hierboven is de standaard en de founder past hem aan in Platformbeheer zonder release.
+- Elke AI-aanroep boekt zijn credits in `ai_credits` en het logboek (`agent_runs`) vóór de aanroep (reservering) en definitief na afloop; een mislukte aanroep kost niets.
+- Bij 80 procent van de pot een melding aan beheerder en gebruikers. Bij 0 stoppen alle AI-handelingen met de melding "De AI-credits van deze maand zijn op. Je beheerder kan extra credits aanvragen."; al het werk zonder AI gaat door (scripts met vaste teksten, briefings met berekende tekst, handmatig invoeren).
+- Automatische AI (agents, motorrondes) stopt bij 10 procent van de pot, zodat er credits overblijven voor wat gebruikers zelf vragen.
+- De beheerder kan per gebruiker een plafond zetten en per AI-soort een dagplafond voor de agents.
+
+Modelnamen en prijzen per model staan in de tabel `llm_prijzen` met peildatum; de modelkeuze per soort staat in de AI-koppeling (F23) zodat wisselen zonder release kan. Een Beginner op Starter heeft geen AI-invulling van scripts: het script werkt met vaste teksten en terugvalzinnen (F08).
 
 ### 11.5 Schrijven: de boodschap
 
@@ -2997,7 +3013,7 @@ Volgorde bij een eerste contact: waarom (uit de golden circle) → hoe (het winp
 | **Telefonie** (bijvoorbeeld Voys, Aircall) | Klik-om-te-bellen, gespreksduur terug | beide | adapter, optioneel | beheerder | na 12 |
 | **Routedienst** (OpenRouteService of Google Routes) | Geocodering, reistijden en omrijtijd voor kansen langs de route | lezen | API-sleutel van het platform, cache per paar punten | founder | 8 |
 | **SalesDNA** | De zeven sublagen plus golden circle als bron van het verkoopverhaal (F25); suggesties met bewijs terug naar kader 2 | beide | gesigneerde webhooks per organisatie (HMAC-SHA256, event-id, tijdvenster 5 minuten): `sublaag.bevestigd`, `sublaag.verouderd`, `sublaag.verouderd-gesloten`, `sublaag.leeg`, `sublaag.overgeslagen`, `ping`; volledige synchronisatie bij een gat in de versies; suggesties hooguit 10 per sublaag per week zonder namen; zonder koppeling de eigen inrichting | beheerder | 3 (spiegel), 11 (suggesties) |
-| **DealDrive** | Overdracht na de eerste afspraak (DealDrive maakt de deal en de offerte); klantstatus en verloren deals terug voor winback | beide | HMAC met gedeeld geheim per organisatie | founder | 11 |
+| **DealDrive** | Overdracht na de eerste afspraak (DealDrive maakt de deal en de offerte); ontdubbelen tegen DealDrive; terugmeldingen (overdracht verwerkt, deal gewonnen, deal verloren, klant slapend) voor de funnel en winback | beide | REST met HMAC-SHA256 en gedeeld geheim per organisatie, idempotent; contract voorbereid in `docs/api/dealdrive-koppeling.md` en de OpenAPI-specificatie (B21); adapter met mock | founder | 11 |
 | **Stripe** en **Moneybird** | Abonnement, seats, facturen, incasso; boekhouding | beide | Stripe Billing met webhook (idempotent op event-id); Moneybird-synchronisatie als job | founder | 12 |
 | **GitHub** | Roadmapwens naar issue en bouwketen | schrijven | token van het platform; workflow opent altijd een pull request | founder | 12 |
 | **Transcriptie** (EU-dienst, keuze in hoofdstuk 22) | Ingesproken verslagen en spraakopdrachten naar tekst (8.9) | lezen | adapter met mock; opname na transcriptie verwijderd | founder | 8 |
@@ -3236,7 +3252,7 @@ Helpartikel(en): titel en kern van het artikel dat met deze functie meekomt.
 Datamodel: tabellen, kolommen, data-velden, migratie, RLS, rechtenmatrix, sync-allowlist.
 Pure functies: naam, invoer, uitvoer, randgevallen, unit-tests.
 Endpoints: methode, route, recht, invoer, uitvoer, fouten.
-AI-stappen: agent, mandaat, materiaal, schema, vangrails, mock, bundelsoort.
+AI-stappen: agent, mandaat, materiaal, schema, vangrails, mock, soort en credits per handeling (11.4).
 Integraties: adapter, mock, fouten, kosten.
 Functiecatalogus: sleutel, niveau, pakket, recht, helpartikel.
 Hergebruik uit DealDrive: bestanden en wat je aanpast.
@@ -3411,12 +3427,12 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 - **Afgewezen**: een eigen pipeline met offertes (dubbel met DealDrive en het CRM); een alleen-lezen kopie van de pipeline (verouderd, verwarrend).
 - **Consequenties**: status `overgedragen` in plaats van `klant`; nieuwe gebeurtenissen `eerste-afspraak-gehouden`, `afspraak-niet-verschenen`, `overgedragen`, `geen-vervolg`; offertematrix, offertebriefing, meetingsoort Offertebespreking en de bijbehorende regels vervallen; accounts die uit DealDrive of het CRM terugkomen, komen via de terugkomregels terug.
 
-### ADR-022 AI-assistent voor iedere gebruiker, begrensd met credits
+### ADR-022 AI-assistent voor iedere gebruiker, alle AI begrensd met credits
 
 - **Beslissing**: iedere gebruiker kan chatten met een AI-assistent (F26) die de context van het scherm kent; het abonnement bepaalt via credits per maand hoeveel. De assistent voert niets uit en zet alleen concepten klaar.
 - **Argumenten**: hulp op het moment dat je hem nodig hebt verlaagt de drempel voor beginners; credits maken de kosten voorspelbaar voor klant en leverancier; één pot per organisatie met een plafond per gebruiker geeft de beheerder grip.
 - **Afgewezen**: onbeperkt chatten (kosten onvoorspelbaar); chat alleen voor hogere niveaus (juist beginners hebben hem nodig).
-- **Consequenties**: credits per pakket in de prijstabel; meter en meldingen bij 80 procent; bij 0 credits stopt alleen de chat; vangrails van 11.2 gelden ook voor de chat.
+- **Consequenties**: credits gelden voor alle AI-onderdelen (B20); prijs per handeling in `shared/credits.ts`; credits per pakket in de prijstabel; meter en meldingen bij 80 procent; agents stoppen bij 10 procent; bij 0 credits stopt alle AI en werkt de rest door; vangrails van 11.2 gelden ook voor de chat.
 
 ---
 
@@ -3475,10 +3491,10 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 | 21 | Accountklassen en rollen van SalesDNA tegenover die van Dealtrace | mapping op naam met controlelijst | founder | sprint 3 |
 | 22 | Bijlagen van winpunten: alleen metadata of ook een tijdelijke downloadlink | eerst metadata | founder met SalesDNA | sprint 11 |
 | 23 | Opent SalesDNA een endpoint voor suggesties van buiten, met welke limiet | hooguit 10 per sublaag per week | founder met SalesDNA | vóór sprint 11 |
-| 24 | Aantal AI-credits per pakket en de prijs van extra credits | startvoorstel 200, 600 en 1.500 per gebruiker per maand; bijstellen na de eerste drie klanten | founder | vóór sprint 5 |
+| 24 | Aantal AI-credits per pakket en de prijs van extra credits | **voorlopig vastgesteld**: 200, 600 en 1.500 per gebruiker per maand; staat zo tot na de eerste drie klanten | founder | na de eerste drie klanten |
 | 25 | Welke functies horen definitief bij welk niveau | startindeling uit 4.3; per sprint vaststellen | founder met eerste salesmanager | elke sprint |
-| 26 | Worden alle AI-soorten (zoekrondes, dossiers, concepten) ook in credits uitgedrukt, of alleen de chat | eerst alleen de chat; daarna beslissen op basis van het verbruik | founder | vóór sprint 12 |
-| 27 | Overdracht naar DealDrive: het ontvangende endpoint bestaat nog niet in DealDrive | aparte opdracht voor DealDrive vóór sprint 11 | founder | vóór sprint 11 |
+| 26 | Worden alle AI-soorten ook in credits uitgedrukt, of alleen de chat | **besloten (B20)**: credits gelden voor alle AI-onderdelen | founder | gesloten |
+| 27 | Overdracht naar DealDrive: de ontvangende kant bestaat nog niet in DealDrive | **API voorbereid (B21)** in `docs/api/`; DealDrive bouwt de ontvangende kant als aparte opdracht; tot dan staat de koppeling op mock (ontwikkeling) of uit (klanten) | founder | vóór sprint 11 |
 
 ---
 
@@ -3533,6 +3549,7 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 | 1.0 | 2026-10-14 | Eerste versie van het bouwplan uit alle documenten in deze repository, met de beslissingen B1 tot en met B11 van de opdrachtgever: productnaam Dealtrace, binnendienst en buitendienst, drie gebruikersniveaus, geen aparte HQ, belscript-templates, eigen velden, AI-agents voor interne en externe bronnen, standaard en maatwerk prospectreis, kansen langs de route, helpcenter met new business-academie, leadgenerator met import, CRM, KvK en Datacollectief |
 | 1.1 | 2026-10-14 | Beslissingen B12 tot en met B16 (inloggen met een code per mail, mobiel en onderweg, sprints naar inhoud, stijlbestand leidend, SalesDNA-sublagen) en de status van de bronnen (0.4); nieuw hoofdstuk 8 Mobiel en onderweg op basis van Dex in DealDrive; nieuwe feature F25 Verkoopverhaal en Richting met leesmodel, webhooks en terugkomregels, verwerkt in F01 tot en met F24; ADR-002 aangevuld, ADR-017 tot en met ADR-020; twaalf sprints; 32 bouwprompts, uitgeschreven in `docs/prompts/`; Bijlage A (checklist gaten DealDrive), Bijlage B (hergebruikkaart, commit 75bee61) en Bijlage C (startset Voltvast); nieuwe mockup in `mockup-dealtrace/` |
 | 1.2 | 2026-10-15 | Beslissingen B17 tot en met B20: Dealtrace loopt tot en met de eerste afspraak (geen pipeline, deals en offertes; F17 wordt Funnel van de prospectreis met overdracht; status `overgedragen`); het niveau ontstaat door het aanzetten van functies met een voorlopige startindeling; het groeipad en de leerpaden per niveau zijn verwijderd; nieuwe feature F26 AI-assistent met credits per abonnement; ADR-012 gewijzigd, ADR-021 en ADR-022 nieuw; prompt P33 |
+| 1.3 | 2026-10-15 | B20 aangevuld: credits gelden voor alle AI-onderdelen (11.4 herschreven met credits per handeling); credits per pakket voorlopig vastgesteld; B21: API met DealDrive voorbereid in `docs/api/` met mock-antwoorden in `seed/dealdrive-mock/` |
 
 ---
 

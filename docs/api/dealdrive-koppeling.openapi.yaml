@@ -1,0 +1,540 @@
+openapi: 3.1.0
+info:
+  title: Koppeling Dealtrace en DealDrive
+  version: 0.1.0
+  description: |
+    Voorbereid contract, nog niet werkend. Toelichting in dealdrive-koppeling.md.
+    Twee kanten: DealDrive biedt /api/koppelingen/dealtrace/v1 aan (overdracht, ontdubbelen),
+    Dealtrace biedt /api/koppelingen/dealdrive/v1 aan (terugmeldingen).
+    Elk verzoek is ondertekend met HMAC-SHA256 over "<X-Koppeling-Tijd>.<ruwe body>".
+servers:
+  - url: https://{dealdrive}/api/koppelingen/dealtrace/v1
+    description: DealDrive-kant
+    variables:
+      dealdrive:
+        default: dealdrive.example
+  - url: https://{dealtrace}/api/koppelingen/dealdrive/v1
+    description: Dealtrace-kant
+    variables:
+      dealtrace:
+        default: dealtrace.example
+security:
+  - handtekening: []
+paths:
+  /overdrachten:
+    post:
+      summary: Account overdragen na de eerste afspraak (Dealtrace naar DealDrive)
+      operationId: overdragen
+      servers:
+        - url: https://{dealdrive}/api/koppelingen/dealtrace/v1
+          variables:
+            dealdrive:
+              default: dealdrive.example
+      parameters:
+        - $ref: '#/components/parameters/Tijd'
+        - $ref: '#/components/parameters/Organisatie'
+        - $ref: '#/components/parameters/Idempotentie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Overdracht'
+      responses:
+        '201':
+          description: Ontvangen en verwerkt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverdrachtAntwoord'
+        '200':
+          description: Herhaald verzoek met dezelfde idempotentiesleutel; zelfde antwoord
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverdrachtAntwoord'
+        '401':
+          $ref: '#/components/responses/Fout'
+        '403':
+          $ref: '#/components/responses/Fout'
+        '409':
+          description: Het bedrijf is al klant in DealDrive (code al_klant); opnieuw sturen met alsNieuweKansBijKlant true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fout'
+        '422':
+          $ref: '#/components/responses/Fout'
+        '429':
+          $ref: '#/components/responses/Fout'
+  /overdrachten/{overdrachtId}:
+    get:
+      summary: Stand van een overdracht opvragen (Dealtrace naar DealDrive)
+      operationId: overdrachtStand
+      servers:
+        - url: https://{dealdrive}/api/koppelingen/dealtrace/v1
+          variables:
+            dealdrive:
+              default: dealdrive.example
+      parameters:
+        - name: overdrachtId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Tijd'
+        - $ref: '#/components/parameters/Organisatie'
+      responses:
+        '200':
+          description: Stand
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/OverdrachtAntwoord'
+        '404':
+          $ref: '#/components/responses/Fout'
+  /accounts/zoek:
+    get:
+      summary: Ontdubbelen tegen DealDrive (Dealtrace naar DealDrive)
+      operationId: zoekAccount
+      servers:
+        - url: https://{dealdrive}/api/koppelingen/dealtrace/v1
+          variables:
+            dealdrive:
+              default: dealdrive.example
+      parameters:
+        - name: kvk
+          in: query
+          schema:
+            type: string
+            pattern: '^[0-9]{8}$'
+        - name: domein
+          in: query
+          schema:
+            type: string
+        - name: naam
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Tijd'
+        - $ref: '#/components/parameters/Organisatie'
+      responses:
+        '200':
+          description: Treffers, eventueel leeg
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [treffers]
+                properties:
+                  treffers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Treffer'
+        '422':
+          $ref: '#/components/responses/Fout'
+  /webhook:
+    post:
+      summary: Terugmelding van DealDrive (DealDrive naar Dealtrace)
+      operationId: terugmelding
+      servers:
+        - url: https://{dealtrace}/api/koppelingen/dealdrive/v1
+          variables:
+            dealtrace:
+              default: dealtrace.example
+      parameters:
+        - $ref: '#/components/parameters/Tijd'
+        - $ref: '#/components/parameters/Organisatie'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Gebeurtenis'
+      responses:
+        '202':
+          description: Ontvangen; verwerking volgt in een job
+        '200':
+          description: Gebeurtenis was al verwerkt (zelfde gebeurtenisId)
+        '401':
+          $ref: '#/components/responses/Fout'
+        '404':
+          $ref: '#/components/responses/Fout'
+  /ping:
+    get:
+      summary: Koppeling testen (beide kanten)
+      operationId: ping
+      parameters:
+        - $ref: '#/components/parameters/Tijd'
+        - $ref: '#/components/parameters/Organisatie'
+      responses:
+        '200':
+          description: Koppeling werkt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+                  versie:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Fout'
+components:
+  securitySchemes:
+    handtekening:
+      type: apiKey
+      in: header
+      name: X-Koppeling-Handtekening
+      description: 'sha256=<hex>, HMAC-SHA256 met het gedeelde geheim per organisatie over "<X-Koppeling-Tijd>.<ruwe body>"'
+  parameters:
+    Tijd:
+      name: X-Koppeling-Tijd
+      in: header
+      required: true
+      description: Unix-seconden; hooguit 5 minuten verschil
+      schema:
+        type: integer
+    Organisatie:
+      name: X-Koppeling-Organisatie
+      in: header
+      required: true
+      description: Id van de organisatie aan de ontvangende kant
+      schema:
+        type: string
+    Idempotentie:
+      name: Idempotentie-Sleutel
+      in: header
+      required: true
+      description: UUID; bij een overdracht gelijk aan overdrachtId; 7 dagen geldig
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Fout:
+      description: Fout met Nederlandse melding
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Fout'
+  schemas:
+    Fout:
+      type: object
+      required: [fout]
+      properties:
+        fout:
+          type: object
+          required: [code, bericht]
+          properties:
+            code:
+              type: string
+              enum: [handtekening_ongeldig, tijd_verlopen, koppeling_uit, organisatie_onbekend, account_onbekend, ongeldige_invoer, al_klant, te_veel_verzoeken, interne_fout]
+            bericht:
+              type: string
+            velden:
+              type: array
+              items:
+                type: string
+            accountId:
+              type: string
+              description: Bij al_klant het bestaande account in DealDrive
+    Persoon:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+        naam:
+          type: string
+    Adres:
+      type: object
+      properties:
+        straat:
+          type: string
+        postcode:
+          type: string
+        plaats:
+          type: string
+        land:
+          type: string
+          default: NL
+    Account:
+      type: object
+      required: [dealtraceId, naam]
+      properties:
+        dealtraceId:
+          type: string
+        naam:
+          type: string
+        statutaireNaam:
+          type: string
+        kvkNummer:
+          type: string
+          pattern: '^[0-9]{8}$'
+        sbiCode:
+          type: string
+        branche:
+          type: string
+        klasse:
+          type: string
+          description: Accountklasse uit Dealtrace; DealDrive zet hem in prospectGrade
+        website:
+          type: string
+        telefoon:
+          type: string
+        adres:
+          $ref: '#/components/schemas/Adres'
+        linkedInUrl:
+          type: [string, 'null']
+        huidigeLeverancier:
+          type: [string, 'null']
+        eigenVelden:
+          type: object
+          additionalProperties: true
+    Contact:
+      type: object
+      required: [dealtraceId, voornaam, achternaam]
+      properties:
+        dealtraceId:
+          type: string
+        voornaam:
+          type: string
+        achternaam:
+          type: string
+        functie:
+          type: string
+        email:
+          type: [string, 'null']
+        telefoon:
+          type: [string, 'null']
+        mobiel:
+          type: [string, 'null']
+        rol:
+          type: string
+          enum: [beslisser, beinvloeder, champion, gebruiker, onbekend]
+        beslisser:
+          type: boolean
+    Overdracht:
+      type: object
+      required: [overdrachtId, overgedragenOp, overgedragenDoor, account, contacten, eersteAfspraak, vervolgstap]
+      properties:
+        overdrachtId:
+          type: string
+          format: uuid
+        overgedragenOp:
+          type: string
+          format: date-time
+        overgedragenDoor:
+          $ref: '#/components/schemas/Persoon'
+        nieuweEigenaar:
+          $ref: '#/components/schemas/Persoon'
+        alsNieuweKansBijKlant:
+          type: boolean
+          default: false
+        account:
+          $ref: '#/components/schemas/Account'
+        contacten:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Contact'
+        eersteAfspraak:
+          type: object
+          required: [datum, uitkomst]
+          properties:
+            dealtraceId:
+              type: string
+            datum:
+              type: string
+              format: date-time
+            soort:
+              type: string
+            vorm:
+              type: string
+              enum: [bezoek, online, telefoon]
+            uitkomst:
+              type: string
+            verslag:
+              type: string
+            aanwezigen:
+              type: array
+              items:
+                type: string
+        vervolgstap:
+          type: object
+          required: [omschrijving]
+          properties:
+            omschrijving:
+              type: string
+            datum:
+              type: string
+              format: date
+            soort:
+              type: string
+              enum: [bellen, mail, bezoek, afspraak, taak]
+        kwalificatie:
+          type: object
+          properties:
+            behoefte:
+              type: string
+            autoriteit:
+              type: string
+            noodzaak:
+              type: string
+            draagvlak:
+              type: string
+        verkoopverhaal:
+          type: object
+          properties:
+            branche:
+              type: string
+            winpuntIngezet:
+              type: string
+            bezwaren:
+              type: array
+              items:
+                type: string
+        briefing:
+          type: string
+          description: Overdrachtsbriefing in Markdown
+        reis:
+          type: object
+          properties:
+            naam:
+              type: string
+            geschiedenis:
+              type: array
+              items:
+                type: object
+                properties:
+                  fase:
+                    type: string
+                  op:
+                    type: string
+                    format: date
+            pogingenTotAfspraak:
+              type: integer
+            bron:
+              type: string
+        dossier:
+          type: object
+          properties:
+            kernfeiten:
+              type: array
+              items:
+                type: string
+            bronnen:
+              type: array
+              items:
+                type: string
+        dealVoorstel:
+          type: object
+          properties:
+            titel:
+              type: string
+            fase:
+              type: string
+              enum: [identificatie, kwalificatie, behoefte, voorstel, onderhandeling]
+              default: behoefte
+            verwachteWaarde:
+              type: [integer, 'null']
+              description: In eurocenten
+    OverdrachtAntwoord:
+      type: object
+      required: [status, dealdrive]
+      properties:
+        status:
+          type: string
+          enum: [ontvangen, samengevoegd, in_behandeling, mislukt]
+        dealdrive:
+          type: object
+          properties:
+            accountId:
+              type: string
+            accountNieuw:
+              type: boolean
+            dealId:
+              type: string
+            taakId:
+              type: string
+            eigenaar:
+              type: string
+            url:
+              type: string
+        contacten:
+          type: array
+          items:
+            type: object
+            properties:
+              dealtraceId:
+                type: string
+              dealdriveId:
+                type: string
+              nieuw:
+                type: boolean
+    Treffer:
+      type: object
+      required: [accountId, naam, soort, zekerheid]
+      properties:
+        accountId:
+          type: string
+        naam:
+          type: string
+        soort:
+          type: string
+          enum: [klant, prospect]
+        eigenaar:
+          type: string
+        zekerheid:
+          type: string
+          enum: [kvk, domein, naam]
+        laatsteContact:
+          type: [string, 'null']
+          format: date
+    Gebeurtenis:
+      type: object
+      required: [gebeurtenisId, soort, op]
+      properties:
+        gebeurtenisId:
+          type: string
+          format: uuid
+        soort:
+          type: string
+          enum: [overdracht.verwerkt, deal.gewonnen, deal.verloren, klant.slapend, account.eigenaar-gewijzigd, ping]
+        op:
+          type: string
+          format: date-time
+        dealtraceAccountId:
+          type: string
+        dealdriveAccountId:
+          type: string
+        gegevens:
+          type: object
+          description: Per soort, zie dealdrive-koppeling.md hoofdstuk 5
+          properties:
+            overdrachtId:
+              type: string
+            dealId:
+              type: string
+            waarde:
+              type: [integer, 'null']
+            gewonnenOp:
+              type: string
+              format: date-time
+            reden:
+              type: string
+            verlorenAan:
+              type: [string, 'null']
+            maandenNietBesteld:
+              type: integer
+              enum: [3, 6, 12]
+            laatsteOrder:
+              type: string
+              format: date
+            eigenaar:
+              type: string

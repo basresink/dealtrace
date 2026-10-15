@@ -1,0 +1,113 @@
+{
+  "overdrachtId": "5d2f7c1e-0b7a-4c1e-9a55-1f3f0c2b9e10",
+  "overgedragenOp": "2026-10-15T14:05:00+02:00",
+  "overgedragenDoor": {
+    "email": "jan.wolters@voltvast.test",
+    "naam": "Jan Wolters"
+  },
+  "nieuweEigenaar": {
+    "email": "eva.dijkstra@voltvast.test"
+  },
+  "account": {
+    "dealtraceId": "acc_7Kq2",
+    "naam": "Testbrontsma Installatietechniek",
+    "statutaireNaam": "Testbrontsma Installatietechniek B.V.",
+    "kvkNummer": "99123456",
+    "sbiCode": "4321",
+    "branche": "Installatiebedrijven woningbouw",
+    "klasse": "A",
+    "website": "https://testbrontsma.test",
+    "telefoon": "+31 6 0000 1001",
+    "adres": {
+      "straat": "Testweg 12",
+      "postcode": "9201 AB",
+      "plaats": "Drachten",
+      "land": "NL"
+    },
+    "linkedInUrl": null,
+    "huidigeLeverancier": "Landelijke groothandelsketen",
+    "eigenVelden": {
+      "aantalMonteurs": 24
+    }
+  },
+  "contacten": [
+    {
+      "dealtraceId": "con_31",
+      "voornaam": "Hilde",
+      "achternaam": "Testbrontsma",
+      "functie": "Eigenaar",
+      "email": "hilde@testbrontsma.test",
+      "telefoon": null,
+      "mobiel": "+31 6 0000 1002",
+      "rol": "beslisser",
+      "beslisser": true
+    }
+  ],
+  "eersteAfspraak": {
+    "dealtraceId": "afs_88",
+    "datum": "2026-10-15T10:00:00+02:00",
+    "soort": "Kennismaking",
+    "vorm": "bezoek",
+    "uitkomst": "vervolg",
+    "verslag": "Twee nieuwe woningbouwprojecten in 2027; monteurs wachten nu vaak op materiaal.",
+    "aanwezigen": [
+      "con_31"
+    ]
+  },
+  "vervolgstap": {
+    "omschrijving": "Gratis projectschouw op het project in Drachten",
+    "datum": "2026-10-22",
+    "soort": "bezoek"
+  },
+  "kwalificatie": {
+    "behoefte": "Levering per bouwfase",
+    "autoriteit": "Eigenaar beslist",
+    "noodzaak": "Start project maart 2027",
+    "draagvlak": "Werkvoorbereider is positief"
+  },
+  "verkoopverhaal": {
+    "branche": "Installatiebedrijven woningbouw",
+    "winpuntIngezet": "Gratis projectschouw binnen 48 uur",
+    "bezwaren": [
+      "Bij de keten heb ik alles onder één dak."
+    ]
+  },
+  "briefing": "## Overdracht Testbrontsma Installatietechniek\n\nWie: installatiebedrijf in de woningbouw, 24 monteurs.",
+  "reis": {
+    "naam": "Standaardreis",
+    "geschiedenis": [
+      {
+        "fase": "Gevonden",
+        "op": "2026-09-02"
+      },
+      {
+        "fase": "Gekwalificeerd",
+        "op": "2026-09-09"
+      },
+      {
+        "fase": "Afspraak gepland",
+        "op": "2026-10-01"
+      },
+      {
+        "fase": "Afspraak gehouden",
+        "op": "2026-10-15"
+      }
+    ],
+    "pogingenTotAfspraak": 4,
+    "bron": "KvK"
+  },
+  "dossier": {
+    "kernfeiten": [
+      "24 monteurs",
+      "Vacature servicemonteur (12 okt)"
+    ],
+    "bronnen": [
+      "https://testbrontsma.test/vacatures"
+    ]
+  },
+  "dealVoorstel": {
+    "titel": "Projectlevering woningbouw 2027",
+    "fase": "behoefte",
+    "verwachteWaarde": null
+  }
+}

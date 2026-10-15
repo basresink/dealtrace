@@ -1,0 +1,11 @@
+{
+  "gebeurtenisId": "2c3d4e5f-6071-4c8d-9e0f-1a2b3c4d5e6f",
+  "soort": "klant.slapend",
+  "op": "2027-06-01T06:00:00+02:00",
+  "dealtraceAccountId": "acc_7Kq2",
+  "dealdriveAccountId": "acc_dd_5520",
+  "gegevens": {
+    "maandenNietBesteld": 6,
+    "laatsteOrder": "2026-12-10"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "gebeurtenisId": "e2b1c3d4-5f60-4a7b-8c9d-0e1f2a3b4c5d",
+  "soort": "deal.verloren",
+  "op": "2027-01-20T09:12:00+01:00",
+  "dealtraceAccountId": "acc_7Kq2",
+  "dealdriveAccountId": "acc_dd_5520",
+  "gegevens": {
+    "dealId": "deal_dd_9041",
+    "reden": "Prijs",
+    "verlorenAan": "Online webgroothandel"
+  }
+}

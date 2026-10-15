@@ -1,0 +1,11 @@
+{
+  "gebeurtenisId": "0a1b2c3d-4e5f-4a6b-9c7d-8e9f0a1b2c3d",
+  "soort": "overdracht.verwerkt",
+  "op": "2026-10-15T14:05:20+02:00",
+  "dealtraceAccountId": "acc_7Kq2",
+  "dealdriveAccountId": "acc_dd_5520",
+  "gegevens": {
+    "overdrachtId": "5d2f7c1e-0b7a-4c1e-9a55-1f3f0c2b9e10",
+    "dealId": "deal_dd_9041"
+  }
+}

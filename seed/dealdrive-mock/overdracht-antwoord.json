@@ -1,0 +1,18 @@
+{
+  "status": "ontvangen",
+  "dealdrive": {
+    "accountId": "acc_dd_5520",
+    "accountNieuw": true,
+    "dealId": "deal_dd_9041",
+    "taakId": "task_dd_7710",
+    "eigenaar": "eva.dijkstra@voltvast.test",
+    "url": "https://<domein-dealdrive>/accounts/acc_dd_5520"
+  },
+  "contacten": [
+    {
+      "dealtraceId": "con_31",
+      "dealdriveId": "con_dd_301",
+      "nieuw": true
+    }
+  ]
+}
