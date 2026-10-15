@@ -316,7 +316,7 @@ De kolom "Rol" noemt de minimale rol; leeg betekent iedere gebruiker. Dit is de 
 | Feature | Beginner | Gevorderd | Expert | Rol |
 |---|---|---|---|---|
 | F01 Vandaag | Takenlijst, afspraken, belblok van vandaag, klaargezette concepten, afronden met uitkomst | Plus: eigen indeling van de blokken, "Door agents gedaan", weekvooruitblik | Plus: eigen weergaven en filters op Vandaag | |
-| F02 Leadgenerator | Een lead overnemen die de salesmanager of een agent klaarzette; handmatig één prospect toevoegen | Zoeken in KvK, import uit Excel of CSV met ontdubbelen, AI-zoekronde binnen de bundel | CRM-koppeling en Datacollectief in bulk, opgeslagen zoekopdrachten, automatische rondes per doelgroep | Bulkbronnen: beheerder koppelt |
+| F02 Leadgenerator | Een lead overnemen die de salesmanager of een agent klaarzette; handmatig één prospect toevoegen | Zoeken in KvK, import uit Excel of CSV met ontdubbelen, AI-zoekronde binnen de AI-credits | CRM-koppeling en Datacollectief in bulk, opgeslagen zoekopdrachten, automatische rondes per doelgroep | Bulkbronnen: beheerder koppelt |
 | F03 Prospects en accountkaart | Lijst, kaart, gegevens bewerken, notities, status zien | Plus: segmenten, opgeslagen filters, massabewerking van eigen accounts, klasse zetten | Plus: samenvoegen van duplicaten, exporteren | Verwijderen: salesmanager |
 | F04 Contacten | Contacten toevoegen en bewerken, rol in het buying committee | Plus: buying committee door AI laten voorstellen | Plus: samenvoegen, verhuizen tussen bedrijven | |
 | F05 Prospectreis | De reis van een account zien en een gebeurtenis vastleggen | Plus: reis per doelgroep bekijken met aantallen per fase | Maatwerkreis per doelgroep maken (concept), fases en overgangen bewerken | Activeren: salesmanager |
@@ -1014,7 +1014,7 @@ Een Beginner gebruikt de leadgenerator niet zelf; hij krijgt overgenomen leads v
 
 **Tabblad Zoeken**
 
-- Kop: kicker "LEADGENERATOR · 25 GEVONDEN", titel "Leadgenerator", subtitel "Bedrijven die passen bij je doelgroep, met bewijs, bron en datum." Rechts "Zoekopdracht aanpassen" en "Nieuwe ronde" (geel; uit als de bundel op is met tooltip "Je maandbundel voor zoekrondes is op").
+- Kop: kicker "LEADGENERATOR · 25 GEVONDEN", titel "Leadgenerator", subtitel "Bedrijven die passen bij je doelgroep, met bewijs, bron en datum." Rechts "Zoekopdracht aanpassen" en "Nieuwe ronde" (geel; uit als de AI-credits op zijn, met tooltip "De AI-credits van deze maand zijn op").
 - **Zoekopdracht** in vakken, elk met label, waarde en herkomstregel:
 
 | Vak | Waarde | Herkomst |
@@ -1064,8 +1064,8 @@ Elke importbatch is terug te draaien zolang er nog geen activiteit op de account
 **Tabblad Koppelingen** (beheerder richt in, Expert gebruikt)
 
 - **KvK**: API-sleutel van de organisatie, test, gebruiksteller. Functies: zoeken (handelsnaam, KvK-nummer, plaats, postcode, SBI), basisprofiel en vestigingsprofiel ophalen, maandelijkse controle op wijzigingen bij prospects in reis (wordt een inzicht "KvK-mutatie").
-- **Datacollectief**: sleutel, test, tegoed. Functies: selectie op doelgroep (branche, omvang, regio, functieniveau), verrijken van een account met contactpersonen, verrijken van een contact (functie, nummer, e-mail). Elk opgehaald record kost tegoed en telt in de bundel.
-- **CRM** (eerst HubSpot, daarna Salesforce, Dynamics, Pipedrive, AFAS via dezelfde koppellaag): OAuth-verbinding, veldtoewijzing, richting per object (lezen, schrijven, beide), eigenaarsregel (CRM-eigenaar naar Dealtrace-gebruiker op e-mail), synchronisatiemoment (elk uur en op verzoek), conflictregel (bronprioriteit, zie 15.1). Lezen: klanten en prospects voor ontdubbelen en profiel; schrijven: overgenomen leads met contactpersonen, uitkomsten en deals.
+- **Datacollectief**: sleutel, test, tegoed. Functies: selectie op doelgroep (branche, omvang, regio, functieniveau), verrijken van een account met contactpersonen, verrijken van een contact (functie, nummer, e-mail). Elk opgehaald record kost tegoed en telt in het maandplafond voor Datacollectief (geen AI-credits).
+- **CRM** (eerst HubSpot, daarna Salesforce, Dynamics, Pipedrive, AFAS via dezelfde koppellaag): OAuth-verbinding, veldtoewijzing, richting per object (lezen, schrijven, beide), eigenaarsregel (CRM-eigenaar naar Dealtrace-gebruiker op e-mail), synchronisatiemoment (elk uur en op verzoek), conflictregel (bronprioriteit, zie 15.1). Lezen: klanten en prospects voor ontdubbelen en profiel; schrijven: overgenomen leads met contactpersonen, uitkomsten, eerste afspraken en de overdracht (het CRM maakt de deal).
 
 **Tabblad Rondes en verbruik**: lijst van rondes en imports met datum, bron, aantal gevonden, overgenomen, afgewezen, conversie naar afspraak; meters per bron in credits; daggrens per gebruiker (10 rondes).
 
@@ -2277,7 +2277,7 @@ Cadans: Dagelijks 1, 2 dagen, 3 dagen, Wekelijks 7, 2 weken 14, Maandelijks 30, 
 - Gebeurtenissen: `eerste-afspraak-gehouden` en `overgedragen` (F05).
 - Prestatiebudget: funnel van een organisatie met 10.000 accounts en een kwartaal geschiedenis onder 1 seconde.
 - Acceptatie: een account dat van Gevonden naar Afspraak gepland gaat, telt in elke tussenliggende fase die het bereikte; de som van doorgestroomd en uitgevallen per fase klopt met het aantal dat binnenkwam min wat er nog staat; de overdracht naar DealDrive geeft een extern id terug en zet het account op `overgedragen`; zonder koppeling ontstaat een overdrachtstaak met briefing.
-- Hergebruik: de trechter uit de analysepagina's van DealDrive als vorm; `pipeline.vue`, `DealFlyout.vue` en `offertes.vue` worden **niet** overgenomen.
+- Hergebruik: de trechterweergave uit de analysepagina's van DealDrive als vorm; `pipeline.vue`, `DealFlyout.vue` en `offertes.vue` worden **niet** overgenomen.
 - Buiten scope: deals, offertes, pipelinewaarde, kans op winst, forecast van omzet.
 
 ---
@@ -2400,7 +2400,7 @@ Cadans: Dagelijks 1, 2 dagen, 3 dagen, Wekelijks 7, 2 weken 14, Maandelijks 30, 
 - **Coachingkaart per accountmanager** (`/coaching/:gebruiker`):
   - Kop met naam, niveau, werkplek, en de knop "Wijzig niveau".
   - **Cijfers tegen norm en team** (laatste 4 weken met trend): activiteit (pogingen per dag, belblokken), bereik (gesproken, beslisser bereikt), conversie (gesprek naar afspraak, afspraak gepland naar gehouden, gehouden naar overgedragen), discipline (pogingen tot afspraak, taken op de dag, winpunt uitgevoerd, briefing geopend vóór gesprek), kwaliteit (AI-concept ongewijzigd of aangepast, doel gehaald per gesprek).
-  - **Trechter van deze persoon** naast die van het team: waar valt het weg?
+  - **Funnel van deze persoon** (F17) naast die van het team: waar valt het weg?
   - **Gesprekken om te bespreken**: de Coach-agent kiest drie gesprekken of bezoeken van de afgelopen week (een goede, een verloren, een met een bezwaar dat vaker terugkomt) met verslag, uitkomst en script; de manager kan zelf kiezen.
   - **Coachingpunten**: maximaal drie, uitgerekend en door de Coach voorgesteld met onderbouwing ("Bij koude acquisitie sluit je 2 van de 10 gesprekken met een afspraak; het team 4 van de 10. In 6 gesprekken werd het afsluitblok van het script niet gebruikt."), elk met een gekoppeld helpartikel uit de new business-academie (F21).
   - **Afspraken**: wat spreken we af (doel, gedrag, termijn), vastgelegd als coachingnotitie met datum; de accountmanager ziet de afspraken (niet de privénotities van de manager) en kan reageren.
@@ -2443,7 +2443,7 @@ Elke grafiek is klikbaar naar de onderliggende lijst; elk tabblad heeft "Downloa
 
 - `coaching_sessies: id, organisation_id, gebruiker_id, manager_id, datum, data {cijfers (momentopname), punten[{tekst, onderbouwing, artikelId?}], afspraken[{tekst, termijn, status}], gesprekken[activiteitIds], reactie?}`; `coaching_notities: id, organisation_id, gebruiker_id, manager_id, soort ('afspraak'|'prive'), tekst, op`.
 - Afgeleide tabellen (dagelijkse job): `nb_kpi_dag (organisation_id, gebruiker_id, datum, metriek, waarde)`, `nb_conversies`, `nb_script_resultaten`, `nb_regel_resultaten`.
-- Pure functies: `kpi(gebruiker, periode, activiteiten)`, `trechter(accounts, reisgeschiedenis, periode)`, `aandachtspunten(team, kpis, normen)`, `coachVoorstel(kpis, team, verslagen)` (AI, schema `{punten[{tekst, onderbouwing {cijfers[], bron}, artikelSleutel}]}`, maximaal drie).
+- Pure functies: `kpi(gebruiker, periode, activiteiten)`, `funnelStand` (F17), `aandachtspunten(team, kpis, normen)`, `coachVoorstel(kpis, team, verslagen)` (AI, schema `{punten[{tekst, onderbouwing {cijfers[], bron}, artikelSleutel}]}`, maximaal drie).
 - Endpoints: `GET /api/team?team=&periode=`, `GET /api/coaching/:gebruiker`, `POST /api/coaching/:gebruiker/sessie`, `PUT /api/coaching/sessie/:id`, `GET /api/analyse/:tabblad?filters`, `GET /api/resultaten/mij`.
 - Rechten: server-side alleen eigen teams; privénotities nooit naar de accountmanager.
 - Acceptatie: de teamtabel klopt met de onderliggende lijsten; een coachingpunt is pas zichtbaar voor de accountmanager na "Deel"; een vergelijking onder het minimum toont de melding; CSV-export bevat precies de getoonde rijen.
@@ -2532,7 +2532,7 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 
 **Gebruikers**: lijst met naam, e-mail, rol, team, niveau (segmentknoppen Beginner, Gevorderd, Expert), werkplek, plafond voor AI-credits, laatste inlog, status; "Gebruiker toevoegen" binnen de seats of "Gebruiker aanvragen" (afhankelijk van de stand die de founder zette, F23); archiveren; niveau verlagen vraagt bevestiging. Vangrails: niet jezelf, niet de laatste beheerder.
 
-**Regels voor instellingen**: elke wijziging wordt per veld na 600 ms stilte bewaard met zichtbare status ("Opslaan…", "Opgeslagen", "Opslaan mislukt"); elke wijziging is een auditregel; sleutels die de leverancier beheert (pakket, bundel, functievlaggen, platformprompts) zijn nooit via deze pagina's te schrijven.
+**Regels voor instellingen**: elke wijziging wordt per veld na 600 ms stilte bewaard met zichtbare status ("Opslaan…", "Opgeslagen", "Opslaan mislukt"); elke wijziging is een auditregel; sleutels die de leverancier beheert (pakket, AI-credits, features per niveau, platformprompts) zijn nooit via deze pagina's te schrijven.
 
 #### Technisch
 
@@ -2584,9 +2584,9 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 5. In "Alleen meekijken" weigert de server elke schrijfactie in klantdata ("Je kijkt mee in deze organisatie; schakel over naar wijzigen om iets aan te passen."). Overschakelen vraagt opnieuw een reden.
 6. De beheerder van de klant krijgt bij elke start een melding met naam, reden en modus. Per organisatie instelbaar: "Toegang leverancier: altijd" of "Alleen na toestemming" (de beheerder keurt een verzoek eerst goed).
 
-**Abonnementen**: pakketten Starter, Plus, Compleet met per pakket de functies en de databronnen (AI-zoeker, KvK, Datacollectief, webonderzoek), seats, bundels en **AI-credits per gebruiker per maand** (F26); matrix "Welke inhoud?" met "Vergelijk met klant"; een pakketwissel vraagt bevestiging met wat de klant wint of verliest en wordt geaudit; prijzen per pakket en per seat als gegeven met geldig-vanaf; proefperiode met automatische afwaardering en melding 7 dagen vooraf. De beheerder ziet zijn pakket in gewone woorden, seats in gebruik, contract en "Upgrade aanvragen".
+**Abonnementen**: pakketten Starter, Plus, Compleet met per pakket de functies en de databronnen (AI-zoeker, KvK, Datacollectief, webonderzoek), seats, maandplafonds voor KvK en Datacollectief en **AI-credits per gebruiker per maand** (F26, 11.4); matrix "Welke inhoud?" met "Vergelijk met klant"; een pakketwissel vraagt bevestiging met wat de klant wint of verliest en wordt geaudit; prijzen per pakket en per seat als gegeven met geldig-vanaf; proefperiode met automatische afwaardering en melding 7 dagen vooraf. De beheerder ziet zijn pakket in gewone woorden, seats in gebruik, contract en "Upgrade aanvragen".
 
-**Facturen**: Stripe Billing als bron van abonnementen, seats, facturen en incasso (SEPA, iDEAL, kaart); betaalde facturen naar de boekhouding (Moneybird) als synchronisatie; meerwerk boven de bundel als factuurregel; achterstallig pauzeert automatisch AI-werk (niet de app); de founder ziet marge per klant (gefactureerd tegen AI- en datakosten). De beheerder ziet eigen facturen met pdf, betaalknop, factuuradres en btw-nummer.
+**Facturen**: Stripe Billing als bron van abonnementen, seats, facturen en incasso (SEPA, iDEAL, kaart); betaalde facturen naar de boekhouding (Moneybird) als synchronisatie; extra AI-credits en extra databronverbruik als factuurregel; achterstallig pauzeert automatisch AI-werk (niet de app); de founder ziet marge per klant (gefactureerd tegen AI- en datakosten). De beheerder ziet eigen facturen met pdf, betaalknop, factuuradres en btw-nummer.
 
 **AI-verbruik**: elke AI-aanroep in het logboek met de credits die hij kostte; per organisatie de pot AI-credits en het verbruik per soort en per gebruiker (11.4), los daarvan de externe databronnen (KvK, Datacollectief); melding bij 80 procent, blokkade bij 100 ("Je maandbundel voor dossiers is op."); de founder ziet kosten in euro's per model en soort, de beheerder alleen handelingen.
 
@@ -2621,7 +2621,7 @@ Persoonlijke instellingen (iedereen, via het gebruikersmenu "Mijn instellingen")
 **Meldingen**
 
 - Bel onderaan de zijbalk met rode teller; pagina `/meldingen` met rijen (kleurbalk per soort: kritiek rood, hete aanleiding paars, dagstart blauw, herinnering geel, inzicht groen), "Openen", "Markeer gelezen", "Verberg".
-- Soorten: herinnering (taak of afspraak), dagstart (zelfgekozen tijd, standaard 07:45 zoals in 8.10: afspraken, taken van vandaag, top 3 aanleidingen), nieuwe hete aanleiding bij een eigen account, concept klaar ter goedkeuring, afspraak gemaakt door een collega voor jou, kans klaargezet door de binnendienst, campagne loopt achter, functie voor je aangezet, coachingafspraak gedeeld, AI-credits op 80 procent, leverancier werkt in je organisatie (beheerder), bundel op 80 procent (beheerder).
+- Soorten: herinnering (taak of afspraak), dagstart (zelfgekozen tijd, standaard 07:45 zoals in 8.10: afspraken, taken van vandaag, top 3 aanleidingen), nieuwe hete aanleiding bij een eigen account, concept klaar ter goedkeuring, afspraak gemaakt door een collega voor jou, kans klaargezet door de binnendienst, campagne loopt achter, functie voor je aangezet, coachingafspraak gedeeld, AI-credits op 80 procent, leverancier werkt in je organisatie (beheerder), databronnen KvK of Datacollectief op 80 procent van het maandplafond (beheerder).
 - Kanalen: in-app, e-mail, web-push (PWA); per soort aan of uit en stille uren in Mijn instellingen; tijdens een belblok met "meldingen stil" worden ze vastgehouden tot het einde.
 
 **Globaal zoeken** (Ctrl K of `/`): prospects, klanten, contacten, campagnes, helpartikelen; per soort gegroepeerd met telling; pijltjes, Enter, Escape; accent- en hoofdletterongevoelig; functies die niet aanstaan met slot en uitleg.
@@ -2944,7 +2944,7 @@ Mandaatniveaus: **A** autonoom (doet het zelf, logt het, de mens ziet het achter
 | Notulist | Maakt het verslag volgens de agenda van de meetingsoort, stelt de uitkomst voor | Aantekeningen, transcript, meetingsoort | A voor het verslag; uitkomst kiest de mens |
 | Coach | Verbetervoorstel per doelgroep, coachingpunten per persoon | Activiteitenlog, conversies, verslagen | A voor voorstellen; de manager beslist |
 | Gids | De AI-assistent (F26): beantwoordt vragen van gebruikers en zet concepten klaar | Help-artikelen, kennisbank van de organisatie, verkoopverhaal, de context van het scherm binnen de rechten van de gebruiker | A, alleen lezen en concepten |
-| Bewaker | Toetst elke handeling aan mandaat, consent, afkoeling, ritme, capaciteit, bundel en werkuren | Alle tabellen | A, kan alleen blokkeren en melden |
+| Bewaker | Toetst elke handeling aan mandaat, consent, afkoeling, ritme, capaciteit, AI-credits en werkuren | Alle tabellen | A, kan alleen blokkeren en melden |
 
 **Mandaat per gebruikersniveau** (binnen het organisatiemaximum):
 
@@ -3521,7 +3521,7 @@ De ADR's 001 tot en met 010 uit `Architectuurplan-NewBusiness.md` blijven van kr
 - **Belblok**: een vast tijdvak in de agenda met een gevulde bellijst en een gekozen belscript.
 - **Belmodus**: het scherm waarin je een belblok gesprek na gesprek afwerkt.
 - **Belscript-template**: een in Instellingen gemaakt script met blokken, variabelen en bezwaren, dat AI per account invult.
-- **Bewaker**: de functie die elke agenthandeling toetst aan mandaat, consent, afkoeling, ritme, capaciteit en bundel.
+- **Bewaker**: de functie die elke agenthandeling toetst aan mandaat, consent, afkoeling, ritme, capaciteit en AI-credits.
 - **Buying committee**: wie bij een account beslist, beïnvloedt, blokkeert of gebruikt.
 - **Credits**: de eenheid waarin het abonnement bepaalt hoeveel er met de AI-assistent gechat kan worden.
 - **Dagpakket**: wat Dealtrace elke ochtend op de telefoon bewaart voor een dag offline: afspraken, route, accountkaarten, scripts en helpartikelen (8.8).
