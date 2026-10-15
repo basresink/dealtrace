@@ -72,3 +72,15 @@ export async function voerAiKern<T>(provider: AiProvider, stap: { soort: string;
   }
   return { ok: false, pogingen: 2, fouten, invoer: materiaal }
 }
+
+/**
+ * Namenfilter (11.2, C.9 geval 9): namen van contactpersonen gaan nooit mee in een
+ * AI-aanroep, ook niet als ze in aantekeningen staan.
+ */
+export function verwijderNamen<T>(materiaal: T, namen: (string | null | undefined)[]): T {
+  const delen = [...new Set(namen.flatMap((n) => (n ?? '').split(/\s+/)).map((n) => n.trim()).filter((n) => n.length >= 3 && !/^(van|der|den|de|het)$/i.test(n)))]
+  if (!delen.length) return materiaal
+  const re = new RegExp(`\\b(${delen.map((d) => d.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`, 'gi')
+  const loop = (w: any): any => (typeof w === 'string' ? w.replace(re, '[naam]') : Array.isArray(w) ? w.map(loop) : w && typeof w === 'object' ? Object.fromEntries(Object.entries(w).map(([k, v]) => [k, loop(v)])) : w)
+  return loop(materiaal)
+}

@@ -23,13 +23,15 @@ const laterOp = ref('')
 const reden = ref('')
 const toelichting = ref('')
 const bewerken = ref(false)
+const belpaneel = ref<any>(null)
+async function laadBelpaneel() { if (!belpaneel.value && t.value) belpaneel.value = await $fetch(`/api/bellen/taak/${t.value.id}`).catch(() => ({ item: null })) }
 const annuleren = ref(false)
 const annuleerReden = ref('')
 const bezig = ref(false)
 const bewerk = reactive({ title: '', priority: 'middel', dueDate: '', actionType: 'taak', beschrijving: '' })
 watch(() => [props.open, props.taakId], async ([o]) => {
   if (!o || !props.taakId) return
-  uitkomst.value = ''; laterOp.value = ''; reden.value = ''; toelichting.value = ''; bewerken.value = false; annuleren.value = false
+  uitkomst.value = ''; laterOp.value = ''; reden.value = ''; toelichting.value = ''; bewerken.value = false; annuleren.value = false; belpaneel.value = null
   laden.value = true
   try { t.value = await $fetch(`/api/tasks/${props.taakId}`) } catch { t.value = props.basis ? { ...props.basis, kan: { afronden: true }, account: props.basis.account ?? null } : null } finally { laden.value = false }
 }, { immediate: true })
@@ -82,6 +84,11 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
             <p v-if="t.aanleiding">{{ t.aanleiding }}</p>
             <p v-if="t.waarom" class="mt-8" data-test="waarom"><strong>Waarom krijg ik dit?</strong> {{ t.waarom }}<template v-if="t.regel"> <NuxtLink v-if="functie('regels.lezen')?.beschikbaar" :to="`/instellingen/regels`" class="tekst-link">Bekijk de regel</NuxtLink></template></p>
           </article>
+          <details v-if="t.actionType === 'bellen' && functie('belscript.kiezen')?.beschikbaar" class="fo-blok" data-test="belpaneel" @toggle="laadBelpaneel">
+            <summary class="fo-blok-titel">Belscript</summary>
+            <BelScript v-if="belpaneel?.item" :scripts="belpaneel.scripts" :voorstel="belpaneel.item.voorstel" :waarden="belpaneel.item.waarden" :extra-bezwaren="belpaneel.item.extraBezwaren" :meldingen="belpaneel.item.meldingen" :account-id="belpaneel.item.accountId" :contact-id="belpaneel.item.contactId" :ai-aan="belpaneel.kan.ai" compact />
+            <p v-else-if="belpaneel" class="meta">Geen script voor deze taak.</p>
+          </details>
           <article v-if="t.agent" class="fo-blok" data-test="agent-blok">
             <p class="taak-meta">Door {{ agentDef(t.agent)?.naam ?? t.agent }}<template v-if="me?.gebruiker.niveau === 'expert' && t.mandaat"> · mandaat <span class="pil" :class="`pil--mandaat-${t.mandaat}`">{{ t.mandaat }}</span></template><template v-if="t.executorStatus"> · {{ STATUS_LABEL[t.executorStatus] }}</template></p>
           </article>

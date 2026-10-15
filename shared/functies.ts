@@ -385,6 +385,43 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'ritme.beheer', naam: 'Ritmes beheren', pakket: 'starter', rollen: MANAGERS, helpartikel: 'hercontactritme', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'De stappen en parkeerduur van de ritmes aanpassen.', totDieTijd: 'Geen.' },
   },
+  // P10: belblokken, belmodus en belscripts (F07, F08).
+  {
+    sleutel: 'belblok.uitvoeren', naam: 'Belmodus', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-belmodus', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Gesprek na gesprek bellen met een script en de uitkomst per gesprek.', totDieTijd: 'Je beltaken staan op Vandaag en bij Acties.' },
+  },
+  {
+    sleutel: 'belblok.plannen', naam: 'Eigen belblokken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'belblokken', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Eigen vaste blokken met soort, plek en script, Top 10 en 15, en het blokdetail met "Vul aan".', totDieTijd: 'Je werkt met de twee standaard vaste blokken en de Top 5.' },
+  },
+  {
+    sleutel: 'belblok.automatisch', naam: 'Blok vult zichzelf', pakket: 'starter', rollen: 'iedereen', helpartikel: 'belblokken', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Een vast blok dat Dealtrace zelf vult, met de verhouding tussen nieuw en opvolging.', totDieTijd: 'Je vult je blokken zelf vanuit de bellijst.' },
+  },
+  {
+    sleutel: 'belscript.kiezen', naam: 'Belscript kiezen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-belscript-kiezen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Een script kiezen in het belpaneel en volgen tijdens het gesprek.', totDieTijd: 'Je belt met het standaardscript.' },
+  },
+  {
+    sleutel: 'belscript.ai', naam: 'Script per account aanvullen', pakket: 'plus', rollen: 'iedereen', helpartikel: 'een-belscript-kiezen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'AI vult per account de aanleiding en het winpunt in, met bron.', totDieTijd: 'Het script werkt met vaste teksten en terugvalzinnen.' },
+  },
+  {
+    sleutel: 'belscript.variant', naam: 'Mijn scripts', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-belscript-kiezen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een persoonlijke variant van een script met je eigen formuleringen.', totDieTijd: 'Je belt met de scripts van je team.' },
+  },
+  {
+    sleutel: 'belscript.vergelijken', naam: 'Scripts vergelijken', pakket: 'plus', rollen: 'iedereen', helpartikel: 'belscripts-maken', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Versies en varianten vergelijken op afspraken per gesprek.', totDieTijd: 'Je ziet de conversie per script in de keuzelijst.' },
+  },
+  {
+    sleutel: 'belscript.beheer', naam: 'Belscripts beheren', pakket: 'starter', rollen: MANAGERS, helpartikel: 'belscripts-maken', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Scripts maken, testen en activeren voor teams.', totDieTijd: 'Vraag je salesmanager.' },
+  },
+  {
+    sleutel: 'bellen.handsfree', naam: 'Handsfree bellen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-belmodus', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Dealtrace leest naam, reden en opening voor terwijl je rijdt.', totDieTijd: 'Je leest het script zelf op het scherm.' },
+  },
   // P09: helpcenter en niveaus (F21, 4.2).
   {
     sleutel: 'help.lezen', naam: 'Helpcenter', pakket: 'starter', rollen: 'iedereen', helpartikel: 'je-eerste-dag-in-dealtrace', startNiveau: 'beginner',
@@ -594,7 +631,7 @@ const FEATURE_GROEPEN: [RegExp, string][] = [
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\./, 'F13 Hercontactritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],
-  [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
+  [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
 ]
 export function featureGroep(sleutel: string): string {
   return FEATURE_GROEPEN.find(([r]) => r.test(sleutel))?.[1] ?? 'Overig'

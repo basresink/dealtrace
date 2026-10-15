@@ -65,6 +65,11 @@ useHead({ title: 'Mijn instellingen · Dealtrace' })
             <p class="kaart-meta">Welke regels jouw taken en inzichten klaarzetten{{ functie('regels.persoonlijk')?.beschikbaar ? ', en je eigen regels voor je eigen accounts' : '' }}.</p>
             <div class="reis-knoppen mt-16"><NuxtLink to="/instellingen/regels" class="dd-act">Naar de regels</NuxtLink><NuxtLink to="/instellingen/ritme" class="dd-act">Accountmatrix</NuxtLink></div>
           </article>
+          <article v-if="functie('belscript.variant')?.beschikbaar" class="kaart" data-test="mijn-scripts-kaart">
+            <header class="kaart-kop"><h2 class="kaart-titel">Mijn scripts</h2></header>
+            <p class="kaart-meta">Je eigen varianten van de belscripts van je team.</p>
+            <div class="reis-knoppen mt-16"><NuxtLink to="/instellingen/mijn-scripts" class="dd-act">Naar mijn scripts</NuxtLink></div>
+          </article>
           <article class="kaart">
             <header class="kaart-kop"><h2 class="kaart-titel">Meldingen</h2></header>
             <ul class="schakel-lijst">

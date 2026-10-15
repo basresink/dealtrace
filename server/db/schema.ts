@@ -594,3 +594,62 @@ export const helpZoekopdrachten = pgTable('help_zoekopdrachten', {
   resultaten: integer('resultaten').notNull(),
   op: ts('op').defaultNow().notNull(),
 })
+
+// P10: belscripts en belblokken (0010_bellen.sql)
+export const belscripts = pgTable('belscripts', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  naam: text('naam').notNull(),
+  doel: text('doel').notNull(),
+  status: text('status').notNull().default('concept'),
+  versie: integer('versie').notNull().default(0),
+  eigenaarId: text('eigenaar_id'),
+  basisScriptId: text('basis_script_id'),
+  isPersoonlijk: boolean('is_persoonlijk').notNull().default(false),
+  gebruikerId: text('gebruiker_id'),
+  controleren: boolean('controleren').notNull().default(false),
+  startset: text('startset'),
+  data: jsonb('data').$type<import('../../shared/belscripts').ScriptData>().notNull(),
+  createdAt: ts('created_at').defaultNow().notNull(),
+  updatedAt: ts('updated_at').defaultNow().notNull(),
+})
+export const belscriptVersies = pgTable('belscript_versies', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  belscriptId: text('belscript_id').notNull(),
+  versie: integer('versie').notNull(),
+  naam: text('naam').notNull(),
+  doel: text('doel').notNull(),
+  data: jsonb('data').$type<import('../../shared/belscripts').ScriptData>().notNull(),
+  geactiveerdOp: ts('geactiveerd_op').defaultNow().notNull(),
+  geactiveerdDoor: text('geactiveerd_door'),
+})
+export interface SessieData {
+  plek?: string; soort?: string; verhouding?: number; scriptId?: string | null; scriptVersie?: number | null
+  bezet?: boolean; stil?: boolean; handmatig?: boolean
+  gesprekken?: (import('../../shared/belblokken').Gesprek & { op: string; sleutel?: string | null })[]
+  resultaat?: ReturnType<typeof import('../../shared/belblokken').blokResultaat> | null
+  agenda?: { gekoppeld: boolean; bezetGezet: boolean }
+}
+export const belblokSessies = pgTable('belblok_sessies', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  gebruikerId: text('gebruiker_id').notNull(),
+  vastBlokId: text('vast_blok_id'),
+  startOp: ts('start_op').notNull(),
+  eindOp: ts('eind_op').notNull(),
+  status: text('status').notNull().default('gepland'),
+  gestartOp: ts('gestart_op'),
+  gestoptOp: ts('gestopt_op'),
+  data: jsonb('data').$type<SessieData>().notNull().default({}),
+  createdAt: ts('created_at').defaultNow().notNull(),
+})
+export const belscriptInvullingen = pgTable('belscript_invullingen', {
+  organisationId: text('organisation_id').notNull(),
+  belscriptId: text('belscript_id').notNull(),
+  versie: integer('versie').notNull(),
+  accountId: text('account_id').notNull(),
+  contactId: text('contact_id').notNull().default(''),
+  data: jsonb('data').notNull(),
+  op: ts('op').defaultNow().notNull(),
+}, (t) => [primaryKey({ columns: [t.belscriptId, t.versie, t.accountId, t.contactId] })])

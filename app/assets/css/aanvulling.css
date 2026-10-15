@@ -571,3 +571,150 @@
 .cel-afwijking { background: var(--yellow-zacht, #fff6c2); }
 .tabel-tussenkop { background: var(--surface); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .help-tekst ul { list-style: disc; } .help-tekst ol { list-style: decimal; }
+
+/* P10: belmodus, script en belblokken (uit mockup-dealtrace/mockup.css). */
+.kop-rij { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.ai-label {
+  display: inline-block;
+  padding: 0 5px;
+  margin-left: 4px;
+  background: var(--ink);
+  border-radius: var(--radius);
+  color: var(--yellow);
+  font-size: var(--fs-label);
+  font-weight: 800;
+}
+.codes { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--muted); }
+.bloklabel {
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.stuurstrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+.stuurstrip > div { padding: 10px 12px; background: var(--wit); font-size: var(--fs-klein); }
+.uitkomstraster { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.uitkomstraster--2 { grid-template-columns: repeat(2, 1fr); }
+.uitkomst {
+  min-height: var(--keuzeknop-h);
+  padding: 8px 10px;
+  background: var(--wit);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-klein);
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.uitkomst:hover { border-color: var(--ink); }
+.uitkomst--aan { background: var(--ink); border-color: var(--ink); color: var(--yellow); }
+/* Script in de belmodus (F07, F08) */
+.var {
+  padding: 0 3px;
+  background: var(--yellow-licht);
+  border-bottom: 1px solid var(--yellow-dark);
+  border-radius: var(--radius);
+}
+.var-code { font-family: var(--font-mono); font-size: var(--fs-meta); color: var(--muted); }
+.var--onbekend { background: var(--yellow-teller); }
+.var--onbekend::after {
+  content: 'onbekend';
+  margin-left: 4px;
+  padding: 0 4px;
+  background: var(--yellow);
+  font-size: var(--fs-label);
+  font-weight: 800;
+  color: var(--ink);
+}
+.toon-codes .var-tekst { display: none; }
+.var-code { display: none; }
+.toon-codes .var-code { display: inline; }
+.scriptblok { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.scriptblok:last-child { border-bottom: 0; }
+.scriptblok-kop { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.scriptblok p { font-size: var(--fs-body); line-height: 1.6; color: var(--ink); }
+.bezwaar-knop {
+  display: block;
+  width: 100%;
+  min-height: var(--touch-target-min);
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--wit);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-klein);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.bezwaar-knop:hover,
+.bezwaar-knop[aria-expanded='true'] { border-color: var(--ink); }
+.bezwaar-antwoord { padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-top: 0; font-size: var(--fs-klein); }
+
+/* Belmodus schermvullend (F07) */
+.belmodus {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+.belmodus[hidden] { display: none; }
+.belmodus-kop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  background: var(--ink);
+  color: var(--wit-85);
+}
+.belmodus-kop strong { color: var(--yellow); }
+.belmodus-kop .dd-act { margin-left: auto; }
+.belmodus-raster {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 280px;
+  min-height: 0;
+}
+.belmodus-raster > * { padding: 20px 24px; overflow-y: auto; border-right: 1px solid var(--border); }
+.belmodus-voet { padding: 12px 24px; background: var(--wit); border-top: 1px solid var(--ink); }
+@media (max-width: 1023px) {
+  .belmodus-raster { grid-template-columns: 1fr; overflow-y: auto; }
+  .belmodus-raster > * { overflow: visible; border-right: 0; border-bottom: 1px solid var(--border); }
+}
+.wachtrij-item { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: var(--fs-klein); }
+.wachtrij-item--nu { font-weight: 700; }
+.belmodus-voet .uitkomstraster { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+.belmodus-raster--resultaat { grid-template-columns: minmax(0, 720px); justify-content: center; } .mb-8 { margin-bottom: 8px; } .tekst--groot { font-size: 20px; line-height: 1.4; }
+/* P10: editor voor belscripts (760 px over de volle hoogte). */
+.fo-panel--editor { max-width: 760px; }
+@media (min-width: 1200px) { .fo-panel--editor { max-width: 1100px; } }
+.editor-raster { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 1200px) { .editor-raster { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+.editor-voorbeeld { background: var(--surface); padding: 12px 16px; border: 1px solid var(--border); align-self: start; }
+.editor-blok .invoer { min-height: 40px; }
+.fo-titel-invoer { font-family: var(--font-serif, Georgia, serif); font-size: 22px; font-weight: 700; margin-top: 4px; }
+.kaart--rood { border-color: var(--red); color: var(--red); }
+.tabel-rij--klik { cursor: pointer; } .tabel-rij--klik:hover td { background: var(--surface); }
+/* P10: bellen op de telefoon (8.5.4): belknop binnen duimbereik, minimaal 44 px. */
+.bel-rij { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; cursor: default; }
+.bel-knop { min-height: 48px; justify-content: center; }
+@media (max-width: 767px) { .bel-knop { width: 100%; } }
+.bel-eerste-regel { margin-top: 6px; font-size: 16px; line-height: 1.4; color: var(--ink); }
+.uitkomst--tegel { min-height: 64px; font-size: 16px; text-align: center; }
+.dd-act--vast { flex: 0 0 auto; width: auto; }
+.editor-blok .rijtje > .invoer, .editor-blok .rijtje > select { width: auto; flex: 1 1 160px; } .editor-blok .rijtje > .dd-act { flex: 0 0 auto; }
+@media (max-width: 767px) { .bel-rij { grid-template-columns: minmax(0, 1fr); } }

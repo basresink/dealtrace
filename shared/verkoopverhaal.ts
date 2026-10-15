@@ -21,7 +21,12 @@ export interface Redenmapping {
   terugkomregelId: string | null
 }
 
-export interface Concurrent { id: string; naam: string; soort: string }
+export interface Concurrent {
+  id: string; naam: string; soort: string
+  zoZegJeHet?: string; alsDeKlantZegt?: string; bewijs?: string; onderscheid?: string
+}
+export interface VerhaalTekst { id: string; sublaag: string; sleutel: string; brancheId: string | null; tekst: string; kernzin?: string | null }
+export interface Winpunt { id: string; titel: string; omschrijving: string; faseId: string | null; weging: number; onderNorm: boolean; actief: boolean }
 
 export interface Branche { id: string; naam: string; focus: string }
 
@@ -32,6 +37,9 @@ export interface VerkoopverhaalStand {
   terugkomregels: Terugkomregel[]
   redenmapping: Redenmapping[]
   concurrenten: Concurrent[]
+  /** P10: teksten (kernzin, verhaal per branche, belofte) en winpunten voor de scripts. Tot P28 uit de seed. */
+  teksten?: VerhaalTekst[]
+  winpunten?: Winpunt[]
 }
 
 /** Kanaal uit de regel ("Telefoon", "E-mail", "Bezoek") naar het kanaal van de afkoelperiode. */
@@ -104,6 +112,53 @@ export function verkoopverhaalUitSeed(vv: any): VerkoopverhaalStand {
       rollen: r.rollen_label ?? [], aanpak: r.aanpak, klassen: r.klassen ?? [],
     })),
     redenmapping: (vv?.eigen_aanvullingen?.vv_redenmapping ?? []).map((m: any) => ({ bronSoort: m.bron_soort, reden: m.dealtrace_reden, terugkomregelId: m.terugkomregel_id })),
-    concurrenten: (vv?.vv_concurrenten ?? []).map((c: any) => ({ id: c.extern_id, naam: c.concurrent, soort: c.soort_label })),
+    concurrenten: (vv?.vv_concurrenten ?? []).map((c: any) => ({ id: c.extern_id, naam: c.concurrent, soort: c.soort_label, zoZegJeHet: c.zoZegJeHet, alsDeKlantZegt: c.alsDeKlantZegt, bewijs: c.bewijs, onderscheid: c.onderscheid })),
+    teksten: (vv?.vv_teksten ?? []).map((t: any) => ({ id: t.id, sublaag: t.sublaag, sleutel: t.sleutel, brancheId: t.branche_id ?? null, tekst: t.tekst, kernzin: t.kernzin ?? null })),
+    winpunten: (vv?.vv_winpunten ?? []).map((w: any) => ({
+      id: w.extern_id, titel: w.titel, omschrijving: w.omschrijving, faseId: w.fase ?? null, weging: Number(w.weging ?? 1),
+      onderNorm: !!w.context?.klantfeedback?.onder_norm, actief: w.actief !== false,
+    })),
   }
+}
+
+// ── Leesmodel voor scripts en concepten (F25; volledig in P28) ──────────────
+
+const eersteZin = (t: string) => (/^.*?[.!?](\s|$)/.exec(t)?.[0] ?? t).trim()
+
+/** De kernzin van de branche, met terugval op het algemene verhaal en een melding (C.9 geval 1). */
+export function kernzinVoor(stand: Pick<VerkoopverhaalStand, 'teksten'>, brancheId: string | null | undefined): { tekst: string | null; terugval: boolean; melding?: string } {
+  const t = stand.teksten ?? []
+  const eigen = brancheId ? t.find((x) => x.sleutel === 'verhaal' && x.brancheId === brancheId) : undefined
+  if (eigen) return { tekst: eigen.kernzin || eersteZin(eigen.tekst), terugval: false }
+  const alg = t.find((x) => x.sleutel === 'bedrijfsverhaal' && !x.brancheId)
+  return { tekst: alg ? alg.kernzin || eersteZin(alg.tekst) : null, terugval: true, melding: brancheId ? 'Deze branche heeft nog geen eigen verhaal; het algemene verhaal geldt.' : undefined }
+}
+
+/** De belofte van de branche (kernbelofte), met terugval op de algemene. */
+export function beloftVoor(stand: Pick<VerkoopverhaalStand, 'teksten'>, brancheId: string | null | undefined): { tekst: string | null; terugval: boolean; melding?: string } {
+  const t = stand.teksten ?? []
+  const eigen = brancheId ? t.find((x) => x.sleutel === 'kernbelofte' && x.brancheId === brancheId) : undefined
+  if (eigen) return { tekst: eigen.tekst, terugval: false }
+  const alg = t.find((x) => x.sleutel === 'kernbelofte' && !x.brancheId)
+  return { tekst: alg?.tekst ?? null, terugval: true, melding: brancheId ? 'Deze branche heeft nog geen eigen belofte; de algemene geldt.' : undefined }
+}
+
+/**
+ * Het winpunt voor een gesprek: actief, bij voorkeur van de fase, hoogste weging. Een
+ * winpunt onder de norm van de klantfeedback komt nooit als eerste (C.9 geval 4). Een
+ * eerder gebruikt winpunt gaat achteraan (bericht 2 gebruikt een ander, 11.5).
+ */
+export function kiesWinpunt(winpunten: Winpunt[], opties: { faseId?: string | null; eerderGebruikt?: string[] } = {}): Winpunt | null {
+  const kandidaten = winpunten.filter((w) => w.actief)
+  if (!kandidaten.length) return null
+  const gebruikt = new Set(opties.eerderGebruikt ?? [])
+  const sleutel = (w: Winpunt) => [w.onderNorm ? 1 : 0, gebruikt.has(w.id) ? 1 : 0, opties.faseId && w.faseId === opties.faseId ? 0 : 1, -w.weging]
+  return [...kandidaten].sort((a, b) => { const x = sleutel(a), y = sleutel(b); for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i]! - y[i]!; return a.id.localeCompare(b.id) })[0]!
+}
+
+/** "Als de klant zegt": '"Online is het goedkoper." Antwoord: "Per stuk soms wel."' naar bezwaar en antwoord. */
+export function leesAlsDeKlantZegt(t: string | null | undefined): { bezwaar: string; antwoord: string } | null {
+  if (!t) return null
+  const m = /^\s*"?(.+?)"?\s*Antwoord:\s*"?(.+?)"?\s*$/s.exec(t)
+  return m ? { bezwaar: m[1]!.trim(), antwoord: m[2]!.trim() } : null
 }

@@ -34,7 +34,7 @@ async function hercontactRegelId(tx: Tx): Promise<string> {
 export interface AfrondUitkomst { taakId: string; status: string; tekst: string; volgende: { op: string; kanaal: string; stap: number; van: number } | null; vervolgId: string | null; accountStatus: string | null; alAfgerond?: boolean }
 
 /** Het enige afrondpad. Idempotent op de sleutel: een tweede keer geeft hetzelfde antwoord. */
-export async function rondAf(tx: Tx, taakId: string, invoer: AfrondInvoer, door: string, nu = new Date()): Promise<AfrondUitkomst> {
+export async function rondAf(tx: Tx, taakId: string, invoer: AfrondInvoer & { activiteit?: Record<string, unknown> }, door: string, nu = new Date()): Promise<AfrondUitkomst> {
   const [t] = await tx.select().from(schema.tasks).where(eq(schema.tasks.id, taakId))
   if (!t) throw new ReisFout(404, 'Taak onbekend')
   const vorig = (t.data as any)?.afronding
@@ -53,7 +53,7 @@ export async function rondAf(tx: Tx, taakId: string, invoer: AfrondInvoer, door:
 
   // Taak, activiteit en stuurvelden.
   await tx.update(schema.tasks).set({ status: 'klaar', uitkomst: r.taakPatch.uitkomst, laterOp: r.taakPatch.laterOp, data: { ...(t.data ?? {}), ...r.taakPatch.data }, updatedAt: tijd }).where(eq(schema.tasks.id, t.id))
-  await tx.insert(schema.activiteiten).values({ organisationId: t.organisationId, accountId: t.accountId, contactId: t.contactId, taskId: t.id, soort: r.activiteit.soort, kanaal: r.activiteit.kanaal, uitkomst: r.activiteit.uitkomst, door, op: tijd, data: { ...r.activiteit.data, status: 'afgerond' } })
+  await tx.insert(schema.activiteiten).values({ organisationId: t.organisationId, accountId: t.accountId, contactId: t.contactId, taskId: t.id, soort: r.activiteit.soort, kanaal: r.activiteit.kanaal, uitkomst: r.activiteit.uitkomst, door, op: tijd, data: { ...r.activiteit.data, ...(invoer.activiteit ?? {}), status: 'afgerond' } })
   if (a) {
     if (r.ritme) await tx.update(schema.accounts).set({ data: { ...(a.data ?? {}), reis: { ...((a.data as any)?.reis ?? {}), ritme: r.ritme.stand } } }).where(eq(schema.accounts.id, a.id))
     await herbereken(tx, a.id, nu)

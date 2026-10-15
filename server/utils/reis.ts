@@ -33,7 +33,7 @@ async function meldpuntAan(tx: Tx) {
 export async function verkoopverhaal(tx: Tx): Promise<VerkoopverhaalStand> {
   const [r] = await tx.select().from(schema.orgSettings).where(eq(schema.orgSettings.key, 'verkoopverhaal'))
   const v = (r?.value ?? {}) as Partial<VerkoopverhaalStand>
-  return { terugkomregels: v.terugkomregels ?? [], redenmapping: v.redenmapping ?? [], concurrenten: v.concurrenten ?? [] }
+  return { ...v, terugkomregels: v.terugkomregels ?? [], redenmapping: v.redenmapping ?? [], concurrenten: v.concurrenten ?? [] }
 }
 
 export async function afkoelingInstelling(tx: Tx): Promise<Afkoeling> {

@@ -10,6 +10,7 @@ import type { MotorAccount, Regel, RegelData } from '../../shared/regelPatronen'
 import { BELMATRIX_STANDAARD, CAPACITEIT_STANDAARD, klasseCode, leesMatrix, type Klasse } from '../../shared/ritmematrix'
 import { schema } from './db'
 import { draai as draaiPlanner } from './agents/planner'
+import { vulBelblokken } from './bellen'
 
 type Tx = Parameters<Parameters<ReturnType<typeof import('./db').gebruikDb>['transaction']>[0]>[0]
 type RegelRij = typeof schema.activityRules.$inferSelect
@@ -183,6 +184,12 @@ export async function draaiMotor(tx: Tx, org: string, opties: RunOpties) {
     uit.waarschuwingen.unshift(...waarschuwingen)
     await schrijfMotorUitvoer(tx, org, uit, nu)
     await draaiPlanner(tx, org, uit, nu)
+    // Belblokvuller (F07): na elke geplande of handmatige run, niet bij een gebeurtenis.
+    if (opties.soort !== 'gebeurtenis') {
+      const v = await vulBelblokken(tx, org, nu)
+      const stap = uit.stappen.find((s) => s.stap === 'belblokvuller')
+      if (stap) Object.assign(stap, { status: 'gedaan', toelichting: `${v.blokken} blokken, ${v.gesprekken} gesprekken` })
+    }
   } catch (e) {
     fouten.push((e as Error).message)
     throw e

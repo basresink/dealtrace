@@ -114,3 +114,6 @@ grant select, insert, update, delete on functies_per_niveau to dealtrace_platfor
 grant select, insert, update, delete on help_artikelen to dealtrace_platform;
 revoke update, delete on help_feedback, help_zoekopdrachten from dealtrace_app;
 grant execute on function dealtrace_zoektekst(text) to dealtrace_app, dealtrace_platform;
+-- P10: de startset van belscripts laadt de platformrol; versies zijn een log.
+grant select, insert on belscripts, belscript_versies to dealtrace_platform;
+revoke update, delete on belscript_versies from dealtrace_app;

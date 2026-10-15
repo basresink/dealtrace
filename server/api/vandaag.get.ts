@@ -91,6 +91,9 @@ export default defineEventHandler(async (event) => {
     const volgendeKoud = geordend.find((t) => t.actionType === 'bellen' && t.dueDate && Date.parse(t.dueDate) >= nu.getTime())
     const volgorde = ((mij?.data as any)?.vandaagVolgorde as string[] | undefined) ?? ['agents', 'datakwaliteit', 'week']
     const aanleidingAccount = aanleiding?.accountId ? per.get(aanleiding.accountId) : null
+    // P10: het belblok van vandaag dat nog loopt, met zijn open gesprekken.
+    const [blokVandaag] = (await tx.execute(sql`select s.id, s.start_op, (select count(*)::int from tasks t where t.belblok_id = s.id and t.status in ('open', 'bezig')) as n
+      from belblok_sessies s where s.gebruiker_id = ${ctx.gebruiker.id} and s.status in ('gepland', 'bezig') and s.eind_op > now() and s.start_op < now() + interval '18 hours' order by s.start_op limit 1`)).rows as { id: string; start_op: string; n: number }[]
     return {
       kop: {
         groet: `${groetVoor(nu)}, ${ctx.gebruiker.naam.replace(/^Test(gebruiker|founder)\s+/, '').split(' ')[0]}.`,
@@ -103,7 +106,9 @@ export default defineEventHandler(async (event) => {
       prio: prio.slice(0, 4),
       werkblok: werkplek === 'buitendienst'
         ? { soort: 'bezoekdag', titel: 'BEZOEKDAG', tekst: bezoekTaken ? `${bezoekTaken} ${bezoekTaken === 1 ? 'bezoek' : 'bezoeken'} vandaag · nog geen regiodag gepland` : 'Nog geen regiodag gepland', knop: { tekst: 'Open bezoeken', naar: '/acties?actiesoort=bezoek' } }
-        : { soort: 'belblok', titel: 'BELBLOK', tekst: belTaken ? `${belTaken} ${belTaken === 1 ? 'gesprek' : 'gesprekken'} · ongeveer ${belTaken * 8} min · nog geen belblok gepland` : 'Nog geen belblok gepland', knop: { tekst: 'Start bellen', naar: '/acties?actiesoort=bellen' } },
+        : blokVandaag
+          ? { soort: 'belblok', titel: 'BELBLOK', tekst: `${new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(blokVandaag.start_op))} · ${blokVandaag.n} ${blokVandaag.n === 1 ? 'gesprek' : 'gesprekken'}`, knop: { tekst: 'Start belblok', naar: `/belblokken/${blokVandaag.id}` } }
+          : { soort: 'belblok', titel: 'BELBLOK', tekst: belTaken ? `${belTaken} ${belTaken === 1 ? 'gesprek' : 'gesprekken'} · ongeveer ${belTaken * 8} min · nog geen belblok gepland` : 'Nog geen belblok gepland', knop: { tekst: belTaken ? 'Plan een belblok' : 'Naar belblokken', naar: '/belblokken' } },
       concepten: { aantal: taken.filter((t) => (t.data as any)?.concept).length },
       agents: gevorderd && kan(ctx, 'vandaag.agentsGedaan') ? { taken: motorTaken.n, inzichten: motorInzichten.n, geparkeerd: geparkeerd.n } : null,
       datakwaliteit: gevorderd ? gaten : null,

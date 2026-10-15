@@ -7,6 +7,7 @@ import type { alsPlatform } from './platform'
 import { schema } from './db'
 import { startersetRijen } from './motor'
 import { RITMES_STARTSET } from '../../shared/hercontact'
+import { STARTSET_SCRIPTS } from '../../shared/belscripts'
 import { AFKOELING_STANDAARD } from '../../shared/nbStatus'
 import { STANDAARD_ACTIVITEITEN, STANDAARDREIS_NAAM, standaardReisData, standaardReisId } from '../../shared/reis'
 
@@ -73,6 +74,18 @@ export const STARTSET: StartsetOnderdeel[] = [
       const [r] = (await tx.execute(sql`select count(*)::int as n from hercontactritmes where organisation_id = ${org}`)).rows as { n: number }[]
       if (r && r.n > 0) return
       await tx.insert(schema.hercontactritmes).values(RITMES_STARTSET.map((x) => ({ organisationId: org, naam: x.naam, bron: x.bron, data: { stappen: x.stappen, parkeerDagen: x.parkeerDagen, werkplek: x.werkplek ?? 'alle' } })))
+    },
+  },
+  {
+    sleutel: 'belscripts',
+    naam: 'Zes belscripts, actief in versie 1 (P10)',
+    async voerUit(tx, org) {
+      const [r] = (await tx.execute(sql`select count(*)::int as n from belscripts where organisation_id = ${org} and startset is not null`)).rows as { n: number }[]
+      if (r && r.n > 0) return
+      for (const [i, s] of STARTSET_SCRIPTS.entries()) {
+        const [b] = await tx.insert(schema.belscripts).values({ organisationId: org, naam: s.naam, doel: s.doel, status: 'actief', versie: 1, startset: `start-${i + 1}`, data: s.data }).returning({ id: schema.belscripts.id })
+        await tx.insert(schema.belscriptVersies).values({ organisationId: org, belscriptId: b!.id, versie: 1, naam: s.naam, doel: s.doel, data: s.data, geactiveerdDoor: 'startset' })
+      }
     },
   },
 ]

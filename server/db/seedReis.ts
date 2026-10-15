@@ -5,7 +5,8 @@ import type pg from 'pg'
 import { AFKOELING_STANDAARD, afkoelingVoorNee } from '../../shared/nbStatus'
 import { terugkomDatum, verkoopverhaalUitSeed } from '../../shared/verkoopverhaal'
 import { zorgVoorReizen } from './reisStart'
-import { zorgVoorRegels, zorgVoorRitmes } from './regelStart'
+import { zorgVoorBelscripts, zorgVoorRegels, zorgVoorRitmes } from './regelStart'
+import { STARTSET_SCRIPTS } from '../../shared/belscripts'
 import { RITMES_STARTSET, kiesRitme, startRitme, type Ritme } from '../../shared/hercontact'
 
 export async function seedReis(client: Pick<pg.Client, 'query'>, orgId: string, voltvast: any) {
@@ -15,6 +16,9 @@ export async function seedReis(client: Pick<pg.Client, 'query'>, orgId: string, 
   ] as const) {
     await client.query(`insert into org_settings (organisation_id, key, value) values ($1, $2, $3) on conflict (organisation_id, key) do nothing`, [o, key, JSON.stringify(value)])
   }
+  // P10: teksten, winpunten en concurrenten aanvullen in een bestaand verkoopverhaal (tot P28).
+  await client.query(`update org_settings set value = value || $2 where organisation_id = $1 and key = 'verkoopverhaal' and not (value ? 'winpunten')`,
+    [orgId, JSON.stringify({ teksten: vv.teksten, winpunten: vv.winpunten, concurrenten: vv.concurrenten })])
   // Vast geval voor de Bewaker (P08): een fictieve prospect in br-02 op nee met reden
   // "Geen behoefte" en een lopende afkoelperiode voor mail en bellen.
   const neeOp = new Date(Date.now() - 10 * 864e5).toISOString()
@@ -28,6 +32,7 @@ export async function seedReis(client: Pick<pg.Client, 'query'>, orgId: string, 
   await zorgVoorReizen(client)
   await zorgVoorRegels(client)
   await zorgVoorRitmes(client, RITMES_STARTSET)
+  await zorgVoorBelscripts(client, STARTSET_SCRIPTS)
   // Prospects in Gekwalificeerd lopen in een hercontactritme (P07), poging 1 is nu aan de beurt.
   const ritmes = (await client.query(`select id, naam, bron, status, data from hercontactritmes where organisation_id = $1`, [orgId])).rows
     .map((r: any) => ({ id: r.id, naam: r.naam, bron: r.bron, status: r.status, werkplek: r.data.werkplek, stappen: r.data.stappen, parkeerDagen: r.data.parkeerDagen })) as Ritme[]
