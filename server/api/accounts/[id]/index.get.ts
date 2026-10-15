@@ -71,6 +71,10 @@ export default defineEventHandler(async (event) => {
       reis: reisInfo, terugkom, nee: a.data?.nee ? { ...a.data.nee, tot: Object.fromEntries(KANALEN.map((k) => [k, afkoelingTot(a.data!.nee, k)])) } : null, wachtendTot: a.data?.wachtendTot ?? null, benaderen,
       reizen: kan(ctx, 'reis.verplaatsen') ? reizen.filter((r) => r.status === 'actief' && r.id !== a.reisId).map((r) => ({ id: r.id, naam: r.naam })) : [],
       concurrenten: vv?.concurrenten ?? [],
+      // Verkoopverhaal op de kaart (P28): branche uit het verhaal en de huidige leverancier.
+      vvBranche: a.vvBrancheId ? (vv?.branches ?? []).find((b) => b.id === a.vvBrancheId) ?? { id: a.vvBrancheId, naam: a.vvBrancheId } : null,
+      huidigeLeverancier: a.huidigeLeverancierId ? ((vv?.concurrenten ?? []) as any[]).find((c) => c.id === a.huidigeLeverancierId) ?? { id: a.huidigeLeverancierId, naam: 'Onbekende leverancier' } : null,
+      kanLeverancier: kan(ctx, 'account.huidigeLeverancier'),
       klassen: ((klasseRij?.value as any[]) ?? []).filter((k) => !k.tabblad || k.tabblad === (a.accountKind === 'klant' ? 'Klanten' : 'Prospects')),
       gebruikers: gebruikers.filter((u) => u.status !== 'gearchiveerd').map((u) => ({ id: u.id, naam: u.naam })),
       kan: {

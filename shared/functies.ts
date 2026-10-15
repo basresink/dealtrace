@@ -422,6 +422,27 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'bellen.handsfree', naam: 'Handsfree bellen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-belmodus', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'Dealtrace leest naam, reden en opening voor terwijl je rijdt.', totDieTijd: 'Je leest het script zelf op het scherm.' },
   },
+  // P28: verkoopverhaal en Richting (F25).
+  {
+    sleutel: 'richting.concurrentiekaart', naam: 'Concurrentiekaart', pakket: 'starter', rollen: 'iedereen', helpartikel: 'tegen-wie-we-verkopen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De concurrentkaarten downloaden om te printen of mee te nemen.', totDieTijd: 'Lees de concurrenten op Richting.' },
+  },
+  {
+    sleutel: 'account.huidigeLeverancier', naam: 'Huidige leverancier zetten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'tegen-wie-we-verkopen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Op de accountkaart kiezen bij wie de prospect nu koopt, met "Zo zeg je het" en bewijs.', totDieTijd: 'Je ziet de leverancier als iemand anders hem zette.' },
+  },
+  {
+    sleutel: 'richting.voorstellen', naam: 'Voorstellen voor het verhaal', pakket: 'starter', rollen: 'iedereen', helpartikel: 'ons-verhaal', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Een antwoord, bezwaar, winpunt of bewijs voorstellen aan je salesmanager.', totDieTijd: 'Bespreek het met je salesmanager.' },
+  },
+  {
+    sleutel: 'verkoopverhaal.inrichten', naam: 'Verkoopverhaal inrichten', pakket: 'starter', rollen: ['salesmanager', 'beheerder'], helpartikel: 'ons-verhaal', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De acht onderdelen van het verkoopverhaal vullen en bevestigen.', totDieTijd: 'Vraag je salesmanager of beheerder.' },
+  },
+  {
+    sleutel: 'verkoopverhaal.mappings', naam: 'Mappings verkoopverhaal', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'ons-verhaal', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Branche naar SBI, verliesreden naar terugkomreden en ambitiedoelen beheren.', totDieTijd: 'Vraag je beheerder.' },
+  },
   // P27: inloggen met code en de mobiele schil (F24, hoofdstuk 8).
   {
     sleutel: 'auth.toestellen', naam: 'Toestellen en sessies', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'beginner',
@@ -698,7 +719,7 @@ const FEATURE_GROEPEN: [RegExp, string][] = [
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],
-  [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^auth\.|^schil\./, 'F24 Inloggen en telefoon'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^leads\.|^koppeling\.kvk|^onderweg\.kvk/, 'F02 Leadgenerator'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
+  [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^auth\.|^schil\./, 'F24 Inloggen en telefoon'], [/^richting\.|^verkoopverhaal\.|^account\.huidigeLeverancier/, 'F25 Verkoopverhaal en Richting'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^leads\.|^koppeling\.kvk|^onderweg\.kvk/, 'F02 Leadgenerator'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
 ]
 export function featureGroep(sleutel: string): string {
   return FEATURE_GROEPEN.find(([r]) => r.test(sleutel))?.[1] ?? 'Overig'

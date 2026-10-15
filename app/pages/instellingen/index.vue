@@ -29,6 +29,7 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
     kaarten: [
       { titel: 'Regels', tekst: 'Wat de motor zelf klaarzet: 23 regels uit de starterset en jullie eigen regels.', link: '/instellingen/regels', toon: true },
       { titel: 'Accountmatrix en ritmes', tekst: 'Klassen, belmatrix, afspraakmatrix en capaciteit.', link: '/instellingen/ritme', toon: true },
+      { titel: 'Verkoopverhaal', tekst: 'Verhaal, belofte, branches, concurrenten, winpunten en terugkomregels.', link: '/instellingen/verkoopverhaal', toon: !!functie('verkoopverhaal.inrichten')?.beschikbaar },
       { titel: 'Belscripts', tekst: 'Standaardscripts voor het belpaneel, met versies en resultaten.', link: '/instellingen/belscripts', toon: true },
       { titel: 'Eigen velden', tekst: 'Extra velden op prospects en contacten.', link: '/instellingen/eigen-velden', toon: beheerder.value },
       { titel: 'Prospectreizen', tekst: 'Doelgroepen, de standaardreis en reizen op maat.', link: '/reizen', toon: beheerder.value },

@@ -12,7 +12,7 @@ import { verbindingsopties } from '../../shared/verbinding'
 import { APP_WACHTWOORD, BEHEER_URL, isLokaal } from './omgeving'
 import { startindeling } from '../../shared/functies'
 import { zorgVoorReizen } from './reisStart'
-import { zorgVoorBelscripts, zorgVoorBrancheMapping, zorgVoorRegels, zorgVoorRitmes } from './regelStart'
+import { zorgVoorBelscripts, zorgVoorVerkoopverhaal, zorgVoorRegels, zorgVoorRitmes } from './regelStart'
 import { STARTSET_SCRIPTS } from '../../shared/belscripts'
 import { zorgVoorHelp } from './helpStart'
 import { RITMES_STARTSET } from '../../shared/hercontact'
@@ -68,9 +68,9 @@ export async function migreer(url = BEHEER_URL, opties: { opnieuw?: boolean; sti
     // P10: de zes belscripts van de startset.
     const nScripts = await zorgVoorBelscripts(client, STARTSET_SCRIPTS)
     if (nScripts) log(`Belscripts: startset geladen voor ${nScripts} organisaties.`)
-    // P11: SBI-mapping per branche voor de leadgenerator.
-    const nMapping = await zorgVoorBrancheMapping(client)
-    if (nMapping) log(`Verkoopverhaal: SBI-mapping toegevoegd voor ${nMapping} organisaties.`)
+    // P28: het leesmodel van het verkoopverhaal voor organisaties met het oude verhaal.
+    const nVv = await zorgVoorVerkoopverhaal(client as any)
+    if (nVv) log(`Verkoopverhaal: leesmodel uit de startset geladen voor ${nVv} organisaties.`)
     // P09: de platformartikelen van het helpcenter.
     const help = await zorgVoorHelp(client)
     if (help.nieuw || help.bijgewerkt) log(`Helpcenter: ${help.nieuw} nieuwe en ${help.bijgewerkt} bijgewerkte artikelen.`)

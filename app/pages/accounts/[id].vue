@@ -19,6 +19,9 @@ const notitie = ref('')
 const geschiedenisOpen = ref(false)
 const neeOpen = ref(false)
 const handeling = ref<null | 'fase' | 'pauzeer' | 'verplaats' | 'terugop'>(null)
+async function zetLeverancier(id: string) {
+  try { await $fetch(`/api/accounts/${a.value.id}`, { method: 'PUT', body: { huidigeLeverancierId: id || null } }); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+}
 async function klaar(tekst: string) { neeOpen.value = false; handeling.value = null; toast.toon(tekst); await refresh() }
 async function kwalificeer() {
   try {
@@ -77,7 +80,19 @@ useHead({ title: computed(() => `${a.value?.naam ?? 'Account'} · Dealtrace`) })
               <button v-if="a.reis?.fase" type="button" class="pil reis-pil-knop" :class="fasePil(a.reis.fase.kleur)" :disabled="!a.kan.geschiedenis" :title="a.kan.geschiedenis ? 'Reisgeschiedenis' : undefined" data-test="fasepil" @click="openFase">{{ a.reis.fase.label }}</button>
               <span class="pil" :class="STATUS_PIL[a.status]" data-test="statuspil">{{ STATUS_LABEL[a.status] ?? a.status }}</span>
               <span v-if="a.dagenInFase !== null && a.reis" class="meta" :class="{ 'meta--oranje': a.reis.fase?.overschreden }" data-test="dagen-in-fase">{{ a.dagenInFase }} dagen in fase</span>
+              <span v-if="a.vvBranche" class="chip chip--branche" title="Branche (verkoopverhaal)" data-test="vv-branche">{{ a.vvBranche.naam }}</span>
               <span v-for="c in [a.branche, a.plaats, a.land].filter(Boolean)" :key="c" class="pil pil--leeg">{{ c }}</span>
+            </div>
+            <div v-if="a.soort === 'prospect' && (a.concurrenten.length || a.huidigeLeverancier)" class="ak-leverancier mt-8" data-test="leverancier">
+              <label class="veld veld--rij"><span class="veld-label">Huidige leverancier</span>
+                <select v-if="a.kanLeverancier" class="invoer invoer--klein" :value="a.huidigeLeverancier?.id ?? ''" data-test="leverancier-kies" @change="zetLeverancier(($event.target as HTMLSelectElement).value)"><option value="">Onbekend</option><option v-for="c in a.concurrenten" :key="c.id" :value="c.id">{{ c.naam }}</option></select>
+                <span v-else>{{ a.huidigeLeverancier?.naam ?? 'Onbekend' }}</span>
+              </label>
+              <div v-if="a.huidigeLeverancier?.zoZegJeHet" class="kaart kaart--vlak mt-8" data-test="zo-zeg-je-het">
+                <p><strong>Zo zeg je het:</strong> {{ a.huidigeLeverancier.zoZegJeHet }}</p>
+                <p v-if="a.huidigeLeverancier.bewijs" class="mt-8"><strong>Bewijs:</strong> {{ a.huidigeLeverancier.bewijs }}</p>
+                <p v-if="a.huidigeLeverancier.wanneerVerliezen && a.reis?.fase?.id === 'gekwalificeerd'" class="veld-fout mt-8" data-test="verlies-waarschuwing">Let op: hier verliezen we vaak van {{ a.huidigeLeverancier.naam }}. {{ a.huidigeLeverancier.wanneerVerliezen }}</p>
+              </div>
             </div>
             <div class="ak-contactstrip mt-8">
               <a v-if="a.website" :href="a.website" target="_blank" rel="noopener"><Icoon naam="Globe" :grootte="16" /> Website</a>

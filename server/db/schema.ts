@@ -769,3 +769,16 @@ export const gebruikerToestellen = pgTable('gebruiker_toestellen', {
   laatstGezien: ts('laatst_gezien').defaultNow().notNull(),
   ingetrokkenOp: ts('ingetrokken_op'),
 })
+
+// P28: voorstellen voor het verkoopverhaal (de rest van vv_* leest server/utils/vvProjectie.ts met SQL).
+export const vvVoorstellen = pgTable('vv_voorstellen', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  onderdeel: text('onderdeel').notNull(),
+  ref: text('ref'),
+  soort: text('soort').notNull(),
+  tekst: text('tekst').notNull(),
+  door: text('door').notNull(),
+  status: text('status').notNull().default('open'),
+  op: ts('op').defaultNow().notNull(),
+})

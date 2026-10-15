@@ -3,25 +3,25 @@
 // wachtend. Idempotent; draait in de seed en bij elke Netlify-build.
 import type pg from 'pg'
 import { AFKOELING_STANDAARD, afkoelingVoorNee } from '../../shared/nbStatus'
+import { drizzle } from 'drizzle-orm/node-postgres'
 import { terugkomDatum, verkoopverhaalUitSeed } from '../../shared/verkoopverhaal'
+import { laadStartsetBevestigd } from '../utils/vvProjectie'
+import * as schema from './schema'
 import { zorgVoorReizen } from './reisStart'
 import { zorgVoorBelscripts, zorgVoorRegels, zorgVoorRitmes } from './regelStart'
 import { STARTSET_SCRIPTS } from '../../shared/belscripts'
 import { RITMES_STARTSET, kiesRitme, startRitme, type Ritme } from '../../shared/hercontact'
 
 export async function seedReis(client: Pick<pg.Client, 'query'>, orgId: string, voltvast: any) {
-  const vv = verkoopverhaalUitSeed(voltvast.verkoopverhaal)
-  for (const [o, key, value] of [
-    [orgId, 'afkoeling', AFKOELING_STANDAARD], [orgId, 'verkoopverhaal', vv], ['org-tweede', 'afkoeling', AFKOELING_STANDAARD],
-  ] as const) {
+  for (const [o, key, value] of [[orgId, 'afkoeling', AFKOELING_STANDAARD], ['org-tweede', 'afkoeling', AFKOELING_STANDAARD]] as const) {
     await client.query(`insert into org_settings (organisation_id, key, value) values ($1, $2, $3) on conflict (organisation_id, key) do nothing`, [o, key, JSON.stringify(value)])
   }
-  // P10: teksten, winpunten en concurrenten aanvullen in een bestaand verkoopverhaal (tot P28).
-  await client.query(`update org_settings set value = value || $2 where organisation_id = $1 and key = 'verkoopverhaal' and not (value ? 'winpunten')`,
-    [orgId, JSON.stringify({ teksten: vv.teksten, winpunten: vv.winpunten, concurrenten: vv.concurrenten })])
-  // P11: SBI-mapping per branche voor de leadgenerator (tot P28).
-  await client.query(`update org_settings set value = value || $2 where organisation_id = $1 and key = 'verkoopverhaal' and not (value ? 'brancheMapping')`,
-    [orgId, JSON.stringify({ brancheMapping: vv.brancheMapping })])
+  // P28: het verkoopverhaal van Voltvast als eigen inrichting uit de startset (Bijlage C), bevestigd.
+  // Testorganisatie Tweede heeft een lege inrichting.
+  const db = drizzle(client as any, { schema })
+  const [heeft] = (await client.query(`select 1 from vv_sublagen where organisation_id = $1 limit 1`, [orgId])).rows
+  if (!heeft) await laadStartsetBevestigd(db as any, orgId, voltvast.verkoopverhaal, 'u-06')
+  const vv = verkoopverhaalUitSeed(voltvast.verkoopverhaal)
   // Vast geval voor de Bewaker (P08): een fictieve prospect in br-02 op nee met reden
   // "Geen behoefte" en een lopende afkoelperiode voor mail en bellen.
   const neeOp = new Date(Date.now() - 10 * 864e5).toISOString()

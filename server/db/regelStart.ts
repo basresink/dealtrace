@@ -3,6 +3,9 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type pg from 'pg'
+import { drizzle } from 'drizzle-orm/node-postgres'
+import { laadStartsetBevestigd } from '../utils/vvProjectie'
+import * as schema from './schema'
 
 export async function zorgVoorRegels(client: Pick<pg.Client, 'query'>): Promise<number> {
   const set = JSON.parse(readFileSync(join(import.meta.dirname, '../../seed/regels-starterset.json'), 'utf8')) as any[]
@@ -41,10 +44,13 @@ export async function zorgVoorBelscripts(client: Pick<pg.Client, 'query'>, start
   return orgs.length
 }
 
-/** P11: de SBI-mapping per branche (vv_branche_mapping) in een verkoopverhaal met de Voltvast-branches (tot P28). */
-export async function zorgVoorBrancheMapping(client: Pick<pg.Client, 'query'>): Promise<number> {
+/** P28: een organisatie met het oude verkoopverhaal in org_settings (P10 tot P12) krijgt het leesmodel uit de startset, bevestigd. */
+export async function zorgVoorVerkoopverhaal(client: pg.Client): Promise<number> {
+  const orgs = (await client.query(`select s.organisation_id as id from org_settings s where s.key = 'verkoopverhaal'
+    and not exists (select 1 from vv_sublagen v where v.organisation_id = s.organisation_id)`)).rows as { id: string }[]
+  if (!orgs.length) return 0
   const vv = JSON.parse(readFileSync(join(import.meta.dirname, '../../seed/voltvast.json'), 'utf8')).verkoopverhaal
-  const mapping = (vv?.eigen_aanvullingen?.vv_branche_mapping ?? []).map((m: any) => ({ brancheId: m.branche_id, sbiCodes: m.sbi_codes ?? [], trefwoorden: m.trefwoorden ?? [] }))
-  const r = await client.query(`update org_settings set value = value || $1 where key = 'verkoopverhaal' and not (value ? 'brancheMapping') and value->'branches' @> '[{"id": "br-01"}]'`, [JSON.stringify({ brancheMapping: mapping })])
-  return r.rowCount ?? 0
+  const db = drizzle(client as any, { schema })
+  for (const o of orgs) await laadStartsetBevestigd(db as any, o.id, vv, 'systeem')
+  return orgs.length
 }

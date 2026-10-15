@@ -1,4 +1,5 @@
 // GET /api/doelgroepen: doelgroepen met aantal accounts en hun reis (lezen: iedereen).
+import { verkoopverhaal } from '../../utils/reis'
 import { sql } from 'drizzle-orm'
 import { metOrganisatie, schema } from '../../utils/db'
 import { vereisFunctie } from '../../utils/sessie'
@@ -10,7 +11,7 @@ export default defineEventHandler(async (event) => {
     const tellingen = (await tx.execute(sql`select doelgroep_id, count(*)::int as n from accounts where doelgroep_id is not null group by doelgroep_id`)).rows as { doelgroep_id: string; n: number }[]
     const reizen = await tx.select({ id: schema.reistemplates.id, naam: schema.reistemplates.naam, doelgroepId: schema.reistemplates.doelgroepId, isStandaard: schema.reistemplates.isStandaard }).from(schema.reistemplates)
     const standaard = reizen.find((r) => r.isStandaard)
-    const [vv] = await tx.select().from(schema.orgSettings).where(sql`${schema.orgSettings.key} = 'verkoopverhaal'`)
+    const vv = { value: await verkoopverhaal(tx) }
     return {
       doelgroepen: rijen.map((d) => {
         const reis = reizen.find((r) => r.doelgroepId === d.id) ?? standaard

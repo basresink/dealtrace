@@ -14,6 +14,7 @@ import {
 import { terugkomDatum, type VerkoopverhaalStand } from '../../shared/verkoopverhaal'
 import { metAfkoeling } from '../../shared/planning'
 import { schrijfAudit } from './audit'
+import { leesStand } from './vvProjectie'
 import { schema } from './db'
 import { draaiMotor } from './motor'
 import { kiesRitme, startRitme, type Ritme, type RitmeStand } from '../../shared/hercontact'
@@ -31,10 +32,9 @@ async function meldpuntAan(tx: Tx) {
   await tx.execute(sql`select set_config('dealtrace.meldpunt', 'aan', true)`)
 }
 
+/** Het verkoopverhaal uit het leesmodel vv_* (P28, ADR-017): alleen bevestigde inhoud. */
 export async function verkoopverhaal(tx: Tx): Promise<VerkoopverhaalStand> {
-  const [r] = await tx.select().from(schema.orgSettings).where(eq(schema.orgSettings.key, 'verkoopverhaal'))
-  const v = (r?.value ?? {}) as Partial<VerkoopverhaalStand>
-  return { ...v, terugkomregels: v.terugkomregels ?? [], redenmapping: v.redenmapping ?? [], concurrenten: v.concurrenten ?? [] }
+  return leesStand(tx)
 }
 
 export async function afkoelingInstelling(tx: Tx): Promise<Afkoeling> {

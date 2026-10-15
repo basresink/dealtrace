@@ -802,3 +802,11 @@ html.zonlicht body { color: #000; }
 @media (max-width: 767px) { body { font-size: max(15px, 1em); } }
 .install-vraag { position: fixed; left: 16px; right: 16px; bottom: calc(var(--onderbalk-veilig) + 8px); z-index: var(--z-overlay); }
 @media (min-width: 768px) and (max-width: 1023px) { .app-sidebar .sb-inklap { display: none; } }
+/* Tabbalk die horizontaal schuift in plaats van te wrappen (P28 Richting op 390 px). */
+.tabbalk--schuif { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.tabbalk--schuif::-webkit-scrollbar { display: none; }
+.tabbalk--schuif .tab { flex: 0 0 auto; }
+.vv-regel { border: 1px solid var(--border); padding: 12px; margin-top: 8px; display: grid; gap: 8px; }
+.vv-regel textarea, .vv-onderdeel textarea { width: 100%; min-height: 72px; }
+.vv-velden { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.rij-tussen { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }

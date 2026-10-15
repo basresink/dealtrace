@@ -301,3 +301,54 @@ export function filterNamen(tekst: string, namen: { naam: string; rol?: string }
   }
   return uit
 }
+
+// ── Startset (Bijlage C) en het leesmodel ─────────────────────────────────────
+
+const SOORT_UIT_SEED: Record<string, keyof typeof CONCURRENT_SOORTEN> = { 'concurrent-direct': 'direct', 'concurrent-indirect': 'indirect', 'concurrent-intern': 'intern', 'niets-doen': 'niets' }
+
+/** De startset (seed/voltvast.json, letterlijk) als concept per onderdeel. De golden circle staat niet in Bijlage C en blijft leeg. */
+export function startsetConcepten(vv: any): Concepten {
+  const perBranche = (sleutel: string) => Object.fromEntries((vv?.vv_teksten ?? []).filter((t: any) => t.sleutel === sleutel && t.branche_id).map((t: any) => [t.branche_id, t.tekst]))
+  const alg = (sublaag: string, sleutel: string) => (vv?.vv_teksten ?? []).find((t: any) => t.sublaag === sublaag && t.sleutel === sleutel && !t.branche_id)
+  const beloftes: Record<string, { kernbelofte?: string; waardestatement?: string }> = {}
+  for (const t of (vv?.vv_teksten ?? []).filter((x: any) => x.sublaag === 'L0.4' && x.branche_id)) (beloftes[t.branche_id] ??= {})[t.sleutel as 'kernbelofte'] = t.tekst
+  return {
+    golden_circle: {},
+    bedrijfsverhaal: { wieZijnWij: alg('L0.1', 'bedrijfsverhaal')?.tekst, kernzin: alg('L0.1', 'bedrijfsverhaal')?.kernzin ?? null, perBranche: perBranche('verhaal') },
+    ambitie: { ambitie: alg('L0.2', 'ambitie')?.tekst, visie: alg('L0.2', 'visie')?.tekst, missie: alg('L0.2', 'missie')?.tekst },
+    waarde: { kernbelofte: alg('L0.4', 'kernbelofte')?.tekst, waardestatement: alg('L0.4', 'waardestatement')?.tekst, perBranche: beloftes },
+    branches: { items: (vv?.vv_branches ?? []).map((b: any) => ({ id: b.extern_id, naam: b.naam, focus: b.focus, horizon: b.horizon, termijn: b.termijn, prioriteit: b.prioriteit, actief: true })) },
+    concurrenten: { items: (vv?.vv_concurrenten ?? []).map((c: any) => ({
+      id: c.extern_id, naam: c.concurrent, soort: SOORT_UIT_SEED[c.soortConcurrent] ?? 'direct', sterk: c.sterk, zwak: c.zwak, onderscheid: c.onderscheid,
+      zoZegJeHet: c.zoZegJeHet, alsDeKlantZegt: c.alsDeKlantZegt, antwoord: leesAlsDeKlantZegt(c.alsDeKlantZegt)?.antwoord, bewijs: c.bewijs, wanneerVerliezen: c.wanneerVerliezen, actief: true,
+    })) },
+    winpunten: {
+      fasen: (vv?.vv_fasen ?? []).map((f: any) => ({ id: f.extern_id, naam: f.naam, soort: f.soort, volgorde: f.volgorde, reisHoofdfase: f.reis_hoofdfase ?? null })),
+      items: (vv?.vv_winpunten ?? []).map((w: any) => ({ id: w.extern_id, faseId: w.fase ?? null, titel: w.titel, omschrijving: w.omschrijving, waarom: w.onderscheidend, impact: w.impact ?? 'midden', concurrentIds: w.concurrenten ?? [], weging: Number(w.weging ?? 1), context: w.context ?? {}, actief: w.actief !== false })),
+    },
+    terugkomregels: { items: (vv?.vv_terugkomregels ?? []).map((r: any) => ({ id: r.extern_id, lijst: r.lijst, reden: r.reden, termijn: r.termijn, termijnDagen: r.termijn_dagen, kanaal: r.kanaal, klassen: r.klassen ?? [], rollen: r.rollen_label ?? [], aanpak: r.aanpak, hercontactritmeId: r.hercontactritme_id ?? null })) },
+  }
+}
+
+/** Eigen aanvullingen uit de startset: SBI-mapping, ambitiedoelen, redenmapping, eigen opties. */
+export function startsetAanvullingen(vv: any) {
+  const e = vv?.eigen_aanvullingen ?? {}
+  return {
+    brancheMapping: (e.vv_branche_mapping ?? []).map((m: any) => ({ brancheId: m.branche_id, sbiCodes: m.sbi_codes ?? [], trefwoorden: m.trefwoorden ?? [], doelgroepIds: m.doelgroep_ids ?? [] })),
+    ambitiedoelen: (e.vv_ambitiedoelen ?? []).map((a: any) => ({ id: a.id, naam: a.naam, doel: a.doel, eenheid: a.eenheid, jaar: a.jaar ?? null, stand: a.stand ?? null })),
+    redenmapping: (e.vv_redenmapping ?? []).map((m: any) => ({ bronSoort: m.bron_soort, reden: m.dealtrace_reden, terugkomregelId: m.terugkomregel_id ?? null })),
+    eigenOpties: (vv?.vv_eigen_opties ?? []).map((o: any) => ({ sublaag: o.sublaag, veld: o.veld, waarde: o.waarde })),
+  }
+}
+
+/** Teksten van een tekstonderdeel uit het concept, zoals ze in het leesmodel komen. */
+export function tekstenUitConcept(onderdeel: 'golden_circle' | 'bedrijfsverhaal' | 'ambitie' | 'waarde', c: any): VerhaalTekst[] {
+  const sub = SUBLAAG[onderdeel]!
+  const t = (sleutel: string, tekst: string | undefined | null, brancheId: string | null = null, kz?: string | null): VerhaalTekst[] => (tekst?.trim() ? [{ id: `tx-${sub}-${sleutel}-${brancheId ?? 'alg'}`, sublaag: sub, sleutel, brancheId, tekst: tekst.trim(), kernzin: kz ?? null }] : [])
+  switch (onderdeel) {
+    case 'golden_circle': return [...t('waarom', c.waarom), ...t('hoe', c.hoe), ...t('wat', c.wat)]
+    case 'bedrijfsverhaal': return [...t('bedrijfsverhaal', c.wieZijnWij, null, c.kernzin?.trim() || kernzin(c.wieZijnWij)), ...Object.entries(c.perBranche ?? {}).flatMap(([b, x]) => t('verhaal', x as string, b))]
+    case 'ambitie': return [...t('ambitie', c.ambitie), ...t('visie', c.visie), ...t('missie', c.missie)]
+    case 'waarde': return [...t('kernbelofte', c.kernbelofte), ...t('waardestatement', c.waardestatement), ...Object.entries(c.perBranche ?? {}).flatMap(([b, x]: [string, any]) => [...t('kernbelofte', x?.kernbelofte, b), ...t('waardestatement', x?.waardestatement, b)])]
+  }
+}

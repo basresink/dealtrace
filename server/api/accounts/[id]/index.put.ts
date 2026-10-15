@@ -20,6 +20,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Fase en status veranderen alleen via het meldpunt (Kwalificeer, Fase corrigeren, Zet nee)' })
   }
   if ('klasse' in b && !kan(ctx, 'prospects.klasseZetten')) weigerFunctie('prospects.klasseZetten', 'niveau')
+  if ('huidigeLeverancierId' in b && !kan(ctx, 'account.huidigeLeverancier')) weigerFunctie('account.huidigeLeverancier', 'niveau')
   if ('eigenaarId' in b && !kan(ctx, 'prospects.eigenaarWijzigen')) throw createError({ statusCode: 403, statusMessage: 'Alleen een salesmanager of beheerder wijzigt de eigenaar' })
   if (b.telefoon) {
     const t = normaliseerTelefoon(b.telefoon)
@@ -37,6 +38,7 @@ export default defineEventHandler(async (event) => {
     if ('website' in b) set.domein = normaliseerDomein(b.website)
     if ('klasse' in b) set.klasse = b.klasse || null
     if ('eigenaarId' in b) set.ownerId = b.eigenaarId || null
+    if ('huidigeLeverancierId' in b) set.huidigeLeverancierId = b.huidigeLeverancierId || null
     const data = pasDataToe({ ...(a.data ?? {}) }, b, DATA_VELDEN, ctx.gebruiker.id)
     if (b.customFields) {
       const velden = await eigenVeldenVoor(tx, 'account', effectiefNiveau(ctx))
