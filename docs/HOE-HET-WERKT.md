@@ -75,6 +75,14 @@ Kiest de klant "Alleen na toestemming", dan maakt de founder eerst een toegangsv
 
 **Startset** (`server/utils/orgStarter.ts`): register van onderdelen voor een nieuwe klant; elke latere prompt voegt zijn onderdeel toe. "Startset aanvullen" in de klantflyout draait alles opnieuw en is idempotent.
 
+## Accounts, contacten en eigen velden (P03)
+
+- **Een account is een bedrijf**; prospect of klant is de eigenschap `account_kind`. Klanten komen uit DealDrive of het CRM. Dealtrace maakt zelf geen klant van een prospect: er is geen endpoint, knop of menu-item om te promoveren (B17).
+- **Eén plek per rekenregel** in `shared/`: score met opbouw (`score.ts`, geen vaste 50), laatste contact (open taken, toekomstige afspraken en import tellen niet), primair contact en ontbrekende rollen (`contactgegevens.ts`), ontdubbelen op KvK, domein en naam (`ontdubbelen.ts`, Sørensen-Dice 80 en 60 procent), filters met meerekenende tellers (`accountFilters.ts`), en eigen velden (`eigenVelden.ts`).
+- **Filters** staan in de URL; tellers rekenen mee met alle andere actieve filters. "Van mij" staat standaard aan.
+- **Contacten** hebben één rolbegrip (beslisser, beïnvloeder, champion, gebruiker, blokkeerder, poortwachter, onbekend). Een contact kan niet zonder account bestaan; verwijderen van een account neemt de contacten mee. "Bel me niet" zet het nummer op de bel-me-niet-lijst; vertrekken in plaats van verwijderen.
+- **Eigen velden**: waarden staan in `data.customFields`, met herkomst. Zichtbaar per niveau, ook in de API-respons. "Filterbaar" maakt een expressie-index via `dealtrace_index_eigen_veld()`. Een typewissel kan alleen als alle bestaande waarden geldig blijven.
+
 ## Waar staat wat
 
 | Map | Inhoud |

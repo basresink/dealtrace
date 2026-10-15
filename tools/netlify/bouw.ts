@@ -5,7 +5,10 @@
 import { spawnSync } from 'node:child_process'
 import pg from 'pg'
 import { migreer } from '../../server/db/migreer'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { seed } from '../../server/db/seed'
+import { seedAccounts } from '../../server/db/seedAccounts'
 import { normaliseerUrl, verbindingsopties } from '../../shared/verbinding'
 
 const beheer = process.env.DATABASE_URL_BEHEER
@@ -34,7 +37,20 @@ await c.connect()
 const { rows } = await c.query(`select count(*)::int as n from organisations where id = 'org-voltvast'`)
 await c.end()
 if (rows[0].n === 0) await seed(beheer)
-else console.log('Testdata staat er al; seed overgeslagen.')
+else {
+  // Latere prompts voegen testdata toe; vul aan waar die nog ontbreekt.
+  const c2 = new pg.Client(verbindingsopties(beheer))
+  await c2.connect()
+  const { rows: acc } = await c2.query(`select count(*)::int as n from accounts where organisation_id = 'org-voltvast'`)
+  if (acc[0].n === 0) {
+    const bron = JSON.parse(readFileSync(join(import.meta.dirname, '../../seed/voltvast.json'), 'utf8'))
+    await c2.query('begin')
+    const r = await seedAccounts(c2, { id: 'org-voltvast' }, bron)
+    await c2.query('commit')
+    console.log(`Testdata aangevuld: ${r.accounts} accounts en ${r.contacten} contacten.`)
+  } else console.log('Testdata staat er al; seed overgeslagen.')
+  await c2.end()
+}
 
 const r = spawnSync('pnpm', ['exec', 'nuxt', 'build'], { stdio: 'inherit', env: process.env })
 process.exit(r.status ?? 1)

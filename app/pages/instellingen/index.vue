@@ -28,7 +28,7 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
     naam: 'Werkwijze',
     kaarten: [
       { titel: 'Belscripts', tekst: 'Templates voor binnendienst en buitendienst.', toon: beheerder.value },
-      { titel: 'Eigen velden', tekst: 'Extra velden op prospects en contacten.', toon: beheerder.value },
+      { titel: 'Eigen velden', tekst: 'Extra velden op prospects en contacten.', link: '/instellingen/eigen-velden', toon: beheerder.value },
       { titel: 'Prospectreizen', tekst: 'Standaardreis en reizen op maat.', toon: beheerder.value },
     ],
   },

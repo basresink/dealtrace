@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import pg from 'pg'
 import { verbindingsopties } from '../../shared/verbinding'
+import { seedAccounts } from './seedAccounts'
 import { BEHEER_URL } from './omgeving'
 
 interface SeedGebruiker {
@@ -120,8 +121,10 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
       )
     }
 
+    const p03 = await seedAccounts(client, org, voltvast)
+
     await client.query('commit')
-    log(`Startdata geladen: ${org.naam} met ${gebruikers.length} gebruikers, Testorganisatie Tweede en een founder.`)
+    log(`Startdata geladen: ${org.naam} met ${gebruikers.length} gebruikers, ${p03.accounts} accounts en ${p03.contacten} contacten, Testorganisatie Tweede en een founder.`)
   } catch (e) {
     await client.query('rollback')
     throw e

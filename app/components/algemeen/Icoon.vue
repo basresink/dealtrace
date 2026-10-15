@@ -6,6 +6,8 @@ import {
   CircleCheck, CircleHelp, Compass, Filter, House, Lightbulb, Lock, LogOut, MapPin, Megaphone, MessagesSquare,
   PanelLeft, Pencil, Phone, Plus, RefreshCw, Route, ScrollText, Search, Server, Settings, Sparkles, SquareCheck,
   UserCog, UserPlus, Users, UsersRound, WifiOff, X, Bell,
+  Globe, Mail, MessageCircle, Navigation, Ellipsis, ArrowLeft, ArrowRight, Trash2, GripVertical, Download, Merge, LayoutList, LayoutGrid,
+  List, ArrowUpDown, Star, Ban, Link, Linkedin, Info, Save, UserX, Bookmark, PhoneOff, Briefcase, Clock, StickyNote,
 } from 'lucide-vue-next'
 
 const ICONEN = {
@@ -13,6 +15,8 @@ const ICONEN = {
   CircleCheck, CircleHelp, Compass, Filter, House, Lightbulb, Lock, LogOut, MapPin, Megaphone, MessagesSquare,
   PanelLeft, Pencil, Phone, Plus, RefreshCw, Route, ScrollText, Search, Server, Settings, Sparkles, SquareCheck,
   UserCog, UserPlus, Users, UsersRound, WifiOff, X, Bell,
+  Globe, Mail, MessageCircle, Navigation, Ellipsis, ArrowLeft, ArrowRight, Trash2, GripVertical, Download, Merge, LayoutList, LayoutGrid,
+  List, ArrowUpDown, Star, Ban, Link, Linkedin, Info, Save, UserX, Bookmark, PhoneOff, Briefcase, Clock, StickyNote,
 } as const
 
 const props = defineProps<{ naam: string; grootte?: number }>()

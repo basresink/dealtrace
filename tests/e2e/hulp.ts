@@ -12,3 +12,9 @@ export async function apiLogin(request: APIRequestContext, id: string) {
   const r = await request.post('/api/sessie/ontwikkel', { data: { gebruikerId: id } })
   if (!r.ok()) throw new Error(`login ${id} mislukt: ${r.status()}`)
 }
+
+/** Naar een pagina en wachten tot hij klaar (gehydrateerd) is. */
+export async function ga(page: Page, pad: string) {
+  await page.goto(pad)
+  await page.waitForLoadState('networkidle')
+}

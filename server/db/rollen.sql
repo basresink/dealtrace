@@ -89,3 +89,7 @@ begin
     end if;
   end loop;
 end $$;
+
+-- P03: index voor filterbare eigen velden (alleen de app, alleen via de functie).
+revoke execute on function dealtrace_index_eigen_veld(text, text, text, text) from public;
+grant execute on function dealtrace_index_eigen_veld(text, text, text, text) to dealtrace_app;

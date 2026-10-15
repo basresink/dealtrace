@@ -6,6 +6,7 @@ export const SETTING_KEYS = [
   'organisatie', // {naam, logo, land, verkoopjaarStartmaand}
   'werkdagen', // WerkdagInstelling
   'niveaus', // {iedereenAlles, standaardNiveauNieuweGebruiker}
+  'klassen', // [{id, naam, omschrijving, tabblad}] (F03, gat 2)
   // Van de leverancier:
   'pakket',
   'aiCredits',

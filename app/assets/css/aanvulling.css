@@ -373,3 +373,64 @@
 .pil--stand-leeg { background: var(--grijs-soft, #eee); color: var(--muted); }
 .veld--rij { display: flex; align-items: center; gap: 8px; min-height: 44px; }
 .fo-blok .schakel-naam { font-size: var(--fs-body); }
+
+/* P03: accountlijst, kaart en contacten */
+.kruimel { display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-meta); color: var(--muted); text-decoration: none; min-height: 32px; }
+.kruimel:hover { color: var(--ink); }
+.werkbalk { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 16px; }
+.werkbalk .zoekinvoer { flex: 1 1 220px; min-width: 0; min-height: 44px; }
+.filterpaneel { display: grid; gap: 12px; padding: 16px; background: var(--wit); border: 1px solid var(--border); border-radius: var(--radius); }
+.dd-tekstknop { background: none; border: 0; color: var(--ink); text-decoration: underline; cursor: pointer; font: inherit; min-height: 44px; }
+.account-lijst { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.account-lijst--kaarten { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.account-rij { background: var(--wit); border: 1px solid var(--border); border-radius: var(--radius); }
+.account-rij:hover { border-color: var(--ink); }
+.account-rij-link { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; color: inherit; text-decoration: none; min-height: 44px; }
+.account-lijst--compact .account-rij-link { padding: 8px 12px; align-items: center; }
+.account-lijst--kaarten .account-rij-link { flex-direction: column; }
+.account-logo { flex: 0 0 40px; height: 40px; display: grid; place-items: center; border-radius: var(--radius); background: var(--surface, #f2f1ec); font-weight: 800; font-size: 13px; }
+.account-logo--a { background: var(--ink); color: var(--yellow); }
+.account-logo--b { background: var(--yellow); color: var(--ink); }
+.account-hoofd { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.account-naam { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; overflow-wrap: anywhere; }
+.account-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: var(--fs-meta); color: var(--muted); }
+.account-aanleiding { font-size: var(--fs-meta); padding: 4px 8px; background: var(--surface, #f2f1ec); border-left: 2px solid var(--purple, #6b3fa0); }
+.account-aanleiding--heet { border-left-color: var(--red, #c62828); color: var(--red, #c62828); }
+.account-contacten { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+.contact-bol { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--wit); font-size: 11px; font-weight: 700; }
+.contextmenu { position: fixed; z-index: 100; min-width: 200px; background: var(--wit); border: 1px solid var(--ink); border-radius: var(--radius); display: grid; padding: 4px 0; }
+.contextmenu a, .contextmenu button { padding: 10px 14px; min-height: 44px; display: flex; align-items: center; color: var(--ink); text-decoration: none; background: none; border: 0; font: inherit; text-align: left; cursor: pointer; }
+.contextmenu a:hover, .contextmenu button:hover { background: var(--surface, #f2f1ec); }
+@media (max-width: 767px) { .account-contacten { display: none; } .account-lijst--kaarten { grid-template-columns: 1fr; } }
+.top-kaart { position: relative; text-decoration: none; color: inherit; display: grid; gap: 6px; }
+.top-rang { position: absolute; top: 12px; right: 16px; font-family: var(--font-serif); font-size: 28px; font-weight: 700; color: var(--muted); }
+.mt-8 { margin-top: 8px; }
+.ak-kop { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
+.ak-contactstrip { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.ak-contactstrip a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--ink); }
+.ak-stuur { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 0; padding: 12px 16px; background: var(--wit); border: 1px solid var(--border); border-radius: var(--radius); }
+.ak-stuur dt { font-size: var(--fs-label); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.ak-stuur dd { margin: 0; }
+.ak-blokken { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--kaart-gap); }
+.committee { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+.committee-vak { display: grid; gap: 4px; align-content: start; padding: 12px; background: var(--wit); border: 1px solid var(--border); border-radius: var(--radius); }
+.committee-vak--leeg { background: var(--surface, #f2f1ec); border-style: dashed; }
+.committee-naam { font-weight: 600; color: var(--ink); }
+.contact-vertrokken { opacity: .6; }
+.dd-act--uit { opacity: .45; pointer-events: none; }
+.dd-act--gevaar { color: var(--red, #c62828); border-color: var(--red, #c62828); }
+.invoer--lees { display: flex; align-items: center; background: transparent; }
+.actiebalk { display: none; }
+@media (max-width: 767px) {
+  .alleen-groot { display: none !important; }
+  .accountkaart { padding-bottom: 72px; }
+  .actiebalk { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: var(--sidebar-w-smal, 64px); right: 0; bottom: 0; z-index: 30; background: var(--ink); border-top: 1px solid var(--ink); }
+  .actiebalk-knop { min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--yellow); font-size: 11px; font-weight: 700; text-decoration: none; }
+  .actiebalk-knop--uit { color: var(--wit-55, #888); pointer-events: none; }
+  .ak-stuur { grid-template-columns: 1fr 1fr; }
+}
+.contact-kop { display: flex; gap: 16px; align-items: flex-start; }
+.contact-kop .account-logo { flex-basis: 56px; height: 56px; font-size: 18px; }
+.ak-mobiel { display: none; }
+.ak-kop select.invoer--klein { width: auto; max-width: 100%; }
+@media (max-width: 767px) { .ak-mobiel { display: grid; gap: 8px; } }

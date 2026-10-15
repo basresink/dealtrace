@@ -150,6 +150,87 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'gebruikers.niveau', naam: 'Niveau van gebruikers kiezen', pakket: 'starter', rollen: MANAGERS, helpartikel: 'gebruikers-rollen-niveaus', startNiveau: 'beginner',
     uitleg: { watHetDoet: 'Het niveau van een gebruiker kiezen: Beginner, Gevorderd of Expert.', totDieTijd: 'Geen.' },
   },
+  // P03: prospects, contacten en eigen velden
+  {
+    sleutel: 'prospects.lijst', naam: 'Prospectlijst', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-prospect-toevoegen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'De lijst met al je prospects, met zoeken en filters.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'prospects.kaart', naam: 'Accountkaart', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-accountkaart-lezen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Het dossier van een bedrijf voor en na elk gesprek.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'prospects.nieuw', naam: 'Nieuwe prospect', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-prospect-toevoegen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Een bedrijf toevoegen, met dubbelcheck.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'prospects.filtersAlle', naam: 'Alle filters', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-accountkaart-lezen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Alle filters met meerekenende tellers en sorteren.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'prospects.weergaven', naam: 'Weergaven', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-accountkaart-lezen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Lijst, compact of kaarten.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'prospects.opgeslagenFilters', naam: 'Opgeslagen filters', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-accountkaart-lezen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Je eigen filters bewaren.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'prospects.klasseZetten', naam: 'Klasse zetten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-accountkaart-lezen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De klasse van een account kiezen.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'prospects.samenvoegen', naam: 'Samenvoegen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-accountkaart-lezen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Dubbele accounts samenvoegen.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'prospects.export', naam: 'Exporteren', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-accountkaart-lezen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Een lijst als CSV downloaden.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'prospects.scoreOpbouw', naam: 'Scoreopbouw', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-accountkaart-lezen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Zien hoe de score is opgebouwd.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'prospects.verwijderen', naam: 'Accounts verwijderen', pakket: 'starter', rollen: ['salesmanager', 'beheerder'], helpartikel: 'de-accountkaart-lezen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een account met zijn contacten verwijderen.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'prospects.eigenaarWijzigen', naam: 'Eigenaar wijzigen', pakket: 'starter', rollen: ['salesmanager', 'beheerder'], helpartikel: 'de-accountkaart-lezen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een account aan een collega geven.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'contacten.basis', naam: 'Contacten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'buying-committee', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Contactpersonen met hun rol.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'contacten.filters', naam: 'Contactfilters', pakket: 'starter', rollen: 'iedereen', helpartikel: 'buying-committee', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Filteren op e-mail, telefoon en laatste contact.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'contacten.samenvoegen', naam: 'Contacten samenvoegen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'buying-committee', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Dubbele contacten samenvoegen.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'contacten.verhuizen', naam: 'Contact verhuizen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'buying-committee', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Een contact naar een ander bedrijf verhuizen.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'eigenVelden.invullen', naam: 'Eigen velden invullen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'eigen-velden', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'De velden die jullie zelf nodig hebben invullen.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'eigenVelden.filteren', naam: 'Filteren op eigen velden', pakket: 'starter', rollen: 'iedereen', helpartikel: 'eigen-velden', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Filteren en sorteren op eigen velden.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'eigenVelden.voorstellen', naam: 'Eigen veld voorstellen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'eigen-velden', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Een nieuw veld voorstellen aan de beheerder.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    sleutel: 'eigenVelden.beheren', naam: 'Eigen velden beheren', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'eigen-velden', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Eigen velden maken, wijzigen, ordenen en archiveren.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
   // P02: platform (alleen founder, geen regels in functies_per_niveau) en de spiegel voor de beheerder.
   {
     sleutel: 'platform.klanten', naam: 'Klanten', pakket: 'starter', rollen: ['founder'], helpartikel: '', startNiveau: 'beginner',
