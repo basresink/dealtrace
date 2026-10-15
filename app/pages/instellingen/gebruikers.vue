@@ -1,0 +1,180 @@
+<script setup lang="ts">
+// Gebruikers en teams (F22, 3.2, 6.1). De beheerder ziet iedereen; de salesmanager
+// alleen zijn teams en zet daar het niveau. Verlagen vraagt een reden.
+import { NIVEAUS, NIVEAU_LABEL, ROL_LABEL, WERKPLEKKEN, WERKPLEK_LABEL, type Niveau, type Rol, type Werkplek } from '~~/shared/types'
+
+interface Gebruiker { id: string; naam: string; email: string; rol: Rol; niveau: Niveau; teamId: string | null; werkplek: Werkplek; laatsteInlog: string | null; status: string }
+interface Team { id: string; naam: string; managerIds: string[]; gekoppeldeTeams: string[] }
+
+const { me, functie, laad } = useMe()
+const toast = useToast()
+if (!functie('nav.instellingen')?.beschikbaar) throw createError({ statusCode: 403, statusMessage: 'Geen toegang tot gebruikers' })
+const beheerder = computed(() => me.value?.gebruiker.rol === 'beheerder')
+const magNiveau = computed(() => !!functie('gebruikers.niveau')?.beschikbaar)
+
+const [{ data: gebruikers, refresh: herlaadGebruikers }, { data: teams, refresh: herlaadTeams }] = await Promise.all([
+  useFetch<Gebruiker[]>('/api/gebruikers', { default: () => [] }),
+  useFetch<Team[]>('/api/teams', { default: () => [] }),
+])
+const route = useRoute()
+const tab = ref<'gebruikers' | 'teams'>('gebruikers')
+const teamNaam = (id: string | null) => teams.value.find((t) => t.id === id)?.naam ?? 'Geen team'
+const actief = computed(() => gebruikers.value.filter((g) => g.status !== 'gearchiveerd'))
+const gemarkeerd = computed(() => route.query.gebruiker as string | undefined)
+
+function fout(e: any) { toast.toon(e?.data?.statusMessage ?? e?.statusMessage ?? 'Opslaan mislukt', 'fout') }
+
+// Niveau
+const verlaging = ref<{ g: Gebruiker; naar: Niveau } | null>(null)
+async function kiesNiveau(g: Gebruiker, naar: Niveau) {
+  if (g.niveau === naar) return
+  if (NIVEAUS.indexOf(naar) < NIVEAUS.indexOf(g.niveau)) { verlaging.value = { g, naar }; return }
+  await zetNiveau(g, naar)
+}
+async function zetNiveau(g: Gebruiker, naar: Niveau, reden?: string) {
+  try {
+    await $fetch(`/api/gebruikers/${g.id}/niveau`, { method: 'POST', body: { niveau: naar, reden } })
+    toast.toon(`${g.naam} staat nu op ${NIVEAU_LABEL[naar]}.`)
+    await herlaadGebruikers()
+    if (g.id === me.value?.gebruiker.id) await laad()
+  } catch (e) { fout(e) }
+}
+const niveauUit = (g: Gebruiker) => !magNiveau.value || (g.id === me.value?.gebruiker.id && !beheerder.value)
+
+// Wijzigen (beheerder)
+async function wijzig(g: Gebruiker, veld: 'werkplek' | 'teamId' | 'rol', waarde: string | null) {
+  try {
+    await $fetch(`/api/gebruikers/${g.id}`, { method: 'PUT', body: { [veld]: waarde } })
+    await herlaadGebruikers()
+    toast.toon('Opgeslagen.')
+  } catch (e) { fout(e); await herlaadGebruikers() }
+}
+const archiveren = ref<Gebruiker | null>(null)
+async function archiveer(g: Gebruiker) {
+  archiveren.value = null
+  try { await $fetch(`/api/gebruikers/${g.id}/archiveer`, { method: 'POST' }); await herlaadGebruikers(); toast.toon(`${g.naam} is gearchiveerd.`) } catch (e) { fout(e) }
+}
+
+// Toevoegen (beheerder)
+const nieuw = reactive({ open: false, naam: '', email: '', rol: 'accountmanager', werkplek: 'binnendienst', teamId: '' })
+async function voegToe() {
+  try {
+    await $fetch('/api/gebruikers', { method: 'POST', body: { naam: nieuw.naam, email: nieuw.email, rol: nieuw.rol, werkplek: nieuw.werkplek, teamId: nieuw.teamId || null } })
+    toast.toon(`${nieuw.naam} is uitgenodigd.`)
+    Object.assign(nieuw, { open: false, naam: '', email: '' })
+    await herlaadGebruikers()
+  } catch (e) { fout(e) }
+}
+
+// Teams (beheerder)
+const nieuwTeam = ref('')
+async function voegTeamToe() {
+  try { await $fetch('/api/teams', { method: 'POST', body: { naam: nieuwTeam.value } }); nieuwTeam.value = ''; await herlaadTeams() } catch (e) { fout(e) }
+}
+const salesmanagers = computed(() => actief.value.filter((g) => g.rol === 'salesmanager'))
+async function wisselManager(t: Team, id: string) {
+  const managerIds = t.managerIds.includes(id) ? t.managerIds.filter((m) => m !== id) : [...t.managerIds, id]
+  try { await $fetch(`/api/teams/${t.id}`, { method: 'PUT', body: { managerIds } }); await herlaadTeams() } catch (e) { fout(e) }
+}
+const naamVan = (id: string) => gebruikers.value.find((g) => g.id === id)?.naam ?? id
+useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
+</script>
+
+<template>
+  <div>
+    <PaginaKop kicker="Instellingen · Gebruikers" titel="Gebruikers en teams" :uitleg="beheerder ? 'Wie werkt in Dealtrace, op welk niveau en in welk team.' : 'De mensen in je teams en hun niveau.'" helpartikel="gebruikers-en-niveaus">
+      <template #acties>
+        <button v-if="beheerder && tab === 'gebruikers'" type="button" class="dd-actie dd-actie--primair" data-test="gebruiker-toevoegen" @click="nieuw.open = !nieuw.open"><Icoon naam="Plus" class="dd-actie-icoon" />Gebruiker toevoegen</button>
+      </template>
+    </PaginaKop>
+    <section class="section section--laatste">
+      <div class="container">
+        <nav class="tabbalk" aria-label="Gebruikers en teams">
+          <button type="button" class="tab" :class="{ 'tab--actief': tab === 'gebruikers' }" :aria-current="tab === 'gebruikers' ? 'page' : undefined" @click="tab = 'gebruikers'">Gebruikers <span class="tab-teller">{{ actief.length }}</span></button>
+          <button type="button" class="tab" :class="{ 'tab--actief': tab === 'teams' }" :aria-current="tab === 'teams' ? 'page' : undefined" @click="tab = 'teams'">Teams <span class="tab-teller">{{ teams.length }}</span></button>
+        </nav>
+
+        <template v-if="tab === 'gebruikers'">
+          <form v-if="nieuw.open" class="kaart mt-16" data-test="nieuwe-gebruiker" @submit.prevent="voegToe">
+            <div class="formulier-raster">
+              <label class="veld"><span class="veld-label">Naam <span class="veld-verplicht">*</span></span><input v-model="nieuw.naam" class="invoer" required></label>
+              <label class="veld"><span class="veld-label">E-mail <span class="veld-verplicht">*</span></span><input v-model="nieuw.email" class="invoer" type="email" required></label>
+              <label class="veld"><span class="veld-label">Rol</span><select v-model="nieuw.rol" class="invoer"><option value="accountmanager">Accountmanager</option><option value="salesmanager">Salesmanager</option><option value="beheerder">Beheerder</option></select></label>
+              <label class="veld"><span class="veld-label">Werkplek</span><select v-model="nieuw.werkplek" class="invoer"><option v-for="w in WERKPLEKKEN" :key="w" :value="w">{{ WERKPLEK_LABEL[w] }}</option></select></label>
+              <label class="veld"><span class="veld-label">Team</span><select v-model="nieuw.teamId" class="invoer"><option value="">Geen team</option><option v-for="t in teams" :key="t.id" :value="t.id">{{ t.naam }}</option></select></label>
+              <button type="submit" class="dd-actie dd-actie--primair">Uitnodigen</button>
+            </div>
+            <p class="veld-uitleg">Het niveau wordt het standaardniveau van je organisatie. Dat pas je daarna hieronder aan.</p>
+          </form>
+
+          <LegeStaat v-if="!actief.length" titel="Nog geen gebruikers." tekst="Voeg je eerste collega toe." />
+          <div v-else class="tabel-wrap mt-16">
+            <table class="tabel tabel--kaarten" data-test="gebruikers-tabel">
+              <thead><tr><th>Naam</th><th>Rol</th><th>Niveau</th><th>Werkplek</th><th>Team</th><th v-if="beheerder"><span class="sr-only">Acties</span></th></tr></thead>
+              <tbody>
+                <tr v-for="g in actief" :key="g.id" :data-gebruiker="g.id" :class="{ 'tabel-rij--gemarkeerd': gemarkeerd === g.id }">
+                  <td><div class="gebruiker-cel"><strong>{{ g.naam }}</strong><small>{{ g.email }}</small><span v-if="g.status === 'uitgenodigd'" class="pil pil--geel">Uitgenodigd</span></div></td>
+                  <td>
+                    <select v-if="beheerder" class="invoer invoer--klein" :value="g.rol" :aria-label="`Rol van ${g.naam}`" @change="wijzig(g, 'rol', ($event.target as HTMLSelectElement).value)">
+                      <option value="accountmanager">Accountmanager</option><option value="salesmanager">Salesmanager</option><option value="beheerder">Beheerder</option>
+                    </select>
+                    <template v-else>{{ ROL_LABEL[g.rol] }}</template>
+                  </td>
+                  <td>
+                    <div class="keuzegroep keuzegroep--klein" role="group" :aria-label="`Niveau van ${g.naam}`">
+                      <button
+                        v-for="n in NIVEAUS" :key="n" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': g.niveau === n }"
+                        :aria-pressed="g.niveau === n" :disabled="niveauUit(g) || (g.rol === 'salesmanager' && n === 'beginner')" :data-test="`niveau-${g.id}-${n}`" @click="kiesNiveau(g, n)"
+                      >{{ NIVEAU_LABEL[n] }}</button>
+                    </div>
+                  </td>
+                  <td>
+                    <select v-if="beheerder" class="invoer invoer--klein" :value="g.werkplek" :aria-label="`Werkplek van ${g.naam}`" @change="wijzig(g, 'werkplek', ($event.target as HTMLSelectElement).value)">
+                      <option v-for="w in WERKPLEKKEN" :key="w" :value="w">{{ WERKPLEK_LABEL[w] }}</option>
+                    </select>
+                    <template v-else>{{ WERKPLEK_LABEL[g.werkplek] }}</template>
+                  </td>
+                  <td>
+                    <select v-if="beheerder" class="invoer invoer--klein" :value="g.teamId ?? ''" :aria-label="`Team van ${g.naam}`" @change="wijzig(g, 'teamId', ($event.target as HTMLSelectElement).value || null)">
+                      <option value="">Geen team</option><option v-for="t in teams" :key="t.id" :value="t.id">{{ t.naam }}</option>
+                    </select>
+                    <template v-else>{{ teamNaam(g.teamId) }}</template>
+                  </td>
+                  <td v-if="beheerder"><button v-if="g.id !== me?.gebruiker.id" type="button" class="dd-act" @click="archiveren = g">Archiveer</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
+
+        <template v-else>
+          <form v-if="beheerder" class="kaart mt-16 formulier-raster" @submit.prevent="voegTeamToe">
+            <label class="veld"><span class="veld-label">Nieuw team</span><input v-model="nieuwTeam" class="invoer" placeholder="Bijvoorbeeld Team Oost"></label>
+            <button type="submit" class="dd-actie dd-actie--primair" :disabled="!nieuwTeam.trim()">Team toevoegen</button>
+          </form>
+          <LegeStaat v-if="!teams.length" titel="Nog geen teams." tekst="Een team bundelt accountmanagers onder een salesmanager." />
+          <div class="instellingen-raster mt-16">
+            <article v-for="t in teams" :key="t.id" class="kaart">
+              <header class="kaart-kop"><h2 class="kaart-titel">{{ t.naam }}</h2><span class="pil pil--grijs">{{ actief.filter((g) => g.teamId === t.id).length }} leden</span></header>
+              <p class="kaart-meta">Salesmanager: {{ t.managerIds.map(naamVan).join(', ') || 'nog niemand' }}</p>
+              <div v-if="beheerder && salesmanagers.length" class="keuzechips mt-16">
+                <button v-for="s in salesmanagers" :key="s.id" type="button" class="pil pil--knop" :class="t.managerIds.includes(s.id) ? 'pil--zwart' : 'pil--leeg'" :aria-pressed="t.managerIds.includes(s.id)" @click="wisselManager(t, s.id)">{{ s.naam }}</button>
+              </div>
+            </article>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <BevestigVenster
+      :open="!!verlaging" titel="Niveau verlagen" bevestig="Verlagen" met-reden
+      :tekst="verlaging ? `${verlaging.g.naam} gaat van ${NIVEAU_LABEL[verlaging.g.niveau]} naar ${NIVEAU_LABEL[verlaging.naar]}. Functies die daarbij horen gaan uit. Zijn gegevens blijven bewaard.` : ''"
+      @geannuleerd="verlaging = null" @bevestigd="(r) => { const v = verlaging!; verlaging = null; zetNiveau(v.g, v.naar, r) }"
+    />
+    <BevestigVenster
+      :open="!!archiveren" titel="Gebruiker archiveren" bevestig="Archiveer"
+      :tekst="archiveren ? `${archiveren.naam} kan niet meer inloggen. Zijn gegevens blijven bewaard.` : ''"
+      @geannuleerd="archiveren = null" @bevestigd="archiveer(archiveren!)"
+    />
+  </div>
+</template>

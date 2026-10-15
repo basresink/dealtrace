@@ -33,7 +33,7 @@ Elke latere functie heeft een stand per niveau (aan of uit), een pakket, een rec
 
 | Rol | Niveau | Wat |
 |---|---|---|
-| accountmanager | Beginner | Zijbalk met 10 items, groep "Nog niet aangezet", gebruikersblok "ACCOUNTMANAGER · BEGINNER", eigen profiel en meldingen in Mijn instellingen, "Toon minder" om zelf functies te verbergen |
+| accountmanager | Beginner | Zijbalk met 11 items, groep "Nog niet aangezet", gebruikersblok "ACCOUNTMANAGER · BEGINNER", eigen profiel en meldingen in Mijn instellingen, "Toon minder" om zelf functies te verbergen |
 | accountmanager | Gevorderd | Zijbalk met 14 items; plus eigen belblokken en werkplekindeling in Mijn instellingen (de inhoud komt in latere prompts) |
 | accountmanager | Expert | Zijbalk met 15 items; plus persoonlijke regels en scripts in Mijn instellingen (inhoud later) |
 | salesmanager | minimaal Gevorderd, standaard Expert | Plus de groep Manager in de zijbalk; het niveau kiezen van gebruikers in eigen teams; verder is per gebruiker niets in te stellen (B18) |
@@ -172,7 +172,8 @@ Niet vastgelegd in het bouwplan; voorstel voor gebruikers, teams en meldingen:
 |---|---|---|---|---|
 | `nav.vandaag`, `nav.agenda`, `nav.acties`, `nav.belblokken`, `nav.bezoeken`, `nav.prospects`, `nav.contacten`, `nav.richting`, `nav.resultaten` | Beginner | Starter | iedereen | per pagina het artikel uit F21 |
 | `nav.campagnes` | Beginner (meedoen) | Starter | iedereen | "Campagnes" |
-| `nav.funnel`, `nav.leadgenerator`, `nav.inzichten`, `nav.planning` | Gevorderd | Starter | iedereen | "De funnel van je prospectreis", "Leadgenerator", "Inzichten beoordelen", "Prospectplanning" |
+| `nav.funnel` | Beginner | Starter | iedereen | "De funnel van je prospectreis" |
+| `nav.leadgenerator`, `nav.inzichten`, `nav.planning` | Gevorderd | Starter | iedereen | "Leadgenerator", "Inzichten beoordelen", "Prospectplanning" |
 | `nav.reizen` | Expert | Starter | iedereen (lezen), salesmanager (activeren) | "De prospectreis en fases" |
 | `nav.team`, `nav.coaching`, `nav.analyse`, `nav.audit` | Gevorderd | Starter | salesmanager | "Team controleren" |
 | `nav.instellingen` | Expert | Starter | beheerder | "Gebruikers, rollen en niveaus" |
@@ -205,7 +206,7 @@ Inloggen met code en de mobiele schil (P27), Platformbeheer en werken in een org
 
 ## Acceptatiecriteria
 
-1. Een Beginner ziet precies de 10 items uit 6.1, een Gevorderde 14, een Expert 15; de navigatie van een Beginner past zonder scrollen op 900 px hoogte.
+1. Een Beginner ziet precies de 11 items uit 6.1, een Gevorderde 14, een Expert 15; de navigatie van een Beginner past zonder scrollen op 900 px hoogte.
 2. Een item dat voor het niveau uit staat, staat in "Nog niet aangezet" met slot, is focusbaar en opent de uitlegflyout met kicker, "Wat het doet", "Tot die tijd" en "Lees hoe het werkt", zonder verzoekknop; een directe link toont de paginakop met kicker "Nog niet aangezet", geen foutpagina.
 3. Een endpoint van een niet-beschikbare functie geeft 403 met `{functie, reden}`; getest voor `niveau`, `pakket` en `rol`.
 4. Een regel in `functies_per_niveau` omzetten werkt direct, zonder release, voor iedereen met dat niveau; een regel voor één organisatie gaat voor de regel voor alle organisaties; er is geen endpoint of veld om een functie voor één gebruiker aan of uit te zetten. "Toon minder" verbergt alleen; niveau verlagen door de beheerder vraagt bevestiging en reden.

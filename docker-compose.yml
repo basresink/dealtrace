@@ -1,0 +1,20 @@
+# Lokale database voor Dealtrace (hoofdstuk 13.5 van het bouwplan).
+# Start met: pnpm db:up   (of: docker compose up -d db)
+services:
+  db:
+    image: postgres:16
+    container_name: dealtrace-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dealtrace
+    ports:
+      - "5432:5432"
+    volumes:
+      - dealtrace-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d dealtrace"]
+      interval: 3s
+      retries: 20
+volumes:
+  dealtrace-db:
