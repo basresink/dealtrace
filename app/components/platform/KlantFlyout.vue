@@ -17,6 +17,11 @@ async function laad() {
 }
 watch(() => props.id, laad, { immediate: true })
 
+// P17: de stand van de DealDrive-koppeling (uit of mock; http volgt).
+async function zetDealdrive(stand: string) {
+  if (stand === klant.value.dealdrive) return
+  try { await $fetch(String(`/api/platform/klanten/${props.id}/dealdrive`), { method: 'PUT', body: { stand } }); toast.toon(`DealDrive staat op ${stand}.`); await laad() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+}
 // Pakketwissel met bevestiging: wat de klant wint en verliest.
 const voorstel = ref<{ naar: Pakket; wint: string[]; verliest: string[] } | null>(null)
 async function kiesPakket(naar: Pakket) {
@@ -104,6 +109,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
             <button type="button" class="dd-act mt-16" @click="bewaarContract">Contract opslaan</button>
           </article>
 
+          <article class="fo-blok" data-test="klant-dealdrive">
+            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Koppeling DealDrive</h3></header>
+            <div class="keuzegroep" role="group" aria-label="DealDrive">
+              <button v-for="[s, l] in [['uit', 'Uit'], ['mock', 'Mock'], ['http', 'Http']]" :key="s" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': klant.dealdrive === s }" :aria-pressed="klant.dealdrive === s" :disabled="s === 'http'" :data-test="`dealdrive-${s}`" @click="zetDealdrive(s)">{{ l }}</button>
+            </div>
+            <p class="veld-uitleg">Uit: overdragen geeft een overdrachtstaak met briefing. Mock: de fixtures uit seed/dealdrive-mock. Http komt in een volgende versie.</p>
+          </article>
           <article class="fo-blok">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Gebruikers en aanvragen</h3></header>
             <div class="veld"><span class="veld-label">Nieuwe gebruikers</span>

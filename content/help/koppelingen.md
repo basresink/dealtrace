@@ -65,6 +65,10 @@ Klik **Ontkoppelen** en bevestig. De laatst bevestigde inhoud uit SalesDNA wordt
 
 De koppeling met je CRM komt in een volgende versie.
 
+## DealDrive
+
+Na een eerste afspraak met vervolg draag je een account over aan DealDrive. Bij **Instellingen**, **Koppelingen** zie je de stand: **uit**, **mock** (de testomgeving) of gekoppeld. De stand zet de leverancier. Staat de koppeling uit, dan krijg je bij overdragen een overdrachtstaak met de briefing om te mailen of te downloaden; de status van het account wordt wel Overgedragen.
+
 ## Je agenda koppelen
 
 Met een gekoppelde agenda van Microsoft 365 of Google telt wat daarin staat mee als bezet: bij vrije momenten voor een afspraak, bij het advies voor een belblok en bij het vullen van je dag. Afspraken die je in Dealtrace plant, komen in je agenda, met een Teams- of Meet-link als de afspraak online is.

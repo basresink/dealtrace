@@ -16,6 +16,7 @@ import { seedReis } from './seedReis'
 import { seedDag } from './seedDag'
 import { seedGebieden } from './seedGebieden'
 import { seedCampagnes } from './seedCampagnes'
+import { seedFunnel } from './seedFunnel'
 import { versleutel } from '../utils/geheimen'
 
 interface SeedGebruiker {
@@ -132,11 +133,14 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
     await seedDag(client, org.id)
     await seedGebieden(client, org.id)
     await seedCampagnes(client, org.id)
+    await seedFunnel(client, org.id)
 
     // P11: Voltvast heeft een (mock-)KvK-sleutel; Tweede niet, zodat "niet gekoppeld" te zien is.
     // De buitendienst heeft een thuisbasis voor het werkgebied met een straal.
     await client.query(`insert into koppelingen (organisation_id, soort, status, geheimen, instellingen, getest_op) values ($1, 'kvk', 'actief', $2, '{"plafond": null}', now())
       on conflict (organisation_id, soort) do nothing`, [org.id, versleutel({ sleutel: 'kvk-mock-voltvast-sleutel' })])
+    // P17: de DealDrive-koppeling van Voltvast staat op de mock; Tweede op uit (geen rij).
+    await client.query(`insert into koppelingen (organisation_id, soort, status, instellingen) values ($1, 'dealdrive', 'actief', '{"stand": "mock"}') on conflict (organisation_id, soort) do nothing`, [org.id])
     // P15: Datacollectief op de mock (Voltvast heeft Compleet), met een plafond van 500 records.
     await client.query(`insert into koppelingen (organisation_id, soort, status, geheimen, instellingen, getest_op) values ($1, 'datacollectief', 'actief', $2, '{"plafond": 500, "tegoed": 4800, "vingerafdruk": "mock0dc1"}', now())
       on conflict (organisation_id, soort) do nothing`, [org.id, versleutel({ sleutel: 'dc-mock-voltvast-sleutel' })])

@@ -16,6 +16,8 @@ import { schema } from './db'
 import { draai as draaiPlanner } from './agents/planner'
 import { vulBelblokken } from './bellen'
 import { achterstandPerAccount, sluitAf } from './campagnes'
+import { verstuurWachtrij } from './overdracht'
+import { bouwFunnelStand } from './funnel'
 
 type Tx = Parameters<Parameters<ReturnType<typeof import('./db').gebruikDb>['transaction']>[0]>[0]
 type RegelRij = typeof schema.activityRules.$inferSelect
@@ -71,6 +73,10 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
 
   // Campagnes (P16): achterstand per account uit de ene tempofunctie, voor SR11.
   const campagnes = await achterstandPerAccount(tx, nu)
+  // Eerste afspraken (P17): een afgeronde afspraak met vervolg zonder overdracht laat de regel "Afspraak niet overgedragen" vuren.
+  const eersteAfs = ids.length ? (await tx.execute(sql`select ap.id, ap.account_id, ap.status, ap.start_at, ap.uitkomst_code, coalesce((ap.data->>'overdragen')::boolean, false) as overdragen,
+      exists (select 1 from overdrachten o where o.account_id = ap.account_id and o.status <> 'mislukt') as overgedragen
+    from appointments ap join meetingsoorten m on m.id = ap.meetingsoort_id where m.type = 'klant' and coalesce((m.data->>'eersteAfspraak')::boolean, false)${accountIds?.length ? sql` and ap.account_id in ${ids}` : sql``}`)).rows as any[] : []
   const accounts: MotorAccount[] = accountRijen.map((a) => {
     const k = klassen.find((x) => x.id === a.klasse)
     const reis = reizen.find((r) => r.id === a.reisId)
@@ -81,6 +87,7 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
     return {
       id: a.id, naam: a.name, type: a.accountKind as 'prospect' | 'klant', nbStatus: a.nbStatus, reisId: a.reisId, faseId: a.faseId, faseSinds: a.faseSinds,
       verwachtVerblijfDagen: f?.eind ? null : f?.verwachtVerblijfDagen ?? null, doelgroepId: a.doelgroepId, campagneIds: (campagnes.get(a.id) ?? []).map((c) => c.id), campagnes: campagnes.get(a.id) ?? [], klasse: a.klasse,
+      afspraken: eersteAfs.filter((x) => x.account_id === a.id).map((x) => ({ id: x.id, eerste: true, status: x.status === 'afgerond' ? 'gehouden' as const : x.status === 'niet_verschenen' ? 'niet-verschenen' as const : x.status === 'geannuleerd' ? 'geannuleerd' as const : 'gepland' as const, op: new Date(x.start_at).toISOString(), overgedragen: !!x.overgedragen, uitkomst: x.overdragen ? null : x.uitkomst_code })),
       klasseCode: k ? klasseCode(k) : null, ownerId: a.ownerId, ownerTeamId: owner?.teamId ?? null, ownerWerkplek: owner?.werkplek ?? null, gebiedId: a.gebiedId,
       aangemaaktOp: a.createdAt, laatsteContactOp: a.laatsteContactOp, terugOp: a.terugOp, dossierOp: (a.data?.dossier as any)?.op ?? null,
       bandScore: bandScore(a.data?.band as any), belMeNiet: !!primair?.data?.belMeNiet, nee: a.data?.nee ?? null, wachtendTot: a.data?.wachtendTot ?? null,
@@ -216,6 +223,9 @@ export async function draaiMotor(tx: Tx, org: string, opties: RunOpties) {
       if (stap) Object.assign(stap, { status: 'gedaan', toelichting: `${v.blokken} blokken, ${v.gesprekken} gesprekken` })
       // Leadgenerator (F02): automatische rondes, opruimen en KvK-mutaties.
       await leadOnderhoud(tx, org, nu)
+      // Overdracht (P17): de wachtrij naar DealDrive en de afgeleide funnelstand van vandaag.
+      await verstuurWachtrij(tx, nu)
+      await bouwFunnelStand(tx, org, nlMoment(nu).datum)
     }
   } catch (e) {
     fouten.push((e as Error).message)

@@ -53,3 +53,40 @@ export async function zoekAccounts(q: { kvk?: string | null; domein?: string | n
   cache.set(sleutel, { tot: Date.now() + DAG, treffers })
   return treffers
 }
+
+// ── P17: overdracht (hoofdstuk 3) ───────────────────────────────────────────
+// De stand per organisatie staat in koppelingen (soort 'dealdrive', status uit, mock of http).
+// De mock geeft de fixtures uit seed/dealdrive-mock terug: overdracht-antwoord.json bij succes en
+// fout-al-klant.json als het account in de seed al klant is (zelfde KvK of naam). De uitvoering http
+// en de terugmeldingen komen in P23.
+
+export type DealDriveStand = 'uit' | 'mock' | 'http'
+export type OverdrachtAntwoord =
+  | { ok: true; status: 200 | 201; accountId: string; dealId: string; url: string; bevestigd: boolean }
+  | { ok: false; code: 'al_klant'; accountId: string; bericht: string }
+  | { ok: false; code: 'fout'; bericht: string; tijdelijk: boolean }
+export interface DealDriveKoppeling { overdragen(pakket: Record<string, any>): Promise<OverdrachtAntwoord> }
+
+const MOCK_ANTWOORD = { accountId: 'acc_dd_5520', dealId: 'deal_dd_9041', url: 'https://dealdrive.test/accounts/acc_dd_5520' }
+const verstuurd = new Set<string>()
+
+/** De mock: kent de klanten van de organisatie (naam en KvK) om al_klant te kunnen geven. */
+export function mockKoppeling(klanten: { naam: string; kvk?: string | null }[]): DealDriveKoppeling {
+  return {
+    async overdragen(p) {
+      const naam = normaliseerNaam(String(p.account?.naam ?? ''))
+      const kvk = p.account?.kvkNummer ?? null
+      const klant = klanten.find((k) => (kvk && k.kvk === kvk) || normaliseerNaam(k.naam) === naam)
+      if (klant && !p.alsNieuweKansBijKlant) return { ok: false, code: 'al_klant', accountId: MOCK_KLANT.accountId, bericht: 'Dit bedrijf is al klant in DealDrive.' }
+      const herhaald = verstuurd.has(String(p.overdrachtId))
+      verstuurd.add(String(p.overdrachtId))
+      return { ok: true, status: herhaald ? 200 : 201, ...MOCK_ANTWOORD, bevestigd: true }
+    },
+  }
+}
+
+export function koppelingVoor(stand: DealDriveStand, klanten: { naam: string; kvk?: string | null }[]): DealDriveKoppeling | null {
+  if (stand === 'uit') return null
+  if (stand === 'mock') return mockKoppeling(klanten)
+  return { async overdragen() { return { ok: false, code: 'fout', bericht: 'De http-koppeling met DealDrive komt in een volgende versie', tijdelijk: false } } }
+}

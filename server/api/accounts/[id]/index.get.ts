@@ -63,6 +63,10 @@ export default defineEventHandler(async (event) => {
     const benaderen = Object.fromEntries(KANALEN.map((k) => [k, magBenaderen(a, k, nu)]))
     const momenten = acts.filter((x) => ['gebeld', 'mail', 'bericht', 'afspraak', 'bezoek'].includes(x.soort))
     const laatste = (s: string[]) => momenten.find((m) => s.includes(m.soort))?.op ?? null
+    // P17: de laatste overdracht en of er nu overgedragen kan worden.
+    const [ov] = (await tx.execute(sql`select o.*, u.name as door_naam from overdrachten o left join users u on u.id = o.door where o.account_id = ${a.id} order by o.op desc limit 1`)).rows as any[]
+    const [afv] = (await tx.execute(sql`select 1 from appointments where account_id = ${a.id} and status = 'afgerond' and coalesce((data->>'overdragen')::boolean, false) limit 1`)).rows as any[]
+    const overdracht = ov ? { id: ov.id, naar: ov.naar, status: ov.status, op: new Date(ov.op).toISOString(), door: String(ov.door_naam ?? '').replace(/^Testgebruiker /, ''), externUrl: ov.extern_url, laatsteFout: ov.laatste_fout, alKlant: !!ov.data?.alKlant } : null
     return {
       id: a.id, naam: a.name, soort: a.accountKind, klasse: a.klasse, status: a.nbStatus, dagenInFase: fase, score: a.score,
       scoreOpbouw: kan(ctx, 'prospects.scoreOpbouw') ? a.data?.scoreOpbouw ?? null : null,
@@ -78,6 +82,7 @@ export default defineEventHandler(async (event) => {
       stuur: { laatsteActie: acts[0]?.op ?? null, laatsteCall: laatste(['gebeld']), laatsteBezoek: laatste(['bezoek', 'afspraak']) },
       openTaken: telOpenTaken([], { accountId: id }),
       tijdlijn: acts.map((x) => ({ id: x.id, soort: x.soort, kanaal: x.kanaal, uitkomst: x.uitkomst, op: x.op, door: x.door ? namen.get(x.door) ?? x.door : null, tekst: (x.data as any)?.tekst ?? null, contactId: x.contactId })),
+      overdracht, kanOverdragen: !!afv && a.nbStatus !== 'overgedragen' && (!ov || ov.status === 'mislukt' || !!ov.data?.alKlant),
       reis: reisInfo, terugkom, nee: a.data?.nee ? { ...a.data.nee, tot: Object.fromEntries(KANALEN.map((k) => [k, afkoelingTot(a.data!.nee, k)])) } : null, wachtendTot: a.data?.wachtendTot ?? null, benaderen,
       reizen: kan(ctx, 'reis.verplaatsen') ? reizen.filter((r) => r.status === 'actief' && r.id !== a.reisId).map((r) => ({ id: r.id, naam: r.naam })) : [],
       concurrenten: vv?.concurrenten ?? [],

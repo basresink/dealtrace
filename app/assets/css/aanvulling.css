@@ -1087,3 +1087,48 @@ html.zonlicht body { color: #000; }
   .cp-zoek { max-width: none; flex: 1 1 100%; }
   .cp-groep .rij { flex-wrap: wrap; }
 }
+
+/* P17: funnel. Horizontaal per hoofdfase op de laptop, verticaal op de telefoon; het stokpunt oranje. */
+.fn-stok { display: block; width: 100%; margin-bottom: 16px; text-align: left; font: inherit; font-weight: 600; cursor: pointer; }
+.fn-filters { align-items: end; }
+.fn-slot { align-self: end; min-height: 44px; }
+.fn-bord { display: grid; gap: var(--kaart-gap); }
+.fn-bord--twee { grid-template-columns: 1fr 1fr; }
+.fn-funnel { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--kaart-gap); }
+.fn-bord--twee .fn-funnel { grid-template-columns: 1fr; }
+.fn-groep { display: flex; flex-direction: column; gap: 8px; }
+.fn-groep-kop { margin: 0; font-size: var(--fs-label); font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.fn-fase { display: flex; flex-direction: column; gap: 6px; min-height: 44px; padding: 12px; text-align: left; background: var(--wit); border: 1px solid var(--border); border-left: 4px solid var(--ink); font: inherit; color: var(--ink); cursor: pointer; }
+.fn-fase:hover, .fn-fase:focus-visible { border-color: var(--ink); }
+.fn-fase--stok { border-left-color: var(--orange); background: rgba(217, 119, 6, 0.06); }
+.fn-fase-kop { display: flex; justify-content: space-between; gap: 8px; }
+.fn-fase-naam { font-weight: 700; }
+.fn-fase-aantal { font-family: var(--font-serif); font-size: 1.4rem; font-feature-settings: "tnum"; }
+.fn-balk { height: 6px; background: var(--bg); }
+.fn-balk > span { display: block; height: 100%; background: var(--ink); }
+.fn-fase--stok .fn-balk > span { background: var(--orange); }
+.fn-fase-cijfers { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: var(--fs-label); color: var(--muted); }
+.fn-uitval { display: flex; flex-wrap: wrap; gap: 4px; }
+.fn-reden { padding: 2px 6px; font-size: var(--fs-label); background: var(--bg); border: 1px solid var(--border); cursor: pointer; }
+.fn-reden:hover { border-color: var(--ink); }
+.fn-staafjes { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; align-items: end; height: 160px; margin-top: 12px; }
+.fn-staaf { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; }
+.fn-staaf-balk { width: 100%; min-height: 2px; background: var(--ink); }
+.alleen-groot { display: flex; }
+@media (max-width: 767px) {
+  .fn-funnel, .fn-bord--twee { grid-template-columns: 1fr; }
+  .alleen-groot { display: none; }
+}
+
+/* P17: overdragen. Tegels van minimaal 56 px; de briefing als voorbeeld. */
+.ov-keuze { display: flex; flex-direction: column; gap: 12px; }
+.ov-tegels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ov-tegel { display: flex; flex-direction: column; gap: 4px; min-height: 56px; padding: 10px 12px; text-align: left; background: var(--wit); border: 1px solid var(--border); font: inherit; color: var(--ink); cursor: pointer; }
+.ov-tegel:hover:not(:disabled) { border-color: var(--ink); }
+.ov-tegel.is-gekozen { border: 2px solid var(--ink); background: var(--yellow-licht); }
+.ov-tegel:disabled { opacity: 0.5; cursor: not-allowed; }
+.ov-mee { margin: 8px 0; padding-left: 18px; font-size: var(--fs-meta); }
+.ov-briefing { margin: 8px 0 0; padding: 12px; white-space: pre-wrap; font-family: inherit; font-size: var(--fs-meta); background: var(--bg); border: 1px solid var(--border); }
+.ov-stand { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+@media (max-width: 767px) { .ov-tegels { grid-template-columns: 1fr; } }
+.mb-16 { margin-bottom: var(--kaart-gap); }

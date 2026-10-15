@@ -600,6 +600,35 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'instellingen.campagnesoorten', naam: 'Campagnesoorten', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'een-campagne-opzetten', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Campagnesoorten aan en uit zetten.', totDieTijd: 'De acht startsoorten staan aan.' },
   },
+  // P17: funnel van de prospectreis en overdracht (F17).
+  {
+    sleutel: 'funnel.eigen', naam: 'Je eigen funnel', pakket: 'starter', rollen: 'iedereen', helpartikel: 'funnel', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Hoeveel accounts per fase, en waar het het meest stokt.', totDieTijd: 'Je salesmanager bespreekt de funnel met je.' },
+  },
+  {
+    sleutel: 'funnel.filters', naam: 'Funnel per doelgroep, reis en campagne', pakket: 'starter', rollen: 'iedereen', helpartikel: 'funnel', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Conversie, doorlooptijd, uitval met reden en pogingen tot afspraak, per doelgroep, reis of campagne.', totDieTijd: 'Je ziet de aantallen en het stokpunt.' },
+  },
+  {
+    sleutel: 'funnel.vergelijken', naam: 'Reizen vergelijken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'funnel', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Twee reizen naast elkaar op hoofdfase.', totDieTijd: 'Je kiest één reis tegelijk.' },
+  },
+  {
+    sleutel: 'funnel.export', naam: 'Funnel downloaden', pakket: 'starter', rollen: 'iedereen', helpartikel: 'funnel', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'De funnel zoals op het scherm als CSV.', totDieTijd: 'Je leest de funnel op het scherm.' },
+  },
+  {
+    sleutel: 'funnel.team', naam: 'Funnel van het team', pakket: 'starter', rollen: ['salesmanager', 'beheerder'], helpartikel: 'funnel', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'De funnel per team en per persoon, met download.', totDieTijd: 'Vraag je salesmanager.' },
+  },
+  {
+    sleutel: 'overdracht.basis', naam: 'Overdragen na de eerste afspraak', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-afspraak-plannen-afronden-en-overdragen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Na een eerste afspraak met vervolg het account overdragen aan DealDrive, het CRM of een collega, met briefing.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'instellingen.funnelNormen', naam: 'Normen per fase', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'funnel', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Conversie- en doorlooptijdnormen per fase van de funnel.', totDieTijd: 'De standaardnormen gelden.' },
+  },
   // P33: AI-assistent en credits (F26, 11.4). Op alle niveaus; de credits begrenzen, niet het niveau.
   {
     sleutel: 'assistent.chat', naam: 'AI-assistent', pakket: 'starter', rollen: 'iedereen', helpartikel: 'chatten-met-de-ai-assistent', startNiveau: 'beginner',
@@ -944,7 +973,7 @@ export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | u
 
 /** De feature (hoofdstuk 7, F01 tot en met F26) waar een functie bij hoort, voor het raster van de founder. */
 const FEATURE_GROEPEN: [RegExp, string][] = [
-  [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^campagnes\.|^instellingen\.campagnesoorten/, 'F12 Campagnes'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
+  [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^campagnes\.|^instellingen\.campagnesoorten/, 'F12 Campagnes'], [/^(funnel|overdracht)\.|^instellingen\.funnelNormen/, 'F17 Funnel en overdracht'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],

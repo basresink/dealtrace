@@ -190,7 +190,7 @@ export async function rondAfAfspraak(tx: Tx, org: string, afspraakId: string, do
   const eerste = !!ap!.account_id && ap!.type === 'klant' && !!ap!.soort_data?.eersteAfspraak && isEersteAfspraak(alle.map((x) => ({ id: x.id, accountId: x.account_id, status: x.status, start: new Date(x.start_at).toISOString(), meetingsoortType: x.type })), ap!.account_id, ap!.id)
   const m = meetingUitkomst({ accountNaam: ap!.account_naam, start: new Date(ap!.start_at).toISOString(), eerste }, { type: ap!.type, data: ap!.soort_data, naam: ap!.soort_naam }, inv.uitkomst, { ...inv, nu })
   if (m.fout) fout(400, m.fout)
-  const data = { ...(ap!.data ?? {}), verslag: { tekst: inv.verslag ?? '', bron: 'getypt', perAgendapunt: inv.agendapunten ?? [] }, overdragen: m.overdragen, afronding: { sleutel: inv.sleutel ?? null, door, op: nu.toISOString() } }
+  const data = { ...(ap!.data ?? {}), verslag: { tekst: inv.verslag ?? '', bron: 'getypt', perAgendapunt: inv.agendapunten ?? [] }, overdragen: m.overdragen, vervolgstap: inv.vervolgstap?.trim() || null, afronding: { sleutel: inv.sleutel ?? null, door, op: nu.toISOString() } }
   await tx.execute(sql`update appointments set status = 'afgerond', uitkomst_code = ${inv.uitkomst}, uitkomst_op = ${nu.toISOString()}, data = ${JSON.stringify(data)}::jsonb, updated_at = now(), versie = versie + 1 where id = ${ap!.id}`)
   // Gat 32: de gekoppelde taak sluit.
   if (ap!.task_id) {

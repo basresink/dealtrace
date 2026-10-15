@@ -1,6 +1,6 @@
 // GET /api/platform/klanten/:id: de klantflyout (founder, aal2). Gebruikers met rol,
 // niveau en login; geen klantdata (accounts, contacten, activiteiten).
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm'
 import { FUNCTIES, pakketBevat } from '../../../../../shared/functies'
 import { schema } from '../../../../utils/db'
 import { STARTSET } from '../../../../utils/orgStarter'
@@ -25,7 +25,9 @@ export default defineEventHandler(async (event) => {
       const groep = f.zijbalk?.groep ?? 'Overig'
       ;(groepen[groep] ??= []).push({ sleutel: f.sleutel, naam: f.naam, stand: pakketBevat({ pakket: o.pakket as any, features: o.features ?? {} }, f) ? 'live' : 'pakket te laag' })
     }
+    const [dd] = (await tx.execute(sql`select status, instellingen->>'stand' as stand from koppelingen where organisation_id = ${id} and soort = 'dealdrive'`)).rows as any[]
     return {
+      dealdrive: dd?.status === 'actief' ? dd.stand : 'uit',
       id: o.id, naam: o.name, pakket: o.pakket, contract: o.contract ?? {}, contact: o.data?.contact ?? {},
       gebruikersStand: o.data?.gebruikersStand ?? 'aanvragen', toegangLeverancier: o.data?.toegangLeverancier ?? 'altijd',
       gebruikers, aanvragen, gezondheid: g ?? null, functies: groepen,

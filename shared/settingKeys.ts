@@ -22,6 +22,8 @@ export const SETTING_KEYS = [
   'spraak', // {opnamesBewaren, bewaartermijnDagen, browserherkenning}: spraak per organisatie (P31)
   'meldingsregels', // Partial<MeldingInstelling> uit shared/meldingsregels.ts: dagplafond en stilte (P31)
   'kansRegels', // KansRegels uit shared/route.ts: gewichten, maximale omrijtijd, aantal (P14)
+  'funnelNormen', // Normen uit shared/funnel.ts: {faseId: {conversie, doorlooptijd}} (P17)
+  'overdracht', // {vasteOntvanger}: vaste ontvanger in DealDrive of het CRM (P17)
   'dagritme', // DagInstelling en SignaalInstelling uit shared/dag.ts en shared/signalen.ts (P32)
   // Van de leverancier:
   'pakket',

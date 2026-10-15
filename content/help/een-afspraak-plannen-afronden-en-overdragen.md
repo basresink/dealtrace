@@ -46,6 +46,24 @@ Bij een belafspraak kies je **Afspraak gemaakt**, **Later opnieuw** of **Geen in
 
 Dealtrace maakt geen deals of offertes. Na de eerste afspraak draag je over aan DealDrive, jullie CRM of een collega.
 
+## Overdragen
+
+Rond je een eerste afspraak af met **Vervolg afgesproken**, dan verschijnt meteen **Overdragen?** met drie keuzes: **DealDrive**, **Het CRM** of **Een collega**. Kan een keuze niet, dan staat de reden erbij, bijvoorbeeld "DealDrive is nog niet gekoppeld. Je krijgt een overdrachtstaak met de briefing."
+
+1. Kies naar wie. Bij een collega kies je de nieuwe eigenaar; bij DealDrive of het CRM het e-mailadres van de ontvanger (voorgevuld als er een vaste ontvanger is).
+2. Controleer de vervolgstap, met datum en soort.
+3. Onder **Wat gaat er mee** zie je wat de ontvanger krijgt: het account met contacten en buying committee, het dossier, de reis, je verslag, de vervolgstap en de briefing. Tik **Bekijk briefing** om hem te lezen.
+4. Tik **Draag over** en bevestig.
+
+Het account krijgt de status **Overgedragen** en verdwijnt uit je actieve reis. Wie en wanneer staat in de audit. Bij DealDrive ontstaat de deal daar; op de accountkaart zie je "Overgedragen aan DealDrive op ..." met de stand en een link. Een collega wordt eigenaar en krijgt een taak met de vervolgstap en de briefing. Zonder koppeling krijg je een overdrachtstaak met de briefing om te mailen of te downloaden.
+
+- **Later** laat de overdrachtstaak staan voor de volgende werkdag. Is er na een werkdag nog niets overgedragen, dan krijg je een inzicht.
+- Meldt DealDrive dat het bedrijf **al klant** is, dan vraagt Dealtrace "Overdragen als nieuwe kans bij een bestaande klant?".
+- Lukt het versturen niet, dan probeert Dealtrace het opnieuw. Lukt het na vijf keer niet, dan krijg je een taak en staat op de accountkaart **Opnieuw proberen**. De overdracht in Dealtrace blijft staan.
+- Vanaf de accountkaart open je hetzelfde venster met **Overdragen**, alleen na een gehouden eerste afspraak met vervolg.
+
+Op de telefoon kies je in **Bezoek afronden** meteen naar wie je overdraagt; ook zonder verbinding gaat dat mee in de wachtrij.
+
 ## Niet verschenen of geannuleerd
 
 Kwam de klant niet, klik dan **Niet verschenen**. Bij de eerste afspraak gaat de fase terug naar In gesprek en verschijnt het account in "Wie moet ik spreken" met "No-show opnieuw inplannen". Je krijgt ook het inzicht "Gat in je agenda".

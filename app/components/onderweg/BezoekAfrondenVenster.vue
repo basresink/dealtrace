@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Bezoek afronden (P30, 8.5.3): uitkomst als grote tegels in twee kolommen (uit de meetingsoort),
 // verslag met de microfoon als primaire invoer en typen als terugval, foto, volgende stap (of bij een
-// eerste afspraak met vervolg de vraag "Overdragen?"), nieuwe contactpersoon en de plakkende knop
+// eerste afspraak met vervolg de vraag "Overdragen?" met de keuzes, P17), nieuwe contactpersoon en de plakkende knop
 // "Bewaar bezoek". Alles via de wachtrij, dus ook offline; 5 seconden "Ongedaan maken".
 import { NEE_REDENEN } from '~~/shared/nbStatus'
 const props = defineProps<{ open: boolean; afspraak: { id: string; accountId?: string | null; accountNaam?: string | null; start: string; eind: string; eerste?: boolean; uitkomsten: { code: string; label: string; gevolg: { type: string } }[] } | null }>()
@@ -17,7 +17,8 @@ const contactOpen = ref(false)
 const kaartje = ref(false)
 const { functie } = useMe()
 const bewaard = ref(false)
-watch(() => props.open, (o) => { if (o) { Object.assign(f, leeg()); fotos.value = []; opname.value = null; contactOpen.value = false; bewaard.value = false } })
+const overdracht = ref<any>(null)
+watch(() => props.open, (o) => { if (o) { Object.assign(f, leeg()); overdracht.value = null; fotos.value = []; opname.value = null; contactOpen.value = false; bewaard.value = false } })
 const tijd = (iso: string) => new Date(iso).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })
 const gekozen = computed(() => props.afspraak?.uitkomsten.find((u) => u.code === f.uitkomst))
 const nee = computed(() => gekozen.value?.gevolg.type === 'nee')
@@ -31,7 +32,7 @@ watch(() => f.uitkomst, () => {
   else if (t === 'gehouden' && !props.afspraak?.eerste) Object.assign(f, { stapTitel: `Terugbellen ${props.afspraak?.accountNaam ?? ''}`.trim(), stapDatum: werkdagen(3) })
   else Object.assign(f, { stapTitel: '', stapDatum: '' })
 })
-const ongeldig = computed(() => !f.uitkomst || (nee.value && (!f.reden || (f.reden === 'Anders' && !f.toelichting.trim()))))
+const ongeldig = computed(() => !f.uitkomst || (nee.value && (!f.reden || (f.reden === 'Anders' && !f.toelichting.trim()))) || (overdragen.value && !!overdracht.value && (!overdracht.value.vervolgstap.omschrijving || (overdracht.value.naar === 'collega' && !overdracht.value.naarGebruikerId))))
 
 async function foto(e: Event) {
   const bestand = (e.target as HTMLInputElement).files?.[0]
@@ -46,7 +47,8 @@ async function bewaar() {
   if (ongeldig.value || !props.afspraak) return
   const a = props.afspraak
   const patch = {
-    soort: 'bezoek.afronden', uitkomst: f.uitkomst, verslag: f.verslag || null, reden: f.reden || null, toelichting: f.toelichting || null, laterOp: f.laterOp || null, vervolgstap: f.vervolgstap || null,
+    soort: 'bezoek.afronden', uitkomst: f.uitkomst, verslag: f.verslag || null, reden: f.reden || null, toelichting: f.toelichting || null, laterOp: f.laterOp || null, vervolgstap: overdracht.value?.vervolgstap.omschrijving || f.vervolgstap || null,
+    overdracht: overdragen.value && overdracht.value ? JSON.parse(JSON.stringify(overdracht.value)) : null,
     bijlagen: [...fotos.value.map((x) => x.id), ...(opname.value ? [opname.value.id] : [])],
     volgendeStap: f.stapTitel.trim() && f.stapDatum ? { titel: f.stapTitel.trim(), datum: f.stapDatum, soort: f.stapSoort } : null,
     nieuwContact: f.contactNaam.trim() ? { naam: f.contactNaam.trim(), functie: f.contactFunctie || null, telefoon: f.contactTelefoon || null } : null,
@@ -55,7 +57,7 @@ async function bewaar() {
   const sleutel = await voegToe({ tabel: 'appointments', op: 'patch', recordId: a.id, patch }, { uitstelMs: 5000 })
   bewaard.value = true
   const offline = !navigator.onLine
-  toast.toon(offline ? 'Bewaard op je telefoon, wordt verstuurd zodra je verbinding hebt.' : overdragen.value ? 'Bezoek vastgelegd. Overdragen? Er staat een overdrachtstaak klaar.' : 'Bezoek vastgelegd.', 'succes', undefined, {
+  toast.toon(offline ? 'Bewaard op je telefoon, wordt verstuurd zodra je verbinding hebt.' : overdragen.value && overdracht.value ? 'Bezoek vastgelegd en overgedragen.' : overdragen.value ? 'Bezoek vastgelegd. Overdragen? Er staat een overdrachtstaak klaar.' : 'Bezoek vastgelegd.', 'succes', undefined, {
     tekst: 'Ongedaan maken', doe: async () => { if (await trekIn(sleutel)) toast.toon('Teruggezet. Het bezoek staat weer open.'); else toast.toon('Al verstuurd; ongedaan maken lukt niet meer.', 'let-op') },
   })
   emit('bewaard', a.id)
@@ -93,8 +95,9 @@ async function bewaar() {
           <article v-if="f.uitkomst" class="fo-blok" data-test="ba-volgende">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">{{ overdragen ? 'Overdragen?' : 'Volgende stap' }}</h3></header>
             <template v-if="overdragen">
-              <p>De eerste afspraak is gehouden. Draag over aan DealDrive, jullie CRM of een collega. Er staat een overdrachtstaak klaar met je verslag.</p>
-              <label class="veld mt-8"><span class="veld-label">Afgesproken vervolgstap</span><input v-model="f.vervolgstap" class="invoer" placeholder="Bijvoorbeeld: offerte via DealDrive"></label>
+              <p>De eerste afspraak is gehouden. Kies naar wie je overdraagt; doe je dat later, dan staat er een overdrachtstaak klaar met je verslag.</p>
+              <OverdrachtKeuze v-if="afspraak.accountId" v-model="overdracht" :account-id="afspraak.accountId" class="mt-8" />
+              <label v-else class="veld mt-8"><span class="veld-label">Afgesproken vervolgstap</span><input v-model="f.vervolgstap" class="invoer" placeholder="Bijvoorbeeld: projectschouw op locatie"></label>
             </template>
             <label v-else-if="gekozen?.gevolg.type === 'later'" class="veld"><span class="veld-label">Terugkomen op</span><input v-model="f.laterOp" type="date" class="invoer"></label>
             <template v-else-if="!nee">

@@ -26,6 +26,12 @@ watch(() => a.value?.naam, (n) => { accountNaam.value = n ?? null }, { immediate
 onBeforeUnmount(() => { accountNaam.value = null })
 if (!a.value) throw createError({ statusCode: 404, statusMessage: 'Account onbekend' })
 const infoOpen = ref(false)
+// P17: overdracht na de eerste afspraak.
+const overdragenOpen = ref(route.query.overdragen === '1')
+const OV_NAAR: Record<string, string> = { dealdrive: 'DealDrive', crm: 'het CRM', collega: 'een collega' }
+async function overdrachtOpnieuw() {
+  try { const r = await $fetch<any>(`/api/overdrachten/${a.value.overdracht.id}/opnieuw`, { method: 'POST' }); toast.toon(r.status === 'mislukt' ? 'Opnieuw mislukt.' : 'Overdracht opnieuw verstuurd.'); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+}
 const contactenOpen = ref(false)
 const verwijderOpen = ref(false)
 const tab = ref<'tijdlijn' | 'taken' | 'contacten' | 'notities' | 'reis' | 'eigenvelden'>('tijdlijn')
@@ -129,6 +135,7 @@ async function bewaarOffline() { await dagpakket.bewaarVoorOffline(String(route.
             <button v-if="functie('contact.visitekaartje')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair alleen-telefoon" data-test="scan-visitekaartje" @click="kaartjeOpen = true"><Icoon naam="Camera" class="dd-actie-icoon" />Scan visitekaartje</button>
             <button v-if="!inPakket && functie('onderweg.dagpakket')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair alleen-telefoon" data-test="bewaar-offline" @click="bewaarOffline"><Icoon naam="Download" class="dd-actie-icoon" />Bewaar voor offline</button>
             <button v-if="kanKlaarzetten" type="button" class="dd-actie dd-actie--secundair" data-test="klaarzetten-knop" @click="klaarOpen = true"><Icoon naam="MapPin" class="dd-actie-icoon" />Klaarzetten voor buitendienst</button>
+            <button v-if="a.kanOverdragen && functie('overdracht.basis')?.beschikbaar" type="button" class="dd-actie dd-actie--primair" data-test="overdragen-knop" @click="overdragenOpen = true"><Icoon naam="ArrowRight" class="dd-actie-icoon" />Overdragen</button>
             <button type="button" class="dd-actie dd-actie--secundair" data-test="info-knop" @click="infoOpen = true"><Icoon naam="Info" class="dd-actie-icoon" />Info</button>
             <button type="button" class="dd-actie dd-actie--secundair" data-test="contacten-knop" @click="contactenOpen = true"><Icoon naam="Users" class="dd-actie-icoon" />Contacten {{ a.contacten.filter((c: any) => c.status !== 'vertrokken').length }}</button>
             <a v-if="belNummer" class="dd-actie dd-actie--primair alleen-groot" :href="telLink(belNummer)"><Icoon naam="Phone" class="dd-actie-icoon" />Bel</a>
@@ -159,6 +166,13 @@ async function bewaarOffline() { await dagpakket.bewaarVoorOffline(String(route.
     </section>
     <section class="section">
       <div class="container">
+        <div v-if="a.overdracht" class="kaart ov-stand mb-16" :class="{ 'kaart--geel': a.overdracht.status === 'mislukt' }" data-test="overdracht-regel">
+          <span>Overgedragen aan {{ OV_NAAR[a.overdracht.naar] }} op {{ new Date(a.overdracht.op).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Amsterdam' }) }} door {{ a.overdracht.door }}</span>
+          <span class="pil" :class="{ 'pil--leeg': a.overdracht.status !== 'mislukt' }">{{ a.overdracht.status }}</span>
+          <a v-if="a.overdracht.externUrl" :href="a.overdracht.externUrl" target="_blank" rel="noopener" class="filter-link">Open in DealDrive</a>
+          <button v-if="a.overdracht.status === 'mislukt'" type="button" class="dd-act" data-test="overdracht-opnieuw" @click="overdrachtOpnieuw">Opnieuw proberen</button>
+          <span v-if="a.overdracht.laatsteFout" class="meta">{{ a.overdracht.laatsteFout }}</span>
+        </div>
         <div class="stat-grid stat-grid--6 alleen-groot" data-test="statstrook">
           <div class="stat-card"><span class="stat-label">Open acties</span><span class="stat-num tnum">{{ a.openTaken }}</span></div>
           <div class="stat-card"><span class="stat-label">Inzichten</span><span class="stat-num tnum">0</span></div>
@@ -252,6 +266,7 @@ async function bewaarOffline() { await dagpakket.bewaarVoorOffline(String(route.
     <BevestigVenster :open="verwijderOpen" :titel="`${a.naam} verwijderen?`" tekst="Het account en zijn contacten worden verwijderd. De activiteitenlog blijft bewaard." bevestig="Verwijderen" @geannuleerd="verwijderOpen = false" @bevestigd="verwijder" />
     <VisitekaartjeVenster :open="kaartjeOpen" :account="a ? { id: a.id, naam: a.naam } : null" @sluit="kaartjeOpen = false" @bewaard="refresh()" />
     <KlaarzetFlyout :open="klaarOpen" :account="a ? { id: a.id, naam: a.naam } : null" @sluit="klaarOpen = false" />
+    <OverdrachtVenster :open="overdragenOpen" :account-id="a?.id ?? null" :account-naam="a?.naam ?? ''" @sluit="overdragenOpen = false" @overgedragen="refresh()" />
   </div>
   <OfflineAccount v-else :id="String(route.params.id)" />
 </template>

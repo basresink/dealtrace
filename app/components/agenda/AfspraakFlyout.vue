@@ -10,6 +10,7 @@ const emit = defineEmits<{ sluit: []; gewijzigd: [] }>()
 const toast = useToast()
 const { voegToe } = useSyncQueue()
 const a = ref<any>(null)
+const ov = ref<{ accountId: string; naam: string; vervolgstap: string } | null>(null)
 const afronden = ref(false)
 const bezig = ref(false)
 const f = reactive({ uitkomst: '', verslag: '', laterOp: '', reden: '', toelichting: '', vervolgstap: '', punten: [] as { punt: string; besproken: boolean }[] })
@@ -37,6 +38,8 @@ async function rondAf() {
       toast.toon('Afgerond. Wordt verstuurd zodra je weer verbinding hebt.')
     } else {
       const r: any = await $fetch(`/api/afspraken/${a.value.id}/afronden`, { method: 'POST', body })
+      // P17: een eerste afspraak met vervolg opent meteen "Overdragen?".
+      if (r.overdragen && a.value.account?.id) { ov.value = { accountId: a.value.account.id, naam: a.value.account.naam, vervolgstap: f.vervolgstap }; emit('gewijzigd'); return }
       toast.toon(r.tekst)
     }
     emit('gewijzigd'); emit('sluit')
@@ -123,5 +126,6 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
         </footer>
       </aside>
     </div>
+    <OverdrachtVenster :open="!!ov" :account-id="ov?.accountId ?? null" :account-naam="ov?.naam ?? ''" :vervolgstap="ov?.vervolgstap" @sluit="ov = null; emit('sluit')" @overgedragen="emit('gewijzigd')" />
   </Teleport>
 </template>

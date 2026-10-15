@@ -15,6 +15,7 @@ import { ACCOUNT_MUTATIESOORTEN, AFSPRAAK_MUTATIESOORTEN, CAMPAGNE_MUTATIESOORTE
 import { besluit } from '../../utils/dagritme'
 import { planAfspraak, rondAfAfspraak } from '../../utils/agenda'
 import { klaarzetten } from '../../utils/bezoeken'
+import { draagOver } from '../../utils/overdracht'
 import { kolomWissel, laad as laadCampagne, magWijzigen as magCampagne } from '../../utils/campagnes'
 import { KOLOMMEN } from '../../../shared/campagnes'
 import { bezoekAfronden, legInloopVast } from '../../utils/onderweg'
@@ -128,12 +129,24 @@ export default defineEventHandler(async (event) => {
         try {
           if (p.soort === 'bezoek.afronden') {
             // P30: recordId is de afspraak; idempotent op afspraak en uitkomst (en op de sleutel).
-            await bezoekAfronden(tx, klant.organisatie.id, gebruiker.id, { ...(p as any), afspraakId: m.recordId, uitkomst: String(p.uitkomst ?? ''), sleutel: m.idempotentieSleutel }, op)
+            const af = await bezoekAfronden(tx, klant.organisatie.id, gebruiker.id, { ...(p as any), afspraakId: m.recordId, uitkomst: String(p.uitkomst ?? ''), sleutel: m.idempotentieSleutel }, op)
+            // P17: overdragen in hetzelfde venster; idempotent op de sleutel van deze mutatie.
+            if (p.overdracht && (af as any).overdragen && kan(klant, 'overdracht.basis')) {
+              const [ap] = (await tx.execute(sql`select account_id from appointments where id = ${m.recordId}`)).rows as any[]
+              if (ap?.account_id) await draagOver(tx, klant.organisatie.id, { id: gebruiker.id, naam: klant.gebruiker.naam, email: klant.gebruiker.email }, ap.account_id, { ...p.overdracht, sleutel: `${m.idempotentieSleutel}:overdracht` }, op)
+            }
           } else if (p.soort === 'inloop.vastleggen') {
             if (!kan(klant, 'onderweg.inloop')) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Functie niet beschikbaar' }
             await legInloopVast(tx, klant.organisatie.id, gebruiker.id, { id: m.recordId, accountId: String(p.accountId ?? ''), tijd: p.tijd ?? null })
           } else if (p.soort === 'afspraak.nieuw') await planAfspraak(tx, klant.organisatie.id, { id: gebruiker.id, naam: klant.gebruiker.naam, rol: klant.gebruiker.rol, mag: { voorCollega: kan(klant, 'agenda.voorCollega') } }, { ...p, id: m.recordId } as any, op)
-          else await rondAfAfspraak(tx, klant.organisatie.id, m.recordId, gebruiker.id, { uitkomst: String(p.uitkomst ?? ''), verslag: p.verslag ?? null, agendapunten: p.agendapunten ?? [], laterOp: p.laterOp ?? null, reden: p.reden ?? null, toelichting: p.toelichting ?? null, verlorenAan: p.verlorenAan ?? null, vervolgstap: p.vervolgstap ?? null, sleutel: m.idempotentieSleutel }, op)
+          else {
+            const af = await rondAfAfspraak(tx, klant.organisatie.id, m.recordId, gebruiker.id, { uitkomst: String(p.uitkomst ?? ''), verslag: p.verslag ?? null, agendapunten: p.agendapunten ?? [], laterOp: p.laterOp ?? null, reden: p.reden ?? null, toelichting: p.toelichting ?? null, verlorenAan: p.verlorenAan ?? null, vervolgstap: p.vervolgstap ?? null, sleutel: m.idempotentieSleutel }, op)
+            // P17: afronden en overdragen gaan samen in de wachtrij; het versturen naar DealDrive doet de motor daarna.
+            if (p.overdracht && af.overdragen && kan(klant, 'overdracht.basis')) {
+              const [ap] = (await tx.execute(sql`select account_id from appointments where id = ${m.recordId}`)).rows as any[]
+              if (ap?.account_id) await draagOver(tx, klant.organisatie.id, { id: gebruiker.id, naam: klant.gebruiker.naam, email: klant.gebruiker.email }, ap.account_id, { ...p.overdracht, sleutel: `${m.idempotentieSleutel}:overdracht` }, op)
+            }
+          }
         } catch (e: any) {
           if (e instanceof ReisFout) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 404 ? 404 : 422, reden: e.message }
           if (e?.statusCode && [400, 403, 404, 409, 422].includes(e.statusCode)) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 409 ? 422 : e.statusCode, reden: e.message }
