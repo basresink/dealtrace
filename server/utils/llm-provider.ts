@@ -70,6 +70,43 @@ export const MOCK_GENERATOREN: Record<string, (materiaal: any) => unknown> = {
 }
 // De Gids (P33): hetzelfde antwoord voor een gewone vraag, een vraag met account en webonderzoek.
 for (const soort of ['assistent', 'assistentUitgebreid', 'webonderzoek']) MOCK_GENERATOREN[soort] = (m) => mockGids(m)
+// De Waarnemer (P19): een oordeel met letterlijk citaat en de URL uit de vondst.
+MOCK_GENERATOREN.webonderzoek = (m) => {
+  if (!m?.waarnemer) return mockGids(m)
+  const v = m.vondsten?.[0]
+  const citaat = String(v?.tekst ?? '').split(/(?<=\.)\s/)[0] ?? ''
+  return {
+    titel: v?.titel ?? 'Aanleiding gevonden', beschrijving: `${v?.fragment ?? ''} Dat is een aanleiding om nu contact op te nemen.`.trim(), relevantie: 85, zekerheid: 75,
+    evidence: [{ citaat, bron: v?.titel ?? 'Web', ...(v?.datum ? { datum: v.datum } : {}), ...(v?.url ? { url: v.url } : {}) }],
+    ...(m.winpuntId ?? m.winpunten?.[0]?.id ? { winpuntVoorstel: m.winpuntId ?? m.winpunten[0].id } : {}), taakVoorstel: `Bel ${m.account} over de ${m.soort}`,
+  }
+}
+// De Verrijker (P19): alleen velden met bron; een patroon als aanname.
+const leadDossier = MOCK_GENERATOREN.dossier!
+MOCK_GENERATOREN.dossier = (m) => !m?.verrijker ? leadDossier(m) : ({
+  velden: [
+    ...(m?.kvk ? [{ veld: 'omvang', waarde: `${m.kvk.medewerkers ?? 'onbekend'} medewerkers`, bron: 'KvK' }] : []),
+    ...(m?.website ? [{ veld: 'kernfeit', waarde: String(m.website.tekst).split(/(?<=\.)\s/)[0], bron: m.website.url }] : []),
+    ...(m?.domein ? [{ veld: 'emailpatroon', waarde: `voornaam@${m.domein}`, aanname: true }] : []),
+  ],
+  criteria: { branche: m?.branche ? 'ja' : 'onbekend', omvang: m?.kvk ? 'ja' : 'onbekend', locatie: m?.plaats ? 'ja' : 'onbekend', leverancier: m?.leverancier ? 'ja' : 'onbekend', aanleiding: m?.aanleiding ? 'ja' : 'onbekend', beslisser: m?.beslisser ? 'ja' : 'onbekend' },
+})
+// De Profielbouwer (P19): rollen uit de functies, zonder namen te verzinnen.
+MOCK_GENERATOREN.brief = (m) => m?.committee ? { voorstellen: (m.functies ?? []).map((f: string) => ({ functie: f, rol: /directeur|eigenaar|inkoop/i.test(f) ? 'beslisser' : /werkvoorbereider|projectleider/i.test(f) ? 'beinvloeder' : 'gebruiker', bron: m.bron ?? 'Website', zekerheid: /directeur|eigenaar/i.test(f) ? 80 : 55 })) } : { tekst: 'Mock-antwoord voor brief' }
+// De Notulist (P19): per agendapunt, open vragen, voorgestelde uitkomst, signalen en concurrenten.
+MOCK_GENERATOREN.notulist = (m) => {
+  const t = String(m?.aantekeningen ?? '')
+  const zinnen = t.split(/(?<=[.!?])\s+/).filter(Boolean)
+  return {
+    perAgendapunt: (m?.agenda ?? []).map((p: string, i: number) => ({ punt: p, samenvatting: zinnen[i] ?? 'Niet besproken.' })),
+    openVragen: zinnen.filter((z) => z.endsWith('?')),
+    voorgesteldeUitkomst: /afspraak|vervolg|offerte/i.test(t) ? 'vervolg' : 'later',
+    koopsignalen: zinnen.filter((z) => /nieuwbouw|uitbreid|budget|starten|planning/i.test(z)).slice(0, 3),
+    bezwaren: zinnen.filter((z) => /duur|goedkoper|tevreden/i.test(z)).slice(0, 3),
+    concurrenten: (m?.concurrenten ?? []).filter((c: any) => t.toLowerCase().includes(String(c.naam).toLowerCase().replace(/\s*b\.?v\.?$/i, ''))).map((c: any) => c.naam),
+    actiepunten: zinnen.filter((z) => /sturen|bellen|mailen|plannen|terugkomen/i.test(z)).slice(0, 3),
+  }
+}
 // P31: spraakopdracht uit de zin en de lijst accounts; visitekaartje met een vast fictief kaartje.
 MOCK_GENERATOREN.spraakopdracht = (m) => mockOpdracht(String(m?.zin ?? ''), m?.accounts ?? [], new Date(m?.vandaag ?? Date.now()))
 export const MOCK_VISITEKAARTJES: Record<string, unknown> = {}

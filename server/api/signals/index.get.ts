@@ -1,4 +1,5 @@
-// GET /api/signals: inzichten met filters (gelezen, bron, periode, reis en fase, soort account).
+// GET /api/signals: inzichten met filters (gelezen, bron, agent, periode, reis en fase, soort account).
+// Tegengehouden inzichten staan hier niet in (P19); die komen uit /api/signals/tegengehouden.
 import { and, eq, inArray } from 'drizzle-orm'
 import { metOrganisatie, schema } from '../../utils/db'
 import { vereisFunctie } from '../../utils/sessie'
@@ -15,6 +16,8 @@ export default defineEventHandler(async (event) => {
     const per = new Map(accounts.map((a) => [a.id, a]))
     const alle = rijen.map((s) => ({
       id: s.id, title: s.title, type: s.type, status: s.status, bron: s.bron, relevantie: s.relevanceScore, createdAt: s.createdAt, ruleId: s.ruleId,
+      agent: s.agent ?? (s.data as any)?.agent ?? null, evidence: (s.data as any)?.evidence ?? [], zekerheid: (s.data as any)?.zekerheid ?? (s.confidence != null ? Math.round(s.confidence * 100) : null),
+      winpuntVoorstel: (s.data as any)?.winpuntVoorstel ?? null, bronUrl: (s.data as any)?.bron?.url ?? null, bronDatum: (s.data as any)?.bron?.datum ?? null,
       specifiekeBron: (s.data as any)?.bron?.naam ?? null, waarom: s.data?.waarom ?? null, bewijs: s.data?.bewijs ?? [], voorstel: s.data?.voorstel ?? null,
       account: s.accountId ? { id: s.accountId, naam: per.get(s.accountId)?.naam ?? null, soort: per.get(s.accountId)?.kind ?? null, faseId: per.get(s.accountId)?.faseId ?? null } : null,
     }))
@@ -22,6 +25,7 @@ export default defineEventHandler(async (event) => {
     if (q.soort === 'prospect' || q.soort === 'klant') lijst = lijst.filter((s) => s.account?.soort === q.soort)
     if (q.bron === 'intern' || q.bron === 'extern') lijst = lijst.filter((s) => s.bron === q.bron)
     if (q.periode === 'week') lijst = lijst.filter((s) => nu - Date.parse(s.createdAt) <= 7 * 864e5)
+    if (q.agent) lijst = lijst.filter((s) => (q.agent === 'motor' ? !s.agent : s.agent === q.agent))
     if (q.fase) lijst = lijst.filter((s) => s.account?.faseId === q.fase)
     lijst.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     return {

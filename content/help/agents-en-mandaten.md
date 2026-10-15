@@ -38,3 +38,20 @@ De Bewaker toetst elke handeling vooraf: mandaat, toestemming, afkoeling, ritme,
 ## Agents pauzeren
 
 De beheerder klikt op **Agents pauzeren**. Alles wat zonder jou zou gaan, stopt direct; de volgende mails komen als taak bij jou. Met **Hervat** gaan de agents weer verder.
+
+## De vier agents voor bronnen
+
+| Agent | Wat hij leest | Wat je ziet |
+|---|---|---|
+| Waarnemer | Vacatures, nieuws en websites van je accounts, minimaal een week tussen twee keer kijken | Een inzicht met bron, datum en citaat |
+| Verrijker | KvK, de website en wat Dealtrace al weet | Het dossier op de accountkaart, met de datum van vandaag |
+| Profielbouwer | Functies uit contacten en verslagen | Een voorstel voor het buying committee; onder 60 procent zekerheid staat er "vermoedelijk" |
+| Notulist | Je verslag na **Rond af** of **Bewaar bezoek** | Actiepunten als concept, koopsignalen en concurrenten als inzicht |
+
+Een agent noemt alleen wat hij kan aantonen. Een telefoonnummer of adres zonder bron vult de Verrijker nooit in; een afgeleid e-mailpatroon krijgt de pil "aanname". Namen uit je aantekeningen gaan niet mee naar de AI.
+
+Op de accountkaart klik je **Laat opnieuw onderzoeken** (vanaf Gevorderd, 10 credits). Als Expert voeg je onder **Bronnen om te volgen** een eigen URL of trefwoord toe.
+
+## De Waarnemer instellen
+
+Bij **Instellingen, Waarnemer en signaalregels** kies je per doelgroep waar de Waarnemer op let: vacatures met functietrefwoorden, nieuws met trefwoorden, KvK-mutaties, websitewijzigingen en aanbestedingen. Per soort zet je een minimale relevantie en het winpunt dat erbij past. De Waarnemer kijkt per run naar hooguit 25 accounts per soort. Een Gevorderde leest mee; een Expert of de beheerder past het aan.

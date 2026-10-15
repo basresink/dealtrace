@@ -14,7 +14,7 @@ const tab = computed(() => (route.query.tab === 'inzichten' ? 'inzichten' : 'tak
 function zet(p: Record<string, string | undefined>) { const q: Record<string, any> = { ...route.query, ...p }; for (const k of Object.keys(q)) if (!q[k]) delete q[k]; router.replace({ query: q }) }
 const query = computed(() => ({ ...route.query }))
 const { data, refresh } = await useFetch<any>('/api/tasks', { query, default: () => ({ groepen: [], tellers: {}, kan: {}, teamleden: [], titel: '' }) })
-const { data: inz, refresh: refreshInz } = await useFetch<any>('/api/signals', { query: computed(() => ({ gelezen: route.query.gelezen, soort: route.query.soort, bron: route.query.bron })), default: () => ({ inzichten: [], tellers: {} }) })
+const { data: inz, refresh: refreshInz } = await useFetch<any>('/api/signals', { query: computed(() => ({ gelezen: route.query.gelezen, soort: route.query.soort, bron: route.query.bron, agent: route.query.agent })), default: () => ({ inzichten: [], tellers: {} }) })
 watch([versie, motorVersie], () => { refresh(); refreshInz() })
 const weergave = computed(() => (route.query.weergave === 'horizon' && data.value.kan.horizon ? 'horizon' : 'lijst'))
 const filtersOpen = ref(false)
@@ -24,6 +24,10 @@ const alle = computed(() => data.value.groepen.flatMap((g: any) => g.taken))
 const open = ref<string | null>(null)
 const nieuw = ref(false)
 const inzicht = ref<any>(null)
+const metBron = ref(false)
+const AGENT_NAAM: Record<string, string> = { waarnemer: 'Waarnemer', verrijker: 'Verrijker', profielbouwer: 'Profielbouwer', notulist: 'Notulist', handmatig: 'Handmatig' }
+const tegengehouden = ref<any[] | null>(null)
+async function toonTegengehouden(aan: boolean) { tegengehouden.value = aan ? await $fetch<any[]>('/api/signals/tegengehouden').catch(() => []) : null }
 watch(() => route.query.taak, (id) => { if (typeof id === 'string') open.value = id }, { immediate: true })
 function volgendeNa(id: string) {
   const lijst = alle.value
@@ -133,6 +137,10 @@ useHead({ title: 'Acties · Dealtrace' })
           <button v-for="s in [['', 'Alle'], ['prospect', 'Prospects'], ['klant', 'Klanten']]" :key="s[0]" type="button" class="pil pil--knop" :class="{ 'pil--zwart': (route.query.soort ?? '') === s[0] }" @click="zet({ soort: s[0] || undefined })">{{ s[1] }}</button>
           <select class="invoer invoer--klein" :value="route.query.gelezen ?? ''" aria-label="Gelezen" @change="zet({ gelezen: ($event.target as HTMLSelectElement).value || undefined })"><option value="">Ongelezen</option><option value="gelezen">Gelezen</option><option value="alle">Alle open</option></select>
           <select class="invoer invoer--klein" :value="route.query.bron ?? ''" aria-label="Bron" @change="zet({ bron: ($event.target as HTMLSelectElement).value || undefined })"><option value="">Alle bronnen</option><option value="intern">Intern</option><option value="extern">Extern</option></select>
+          <select v-if="functie('inzichten.afwijzen')?.beschikbaar" class="invoer invoer--klein" :value="route.query.agent ?? ''" aria-label="Agent" data-test="filter-agent" @change="zet({ agent: ($event.target as HTMLSelectElement).value || undefined })"><option value="">Alle agents</option><option value="motor">Motor</option><option v-for="(n, k) in AGENT_NAAM" :key="k" :value="k">{{ n }}</option></select>
+          <label v-if="functie('agents.waaromNiet')?.beschikbaar" class="schakel-inline"><input type="checkbox" data-test="toon-tegengehouden" @change="toonTegengehouden(($event.target as HTMLInputElement).checked)"> Toon tegengehouden</label>
+          <span class="dd-acties-vul" />
+          <button v-if="functie('inzichten.handmatig')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair" data-test="inzicht-met-bron-knop" @click="metBron = true"><Icoon naam="Plus" class="dd-actie-icoon" />Inzicht met bron</button>
         </div>
         <div class="stat-grid stat-grid--4 mt-16">
           <div class="stat-card"><span class="stat-label">Nieuw</span><span class="stat-num tnum">{{ inz.tellers.nieuw ?? 0 }}</span></div>
@@ -148,14 +156,24 @@ useHead({ title: 'Acties · Dealtrace' })
             <li v-for="r in waaromNiet" :key="r.id" class="schakel-rij"><span><strong>{{ r.reden }}</strong><br><span class="meta">{{ r.handeling }}<template v-if="r.account"> · {{ r.account }}</template></span></span></li>
           </ul>
         </details>
-        <LegeStaat v-if="!inz.inzichten.length" class="mt-16" titel="Er zijn geen nieuwe inzichten bij je prospects." tekst="De motor en de agents melden hier wat er speelt." />
+        <LegeStaat v-if="!inz.inzichten.length" class="mt-16" titel="Geen nieuwe inzichten." :tekst="route.query.agent || route.query.bron || route.query.soort ? 'Er zijn geen inzichten die aan deze filters voldoen.' : 'De agents hebben sinds gisteren niets gevonden bij je accounts.'">
+          <button v-if="route.query.agent || route.query.bron || route.query.soort" type="button" class="dd-act mt-8" @click="zet({ agent: undefined, bron: undefined, soort: undefined })">Toon alles</button>
+        </LegeStaat>
         <div class="ak-blokken mt-16" data-test="inzichten">
           <article v-for="i in inz.inzichten" :key="i.id" class="kaart inzicht-kaart" :data-test="`inzicht-${i.id}`">
-            <div class="taak-labels"><span class="pil" :class="i.bron === 'extern' ? 'badge-extern' : 'badge-intern'">{{ i.bron === 'extern' ? 'EXTERN' : 'INTERN' }}</span><span class="taak-meta">relevantie {{ i.relevantie }} · {{ new Date(i.createdAt).toLocaleDateString('nl-NL') }}</span></div>
+            <div class="taak-labels"><span class="pil" :class="i.bron === 'extern' ? 'badge-extern' : 'badge-intern'">{{ i.bron === 'extern' ? 'EXTERN' : 'INTERN' }}</span><span v-if="i.specifiekeBron" class="taak-meta">{{ i.specifiekeBron }}</span><span class="taak-meta">relevantie {{ i.relevantie }} · {{ new Date(i.createdAt).toLocaleDateString('nl-NL') }}</span><span v-if="i.agent && i.agent !== 'handmatig'" class="pil pil--leeg" title="Mandaat A">{{ AGENT_NAAM[i.agent] ?? i.agent }} · A</span></div>
             <button type="button" class="taak-titel" @click="inzicht = i">{{ i.title }}</button>
             <p v-if="i.account" class="taak-meta">{{ i.account.naam }}</p>
             <p v-if="i.waarom" class="taak-meta">{{ i.waarom }}</p>
             <div class="reis-knoppen"><button type="button" class="dd-act dd-act--primair" @click="$fetch(`/api/signals/${i.id}/omzetten`, { method: 'POST', body: {} }).then(() => { toast.toon('Taak gemaakt uit het inzicht.'); refreshInz(); refresh() }).catch((e) => toast.toon(foutTekst(e), 'fout'))">+ Maak taak</button><button type="button" class="dd-act" @click="$fetch(`/api/signals/${i.id}/gelezen`, { method: 'POST' }).then(() => refreshInz())">Markeer als gelezen</button></div>
+          </article>
+        </div>
+        <div v-if="tegengehouden" class="ak-blokken mt-16" data-test="tegengehouden">
+          <p v-if="!tegengehouden.length" class="kaart-meta">Er is de laatste 30 dagen niets tegengehouden.</p>
+          <article v-for="t in tegengehouden" :key="t.id" class="kaart inzicht-kaart inzicht-kaart--grijs">
+            <div class="taak-labels"><span class="pil pil--leeg">TEGENGEHOUDEN</span><span class="taak-meta">{{ t.specifiekeBron }} · {{ new Date(t.createdAt).toLocaleDateString('nl-NL') }}</span></div>
+            <p class="taak-titel">{{ t.title }}</p>
+            <p class="taak-meta">{{ t.reden }}<template v-if="t.account"> · {{ t.account.naam }}</template></p>
           </article>
         </div>
       </div>
@@ -177,6 +195,7 @@ useHead({ title: 'Acties · Dealtrace' })
     </div>
     <TaakFlyout :open="!!open" :taak-id="open" :basis="alle.find((t: any) => t.id === open)" :volgende="true" @sluit="open = null" @klaar="klaar" @gewijzigd="refresh" />
     <NieuweTaakFlyout :open="nieuw" :teamleden="data.teamleden" @sluit="nieuw = false" @gemaakt="nieuw = false; refresh()" />
+    <InzichtMetBron :open="metBron" @sluit="metBron = false" @opgeslagen="refreshInz()" />
     <InzichtFlyout :open="!!inzicht" :inzicht="inzicht" @sluit="inzicht = null" @gewijzigd="refreshInz(); refresh()" />
   </div>
 </template>

@@ -1,167 +1,163 @@
-// P08 op databaseniveau: agent_runs (RLS, alleen toevoegen), platformmaxima alleen voor
-// de platformrol, executor_status alleen bekende waarden, en de Bewaker met de
-// mock-Verzender en de AI-schil op een echte database.
+// P19 op databaseniveau: de Waarnemer met een mock-zoeker (inzicht met citaat, URL en datum; verzonnen
+// URL en te oude bron tegengehouden; hooguit 25 accounts per regel; bijwerken laat gelezen staan), de
+// Notulist (cc-02 en het namenfilter), de Verrijker (dossier-compleet, geen nummer zonder bron) en RLS.
 import { sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import pg from 'pg'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import * as schema from '../../server/db/schema'
-import { CREDITS_OP_TEKST } from '../../shared/credits'
 
 ;(globalThis as any).createError ??= (o: { statusCode: number; statusMessage: string }) => Object.assign(new Error(o.statusMessage), o)
+const { draaiWaarnemer } = await import('../../server/utils/agents/waarnemer')
+const { onderzoekAccount } = await import('../../server/utils/agents/verrijker')
+const { stelCommitteeVoor } = await import('../../server/utils/agents/profielbouwer')
+const { planAfspraak, rondAfAfspraak } = await import('../../server/utils/agenda')
+const { mockLog, MOCK_FIXTURES } = await import('../../server/utils/llm-provider')
 
-const { verstuurVervolgmail, verstuurGoedgekeurd } = await import('../../server/utils/agents/verzender')
-const { MOCK_FIXTURES, mockLog, voerAiStapUit } = await import('../../server/utils/llm-provider')
-
-let app: pg.Client
-let beheer: pg.Client
 let pool: pg.Pool
-const NU = new Date('2026-10-14T08:00:00Z') // woensdag 10:00 in Nederland
 class Terug extends Error {}
-
-async function alsOrg<T>(org: string, werk: () => Promise<T>): Promise<T> {
-  await app.query('begin')
-  try { await app.query(`select set_config('app.organisation_id', $1, true)`, [org]); return await werk() } finally { await app.query('rollback') }
-}
-/** Werk via drizzle als de app in Voltvast; alles wordt aan het eind teruggedraaid. */
-async function inVoltvast<T>(werk: (tx: any) => Promise<T>): Promise<T> {
+async function inOrg<T>(org: string, werk: (tx: any) => Promise<T>): Promise<T> {
   const db = drizzle(pool, { schema })
   let uit: T
   await db.transaction(async (tx) => {
-    await tx.execute(sql`select set_config('app.organisation_id', 'org-voltvast', true)`)
+    await tx.execute(sql`select set_config('app.organisation_id', ${org}, true)`)
     uit = await werk(tx)
     throw new Terug()
   }).catch((e) => { if (!(e instanceof Terug)) throw e })
   return uit!
 }
-const gebruiker = async (tx: any, id: string) => {
-  const r = (await tx.execute(sql`select id, niveau, data from users where id = ${id}`)).rows[0]
-  return { id: r.id, niveau: r.niveau, data: r.data }
-}
-const inReis = async (tx: any) => (await tx.execute(sql`select id from accounts where nb_status = 'in reis' order by id limit 1`)).rows[0].id as string
-const zet = (tx: any, key: string, value: unknown) => tx.execute(sql`insert into org_settings (organisation_id, key, value) values ('org-voltvast', ${key}, ${JSON.stringify(value)}::jsonb) on conflict (organisation_id, key) do update set value = excluded.value`)
+beforeAll(() => { pool = new pg.Pool({ connectionString: process.env.TEST_APP_URL, max: 2 }) })
+afterAll(async () => { await pool.end() })
+afterEach(() => { for (const k of Object.keys(MOCK_FIXTURES)) delete MOCK_FIXTURES[k] })
 
-beforeAll(async () => {
-  app = new pg.Client({ connectionString: process.env.TEST_APP_URL }); await app.connect()
-  beheer = new pg.Client({ connectionString: process.env.TEST_BEHEER_URL }); await beheer.connect()
-  pool = new pg.Pool({ connectionString: process.env.TEST_APP_URL, max: 2 })
-})
-afterAll(async () => { await app.end(); await beheer.end(); await pool.end() })
+const ORG = 'org-voltvast'
+const rijen = async (tx: any, q: any) => (await tx.execute(q)).rows as any[]
+const rij = async (tx: any, q: any) => (await rijen(tx, q))[0]
+// Woensdag 10:00 in Nederland: binnen werkuren voor de Bewaker.
+const nu = new Date('2026-10-14T08:00:00Z')
+const datum = (dagen: number) => new Date(nu.getTime() - dagen * 864e5).toISOString().slice(0, 10)
+const vacature = (dagen: number) => async (a: { naam: string }, regel: { soort: string }) => regel.soort !== 'vacature' ? [] : [{
+  url: 'https://werkenbij.testplanning.test/vacatures/servicemonteur', titel: `Vacature servicemonteur bij ${a.naam}`, fragment: `${a.naam} zoekt een servicemonteur.`, datum: datum(dagen),
+  tekst: `${a.naam} zoekt een servicemonteur voor de groeiende installatieafdeling. Het materiaal komt nu via Online webgroothandel.`,
+}]
 
-describe('agent_runs en mandaten', () => {
-  it('agent_runs van A zijn onzichtbaar voor B; schrijven voor een andere organisatie kan niet', async () => {
-    await beheer.query(`insert into agent_runs (organisation_id, agent, handeling, mandaat_niveau, uitkomst, reden) values ('org-voltvast', 'planner', 'x', 'A', 'geblokkeerd', 'Alleen Voltvast')`)
-    expect(await alsOrg('org-tweede', async () => (await app.query(`select count(*)::int n from agent_runs`)).rows[0].n)).toBe(0)
-    await expect(alsOrg('org-tweede', () => app.query(`insert into agent_runs (organisation_id, agent, handeling, mandaat_niveau, uitkomst) values ('org-voltvast', 'x', 'x', 'A', 'fout')`))).rejects.toThrow(/row-level security/)
-  })
-  it('agent_runs is alleen toevoegen', async () => {
-    await expect(alsOrg('org-voltvast', () => app.query(`update agent_runs set reden = 'x'`))).rejects.toThrow(/permission denied/)
-    await expect(alsOrg('org-voltvast', () => app.query(`delete from agent_runs`))).rejects.toThrow(/permission denied/)
-  })
-  it('platformmaxima: de app leest, alleen de platformrol schrijft', async () => {
-    await expect(alsOrg('org-voltvast', () => app.query(`insert into platform_agentmaxima (agent, max_mandaat) values ('verzender', 'C')`))).rejects.toThrow(/permission denied/)
-    await app.query('begin')
-    await app.query('set local role dealtrace_platform')
-    await app.query(`insert into platform_agentmaxima (agent, max_mandaat) values ('verzender', 'C') on conflict (agent) do update set max_mandaat = 'C'`)
-    await app.query('rollback')
-  })
-  it('executor_status kent alleen de vier waarden die de code zet (gat 22)', async () => {
-    await expect(alsOrg('org-voltvast', () => app.query(`insert into tasks (organisation_id, title, executor_status) values ('org-voltvast', 'x', 'wacht')`))).rejects.toThrow(/check constraint/)
-    await alsOrg('org-voltvast', () => app.query(`insert into tasks (organisation_id, title, executor, executor_status) values ('org-voltvast', 'x', 'ai', 'concept-klaar')`))
-  })
-})
-
-describe('de Bewaker met de mock-Verzender', () => {
-  it('afkoelperiode: geblokkeerd met reden in agent_runs, geen taak en geen mail (vast geval Rietkraag)', async () => {
-    const r = await inVoltvast(async (tx) => {
-      const u = await gebruiker(tx, 'u-03')
-      const af = await verstuurVervolgmail(tx, 'org-voltvast', { gebruiker: u, accountId: 'acc-bewaker', campagneGoedgekeurd: true, onderwerp: 'Vervolg', tekst: 'Hallo' }, NU)
-      const runs = (await tx.execute(sql`select uitkomst, reden, mandaat_niveau from agent_runs where account_id = 'acc-bewaker'`)).rows
-      const taken = (await tx.execute(sql`select count(*)::int n from tasks where account_id = 'acc-bewaker'`)).rows[0].n
-      const mails = (await tx.execute(sql`select count(*)::int n from activiteiten where account_id = 'acc-bewaker' and agent = 'verzender'`)).rows[0].n
-      return { af, runs, taken, mails }
+describe('Waarnemer', () => {
+  it('een vacature wordt een inzicht met citaat, URL en datum; concurrent cc-02 wordt een signaal', async () => {
+    await inOrg(ORG, async (tx) => {
+      const r = await draaiWaarnemer(tx, ORG, nu, { accountIds: ['pl-47'], zoeker: vacature(5) as any })
+      expect(r).toMatchObject({ inzichten: 1, tegengehouden: 0, gestopt: null })
+      const s = await rij(tx, sql`select status, agent, bron, relevance_score, data from signals where account_id = 'pl-47' and agent = 'waarnemer' and type = 'vacature'`)
+      expect(s).toMatchObject({ status: 'nieuw', bron: 'extern', relevance_score: 85 })
+      expect(s.data.evidence[0]).toMatchObject({ url: 'https://werkenbij.testplanning.test/vacatures/servicemonteur', datum: datum(5) })
+      expect(s.data.evidence[0].citaat).toContain('zoekt een servicemonteur')
+      expect(s.data.voorstel).toMatchObject({ priority: 'hoog' })
+      expect((await rij(tx, sql`select title from signals where account_id = 'pl-47' and onderwerp = 'concurrent:cc-02'`)).title).toBe('Online webgroothandel genoemd bij Testplanning Installatie 47')
+      expect(await rij(tx, sql`select uitkomst, mandaat_niveau from agent_runs where agent = 'waarnemer' and account_id = 'pl-47' and handeling = 'inzicht'`)).toMatchObject({ uitkomst: 'uitgevoerd', mandaat_niveau: 'A' })
     })
-    expect(r.af.uitkomst).toBe('geblokkeerd')
-    expect(r.runs).toEqual([{ uitkomst: 'geblokkeerd', reden: expect.stringMatching(/^Afkoelperiode mail tot \d+ \w+$/), mandaat_niveau: 'B' }])
-    expect([r.taken, r.mails]).toEqual([0, 0])
   })
-  it('Gevorderd binnen een goedgekeurde campagne: B, direct verstuurd met activiteit en agent_runs', async () => {
-    const r = await inVoltvast(async (tx) => {
-      const acc = await inReis(tx)
-      const af = await verstuurVervolgmail(tx, 'org-voltvast', { gebruiker: await gebruiker(tx, 'u-01'), accountId: acc, campagneGoedgekeurd: true, onderwerp: 'Vervolg', tekst: 'Hallo' }, NU)
-      const act = (await tx.execute(sql`select uitvoerder, agent, data->>'mandaat' as mandaat from activiteiten where account_id = ${acc} and agent = 'verzender'`)).rows
-      return { af, act }
+  it('een verzonnen URL wordt tegengehouden; geen inzicht in de feed', async () => {
+    await inOrg(ORG, async (tx) => {
+      MOCK_FIXTURES.webonderzoek = [{ titel: 'Vacature', beschrijving: 'x', relevantie: 90, zekerheid: 90, evidence: [{ citaat: 'zoekt een servicemonteur', bron: 'Web', url: 'https://verzonnen.test/vacature' }] }]
+      const r = await draaiWaarnemer(tx, ORG, nu, { accountIds: ['pl-48'], zoeker: vacature(5) as any })
+      expect(r).toMatchObject({ inzichten: 0, tegengehouden: 1 })
+      const s = await rij(tx, sql`select status, data->>'tegenhoudReden' as reden from signals where account_id = 'pl-48' and type = 'vacature'`)
+      expect(s).toEqual({ status: 'tegengehouden', reden: 'URL kwam niet uit de zoekresultaten' })
     })
-    expect(r.af.uitkomst).toBe('uitgevoerd')
-    expect(r.act).toEqual([{ uitvoerder: 'ai', agent: 'verzender', mandaat: 'B' }])
   })
-  it('Beginner: elke mail als concept (C); buiten een campagne ook voor Gevorderd', async () => {
-    const r = await inVoltvast(async (tx) => {
-      const acc = await inReis(tx)
-      const beginner = await verstuurVervolgmail(tx, 'org-voltvast', { gebruiker: await gebruiker(tx, 'u-02'), accountId: acc, campagneGoedgekeurd: true, onderwerp: 'A', tekst: 'x' }, NU)
-      const buiten = await verstuurVervolgmail(tx, 'org-voltvast', { gebruiker: await gebruiker(tx, 'u-01'), accountId: acc, onderwerp: 'B', tekst: 'x' }, NU)
-      const t = (await tx.execute(sql`select executor, executor_status, data->>'mandaat' as mandaat from tasks where id = ${beginner.taskId}`)).rows[0]
-      return { beginner, buiten, t }
+  it('een vacature van 121 dagen vervalt; van 31 dagen geen taakvoorstel', async () => {
+    await inOrg(ORG, async (tx) => {
+      await draaiWaarnemer(tx, ORG, nu, { accountIds: ['pl-49'], zoeker: vacature(121) as any })
+      expect((await rij(tx, sql`select data->>'tegenhoudReden' as r from signals where account_id = 'pl-49' and type = 'vacature'`)).r).toBe('Te oud: vacature ouder dan 120 dagen')
+      await draaiWaarnemer(tx, ORG, nu, { accountIds: ['pl-48'], zoeker: vacature(31) as any })
+      const s = await rij(tx, sql`select status, data->'voorstel' as voorstel from signals where account_id = 'pl-48' and type = 'vacature'`)
+      expect(s).toEqual({ status: 'nieuw', voorstel: null })
     })
-    expect([r.beginner.uitkomst, r.buiten.uitkomst]).toEqual(['als_taak', 'als_taak'])
-    expect(r.t).toEqual({ executor: 'ai', executor_status: 'concept-klaar', mandaat: 'C' })
   })
-  it('Agents pauzeren: de volgende vervolgmail wordt een taak voor de mens; goedkeuren verstuurt hem', async () => {
-    const r = await inVoltvast(async (tx) => {
-      await zet(tx, 'agentenGepauzeerd', { sinds: NU.toISOString(), door: 'Test' })
-      const acc = await inReis(tx)
-      const af = await verstuurVervolgmail(tx, 'org-voltvast', { gebruiker: await gebruiker(tx, 'u-01'), accountId: acc, campagneGoedgekeurd: true, onderwerp: 'Na de pauze', tekst: 'x' }, NU)
-      await tx.execute(sql`update tasks set executor_status = 'goedgekeurd' where id = ${af.taskId}`)
-      const na = await verstuurGoedgekeurd(tx, 'org-voltvast', af.taskId!, NU)
-      const t = (await tx.execute(sql`select status, executor_status from tasks where id = ${af.taskId}`)).rows[0]
-      return { af, na, t }
+  it('hooguit 25 accounts per regel per run; een tweede run binnen de cadans doet niets', async () => {
+    await inOrg(ORG, async (tx) => {
+      const tel: Record<string, number> = {}
+      const zoeker = async (_a: any, regel: { soort: string }) => { tel[regel.soort] = (tel[regel.soort] ?? 0) + 1; return [] }
+      await draaiWaarnemer(tx, ORG, nu, { zoeker: zoeker as any })
+      expect(tel.vacature).toBe(25)
+      expect(tel.nieuws).toBe(25)
+      const n = { ...tel }
+      const r2 = await draaiWaarnemer(tx, ORG, nu, { zoeker: zoeker as any })
+      expect(r2.bekeken).toBeGreaterThan(0)
+      expect(tel.vacature! - n.vacature!).toBeLessThanOrEqual(25)
+      // Wie in run 1 bekeken is, komt binnen 7 dagen niet terug.
+      const dubbel = await rij(tx, sql`select count(*)::int n from accounts where data->'waarnemer'->>'vacature' is not null`)
+      expect(dubbel.n).toBe(tel.vacature)
     })
-    expect(r.af).toMatchObject({ uitkomst: 'als_taak', toets: { mandaat: 'C' } })
-    expect(r.na?.uitkomst).toBe('uitgevoerd')
-    expect(r.t).toEqual({ status: 'klaar', executor_status: 'uitgevoerd' })
   })
-  it('organisatiemandaat D zet de Verzender op altijd mens', async () => {
-    const r = await inVoltvast(async (tx) => {
-      await zet(tx, 'agentmandaten', { verzender: { mandaat: 'D' } })
-      return verstuurVervolgmail(tx, 'org-voltvast', { gebruiker: await gebruiker(tx, 'u-07'), accountId: await inReis(tx), campagneGoedgekeurd: true, onderwerp: 'x', tekst: 'x' }, NU)
+  it('een open inzicht dat de Waarnemer bijwerkt, blijft gelezen', async () => {
+    await inOrg(ORG, async (tx) => {
+      await draaiWaarnemer(tx, ORG, nu, { accountIds: ['pl-47'], zoeker: vacature(5) as any })
+      await tx.execute(sql`update signals set status = 'gelezen' where account_id = 'pl-47' and type = 'vacature'`)
+      await tx.execute(sql`update accounts set data = data - 'waarnemer' where id = 'pl-47'`)
+      await draaiWaarnemer(tx, ORG, nu, { accountIds: ['pl-47'], zoeker: vacature(3) as any })
+      const s = await rijen(tx, sql`select status, data->'bron'->>'datum' as d from signals where account_id = 'pl-47' and type = 'vacature'`)
+      expect(s).toEqual([{ status: 'gelezen', d: datum(3) }])
     })
-    expect(r).toMatchObject({ uitkomst: 'als_taak', toets: { mandaat: 'D', uitvoering: 'als_taak_mens' } })
+  })
+  it('de Bewaker houdt de run tegen als het dagplafond voor webonderzoek op is', async () => {
+    await inOrg(ORG, async (tx) => {
+      await tx.execute(sql`insert into org_settings (organisation_id, key, value) values (${ORG}, 'agentCreditsPerSoort', '{"webonderzoek":0}'::jsonb) on conflict (organisation_id, key) do update set value = excluded.value`)
+      const r = await draaiWaarnemer(tx, ORG, nu, { accountIds: ['pl-47'], zoeker: vacature(5) as any })
+      expect(r.bekeken).toBe(0)
+      expect(r.gestopt).toBeTruthy()
+      expect((await rij(tx, sql`select uitkomst from agent_runs where agent = 'waarnemer' and handeling = 'run'`)).uitkomst).toBe('geblokkeerd')
+    })
   })
 })
 
-describe('AI-credits en de AI-schil', () => {
-  const schemaBrief = { type: 'object' as const, required: ['tekst'], additionalProperties: false, properties: { tekst: { type: 'string' as const } } }
-  it('pot op 0: een gebruiker krijgt 402 met de vaste melding, vóór de aanroep', async () => {
-    const voor = mockLog.length
-    const fout = await inVoltvast(async (tx) => {
-      await zet(tx, 'aiCredits', { vastePot: 0 })
-      return voerAiStapUit(tx, 'org-voltvast', { soort: 'assistent', prompt: 'x', schema: schemaBrief, materiaal: {} }, NU).then(() => null, (e) => e)
+describe('Notulist', () => {
+  it('herkent cc-02 in het verslag; de contactnaam gaat niet mee naar de AI; actiepunten worden concepten', async () => {
+    await inOrg(ORG, async (tx) => {
+      const soort = (await rij(tx, sql`select id from meetingsoorten where slug = 'kennismaking'`)).id
+      const c = await rij(tx, sql`select first_name, last_name, account_id, a.owner_id from contacts c join accounts a on a.id = c.account_id where c.id = 'pr-g39-c1'`)
+      const ap = await planAfspraak(tx, ORG, { id: c.owner_id, naam: 'Eigenaar', rol: 'accountmanager', mag: { voorCollega: false } }, { accountId: c.account_id, meetingsoortId: soort, start: '2026-10-14T07:00:00Z' }, nu)
+      const verslag = `${c.first_name} ${c.last_name} vertelde dat ze in 2027 een nieuwbouwproject starten. Het materiaal komt nu via Online webgroothandel. Ik ga volgende week een offerte sturen.`
+      await rondAfAfspraak(tx, ORG, ap.id, c.owner_id, { uitkomst: 'vervolg', verslag }, nu)
+      const s = await rij(tx, sql`select agent, title from signals where account_id = ${c.account_id} and onderwerp = 'concurrent:cc-02'`)
+      expect(s).toEqual({ agent: 'notulist', title: 'Online webgroothandel genoemd in het verslag' })
+      const aanroep = [...mockLog].reverse().find((l) => l.soort === 'notulist')!
+      expect(JSON.stringify(aanroep.materiaal)).not.toContain(c.last_name)
+      expect((await rij(tx, sql`select count(*)::int n from concepten where appointment_id = ${ap.id} and agent = 'notulist'`)).n).toBe(1)
+      expect((await rij(tx, sql`select data->'notulist'->>'voorgesteldeUitkomst' as u from appointments where id = ${ap.id}`)).u).toBe('vervolg')
     })
-    expect(fout).toMatchObject({ statusCode: 402, statusMessage: CREDITS_OP_TEKST })
-    expect(mockLog.length).toBe(voor)
   })
-  it('een agent onder 10 procent: tegengehouden en gelogd; de motor draait door', async () => {
-    const r = await inVoltvast(async (tx) => {
-      await zet(tx, 'aiCredits', { vastePot: 100, verbruikt: 91 })
-      const u = await voerAiStapUit(tx, 'org-voltvast', { soort: 'brief', prompt: 'x', schema: schemaBrief, materiaal: {}, agent: 'verrijker', accountId: await inReis(tx) }, NU)
-      const runs = (await tx.execute(sql`select uitkomst, reden from agent_runs where agent = 'verrijker'`)).rows
-      return { u, runs }
+})
+
+describe('Verrijker en Profielbouwer', () => {
+  it('meldt dossier-compleet zodra alle zes criteria een oordeel hebben; geen nummer zonder bron', async () => {
+    await inOrg(ORG, async (tx) => {
+      MOCK_FIXTURES.dossier = [{ velden: [{ veld: 'telefoon', waarde: '010 000 0000' }, { veld: 'medewerkers', waarde: '40', bron: 'KvK' }], criteria: { branche: 'ja', omvang: 'ja', locatie: 'ja', leverancier: 'nee', aanleiding: 'ja', beslisser: 'nee' } }]
+      const r = await onderzoekAccount(tx, ORG, 'pl-47', { gebruiker: { id: 'u-07', rol: 'accountmanager', niveau: 'expert', data: {} }, nu })
+      expect(r).toMatchObject({ ok: true, compleet: true, velden: 1, geweigerd: 1 })
+      const a = await rij(tx, sql`select fase_id, data->'dossier' as d from accounts where id = 'pl-47'`)
+      expect(a.fase_id).toBe('dossier-compleet')
+      expect(a.d.velden.map((v: any) => v.veld)).toEqual(['medewerkers'])
+      expect(a.d.op).toBe(nu.toISOString())
     })
-    expect(r.u).toEqual({ ok: false, reden: 'Minder dan 10 procent AI-credits over' })
-    expect(r.runs).toEqual([{ uitkomst: 'geblokkeerd', reden: 'Minder dan 10 procent AI-credits over' }])
   })
-  it('geen geldig antwoord na twee pogingen: fout gelogd zonder kosten; privégegevens nooit naar de provider', async () => {
-    MOCK_FIXTURES.notulist = [{ verkeerd: 1 }, { verkeerd: 2 }]
-    const r = await inVoltvast(async (tx) => {
-      await zet(tx, 'aiCredits', { vastePot: 10000 })
-      const u = await voerAiStapUit(tx, 'org-voltvast', { soort: 'notulist', prompt: 'Vat samen', schema: schemaBrief, agent: 'notulist', materiaal: { notitie: 'Privé 06-11223344, mail piet@gmail.com', priveMobiel: '0611223344' } }, NU)
-      const runs = (await tx.execute(sql`select uitkomst, kosten from agent_runs where agent = 'notulist'`)).rows
-      return { u, runs }
+  it('stelt het committee voor; zekerheid onder 60 is vermoedelijk', async () => {
+    await inOrg(ORG, async (tx) => {
+      await tx.execute(sql`update contacts set data = data || '{"functie":"Werkvoorbereider"}'::jsonb where id = 'pr-g39-c1'`)
+      await tx.execute(sql`update contacts set data = data || '{"functie":"Directeur"}'::jsonb where id = 'pr-g39-c2'`)
+      const r = await stelCommitteeVoor(tx, ORG, { id: 'u-05', rol: 'accountmanager', niveau: 'gevorderd', data: {} }, 'pr-g39', nu)
+      expect(r.voorstellen).toEqual(expect.arrayContaining([expect.objectContaining({ functie: 'directeur', rol: 'beslisser', vermoedelijk: false }), expect.objectContaining({ functie: 'werkvoorbereider', vermoedelijk: true })]))
     })
-    expect(r.u.ok).toBe(false)
-    expect(r.runs).toEqual([{ uitkomst: 'fout', kosten: null }])
-    const gezien = JSON.stringify(mockLog.filter((m) => m.soort === 'notulist'))
-    expect(gezien).toContain('[privémobiel]')
-    expect(gezien).not.toMatch(/11223344|gmail/)
+  })
+})
+
+describe('RLS', () => {
+  it('een Waarnemer-profiel van organisatie A is onzichtbaar voor B', async () => {
+    await inOrg(ORG, async (tx) => {
+      await tx.execute(sql`insert into waarnemer_profielen (organisation_id, doelgroep_id, data) values (${ORG}, null, '{"cadansDagen":14,"signaalsoorten":[]}'::jsonb)`)
+      expect((await rij(tx, sql`select count(*)::int n from waarnemer_profielen`)).n).toBe(1)
+      await tx.execute(sql`select set_config('app.organisation_id', 'org-tweede', true)`)
+      expect((await rij(tx, sql`select count(*)::int n from waarnemer_profielen`)).n).toBe(0)
+      await expect(tx.execute(sql`insert into waarnemer_profielen (organisation_id, data) values (${ORG}, '{}'::jsonb)`)).rejects.toThrow()
+    })
   })
 })

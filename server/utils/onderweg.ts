@@ -100,7 +100,7 @@ export async function bezoekAfronden(tx: Tx, org: string, door: string, b: Bezoe
   if (b.volgendeStap?.titel?.trim() && b.volgendeStap.datum && ap!.account_id) {
     await tx.execute(sql`insert into tasks (id, organisation_id, owner_id, account_id, action_type, title, status, priority, due_date, executor, data) values (${crypto.randomUUID()}, ${org}, ${ap!.owner_id}, ${ap!.account_id}, ${b.volgendeStap.soort ?? 'bellen'}, ${b.volgendeStap.titel.trim()}, 'open', 'middel', ${new Date(`${b.volgendeStap.datum}T07:00:00Z`).toISOString()}, 'mens', ${JSON.stringify({ herkomst: { bron: 'bezoek' }, afspraakId: ap!.id })}::jsonb)`)
   }
-  // De verslaganalyse (Notulist) komt in P19; tot dan gebeurt hier niets.
+  // De verslaganalyse (Notulist) loopt in rondAfAfspraak (P19).
   return r
 }
 

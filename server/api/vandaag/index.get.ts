@@ -1,5 +1,6 @@
 // GET /api/vandaag: alle blokken van Vandaag in één antwoord (F01). De laptop (P07) en de
 // telefoon (P32) gebruiken hetzelfde. Blokken zonder bron laten we weg.
+import { doorAgentsSamenvatting } from '../../../shared/agents'
 import { verkoopverhaal } from '../../utils/reis'
 import { and, eq, gte, inArray, sql } from 'drizzle-orm'
 import { nlMoment, plusDagen, volgendeWerkdag } from '../../../shared/datum'
@@ -64,6 +65,9 @@ export default defineEventHandler(async (event) => {
     const motorTaken = (await tx.execute(sql`select count(*)::int n from tasks where owner_id = ${mijn} and rule_id is not null and created_at >= ${gisteren}`)).rows[0] as { n: number }
     const motorInzichten = (await tx.execute(sql`select count(*)::int n from signals where owner_id = ${mijn} and created_at >= ${gisteren}`)).rows[0] as { n: number }
     const geparkeerd = (await tx.execute(sql`select count(*)::int n from reisgeschiedenis r join accounts a on a.id = r.account_id where a.owner_id = ${mijn} and r.gebeurtenis = 'geparkeerd' and r.op >= ${gisteren}`)).rows[0] as { n: number }
+    // P19: één regel uit het logboek van de agents ("3 dossiers ververst · 2 nieuwe aanleidingen").
+    const agentRuns = (await tx.execute(sql`select r.agent, r.handeling, r.uitkomst from agent_runs r left join accounts a on a.id = r.account_id
+      where r.op >= ${gisteren} and r.uitkomst = 'uitgevoerd' and (a.owner_id = ${mijn} or r.gebruiker_id = ${mijn})`)).rows as { agent: string; handeling: string; uitkomst: string }[]
 
     // Datakwaliteit: de drie grootste gaten bij je actieve prospects.
     const actief = eigen.filter((a) => a.kind === 'prospect' && ['nieuw', 'in reis'].includes(a.nbStatus))
@@ -120,7 +124,7 @@ export default defineEventHandler(async (event) => {
           ? { soort: 'belblok', titel: 'BELBLOK', tekst: `${new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(blokVandaag.start_op))} · ${blokVandaag.n} ${blokVandaag.n === 1 ? 'gesprek' : 'gesprekken'}`, knop: { tekst: 'Start belblok', naar: `/belblokken/${blokVandaag.id}` } }
           : { soort: 'belblok', titel: 'BELBLOK', tekst: belTaken ? `${belTaken} ${belTaken === 1 ? 'gesprek' : 'gesprekken'} · ongeveer ${belTaken * 8} min · nog geen belblok gepland` : 'Nog geen belblok gepland', knop: { tekst: belTaken ? 'Plan een belblok' : 'Naar belblokken', naar: '/belblokken' } },
       concepten: { aantal: taken.filter((t) => (t.data as any)?.concept).length },
-      agents: gevorderd && kan(ctx, 'vandaag.agentsGedaan') ? { taken: motorTaken.n, inzichten: motorInzichten.n, geparkeerd: geparkeerd.n } : null,
+      agents: gevorderd && kan(ctx, 'vandaag.agentsGedaan') ? { taken: motorTaken.n, inzichten: motorInzichten.n, geparkeerd: geparkeerd.n, samenvatting: doorAgentsSamenvatting(agentRuns) } : null,
       datakwaliteit: gevorderd ? gaten : null,
       week: gevorderd && kan(ctx, 'vandaag.week') ? week : null,
       team: kan(ctx, 'vandaag.team') ? team : null,

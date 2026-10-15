@@ -5678,3 +5678,12 @@ button.trechter-rij:disabled { cursor: default; }
   .fo-kicker,
   .fo-meta { color: var(--ink-soft); }
 }
+
+/* P19: bewijs in de inzichtflyout en tegengehouden inzichten */
+.inzicht-citaat { margin: 0 0 8px; padding: 8px 12px; border-left: 3px solid var(--yellow); background: var(--surface); font-style: italic; }
+.inzicht-citaat footer { font-style: normal; margin-top: 4px; }
+.inzicht-kaart--grijs { opacity: .7; background: var(--surface); }
+.schakel-inline { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; min-height: 44px; }
+.waarnemer-rij { border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px; align-items: end; }
+@media (min-width: 900px) { .formulier-raster.waarnemer-rij { grid-template-columns: 170px 2fr 110px 1.4fr; } }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }

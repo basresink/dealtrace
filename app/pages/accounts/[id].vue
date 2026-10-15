@@ -43,6 +43,13 @@ const handeling = ref<null | 'fase' | 'pauzeer' | 'verplaats' | 'terugop'>(null)
 async function zetLeverancier(id: string) {
   try { await $fetch(`/api/accounts/${a.value.id}`, { method: 'PUT', body: { huidigeLeverancierId: id || null } }); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
+// P19: de Profielbouwer stelt het buying committee voor (3 credits).
+const committee = ref<any[] | null>(null)
+const committeeBezig = ref(false)
+async function stelCommitteeVoor() {
+  committeeBezig.value = true
+  try { const r = await $fetch<any>(`/api/accounts/${a.value.id}/committee`, { method: 'POST' }); committee.value = r.voorstellen; if (!r.voorstellen.length) toast.toon(r.reden ?? 'Nog te weinig functies bekend om een voorstel te doen.') } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { committeeBezig.value = false }
+}
 async function klaar(tekst: string) { neeOpen.value = false; handeling.value = null; toast.toon(tekst); await refresh() }
 async function kwalificeer() {
   try {
@@ -184,7 +191,7 @@ async function bewaarOffline() { await dagpakket.bewaarVoorOffline(String(route.
         </div>
         <div v-if="a.aanleiding" class="account-aanleiding mt-16 alleen-groot" :class="{ 'account-aanleiding--heet': a.aanleiding.heet }" data-test="aanleiding"><strong>Waarom nu:</strong> {{ a.aanleiding.tekst }} <span class="meta">· {{ a.aanleiding.bron }} · {{ datumKort(a.aanleiding.op) }}</span></div>
         <div class="ak-blokken mt-16">
-          <article class="kaart"><header class="kaart-kop"><h2 class="kaart-titel">Dossier</h2></header><p class="kaart-meta">{{ a.dossier ? `${a.dossier.criteria ?? 0} criteria` : 'Nog geen dossier. Het dossier vult zich met de reis en de AI-onderzoeker.' }}</p></article>
+          <AgentBlokken :account="a" @gewijzigd="refresh" />
           <article class="kaart" data-test="band"><header class="kaart-kop"><h2 class="kaart-titel">Kwalificatie BAND {{ Object.values(a.band).filter((b: any) => b?.ja).length }}/4</h2></header>
             <ul class="kaart-meta band-lijst">
               <li v-for="k in ['behoefte', 'autoriteit', 'noodzaak', 'draagvlak']" :key="k" class="band-rij">
@@ -206,8 +213,11 @@ async function bewaarOffline() { await dagpakket.bewaarVoorOffline(String(route.
           </article>
         </div>
         <div class="mt-16">
-          <span class="kicker kicker--streep">Buying committee</span>
+          <div class="sec-head"><span class="kicker kicker--streep">Buying committee</span><button type="button" class="dd-act" :disabled="committeeBezig" data-test="committee-ai" @click="stelCommitteeVoor"><Icoon naam="Sparkles" class="dd-actie-icoon" />Stel voor met AI</button></div>
           <BuyingCommittee class="mt-16" :contacten="a.contacten" :ontbrekend="a.ontbrekendeRollen" />
+          <ul v-if="committee?.length" class="schakel-lijst kaart mt-16" data-test="committee-voorstel">
+            <li v-for="v in committee" :key="v.functie" class="schakel-rij"><span><strong>{{ v.functie }}</strong>: {{ v.rol }} <span v-if="v.vermoedelijk" class="pil pil--leeg">vermoedelijk</span><br><span class="meta">{{ v.bron }} · zekerheid {{ v.zekerheid }}</span></span></li>
+          </ul>
         </div>
       </div>
     </section>

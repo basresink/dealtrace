@@ -119,6 +119,7 @@ useHead({ title: 'Vandaag · Dealtrace' })
             <article v-if="blok === 'agents' && v.agents" class="kaart" data-test="agents">
               <header class="kaart-kop"><span class="kicker">Door agents gedaan sinds gisteren</span><span v-if="v.kan.indeling" class="reis-knoppen"><button type="button" class="dd-act dd-act--icoon" aria-label="Eerder" :disabled="i === 0" @click="verplaats(blok, -1)">↑</button><button type="button" class="dd-act dd-act--icoon" aria-label="Later" :disabled="i === v.volgorde.length - 1" @click="verplaats(blok, 1)">↓</button></span></header>
               <p class="mt-8">{{ v.agents.taken }} taken en {{ v.agents.inzichten }} inzichten klaargezet · {{ v.agents.geparkeerd }} accounts geparkeerd</p>
+              <p v-if="v.agents.samenvatting" class="taak-meta mt-8" data-test="agents-samenvatting">{{ v.agents.samenvatting }}</p>
             </article>
             <article v-if="blok === 'datakwaliteit' && v.datakwaliteit" class="kaart" data-test="datakwaliteit">
               <header class="kaart-kop"><span class="kicker">Datakwaliteit</span><span v-if="v.kan.indeling" class="reis-knoppen"><button type="button" class="dd-act dd-act--icoon" aria-label="Eerder" :disabled="i === 0" @click="verplaats(blok, -1)">↑</button><button type="button" class="dd-act dd-act--icoon" aria-label="Later" :disabled="i === v.volgorde.length - 1" @click="verplaats(blok, 1)">↓</button></span></header>

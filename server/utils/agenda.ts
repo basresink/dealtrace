@@ -3,6 +3,7 @@
 // bezet" telt mee in vrije momenten, belblokadviezen en de vuller. Plannen, afronden en de status
 // van een afspraak lopen hier; de fase verandert alleen via het meldpunt (meldGebeurtenis).
 import { sql } from 'drizzle-orm'
+import { analyseerVerslag } from './agents/notulist'
 import { conflicten, isEersteAfspraak, meetingUitkomst, MEETINGSOORTEN_START, type Meetingsoort, type Vorm } from '../../shared/agenda'
 import { nlMoment, nlTijdstip, plusDagen } from '../../shared/datum'
 import { schrijfAudit } from './audit'
@@ -214,6 +215,10 @@ export async function rondAfAfspraak(tx: Tx, org: string, afspraakId: string, do
     }
   }
   await schrijfAudit(tx, { organisationId: org, actorId: door, action: 'afspraak.afronden', resourceType: 'appointments', resourceId: ap!.id, changes: { uitkomst: inv.uitkomst, eerste } })
+  // P19: de Notulist leest het verslag. In een savepoint: een fout in de analyse breekt het afronden nooit.
+  if (ap!.account_id && (inv.verslag ?? '').trim().length >= 20) {
+    await tx.transaction((sp) => analyseerVerslag(sp as unknown as Tx, org, ap!.id, nu)).catch((e) => console.error('notulist', (e as Error).message))
+  }
   const label = (ap!.soort_data?.uitkomsten ?? []).find((u: any) => u.code === inv.uitkomst)?.label ?? inv.uitkomst
   return { alAfgerond: false, uitkomst: inv.uitkomst, eerste, overdragen: m.overdragen, planAfspraak: m.planAfspraak, tekst: m.overdragen ? `${label}. Overdragen? Er staat een overdrachtstaak klaar.` : `Afgerond: ${label}.` }
 }

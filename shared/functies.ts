@@ -835,6 +835,23 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'agents.waaromNiet', naam: 'Waarom niet?', pakket: 'plus', rollen: 'iedereen', helpartikel: 'agents-en-mandaten', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Zien welke handelingen de Bewaker bij je accounts tegenhield, met de reden.', totDieTijd: 'Geen.' },
   },
+  // P19: agents voor interne en externe bronnen (F14).
+  {
+    sleutel: 'inzichten.handmatig', naam: 'Inzicht met bron', pakket: 'starter', rollen: 'iedereen', helpartikel: 'inzichten-beoordelen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Zelf een inzicht toevoegen met bron en citaat.', totDieTijd: 'Maak een taak met een notitie.' },
+  },
+  {
+    sleutel: 'account.opnieuwOnderzoeken', naam: 'Laat opnieuw onderzoeken', pakket: 'compleet', rollen: 'iedereen', helpartikel: 'agents-en-mandaten', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De Verrijker ververst het dossier van een account (10 credits).', totDieTijd: 'De Verrijker ververst het dossier in de wekelijkse run.' },
+  },
+  {
+    sleutel: 'account.bronnenVolgen', naam: 'Bronnen om te volgen', pakket: 'compleet', rollen: 'iedereen', helpartikel: 'agents-en-mandaten', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Eigen URL\'s en trefwoorden per account die de Waarnemer meeneemt.', totDieTijd: 'De Waarnemer volgt het profiel van de doelgroep.' },
+  },
+  {
+    sleutel: 'waarnemer.profielen', naam: 'Waarnemer instellen', pakket: 'plus', rollen: 'iedereen', helpartikel: 'agents-en-mandaten', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Per doelgroep instellen op welke signalen de Waarnemer let.', totDieTijd: 'De Waarnemer gebruikt het standaardprofiel.' },
+  },
   {
     sleutel: 'verbruik.lezen', naam: 'AI-verbruik lezen', pakket: 'starter', rollen: ['salesmanager'], helpartikel: 'abonnement-verbruik-ai-credits', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'De AI-credits die de agents deze maand verbruikten.', totDieTijd: 'Vraag je beheerder.' },
@@ -1010,7 +1027,7 @@ export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | u
 
 /** De feature (hoofdstuk 7, F01 tot en met F26) waar een functie bij hoort, voor het raster van de founder. */
 const FEATURE_GROEPEN: [RegExp, string][] = [
-  [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^campagnes\.|^instellingen\.campagnesoorten/, 'F12 Campagnes'], [/^(funnel|overdracht)\.|^instellingen\.funnelNormen/, 'F17 Funnel en overdracht'], [/^(briefing|pitstop|concepten|mail)\.|^koppeling\.mail|^instellingen\.mailsjablonen/, 'F11 Briefings, Pitstop en mail'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
+  [/^waarnemer\.|^account\.(opnieuwOnderzoeken|bronnenVolgen)$/, 'F14 Agents en mandaten'], [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^campagnes\.|^instellingen\.campagnesoorten/, 'F12 Campagnes'], [/^(funnel|overdracht)\.|^instellingen\.funnelNormen/, 'F17 Funnel en overdracht'], [/^(briefing|pitstop|concepten|mail)\.|^koppeling\.mail|^instellingen\.mailsjablonen/, 'F11 Briefings, Pitstop en mail'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],

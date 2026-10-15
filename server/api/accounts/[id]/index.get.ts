@@ -67,6 +67,11 @@ export default defineEventHandler(async (event) => {
     const [ov] = (await tx.execute(sql`select o.*, u.name as door_naam from overdrachten o left join users u on u.id = o.door where o.account_id = ${a.id} order by o.op desc limit 1`)).rows as any[]
     const [afv] = (await tx.execute(sql`select 1 from appointments where account_id = ${a.id} and status = 'afgerond' and coalesce((data->>'overdragen')::boolean, false) limit 1`)).rows as any[]
     const overdracht = ov ? { id: ov.id, naar: ov.naar, status: ov.status, op: new Date(ov.op).toISOString(), door: String(ov.door_naam ?? '').replace(/^Testgebruiker /, ''), externUrl: ov.extern_url, laatsteFout: ov.laatste_fout, alKlant: !!ov.data?.alKlant } : null
+    // P19: wat de agents zagen (laatste inzichten op dit account) en de bronnen om te volgen.
+    const agentInzichten = (await tx.execute(sql`select id, title, agent, type, bron, relevance_score, status, created_at, data->'bron' as bron_info from signals
+      where account_id = ${a.id} and status in ('nieuw', 'gelezen', 'omgezet') and agent is not null order by created_at desc limit 5`)).rows.map((r: any) => ({
+      id: r.id, title: r.title, agent: r.agent, type: r.type, bron: r.bron, relevantie: r.relevance_score, status: r.status, op: new Date(r.created_at).toISOString(), bronNaam: r.bron_info?.naam ?? null, url: r.bron_info?.url ?? null,
+    }))
     return {
       id: a.id, naam: a.name, soort: a.accountKind, klasse: a.klasse, status: a.nbStatus, dagenInFase: fase, score: a.score,
       scoreOpbouw: kan(ctx, 'prospects.scoreOpbouw') ? a.data?.scoreOpbouw ?? null : null,
@@ -75,6 +80,7 @@ export default defineEventHandler(async (event) => {
       website: a.data?.website ?? null, telefoon: a.data?.telefoon ?? null, email: a.data?.email ?? null, linkedin: a.data?.linkedin ?? null,
       adres: a.data?.adres ?? null, branche: a.data?.branche ?? null, land: a.data?.land ?? 'NL', medewerkers: a.data?.medewerkers ?? null,
       aanleiding: a.data?.aanleiding ?? null, dossier: a.data?.dossier ?? null, band: a.data?.band ?? {},
+      agentInzichten, volgBronnen: kan(ctx, 'account.bronnenVolgen') ? (a.data as any)?.volgBronnen ?? [] : [],
       herkomst: niveau === 'expert' ? a.data?.herkomst ?? {} : {},
       customFields: zichtbareCustomFields(a.data?.customFields, velden),
       eigenVelden: velden.map((v) => ({ id: v.id, sleutel: v.sleutel, naam: v.naam, type: v.type, sectie: v.sectie, opties: v.data.opties ?? [], hulp: v.data.hulp ?? null, bewerkbaarDoor: v.data.bewerkbaarDoor ?? 'iedereen' })),
@@ -105,6 +111,7 @@ export default defineEventHandler(async (event) => {
         pauzeer: kan(ctx, 'account.nee') && ['nieuw', 'in reis'].includes(a.nbStatus),
         verplaatsen: kan(ctx, 'reis.verplaatsen') && (eigen || manager) && a.accountKind === 'prospect',
         terugOp: kan(ctx, 'account.terugOpAanpassen') && !!a.terugOp,
+        onderzoek: kan(ctx, 'account.opnieuwOnderzoeken'), bronnenVolgen: kan(ctx, 'account.bronnenVolgen'),
       },
     }
   })
