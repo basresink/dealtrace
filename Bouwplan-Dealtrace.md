@@ -346,7 +346,7 @@ De kolom "Rol" noemt de minimale rol; leeg betekent iedere gebruiker. Dit is de 
 
 | Plek | Beginner | Gevorderd | Expert |
 |---|---|---|---|
-| Zijbalk | 10 items, groep "Nog niet aangezet" ingeklapt (zie 6.1) | 14 items | 15 items (alle) |
+| Zijbalk | 11 items, groep "Nog niet aangezet" ingeklapt (zie 6.1) | 14 items | 15 items (alle) |
 | Paginakop | primaire knop, "Hulp", subtitel met één zin uitleg over wat je hier doet | plus werkbalk met Weergave en Filters | plus Sortering, opgeslagen weergaven, Download; subtitel met de stand van zaken |
 | Flyouts | basisvelden; geavanceerde blokken ingeklapt achter "Meer" | alle velden | alle velden plus herkomst per veld, regelcode en mandaatletter |
 | Taal | volle woorden ("Kwalificatie 3 van 4 ingevuld"), geen interne codes | codes in meta | codes zichtbaar |
@@ -417,7 +417,7 @@ De zijbalk is de schil van het designsysteem (zwart, 240 px, inklapbaar naar 64 
 | Werk | Belblokken | `/belblokken` | ● | ● | ● | |
 | Werk | Bezoeken | `/bezoeken` | ● | ● | ● | |
 | Werk | Campagnes | `/campagnes` | meedoen | ● | ● | |
-| Werk | Funnel | `/funnel` | | ● | ● | |
+| Werk | Funnel | `/funnel` | ● | ● | ● | |
 | Prospects | Prospects | `/prospects` | ● | ● | ● | |
 | Prospects | Contacten | `/contacten` | ● | ● | ● | |
 | Prospects | Leadgenerator | `/leadgenerator` | | ● | ● | |
@@ -434,7 +434,7 @@ De zijbalk is de schil van het designsysteem (zwart, 240 px, inklapbaar naar 64 
 | Beheer | Platformbeheer | `/platform` | | | | founder |
 | Onderaan | Meldingen, Helpcenter, gebruikersmenu (Mijn instellingen, Roadmap, Uitloggen) | | ● | ● | ● | |
 
-Een Beginner heeft 10 items en de hele navigatie past zonder scrollen op 900 px hoogte. Het werkplekprofiel bepaalt de volgorde binnen "Werk": binnendienst zet Belblokken boven Bezoeken, buitendienst andersom.
+Een Beginner heeft 11 items en de hele navigatie past zonder scrollen op 900 px hoogte. Het werkplekprofiel bepaalt de volgorde binnen "Werk": binnendienst zet Belblokken boven Bezoeken, buitendienst andersom.
 
 **Items die niet aanstaan.** Wat niet voor je aanstaat, staat niet tussen de gewone items maar samen in één ingeklapte groep onderaan de navigatie: "Nog niet aangezet" met een grijze teller. Uitgeklapt staan de items met `aria-disabled="true"`, tekst `--wit-30` en een slot-icoon van 14 px; ze blijven focusbaar. Een klik opent een smalle flyout (480 px) met kicker "Gevorderd · nog niet aangezet", "Wat het doet" (twee zinnen), "Tot die tijd" (wat Dealtrace alvast voor je doet) en "Lees hoe het werkt". De groep onthoudt per gebruiker of hij open of dicht staat. Een directe link naar een pagina die niet aanstaat, toont de paginakop met kicker "Nog niet aangezet" en dezelfde uitleg; nooit een foutpagina.
 
