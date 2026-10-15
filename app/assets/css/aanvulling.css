@@ -883,3 +883,6 @@ html.zonlicht body { color: #000; }
 .pot-vulling--geel { background: var(--yellow); }
 .pot-vulling--rood { background: var(--rood, #c0392b); }
 .pot-streep { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--muted); }
+/* P15: Zoek contactpersonen via Datacollectief. */
+.dc-zoek { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-bottom: 8px; }
+.dc-knop { min-height: 44px; }

@@ -90,3 +90,27 @@ export function contactDuplicaat(nieuw: ContactKandidaat, bestaand: ContactKandi
   const volledig = (c: ContactKandidaat) => normaliseerNaam(`${c.firstName ?? ''} ${c.lastName}`)
   return anderen.find((b) => b.accountId === nieuw.accountId && volledig(b) === volledig(nieuw)) ?? null
 }
+
+export interface ContactNieuw { firstName?: string | null; lastName: string; email?: string | null; telefoon?: string | null; functie?: string | null; linkedin?: string | null }
+/**
+ * Nieuwe contacten (Datacollectief, import) tegen de contacten van een account (15.1): exacte
+ * e-mail wint, anders de volledige naam. Een treffer met lege velden wordt bijgewerkt; wat al
+ * gevuld is blijft (de bronprioriteit zit in magOverschrijven). Dubbelen in de nieuwe lijst tellen één keer.
+ */
+export function voegContactenSamen<B extends ContactKandidaat & { telefoon?: string | null; functie?: string | null }>(bestaand: B[], nieuw: ContactNieuw[]): { toevoegen: ContactNieuw[]; bijwerken: { id: string; velden: Partial<ContactNieuw> }[]; overslaan: ContactNieuw[] } {
+  const uit = { toevoegen: [] as ContactNieuw[], bijwerken: [] as { id: string; velden: Partial<ContactNieuw> }[], overslaan: [] as ContactNieuw[] }
+  const gezien: ContactKandidaat[] = [...bestaand]
+  for (const n of nieuw) {
+    const kandidaat: ContactKandidaat = { accountId: bestaand[0]?.accountId ?? '', firstName: n.firstName, lastName: n.lastName, email: n.email }
+    const match = contactDuplicaat(kandidaat, gezien) as (B & { id?: string }) | null
+    if (!match) { uit.toevoegen.push(n); gezien.push(kandidaat); continue }
+    if (!match.id) { uit.overslaan.push(n); continue }
+    const velden: Partial<ContactNieuw> = {}
+    if (!match.email && n.email) velden.email = n.email
+    if (!(match as any).telefoon && n.telefoon) velden.telefoon = n.telefoon
+    if (!(match as any).functie && n.functie) velden.functie = n.functie
+    if (Object.keys(velden).length) uit.bijwerken.push({ id: match.id, velden })
+    else uit.overslaan.push(n)
+  }
+  return uit
+}

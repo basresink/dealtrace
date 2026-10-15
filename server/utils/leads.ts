@@ -8,7 +8,7 @@ import { nlTijdstip, nlMoment, plusDagen } from '../../shared/datum'
 import { volgendVastBlok } from '../../shared/belblokken'
 import {
   alleenEchteUrls, beoordeelLead, bijsturing, brancheUitSbi, controleerBewijs, controleerContacten, GRENZEN, groepeerLead, klasseUitMedewerkers,
-  leadSleutels, magRonde, pastNaBijsturing, sbiVoorBranche, zoekopdrachtHash,
+  datacollectiefNaarLead, leadSleutels, priveEmail, magRonde, pastNaBijsturing, sbiVoorBranche, selectieUitDoelgroep, zoekopdrachtHash,
   type Bewijs, type BrancheMapping, type LeadContact, type LeadFeiten, type LeadGroep, type Zoekopdracht,
 } from '../../shared/leadGenerator'
 import { normaliseerDomein, zoekDuplicaat, type AccountKandidaat } from '../../shared/ontdubbelen'
@@ -21,6 +21,10 @@ import { herbereken } from './accounts'
 import { creditsStandVoor } from './agents/bewaker'
 import { blokkenVan, sessieOp } from './bellen'
 import { kvkContext, kvkMutaties, kvkProfiel, kvkStatus, kvkZoek, KvkFout, type KvkContext, type KvkProfiel } from './bronnen/kvk'
+import { dcBedrijf, dcContext, dcStatus, dcSelectie, DcFout, type DcContext } from './bronnen/datacollectief'
+import { magOverschrijven } from '../../shared/herkomst'
+import { voegContactenSamen } from '../../shared/ontdubbelen'
+import { emailHash } from './importer'
 import { schema } from './db'
 import { zoekAccounts } from './dealdriveAdapter'
 import { voerAiStapUit } from './llm-provider'
@@ -29,6 +33,16 @@ import { alsDoelgroepAccount, instapVelden, laadInstapContext, schrijfInstap, ve
 import { haalPagina, zoekWeb } from './webBron'
 
 type Tx = Parameters<Parameters<ReturnType<typeof import('./db').gebruikDb>['transaction']>[0]>[0]
+
+
+/** De onderdrukkingslijst (15.2): gehashte afgemelde e-mailadressen. */
+export async function onderdruktSet(tx: Tx): Promise<Set<string>> {
+  return new Set((await tx.select({ h: schema.onderdrukkingslijst.emailHash }).from(schema.onderdrukkingslijst)).map((x) => x.h))
+}
+/** Een afgemeld contact komt niet terug als mailbaar contact: het e-mailadres valt weg. */
+export function zonderAfgemeld<T extends { email?: string | null }>(contacten: T[], onderdrukt: Set<string>): T[] {
+  return contacten.map((c) => (c.email && onderdrukt.has(emailHash(c.email)) ? { ...c, email: null, afgemeld: true } : c))
+}
 type LeadRij = typeof schema.leads.$inferSelect
 export interface LeadGebruiker { id: string; rol: string; niveau: string; werkplek?: string | null; data?: any }
 
@@ -89,7 +103,7 @@ async function bestand(tx: Tx): Promise<AccountKandidaat[]> {
 
 // ── Ronde ─────────────────────────────────────────────────────────────────────
 
-export interface RondeUitkomst { rondeId: string; bewaard: boolean; aantal: number; credits: number; kvk: number; melding?: string | null }
+export interface RondeUitkomst { rondeId: string; bewaard: boolean; aantal: number; credits: number; kvk: number; dc?: number; melding?: string | null }
 
 /**
  * Eén ronde. Dezelfde zoekopdracht binnen 24 uur geeft het bewaarde resultaat zonder kosten.
@@ -98,7 +112,7 @@ export interface RondeUitkomst { rondeId: string; bewaard: boolean; aantal: numb
  */
 export async function draaiRonde(tx: Tx, org: { id: string; pakket: Pakket }, g: LeadGebruiker, z: Zoekopdracht, bronnen: string[], opties: { automatisch?: boolean; nu?: Date } = {}): Promise<RondeUitkomst> {
   const nu = opties.nu ?? new Date()
-  const bron = [...new Set(bronnen.filter((b) => b === 'ai' || b === 'kvk'))]
+  const bron = [...new Set(bronnen.filter((b) => b === 'ai' || b === 'kvk' || b === 'datacollectief'))]
   const mapping = await brancheMapping(tx)
   const branche = sbiVoorBranche(z.brancheId, mapping)
   // De branche uit het verkoopverhaal levert de SBI-codes als de zoekopdracht er geen noemt.
@@ -109,20 +123,24 @@ export async function draaiRonde(tx: Tx, org: { id: string; pakket: Pakket }, g:
   if (eerder) return { rondeId: eerder.id, bewaard: true, aantal: eerder.aantal, credits: 0, kvk: 0 }
 
   const status = await kvkStatus(tx, org.pakket, nu)
+  const dcS = await dcStatus(tx, org.pakket, nu)
   const stand = await creditsStandVoor(tx, org.id, nu)
-  const m = magRonde({ rondesVandaag: opties.automatisch ? 0 : await rondesVandaag(tx, g.id, nu), stand, kvk: { gekoppeld: status.gekoppeld, gebruikt: status.gebruikt, plafond: status.plafond } }, org.pakket, bron)
+  const m = magRonde({ rondesVandaag: opties.automatisch ? 0 : await rondesVandaag(tx, g.id, nu), stand, kvk: { gekoppeld: status.gekoppeld, gebruikt: status.gebruikt, plafond: status.plafond }, dc: { gekoppeld: dcS.gekoppeld, gebruikt: dcS.gebruikt, plafond: dcS.plafond } }, org.pakket, bron)
   if (!m.mag) fout(m.status!, m.reden!)
 
   const [ronde] = await tx.insert(schema.leadRondes).values({ organisationId: org.id, gebruikerId: g.id, zoekopdracht: z, hash, bronnen: bron, automatisch: !!opties.automatisch, gestartOp: nu.toISOString() }).returning()
   const op = nu.toISOString()
-  const kandidaten = new Map<string, { feiten: LeadFeiten; bron: 'ai' | 'kvk'; bronzin?: string; url?: string }>()
-  const voegToe = (f: LeadFeiten, b: 'ai' | 'kvk', extra: { bronzin?: string; url?: string } = {}) => {
+  const kandidaten = new Map<string, { feiten: LeadFeiten; bron: 'ai' | 'kvk' | 'datacollectief'; bronzin?: string; url?: string }>()
+  const voegToe = (f: LeadFeiten, b: 'ai' | 'kvk' | 'datacollectief', extra: { bronzin?: string; url?: string } = {}) => {
     const s = leadSleutels(f)
     const bestaand = [...kandidaten.values()].find((k) => leadSleutels(k.feiten).some((x) => s.includes(x)))
-    if (bestaand) { bestaand.feiten = { ...f, ...bestaand.feiten, contacten: bestaand.feiten.contacten, zinnen: [...(bestaand.feiten.zinnen ?? []), ...(f.zinnen ?? [])] }; return }
+    // Samenvoegen: wat er al staat blijft (bronprioriteit), contactpersonen van Datacollectief komen erbij.
+    const contacten = [...(bestaand?.feiten.contacten ?? []), ...(f.contacten ?? []).filter((c) => !(bestaand?.feiten.contacten ?? []).some((x) => x.naam === c.naam))]
+    if (bestaand) { bestaand.feiten = { ...f, ...bestaand.feiten, contacten, herkomst: { ...(f.herkomst ?? {}), ...(bestaand.feiten.herkomst ?? {}) }, zinnen: [...(bestaand.feiten.zinnen ?? []), ...(f.zinnen ?? [])] }; return }
     if (kandidaten.size < GRENZEN.bedrijvenPerRonde) kandidaten.set(s[0]!, { feiten: f, bron: b, ...extra })
   }
   let kvk: KvkContext | null = null
+  let dc: DcContext | null = null
   let melding: string | null = null
   let credits = 0
   let kvkVoor = status.gebruikt
@@ -133,6 +151,14 @@ export async function draaiRonde(tx: Tx, org: { id: string; pakket: Pakket }, g:
       for (const r of await kvkZoek(tx, org.id, kvk, { sbi, postcode: z.werkgebied?.postcodes?.length === 1 ? z.werkgebied.postcodes[0] : undefined })) {
         const p = await kvkProfiel(tx, org.id, kvk, r.kvk)
         if (p) voegToe(feitenUitProfiel(p, op), 'kvk')
+      }
+    }
+    // Datacollectief: een selectie op de doelgroep met contactpersonen; elk record telt.
+    if (bron.includes('datacollectief')) {
+      dc = await dcContext(tx, org.pakket)
+      if (dc) {
+        const sel = selectieUitDoelgroep({ sbi, brancheId: z.brancheId, omvang: z.omvang, postcodes: z.werkgebied?.postcodes }, mapping)
+        try { for (const r of await dcSelectie(tx, org.id, dc, sel)) voegToe(datacollectiefNaarLead(r, op), 'datacollectief') } catch (e) { if (!(e instanceof DcFout)) throw e; melding = e.message }
       }
     }
     // AI-zoeker: hooguit drie webzoekopdrachten; KvK-feiten gaan als feiten het materiaal in.
@@ -168,6 +194,7 @@ export async function draaiRonde(tx: Tx, org: { id: string; pakket: Pakket }, g:
     }
   } catch (e) { kvkFout(e) }
   kvkVoor = (kvk?.gebruikt ?? kvkVoor) - status.gebruikt
+  const dcVoor = (dc?.gebruikt ?? dcS.gebruikt) - dcS.gebruikt
 
   // Afgewezen komt nooit terug; afwijsredenen sturen bij.
   const afgewezen = await tx.select({ kvk: schema.leads.kvk, naam: schema.leads.naam, domein: schema.leads.domein, postcode: schema.leads.postcode, data: schema.leads.data }).from(schema.leads).where(eq(schema.leads.status, 'afgewezen'))
@@ -175,8 +202,10 @@ export async function draaiRonde(tx: Tx, org: { id: string; pakket: Pakket }, g:
   const stuur = bijsturing(afgewezen.map((a) => ({ reden: a.data.afwijsreden, medewerkers: a.data.medewerkers, sbi: a.data.sbi, plaats: a.data.plaats })))
   const klassen = await klassenVan(tx)
   let aantal = 0
+  const onderdrukt = await onderdruktSet(tx)
   for (const k of kandidaten.values()) {
     if (leadSleutels(k.feiten).some((s) => weg.has(s)) || !pastNaBijsturing(k.feiten, stuur)) continue
+    k.feiten.contacten = zonderAfgemeld(k.feiten.contacten ?? [], onderdrukt)
     const dd = await ddTreffer(k.feiten)
     const b = beoordeelLead(k.feiten, z, klassen, nu)
     const tekst = [k.feiten.naam, ...(k.feiten.zinnen ?? []).map((x) => x.tekst)].join(' ')
@@ -193,10 +222,10 @@ export async function draaiRonde(tx: Tx, org: { id: string; pakket: Pakket }, g:
     }
     aantal++
   }
-  await tx.update(schema.leadRondes).set({ aantal, kosten: { credits, kvk: kvkVoor, ...(melding ? { fout: melding } : {}) } }).where(eq(schema.leadRondes.id, ronde!.id))
+  await tx.update(schema.leadRondes).set({ aantal, kosten: { credits, kvk: kvkVoor, ...(dcVoor ? { datacollectief: dcVoor } : {}), ...(melding ? { fout: melding } : {}) } }).where(eq(schema.leadRondes.id, ronde!.id))
   await tx.execute(sql`insert into lead_verbruik (organisation_id, maand, soort, aantal) values (${org.id}, ${op.slice(0, 7)}, 'ronde', 1)
     on conflict (organisation_id, maand, soort) do update set aantal = lead_verbruik.aantal + 1`)
-  return { rondeId: ronde!.id, bewaard: false, aantal, credits, kvk: kvkVoor, melding }
+  return { rondeId: ronde!.id, bewaard: false, aantal, credits, kvk: kvkVoor, dc: dcVoor, melding }
 }
 
 async function ddTreffer(f: LeadFeiten): Promise<LeadRij['data']['dealdrive']> {
@@ -241,7 +270,7 @@ export async function leadsVoorScherm(tx: Tx, rijen: LeadRij[], z: Zoekopdracht,
     const klasse = klasseUitMedewerkers(f.medewerkers, klassen)
     return {
       id: l.id, naam: l.naam, plaats: l.plaats, status: l.status, bron: l.bron, accountId: l.accountId,
-      bronLabel: l.bron === 'import' ? `Import: ${batches.get(l.bronRef ?? '') ?? 'bestand'}` : l.bron === 'kvk' ? 'KvK' : l.bron === 'ai' ? 'AI-zoeker' : l.bron,
+      bronLabel: l.bron === 'import' ? `Import: ${batches.get(l.bronRef ?? '') ?? 'bestand'}` : l.bron === 'kvk' ? 'KvK' : l.bron === 'ai' ? 'AI-zoeker' : l.bron === 'datacollectief' ? 'Datacollectief' : l.bron,
       klasse: klasse ? klasseCode(klassen.find((k) => k.id === klasse) ?? { id: klasse, naam: klasse }) : null,
       feiten: f, bewijs: b.bewijs, score: b.score, groep: groepeerLead({ alBekend: !!alBekend, bewijs: b.bewijs, dossierOp: l.dossierOp }, nu), dossierOp: l.dossierOp, alBekend,
       vvBrancheId: l.data.vvBrancheId ?? null, gevondenOp: l.gevondenOp,
@@ -510,4 +539,72 @@ export async function verrijkViaKvk(tx: Tx, org: string, pakket: Pakket, account
     verrijkt++
   }
   return { verrijkt, gestopt: null }
+}
+
+/**
+ * Contactpersonen uit Datacollectief op één account (P15): hooguit max records, ontdubbeld op e-mail
+ * en anders volledige naam (15.1), alleen lege velden aangevuld (nooit over hand of KvK, 10.1), nooit
+ * privégegevens, een afgemeld adres komt niet terug (15.2), herkomst met datum op elk veld.
+ */
+export async function verrijkContactenViaDc(tx: Tx, org: string, pakket: Pakket, accountId: string, door: string, max = 5) {
+  const [a] = await tx.select().from(schema.accounts).where(eq(schema.accounts.id, accountId))
+  if (!a) throw new DcFout(404, 'Account niet gevonden')
+  if (!a.kvk && !a.domein) throw new DcFout(409, 'Dit account heeft geen KvK-nummer of website; Datacollectief kan het niet vinden.')
+  const dc = await dcContext(tx, pakket)
+  if (!dc) throw new DcFout(400, 'Datacollectief is nog niet gekoppeld. Je beheerder plakt de sleutel bij Koppelingen.')
+  const r = await dcBedrijf(tx, org, dc, { kvk: a.kvk, domein: a.domein }, max)
+  if (!r) return { toegevoegd: 0, bijgewerkt: 0, overgeslagen: 0, tekst: 'Datacollectief kent dit bedrijf niet.' }
+  const op = new Date().toISOString()
+  const h = { bron: 'datacollectief', op, door: door }
+  const onderdrukt = await onderdruktSet(tx)
+  const nieuw = zonderAfgemeld(r.contacten.filter((c) => !c.prive).map((c) => ({
+    firstName: c.voornaam ?? null, lastName: c.achternaam, email: c.email && !priveEmail(c.email) ? c.email.toLowerCase() : null,
+    telefoon: c.telefoon ? (normaliseerTelefoon(c.telefoon) as any).e164 ?? null : null, functie: c.functie ?? null, linkedin: c.linkedin ?? null,
+  })), onderdrukt)
+  const bestaand = (await tx.select().from(schema.contacts).where(eq(schema.contacts.accountId, a.id))).map((c) => ({ id: c.id, accountId: c.accountId, firstName: c.firstName, lastName: c.lastName, email: c.email, telefoon: c.data?.telefoon ?? null, functie: c.data?.functie ?? null, herkomst: c.data?.herkomst ?? {}, data: c.data }))
+  const plan = voegContactenSamen(bestaand, nieuw)
+  for (const n of plan.toevoegen) {
+    const herkomst: Record<string, typeof h> = { naam: h }
+    for (const v of ['email', 'telefoon', 'functie', 'linkedin'] as const) if ((n as any)[v]) herkomst[v] = h
+    await tx.insert(schema.contacts).values({
+      organisationId: org, accountId: a.id, firstName: n.firstName ?? null, lastName: n.lastName, email: n.email ?? null, rol: 'onbekend',
+      data: { functie: n.functie ?? undefined, telefoon: n.telefoon ?? undefined, linkedin: n.linkedin ?? undefined, bron: 'datacollectief', herkomst, ...((n as any).afgemeld ? { consent: { email: { status: 'nee', op, bron: 'onderdrukkingslijst' } } } : {}) },
+    })
+  }
+  let bijgewerkt = 0
+  for (const u of plan.bijwerken) {
+    const c = bestaand.find((x) => x.id === u.id)!
+    const data = { ...(c.data ?? {}) } as any
+    const hk = { ...(data.herkomst ?? {}) }
+    let email = c.email
+    for (const [veld, waarde] of Object.entries(u.velden)) {
+      if (!waarde || !magOverschrijven(hk[veld]?.bron, 'datacollectief')) continue
+      if (veld === 'email') email = String(waarde)
+      else data[veld] = waarde
+      hk[veld] = h
+    }
+    data.herkomst = hk
+    await tx.update(schema.contacts).set({ email, data, updatedAt: op }).where(eq(schema.contacts.id, u.id))
+    bijgewerkt++
+  }
+  await tx.insert(schema.activiteiten).values({ organisationId: org, accountId: a.id, soort: 'notitie', door: door, data: { tekst: `${plan.toevoegen.length} contactpersonen toegevoegd uit Datacollectief`, bron: 'datacollectief' } })
+  const n = plan.toevoegen.length
+  return { toegevoegd: n, bijgewerkt, overgeslagen: plan.overslaan.length, tekst: n ? `${n} ${n === 1 ? 'contactpersoon' : 'contactpersonen'} toegevoegd uit Datacollectief.` : bijgewerkt ? `${bijgewerkt} contactpersonen aangevuld uit Datacollectief.` : 'Geen nieuwe contactpersonen gevonden.' }
+}
+
+/** Na een import: contactpersonen zoeken via Datacollectief voor nieuwe accounts; stopt bij het plafond. */
+export async function verrijkImportViaDc(tx: Tx, org: string, pakket: Pakket, accountIds: string[], door: string): Promise<{ accounts: number; contacten: number; gestopt: string | null }> {
+  let accounts = 0
+  let contacten = 0
+  for (const id of accountIds) {
+    try {
+      const r = await verrijkContactenViaDc(tx, org, pakket, id, door, 5)
+      accounts++; contacten += r.toegevoegd
+    } catch (e) {
+      if (!(e instanceof DcFout)) throw e
+      if (e.statusCode === 409) continue
+      return { accounts, contacten, gestopt: e.message }
+    }
+  }
+  return { accounts, contacten, gestopt: null }
 }

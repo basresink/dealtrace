@@ -19,6 +19,8 @@ const controle = ref<any>(null)
 const keuzes = reactive<Record<string, string>>({})
 const eigenaar = ref<'vast' | 'team'>('vast')
 const verrijk = ref(false)
+const verrijkDc = ref(false)
+const { data: dcStand } = await useFetch<any>('/api/koppelingen/datacollectief', { default: () => null })
 const { data: kvk } = await useFetch<any>('/api/koppelingen/kvk', { default: () => null })
 const klaar = ref<any>(null)
 const terug = ref<any>(null)
@@ -53,7 +55,7 @@ const openKeuzes = computed(() => Object.values(keuzes).filter((k) => k === 'kie
 async function verwerk() {
   bezig.value = true
   try {
-    klaar.value = await $fetch('/api/import/verwerk', { method: 'POST', body: { batchId: vb.value.batchId, keuzes, eigenaar: { soort: eigenaar.value }, verrijkKvk: verrijk.value } })
+    klaar.value = await $fetch('/api/import/verwerk', { method: 'POST', body: { batchId: vb.value.batchId, keuzes, eigenaar: { soort: eigenaar.value }, verrijkKvk: verrijk.value, verrijkDc: verrijkDc.value } })
     stap.value = 5
     await refresh()
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
@@ -135,15 +137,16 @@ const datum = (t: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', 
         <div class="keuzegroep" role="group"><button type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': eigenaar === 'vast' }" @click="eigenaar = 'vast'">Vast: ik</button><button v-if="kanTeam" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': eigenaar === 'team' }" data-test="eigenaar-team" @click="eigenaar = 'team'">Gelijk verdelen over het team</button></div>
       </div>
       <label v-if="kvk?.gekoppeld" class="vink mt-16"><input v-model="verrijk" type="checkbox" data-test="verrijk-kvk"> Verrijk na import via KvK</label>
+      <label v-if="dcStand?.gekoppeld && functie('datacollectief.verrijken')?.beschikbaar" class="vink mt-8"><input v-model="verrijkDc" type="checkbox" data-test="verrijk-dc"> Zoek contactpersonen via Datacollectief <span class="meta">(kost tot 5 records per nieuw account; nog {{ dcStand.plafond - dcStand.gebruikt }} deze maand)</span></label>
     <p v-if="kvk?.gekoppeld" class="veld-uitleg">Kost één KvK-bevraging per nieuw account met een KvK-nummer; nog {{ Math.max(0, kvk.plafond - kvk.gebruikt) }} over deze maand. KvK telt niet in de AI-credits.</p>
-    <p v-else class="kaart-meta mt-16">Verrijken via KvK kan zodra je beheerder KvK koppelt. Datacollectief, doelgroep en campagne komen in een volgende versie.</p>
+    <p v-else class="kaart-meta mt-16">Verrijken via KvK kan zodra je beheerder KvK koppelt. Doelgroep en campagne komen in een volgende versie.</p>
       <div class="dd-acties mt-16"><button type="button" class="dd-act" @click="stap = 3">Terug</button><span class="dd-acties-vul" /><button type="button" class="dd-act dd-act--primair" :disabled="bezig" data-test="importeren" @click="verwerk">{{ bezig ? 'Bezig met importeren…' : 'Importeren' }}</button></div>
       <div v-if="bezig" class="voortgang mt-16" role="progressbar" aria-label="Importeren"><span /></div>
     </div>
 
     <div v-else-if="stap === 5" class="kaart mt-16" data-test="samenvatting">
       <h2 class="kaart-titel">Import klaar</h2>
-      <p class="kaart-meta">{{ klaar.nieuw }} nieuw · {{ klaar.samengevoegd }} samengevoegd · {{ klaar.overgeslagen }} overgeslagen · {{ klaar.contacten }} contactpersonen<template v-if="klaar.verhuisd"> · {{ klaar.verhuisd }} verhuisd</template><template v-if="klaar.kvkVerrijkt != null"> · {{ klaar.kvkVerrijkt }} verrijkt via KvK</template></p>
+      <p class="kaart-meta">{{ klaar.nieuw }} nieuw · {{ klaar.samengevoegd }} samengevoegd · {{ klaar.overgeslagen }} overgeslagen · {{ klaar.contacten }} contactpersonen<template v-if="klaar.verhuisd"> · {{ klaar.verhuisd }} verhuisd</template><template v-if="klaar.kvkVerrijkt != null"> · {{ klaar.kvkVerrijkt }} verrijkt via KvK</template><template v-if="klaar.dcContacten != null"> · {{ klaar.dcContacten }} contactpersonen uit Datacollectief</template></p>
     <p v-if="klaar.kvkMelding" class="veld-uitleg">{{ klaar.kvkMelding }}</p>
       <div class="dd-acties mt-16"><NuxtLink class="dd-act dd-act--primair" to="/prospects/alle">Naar je prospects</NuxtLink><button type="button" class="dd-act" @click="opnieuw">Nog een bestand</button></div>
     </div>

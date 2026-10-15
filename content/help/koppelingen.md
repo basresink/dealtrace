@@ -22,6 +22,17 @@ De sleutel wordt versleuteld bewaard en is daarna niet meer zichtbaar. Je ziet a
 
 Zonder sleutel is KvK geen kiesbare bron in de Leadgenerator.
 
+## Datacollectief koppelen
+
+Datacollectief zit in Compleet. Op Starter of Plus zie je "Onderdeel van Compleet".
+
+1. Vraag de API-sleutel op bij Datacollectief, uit jullie contract.
+2. Plak hem in de kaart Datacollectief en klik **Test verbinding**. Werkt het, dan zie je ook jullie tegoed.
+3. Zet desgewenst een **Maandplafond records**.
+4. Klik **Opslaan**. Daarna zie je van de sleutel alleen een vingerafdruk van acht tekens.
+
+Werkt de sleutel niet meer, dan staat er "De Datacollectief-sleutel werkt niet meer. Vraag een nieuwe aan bij Datacollectief en plak hem hier." Is het tegoed op, dan is de bron uitgeschakeld tot je het aanvult. Onder **Functies en laatste runs** zie je per aanroep hoeveel records er gelezen zijn.
+
 ## SalesDNA koppelen
 
 Met SalesDNA komt jullie verkoopverhaal automatisch binnen. Dealtrace leest alleen versies die in SalesDNA zijn bevestigd en schrijft niets terug. Je vindt de koppeling onder **Instellingen, Koppelingen, SalesDNA**. Alleen de beheerder richt hem in.
@@ -52,4 +63,4 @@ Klik **Ontkoppelen** en bevestig. De laatst bevestigde inhoud uit SalesDNA wordt
 
 ## Later
 
-Datacollectief en de koppeling met je CRM komen in een volgende versie.
+De koppeling met je CRM komt in een volgende versie.

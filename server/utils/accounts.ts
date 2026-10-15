@@ -61,7 +61,7 @@ export function contactUit(c: typeof schema.contacts.$inferSelect, zichtbaar: { 
     id: c.id, accountId: c.accountId, voornaam: c.firstName, achternaam: c.lastName, naam: `${c.firstName ?? ''} ${c.lastName}`.trim(),
     email: c.email, rol: c.rol, status: c.status, functie: c.data?.functie ?? null, telefoon: c.data?.telefoon ?? null, mobiel: c.data?.mobiel ?? null,
     linkedin: c.data?.linkedin ?? null, consent: c.data?.consent ?? {}, voorkeurskanaal: c.data?.voorkeurskanaal ?? null, belMeNiet: !!c.data?.belMeNiet,
-    vertrokkenOp: c.data?.vertrokkenOp ?? null, bron: c.data?.bron ?? null, zekerheid: c.data?.zekerheid ?? null, updatedAt: c.updatedAt,
+    vertrokkenOp: c.data?.vertrokkenOp ?? null, bron: c.data?.bron ?? null, herkomst: c.data?.herkomst?.naam ?? null, zekerheid: c.data?.zekerheid ?? null, updatedAt: c.updatedAt,
     customFields: zichtbareCustomFields(c.data?.customFields, zichtbaar),
   }
 }

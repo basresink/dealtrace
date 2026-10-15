@@ -79,7 +79,7 @@ async function nieuweRonde() {
   bezig.value = 'ronde'
   try {
     const r = await $fetch<any>('/api/leads/ronde', { method: 'POST', body: { zoekopdracht: z, bronnen: bronnen.value } })
-    toast.toon(r.bewaard ? `Bewaard resultaat van eerder vandaag: ${r.aantal} bedrijven, zonder kosten.` : `${r.aantal} bedrijven gevonden${r.credits ? `, ${r.credits} AI-credits` : ''}${r.kvk ? `, ${r.kvk} KvK-bevragingen` : ''}.`)
+    toast.toon(r.bewaard ? `Bewaard resultaat van eerder vandaag: ${r.aantal} bedrijven, zonder kosten.` : `${r.aantal} bedrijven gevonden${r.credits ? `, ${r.credits} AI-credits` : ''}${r.kvk ? `, ${r.kvk} KvK-bevragingen` : ''}${r.dc ? `, ${r.dc} Datacollectief-records` : ''}.`)
     if (r.melding) toast.toon(r.melding, 'let-op')
     paneel.value = false
     await router.replace({ query: { ...route.query, ronde: r.rondeId } })
@@ -129,7 +129,7 @@ const vakken = computed(() => {
     { label: 'Branche', waarde: z.sbi?.length ? z.sbi.join(' en ') : 'Alle branches', herkomst: z.lijktOpKlanten ? `Uit je ${c?.lijktOpKlanten.aantalKlanten ?? 0} klanten in deze klassen` : branche.value?.naam ?? 'verkoopverhaal' },
     { label: 'Werkgebied', waarde: wg?.straal ? `${wg.straal.km} km rond ${c?.thuisbasis?.plaats ?? 'je thuisbasis'}` : wg?.postcodes?.length ? wg.postcodes.join(', ') : 'Overal', herkomst: wg?.straal ? 'straal rond je thuisbasis' : wg?.postcodes?.length ? 'postcodegebieden' : 'geen werkgebied' },
     { label: 'Aanleiding', waarde: z.aanleiding || 'Geen', herkomst: 'jij' },
-    { label: 'Bronnen', waarde: bronnen.value.map((b) => BRON_LABEL[b as 'ai']).join(', ') || 'Geen', herkomst: 'Datacollectief niet gekoppeld' },
+    { label: 'Bronnen', waarde: bronnen.value.map((b) => BRON_LABEL[b as 'ai']).join(', ') || 'Geen', herkomst: context.value?.bronnen?.datacollectief?.beschikbaar ? 'Datacollectief gekoppeld' : 'Datacollectief niet gekoppeld' },
   ]
 })
 const kicker = computed(() => `Leadgenerator · ${leads.value.length} gevonden`)
@@ -190,7 +190,7 @@ useHead({ title: 'Leadgenerator · Dealtrace' })
                 <label class="veld"><span class="veld-label">Aanleiding</span><input v-model="z.aanleiding" class="invoer" placeholder="Bijvoorbeeld werft servicemonteurs" maxlength="200" data-test="zp-aanleiding"></label>
                 <div class="veld"><span class="veld-label">Bronnen</span>
                   <div class="rijtje">
-                    <label v-for="b in (['ai', 'kvk'] as const)" :key="b" class="vink" :title="context.bronnen[b].reden ?? ''"><input type="checkbox" :checked="bronnen.includes(b)" :disabled="!context.bronnen[b].beschikbaar" :data-test="`zp-bron-${b}`" @change="wisselBron(b)"> {{ BRON_LABEL[b] }}<span v-if="!context.bronnen[b].beschikbaar" class="meta"> · {{ context.bronnen[b].reden }}</span></label>
+                    <label v-for="b in (['ai', 'kvk', 'datacollectief'] as const)" :key="b" class="vink" :title="context.bronnen[b].reden ?? ''"><input type="checkbox" :checked="bronnen.includes(b)" :disabled="!context.bronnen[b].beschikbaar" :data-test="`zp-bron-${b}`" @change="wisselBron(b)"> {{ BRON_LABEL[b] }}<span v-if="!context.bronnen[b].beschikbaar" class="meta"> · {{ context.bronnen[b].reden }}</span></label>
                   </div>
                 </div>
               </div>
@@ -257,6 +257,7 @@ useHead({ title: 'Leadgenerator · Dealtrace' })
             <div v-if="context" class="stat-grid mt-32" data-test="meters">
               <div class="stat-card"><span class="stat-label">AI-credits deze maand</span><span class="stat-num tnum" data-test="meter-credits">{{ fmt(context.meters.credits) }} over</span><span class="stat-foot">Een zoekronde kost 20, een dossier 10</span></div>
               <div class="stat-card"><span class="stat-label">KvK-bevragingen</span><span class="stat-num tnum" data-test="meter-kvk">{{ fmt(context.meters.kvk.gebruikt) }} / {{ fmt(context.meters.kvk.plafond) }}</span><div class="voortgang"><span class="voortgang-vul" :style="{ width: `${context.meters.kvk.plafond ? Math.min(100, (context.meters.kvk.gebruikt / context.meters.kvk.plafond) * 100) : 0}%` }" /></div><span class="stat-foot">KvK is geen AI en telt niet in de credits</span></div>
+              <div v-if="context.meters.dc" class="stat-card"><span class="stat-label">Datacollectief-records</span><span class="stat-num tnum" data-test="meter-dc">{{ fmt(context.meters.dc.gebruikt) }} / {{ fmt(context.meters.dc.plafond) }}</span><div class="voortgang"><span class="voortgang-vul" :style="{ width: `${context.meters.dc.plafond ? Math.min(100, (context.meters.dc.gebruikt / context.meters.dc.plafond) * 100) : 0}%` }" /></div><span class="stat-foot">Datacollectief is geen AI en telt niet in de credits</span></div>
             </div>
           </div>
 

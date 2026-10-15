@@ -565,6 +565,19 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'koppeling.kvk', naam: 'KvK koppelen', pakket: 'plus', rollen: ['beheerder'], helpartikel: 'koppelingen', startNiveau: 'expert',
     uitleg: { watHetDoet: 'De KvK-sleutel van je organisatie plakken, testen en een maandplafond zetten.', totDieTijd: 'Vraag je beheerder.' },
   },
+  // P15: Datacollectief als vijfde bron (F02).
+  {
+    sleutel: 'leadgenerator.datacollectief', naam: 'Datacollectief in rondes', pakket: 'compleet', rollen: 'iedereen', helpartikel: 'kvk-en-datacollectief', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Selecties op doelgroep met contactpersonen (functie, direct nummer, zakelijk e-mailadres) als bron in zoekrondes.', totDieTijd: 'Zoek met KvK of de AI-zoeker.' },
+  },
+  {
+    sleutel: 'datacollectief.verrijken', naam: 'Contactpersonen zoeken via Datacollectief', pakket: 'compleet', rollen: 'iedereen', helpartikel: 'kvk-en-datacollectief', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Op een account contactpersonen met functie en nummer ophalen.', totDieTijd: 'Voeg contactpersonen zelf toe.' },
+  },
+  {
+    sleutel: 'koppeling.datacollectief', naam: 'Datacollectief koppelen', pakket: 'compleet', rollen: ['beheerder'], helpartikel: 'koppelingen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'De sleutel van jullie Datacollectief-contract plakken, testen en een maandplafond zetten.', totDieTijd: 'Vraag je beheerder.' },
+  },
   {
     sleutel: 'onderweg.kvkOpzoeken', naam: 'KvK opzoeken', pakket: 'plus', rollen: 'iedereen', helpartikel: 'kvk-en-datacollectief', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'Een bedrijf dat je passeert opzoeken in KvK en met één tik toevoegen.', totDieTijd: 'Voeg een prospect met de hand toe.' },
@@ -778,7 +791,7 @@ const FEATURE_GROEPEN: [RegExp, string][] = [
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],
-  [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^auth\.|^schil\./, 'F24 Inloggen en telefoon'], [/^richting\.|^verkoopverhaal\.|^account\.huidigeLeverancier|^koppeling\.salesdna/, 'F25 Verkoopverhaal en Richting'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^leads\.|^koppeling\.kvk|^onderweg\.kvk/, 'F02 Leadgenerator'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
+  [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^auth\.|^schil\./, 'F24 Inloggen en telefoon'], [/^richting\.|^verkoopverhaal\.|^account\.huidigeLeverancier|^koppeling\.salesdna/, 'F25 Verkoopverhaal en Richting'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^leads\.|^koppeling\.kvk|^onderweg\.kvk|datacollectief/, 'F02 Leadgenerator'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
 ]
 export function featureGroep(sleutel: string): string {
   return FEATURE_GROEPEN.find(([r]) => r.test(sleutel))?.[1] ?? 'Overig'

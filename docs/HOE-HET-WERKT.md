@@ -250,6 +250,16 @@ De motor zet zelf taken en inzichten klaar op basis van regels. De matrix is de 
 - **Typen**: met ruim 300 API-routes werd de getypeerde route-matching van `$fetch` te diep voor TypeScript. `nuxt.config.ts` zet de routetypes daarom leeg via de nitro-hook `types:extend`.
 - **Nog niet**: stromend antwoord, Inspreken in de chat (P31), de inbox Concepten (P18), facturatie van extra credits (P24) en een echte provider met webonderzoek (de AI-koppeling, F23).
 
+## Datacollectief (P15)
+
+- **Adapter** (`server/utils/bronnen/datacollectief.ts`, zelfde vorm als `kvk.ts`): `testSleutel`, `dcStatus` (nooit de sleutel; vingerafdruk, tegoed, plafond, verbruik, laatste runs), `dcContext`, `dcSelectie` en `dcBedrijf`. Uitvoering `mock` (standaard, `DATACOLLECTIEF_MODUS=http` voor de echte API zodra het contract er is, open vraag 5) met tien fictieve bedrijven in `datacollectiefMock.ts`. Records alleen in Compleet (`DC_PER_PAKKET`); het plafond per organisatie staat in `koppelingen.instellingen.plafond`.
+- **Verbruik**: elk record telt in `lead_verbruik` (soort `datacollectief`, met `kosten_cent`), geen AI-credits. Het plafond geldt vóór de aanroep (429 met "Je maandplafond voor Datacollectief-records is op.", en een selectie haalt nooit meer dan er past); bij 80 procent één melding aan de beheerder. Elke aanroep staat in `koppeling_runs`. Contactpersonen per bedrijf zijn 30 dagen gecachet per organisatie (`kvk_cache` met sleutel `dc:<org>:<kvk>`), zodat gekochte gegevens nooit naar een andere klant gaan.
+- **In de leadstroom** (ADR-015): `draaiRonde` kent de bron `datacollectief`. `selectieUitDoelgroep` maakt de selectie (SBI uit de branchemapping, regio uit postcodes, omvang, functieniveaus) en `datacollectiefNaarLead` de gemeenschappelijke leadstructuur met herkomst per veld. Samenvoegen met KvK of de AI-zoeker gebeurt op de leadsleutels; wat er al staat blijft (bronprioriteit), contactpersonen komen erbij. `POST /api/datacollectief/selectie` draait een ronde op een doelgroep met alleen deze bron.
+- **Contactpersonen op een account** (`verrijkContactenViaDc` in `server/utils/leads.ts`, `POST /api/accounts/:id/verrijk-contacten`, en in de importwizard na de KvK-stap): hooguit 5 records, `voegContactenSamen` (e-mail, dan volledige naam), alleen lege velden aanvullen met `magOverschrijven` (nooit over hand of KvK), telefoon naar E.164, nooit privé-ogende adressen of privécontacten, de onderdrukkingslijst haalt het e-mailadres weg en zet de toestemming op nee.
+- **Schermen**: kaart Datacollectief in het tabblad Koppelingen (sleutel, test, opslaan, plafond, tegoed, runs, "Onderdeel van Compleet"), het vinkje en de meter "Datacollectief-records" in de leadgenerator, "Zoek contactpersonen" op het tabblad Contacten van de accountkaart (niet offline), en de herkomst "Datacollectief · datum" bij contacten.
+- **Functies**: `leadgenerator.datacollectief` (Expert), `datacollectief.verrijken` (Gevorderd), `koppeling.datacollectief` (beheerder), alle drie Compleet.
+- **Nog niet**: de Verrijker-agent die Datacollectief periodiek gebruikt (P19) en de CRM-bron (P20).
+
 ## Waar staat wat
 
 | Map | Inhoud |

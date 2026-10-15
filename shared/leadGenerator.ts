@@ -391,7 +391,7 @@ export function leidZoekopdrachtAf(accounts: { accountKind?: string | null; sbi?
   }
 }
 
-export interface RondeVerbruik { rondesVandaag: number; stand: CreditsStand | null; kvk: { gekoppeld: boolean; gebruikt: number; plafond: number } }
+export interface RondeVerbruik { rondesVandaag: number; stand: CreditsStand | null; kvk: { gekoppeld: boolean; gebruikt: number; plafond: number }; dc?: { gekoppeld: boolean; gebruikt: number; plafond: number } }
 /** Mag deze ronde? Op de server afgedwongen (429, 400, 403, 402). */
 export function magRonde(v: RondeVerbruik, pakket: Pakket, bronnen: string[]): { mag: boolean; status?: 400 | 402 | 403 | 429; reden?: string } {
   if (v.rondesVandaag >= GRENZEN.rondesPerDag) return { mag: false, status: 429, reden: DAGGRENS_TEKST }
@@ -399,6 +399,11 @@ export function magRonde(v: RondeVerbruik, pakket: Pakket, bronnen: string[]): {
   if (bronnen.includes('kvk')) {
     if (!v.kvk.gekoppeld) return { mag: false, status: 400, reden: KVK_NIET_GEKOPPELD }
     if (v.kvk.gebruikt >= v.kvk.plafond) return { mag: false, status: 429, reden: KVK_PLAFOND_TEKST }
+  }
+  if (bronnen.includes('datacollectief')) {
+    if (!DC_PER_PAKKET[pakket]) return { mag: false, status: 403, reden: 'Datacollectief is onderdeel van Compleet' }
+    if (!v.dc?.gekoppeld) return { mag: false, status: 400, reden: DC_NIET_GEKOPPELD }
+    if (v.dc.gebruikt >= v.dc.plafond) return { mag: false, status: 429, reden: DC_PLAFOND_TEKST }
   }
   if (bronnen.includes('ai')) {
     if (!soortAanIn('zoekronde', pakket)) return { mag: false, status: 403, reden: 'De AI-zoeker is onderdeel van Compleet' }
@@ -458,4 +463,57 @@ export function controleerContacten(contacten: LeadContact[], materiaal: string)
     if (uit.email && !t.includes(uit.email.toLowerCase())) { if (!uit.aanname) uit.email = null }
     return uit
   })
+}
+
+// ── Datacollectief (P15, F02) ─────────────────────────────────────────────────
+
+/** Datacollectief-records zitten alleen in Compleet (11.4); het aantal volgt het contract. */
+export const DC_PER_PAKKET: Record<Pakket, number> = { starter: 0, plus: 0, compleet: 500 }
+export const DC_NIET_GEKOPPELD = 'Datacollectief is nog niet gekoppeld. Een beheerder plakt hier de sleutel van jullie contract.'
+export const DC_PLAFOND_TEKST = 'Je maandplafond voor Datacollectief-records is op.'
+export const DC_SLEUTEL_FOUT = 'De Datacollectief-sleutel werkt niet meer. Vraag een nieuwe aan bij Datacollectief en plak hem hier.'
+export const DC_TEGOED_OP = 'Je tegoed bij Datacollectief is op. Vul het aan bij Datacollectief; tot die tijd is de bron uitgeschakeld.'
+export const DC_KOSTEN_CENT = 25
+
+export interface DcSelectie { sbi: string[]; trefwoorden: string[]; omvang: { min?: number | null; max?: number | null }; regio: string[]; functieniveaus: string[] }
+/** Een selectie voor Datacollectief uit een doelgroep of zoekopdracht, met de SBI-codes van de branche als die er geen noemt. */
+export function selectieUitDoelgroep(d: { sbi?: string[]; brancheId?: string | null; omvang?: { min?: number | null; max?: number | null }; gebieden?: string[]; postcodes?: string[]; functieniveaus?: string[] }, mapping: BrancheMapping[]): DcSelectie & { melding: string | null } {
+  const b = sbiVoorBranche(d.brancheId ?? null, mapping)
+  const sbi = d.sbi?.length ? d.sbi : b.sbi
+  const regio = [...(d.postcodes ?? []).map((p) => p.replace(/\s/g, '').slice(0, 2)), ...(d.gebieden ?? [])].filter(Boolean)
+  return {
+    sbi, trefwoorden: b.trefwoorden, omvang: d.omvang ?? {}, regio: [...new Set(regio)], functieniveaus: d.functieniveaus?.length ? d.functieniveaus : ['eigenaar', 'directie', 'management'],
+    melding: !sbi.length ? (d.brancheId ? 'Deze branche heeft nog geen SBI-koppeling; de selectie zoekt op trefwoorden.' : 'Geen branche of SBI-code; de selectie is breed.') : null,
+  }
+}
+
+export interface DcContact { id: string; voornaam?: string | null; achternaam: string; functie?: string | null; functieniveau?: string | null; email?: string | null; telefoon?: string | null; linkedin?: string | null; prive?: boolean }
+export interface DcRecord { id: string; naam: string; kvk?: string | null; website?: string | null; plaats?: string | null; postcode?: string | null; adres?: string | null; medewerkers?: number | null; sbi?: string[]; telefoon?: string | null; contacten: DcContact[] }
+
+const PRIVE_DOMEINEN = /@(gmail|hotmail|outlook|live|icloud|yahoo|ziggo|kpnmail|planet|home)\./i
+/** Een privé-ogend e-mailadres (11.2, 15.2): nooit overnemen. */
+export const priveEmail = (e: string | null | undefined) => !!e && PRIVE_DOMEINEN.test(e)
+
+/** Een record uit de adapter als lead in de gemeenschappelijke structuur; elk veld met herkomst datacollectief. */
+export function datacollectiefNaarLead(r: DcRecord, op: string): LeadFeiten {
+  const h = { bron: 'datacollectief', op }
+  const herkomst: LeadFeiten['herkomst'] = { naam: h }
+  const zet = <K extends keyof LeadFeiten>(k: K, v: LeadFeiten[K] | null | undefined) => { if (v != null && v !== '' && !(Array.isArray(v) && !v.length)) herkomst![k as string] = h; return v ?? null }
+  const contacten: LeadContact[] = r.contacten.filter((c) => !c.prive).map((c) => ({
+    naam: [c.voornaam, c.achternaam].filter(Boolean).join(' '), functie: c.functie ?? null,
+    email: c.email && !priveEmail(c.email) ? c.email : null, telefoon: c.telefoon ?? null, linkedin: c.linkedin ?? null, bron: 'datacollectief',
+  }))
+  return {
+    naam: r.naam, kvk: zet('kvk', r.kvk), website: zet('website', r.website), domein: r.website ? r.website.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '') : null,
+    plaats: zet('plaats', r.plaats), postcode: zet('postcode', r.postcode), adres: zet('adres', r.adres), medewerkers: zet('medewerkers', r.medewerkers), sbi: zet('sbi', r.sbi) ?? [],
+    contacten, herkomst,
+  }
+}
+
+/** Stand van een maandplafond: waarschuwen vanaf 80 procent, blokkeren op 100. Zonder plafond niets. */
+export function plafondStand(verbruik: number, plafond: number | null | undefined): { rest: number | null; procent: number; geblokkeerd: boolean; waarschuwen: boolean } {
+  if (plafond == null) return { rest: null, procent: 0, geblokkeerd: false, waarschuwen: false }
+  const rest = Math.max(0, plafond - verbruik)
+  const procent = plafond > 0 ? Math.min(100, Math.round((verbruik / plafond) * 100)) : 100
+  return { rest, procent, geblokkeerd: verbruik >= plafond, waarschuwen: plafond <= 0 || verbruik >= plafond * 0.8 }
 }

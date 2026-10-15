@@ -133,6 +133,9 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
     // De buitendienst heeft een thuisbasis voor het werkgebied met een straal.
     await client.query(`insert into koppelingen (organisation_id, soort, status, geheimen, instellingen, getest_op) values ($1, 'kvk', 'actief', $2, '{"plafond": null}', now())
       on conflict (organisation_id, soort) do nothing`, [org.id, versleutel({ sleutel: 'kvk-mock-voltvast-sleutel' })])
+    // P15: Datacollectief op de mock (Voltvast heeft Compleet), met een plafond van 500 records.
+    await client.query(`insert into koppelingen (organisation_id, soort, status, geheimen, instellingen, getest_op) values ($1, 'datacollectief', 'actief', $2, '{"plafond": 500, "tegoed": 4800, "vingerafdruk": "mock0dc1"}', now())
+      on conflict (organisation_id, soort) do nothing`, [org.id, versleutel({ sleutel: 'dc-mock-voltvast-sleutel' })])
     await client.query(`update users set data = data || $2 where id = $1 and not (data ? 'thuisbasis')`, ['u-01', JSON.stringify({ thuisbasis: { lat: 53.22, lng: 6.57, plaats: 'Groningen' } })])
     await client.query(`update users set data = data || $2 where id = $1 and not (data ? 'thuisbasis')`, ['u-05', JSON.stringify({ thuisbasis: { lat: 52.16, lng: 5.39, plaats: 'Amersfoort' } })])
 

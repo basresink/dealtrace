@@ -8,12 +8,12 @@ import { effectiefNiveau, eigenVeldenVoor, kan } from '../../utils/accounts'
 import { metOrganisatie, schema } from '../../utils/db'
 import { eigenTeams } from '../../utils/gebruikers'
 import { controleer, verwerk, type Regel } from '../../utils/importer'
-import { verrijkViaKvk } from '../../utils/leads'
+import { verrijkImportViaDc, verrijkViaKvk } from '../../utils/leads'
 import { vereisFunctie } from '../../utils/sessie'
 
 export default defineEventHandler(async (event) => {
   const ctx = await vereisFunctie(event, 'import.uitvoeren')
-  const b = await readBody<{ batchId?: string; keuzes?: Record<string, string>; eigenaar?: { soort?: 'vast' | 'team'; gebruikerId?: string }; verrijkKvk?: boolean }>(event)
+  const b = await readBody<{ batchId?: string; keuzes?: Record<string, string>; eigenaar?: { soort?: 'vast' | 'team'; gebruikerId?: string }; verrijkKvk?: boolean; verrijkDc?: boolean }>(event)
   if (!b.batchId) throw createError({ statusCode: 400, statusMessage: 'batchId ontbreekt' })
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
     const [batch] = await tx.select().from(schema.importBatches).where(eq(schema.importBatches.id, b.batchId!))
@@ -39,9 +39,11 @@ export default defineEventHandler(async (event) => {
     const tel = await verwerk(tx, { organisatieId: ctx.organisatie.id, gebruikerId: ctx.gebruiker.id, batchId: batch.id, gelezen, regels, keuzes: b.keuzes ?? {}, eigenaars })
     // P11: verrijken via KvK, alleen accounts met een KvK-nummer; stopt bij het plafond.
     const kvk = b.verrijkKvk ? await verrijkViaKvk(tx, ctx.organisatie.id, ctx.organisatie.pakket, regels.filter((r) => r.keuze === 'nieuw' && r.accountId).map((r) => r.accountId!)) : null
-    const rapport = { ...(batch.rapport ?? {}), ...tel, ...(kvk ? { kvkVerrijkt: kvk.verrijkt } : {}), regels: regels.map(({ rij, naam, categorie, keuze, accountId, match, fouten, voor }) => ({ rij, naam, categorie, keuze, accountId, match, fouten, voor })) }
+    // P15: contactpersonen via Datacollectief voor nieuwe accounts (na KvK, zodat het KvK-nummer er is); stopt bij het plafond.
+    const dc = b.verrijkDc && kan(ctx, 'datacollectief.verrijken') ? await verrijkImportViaDc(tx, ctx.organisatie.id, ctx.organisatie.pakket, regels.filter((r) => r.keuze === 'nieuw' && r.accountId).map((r) => r.accountId!), ctx.gebruiker.id) : null
+    const rapport = { ...(batch.rapport ?? {}), ...tel, ...(kvk ? { kvkVerrijkt: kvk.verrijkt } : {}), ...(dc ? { dcContacten: dc.contacten } : {}), regels: regels.map(({ rij, naam, categorie, keuze, accountId, match, fouten, voor }) => ({ rij, naam, categorie, keuze, accountId, match, fouten, voor })) }
     await tx.update(schema.importBatches).set({ status: 'verwerkt', verwerktOp: new Date().toISOString(), rijen: null, rapport }).where(eq(schema.importBatches.id, batch.id))
     await schrijfAudit(tx, { organisationId: ctx.organisatie.id, actorId: ctx.gebruiker.id, action: 'import.verwerken', resourceType: 'import_batches', resourceId: batch.id, changes: { label: batch.bronLabel, ...tel } })
-    return { batchId: batch.id, ...tel, ...(kvk ? { kvkVerrijkt: kvk.verrijkt, kvkMelding: kvk.gestopt } : {}) }
+    return { batchId: batch.id, ...tel, ...(kvk ? { kvkVerrijkt: kvk.verrijkt, kvkMelding: kvk.gestopt } : {}), ...(dc ? { dcContacten: dc.contacten, dcMelding: dc.gestopt } : {}) }
   })
 })

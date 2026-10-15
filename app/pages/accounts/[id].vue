@@ -11,6 +11,15 @@ const toast = useToast()
 const { data: a, refresh } = await useFetch<any>(() => `/api/accounts/${route.params.id}`)
 const { openen: openAi } = useAssistent()
 const aiAan = computed(() => !!useMe().functie('assistent.chat')?.beschikbaar)
+// P15: contactpersonen zoeken via Datacollectief, met bevestiging van de kosten.
+const dcBezig = ref(false)
+const online = ref(true)
+onMounted(() => { online.value = navigator.onLine; window.addEventListener('online', () => { online.value = true }); window.addEventListener('offline', () => { online.value = false }) })
+async function zoekContacten() {
+  if (!confirm('Contactpersonen zoeken via Datacollectief? Dit kost tot 5 records van jullie tegoed.')) return
+  dcBezig.value = true
+  try { const r: any = await ($fetch as any)(`/api/accounts/${a.value.id}/verrijk-contacten`, { method: 'POST', body: { max: 5 } }); toast.toon(r.tekst); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { dcBezig.value = false }
+}
 // De naam voor de contextchip van de assistent, ook als die vanuit de mobiele kop opent.
 const accountNaam = useState<string | null>('accountNaam', () => null)
 watch(() => a.value?.naam, (n) => { accountNaam.value = n ?? null }, { immediate: true })
@@ -188,7 +197,11 @@ useHead({ title: computed(() => `${a.value?.naam ?? 'Account'} · Dealtrace`) })
           </template>
           <LegeStaat v-else-if="tab === 'taken'" titel="Nog geen taken." tekst="Taken komen in een volgende versie (P07)." />
           <template v-else-if="tab === 'contacten'">
-            <ul class="schakel-lijst kaart"><li v-for="c in a.contacten" :key="c.id" class="schakel-rij"><NuxtLink :to="`/contacten/${c.id}`">{{ c.naam }}</NuxtLink><span class="meta">{{ CONTACTROL_LABEL[c.rol as ContactRol] }}<template v-if="c.status === 'vertrokken'"> · vertrokken</template></span></li></ul>
+            <div v-if="functie('datacollectief.verrijken')?.beschikbaar" class="kaart kaart--vlak dc-zoek" data-test="dc-zoek-blok">
+              <button type="button" class="dd-act dc-knop" :disabled="dcBezig || !online" data-test="dc-zoek" @click="zoekContacten">{{ online ? 'Zoek contactpersonen' : 'Niet beschikbaar zonder verbinding' }}</button>
+              <span class="meta">Datacollectief · kost tot 5 records</span>
+            </div>
+            <ul class="schakel-lijst kaart"><li v-for="c in a.contacten" :key="c.id" class="schakel-rij"><NuxtLink :to="`/contacten/${c.id}`">{{ c.naam }}</NuxtLink><span class="meta">{{ CONTACTROL_LABEL[c.rol as ContactRol] }}<template v-if="c.functie"> · {{ c.functie }}</template><template v-if="c.status === 'vertrokken'"> · vertrokken</template><template v-if="c.herkomst?.bron === 'datacollectief'"> · Datacollectief · {{ c.herkomst.op.slice(0, 10) }}</template></span></li></ul>
           </template>
           <template v-else-if="tab === 'notities'">
             <form class="kaart" @submit.prevent="bewaarNotitie"><label class="veld"><span class="veld-label">Nieuwe notitie</span><textarea v-model="notitie" class="invoer" rows="3" data-test="notitie" /></label><button type="submit" class="dd-act dd-act--primair mt-16" :disabled="!notitie.trim()">Notitie bewaren</button></form>
