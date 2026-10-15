@@ -60,6 +60,11 @@ useHead({ title: 'Mijn instellingen · Dealtrace' })
             </dl>
             <p class="veld-uitleg">Je werkplek en niveau stelt je beheerder of salesmanager in.</p>
           </article>
+          <article v-if="functie('regels.lezen')?.beschikbaar" class="kaart" data-test="mijn-regels">
+            <header class="kaart-kop"><h2 class="kaart-titel">{{ functie('regels.persoonlijk')?.beschikbaar ? 'Mijn regels' : 'Regels bekijken' }}</h2></header>
+            <p class="kaart-meta">Welke regels jouw taken en inzichten klaarzetten{{ functie('regels.persoonlijk')?.beschikbaar ? ', en je eigen regels voor je eigen accounts' : '' }}.</p>
+            <div class="reis-knoppen mt-16"><NuxtLink to="/instellingen/regels" class="dd-act">Naar de regels</NuxtLink><NuxtLink to="/instellingen/ritme" class="dd-act">Accountmatrix</NuxtLink></div>
+          </article>
           <article class="kaart">
             <header class="kaart-kop"><h2 class="kaart-titel">Meldingen</h2></header>
             <ul class="schakel-lijst">

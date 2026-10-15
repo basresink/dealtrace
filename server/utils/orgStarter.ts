@@ -4,6 +4,8 @@
 // Elk onderdeel is idempotent; "Startset aanvullen" draait alles opnieuw.
 import { sql } from 'drizzle-orm'
 import type { alsPlatform } from './platform'
+import { schema } from './db'
+import { startersetRijen } from './motor'
 import { AFKOELING_STANDAARD } from '../../shared/nbStatus'
 import { STANDAARD_ACTIVITEITEN, STANDAARDREIS_NAAM, standaardReisData, standaardReisId } from '../../shared/reis'
 
@@ -52,6 +54,15 @@ export const STARTSET: StartsetOnderdeel[] = [
         where exists (select 1 from reistemplates where id = ${id}) and not exists (select 1 from activiteitstemplates where reistemplate_id = ${id})`)
       await tx.execute(sql`insert into org_settings (organisation_id, key, value) values (${org}, 'afkoeling', ${JSON.stringify(AFKOELING_STANDAARD)}::jsonb)
         on conflict (organisation_id, key) do nothing`)
+    },
+  },
+  {
+    sleutel: 'regels',
+    naam: 'Starterset van 23 regels voor de motor (P06)',
+    async voerUit(tx, org) {
+      const [r] = (await tx.execute(sql`select count(*)::int as n from activity_rules where organisation_id = ${org}`)).rows as { n: number }[]
+      if (r && r.n > 0) return
+      await tx.insert(schema.activityRules).values(startersetRijen(org))
     },
   },
 ]

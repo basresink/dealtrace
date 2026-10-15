@@ -105,3 +105,38 @@ export function telWerkdagen(van: string, tot: string, instelling: WerkdagInstel
   for (let d = van; d <= tot; d = plusDagen(d, 1)) if (isWerkdag(d, instelling)) n++
   return n
 }
+
+/** n werkdagen na de datum (n = 0 geeft de datum zelf als het een werkdag is, anders de volgende werkdag). */
+export function voegWerkdagenToe(isoDatum: string, n: number, instelling: WerkdagInstelling = {}): string {
+  let d = isWerkdag(isoDatum, instelling) ? isoDatum : volgendeWerkdag(isoDatum, instelling)
+  for (let i = 0; i < n; i++) d = volgendeWerkdag(d, instelling)
+  return d
+}
+
+const TZ = 'Europe/Amsterdam'
+
+/** Datum en uur in Nederland voor een moment. */
+export function nlMoment(t: Date): { datum: string; uur: number; minuut: number } {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+    .formatToParts(t).map((x) => [x.type, x.value]))
+  return { datum: `${p.year}-${p.month}-${p.day}`, uur: Number(p.hour), minuut: Number(p.minute) }
+}
+
+/** Het moment (UTC) dat in Nederland op `datum` om `uur`:00 valt. */
+export function nlTijdstip(datum: string, uur: number, minuut = 0): Date {
+  const gok = new Date(`${datum}T${String(uur).padStart(2, '0')}:${String(minuut).padStart(2, '0')}:00Z`)
+  const m = nlMoment(gok)
+  const verschil = (m.uur - uur) * 60 + (m.minuut - minuut) + (m.datum === datum ? 0 : m.datum > datum ? 24 * 60 : -24 * 60)
+  return new Date(gok.getTime() - verschil * 60_000)
+}
+
+/** Het volgende hele werkuur (9 tot 18, geen weekend of feestdag) in Nederland. */
+export function volgendWerkmoment(nu: Date, instelling: WerkdagInstelling = {}): Date {
+  const m = nlMoment(nu)
+  if (isWerkdag(m.datum, instelling)) {
+    const uur = m.minuut > 0 ? m.uur + 1 : m.uur
+    if (uur < 9) return nlTijdstip(m.datum, 9)
+    if (uur <= 17) return nlTijdstip(m.datum, uur)
+  }
+  return nlTijdstip(volgendeWerkdag(m.datum, instelling), 9)
+}

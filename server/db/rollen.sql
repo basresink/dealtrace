@@ -97,3 +97,8 @@ grant execute on function dealtrace_index_eigen_veld(text, text, text, text) to 
 -- P05: de reisgeschiedenis is alleen toevoegen voor de app.
 revoke update, delete on reisgeschiedenis from dealtrace_app;
 grant select, insert on reistemplates, activiteitstemplates to dealtrace_platform;
+
+-- P06: de platformrol laadt de starterset van regels; runs zijn een log.
+grant select, insert, delete on activity_rules to dealtrace_platform;
+revoke update, delete on rule_runs from dealtrace_app;
+grant update (eind_op, geraakt, taken, inzichten, geschoven, fouten, stappen) on rule_runs to dealtrace_app;

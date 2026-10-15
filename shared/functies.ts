@@ -295,6 +295,39 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'instellingen.afkoeling', naam: 'Afkoelperiodes', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'nee-met-reden-en-afkoelperiode', startNiveau: 'expert',
     uitleg: { watHetDoet: 'De afkoelperiode per kanaal na een nee instellen.', totDieTijd: 'Geen.' },
   },
+  // P06: motor, regels en accountmatrix
+  {
+    sleutel: 'regels.lezen', naam: 'Regels bekijken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'regels', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De regels lezen die je taken en inzichten klaarzetten, met droogloop.', totDieTijd: 'Bij elke taak staat "Waarom krijg ik dit?".' },
+  },
+  {
+    sleutel: 'regels.persoonlijk', naam: 'Persoonlijke regels', pakket: 'starter', rollen: 'iedereen', helpartikel: 'regels', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Eigen regels maken voor je eigen accounts, en teamregels voorstellen.', totDieTijd: 'De regels van je organisatie gelden voor jou.' },
+  },
+  {
+    sleutel: 'regels.team', naam: 'Teamregels', pakket: 'starter', rollen: ['salesmanager'], helpartikel: 'regels', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Teamregels aan- en uitzetten, cadans, drempels en klassen.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'regels.beheer', naam: 'Regels beheren', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'regels', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Alle regels, Excel, back-up en de starterset.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'motor.ai', naam: 'AI-regels', pakket: 'plus', rollen: ['beheerder'], helpartikel: 'regels', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Regels die met AI signalen beoordelen (kansanalyse, vacatures, nieuws).', totDieTijd: 'De gewone regels draaien wel.' },
+  },
+  {
+    sleutel: 'matrix.klasseZetten', naam: 'Klasse zetten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'accountmatrix', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De accountklasse van een account kiezen.', totDieTijd: 'Je ziet de klasse van een account.' },
+  },
+  {
+    sleutel: 'matrix.voorstellen', naam: 'Matrix voorstellen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'accountmatrix', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Een wijziging van de accountmatrix voorstellen aan de beheerder.', totDieTijd: 'Je kunt de matrix lezen.' },
+  },
+  {
+    sleutel: 'matrix.beheer', naam: 'Accountmatrix beheren', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'accountmatrix', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Klassen, segmenten, belmatrix, afspraakmatrix en capaciteit instellen.', totDieTijd: 'Geen.' },
+  },
   // P02: platform (alleen founder, geen regels in functies_per_niveau) en de spiegel voor de beheerder.
   {
     sleutel: 'platform.klanten', naam: 'Klanten', pakket: 'starter', rollen: ['founder'], helpartikel: '', startNiveau: 'beginner',

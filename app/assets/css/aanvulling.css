@@ -477,3 +477,23 @@
 .band-lijst { display: grid; gap: 0; list-style: none; padding: 0; }
 .band-rij .schakel-naam { min-height: 40px; font-weight: 400; }
 .ak-stuur-breed { grid-column: span 2; }
+
+/* P06: regels (master en detail) en accountmatrix */
+.filterbalk { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.filterbalk .invoer--klein { width: auto; max-width: 100%; }
+.regels-raster { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: var(--kaart-gap); align-items: start; }
+.regels-lijst { max-height: 75vh; overflow-y: auto; }
+.regel-rij { gap: 10px; }
+.regel-rij--actief { background: var(--yellow-soft, #fff7cc); }
+.regel-knop { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; flex: 1; min-height: 44px; padding: 4px 0; text-align: left; background: none; border: 0; font: inherit; color: var(--ink); cursor: pointer; }
+.regels-paneel fieldset { border: 1px solid var(--border); margin: 0; min-width: 0; }
+.regels-paneel legend { padding: 0 4px; }
+.afbakening .reis-knoppen { margin-top: 6px; }
+.veld-info { color: var(--muted); cursor: help; font-weight: 400; }
+.tekst-rood { color: var(--red, #c62828); }
+.matrix-tabel td, .matrix-tabel th { vertical-align: top; }
+.matrix-cel { display: grid; gap: 4px; min-width: 120px; }
+.matrix-cel .invoer { width: 100%; }
+.matrix-label { font-size: var(--fs-meta); color: var(--muted); }
+.matrix-label--uit { color: var(--red, #c62828); font-weight: 600; }
+@media (max-width: 767px) { .regels-raster { grid-template-columns: 1fr; } .regels-lijst { max-height: none; } }

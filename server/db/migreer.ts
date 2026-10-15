@@ -12,6 +12,7 @@ import { verbindingsopties } from '../../shared/verbinding'
 import { APP_WACHTWOORD, BEHEER_URL, isLokaal } from './omgeving'
 import { startindeling } from '../../shared/functies'
 import { zorgVoorReizen } from './reisStart'
+import { zorgVoorRegels } from './regelStart'
 
 const MAP = join(import.meta.dirname, 'migrations')
 
@@ -55,6 +56,9 @@ export async function migreer(url = BEHEER_URL, opties: { opnieuw?: boolean; sti
     // P05: standaardreis per organisatie en een fase voor prospects zonder reis.
     const r = await zorgVoorReizen(client)
     if (r.reizen || r.accounts) log(`Prospectreis: ${r.reizen} standaardreizen, ${r.accounts} accounts in een fase gezet.`)
+    // P06: de starterset van 23 regels voor organisaties zonder regels.
+    const nRegels = await zorgVoorRegels(client)
+    if (nRegels) log(`Regels: starterset geladen voor ${nRegels} organisaties.`)
   } finally {
     await client.end()
   }

@@ -1,0 +1,884 @@
+[
+ {
+  "code": "SR01",
+  "naam": "Nieuwe lead zonder dossier",
+  "categorie": "Vinden",
+  "motor": "regel",
+  "cadansDagen": 7,
+  "prioriteit": "middel",
+  "data": {
+   "omschrijving": "Een nieuwe lead heeft nog geen dossier.",
+   "activiteit": "inzicht",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "inactiviteit",
+    "parameters": {
+     "veld": "dossierOp",
+     "dagen": 2,
+     "alleenZonderDatum": true
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ],
+    "statussen": [
+     "nieuw"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "geen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 2,
+    "taaksjabloon": "Dossier aanvullen: {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": "dossier",
+    "verwachtResultaat": "Dossier compleet binnen 5 dagen"
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR02",
+  "naam": "Dossier verloopt",
+  "categorie": "Vinden",
+  "motor": "regel",
+  "cadansDagen": 30,
+  "prioriteit": "laag",
+  "data": {
+   "omschrijving": "Het dossier is verouderd.",
+   "activiteit": "inzicht",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "lead-verlopen",
+    "parameters": {
+     "dagen": 30
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ],
+    "statussen": [
+     "nieuw",
+     "in reis"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "geen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 3,
+    "taaksjabloon": "Dossier vernieuwen: {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": "dossier",
+    "verwachtResultaat": null
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR03",
+  "naam": "Gekwalificeerd, nog geen contact",
+  "categorie": "Bewerken",
+  "motor": "regel",
+  "cadansDagen": 7,
+  "prioriteit": "hoog",
+  "data": {
+   "omschrijving": "Gekwalificeerd, maar nog geen contact.",
+   "activiteit": "taak",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "inactiviteit",
+    "parameters": {
+     "veld": "laatsteContactOp",
+     "dagen": 7,
+     "ookZonderDatum": true
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ],
+    "statussen": [
+     "in reis"
+    ],
+    "faseIds": [
+     "gekwalificeerd"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "bellen",
+    "uitvoerderrol": "binnendienst",
+    "termijnWerkdagen": 1,
+    "taaksjabloon": "Bel {contact} van {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": null,
+    "verwachtResultaat": "Eerste contact"
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR04",
+  "naam": "Belritme prospect",
+  "categorie": "Ritme",
+  "motor": "regel",
+  "cadansDagen": 30,
+  "prioriteit": "middel",
+  "data": {
+   "omschrijving": "Het belritme van de klasse is aan de beurt.",
+   "activiteit": "taak",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "ritme",
+    "parameters": {
+     "actiesoort": "bellen",
+     "matrix": true
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ],
+    "statussen": [
+     "in reis"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "bellen",
+    "uitvoerderrol": "binnendienst",
+    "termijnWerkdagen": 1,
+    "taaksjabloon": "Belritme: {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": null,
+    "verwachtResultaat": "Contactmoment volgens de matrix"
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR05",
+  "naam": "Bezoekritme A en B",
+  "categorie": "Ritme",
+  "motor": "regel",
+  "cadansDagen": 91,
+  "prioriteit": "middel",
+  "data": {
+   "omschrijving": "Het bezoekritme voor A en B is aan de beurt, op de regiodag.",
+   "activiteit": "taak",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "ritme",
+    "parameters": {
+     "actiesoort": "bezoek",
+     "matrix": false
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ],
+    "statussen": [
+     "in reis"
+    ],
+    "klassen": [
+     "A",
+     "B"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "bezoek",
+    "uitvoerderrol": "buitendienst",
+    "termijnWerkdagen": 5,
+    "taaksjabloon": "Bezoek {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": null,
+    "verwachtResultaat": "Bezoek op de regiodag"
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR06",
+  "naam": "Contact-stilte 45 dagen",
+  "categorie": "Bewerken",
+  "motor": "regel",
+  "cadansDagen": 14,
+  "prioriteit": "middel",
+  "data": {
+   "omschrijving": "Al lang geen contact met dit account.",
+   "activiteit": "taak",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "inactiviteit",
+    "parameters": {
+     "veld": "laatsteContactOp",
+     "dagen": 45,
+     "ookZonderDatum": false
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ],
+    "statussen": [
+     "in reis"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "bellen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 3,
+    "taaksjabloon": "Weer contact met {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": null,
+    "verwachtResultaat": "Contactmoment"
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR07",
+  "naam": "Jaarplanningsvenster voorbij",
+  "categorie": "Bewerken",
+  "motor": "regel",
+  "cadansDagen": 30,
+  "prioriteit": "middel",
+  "data": {
+   "omschrijving": "Het venster uit de prospectplanning is voorbij.",
+   "activiteit": "inzicht",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "jaarplanning-venster",
+    "parameters": {}
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "bellen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 3,
+    "taaksjabloon": "Inplannen: {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": null,
+    "verwachtResultaat": null
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR08",
+  "naam": "Afspraak gehad, geen vervolg",
+  "categorie": "Verbinden",
+  "motor": "regel",
+  "cadansDagen": 0,
+  "prioriteit": "middel",
+  "data": {
+   "omschrijving": "De eerste afspraak leverde geen vervolg op.",
+   "activiteit": "inzicht",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "gebeurtenis",
+    "parameters": {
+     "gebeurtenis": "geen-vervolg",
+     "fase": null
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "geen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 3,
+    "taaksjabloon": "Leg de reden vast: {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": "afspraak",
+    "verwachtResultaat": null
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR09",
+  "naam": "Eerste afspraak bevestigen",
+  "categorie": "Verbinden",
+  "motor": "regel",
+  "cadansDagen": 0,
+  "prioriteit": "hoog",
+  "data": {
+   "omschrijving": "Een eerste afspraak is gepland; bevestig hem.",
+   "activiteit": "taak",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "gebeurtenis",
+    "parameters": {
+     "gebeurtenis": "eerste-afspraak-gepland",
+     "fase": null
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "mailen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 1,
+    "taaksjabloon": "Bevestig de afspraak met {contact} ({account})",
+    "belscriptId": null,
+    "automatischVoorbereiden": true,
+    "signaaltype": null,
+    "verwachtResultaat": "Bevestigde afspraak"
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR10",
+  "naam": "Afspraak onvoldoende gekwalificeerd",
+  "categorie": "Verbinden",
+  "motor": "regel",
+  "cadansDagen": 0,
+  "prioriteit": "hoog",
+  "data": {
+   "omschrijving": "De eerste afspraak staat bijna en BAND is nog mager.",
+   "activiteit": "taak",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "afspraak-onvoldoende-gekwalificeerd",
+    "parameters": {
+     "dagenVooraf": 2
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "bellen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 0,
+    "taaksjabloon": "Kwalificeer voor de afspraak: {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": null,
+    "verwachtResultaat": null
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR11",
+  "naam": "Campagne loopt achter",
+  "categorie": "Kwaliteit",
+  "motor": "regel",
+  "cadansDagen": 7,
+  "prioriteit": "middel",
+  "data": {
+   "omschrijving": "Een campagne loopt achter op het tempo.",
+   "activiteit": "inzicht",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "campagne-achterstand",
+    "parameters": {
+     "marge": 10
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "geen",
+    "uitvoerderrol": "salesmanager",
+    "termijnWerkdagen": 3,
+    "taaksjabloon": "Campagne loopt achter bij {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": null,
+    "verwachtResultaat": null
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR12",
+  "naam": "Afspraak gehouden: overdracht",
+  "categorie": "Verbinden",
+  "motor": "regel",
+  "cadansDagen": 0,
+  "prioriteit": "hoog",
+  "data": {
+   "omschrijving": "De eerste afspraak is gehouden; zet de overdracht klaar.",
+   "activiteit": "taak",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "afspraak-niet-overgedragen",
+    "parameters": {
+     "werkdagen": 1
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "geen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 1,
+    "taaksjabloon": "Overdragen: {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": null,
+    "verwachtResultaat": "Overdracht binnen 24 uur"
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR13",
+  "naam": "No-show: opnieuw inplannen",
+  "categorie": "Verbinden",
+  "motor": "regel",
+  "cadansDagen": 0,
+  "prioriteit": "hoog",
+  "data": {
+   "omschrijving": "De eerste afspraak ging niet door.",
+   "activiteit": "taak",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "gebeurtenis",
+    "parameters": {
+     "gebeurtenis": "afspraak-niet-verschenen",
+     "fase": null
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "bellen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 1,
+    "taaksjabloon": "Nieuwe afspraak met {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": null,
+    "verwachtResultaat": "Nieuwe afspraak"
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR14",
+  "naam": "AI-kansanalyse A en B",
+  "categorie": "Signalen",
+  "motor": "ai",
+  "cadansDagen": 30,
+  "prioriteit": "middel",
+  "data": {
+   "omschrijving": "Wekelijkse kansanalyse van de A- en B-prospects.",
+   "activiteit": "inzicht",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "ritme",
+    "parameters": {
+     "actiesoort": "geen",
+     "matrix": false
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ],
+    "klassen": [
+     "A",
+     "B"
+    ],
+    "statussen": [
+     "in reis"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "geen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 5,
+    "taaksjabloon": "Kansanalyse: {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": "kansanalyse",
+    "verwachtResultaat": null
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR15",
+  "naam": "Vacatures",
+  "categorie": "Signalen",
+  "motor": "ai",
+  "cadansDagen": 7,
+  "prioriteit": "middel",
+  "data": {
+   "omschrijving": "Een vacature kan een reden voor contact zijn.",
+   "activiteit": "inzicht",
+   "bron": "extern",
+   "specifiekeBron": "Web: vacatures",
+   "trigger": {
+    "patroon": "trigger-heractivatie",
+    "parameters": {
+     "signaalsoorten": [
+      "vacature"
+     ],
+     "ookInReis": true
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "bellen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 3,
+    "taaksjabloon": "Vacature bij {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": "vacature",
+    "verwachtResultaat": null
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR16",
+  "naam": "Nieuws",
+  "categorie": "Signalen",
+  "motor": "ai",
+  "cadansDagen": 7,
+  "prioriteit": "middel",
+  "data": {
+   "omschrijving": "Nieuws over het account.",
+   "activiteit": "inzicht",
+   "bron": "extern",
+   "specifiekeBron": "Web: nieuws",
+   "trigger": {
+    "patroon": "trigger-heractivatie",
+    "parameters": {
+     "signaalsoorten": [
+      "nieuws"
+     ],
+     "ookInReis": true
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "bellen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 3,
+    "taaksjabloon": "Nieuws over {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": "nieuws",
+    "verwachtResultaat": null
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR17",
+  "naam": "Hercontact-vervolg",
+  "categorie": "Ritme",
+  "motor": "regel",
+  "cadansDagen": 0,
+  "prioriteit": "middel",
+  "data": {
+   "omschrijving": "De volgende poging in het hercontactritme is aan de beurt.",
+   "activiteit": "taak",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "hercontact-vervolg",
+    "parameters": {}
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "bellen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 0,
+    "taaksjabloon": "Volgende poging: {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": null,
+    "verwachtResultaat": null
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR18",
+  "naam": "Geparkeerd terug",
+  "categorie": "Ritme",
+  "motor": "regel",
+  "cadansDagen": 0,
+  "prioriteit": "middel",
+  "data": {
+   "omschrijving": "De terugkomdatum is bereikt.",
+   "activiteit": "taak",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "geparkeerd-terug",
+    "parameters": {}
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "bellen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 1,
+    "taaksjabloon": "Terug in beeld: {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": null,
+    "verwachtResultaat": null
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR19",
+  "naam": "Trigger-heractivatie",
+  "categorie": "Signalen",
+  "motor": "regel",
+  "cadansDagen": 7,
+  "prioriteit": "middel",
+  "data": {
+   "omschrijving": "Een nieuw signaal bij een account op wachtend of nee.",
+   "activiteit": "inzicht",
+   "bron": "extern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "trigger-heractivatie",
+    "parameters": {
+     "signaalsoorten": [
+      "jubileum",
+      "vacature",
+      "directiewissel",
+      "verhuizing",
+      "subsidie"
+     ],
+     "ookInReis": false
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ],
+    "statussen": [
+     "wachtend",
+     "nee"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "bellen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 3,
+    "taaksjabloon": "Nieuwe aanleiding bij {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": "heractivatie",
+    "verwachtResultaat": null
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR20",
+  "naam": "Partner te laat",
+  "categorie": "Kwaliteit",
+  "motor": "regel",
+  "cadansDagen": 7,
+  "prioriteit": "middel",
+  "data": {
+   "omschrijving": "Een doorgezette lead is niet op tijd bevestigd.",
+   "activiteit": "inzicht",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "partner-te-laat",
+    "parameters": {}
+   },
+   "afbakening": {},
+   "gevolg": {
+    "actiesoort": "geen",
+    "uitvoerderrol": "salesmanager",
+    "termijnWerkdagen": 1,
+    "taaksjabloon": "Partner bevestigde niet: {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": null,
+    "verwachtResultaat": null
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR21",
+  "naam": "Tussendoel gehaald",
+  "categorie": "Kwaliteit",
+  "motor": "regel",
+  "cadansDagen": 0,
+  "prioriteit": "laag",
+  "data": {
+   "omschrijving": "Een tussendoel is gehaald.",
+   "activiteit": "inzicht",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "tussendoel-gehaald",
+    "parameters": {}
+   },
+   "afbakening": {},
+   "gevolg": {
+    "actiesoort": "geen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 3,
+    "taaksjabloon": "Tussendoel gehaald bij {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": null,
+    "verwachtResultaat": null
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR22",
+  "naam": "Te lang in fase",
+  "categorie": "Kwaliteit",
+  "motor": "regel",
+  "cadansDagen": 7,
+  "prioriteit": "laag",
+  "data": {
+   "omschrijving": "Het account staat langer in de fase dan verwacht.",
+   "activiteit": "inzicht",
+   "bron": "intern",
+   "specifiekeBron": "",
+   "trigger": {
+    "patroon": "te-lang-in-fase",
+    "parameters": {
+     "marge": 0
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ],
+    "statussen": [
+     "nieuw",
+     "in reis"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "geen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 3,
+    "taaksjabloon": "Te lang in fase: {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": null,
+    "verwachtResultaat": null
+   },
+   "herkomst": "starterset"
+  }
+ },
+ {
+  "code": "SR23",
+  "naam": "KvK-mutatie bij prospect in reis",
+  "categorie": "Signalen",
+  "motor": "regel",
+  "cadansDagen": 7,
+  "prioriteit": "middel",
+  "data": {
+   "omschrijving": "Een wijziging in het handelsregister.",
+   "activiteit": "inzicht",
+   "bron": "extern",
+   "specifiekeBron": "KvK-mutatie",
+   "trigger": {
+    "patroon": "trigger-heractivatie",
+    "parameters": {
+     "signaalsoorten": [
+      "kvk-mutatie"
+     ],
+     "ookInReis": true
+    }
+   },
+   "afbakening": {
+    "accounttypes": [
+     "prospect"
+    ],
+    "statussen": [
+     "in reis"
+    ]
+   },
+   "gevolg": {
+    "actiesoort": "bellen",
+    "uitvoerderrol": "eigenaar",
+    "termijnWerkdagen": 3,
+    "taaksjabloon": "KvK-mutatie bij {account}",
+    "belscriptId": null,
+    "automatischVoorbereiden": false,
+    "signaaltype": "kvk",
+    "verwachtResultaat": null
+   },
+   "herkomst": "starterset"
+  }
+ }
+]

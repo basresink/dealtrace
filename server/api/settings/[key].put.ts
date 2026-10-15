@@ -4,6 +4,7 @@ import { and, eq } from 'drizzle-orm'
 import { isSettingKey, isVerborgen } from '../../../shared/settingKeys'
 import { rolMag } from '../../../shared/permissions'
 import { KANALEN } from '../../../shared/nbStatus'
+import { valideerMatrix } from '../../../shared/ritmematrix'
 import { schrijfAudit } from '../../utils/audit'
 import { metOrganisatie, schema } from '../../utils/db'
 import { vereisOrganisatie } from '../../utils/sessie'
@@ -16,6 +17,18 @@ export default defineEventHandler(async (event) => {
   if (!rolMag(gebruiker.rol, 'instellingen', 'schrijven')) throw createError({ statusCode: 403, statusMessage: 'Alleen de beheerder wijzigt instellingen' })
   const { value } = await readBody<{ value: unknown }>(event)
   if (value === undefined) throw createError({ statusCode: 400, statusMessage: 'value ontbreekt' })
+  if (key === 'belmatrix' || key === 'afspraakmatrix') {
+    const fouten = valideerMatrix(value)
+    if (fouten.length) throw createError({ statusCode: 422, statusMessage: fouten.join('; ') })
+  }
+  if (key === 'capaciteit') {
+    const v = value as any
+    if (!v || ![v.binnendienst, v.buitendienst].every((n) => Number.isInteger(n) && n >= 0 && n <= 200)) throw createError({ statusCode: 422, statusMessage: 'Geef per werkplek een aantal tussen 0 en 200' })
+  }
+  if (key === 'klassen') {
+    const v = value as any[]
+    if (!Array.isArray(v) || v.some((k) => !k?.id || !String(k.naam ?? '').trim() || (k.code && String(k.code).length > 2))) throw createError({ statusCode: 422, statusMessage: 'Elke klasse heeft een naam en een code van hooguit 2 tekens' })
+  }
   if (key === 'afkoeling') {
     // Afkoelperiode per kanaal in dagen (7.2): elk kanaal een geheel getal van 0 tot 730.
     const v = value as Record<string, unknown>

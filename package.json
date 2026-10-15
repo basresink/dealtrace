@@ -30,6 +30,7 @@
   "dependencies": {
     "dexie": "^4.4.6",
     "drizzle-orm": "^0.45.4",
+    "exceljs": "4.4.0",
     "jose": "^6.2.12",
     "lucide-vue-next": "^1.0.0",
     "nuxt": "^4.6.1",

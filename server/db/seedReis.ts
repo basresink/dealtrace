@@ -5,6 +5,7 @@ import type pg from 'pg'
 import { AFKOELING_STANDAARD, afkoelingVoorNee } from '../../shared/nbStatus'
 import { terugkomDatum, verkoopverhaalUitSeed } from '../../shared/verkoopverhaal'
 import { zorgVoorReizen } from './reisStart'
+import { zorgVoorRegels } from './regelStart'
 
 export async function seedReis(client: Pick<pg.Client, 'query'>, orgId: string, voltvast: any) {
   const vv = verkoopverhaalUitSeed(voltvast.verkoopverhaal)
@@ -14,6 +15,7 @@ export async function seedReis(client: Pick<pg.Client, 'query'>, orgId: string, 
     await client.query(`insert into org_settings (organisation_id, key, value) values ($1, $2, $3) on conflict (organisation_id, key) do nothing`, [o, key, JSON.stringify(value)])
   }
   await zorgVoorReizen(client)
+  await zorgVoorRegels(client)
   // Accounts op nee of wachtend krijgen een reden en een terugkomdatum, zoals na "Zet nee".
   const open = (await client.query(`select id, nb_status, fase_sinds, owner_id from accounts where organisation_id = $1 and nb_status in ('nee', 'wachtend') and terug_op is null`, [orgId])).rows
   for (const [i, a] of open.entries()) {

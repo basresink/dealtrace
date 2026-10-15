@@ -8,6 +8,12 @@ export const SETTING_KEYS = [
   'niveaus', // {iedereenAlles, standaardNiveauNieuweGebruiker}
   'klassen', // [{id, naam, omschrijving, tabblad}] (F03, gat 2)
   'afkoeling', // {bellen, mail, linkedin, whatsapp, bezoek, kaart} in dagen (7.2, P05)
+  // P06: accountmatrix (F16). De accountklassen zijn 'klassen'.
+  'belmatrix', // {prospect: {A: {aantal, periode}}, klant: {...}}; null = niet ingesteld, 0 = bewust uit
+  'afspraakmatrix', // {meeting: {...}, bezoek: {...}}
+  'frequentieplafond', // {werkdagen, maxBerichten}
+  'segmenten', // [{id, naam, filters: [{sleutel, vergelijking, waarde}]}]
+  'capaciteit', // {binnendienst, buitendienst}
   // Van de leverancier:
   'pakket',
   'aiCredits',

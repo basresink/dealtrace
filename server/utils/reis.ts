@@ -14,6 +14,7 @@ import {
 import { terugkomDatum, type VerkoopverhaalStand } from '../../shared/verkoopverhaal'
 import { schrijfAudit } from './audit'
 import { schema } from './db'
+import { draaiMotor } from './motor'
 
 type Tx = Parameters<Parameters<ReturnType<typeof import('./db').gebruikDb>['transaction']>[0]>[0]
 type AccountRij = typeof schema.accounts.$inferSelect
@@ -176,6 +177,8 @@ export interface Melding {
   naarFaseId?: string
   context?: { rol?: string | null; kanaal?: string | null }
   nu?: Date
+  /** Geen motorrun erna (bij een bulkverwerking die zelf de motor draait). */
+  zonderMotor?: boolean
 }
 
 /**
@@ -233,6 +236,8 @@ export async function meldGebeurtenis(tx: Tx, m: Melding): Promise<{ fase: strin
     naarFaseId: naar, naarStatus: status, gebeurtenis: m.gebeurtenis, reden: m.reden ?? null, door: m.door, nu,
     data: Object.keys(data).length ? data : undefined, terugOp, terugRegelId: null,
   })
+  // Direct na de gebeurtenis: gebeurtenisregels en startactiviteiten voor dit ene account (motor, P06).
+  if (!m.zonderMotor) await draaiMotor(tx, a.organisationId, { soort: 'gebeurtenis', door: m.door, accountIds: [a.id], nu })
   return { fase: naar ?? huidigeFase, status, gewisseld: true }
 }
 

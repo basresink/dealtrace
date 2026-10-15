@@ -430,3 +430,88 @@ export const reisgeschiedenis = pgTable('reisgeschiedenis', {
   op: ts('op').defaultNow().notNull(),
   reden: text('reden'),
 })
+
+// P06: regels, runs, inzichten en taken (0006_motor.sql)
+export const activityRules = pgTable('activity_rules', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  code: text('code'),
+  naam: text('naam').notNull(),
+  categorie: text('categorie').notNull().default('Bewerken'),
+  actief: boolean('actief').notNull().default(true),
+  motor: text('motor').notNull().default('regel'),
+  scope: text('scope').notNull().default('organisatie'),
+  teamId: text('team_id'),
+  eigenaarId: text('eigenaar_id'),
+  reisId: text('reis_id'),
+  faseId: text('fase_id'),
+  cadansDagen: integer('cadans_dagen').notNull().default(7),
+  prioriteit: text('prioriteit').notNull().default('middel'),
+  versie: integer('versie').notNull().default(1),
+  data: jsonb('data').$type<import('../../shared/regelPatronen').RegelData>().notNull(),
+  createdAt: ts('created_at').defaultNow().notNull(),
+  updatedAt: ts('updated_at').defaultNow().notNull(),
+})
+
+export const ruleRuns = pgTable('rule_runs', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  ruleId: text('rule_id'),
+  soort: text('soort').notNull(),
+  gestartOp: ts('gestart_op').defaultNow().notNull(),
+  eindOp: ts('eind_op'),
+  geraakt: integer('geraakt').notNull().default(0),
+  taken: integer('taken').notNull().default(0),
+  inzichten: integer('inzichten').notNull().default(0),
+  geschoven: integer('geschoven').notNull().default(0),
+  fouten: jsonb('fouten').$type<string[]>().notNull().default([]),
+  stappen: jsonb('stappen').$type<unknown[]>().notNull().default([]),
+  door: text('door'),
+})
+
+export interface SignalData { waarom?: string; bewijs?: string[]; voorstel?: { title: string; actionType: string; priority: string } | null; afwijsReden?: string; [k: string]: unknown }
+export const signals = pgTable('signals', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  accountId: text('account_id'),
+  contactId: text('contact_id'),
+  ownerId: text('owner_id'),
+  ruleId: text('rule_id'),
+  onderwerp: text('onderwerp'),
+  agent: text('agent'),
+  type: text('type').notNull(),
+  title: text('title').notNull(),
+  relevanceScore: integer('relevance_score').notNull().default(50),
+  confidence: doublePrecision('confidence'),
+  status: text('status').notNull().default('nieuw'),
+  bron: text('bron').notNull().default('intern'),
+  data: jsonb('data').$type<SignalData>().notNull().default({}),
+  createdAt: ts('created_at').defaultNow().notNull(),
+  updatedAt: ts('updated_at').defaultNow().notNull(),
+})
+
+export interface TaskData { waarom?: string; bewijs?: string[]; herkomst?: string; uiterste?: string; geschoven?: boolean; poging?: { n: number; van: number; kanaal?: string; vorige?: string }; [k: string]: unknown }
+export const tasks = pgTable('tasks', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  ownerId: text('owner_id'),
+  accountId: text('account_id'),
+  contactId: text('contact_id'),
+  signalId: text('signal_id'),
+  ruleId: text('rule_id'),
+  onderwerp: text('onderwerp'),
+  campaignId: text('campaign_id'),
+  belblokId: text('belblok_id'),
+  actionType: text('action_type').notNull().default('taak'),
+  title: text('title').notNull(),
+  status: text('status').notNull().default('open'),
+  priority: text('priority').notNull().default('middel'),
+  dueDate: ts('due_date'),
+  uitkomst: text('uitkomst'),
+  laterOp: text('later_op'),
+  executor: text('executor'),
+  executorStatus: text('executor_status'),
+  data: jsonb('data').$type<TaskData>().notNull().default({}),
+  createdAt: ts('created_at').defaultNow().notNull(),
+  updatedAt: ts('updated_at').defaultNow().notNull(),
+})
