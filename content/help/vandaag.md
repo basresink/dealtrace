@@ -1,6 +1,9 @@
 ---
 titel: Vandaag
 categorie: Dagelijks werk
+collectie: product
+samenvatting: Je werkdag op één pagina: wat je nu doet, waarom, en wat er voor je klaarstaat.
+routes: /
 ---
 
 # Vandaag

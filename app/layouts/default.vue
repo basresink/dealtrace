@@ -32,6 +32,7 @@ onMounted(async () => {
       <slot />
     </main>
     <NietAangezetFlyout />
+    <HulpFlyout />
     <ZoekVenster />
     <ConflictVenster />
     <ToastStapel />

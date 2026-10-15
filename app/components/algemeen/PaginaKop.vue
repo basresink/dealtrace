@@ -36,7 +36,7 @@ const subtitel = computed(() => (niveau.value === 'expert' && props.stand ? prop
             <button type="button" class="dd-actie dd-actie--secundair" @click="emit('werkbalk', 'opgeslagen')">Opgeslagen weergaven</button>
             <button type="button" class="dd-actie dd-actie--secundair" @click="emit('werkbalk', 'download')">Download</button>
           </template>
-          <NuxtLink class="dd-actie dd-actie--secundair" :to="helpartikel ? `/help/${helpartikel}` : '/help'"><Icoon naam="CircleHelp" class="dd-actie-icoon" />Hulp</NuxtLink>
+          <HulpKnop :artikel="helpartikel" />
         </div>
       </div>
     </div>

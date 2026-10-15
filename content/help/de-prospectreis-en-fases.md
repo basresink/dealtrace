@@ -1,6 +1,9 @@
 ---
 titel: De prospectreis en fases
 categorie: Prospects
+collectie: product
+samenvatting: De tien fases van de prospectreis en hoe een account doorstroomt.
+routes: /reizen/standaard
 ---
 
 # De prospectreis en fases

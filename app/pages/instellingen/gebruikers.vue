@@ -99,7 +99,7 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
 
 <template>
   <div>
-    <PaginaKop kicker="Instellingen · Gebruikers" titel="Gebruikers en teams" :uitleg="beheerder ? 'Wie werkt in Dealtrace, op welk niveau en in welk team.' : 'De mensen in je teams en hun niveau.'" helpartikel="gebruikers-en-niveaus">
+    <PaginaKop kicker="Instellingen · Gebruikers" titel="Gebruikers en teams" :uitleg="beheerder ? 'Wie werkt in Dealtrace, op welk niveau en in welk team.' : 'De mensen in je teams en hun niveau.'" helpartikel="gebruikers-rollen-niveaus">
       <template #acties>
         <button v-if="beheerder && tab === 'gebruikers'" type="button" class="dd-actie dd-actie--primair" data-test="gebruiker-toevoegen" @click="nieuw.open = !nieuw.open"><Icoon naam="Plus" class="dd-actie-icoon" />{{ zelfToevoegen ? 'Gebruiker toevoegen' : 'Gebruiker aanvragen' }}</button>
       </template>

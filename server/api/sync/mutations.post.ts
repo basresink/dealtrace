@@ -5,6 +5,7 @@
 // mutatie na herstel van de verbinding precies één keer aankomt. Met een
 // meegegeven versie controleert de server op conflicten (409 per mutatie).
 
+import { markeerGelezen } from '../../utils/help'
 import { and, eq } from 'drizzle-orm'
 import { rolMag } from '../../../shared/permissions'
 import { SYNCBARE_TABELLEN, isSyncbareTabel } from '../../../shared/syncTabellen'
@@ -107,6 +108,8 @@ export default defineEventHandler(async (event) => {
           if (!(AFWIJS_REDENEN as readonly string[]).includes(p.reden)) return { status: 'geweigerd', recordId: m.recordId, code: 422, reden: 'Kies een reden om af te wijzen' }
           await tx.update(schema.signals).set({ status: 'afgewezen', data: { ...(s.data ?? {}), afwijsReden: p.reden }, updatedAt: new Date().toISOString() }).where(eq(schema.signals.id, m.recordId))
         } else if (s.status === 'nieuw') await tx.update(schema.signals).set({ status: 'gelezen', updatedAt: new Date().toISOString() }).where(eq(schema.signals.id, m.recordId))
+      } else if (m.tabel === 'help_gelezen') {
+        if (!(await markeerGelezen(tx, organisatie.id, gebruiker.id, m.recordId))) return { status: 'geweigerd', recordId: m.recordId, code: 404, reden: 'Artikel onbekend' }
       } else if (m.tabel === 'notificaties') {
         const [n] = await tx.select().from(schema.notificaties).where(eq(schema.notificaties.id, m.recordId))
         if (!n) return { status: 'geweigerd', recordId: m.recordId, code: 404, reden: 'Melding onbekend' }

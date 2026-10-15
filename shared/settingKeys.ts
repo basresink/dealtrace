@@ -14,6 +14,7 @@ export const SETTING_KEYS = [
   'frequentieplafond', // {werkdagen, maxBerichten}
   'segmenten', // [{id, naam, filters: [{sleutel, vergelijking, waarde}]}]
   'capaciteit', // {binnendienst, buitendienst}
+  'helpVerborgen', // artikel-id's van platformartikelen die de beheerder verbergt (P09)
   // Van de leverancier:
   'pakket',
   'aiCredits',

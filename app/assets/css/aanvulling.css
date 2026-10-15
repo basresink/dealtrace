@@ -547,3 +547,27 @@
 .agents-tabel select, .agents-tabel input { min-height: 44px; }
 .agents-tabel .invoer--smal { width: 90px; }
 .tabel-schuif { overflow-x: auto; max-width: 100%; }
+
+/* P09: helpcenter. */
+.fo-panel--hulp { max-width: 560px; }
+@media (max-width: 767px) { .fo-panel--hulp.fo-panel--schuif { max-height: 92vh; } .help-tekst, .help-tekst p, .help-tekst li { font-size: 15px; } }
+.help-tekst { line-height: 1.6; overflow-wrap: anywhere; }
+.help-tekst h2 { font-size: 22px; margin: 0 0 12px; }
+.help-tekst h3 { font-size: 17px; margin: 20px 0 8px; }
+.help-tekst p, .help-tekst ul, .help-tekst ol { margin: 0 0 12px; }
+.help-tekst ul, .help-tekst ol { padding-left: 20px; }
+.help-tekst table { width: 100%; border-collapse: collapse; margin: 0 0 12px; display: block; overflow-x: auto; }
+.help-tekst th, .help-tekst td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.help-zoek { width: 100%; max-width: 640px; min-height: 48px; font-size: 16px; }
+.help-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.help-lijst { list-style: none; padding: 0; margin: 0; }
+.help-lijst li { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border); min-height: 44px; }
+.help-lijst a { color: var(--ink); text-decoration: none; }
+.help-lijst a:hover { text-decoration: underline; }
+.help-vinkje { color: var(--muted); }
+.help-artikel { max-width: 760px; }
+.mt-24 { margin-top: 24px; }
+/* Founder: een cel die afwijkt van "Alle organisaties" (beheermarkering, geen niveauweergave). */
+.cel-afwijking { background: var(--yellow-zacht, #fff6c2); }
+.tabel-tussenkop { background: var(--surface); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.help-tekst ul { list-style: disc; } .help-tekst ol { list-style: decimal; }

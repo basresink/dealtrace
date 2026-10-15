@@ -17,7 +17,7 @@ useHead({ title: 'Niveaus · Instellingen · Dealtrace' })
 
 <template>
   <div>
-    <PaginaKop kicker="Instellingen · Niveaus" titel="Niveaus" uitleg="Een niveau bepaalt welke functies voor iemand aanstaan." helpartikel="niveaus" />
+    <PaginaKop kicker="Instellingen · Niveaus" titel="Niveaus" uitleg="Een niveau bepaalt welke functies voor iemand aanstaan." helpartikel="gebruikers-rollen-niveaus" />
     <section class="section section--laatste">
       <div class="container">
         <article class="kaart">

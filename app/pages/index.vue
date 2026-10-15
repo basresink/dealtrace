@@ -49,7 +49,7 @@ useHead({ title: 'Vandaag · Dealtrace' })
           <div class="toolbar-buttons">
             <button type="button" class="dd-actie dd-actie--primair" data-test="vandaag-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
             <button v-if="v.kan.nieuwProspect" type="button" class="dd-actie dd-actie--secundair" data-test="vandaag-prospect" @click="nieuweProspect = true"><Icoon naam="UserPlus" class="dd-actie-icoon" />Prospect</button>
-            <NuxtLink class="dd-actie dd-actie--secundair" to="/help/vandaag"><Icoon naam="CircleHelp" class="dd-actie-icoon" />Hulp</NuxtLink>
+            <HulpKnop artikel="vandaag" />
           </div>
         </div>
       </div>

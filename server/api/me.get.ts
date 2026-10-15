@@ -3,6 +3,7 @@
 
 import { eq } from 'drizzle-orm'
 import { catalogusVoor, functie } from '../../shared/functies'
+import { werkFunctiesGezienBij } from '../utils/functiesGezien'
 import { zijbalkVoor } from '../../shared/zijbalk'
 import { resterendTekst } from '../../shared/werkIn'
 import { metOrganisatie, schema } from '../utils/db'
@@ -36,8 +37,10 @@ export default defineEventHandler(async (event) => {
   })
 
   const nu = new Date().toISOString()
-  const nieuw = Object.entries(gebruiker.data.nieuwTot ?? {}).filter(([, tot]) => tot > nu).map(([sleutel]) => sleutel)
-  const nogTonen = (gebruiker.data as any).nogTonen as string[] | undefined
+  // Functies die aangingen (hoger niveau of de founder zette iets aan): één toast, 7 dagen "nieuw".
+  const g = werkIn ? null : await werkFunctiesGezienBij(gebruiker, organisatie, stand)
+  const nieuw = [...new Set([...Object.entries(gebruiker.data.nieuwTot ?? {}).filter(([, tot]) => tot > nu).map(([sleutel]) => sleutel), ...(g?.nieuw ?? [])])]
+  const nogTonen = g?.nogTonen ?? ((gebruiker.data as any).nogTonen as string[] | undefined)
 
   return {
     gebruiker: {

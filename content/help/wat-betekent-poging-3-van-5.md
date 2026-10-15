@@ -1,6 +1,8 @@
 ---
 titel: Wat betekent poging 3 van 5
 categorie: Dagelijks werk
+collectie: product
+samenvatting: Wat de pogingregel op een taak betekent.
 ---
 
 # Wat betekent poging 3 van 5

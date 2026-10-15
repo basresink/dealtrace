@@ -1,7 +1,9 @@
 ---
 titel: Regels
 categorie: Inrichten
-collectie: Hoe werkt Dealtrace
+collectie: product
+samenvatting: Wat de motor zelf klaarzet: de starterset en jullie eigen regels.
+routes: /instellingen/regels
 ---
 
 # Regels

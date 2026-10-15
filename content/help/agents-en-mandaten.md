@@ -1,6 +1,9 @@
 ---
 titel: Agents en mandaten
 categorie: Inrichten
+collectie: product
+samenvatting: Wat agents zelf mogen, de Bewaker en de knop Agents pauzeren.
+routes: /instellingen/agents
 ---
 
 # Agents en mandaten

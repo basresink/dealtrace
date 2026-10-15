@@ -555,3 +555,42 @@ export const platformAgentmaxima = pgTable('platform_agentmaxima', {
   gewijzigdDoor: text('gewijzigd_door'),
   gewijzigdOp: ts('gewijzigd_op').defaultNow().notNull(),
 })
+
+// P09: helpcenter (0009_help.sql)
+export interface HelpData { samenvatting?: string; inhoud?: string; routes?: string[]; features?: string[]; vragen?: unknown[]; videoUrl?: string; hash?: string }
+export const helpArtikelen = pgTable('help_artikelen', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id'),
+  collectie: text('collectie').notNull().default('product'),
+  categorie: text('categorie').notNull(),
+  slug: text('slug').notNull(),
+  titel: text('titel').notNull(),
+  niveau: text('niveau'),
+  status: text('status').notNull().default('gepubliceerd'),
+  versie: integer('versie').notNull().default(1),
+  data: jsonb('data').$type<HelpData>().notNull().default({}),
+  gepubliceerdOp: ts('gepubliceerd_op').defaultNow().notNull(),
+  bijgewerktOp: ts('bijgewerkt_op').defaultNow().notNull(),
+})
+export const helpGelezen = pgTable('help_gelezen', {
+  organisationId: text('organisation_id').notNull(),
+  gebruikerId: text('gebruiker_id').notNull(),
+  artikelId: text('artikel_id').notNull(),
+  op: ts('op').defaultNow().notNull(),
+}, (t) => [primaryKey({ columns: [t.gebruikerId, t.artikelId] })])
+export const helpFeedback = pgTable('help_feedback', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  gebruikerId: text('gebruiker_id').notNull(),
+  artikelId: text('artikel_id').notNull(),
+  nuttig: boolean('nuttig').notNull(),
+  reden: text('reden'),
+  op: ts('op').defaultNow().notNull(),
+})
+export const helpZoekopdrachten = pgTable('help_zoekopdrachten', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  term: text('term').notNull(),
+  resultaten: integer('resultaten').notNull(),
+  op: ts('op').defaultNow().notNull(),
+})

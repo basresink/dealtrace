@@ -1,6 +1,9 @@
 ---
 titel: Doelgroepen en reizen
 categorie: Inrichten
+collectie: product
+samenvatting: Doelgroepen, de standaardreis en reizen op maat.
+routes: /reizen
 ---
 
 # Doelgroepen en reizen

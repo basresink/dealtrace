@@ -23,7 +23,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 <template>
   <Teleport to="body">
     <div v-if="f" class="fo-overlay" @click.self="sluit">
-      <aside class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" aria-labelledby="na-titel" tabindex="-1" data-test="niet-aangezet-flyout">
+      <aside class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="na-titel" tabindex="-1" data-test="niet-aangezet-flyout">
         <header class="fo-head">
           <div class="fo-head-tekst">
             <span class="fo-kicker">{{ niveau }} · nog niet aangezet</span>

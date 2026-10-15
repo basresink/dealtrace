@@ -1,8 +1,8 @@
 ---
 titel: Regels die werk opleveren (en geen ruis)
 categorie: Inrichten
-collectie: Hoe werkt Dealtrace
-status: concept
+collectie: product
+samenvatting: Hoe je regels maakt die echt werk opleveren en geen ruis.
 ---
 
 # Regels die werk opleveren (en geen ruis)

@@ -1,6 +1,9 @@
 ---
 titel: Abonnement, verbruik en AI-credits
 categorie: Inrichten
+collectie: product
+samenvatting: Je pakket, seats en hoe AI-credits werken.
+routes: /instellingen/abonnement
 ---
 
 # Abonnement, verbruik en AI-credits

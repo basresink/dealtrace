@@ -12,6 +12,8 @@ export const SYNCBARE_TABELLEN = {
   // P07: taken (taak.afronden, taak.uitstellen) en inzichten (gelezen, afwijzen).
   tasks: 'taken',
   signals: 'taken',
+  // P09: "Markeer als gelezen" in het helpcenter, ook offline (recordId = artikel-id).
+  help_gelezen: 'persoonlijk',
 } as const
 
 export const ACCOUNT_MUTATIESOORTEN = ['account.nee', 'account.pauzeer'] as const

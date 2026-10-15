@@ -78,6 +78,7 @@ useHead({ title: 'Acties · Dealtrace' })
           <div class="toolbar-buttons">
             <button type="button" class="dd-actie dd-actie--primair" data-test="taak-nieuw" @click="nieuw = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
             <button v-if="tab === 'taken' && data.kan.horizon" type="button" class="dd-actie dd-actie--secundair" data-test="weergave" @click="zet({ weergave: weergave === 'horizon' ? undefined : 'horizon' })"><Icoon :naam="weergave === 'horizon' ? 'List' : 'LayoutGrid'" class="dd-actie-icoon" />{{ weergave === 'horizon' ? 'Lijst' : 'Horizon' }}</button>
+            <HulpKnop :artikel="tab === 'inzichten' ? 'inzichten' : 'een-taak-afronden-met-een-uitkomst'" />
             <button v-if="tab === 'taken'" type="button" class="dd-actie dd-actie--secundair" data-test="filters-knop" @click="filtersOpen = !filtersOpen"><Icoon naam="Filter" class="dd-actie-icoon" />Filters</button>
           </div>
         </div>

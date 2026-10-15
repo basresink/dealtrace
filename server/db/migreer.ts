@@ -13,6 +13,7 @@ import { APP_WACHTWOORD, BEHEER_URL, isLokaal } from './omgeving'
 import { startindeling } from '../../shared/functies'
 import { zorgVoorReizen } from './reisStart'
 import { zorgVoorRegels, zorgVoorRitmes } from './regelStart'
+import { zorgVoorHelp } from './helpStart'
 import { RITMES_STARTSET } from '../../shared/hercontact'
 
 const MAP = join(import.meta.dirname, 'migrations')
@@ -63,6 +64,9 @@ export async function migreer(url = BEHEER_URL, opties: { opnieuw?: boolean; sti
     // P07: de vier hercontactritmes van de startset.
     const nRitmes = await zorgVoorRitmes(client, RITMES_STARTSET)
     if (nRitmes) log(`Hercontactritmes: startset geladen voor ${nRitmes} organisaties.`)
+    // P09: de platformartikelen van het helpcenter.
+    const help = await zorgVoorHelp(client)
+    if (help.nieuw || help.bijgewerkt) log(`Helpcenter: ${help.nieuw} nieuwe en ${help.bijgewerkt} bijgewerkte artikelen.`)
   } finally {
     await client.end()
   }

@@ -1,6 +1,9 @@
 ---
 titel: Nee met reden en afkoelperiode
 categorie: Prospects
+collectie: product
+samenvatting: Een nee met reden, de afkoelperiode per kanaal en de terugkomdatum.
+routes: /instellingen/nee-redenen
 ---
 
 # Nee met reden en afkoelperiode

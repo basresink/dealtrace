@@ -277,7 +277,7 @@ export const FUNCTIES: readonly Functie[] = [
   },
   {
     sleutel: 'reis.verplaatsen', naam: 'Verplaats naar reis', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-prospectreis-en-fases', startNiveau: 'gevorderd',
-    uitleg: { watHetDoet: 'Een account met een reden naar een andere reis verplaatsen (eigen accounts; de salesmanager alle).', totDieTijd: 'Vraag je salesmanager.' },
+    uitleg: { watHetDoet: 'Een account met een reden naar een andere reis verplaatsen (eigen accounts; de salesmanager alle).', totDieTijd: 'Je salesmanager verplaatst een account voor je.' },
   },
   {
     sleutel: 'doelgroepen.beheren', naam: 'Doelgroepen beheren', pakket: 'starter', rollen: MANAGERS, helpartikel: 'doelgroepen-en-reizen', startNiveau: 'gevorderd',
@@ -384,6 +384,19 @@ export const FUNCTIES: readonly Functie[] = [
   {
     sleutel: 'ritme.beheer', naam: 'Ritmes beheren', pakket: 'starter', rollen: MANAGERS, helpartikel: 'hercontactritme', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'De stappen en parkeerduur van de ritmes aanpassen.', totDieTijd: 'Geen.' },
+  },
+  // P09: helpcenter en niveaus (F21, 4.2).
+  {
+    sleutel: 'help.lezen', naam: 'Helpcenter', pakket: 'starter', rollen: 'iedereen', helpartikel: 'je-eerste-dag-in-dealtrace', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Uitleg over elk scherm en over new business, met hulp per scherm.', totDieTijd: 'Geen; het helpcenter staat altijd aan.' },
+  },
+  {
+    sleutel: 'help.verbergen', naam: 'Artikelen verbergen', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'gebruikers-rollen-niveaus', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Een artikel van Dealtrace verbergen voor je organisatie.', totDieTijd: 'Vraag je beheerder.' },
+  },
+  {
+    sleutel: 'niveaus.iedereenAlles', naam: 'Iedereen ziet alles', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'gebruikers-rollen-niveaus', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Voor iedereen alle functies uit het pakket aanzetten, los van het niveau.', totDieTijd: 'Vraag je beheerder.' },
   },
   // P08: agents en mandaten (11.3, F14).
   {
@@ -529,4 +542,60 @@ export function catalogusVoor(
       aanVanaf: aanVanaf(f.sleutel, organisatie, stand),
     }
   })
+}
+
+/**
+ * Wat er voor deze gebruiker aanstaat (4.2, 4.4): aan, nog niet aangezet (met het niveau
+ * waarop de functie aangaat), buiten het pakket en verborgen door "Toon minder". Een
+ * functie voor een andere rol telt nergens mee.
+ */
+export function functiesVoor(
+  gebruiker: Pick<GebruikerContext, 'rol' | 'niveau'>,
+  organisatie: OrganisatieContext,
+  stand: FunctieRegel[],
+  verborgen: string[] = [],
+) {
+  const weg = new Set(verborgen)
+  const uit = { aan: [] as string[], nietAangezet: [] as { sleutel: string; niveau: Niveau | null }[], buitenPakket: [] as { sleutel: string; pakket: Pakket }[], verborgen: [] as string[] }
+  for (const f of FUNCTIES) {
+    const b = beschikbaar(f.sleutel, gebruiker, organisatie, stand)
+    if (b.ok) (weg.has(f.sleutel) ? uit.verborgen : uit.aan).push(f.sleutel)
+    else if (b.reden === 'niveau') uit.nietAangezet.push({ sleutel: f.sleutel, niveau: aanVanaf(f.sleutel, organisatie, stand) })
+    else if (b.reden === 'pakket' && rolMagFunctie(gebruiker.rol, f)) uit.buitenPakket.push({ sleutel: f.sleutel, pakket: f.pakket })
+  }
+  return uit
+}
+
+const WEEK_MS = 7 * 24 * 3600 * 1000
+/** De datum voor functies die er al waren toen de gebruiker voor het eerst keek: nooit "nieuw". */
+export const AL_GEZIEN = '2000-01-01T00:00:00.000Z'
+
+/**
+ * Welke functies gingen voor deze gebruiker aan? `gezien` houdt per functie bij sinds
+ * wanneer hij aanstaat. Een functie die uit en weer aan gaat, is opnieuw nieuw; precies
+ * 7 dagen na het aangaan is hij niet meer nieuw.
+ */
+export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | undefined, nu: Date): { gezien: Record<string, string>; nieuw: string[]; netAan: string[]; gewijzigd: boolean } {
+  const eerste = !gezien
+  const uit: Record<string, string> = {}
+  const netAan: string[] = []
+  for (const s of aanNu) {
+    if (gezien?.[s]) uit[s] = gezien[s]!
+    else { uit[s] = eerste ? AL_GEZIEN : nu.toISOString(); if (!eerste) netAan.push(s) }
+  }
+  const gewijzigd = eerste || netAan.length > 0 || Object.keys(gezien ?? {}).some((s) => !(s in uit))
+  const nieuw = Object.entries(uit).filter(([, op]) => nu.getTime() - Date.parse(op) < WEEK_MS).map(([s]) => s)
+  return { gezien: uit, nieuw, netAan, gewijzigd }
+}
+
+/** De feature (hoofdstuk 7, F01 tot en met F26) waar een functie bij hoort, voor het raster van de founder. */
+const FEATURE_GROEPEN: [RegExp, string][] = [
+  [/^nav\./, 'Navigatie'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
+  [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
+  [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\./, 'F13 Hercontactritme'],
+  [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],
+  [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
+]
+export function featureGroep(sleutel: string): string {
+  return FEATURE_GROEPEN.find(([r]) => r.test(sleutel))?.[1] ?? 'Overig'
 }

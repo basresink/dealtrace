@@ -1,6 +1,9 @@
 ---
 titel: Een taak afronden met een uitkomst
 categorie: Dagelijks werk
+collectie: product
+samenvatting: Elke taak rond je af met een uitkomst; de volgende stap komt vanzelf.
+routes: /acties
 ---
 
 # Een taak afronden met een uitkomst

@@ -27,7 +27,8 @@ useHead({ title: 'Klanten · Platformbeheer · Dealtrace' })
     </PaginaKop>
     <section class="section">
       <div class="container">
-        <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm.</p>
+        <nav class="tabbalk" aria-label="Platformbeheer"><NuxtLink to="/platform/klanten" class="tab tab--actief">Klanten</NuxtLink><NuxtLink to="/platform/features" class="tab" data-test="tab-features">Features per niveau</NuxtLink></nav>
+        <p class="alleen-groot-melding kaart kaart--geel mt-8">Beter op een groot scherm.</p>
         <div v-if="m" class="stat-grid stat-grid--6" data-test="meetlat">
           <div class="stat-card"><span class="stat-label">Klanten</span><span class="stat-num tnum">{{ m.klanten }}</span>
             <span class="stat-foot">{{ m.verdeling.gezond }} gezond · {{ m.verdeling.let_op }} let op · {{ m.verdeling.risico }} risico · {{ m.verdeling.leeg }} leeg</span></div>

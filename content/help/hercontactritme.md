@@ -1,6 +1,9 @@
 ---
 titel: Hercontactritme
 categorie: Plannen en sturen
+collectie: product
+samenvatting: De reeks pogingen tot een afspraak en wanneer een account geparkeerd wordt.
+routes: /planning
 ---
 
 # Hercontactritme

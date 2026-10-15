@@ -109,3 +109,8 @@ revoke update, delete on agent_runs from dealtrace_app;
 revoke insert, update, delete on platform_agentmaxima from dealtrace_app;
 grant select, insert, update, delete on platform_agentmaxima to dealtrace_platform;
 grant select on agent_runs to dealtrace_platform;
+-- P09: features per niveau en platformartikelen schrijft alleen de platformrol.
+grant select, insert, update, delete on functies_per_niveau to dealtrace_platform;
+grant select, insert, update, delete on help_artikelen to dealtrace_platform;
+revoke update, delete on help_feedback, help_zoekopdrachten from dealtrace_app;
+grant execute on function dealtrace_zoektekst(text) to dealtrace_app, dealtrace_platform;

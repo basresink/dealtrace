@@ -1,7 +1,9 @@
 ---
 titel: Accountmatrix
 categorie: Inrichten
-collectie: Hoe werkt Dealtrace
+collectie: product
+samenvatting: Hoeveel aandacht elk account verdient: klassen, belmatrix en capaciteit.
+routes: /instellingen/ritme
 ---
 
 # Accountmatrix
