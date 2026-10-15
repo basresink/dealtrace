@@ -1,7 +1,7 @@
 // Ontdubbelen (15.1): KvK gelijk is altijd een duplicaat; anders domein zonder
 // www.; anders genormaliseerde naam met Sørensen-Dice (80 procent zeker, 60 mogelijk).
 
-export interface AccountKandidaat { id?: string; name: string; kvk?: string | null; domein?: string | null; city?: string | null }
+export interface AccountKandidaat { id?: string; name: string; kvk?: string | null; domein?: string | null; city?: string | null; postcode?: string | null; accountKind?: string }
 export type Duplicaat = { soort: 'zeker' | 'mogelijk' | 'geen'; match?: AccountKandidaat; op?: 'kvk' | 'domein' | 'naam'; gelijkenis?: number }
 
 const RECHTSVORMEN = /\b(b\.?\s?v\.?|n\.?\s?v\.?|v\.?o\.?f\.?|c\.?v\.?|holding|group|groep|beheer)\b/g
@@ -53,6 +53,20 @@ export function zoekDuplicaat(kandidaat: AccountKandidaat, bestand: AccountKandi
     if (m) return { soort: 'zeker', match: m, op: 'domein', gelijkenis: 1 }
   }
   const naam = normaliseerNaam(kandidaat.name)
+  // Import (F02): heeft de kandidaat een postcode, dan geldt naam plus postcode
+  // (80 procent zeker, 60 mogelijk); zonder postcode de naamregel uit 15.1.
+  const pc = (p?: string | null) => (p ?? '').replace(/\s/g, '').toUpperCase()
+  if (pc(kandidaat.postcode)) {
+    let besteMetPc: { m: AccountKandidaat; g: number } | null = null
+    for (const b of anderen) {
+      if (pc(b.postcode) !== pc(kandidaat.postcode)) continue
+      const g = dice(naam, normaliseerNaam(b.name))
+      if (!besteMetPc || g > besteMetPc.g) besteMetPc = { m: b, g }
+    }
+    if (besteMetPc && besteMetPc.g >= 0.8) return { soort: 'zeker', match: besteMetPc.m, op: 'naam', gelijkenis: besteMetPc.g }
+    if (besteMetPc && besteMetPc.g >= 0.6) return { soort: 'mogelijk', match: besteMetPc.m, op: 'naam', gelijkenis: besteMetPc.g }
+    return { soort: 'geen' }
+  }
   let beste: { m: AccountKandidaat; g: number } | null = null
   for (const b of anderen) {
     const g = dice(naam, normaliseerNaam(b.name))

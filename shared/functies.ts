@@ -231,6 +231,19 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'eigenVelden.beheren', naam: 'Eigen velden beheren', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'eigen-velden', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Eigen velden maken, wijzigen, ordenen en archiveren.', totDieTijd: 'Vraag een collega of je manager.' },
   },
+  // P04: import
+  {
+    sleutel: 'import.uitvoeren', naam: 'Importeren', pakket: 'starter', rollen: 'iedereen', helpartikel: 'importeren', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een lijst uit Excel of CSV in één keer binnenhalen, met ontdubbelen en een foutenrapport.', totDieTijd: 'Vraag je manager om een lijst te importeren, of voeg prospects een voor een toe.' },
+  },
+  {
+    sleutel: 'import.terugdraaien', naam: 'Import terugdraaien', pakket: 'starter', rollen: 'iedereen', helpartikel: 'importeren', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een import ongedaan maken zolang er nog niets met de accounts is gebeurd.', totDieTijd: 'Vraag je manager.' },
+  },
+  {
+    sleutel: 'import.teamVerdelen', naam: 'Import verdelen over het team', pakket: 'starter', rollen: ['salesmanager', 'beheerder'], helpartikel: 'importeren', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De nieuwe accounts gelijk verdelen over het team.', totDieTijd: 'Geen.' },
+  },
   // P02: platform (alleen founder, geen regels in functies_per_niveau) en de spiegel voor de beheerder.
   {
     sleutel: 'platform.klanten', naam: 'Klanten', pakket: 'starter', rollen: ['founder'], helpartikel: '', startNiveau: 'beginner',

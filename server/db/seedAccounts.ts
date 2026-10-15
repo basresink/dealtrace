@@ -111,5 +111,9 @@ export async function seedAccounts(client: pg.Client, org: { id: string }, bron:
     await client.query(`insert into activiteiten (id, organisation_id, account_id, contact_id, soort, door, op, data) values ($1,$2,$3,$4,'notitie',$5,$6,$7) on conflict (id) do nothing`,
       [n.id, org.id, n.account_id, n.contact_id, n.auteur_id, n.op, JSON.stringify({ tekst: n.tekst })])
   }
+  // P04: één afgemeld e-mailadres en één bel-me-niet-nummer, voor de importtests.
+  const { createHash } = await import('node:crypto')
+  await client.query(`insert into onderdrukkingslijst (organisation_id, email_hash, bron) values ($1, $2, 'afgemeld') on conflict do nothing`, [org.id, createHash('sha256').update('afgemeld@testafmelding.test').digest('hex')])
+  await client.query(`insert into bel_me_niet (organisation_id, telefoon_e164, door) values ($1, '+31612000999', 'seed') on conflict do nothing`, [org.id])
   return { accounts: accounts.length, contacten: contacten.length }
 }

@@ -83,6 +83,19 @@ Kiest de klant "Alleen na toestemming", dan maakt de founder eerst een toegangsv
 - **Contacten** hebben één rolbegrip (beslisser, beïnvloeder, champion, gebruiker, blokkeerder, poortwachter, onbekend). Een contact kan niet zonder account bestaan; verwijderen van een account neemt de contacten mee. "Bel me niet" zet het nummer op de bel-me-niet-lijst; vertrekken in plaats van verwijderen.
 - **Eigen velden**: waarden staan in `data.customFields`, met herkomst. Zichtbaar per niveau, ook in de API-respons. "Filterbaar" maakt een expressie-index via `dealtrace_index_eigen_veld()`. Een typewissel kan alleen als alle bestaande waarden geldig blijven.
 
+## Importeren (P04)
+
+Leadgenerator, tabblad Importeren: een wizard in vier stappen (bestand, kolommen koppelen, controle en ontdubbelen, bevestigen).
+
+- **Bestand**: Excel (.xlsx) of CSV, hooguit 10.000 rijen en 10 MB. De rijen staan tijdelijk in de conceptbatch en worden na verwerken gewist.
+- **Kolommen**: `importKoppeling()` herkent kolomnamen; `cf:sleutel` of de naam van een eigen veld gaat naar dat veld. Een kolom zonder koppeling wordt niet geïmporteerd; de import verzint niets.
+- **Ontdubbelen**: tegen het bestand op KvK, domein (zonder www.) en, als de rij een postcode heeft, naam plus postcode (80 procent zeker, 60 mogelijk); zonder postcode de naamregel. Binnen het bestand op KvK, domein en naam plus postcode; dubbele rijen worden één account. Optioneel tegen DealDrive via `server/utils/dealdriveAdapter.ts` (mock lokaal en in tests; `DEALDRIVE_MODUS=uit` zet het uit). "Al klant in DealDrive" wordt standaard overgeslagen.
+- **Samenvoegen**: import is de laagste bron, dus vult alleen lege velden. Een klant gaat nooit terug naar prospect.
+- **Datakwaliteit**: e-mail syntaxis plus MX (`server/utils/mx.ts`, mock in tests), telefoon naar E.164, postcode vier cijfers en twee letters. Een afgemeld e-mailadres (onderdrukkingslijst, gehasht) krijgt toestemming e-mail "nee"; een nummer op de bel-me-niet-lijst krijgt "Bel me niet".
+- **Geen contactmoment**: een import vult `laatste_contact_op` nooit.
+- **Herkomst**: elk veld krijgt `{bron: 'import', op, door, batchId}`.
+- **Terugdraaien**: alleen accounts zonder activiteit en zonder wijziging met de hand; samengevoegde accounts krijgen hun oude waarden terug. Een tweede keer geeft 409.
+
 ## Waar staat wat
 
 | Map | Inhoud |

@@ -434,3 +434,17 @@
 .ak-mobiel { display: none; }
 .ak-kop select.invoer--klein { width: auto; max-width: 100%; }
 @media (max-width: 767px) { .ak-mobiel { display: grid; gap: 8px; } }
+
+/* P04: stappenbalk, sleepvak en voortgang */
+.stappen { display: flex; flex-wrap: wrap; gap: 8px 24px; list-style: none; margin: 0; padding: 0; }
+.stappen li { display: flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 600; font-size: var(--fs-meta); }
+.stap-nr { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--border-strong); font-size: 12px; }
+.stap--actief { color: var(--ink) !important; }
+.stap--actief .stap-nr { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.stap--klaar .stap-nr { background: var(--yellow); border-color: var(--yellow); color: var(--ink); }
+.sleepvak { display: grid; place-items: center; gap: 8px; padding: 32px 16px; border: 2px dashed var(--border-strong); border-radius: var(--radius); text-align: center; cursor: pointer; min-height: 140px; }
+.sleepvak:hover { border-color: var(--ink); }
+.rapport { font-size: 18px; }
+.voortgang { height: 6px; background: var(--surface, #eee); overflow: hidden; border-radius: 3px; }
+.voortgang span { display: block; height: 100%; width: 40%; background: var(--ink); animation: voortgang 1.2s infinite ease-in-out; }
+@keyframes voortgang { from { transform: translateX(-100%); } to { transform: translateX(250%); } }

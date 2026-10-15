@@ -335,3 +335,26 @@ export const eigenVeldVoorstellen = pgTable('eigen_veld_voorstellen', {
   status: text('status').notNull().default('open'),
   op: ts('op').defaultNow().notNull(),
 })
+
+// P04: import
+export const importBatches = pgTable('import_batches', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  gebruikerId: text('gebruiker_id').notNull(),
+  bestandsnaam: text('bestandsnaam').notNull(),
+  soort: text('soort').notNull(),
+  bronLabel: text('bron_label').notNull(),
+  koppeling: jsonb('koppeling').$type<Record<string, string>>().notNull().default({}),
+  rapport: jsonb('rapport').$type<Record<string, any>>().notNull().default({}),
+  rijen: jsonb('rijen').$type<string[][] | null>(),
+  status: text('status').notNull().default('concept'),
+  verwerktOp: ts('verwerkt_op'),
+  createdAt: ts('created_at').defaultNow().notNull(),
+})
+
+export const onderdrukkingslijst = pgTable('onderdrukkingslijst', {
+  organisationId: text('organisation_id').notNull(),
+  emailHash: text('email_hash').notNull(),
+  op: ts('op').defaultNow().notNull(),
+  bron: text('bron').notNull().default('afgemeld'),
+})

@@ -52,3 +52,15 @@ describe('filterbaar eigen veld', () => {
     await expect(alsOrg('org-voltvast', () => app.query(`select dealtrace_index_eigen_veld('org-voltvast', 'account', 'x''); drop table accounts; --', 'tekst')`))).rejects.toThrow(/Ongeldige sleutel/)
   })
 })
+
+describe('import', () => {
+  it('een batch van organisatie A is voor B onzichtbaar en niet te wijzigen', async () => {
+    await alsOrg('org-voltvast', async () => {
+      await app.query(`insert into import_batches (id, organisation_id, gebruiker_id, bestandsnaam, soort, bron_label, status) values ('ib-test', 'org-voltvast', 'u-03', 'x.csv', 'bedrijven', 'Test', 'verwerkt')`)
+      await app.query('savepoint s')
+      await app.query(`select set_config('app.organisation_id', 'org-tweede', true)`)
+      expect((await app.query(`select count(*)::int n from import_batches where id = 'ib-test'`)).rows[0].n).toBe(0)
+      expect((await app.query(`update import_batches set status = 'teruggedraaid' where id = 'ib-test'`)).rowCount).toBe(0)
+    })
+  })
+})
