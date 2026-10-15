@@ -5,7 +5,7 @@
 | Sprint | 5 |
 | Features | F01 Vandaag (telefoonweergave), hoofdstuk 8 (Mobiel en onderweg: 8.5.1 en de rekenkern uit 8.13) |
 | Hangt af van | P01 (fundament, functiecatalogus, sync), P27 (inloggen met code, mobiele schil: compacte kop, onderbalk, schuifvenster, meldingsstrook), P03 (compacte accountkaart), P05 (reis en statusmachine), P06 (motor), P07 (Vandaag op de laptop, `GET /api/vandaag`, `rondTaakAf`, hercontactritme) |
-| Bron in het bouwplan | 8.5.1, 8.13, en daarbij 8.1 tot en met 8.4, 8.7, 8.9 (voorlezen), 8.11, 8.12, 8.14, 8.15, 8.16, F01 (Op de telefoon), ADR-019, ADR-020, Bijlage B (rij Telefoon (Dex)), Bijlage A (gat 16) |
+| Bron in het bouwplan | 8.5.1, 8.13, en daarbij 8.1 tot en met 8.4, 8.7, 8.9 (voorlezen), 8.11, 8.12, 8.14, 8.15, 8.16, F01 (Op de telefoon, PRIO), 13.5 (lokaal bouwen), ADR-019, ADR-020, ADR-021, Bijlage B (rij Telefoon (Dex)), Bijlage A (gat 16) |
 
 ## Lees eerst
 
@@ -40,7 +40,7 @@ De buitendienst werkt de hele dag vanaf de telefoon en de binnendienst pakt hem 
 2. **Focuskaart**, de eerste zet: tijd, wat, waarom in één zin, en één primaire knop ("Navigeer naar Bakker Bouw", "Bel Marieke de Vries", "Leg het verslag vast"). Uit `kiesFocus`.
 3. **Signaal** (Gevorderd en Expert): één kaart met bron, bewijs in één regel en de knoppen "Gedaan", "Later", "Weg".
 4. **Telstrip**: vier tegels in één rij van 72 px hoog: Afspraken, Bellen, Acties, Kansen, met aantal en rood als er achterstand is. Een tik springt naar de stapel.
-5. **Stapels** met de handeling in de regel: afspraken (met "Navigeer" en "Pitstop"), belacties (met "Bel" en "Uitkomst"), acties (met "Afgehandeld"), deals zonder vervolgstap (met "Vervolgstap toevoegen"). Bij de binnendienst staat de belstapel bovenaan.
+5. **Stapels** met de handeling in de regel: afspraken (met "Navigeer" en "Pitstop"), belacties (met "Bel" en "Uitkomst"), acties (met "Afgehandeld"), eerste afspraken die nog bevestigd of overgedragen moeten worden (met "Bevestig" of "Overdragen"). Bij de binnendienst staat de belstapel bovenaan.
 6. **Kansen in je dag**: hooguit drie, met "+ Tussenstop" (buitendienst) of "Bel" (binnendienst), en "Alle kansen →".
 7. Na 16:00 verschijnt bovenaan de kaart **Recap** ("2 gesprekken zonder verslag").
 
@@ -63,7 +63,7 @@ Boven de vouw (ongeveer 640 px tussen kop en onderbalk) staan op elk niveau mini
 3. **Bellen en uitkomst vastleggen** (2 tikken): "Bel 06 12 34 56 78" in de belstapel opent de telefoon via een `tel:`-link (mobiel nummer eerst); terug in de app tik je "Uitkomst" en een tegel. Het contactmoment werkt via `rondTaakAf` direct `laatst_gebeld_op` en het ritme bij.
 4. **Signaal afhandelen** (1 tik): "Gedaan", "Later" of "Weg"; de kaart verdwijnt, de meldingsstrook toont "Signaal op later gezet. Komt terug op 2026-10-17." met "Ongedaan maken" (Niet vastgelegd in het bouwplan; voorstel voor de tekst).
 5. **Actie afhandelen**: "Afgehandeld" in de actiestapel rondt een taak zonder contact af; een contacttaak (bellen, mail, bezoek) opent in plaats daarvan het uitkomstraster, want afronden zonder uitkomst kan niet (8.1, 7.3).
-6. **Deal zonder vervolgstap**: "Vervolgstap toevoegen" opent het schuifvenster Nieuwe taak met account en deal ingevuld.
+6. **Eerste afspraak bevestigen of overdragen**: "Bevestig" bij een geplande eerste afspraak rondt de taak "Afspraak bevestigen" af en zet de afspraak op bevestigd; "Overdragen" bij een gehouden eerste afspraak met vervolg opent "Overdragen?" met DealDrive, het CRM of een collega (F17). Niet vastgelegd in het bouwplan hoe "Bevestig" werkt; voorstel zoals hier. De knop "Overdragen" ontbreekt tot P17 Funnel van de prospectreis en overdracht klaar is; tot dan staat de afspraak alleen in de stapel.
 7. **Voorlezen**: "Lees voor" spreekt de dag uit via de spraaksynthese van het toestel in `nl-NL`, in hooguit 60 seconden; nogmaals tikken stopt.
 8. **Morgen bekijken**: veeg naar links op de groet; de URL wordt `/?dag=` met de datum van morgen; focus, signaal en tip verdwijnen.
 9. **Telstrip**: tik op "Bellen"; de pagina scrolt naar de belstapel.
@@ -73,7 +73,7 @@ Boven de vouw (ongeveer 640 px tussen kop en onderbalk) staan op elk niveau mini
 - Elke regel opent het record als schuifvenster van onderen (tot 92 procent hoogte, greep bovenin, sluiten door omlaag te vegen of "Sluiten", plakkende knoppenrij onderaan met de primaire knop rechts); na opslaan sluit het venster pas na 1,2 seconden (8.3).
 - Uitkomstraster: de tegels uit 7.3 in twee kolommen, knoppen van 56 px.
 - Meldingsstrook boven de onderbalk; succes verdwijnt na 5 seconden met "Ongedaan maken", een fout blijft staan.
-- Elke regel met een klant heeft een belknop, elke afspraak een navigeerknop, alle minimaal 44 px en in de onderste helft bereikbaar (8.16). Een knop zonder gegevens is uitgegrijsd met de reden ("Geen mobiel nummer bekend").
+- Elke regel met een contactpersoon heeft een belknop, elke afspraak een navigeerknop, alle minimaal 44 px en in de onderste helft bereikbaar (8.16). Een knop zonder gegevens is uitgegrijsd met de reden ("Geen mobiel nummer bekend").
 
 ### Filters en sorteren
 
@@ -81,9 +81,9 @@ Geen filters op de telefoon. Stapels tonen standaard alleen het werk van de inge
 
 ### Regels
 
-- **Focus** (`kiesFocus`, uit Dex, uitgebreid met de reis): 1. een komende afspraak met een open deal, de grootste gewogen kans; 2. de eerste komende afspraak; 2b. alles geweest en een afspraak zonder verslag: "Leg het verslag vast"; 3. de zwaarste achterstallige actie; 4. de grootste open kans. Dealtrace voegt toe: de poging die vandaag moet uit het hercontactritme, en de kansen langs de route (8.13). Niet vastgelegd in het bouwplan; voorstel voor de volgorde: de poging die vandaag moet komt direct na regel 2b en vóór de achterstallige actie; een kans langs de route komt pas na regel 4, omdat hij vrijblijvend is.
+- **Focus** (`kiesFocus`, uit Dex, uitgebreid met de reis; Dex rekende met open deals, Dealtrace kent geen deals, B17): 1. een komende eerste afspraak; 2. de eerste komende afspraak; 2b. alles geweest en een afspraak zonder verslag: "Leg het verslag vast"; 3. de zwaarste achterstallige actie; 4. een gehouden eerste afspraak die nog niet is overgedragen. Niet vastgelegd in het bouwplan; voorstel voor regel 1 en 4 zoals hier. Dealtrace voegt toe: de poging die vandaag moet uit het hercontactritme, en de kansen langs de route (8.13). Niet vastgelegd in het bouwplan; voorstel voor de volgorde: de poging die vandaag moet komt direct na regel 2b en vóór de achterstallige actie; een kans langs de route komt pas na regel 4, omdat hij vrijblijvend is.
 - **Signalen** (`shared/signalen.ts`): detectoren voor new business: koopsignaal, ritme achter, reis stil, terugkomregel bereikt. Governor: dagplafond 4 signaalbesluiten, stilte na Weg 1 dag, Later 3 dagen, Gedaan 30 dagen; dagplafond en stilte per organisatie instelbaar.
-- **Getallen uit de Dex-kern**, startpunt en per organisatie instelbaar: werkdag 08:00 tot 18:00, deal zonder vervolg na 7 dagen stilte, koopsignaal hooguit 14 dagen oud met relevantie 60, contractvenster 90 dagen, vervolghorizon 90 dagen.
+- **Getallen uit de Dex-kern**, startpunt en per organisatie instelbaar: werkdag 08:00 tot 18:00, account in reis zonder volgende stap na 7 dagen stilte, koopsignaal hooguit 14 dagen oud met relevantie 60, contractvenster 90 dagen (voor bestaande klanten in de route), vervolghorizon 90 dagen (8.13).
 - **Recap** na 16:00 bovenaan; met verslagen bovenaan en de terugkomregels van morgen (8.13). Inhoud per niveau: kort, met risico's, met weekterugblik.
 - **Vorm van het moment** (`bepaalVorm`): maandag weekstart, vrijdag vanaf 15:00 weekafsluiting, anders dagstart. Niet vastgelegd in het bouwplan hoe dit op Vandaag zichtbaar wordt; voorstel: alleen de groet en de recap volgen de vorm ("Goedemorgen, Jan. Een nieuwe week." en op vrijdag de weekterugblik in de recap voor Expert), geen extra blok.
 - **Voorlezen**: tekst geschreven voor het oor, hele zinnen, bedragen uitgeschreven, zonder opsommingstekens, hooguit 60 seconden (8.9).
@@ -100,9 +100,9 @@ Geen filters op de telefoon. Stapels tonen standaard alleen het werk van de inge
 
 ### Datamodel
 
-- Geen nieuwe tabel voor de dag zelf: `bouwDag` rekent uit `tasks`, `appointments`, `signals`, `deals`, `accounts` en `activiteiten`.
+- Geen nieuwe tabel voor de dag zelf: `bouwDag` rekent uit `tasks`, `appointments`, `signals`, `accounts`, `prospectreizen` en `activiteiten`; er is geen tabel `deals` (B17).
 - Signaalbesluiten: 8.10 eist dat "gelezen" op alle apparaten gelijk is en op de server staat; Dex bewaarde besluiten via `dexSignaalBesluit.ts`. Niet vastgelegd in het bouwplan; voorstel: tabel `signaal_besluiten: id, organisation_id, gebruiker_id, signaal_sleutel, besluit ('gedaan'|'later'|'weg'), op, stil_tot`, RLS `org_isolation` plus filter op `gebruiker_id`, uniek op `(gebruiker_id, signaal_sleutel, datum)`.
-- Instellingssleutel `dagritme` in `shared/settingKeys.ts` met de getallen uit 8.13 (werkdag, gat, omweg, contractvenster, dealstilte, koopsignaal, dagplafond, stilte, vervolghorizon). Niet vastgelegd in het bouwplan; voorstel voor de sleutelnaam.
+- Instellingssleutel `dagritme` in `shared/settingKeys.ts` met de getallen uit 8.13 (werkdag, gat, omweg, contractvenster, reisstilte, koopsignaal, dagplafond, stilte, vervolghorizon). Niet vastgelegd in het bouwplan; voorstel voor de sleutelnaam.
 - Rechtenmatrix: `signaal_besluiten` alleen eigen rijen lezen en schrijven.
 - Sync-allowlist: nieuwe mutatiesoort `signaal.besluit` (8.14) met `idempotentie_sleutel`; `taak.afronden` en `belpoging.uitkomst` bestaan uit P07.
 
@@ -113,9 +113,9 @@ Alle functies zonder framework, met `nu` als parameter, bedragen in centen via `
 | Functie | Bestand | Invoer en uitvoer | Randgevallen en tests |
 |---|---|---|---|
 | `bouwDag(bron, gebruiker, dag, nu, opties)` | `shared/dag.ts` | brondata naar stapels, telstrip en achterstand | filter op eigenaar; prospectreis-stappen als bron van belacties; dag in het verleden; lege dag; werkplek binnendienst tegenover buitendienst |
-| `heeftVervolg(bron, accountId, nu, dealId?)` | `shared/dag.ts` | boolean | taak of afspraak binnen de vervolghorizon van 90 dagen; deal 7 dagen stil |
+| `heeftVervolg(bron, accountId, nu)` | `shared/dag.ts` | boolean | taak of afspraak binnen de vervolghorizon van 90 dagen; account in reis 7 dagen stil zonder volgende stap |
 | `telLink(contact)` | `shared/dag.ts` | `tel:`-link of null | mobiel eerst; nummer in E.164; geen nummer |
-| `kiesFocus(afspraken, acties, deals, reis, kansen, nu, periode)` | `shared/dagritme.ts` | `{wat, waarom, wanneer, accountId, verslagVan, knop}` of null | elke regel apart; afspraak precies op het eindtijdstip; 22:41 met alleen voorbije afspraken; poging die vandaag moet |
+| `kiesFocus(afspraken, acties, reis, kansen, nu, periode)` | `shared/dagritme.ts` | `{wat, waarom, wanneer, accountId, verslagVan, knop}` of null | elke regel apart; afspraak precies op het eindtijdstip; 22:41 met alleen voorbije afspraken; poging die vandaag moet; gehouden eerste afspraak niet overgedragen |
 | `kiesTip(...)` | `shared/dagritme.ts` | tekst of null | na 18:00; 3 achterstallige acties; lege dag |
 | `bepaalVorm(nu)` | `shared/dagritme.ts` | weekstart, weekafsluiting of dagstart | vrijdag 14:59 en 15:00 |
 | `detecteerSignalen(bron, gebruiker, nu, instellingen)` | `shared/signalen.ts` | lijst signalen | koopsignaal 14 en 15 dagen oud; relevantie 59 en 60; ritme achter; reis stil; terugkomregel vandaag bereikt |
@@ -181,7 +181,7 @@ Wat je uit Dex niet overneemt: de aparte build en allowlist, stapels organisatie
 
 1. Op 390 px staan op Vandaag de groet, de focuskaart en de telstrip zonder scrollen in beeld, op elk niveau (8.16); een Beginner ziet ook de eerste stapel boven de vouw. Playwright toetst dit op 375, 390 en 412 px.
 2. Tikdoelen uit 8.7: zien waar de dag knelt 0 tikken; naar de volgende afspraak navigeren 1 tik; een prospect bellen en de uitkomst vastleggen 2 tikken; signaal afhandelen 1 tik. Een Playwright-test telt de tikken.
-3. Elke regel met een klant heeft een belknop; elke afspraak een navigeerknop; alle minimaal 44 px en binnen duimbereik (8.16).
+3. Elke regel met een contactpersoon heeft een belknop; elke afspraak een navigeerknop; alle minimaal 44 px en binnen duimbereik (8.16).
 4. Focus, signaal en tellingen zijn op telefoon en laptop identiek, getoetst op de gedeelde kern met dezelfde fixture.
 5. De stapels tonen standaard alleen het werk van de ingelogde gebruiker; een taak van een collega op een eigen account verschijnt niet.
 6. Een contacttaak kan niet met "Afgehandeld" zonder uitkomst worden afgerond.
@@ -197,12 +197,13 @@ Wat je uit Dex niet overneemt: de aparte build en allowlist, stapels organisatie
 16. Per niveau getest: Beginner zonder signaal en tip en met alleen "Morgen" in de dagkiezer; Gevorderd met signaal, tip en "Week"; Expert met de weekterugblik in de recap.
 17. Werkplek getest: binnendienst toont de belstapel bovenaan en "Bel" bij kansen; buitendienst toont "+ Tussenstop".
 18. Testdata uit de Voltvast-startset (Bijlage C): teams Binnendienst, Team Noord en Team Zuid. Niet vastgelegd in het bouwplan; voorstel: een fixturedag met drie fictieve afspraken, vijf belacties en één terugkomregel (hc-02, "Beslissing uitgesteld") die vandaag afloopt.
+19. De vierde stapel toont eerste afspraken die nog bevestigd of overgedragen moeten worden; nergens op Vandaag staan deals, offertes of "deals zonder vervolgstap" (B17).
 
 ## Definition of Done
 
 Hoofdstuk 19 geldt volledig. Specifiek voor deze prompt:
 
-- Testsets `test:dag`, `test:ritme`, `test:signalen`, `test:recap` en `test:spreek` groen, met de checks uit Dex overgenomen en uitgebreid voor de reis.
+- Testsets `test:dag`, `test:ritme`, `test:signalen`, `test:recap` en `test:spreek` groen, lokaal met `pnpm test` en de startset uit `pnpm seed` (13.5), met de checks uit Dex overgenomen en uitgebreid voor de reis.
 - Playwright-projecten voor 375, 390 en 412 px met aanraakmodus; een schermafbeelding van Vandaag als referentie; de boven-de-vouwtest en de tikkentest uit 8.15.
 - Getest op de toestellen uit 8.15 (iPhone SE, iPhone 15 of 16, Samsung Galaxy A-serie, Google Pixel 7 of nieuwer, iPad staand) met schermafbeeldingen in het sprintverslag (8.16: een prompt met een scherm is pas klaar na deze test).
 - Helpartikel "Dealtrace op je telefoon en offline" in `content/help/`; `docs/HOE-HET-WERKT.md` beschrijft de rekenkern en wat uit Dex komt.

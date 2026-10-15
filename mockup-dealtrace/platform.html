@@ -20,14 +20,16 @@
       </div>
       <div class="toolbar-buttons">
         <button type="button" class="dd-actie dd-actie--primair" data-toast="Nieuwe klant met startset aangemaakt; uitnodiging verstuurd."><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Klant</button>
+        <button type="button" class="dd-actie dd-actie--secundair" data-ai><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sparkles"/></svg>Vraag AI</button>
         <a class="dd-actie dd-actie--secundair" href="helpcenter.html"><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-help"/></svg>Hulp</a>
       </div>
     </div>
-    <nav class="tabbalk mt-16" aria-label="Platformbeheer">
-      <button type="button" class="tab tab--actief" aria-current="page">Klanten</button>
-      <button type="button" class="tab" data-stub="Abonnementen">Abonnementen</button>
+    <nav class="tabbalk mt-16" aria-label="Platformbeheer" data-tabset>
+      <button type="button" class="tab tab--actief" aria-current="page" data-tab-knop="pl-klanten">Klanten</button>
+      <button type="button" class="tab" data-tab-knop="pl-abonnementen">Abonnementen</button>
+      <button type="button" class="tab" data-tab-knop="pl-features">Features per niveau</button>
       <button type="button" class="tab" data-stub="Facturen">Facturen</button>
-      <button type="button" class="tab" data-stub="AI-verbruik">AI-verbruik</button>
+      <button type="button" class="tab" data-tab-knop="pl-verbruik">AI-verbruik en credits</button>
       <button type="button" class="tab" data-stub="AI-koppeling">AI-koppeling</button>
       <button type="button" class="tab" data-stub="Agent-prompts">Prompts</button>
       <button type="button" class="tab" data-stub="Help-artikelen">Help</button>
@@ -38,6 +40,8 @@
   </div>
 </section>
 
+<div class="pagina-inhoud">
+<div id="pl-klanten">
 <section class="section section--stats">
   <div class="container">
     <div class="stat-grid stat-grid--6">
@@ -53,19 +57,19 @@
 <section class="section">
   <div class="container">
     <div class="tabel-wrap"><table class="tabel">
-      <thead><tr><th>Klant</th><th>Pakket</th><th>Gebruikers</th><th>Laatst actief</th><th class="cel-r">AI-kosten</th><th>Stand</th><th></th></tr></thead>
+      <thead><tr><th>Klant</th><th>Pakket</th><th>Gebruikers</th><th>Laatst actief</th><th class="cel-r">AI-credits</th><th class="cel-r">AI-kosten</th><th>Stand</th><th></th></tr></thead>
       <tbody>
-        <tr><td class="cel-naam">Testbedrijf Voltvast</td><td>Plus</td><td>8/9 met login</td><td>vandaag</td><td class="cel-r">€ 96</td><td><span class="pil pil--groen">Gezond</span></td><td><div class="cel-acties"><button type="button" class="dd-act" data-stub="Klantflyout">Openen</button><button type="button" class="dd-act dd-act--primair" data-open="venster-instappen">Werk in deze organisatie</button></div></td></tr>
-        <tr><td class="cel-naam">Pelmolen Installatie</td><td>Starter</td><td>3/5 met login</td><td>gisteren</td><td class="cel-r">€ 21</td><td><span class="pil pil--groen">Gezond</span></td><td><div class="cel-acties"><button type="button" class="dd-act" data-stub="Klantflyout">Openen</button></div></td></tr>
-        <tr><td class="cel-naam">Ravelingh Bouwtechniek</td><td>Compleet</td><td>11/12 met login</td><td>vandaag</td><td class="cel-r">€ 154</td><td><span class="pil pil--groen">Gezond</span></td><td><div class="cel-acties"><button type="button" class="dd-act" data-stub="Klantflyout">Openen</button></div></td></tr>
-        <tr><td class="cel-naam">Zuiderhaven Koeltechniek</td><td>Plus</td><td>2/5 met login</td><td>19 dagen geleden</td><td class="cel-r">€ 8</td><td><span class="pil pil--oranje" title="Minder dan de helft met login · 15 tot 30 dagen stil">Let op</span></td><td><div class="cel-acties"><button type="button" class="dd-act" data-stub="Klantflyout">Openen</button></div></td></tr>
-        <tr><td class="cel-naam">Brugwachter Elektro</td><td>Proef tot 30 okt</td><td>0/0</td><td>nooit</td><td class="cel-r">€ 0</td><td><span class="pil pil--leeg">Leeg</span></td><td><div class="cel-acties"><button type="button" class="dd-act" data-stub="Klantflyout">Openen</button></div></td></tr>
+        <tr><td class="cel-naam">Testbedrijf Voltvast</td><td>Compleet</td><td>8/9 met login</td><td>vandaag</td><td class="cel-r">6.120 / 13.500</td><td class="cel-r">€ 96</td><td><span class="pil pil--groen">Gezond</span></td><td><div class="cel-acties"><button type="button" class="dd-act" data-stub="Klantflyout">Openen</button><button type="button" class="dd-act dd-act--primair" data-open="venster-instappen">Werk in deze organisatie</button></div></td></tr>
+        <tr><td class="cel-naam">Pelmolen Installatie</td><td>Starter</td><td>3/5 met login</td><td>gisteren</td><td class="cel-r">410 / 1.000</td><td class="cel-r">€ 21</td><td><span class="pil pil--groen">Gezond</span></td><td><div class="cel-acties"><button type="button" class="dd-act" data-stub="Klantflyout">Openen</button></div></td></tr>
+        <tr><td class="cel-naam">Ravelingh Bouwtechniek</td><td>Compleet</td><td>11/12 met login</td><td>vandaag</td><td class="cel-r">9.870 / 18.000</td><td class="cel-r">€ 154</td><td><span class="pil pil--groen">Gezond</span></td><td><div class="cel-acties"><button type="button" class="dd-act" data-stub="Klantflyout">Openen</button></div></td></tr>
+        <tr><td class="cel-naam">Zuiderhaven Koeltechniek</td><td>Plus</td><td>2/5 met login</td><td>19 dagen geleden</td><td class="cel-r">95 / 3.000</td><td class="cel-r">€ 8</td><td><span class="pil pil--oranje" title="Minder dan de helft met login · 15 tot 30 dagen stil">Let op</span></td><td><div class="cel-acties"><button type="button" class="dd-act" data-stub="Klantflyout">Openen</button></div></td></tr>
+        <tr><td class="cel-naam">Brugwachter Elektro</td><td>Proef tot 30 okt</td><td>0/0</td><td>nooit</td><td class="cel-r">0 / 0</td><td class="cel-r">€ 0</td><td><span class="pil pil--leeg">Leeg</span></td><td><div class="cel-acties"><button type="button" class="dd-act" data-stub="Klantflyout">Openen</button></div></td></tr>
       </tbody>
     </table></div>
   </div>
 </section>
 
-<section class="section section--alt section--laatste">
+<section class="section section--alt">
   <div class="container">
     <div class="raster raster--2">
       <div>
@@ -89,6 +93,149 @@
   </div>
 </section>
 
+</div>
+<div id="pl-abonnementen" hidden>
+<section class="section section--laatste">
+  <div class="container">
+    <span class="kicker kicker--streep">Abonnementen · pakketten</span>
+    <h2 class="sec-title">Drie pakketten, één pot AI-credits per organisatie.</h2>
+    <p class="sec-sub">De credits per gebruiker tellen samen op tot één pot per organisatie per maand, voor alle AI: chat, zoekrondes, dossiers, inzichten, concepten, scripts, verslagen, spraak en coach. Credits vervallen aan het einde van de maand. Aantallen voorlopig.</p>
+    <div class="tabel-wrap mt-16"><table class="tabel tabel--rapport">
+      <thead><tr><th></th><th class="cel-r">Starter</th><th class="cel-r">Plus</th><th class="cel-r">Compleet</th></tr></thead>
+      <tbody>
+        <tr><td class="cel-naam">AI-credits per gebruiker per maand</td><td class="cel-r">200</td><td class="cel-r">600</td><td class="cel-r">1.500</td></tr>
+        <tr><td>Pot bij 9 gebruikers</td><td class="cel-r">1.800</td><td class="cel-r">5.400</td><td class="cel-r">13.500</td></tr>
+        <tr><td>AI-assistent, spraak en transcriptie</td><td class="cel-r">ja</td><td class="cel-r">ja</td><td class="cel-r">ja</td></tr>
+        <tr><td>Inzichten, concepten, belscript-invulling, Notulist, coach</td><td class="cel-r">nee</td><td class="cel-r">ja</td><td class="cel-r">ja</td></tr>
+        <tr><td>Webonderzoek, zoekronde leadgenerator, dossier</td><td class="cel-r">nee</td><td class="cel-r">nee</td><td class="cel-r">ja</td></tr>
+        <tr><td>KvK-bevragingen per maand (geen AI, buiten de credits)</td><td class="cel-r">0</td><td class="cel-r">500</td><td class="cel-r">2.000</td></tr>
+        <tr><td>Datacollectief-records (geen AI)</td><td class="cel-r">nee</td><td class="cel-r">volgens contract</td><td class="cel-r">volgens contract</td></tr>
+        <tr><td>Prijs per seat per maand</td><td class="cel-r">€ 39</td><td class="cel-r">€ 69</td><td class="cel-r">€ 119</td></tr>
+        <tr><td>Extra credits</td><td class="cel-r" colspan="3">per 1.000 credits € 25 · aanvragen door de beheerder, de founder zet ze direct of via de factuur</td></tr>
+      </tbody>
+    </table></div>
+    <div class="rijtje mt-16"><button type="button" class="dd-act" data-toast="Credits per pakket aangepast. Geldt vanaf 1 november, vastgelegd in de audit.">Credits per pakket wijzigen</button><button type="button" class="dd-act" data-toast="1.000 extra credits gezet voor Testbedrijf Voltvast.">Extra credits zetten</button></div>
+  </div>
+</section>
+</div>
+<div id="pl-features" hidden>
+<section class="section">
+  <div class="container">
+    <div class="sec-head">
+      <div>
+        <span class="kicker kicker--streep">Features per niveau · /platform/features</span>
+        <h2 class="sec-title">Welke functie staat aan voor welk niveau.</h2>
+        <p class="sec-sub">Elke functie staat per niveau aan of uit; dat is de enige knop. Er zijn geen schakelaars per gebruiker: de salesmanager kiest alleen het niveau. Een wijziging werkt direct, zonder release, en komt in de audit.</p>
+      </div>
+      <label class="veld"><span class="veld-label">Geldt voor</span>
+        <select class="invoer" id="pf-org" aria-label="Geldt voor">
+          <option value="alle">Alle organisaties</option>
+          <option value="voltvast">Testbedrijf Voltvast (afwijking)</option>
+          <option value="ravelingh">Ravelingh Bouwtechniek (afwijking)</option>
+        </select>
+      </label>
+    </div>
+    <p class="meta mt-8" id="pf-uitleg">Je bewerkt de indeling voor alle organisaties. Kies een organisatie om voor die organisatie af te wijken; afwijkende cellen krijgen een gele rand.</p>
+    <div class="tabel-wrap mt-16"><table class="tabel niveauraster" id="pf-raster">
+      <thead><tr><th>Functie</th><th>Feature</th><th class="cel-c">Beginner</th><th class="cel-c">Gevorderd</th><th class="cel-c">Expert</th></tr></thead>
+      <tbody>
+        <tr><td class="cel-naam">Vandaag: taken, afspraken, belblok, concepten</td><td class="meta">F01</td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Beginner">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Door agents gedaan en weekvooruitblik op Vandaag</td><td class="meta">F01</td><td class="cel-c"><button type="button" class="celknop" aria-pressed="false" data-pf-cel data-pf-niveau="Beginner">Uit</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Agenda, afspraken plannen en overdragen</td><td class="meta">F09</td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Beginner">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Acties: taken afronden en uitstellen</td><td class="meta">F06</td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Beginner">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Belblok uitvoeren met een gekozen script</td><td class="meta">F07</td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Beginner">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Belblokken zelf plannen, Top 10 en Top 15</td><td class="meta">F07</td><td class="cel-c"><button type="button" class="celknop" aria-pressed="false" data-pf-cel data-pf-niveau="Beginner">Uit</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Bezoeken en kansen langs de route</td><td class="meta">F10</td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Beginner">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Route plannen en kansen toevoegen</td><td class="meta">F10</td><td class="cel-c"><button type="button" class="celknop" aria-pressed="false" data-pf-cel data-pf-niveau="Beginner">Uit</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Eigen afstands- en kansregels</td><td class="meta">F10</td><td class="cel-c"><button type="button" class="celknop" aria-pressed="false" data-pf-cel data-pf-niveau="Beginner">Uit</button></td><td class="cel-c"><button type="button" class="celknop" aria-pressed="false" data-pf-cel data-pf-niveau="Gevorderd">Uit</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Meedoen in campagnes</td><td class="meta">F12</td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Beginner">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Campagne maken uit standaardsoorten</td><td class="meta">F12</td><td class="cel-c"><button type="button" class="celknop" aria-pressed="false" data-pf-cel data-pf-niveau="Beginner">Uit</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Funnel van de prospectreis</td><td class="meta">F17</td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Beginner">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Funnel: conversie, doorlooptijd en uitval</td><td class="meta">F17</td><td class="cel-c"><button type="button" class="celknop" aria-pressed="false" data-pf-cel data-pf-niveau="Beginner">Uit</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Prospects en accountkaart</td><td class="meta">F03</td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Beginner">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Leadgenerator: zoeken, importeren, AI-zoekronde</td><td class="meta">F02</td><td class="cel-c"><button type="button" class="celknop" aria-pressed="false" data-pf-cel data-pf-niveau="Beginner">Uit</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Inzichten beoordelen en omzetten in een taak</td><td class="meta">F14</td><td class="cel-c"><button type="button" class="celknop" aria-pressed="false" data-pf-cel data-pf-niveau="Beginner">Uit</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Prospectplanning</td><td class="meta">F13</td><td class="cel-c"><button type="button" class="celknop" aria-pressed="false" data-pf-cel data-pf-niveau="Beginner">Uit</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Persoonlijke scriptvariant</td><td class="meta">F08</td><td class="cel-c"><button type="button" class="celknop" aria-pressed="false" data-pf-cel data-pf-niveau="Beginner">Uit</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Prospectreis per doelgroep (maatwerk)</td><td class="meta">F05</td><td class="cel-c"><button type="button" class="celknop" aria-pressed="false" data-pf-cel data-pf-niveau="Beginner">Uit</button></td><td class="cel-c"><button type="button" class="celknop" aria-pressed="false" data-pf-cel data-pf-niveau="Gevorderd">Uit</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Persoonlijke regels</td><td class="meta">F15</td><td class="cel-c"><button type="button" class="celknop" aria-pressed="false" data-pf-cel data-pf-niveau="Beginner">Uit</button></td><td class="cel-c"><button type="button" class="celknop" aria-pressed="false" data-pf-cel data-pf-niveau="Gevorderd">Uit</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Richting: het verkoopverhaal lezen</td><td class="meta">F25</td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Beginner">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">Mijn resultaten</td><td class="meta">F20</td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Beginner">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+        <tr><td class="cel-naam">AI-assistent</td><td class="meta">F26</td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Beginner">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Gevorderd">Aan</button></td><td class="cel-c"><button type="button" class="celknop celknop--aan" aria-pressed="true" data-pf-cel data-pf-niveau="Expert">Aan</button></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+<section class="section section--alt">
+  <div class="container">
+    <h2 class="kop-blok">Laatste wijzigingen</h2>
+    <div class="lijst mt-12" id="pf-audit">
+      <div class="rij rij--compact"><div class="rij-info"><h3 class="rij-titel">Funnel van de prospectreis · Beginner aan</h3><div class="rij-sub">Mira Dekker · 13 okt 16:40 · alle organisaties · na sprint 6</div></div><div class="rij-rechts"><button type="button" class="dd-act" data-toast="Teruggedraaid: Funnel van de prospectreis staat weer uit voor Beginner.">Draai terug</button></div></div>
+      <div class="rij rij--compact"><div class="rij-info"><h3 class="rij-titel">Leadgenerator · Beginner aan</h3><div class="rij-sub">Mira Dekker · 2 okt 09:12 · alleen Ravelingh Bouwtechniek</div></div><div class="rij-rechts"><button type="button" class="dd-act" data-toast="Teruggedraaid: Leadgenerator staat weer uit voor Beginner bij Ravelingh Bouwtechniek.">Draai terug</button></div></div>
+    </div>
+  </div>
+</section>
+</div>
+<div id="pl-verbruik" hidden>
+<section class="section">
+  <div class="container">
+    <span class="kicker kicker--streep">AI-verbruik · Testbedrijf Voltvast · oktober tot en met 14 okt</span>
+    <h2 class="sec-title">6.120 van 13.500 credits gebruikt.</h2>
+    <p class="sec-sub">Elke AI-handeling kost een vast aantal credits, ongeacht het model. Een mislukte aanroep kost niets. Automatische AI stopt bij 10 procent van de pot.</p>
+    <div class="tabel-wrap mt-16"><table class="tabel tabel--rapport">
+      <thead><tr><th>AI-soort</th><th>Model</th><th class="cel-r">Credits per handeling</th><th class="cel-r">Handelingen</th><th class="cel-r">Credits</th></tr></thead>
+      <tbody>
+        <tr><td class="cel-naam">AI-assistent: gewone vraag</td><td>Claude Haiku</td><td class="cel-r">1</td><td class="cel-r">412</td><td class="cel-r">412</td></tr>
+        <tr><td class="cel-naam">AI-assistent: vraag met accountgegevens of lang antwoord</td><td>Claude Sonnet</td><td class="cel-r">2 tot 5</td><td class="cel-r">76</td><td class="cel-r">228</td></tr>
+        <tr><td class="cel-naam">Webonderzoek (assistent of agent)</td><td>Claude Sonnet met websearch</td><td class="cel-r">10</td><td class="cel-r">18</td><td class="cel-r">180</td></tr>
+        <tr><td class="cel-naam">Zoekronde leadgenerator</td><td>Claude Sonnet met websearch</td><td class="cel-r">20</td><td class="cel-r">14</td><td class="cel-r">280</td></tr>
+        <tr><td class="cel-naam">Dossier</td><td>Claude Sonnet met websearch</td><td class="cel-r">10</td><td class="cel-r">31</td><td class="cel-r">310</td></tr>
+        <tr><td class="cel-naam">Inzicht-beoordeling</td><td>Claude Sonnet</td><td class="cel-r">1</td><td class="cel-r">1.150</td><td class="cel-r">1.150</td></tr>
+        <tr><td class="cel-naam">Concept (Pitstop, boodschap)</td><td>Claude Sonnet</td><td class="cel-r">2</td><td class="cel-r">610</td><td class="cel-r">1.220</td></tr>
+        <tr><td class="cel-naam">Belscript-invulling</td><td>Claude Haiku of Sonnet</td><td class="cel-r">1</td><td class="cel-r">980</td><td class="cel-r">980</td></tr>
+        <tr><td class="cel-naam">Notulist (verslaganalyse)</td><td>Claude Sonnet</td><td class="cel-r">5</td><td class="cel-r">96</td><td class="cel-r">480</td></tr>
+        <tr><td class="cel-naam">Brief en buying committee</td><td>Claude Sonnet</td><td class="cel-r">3</td><td class="cel-r">60</td><td class="cel-r">180</td></tr>
+        <tr><td class="cel-naam">Coach en verbetervoorstel</td><td>Claude Opus</td><td class="cel-r">20</td><td class="cel-r">12</td><td class="cel-r">240</td></tr>
+        <tr><td class="cel-naam">Spraakopdracht en visitekaartje</td><td>Claude Haiku of Sonnet</td><td class="cel-r">1 en 2</td><td class="cel-r">164</td><td class="cel-r">210</td></tr>
+        <tr><td class="cel-naam">Transcriptie van ingesproken verslagen</td><td>EU-transcriptiedienst</td><td class="cel-r">1 per minuut</td><td class="cel-r">250 min</td><td class="cel-r">250</td></tr>
+        <tr><td class="cel-naam">Totaal</td><td></td><td></td><td></td><td class="cel-r"><strong>6.120</strong></td></tr>
+      </tbody>
+    </table></div>
+    <button type="button" class="dd-act mt-16" data-toast="Prijs per handeling aangepast zonder release. Vastgelegd in de audit.">Credits per handeling wijzigen</button>
+  </div>
+</section>
+<section class="section section--alt section--laatste">
+  <div class="container">
+    <div class="raster raster--2">
+      <article class="kaart">
+        <span class="bloklabel">Zo ziet de beheerder van Voltvast het</span>
+        <div class="creditmeter mt-12">
+          <span class="creditmeter-cijfer">7.380</span>
+          <span class="meta">credits over deze maand · pot 13.500 (9 gebruikers op Compleet)</span>
+          <div class="voortgang" role="progressbar" aria-label="Gebruikte credits" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"><span class="voortgang-vul" style="width:45%"></span><span class="voortgang-tempo" style="left:80%" title="Melding bij 80 procent"></span></div>
+          <span class="meta">45 procent gebruikt · melding bij 80 procent · bij 0 stopt alle AI, de rest van Dealtrace werkt door</span>
+        </div>
+        <div class="rijtje mt-12"><button type="button" class="dd-act" data-toast="Aanvraag voor extra credits staat bij de founder.">Extra credits aanvragen</button></div>
+      </article>
+      <article class="kaart">
+        <span class="bloklabel">Plafond per gebruiker</span>
+        <div class="tabel-wrap mt-8"><table class="tabel tabel--rapport">
+          <thead><tr><th>Gebruiker</th><th class="cel-r">Gebruikt</th><th class="cel-r">Plafond</th></tr></thead>
+          <tbody>
+            <tr><td>Sanne Kuipers</td><td class="cel-r">588</td><td class="cel-r">1.000</td></tr>
+            <tr><td>Jan Wolters</td><td class="cel-r">742</td><td class="cel-r">1.500</td></tr>
+            <tr><td>Mark Veenstra</td><td class="cel-r">316</td><td class="cel-r">1.000</td></tr>
+            <tr><td>Ilse Bosman</td><td class="cel-r">905</td><td class="cel-r">geen</td></tr>
+            <tr><td>Agents en motor</td><td class="cel-r">3.569</td><td class="cel-r">dagplafond per soort</td></tr>
+          </tbody>
+        </table></div>
+      </article>
+    </div>
+  </div>
+</section>
+</div>
+</div>
+
 <div class="mk-venster-overlay" id="venster-instappen" hidden>
   <div class="mk-venster" role="dialog" aria-modal="true" aria-labelledby="vi-titel" tabindex="-1">
     <div class="mk-venster-kop"><span class="kicker">Instappen · audit bij platform en klant</span><h2 class="kop-blok mt-4" id="vi-titel">Werken in Testbedrijf Voltvast</h2></div>
@@ -106,5 +253,40 @@
 </main>
 </div>
 <script src="mockup.js"></script>
+<script>
+/* Features per niveau: cellen aan en uit, en afwijken per organisatie (F23, B18). */
+(function () {
+  var keuze = document.getElementById('pf-org');
+  var uitleg = document.getElementById('pf-uitleg');
+  var raster = document.getElementById('pf-raster');
+  if (!keuze || !raster) return;
+  var afwijkingen = { voltvast: [['Funnel: conversie, doorlooptijd en uitval', 0]], ravelingh: [['Leadgenerator: zoeken, importeren, AI-zoekronde', 0]] };
+  var basis = Array.prototype.map.call(raster.querySelectorAll('[data-pf-cel]'), function (k) { return k.classList.contains('celknop--aan'); });
+  function zet(k, aan) { k.classList.toggle('celknop--aan', aan); k.setAttribute('aria-pressed', String(aan)); k.textContent = aan ? 'Aan' : 'Uit'; }
+  function toon() {
+    var org = keuze.value;
+    raster.querySelectorAll('[data-pf-cel]').forEach(function (k, i) { zet(k, basis[i]); k.classList.remove('celknop--afwijking'); });
+    (afwijkingen[org] || []).forEach(function (a) {
+      raster.querySelectorAll('tbody tr').forEach(function (tr) {
+        if (tr.querySelector('.cel-naam').textContent === a[0]) { var k = tr.querySelectorAll('[data-pf-cel]')[a[1]]; zet(k, true); k.classList.add('celknop--afwijking'); }
+      });
+    });
+    uitleg.textContent = org === 'alle'
+      ? 'Je bewerkt de indeling voor alle organisaties. Kies een organisatie om voor die organisatie af te wijken; afwijkende cellen krijgen een gele rand.'
+      : 'Je bewerkt de afwijking voor ' + keuze.options[keuze.selectedIndex].text.replace(' (afwijking)', '') + '. Cellen met een gele rand wijken af van alle organisaties.';
+  }
+  keuze.addEventListener('change', toon);
+  raster.addEventListener('click', function (e) {
+    var k = e.target.closest('[data-pf-cel]');
+    if (!k) return;
+    var aan = !k.classList.contains('celknop--aan');
+    zet(k, aan);
+    var functie = k.closest('tr').querySelector('.cel-naam').textContent;
+    var org = keuze.value;
+    if (org === 'alle') { basis[Array.prototype.indexOf.call(raster.querySelectorAll('[data-pf-cel]'), k)] = aan; } else { k.classList.add('celknop--afwijking'); }
+    window.dtToast(functie + ' staat nu ' + (aan ? 'aan' : 'uit') + ' voor ' + k.getAttribute('data-pf-niveau') + (org === 'alle' ? ' bij alle organisaties' : ' bij ' + keuze.options[keuze.selectedIndex].text.replace(' (afwijking)', '')) + '. Vastgelegd in de audit.');
+  });
+}());
+</script>
 </body>
 </html>

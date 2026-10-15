@@ -5,7 +5,7 @@
 | Sprint | 3 (Verkoopverhaal) |
 | Features | F25 Verkoopverhaal en Richting (koppeling met SalesDNA) |
 | Hangt af van | P01 (instellingen, audit, versleutelde geheimen), P28 (leesmodel `vv_*`, eigen inrichting, `vvProjectie`, Voltvast-seed) |
-| Bron in het bouwplan | F25 (Technisch: Spiegel, Webhook-ontvanger, Projectie; Functioneel: Statussen en versies, Overstappen tussen bronnen), 12 (rij SalesDNA en de regels onder de tabel), ADR-002, ADR-017, 15.3, 21, 22 (vragen 19 tot en met 21), Bijlage C |
+| Bron in het bouwplan | F25 (Technisch: Spiegel, Webhook-ontvanger, Projectie; Functioneel: Statussen en versies, Overstappen tussen bronnen), 12 (rij SalesDNA en de regels onder de tabel), ADR-002, ADR-017, 13.5 (lokaal bouwen met mocks), 15.3, 21, 22 (vragen 19 tot en met 21), Bijlage C |
 
 ## Lees eerst
 
@@ -50,7 +50,7 @@ ADR-002 (gewijzigd): SalesDNA is de voorkeursbron per sublaag via gesigneerde we
 
 **Op `/richting`** (uit P28): bron rechts in de kop "Uit SalesDNA · bijgewerkt 12 okt"; voor de beheerder "Wijzigen doe je in SalesDNA" in plaats van "Inrichten"; per onderdeel "Mogelijk verouderd in SalesDNA" als dat zo is. In de bronregel van elk concept, script en bericht hetzelfde label (de concepten zelf komen in P10 en P18).
 
-**Verwijderd uit SalesDNA**: een verwijzing op een account of deal naar een branche, concurrent of winpunt dat in SalesDNA verdween, toont "Verwijderd uit SalesDNA" naast de naam.
+**Verwijderd uit SalesDNA**: een verwijzing op een account of afspraak naar een branche, concurrent of winpunt dat in SalesDNA verdween, toont "Verwijderd uit SalesDNA" naast de naam.
 
 **Telefoon.** Koppelingen staan onder Instellingen en openen met "Beter op een groot scherm" (8.12). Op `/richting` zijn bron en labels op 390 px leesbaar zonder horizontale scroll.
 
@@ -72,7 +72,7 @@ ADR-002 (gewijzigd): SalesDNA is de voorkeursbron per sublaag via gesigneerde we
 - **Versie boven vlag**: SalesDNA zet bij een gewijzigd blok per branche niets op verouderd; Dealtrace kijkt daarom naar versienummer en `bijgewerkt_op`, niet alleen naar de vlag (C.9 punt 7: alleen een gewijzigd blok in L0.4 geeft geen verouderd-melding, wel een nieuwe versie).
 - **Idempotent** op `event_id` en op `(onderwerp_id, versie)`: een dubbel event verandert niets.
 - **Gat in de versies** (bijvoorbeeld 4 naar 6): volledige synchronisatie van die sublaag.
-- **Projectie**: upsert op `extern_id`; verdwenen ids op `actief=false`; verwijzingen in accounts en deals blijven op id met "Verwijderd uit SalesDNA"; een nieuwe branche of fase zonder mapping maakt een taak voor de beheerder; scripts die een verdwenen winpunt of concurrent noemen gaan op "Controleren" (vanaf P10).
+- **Projectie**: upsert op `extern_id`; verdwenen ids op `actief=false`; verwijzingen in accounts en afspraken blijven op id met "Verwijderd uit SalesDNA"; een nieuwe branche of fase zonder mapping maakt een taak voor de beheerder; scripts die een verdwenen winpunt of concurrent noemen gaan op "Controleren" (vanaf P10).
 - **Overstappen**: eigen naar SalesDNA per onderdeel met archief en naammapping via een controlelijst; SalesDNA naar eigen bij ontkoppelen met kopie en herkomst `salesdna`.
 - **Fasen**: SalesDNA-fasen koppelen aan een hoofdfase van de reis via `vv_fasen.reis_hoofdfase`. Open vraag 20: fasen als eigen event of meegestuurd met Winpunten; voorstel uit 22: meesturen met Winpunten, mapping in Instellingen.
 - **Golden circle** (L0.11): open vraag 19, de veldnamen haal je uit SalesDNA vóór de projectie. Tot dat antwoord er is: Niet vastgelegd in het bouwplan; voorstel: velden `waarom`, `hoe`, `wat` zoals in de eigen inrichting.
@@ -146,7 +146,7 @@ Elk endpoint behalve de webhook controleert de sessie en het recht (Bijlage A ga
 
 ### Integraties
 
-Adapter `server/utils/bronnen/salesdna.ts` met dezelfde interface voor echt en mock: `ping()`, `haalSublagen()`, `haalSublaag(onderwerpId)`. De mock levert de Voltvast-inhoud uit Bijlage C als payloads van `sublaag.bevestigd`, plus een testset met `sublaag.verouderd` voor L0.8, een gewijzigd blok in L0.4 en een hernoemde br-02. Foutmeldingen in gewone taal op de koppelingenpagina; logging in `koppeling_runs`; geen kosten in het verbruik (SalesDNA rekent niet per bericht). Het geheim staat niet in logs.
+Adapter `server/utils/bronnen/salesdna.ts` met dezelfde interface voor echt en mock: `ping()`, `haalSublagen()`, `haalSublaag(onderwerpId)`. De mock levert de Voltvast-inhoud uit Bijlage C als payloads van `sublaag.bevestigd`, plus een testset met `sublaag.verouderd` voor L0.8, een gewijzigd blok in L0.4 en een hernoemde br-02; de payloads staan als fixtures in `seed/webhooks/` (met `seed/webhooks/testgevallen/`). Lokaal (13.5) draait de koppeling altijd op deze mock; er is geen SalesDNA-omgeving nodig en het gedeelde geheim staat alleen in `.env.local`. Foutmeldingen in gewone taal op de koppelingenpagina; logging in `koppeling_runs`; geen kosten in het verbruik (SalesDNA rekent niet per bericht). Het geheim staat niet in logs.
 
 ### AI-stappen
 
@@ -188,7 +188,7 @@ Suggesties naar SalesDNA en `suggestie.status` terug (P23); bijlagen van winpunt
 12. "SalesDNA wordt de bron" archiveert de eigen inhoud en mapt verwijzingen op naam na bevestiging van de controlelijst; "Ontkoppelen" kopieert de spiegel naar de eigen inrichting met herkomst `salesdna`.
 13. Bij een gespiegeld onderdeel is "Bewerken" niet zichtbaar en weigert `PUT /api/instellingen/verkoopverhaal/:onderdeel` met 409; de eigen aanvullingen blijven bewerkbaar.
 14. Zonder koppeling werkt alles met de eigen inrichting; geen foutmeldingen voor gebruikers.
-15. Alle tests draaien zonder netwerk tegen de mock; het geheim komt niet in logs en de koppelingenpagina toont alleen een vingerafdruk.
+15. Alle tests draaien lokaal zonder netwerk tegen de mock met de fixtures uit `seed/webhooks/` (13.5); het geheim komt niet in logs en de koppelingenpagina toont alleen een vingerafdruk.
 16. Getest als accountmanager Beginner, Gevorderd en Expert (lezen, labels, geen bewerken), als salesmanager en als beheerder (koppelen, bron kiezen); cross-tenant: een webhook met het geheim van organisatie A schrijft nooit in B.
 17. Bijlage A, gat 16: handtekening, tijdvenster, idempotentie en projectie staan elk één keer in `server/utils/` of `shared/`.
 

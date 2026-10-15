@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Funnel · Dealtrace</title>
+<link rel="stylesheet" href="../designsysteem/dealdrive-designsysteem.css">
+<link rel="stylesheet" href="mockup.css">
+</head>
+<body data-pagina="funnel" data-titel="Funnel" data-ai-context="Scherm: Funnel">
+<div class="app-shell">
+<main class="app-shell-main" id="inhoud">
+<section class="section">
+  <div class="container">
+    <div class="sec-head">
+      <div>
+        <span class="kicker kicker--streep">Funnel · deze maand</span>
+        <h1 class="title title--groot">Van 214 prospects kwamen er 11 tot een eerste afspraak.</h1>
+        <p class="subtitle subtitle--groot">Testbedrijf Voltvast · standaardreis · oktober tot en met 14 okt. Dealtrace loopt tot en met de eerste afspraak; daarna draag je over aan DealDrive, het CRM of een collega.</p>
+      </div>
+      <div class="toolbar-buttons">
+        <button type="button" class="dd-actie dd-actie--secundair" data-min="expert" data-toast="Kies twee reizen of twee versies. Minimaal 20 accounts per reis."><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-chart-column"/></svg>Vergelijk reizen</button>
+        <button type="button" class="dd-actie dd-actie--secundair" data-min="expert" data-toast="Download CSV gestart."><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-download"/></svg>Download CSV</button>
+        <button type="button" class="dd-actie dd-actie--secundair" data-ai><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sparkles"/></svg>Vraag AI</button>
+        <a class="dd-actie dd-actie--secundair" href="helpcenter.html"><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-help"/></svg>Hulp</a>
+      </div>
+    </div>
+    <div class="rijtje mt-16" role="group" aria-label="Keuzes">
+      <label class="veld"><span class="veld-label">Periode</span><select class="invoer"><option>Deze maand</option><option>Dit kwartaal</option><option>Verkoopjaar</option><option>Eigen periode</option></select></label>
+      <label class="veld" data-min="gevorderd"><span class="veld-label">Doelgroep</span><select class="invoer"><option>Alle doelgroepen</option><option>Installatiebedrijven woningbouw</option><option>Utiliteitsinstallateurs</option></select></label>
+      <label class="veld" data-min="gevorderd"><span class="veld-label">Reis</span><select class="invoer"><option>Standaardreis</option><option>Overstappers van de webgroothandel</option></select></label>
+      <label class="veld" data-min="gevorderd"><span class="veld-label">Campagne</span><select class="invoer"><option>Alle campagnes</option><option>Overstappers van Online webgroothandel</option></select></label>
+      <label class="veld" data-rollen="salesmanager,beheerder,founder"><span class="veld-label">Persoon of team</span><select class="invoer"><option>Team Binnendienst</option><option>Sanne Kuipers</option><option>Mark Veenstra</option><option>Jan Wolters</option></select></label>
+      <label class="veld"><span class="veld-label">Kanaal</span><select class="invoer"><option>Alle kanalen</option><option>Bellen</option><option>Mail</option><option>LinkedIn</option><option>Bezoek</option></select></label>
+    </div>
+    <div class="stokt-kader mt-16">
+      <span><strong>Hier stokt het:</strong> van Benaderd naar In gesprek 18 procent, norm 30 procent.</span>
+      <button type="button" class="dd-act" data-fu-lijst="Benaderd">Toon de 104 accounts</button>
+    </div>
+  </div>
+</section>
+
+<section class="section section--alt">
+  <div class="container">
+    <div class="funnel-hoofdfases" aria-hidden="true"><span class="funnel-hoofdfase">1 · Vinden en kwalificeren</span><span class="funnel-hoofdfase">2 · Bewerken op ritme</span><span class="funnel-hoofdfase">3 · Verbinden</span></div>
+    <div class="funnel" aria-label="Funnel per fase">
+      <button type="button" class="funnel-fase" data-fase="Gevonden">
+        <span class="funnel-naam">Gevonden</span>
+        <span class="funnel-aantal">214</span>
+        <span class="funnel-balk" aria-hidden="true"><span style="--a:100%"></span></span>
+        <span class="funnel-meta"><span data-min="gevorderd"><strong>79% naar Dossier compleet</strong><br>doorlooptijd 2 dagen<br></span>binnengekomen deze maand</span>
+      </button>
+      <button type="button" class="funnel-fase" data-fase="Dossier compleet">
+        <span class="funnel-naam">Dossier compleet</span>
+        <span class="funnel-aantal">168</span>
+        <span class="funnel-balk" aria-hidden="true"><span style="--a:78.5%"></span></span>
+        <span class="funnel-meta"><span data-min="gevorderd"><strong>72% naar Gekwalificeerd</strong><br>doorlooptijd 4 dagen<br></span>79% vanaf Gevonden</span>
+      </button>
+      <button type="button" class="funnel-fase" data-fase="Gekwalificeerd">
+        <span class="funnel-naam">Gekwalificeerd</span>
+        <span class="funnel-aantal">121</span>
+        <span class="funnel-balk" aria-hidden="true"><span style="--a:56.5%"></span></span>
+        <span class="funnel-meta"><span data-min="gevorderd"><strong>86% naar Benaderd</strong><br>doorlooptijd 3 dagen<br></span>BAND 3 of 4 ingevuld</span>
+      </button>
+      <button type="button" class="funnel-fase funnel-fase--stokt" data-fase="Benaderd">
+        <span class="funnel-naam">Benaderd</span>
+        <span class="funnel-aantal">104</span>
+        <span class="funnel-balk" aria-hidden="true"><span style="--a:48.6%"></span></span>
+        <span class="funnel-meta"><span data-min="gevorderd"><strong>18% naar In gesprek · norm 30%</strong><br>doorlooptijd 9 dagen<br></span>gemiddeld 3,4 pogingen</span>
+        <span class="funnel-stokt-pil">Hier stokt het</span>
+      </button>
+      <button type="button" class="funnel-fase" data-fase="In gesprek">
+        <span class="funnel-naam">In gesprek</span>
+        <span class="funnel-aantal">19</span>
+        <span class="funnel-balk" aria-hidden="true"><span style="--a:8.9%"></span></span>
+        <span class="funnel-meta"><span data-min="gevorderd"><strong>58% naar Afspraak gepland</strong><br>doorlooptijd 5 dagen<br></span>beslisser bereikt 63%</span>
+      </button>
+      <button type="button" class="funnel-fase" data-fase="Afspraak gepland">
+        <span class="funnel-naam">Afspraak gepland</span>
+        <span class="funnel-aantal">11</span>
+        <span class="funnel-balk" aria-hidden="true"><span style="--a:5.1%"></span></span>
+        <span class="funnel-meta"><span data-min="gevorderd"><strong>82% gehouden</strong><br>doorlooptijd 8 dagen<br></span>eerste afspraken</span>
+      </button>
+      <button type="button" class="funnel-fase" data-fase="Afspraak gehouden">
+        <span class="funnel-naam">Afspraak gehouden</span>
+        <span class="funnel-aantal">9</span>
+        <span class="funnel-balk" aria-hidden="true"><span style="--a:4.2%"></span></span>
+        <span class="funnel-meta"><span data-min="gevorderd"><strong>67% overgedragen</strong><br>doorlooptijd 1 dag<br></span>no-show 18% (2 van 11)</span>
+      </button>
+      <button type="button" class="funnel-fase" data-fase="Overgedragen">
+        <span class="funnel-naam">Overgedragen</span>
+        <span class="funnel-aantal">6</span>
+        <span class="funnel-balk" aria-hidden="true"><span style="--a:2.8%"></span></span>
+        <span class="funnel-meta"><span data-min="gevorderd"><strong>DealDrive 4 · CRM 1 · collega 1</strong><br></span>na een eerste afspraak met vervolg</span>
+      </button>
+    </div>
+    <p class="meta mt-8">Per fase het aantal accounts dat de fase bereikte<span data-min="gevorderd">, de conversie naar de volgende fase en de gemiddelde doorlooptijd</span>. Klik op een fase voor de accounts.</p>
+  </div>
+</section>
+
+<section class="section" data-max="beginner">
+  <div class="container">
+    <div class="lege-staat">
+      <span class="lege-staat-kicker">Nog niet aangezet</span>
+      <h3 class="lege-staat-titel">Conversie, doorlooptijd, uitval met reden en pogingen tot afspraak.</h3>
+      <p class="lege-staat-tekst">Als Beginner zie je je eigen funnel: hoeveel accounts per fase en waar het stokt. De rest hoort bij Gevorderd. <a class="tekst-link" href="helpcenter.html">Lees hoe het werkt</a></p>
+    </div>
+  </div>
+</section>
+
+<section class="section" data-min="gevorderd">
+  <div class="container">
+    <div class="raster raster--2">
+      <div>
+        <h2 class="kop-blok">Uitval per fase</h2>
+        <p class="meta">Naar nee, geparkeerd of afgekoeld, met de top drie redenen.</p>
+        <div class="tabel-wrap mt-12"><table class="tabel tabel--rapport uitval-tabel">
+          <thead><tr><th>Fase</th><th class="cel-r">Uitval</th><th>Top drie redenen</th><th></th></tr></thead>
+          <tbody>
+          <tr><td class="cel-naam">Gevonden</td><td class="cel-r">46</td><td>Niet geschikt 31 · Anders 9 · Verkeerd moment 6</td><td><button type="button" class="dd-act" data-fu-lijst="Uitval bij Gevonden">Accounts</button></td></tr>
+          <tr><td class="cel-naam">Dossier compleet</td><td class="cel-r">22</td><td>Niet geschikt 14 · Geen budget 5 · Anders 3</td><td><button type="button" class="dd-act" data-fu-lijst="Uitval bij Dossier compleet">Accounts</button></td></tr>
+          <tr><td class="cel-naam">Gekwalificeerd</td><td class="cel-r">9</td><td>Verkeerd moment 5 · Niet de beslisser 3 · Anders 1</td><td><button type="button" class="dd-act" data-fu-lijst="Uitval bij Gekwalificeerd">Accounts</button></td></tr>
+          <tr><td class="cel-naam">Benaderd</td><td class="cel-r">52</td><td>Tevreden met huidige leverancier 14 · Geen budget 6 · Verkeerd moment 5 · plus 27 geparkeerd na de laatste poging</td><td><button type="button" class="dd-act" data-fu-lijst="Uitval bij Benaderd">Accounts</button></td></tr>
+          <tr><td class="cel-naam">In gesprek</td><td class="cel-r">6</td><td>Tevreden met huidige leverancier 3 · Geen behoefte 2 · Niet de beslisser 1</td><td><button type="button" class="dd-act" data-fu-lijst="Uitval bij In gesprek">Accounts</button></td></tr>
+          <tr><td class="cel-naam">Afspraak gepland</td><td class="cel-r">2</td><td>Niet verschenen 2 (terug in de reis, opnieuw inplannen)</td><td><button type="button" class="dd-act" data-fu-lijst="Uitval bij Afspraak gepland">Accounts</button></td></tr>
+          <tr><td class="cel-naam">Afspraak gehouden</td><td class="cel-r">3</td><td>Geen behoefte 2 · Geen budget 1 (geen vervolg)</td><td><button type="button" class="dd-act" data-fu-lijst="Uitval bij Afspraak gehouden">Accounts</button></td></tr>
+          </tbody>
+        </table></div>
+        <p class="tekst mt-12"><strong>Verloren aan</strong> (uit het verkoopverhaal): Online webgroothandel 8 · Landelijke groothandelsketen 5 · Fabrikant die direct levert 1</p>
+      </div>
+      <div>
+        <h2 class="kop-blok">Pogingen tot afspraak</h2>
+        <p class="meta">Bij welke poging de 11 eerste afspraken ontstonden.</p>
+        <div class="poging-staven mt-16" role="img" aria-label="Eerste afspraken per poging: 1 poging 2, 2 pogingen 2, 3 pogingen 3, 4 pogingen 2, 5 pogingen 1, later 1"><div class="poging-staaf poging-staaf--uit"><strong>2</strong><span style="height:54%"></span><small>poging 1</small></div><div class="poging-staaf poging-staaf--uit"><strong>2</strong><span style="height:54%"></span><small>poging 2</small></div><div class="poging-staaf"><strong>3</strong><span style="height:81%"></span><small>poging 3</small></div><div class="poging-staaf"><strong>2</strong><span style="height:54%"></span><small>poging 4</small></div><div class="poging-staaf"><strong>1</strong><span style="height:27%"></span><small>poging 5</small></div><div class="poging-staaf"><strong>1</strong><span style="height:27%"></span><small>poging later</small></div></div>
+        <div class="waarschuwing mt-16"><svg class="icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-alert"/></svg><span>Wie na twee pogingen stopt, mist 7 van de 11 eerste afspraken.</span></div>
+        <h2 class="kop-blok mt-32">Overdracht</h2>
+        <p class="tekst mt-8">6 accounts overgedragen na een eerste afspraak met vervolg: 4 naar DealDrive, 1 naar het CRM, 1 naar een collega. 2 eerste afspraken met vervolg wachten nog op de vraag "Overdragen?".</p>
+        <a class="tekst-link" href="bezoeken.html#fo-afronden">Rond een eerste afspraak af en draag over →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section--laatste">
+  <div class="container">
+    <h2 class="kop-blok" id="fu-lijst-titel">Accounts in Benaderd <span class="meta">104 · eerste vijf</span></h2>
+    <div class="tabel-wrap mt-12"><table class="tabel">
+      <thead><tr><th>Account</th><th>Fase sinds</th><th>Laatste poging</th><th>Volgende stap</th><th></th></tr></thead>
+      <tbody>
+          <tr><td class="cel-naam"><a class="tabel-link" href="account.html">Teunisveld Installatie</a></td><td>Benaderd sinds 2 okt</td><td>poging 2 van 5 · voicemail</td><td>Bellen · do 16 okt</td><td><div class="cel-acties"><button type="button" class="dd-act" data-toast="Taak gemaakt voor Teunisveld Installatie.">Maak taak</button><a class="dd-act" href="account.html">Open</a></div></td></tr>
+          <tr><td class="cel-naam"><a class="tabel-link" href="account.html">Oldenhave Klimaattechniek</a></td><td>Benaderd sinds 9 okt</td><td>poging 1 van 5 · geen gehoor</td><td>Opvolgmail · vandaag</td><td><div class="cel-acties"><button type="button" class="dd-act" data-toast="Taak gemaakt voor Oldenhave Klimaattechniek.">Maak taak</button><a class="dd-act" href="account.html">Open</a></div></td></tr>
+          <tr><td class="cel-naam"><a class="tabel-link" href="account.html">De Kemphaan Zonnetechniek</a></td><td>Benaderd sinds 18 sep</td><td>poging 4 van 5 · geen reactie</td><td>LinkedIn-bericht · vr 17 okt</td><td><div class="cel-acties"><button type="button" class="dd-act" data-toast="Taak gemaakt voor De Kemphaan Zonnetechniek.">Maak taak</button><a class="dd-act" href="account.html">Open</a></div></td></tr>
+          <tr><td class="cel-naam"><a class="tabel-link" href="account.html">Klaver en Wiersma Techniek</a></td><td>Benaderd sinds 7 okt</td><td>poging 2 van 5 · gesproken met receptie</td><td>Bellen beslisser · ma 20 okt</td><td><div class="cel-acties"><button type="button" class="dd-act" data-toast="Taak gemaakt voor Klaver en Wiersma Techniek.">Maak taak</button><a class="dd-act" href="account.html">Open</a></div></td></tr>
+          <tr><td class="cel-naam"><a class="tabel-link" href="account.html">Marskamp Installaties</a></td><td>Benaderd sinds 30 sep</td><td>poging 3 van 5 · geen gehoor</td><td>Bezoek op regiodag · di 21 okt</td><td><div class="cel-acties"><button type="button" class="dd-act" data-toast="Taak gemaakt voor Marskamp Installaties.">Maak taak</button><a class="dd-act" href="account.html">Open</a></div></td></tr>
+          </tbody>
+    </table></div>
+  </div>
+</section>
+</main>
+</div>
+<script src="mockup.js"></script>
+<script>
+/* Funnel: een klik op een fase of uitvalreden zet de lijst eronder op die fase (F17). */
+(function () {
+  var titel = document.getElementById('fu-lijst-titel');
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-fase], [data-fu-lijst]');
+    if (!el || !titel) return;
+    var naam = el.getAttribute('data-fase') || el.getAttribute('data-fu-lijst');
+    titel.firstChild.textContent = (naam.indexOf('Uitval') === 0 ? naam : 'Accounts in ' + naam) + ' ';
+    titel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}());
+</script>
+</body>
+</html>

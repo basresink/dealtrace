@@ -2,11 +2,11 @@
    Dealtrace mockup · aanvulling op ../designsysteem/dealdrive-designsysteem.css
    ----------------------------------------------------------------------------
    Alleen wat het designsysteem nog niet heeft: de strook Mockup-instellingen,
-   de vergrendelde menugroep, de mobiele schil uit hoofdstuk 8 (compacte kop,
+   de menugroep "Nog niet aangezet", de mobiele schil uit hoofdstuk 8 (compacte kop,
    onderbalk, schuifvenster, plakkende actiebalk, offline strook), de
    telefoonkaders voor telefoon.html en een paar nieuwe componenten uit
    hoofdstuk 14 (uitkomstraster, pogingregel, bewijsregel, scriptpaneel,
-   kansregel, niveaukaart). Kleuren en maten via tokens; hoeken 2 px; geen
+   kansregel, meetregel), de AI-assistent, de funnel en het niveauraster. Kleuren en maten via tokens; hoeken 2 px; geen
    schaduwen.
    ========================================================================== */
 
@@ -102,7 +102,7 @@ html[data-werkplek='buitendienst'] [data-werkplek='binnendienst'] { display: non
 }
 .sb-org-knop:hover { border-color: var(--wit-30); color: var(--wit); }
 
-/* Vergrendelde menugroep (6.1) */
+/* Menugroep "Nog niet aangezet" (6.1) */
 .sb-slotgroep-kop {
   display: flex;
   align-items: center;
@@ -356,9 +356,9 @@ html[data-werkplek='buitendienst'] [data-werkplek='binnendienst'] { display: non
 .uitkomst:hover { border-color: var(--ink); }
 .uitkomst--aan { background: var(--ink); border-color: var(--ink); color: var(--yellow); }
 
-/* Niveaukaart (4.5) */
-.niveau-criterium { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin-bottom: 12px; font-size: var(--fs-klein); }
-.niveau-criterium .voortgang { grid-column: 1 / -1; }
+/* Meetregel met balk (ambitie op Richting) */
+.meetregel { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin-bottom: 12px; font-size: var(--fs-klein); }
+.meetregel .voortgang { grid-column: 1 / -1; }
 
 /* Kansregel met scoreopbouw (F10) */
 .kansregel {
@@ -466,7 +466,7 @@ html[data-werkplek='buitendienst'] [data-werkplek='binnendienst'] { display: non
 .stap--klaar { border-top-color: var(--ink); color: var(--ink); }
 .stap--nu { border-top-color: var(--yellow); color: var(--ink); }
 
-/* Vergrendelde pagina (6.1) */
+/* Pagina die nog niet aanstaat (6.1) */
 .slotblok { max-width: 640px; }
 .slotblok .fo-blok { margin-top: 16px; }
 
@@ -840,3 +840,153 @@ html[data-werkplek='buitendienst'] [data-werkplek='binnendienst'] { display: non
 .belmodus-voet .uitkomstraster { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
 .taakregel--rij { grid-template-columns: 76px 1fr; align-items: center; }
 .taakregel--rij .rijtje { justify-content: space-between; }
+
+/* ============================================================================
+   AI-assistent (F26): flyout rechts op de laptop (480 px, blijft open terwijl
+   je doorwerkt, dus zonder donkere laag), schuifvenster op de telefoon.
+   ========================================================================== */
+.ai-overlay { background: transparent; pointer-events: none; }
+.ai-overlay .fo-panel { pointer-events: auto; top: var(--strip-h); }
+.ai-body { display: flex; flex-direction: column; gap: 0; padding: 16px 24px; }
+.ai-kopregel { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.ai-context {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 2px 4px 2px 8px;
+  background: var(--wit);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  font-size: var(--fs-meta);
+  font-weight: 700;
+  color: var(--ink);
+}
+.ai-context button { display: grid; place-items: center; width: 24px; height: 24px; padding: 0; background: transparent; border: 0; color: var(--muted); cursor: pointer; }
+.ai-context button:hover { color: var(--ink); }
+.ai-context--leeg { padding-right: 8px; border-style: dashed; border-color: var(--border-strong); color: var(--muted); font-weight: 600; }
+.ai-credits { font-size: var(--fs-meta); font-weight: 600; color: var(--muted); }
+.ai-voorstellen { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.ai-voorstel {
+  min-height: 32px;
+  padding: 4px 10px;
+  background: var(--wit);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.ai-voorstel:hover { border-color: var(--ink); }
+.ai-gesprek { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.ai-bericht { padding: 12px 14px; font-size: var(--fs-klein); line-height: 1.5; color: var(--ink); }
+.ai-bericht p + p { margin-top: 8px; }
+.ai-bericht--jij { align-self: flex-end; max-width: 85%; background: var(--ink); color: var(--wit); }
+.ai-bericht--ai { background: var(--wit); border: 1px solid var(--border); border-left: 3px solid var(--yellow); }
+.ai-bronnen { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ai-bron {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  color: var(--muted);
+}
+.ai-acties { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.ai-voet { display: block; padding: 12px 24px; }
+.ai-invoer { display: flex; gap: 6px; width: 100%; }
+.ai-invoer .invoer { flex: 1; min-width: 0; }
+.ai-regel { margin-top: 6px; font-size: var(--fs-meta); color: var(--muted); }
+.sheet--ai .sheet-voet { display: block; }
+.sheet--ai .sheet-body { background: var(--bg); }
+
+/* ============================================================================
+   Funnel van de prospectreis (F17): horizontaal op de laptop, verticaal op
+   de telefoon (één fase per rij).
+   ========================================================================== */
+.funnel { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 0; border: 1px solid var(--border); background: var(--wit); }
+.funnel-hoofdfases { display: grid; grid-template-columns: 3fr 3fr 2fr; gap: 0; margin-bottom: 4px; }
+.funnel-hoofdfase { padding: 6px 10px; border-top: 3px solid var(--ink); font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); }
+.funnel-hoofdfase + .funnel-hoofdfase { margin-left: 4px; }
+.funnel-fase {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px 10px 14px;
+  background: var(--wit);
+  border: 0;
+  border-right: 1px solid var(--border);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.funnel-fase:last-child { border-right: 0; }
+.funnel-fase:hover { background: var(--surface); }
+.funnel-naam { font-size: var(--fs-meta); font-weight: 700; }
+.funnel-aantal { font-family: var(--font-serif); font-size: 28px; font-weight: 700; line-height: 1; font-feature-settings: "tnum"; }
+.funnel-balk { position: relative; height: 96px; background: var(--surface); }
+.funnel-balk span { position: absolute; right: 0; bottom: 0; left: 0; height: var(--a); min-height: 2px; background: var(--ink); }
+.funnel-meta { font-size: var(--fs-label); line-height: 1.5; color: var(--muted); font-feature-settings: "tnum"; }
+.funnel-meta strong { color: var(--ink); }
+.funnel-fase--stokt { background: var(--orange-zacht); box-shadow: inset 0 3px 0 var(--orange); }
+.funnel-fase--stokt .funnel-balk span { background: var(--orange); }
+.funnel-stokt-pil { align-self: flex-start; padding: 0 6px; background: var(--orange); border-radius: var(--radius); color: var(--wit); font-size: var(--fs-label); font-weight: 800; }
+.stokt-kader { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 14px; background: var(--orange-zacht); border-left: 3px solid var(--orange); font-size: var(--fs-klein); color: var(--ink); }
+.stokt-kader strong { color: var(--orange-dark); }
+.uitval-tabel td, .uitval-tabel th { vertical-align: top; }
+.poging-staven { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; align-items: end; height: 160px; }
+.poging-staaf { display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; height: 100%; text-align: center; }
+.poging-staaf span { display: block; background: var(--ink); }
+.poging-staaf--uit span { background: var(--border-strong); }
+.poging-staaf small { font-size: var(--fs-label); color: var(--muted); font-feature-settings: "tnum"; }
+.poging-staaf strong { font-size: var(--fs-meta); font-feature-settings: "tnum"; }
+@media (max-width: 1023px) {
+  .funnel-hoofdfases { display: none; }
+  .funnel { grid-template-columns: 1fr; }
+  .funnel-fase { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 12px; padding: 12px 14px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .funnel-fase:last-child { border-bottom: 0; }
+  .funnel-balk { grid-column: 1 / -1; height: 8px; }
+  .funnel-balk span { top: 0; right: auto; bottom: 0; width: var(--a); min-width: 2px; height: auto; min-height: 0; }
+  .funnel-aantal { font-size: 24px; }
+  .funnel-meta { grid-column: 1 / -1; }
+  .funnel-stokt-pil { grid-column: 1 / -1; }
+  .funnel-fase--stokt { box-shadow: inset 3px 0 0 var(--orange); }
+}
+
+/* ============================================================================
+   Features per niveau (F23, B18) en credits (11.4)
+   ========================================================================== */
+.niveauraster th, .niveauraster td { vertical-align: middle; }
+.niveauraster .cel-c { text-align: center; }
+.celknop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 64px;
+  min-height: 32px;
+  padding: 2px 8px;
+  background: var(--wit);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--fs-meta);
+  font-weight: 700;
+  cursor: pointer;
+}
+.celknop--aan { background: var(--ink); border: 1px solid var(--ink); color: var(--yellow); }
+.celknop--afwijking { outline: 2px solid var(--yellow); outline-offset: 1px; }
+.creditmeter { display: grid; gap: 8px; }
+.creditmeter-cijfer { font-family: var(--font-serif); font-size: 32px; font-weight: 700; line-height: 1; font-feature-settings: "tnum"; }
+.creditmeter .voortgang { height: 10px; }

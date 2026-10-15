@@ -24,6 +24,7 @@
         <button type="button" class="vd-toggle" data-min="gevorderd" aria-expanded="false" data-toast="Periode: vandaag, morgen, deze week."><svg class="icoon vd-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-filter"/></svg>Filters<svg class="icoon vd-caret" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
         <button type="button" class="dd-actie dd-actie--secundair knop-slot" data-max="beginner" data-slot="route-plannen"><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg>Route plannen</button>
         <a class="dd-actie dd-actie--secundair" href="index.html#niet-uitgewerkt" data-stub="Agenda">Agenda</a>
+        <button type="button" class="dd-actie dd-actie--secundair" data-ai><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sparkles"/></svg>Vraag AI</button>
         <a class="dd-actie dd-actie--secundair" href="helpcenter.html"><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-help"/></svg>Hulp</a>
       </div>
     </div>
@@ -125,9 +126,9 @@
         <span class="kansregel-nr">4</span>
         <div>
           <h3 class="kop-kaart">Noorderveld Zonnewerk <span class="klasse klasse--c">C</span></h3>
-          <p class="tekst tekst--inkt">Offerte die volgens de offertematrix een bezoek vraagt · Roden</p>
+          <p class="tekst tekst--inkt">Terug uit DealDrive als slapende klant, terugkomregel bereikt · Roden</p>
           <p class="tekst">18 min omrijden, tussen stop 1 en 2</p>
-          <p class="scoreopbouw">offerte +80 · basisscore 22 · 18 min omrijden -18 · kansscore 84</p>
+          <p class="scoreopbouw">terugkomregel +60 · basisscore 42 · 18 min omrijden -18 · kansscore 84</p>
           <div class="rijtje mt-8"><button type="button" class="dd-act dd-act--primair" data-open="fo-tussenstop"><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Tussenstop</button><button type="button" class="dd-act" data-toast="Overgeslagen. De kans komt een week niet terug.">Overslaan</button></div>
         </div>
       </article>
@@ -144,7 +145,7 @@
         <p class="meta">Top 5 voor reistijd en lege momenten, zonder de accounts die je vandaag bezoekt.</p>
         <div class="lijst mt-12">
           <div class="rij rij--compact"><div class="rij-info"><h3 class="rij-titel">Oldenhave Klimaattechniek</h3><div class="rij-sub">poging 2 van 5 · vorige: voicemail</div></div><div class="rij-rechts"><a class="dd-act" href="tel:+31687654321">Bel</a></div></div>
-          <div class="rij rij--compact"><div class="rij-info"><h3 class="rij-titel">Ploegmakers Utiliteit</h3><div class="rij-sub">Offerte wacht 9 dagen</div></div><div class="rij-rechts"><a class="dd-act" href="tel:+31301234567">Bel</a></div></div>
+          <div class="rij rij--compact"><div class="rij-info"><h3 class="rij-titel">Ploegmakers Utiliteit</h3><div class="rij-sub">No-show op 7 okt: opnieuw inplannen</div></div><div class="rij-rechts"><a class="dd-act" href="tel:+31301234567">Bel</a></div></div>
           <div class="rij rij--compact"><div class="rij-info"><h3 class="rij-titel">De Kemphaan Zonnetechniek</h3><div class="rij-sub">poging 4 van 5</div></div><div class="rij-rechts"><a class="dd-act" href="tel:+31320123456">Bel</a></div></div>
         </div>
       </div>
@@ -180,14 +181,24 @@
     <div class="fo-body fo-body--formulier">
       <span class="veld-label">Uitkomst</span>
       <div class="uitkomstraster uitkomstraster--2">
-        <button type="button" class="uitkomst">Interesse, vervolg</button><button type="button" class="uitkomst">Offerte gevraagd</button>
+        <button type="button" class="uitkomst uitkomst--aan">Vervolg afgesproken</button><button type="button" class="uitkomst">Later terugkomen</button>
         <button type="button" class="uitkomst">Geen interesse</button><button type="button" class="uitkomst">Andere contactpersoon</button>
       </div>
       <label class="veld"><span class="veld-label">Verslag</span><textarea class="invoer" rows="4" placeholder="Spreek je verslag in of typ het hier."></textarea></label>
       <div class="rijtje"><button type="button" class="dd-act dd-act--primair" data-toast="Opname gestart."><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mic"/></svg>Spreek je verslag in</button><button type="button" class="dd-act" data-toast="Camera geopend."><svg class="icoon dd-act-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-camera"/></svg>Foto</button></div>
-      <label class="veld"><span class="veld-label">Volgende stap</span><input class="invoer" type="text" value="Offerte sturen voor 21 okt"></label>
+      <article class="fo-blok fo-blok--accent">
+        <header class="fo-blok-kop"><h3 class="fo-blok-titel">Overdragen?</h3></header>
+        <p class="fo-tekst">Dit was de eerste afspraak en er is een vervolg. Dealtrace stopt hier; kies wie het verder oppakt.</p>
+        <div class="keuzegroep mt-8" role="group" aria-label="Overdragen aan">
+          <button type="button" class="keuzegroep-knop keuzegroep-knop--aan" aria-pressed="true">DealDrive</button>
+          <button type="button" class="keuzegroep-knop" aria-pressed="false">CRM</button>
+          <button type="button" class="keuzegroep-knop" aria-pressed="false">Collega</button>
+        </div>
+        <label class="veld mt-12"><span class="veld-label">Afgesproken vervolgstap</span><input class="invoer" type="text" value="Inventarisatie op 28 okt met Hilde en de werkvoorbereider"></label>
+        <p class="meta mt-8">Mee in de overdracht: contacten, buying committee, dossier, reis, dit verslag en de overdrachtsbriefing.</p>
+      </article>
     </div>
-    <footer class="fo-foot dd-acties"><button type="button" class="dd-act dd-act--primair" data-fo-sluit data-toast="Bezoek vastgelegd.">Bewaar bezoek</button><button type="button" class="dd-act" data-fo-sluit>Annuleren</button></footer>
+    <footer class="fo-foot dd-acties"><button type="button" class="dd-act dd-act--primair" data-fo-sluit data-toast="Bezoek vastgelegd en overgedragen aan DealDrive.">Bewaar en draag over</button><button type="button" class="dd-act" data-fo-sluit>Annuleren</button></footer>
   </aside>
 </div>
 </main>

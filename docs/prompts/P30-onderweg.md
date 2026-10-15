@@ -4,8 +4,8 @@
 |---|---|
 | Sprint | 8 |
 | Features | F10 (telefoonweergave), hoofdstuk 8 (8.5.2, 8.5.3, 8.6, 8.8) |
-| Hangt af van | P01 (sync, functiecatalogus), P27 (mobiele schil, onderbalk, schuifvensters, wachtrij), P03 (compacte accountkaart), P07 (taken, `rondTaakAf`), P10 (belmodus en "Hoe ging het?"), P32 (dagritme-kern, Vandaag op de telefoon), P13 (meetingsoorten, venster "Rond af"), P14 (`shared/route.ts`, kansen, routedienst, klaarzetten) |
-| Bron in het bouwplan | 8.2, 8.3, 8.4, 8.5.2, 8.5.3, 8.6, 8.7, 8.8, 8.11, 8.13, 8.14, 8.15, 8.16, F10, F24 (offline), 15.2, ADR-019, ADR-020 |
+| Hangt af van | P01 (sync, functiecatalogus), P27 (mobiele schil, onderbalk, schuifvensters, wachtrij), P03 (compacte accountkaart), P07 (taken, `rondTaakAf`), P10 (belmodus en "Hoe ging het?"), P32 (dagritme-kern, Vandaag op de telefoon), P13 (meetingsoorten, venster "Rond af"), P14 (`shared/route.ts`, kansen, routedienst, klaarzetten), P17 Funnel van de prospectreis en overdracht (de vraag "Overdragen?" na een gehouden eerste afspraak) |
+| Bron in het bouwplan | 8.2, 8.3, 8.4, 8.5.2, 8.5.3, 8.6, 8.7, 8.8, 8.11, 8.13, 8.14, 8.15, 8.16, F09 (uitkomsten), F10, F17 (overdracht), F24 (offline), 13.5 (lokaal bouwen), 15.2, ADR-019, ADR-020, ADR-021 |
 
 ## Lees eerst
 
@@ -51,15 +51,15 @@ Lege staat: Niet vastgelegd in het bouwplan; voorstel: "Geen bezoeken vandaag. K
 **Venster Bezoek afronden** (schuifvenster, opent vanuit de route, de aankomstkaart of de focuskaart, 8.5.3):
 
 1. Kop: account en tijd ("Bakker Bouw · 10:45 tot 11:30").
-2. **Uitkomst**: de knoppen van de meetingsoort als grote tegels in twee kolommen (bijvoorbeeld "Interesse, vervolg", "Offerte gevraagd", "Geen interesse", "Andere contactpersoon").
+2. **Uitkomst**: de knoppen van de meetingsoort als grote tegels in twee kolommen (bijvoorbeeld "Vervolg afgesproken", "Later terugkomen", "Geen interesse", "Andere contactpersoon").
 3. **Verslag**: één groot veld met de microfoonknop als primaire invoer ("Spreek je verslag in"), typen als terugval, en "Foto" (whiteboard, visitekaartje, situatie).
-4. **Volgende stap**: voorgesteld door de reis of uit het verslag ("Offerte sturen voor 21 okt"), aan te passen met datum en soort.
+4. **Volgende stap en overdracht**: bij een eerste afspraak met vervolg de vraag "Overdragen?" met DealDrive, het CRM of een collega (F17, gebouwd in P17); anders de volgende stap uit de reis of het verslag ("Terugbellen op 21 okt"), aan te passen met datum en soort.
 5. **Nieuwe contactpersoon** (ingeklapt): naam, functie, telefoon, of "Scan visitekaartje" (de scan zelf bouwt P31).
 6. Plakkende knop "Bewaar bezoek".
 
 Bij "Geen interesse" vraagt het venster de reden voor nee (F13, 7.2). Na bewaren sluit het venster na 1,2 seconden en verschijnt de meldingsstrook "Bezoek vastgelegd" met "Ongedaan maken" (5 seconden); offline: "Bewaard op je telefoon, wordt verstuurd zodra je verbinding hebt" (8.3).
 
-Let op de uitkomstlabels: 8.5.3 noemt "Interesse, vervolg", "Offerte gevraagd", "Geen interesse", "Andere contactpersoon"; F09 kent voor Kennismaking de codes `vervolg-inventarisatie`, `offerte-aanvraag`, `later`, `geen-match`. Niet vastgelegd in het bouwplan hoe die bij elkaar horen; voorstel: de tegels tonen de labels uit `meetingsoorten.data.uitkomsten`; de startset krijgt bij Kennismaking de labels "Interesse, vervolg" (`vervolg-inventarisatie`), "Offerte gevraagd" (`offerte-aanvraag`), "Later" (`later`), "Geen interesse" (`geen-match`), plus "Andere contactpersoon" (`nieuw_contact` uit 7.3).
+Let op de uitkomstlabels: 8.5.3 noemt "Vervolg afgesproken", "Later terugkomen", "Geen interesse", "Andere contactpersoon"; F09 kent voor Kennismaking, Inventarisatie en Demo (als eerste afspraak) de codes `vervolg`, `later`, `andere-contactpersoon`, `geen-vervolg`. Niet vastgelegd in het bouwplan hoe labels en codes bij elkaar horen; voorstel: de tegels tonen de labels uit `meetingsoorten.data.uitkomsten`; de startset koppelt "Vervolg afgesproken" aan `vervolg`, "Later terugkomen" aan `later`, "Andere contactpersoon" aan `andere-contactpersoon` en "Geen interesse" aan `geen-vervolg`. Er zijn geen uitkomsten voor offertes (B17). Het afronden van een eerste afspraak meldt `eerste-afspraak-gehouden` (F05); bij `vervolg` vraagt Dealtrace daarna "Overdragen?"; bij `geen-vervolg` volgt de gebeurtenis `geen-vervolg` met de reden voor nee.
 
 **Aankomstkaart** (Gevorderd, op Vandaag bovenaan): "Je bent bij Bakker Bouw" met "Pitstop" en "Bezoek afronden". Verschijnt alleen als je de app opent binnen 300 m van een afspraak rond de starttijd; een PWA volgt geen locatie op de achtergrond en Dealtrace beweert dat ook niet (8.6). "Rond de starttijd" is niet vastgelegd in het bouwplan; voorstel: van 15 minuten voor de start tot het einde van de afspraak.
 
@@ -90,7 +90,7 @@ Let op de uitkomstlabels: 8.5.3 noemt "Interesse, vervolg", "Offerte gevraagd", 
 - Locatie alleen bij openen van Route, "In de buurt" en "+ Inloop"; nooit opgeslagen of gevolgd (8.8, 15.2).
 - Geen polling: verversen bij openen van de app en via push (8.8).
 - Foto's verkleind tot 1.600 px, 12 maanden bewaard (15.2). Opnames in Opus met 24 kbit/s; na transcriptie verwijderd tenzij de organisatie bewaren aanzet (8.8, 8.9).
-- Dagpakket: bij openen met verbinding, en om 06:00 als de app in de achtergrond mag verversen. Inhoud: vandaag en morgen (afspraken, taken, belacties, kansen langs de route, route met reistijden); accountkaarten (contacten, laatste tien contactmomenten, open taken, deals, Pitstop) van de route van vandaag en morgen, de kansen en de bellijst; belscripts die je gebruikt, meetingsoorten met uitkomsten, redenen voor nee; helpartikelen van het leerpad van je niveau; de statische kaart van vandaag. Hooguit 5 MB per dag zonder foto's.
+- Dagpakket: bij openen met verbinding, en om 06:00 als de app in de achtergrond mag verversen. Inhoud: vandaag en morgen (afspraken, taken, belacties, kansen langs de route, route met reistijden); accountkaarten (contacten, laatste tien contactmomenten, open taken en afspraken, Pitstop) van de route van vandaag en morgen, de kansen en de bellijst; belscripts die je gebruikt, meetingsoorten met uitkomsten, redenen voor nee; de helpartikelen van de functies die voor je aanstaan; de statische kaart van vandaag. Hooguit 5 MB per dag zonder foto's.
 - Offline kan: bezoek afronden, uitkomst na bellen, verslag typen of inspreken (opname bewaard), foto's, nieuwe taak, nieuwe afspraak, nieuwe contactpersoon, signaal afhandelen, concept goedkeuren (versturen wacht), eigen velden invullen.
 - Offline kan niet: AI (analyse, scriptinvulling, visitekaartje lezen: de foto wacht), KvK en Datacollectief, routeberekening (de laatst bekende route blijft staan), accounts buiten het dagpakket.
 - Bij herstel verstuurt de wachtrij in volgorde; bij een conflict het conflictvenster met "Houd mijn versie" en "Neem de andere over" (F24).
@@ -149,6 +149,7 @@ Geen in deze prompt. De verslaganalyse (Notulist) en transcriptie volgen in P19 
 - Routedienst (P14) voor reistijden in het dagpakket en "In de buurt" (voorselectie hemelsbreed, reistijd voor de top 20, 8.14).
 - Kaartapps: diepe links naar Google Maps, Apple Kaarten of Waze volgens de keuze in Mijn instellingen.
 - Supabase Storage EU voor bijlagen.
+- Lokaal (13.5): de routedienst en de transcriptie draaien op hun mock, Supabase (met Storage) via `supabase start`; op een echte telefoon test je via `pnpm dev --host` in hetzelfde wifi-netwerk. Geen sleutel nodig.
 - PWA: service worker met statische bestanden 30 dagen, API-GET netwerk eerst met terugval op cache, dagpakket via Dexie; `navigator.storage.persist()` na installatie (8.14).
 
 ### Functiecatalogus
@@ -193,7 +194,7 @@ Sleutels niet vastgelegd in het bouwplan; niveaus uit 8.6 en 8.11; voorstel:
 9. De locatie wordt nooit opgeslagen: geen kolom, geen log, geen analytics met coördinaten.
 10. "In de buurt" toont alleen accounts binnen 15 minuten reistijd, met reden; "alleen prospects" werkt.
 11. De aankomstkaart verschijnt binnen 300 m in het tijdvenster en niet daarbuiten.
-12. Bij "Geen interesse" is een reden verplicht en wordt de afkoelperiode gezet.
+12. Bij "Geen interesse" is een reden verplicht en wordt de afkoelperiode gezet. Bij "Vervolg afgesproken" na een eerste afspraak verschijnt "Overdragen?" (P17); er is geen tegel of volgende stap voor een offerte.
 13. Toestellen (8.15): getest op iPhone SE (375 px), iPhone 15 of 16, Samsung Galaxy A, Pixel 7 of nieuwer en iPad staand; scenario 1 (volledige buitendienstdag met drie bezoeken, twee tussenstops, vijf belacties en drie ingesproken verslagen), scenario 2 en scenario 3 (zon en handschoenen) doorlopen; VoiceOver en TalkBack op Route en Bezoek afronden; tekstvergroting tot 200 procent zonder afgekapte knoppen.
 14. De onderbalk licht "Route" op op `/onderweg` en op Bezoek afronden (8.16).
 15. Niveaus (8.11): als Beginner route, navigeren, bezoek afronden, foto en top 3 kansen, zonder "In de buurt", "+ Inloop" en aankomstkaart; als Gevorderd ook die drie en alle kansen; als Expert ook eigen bronnen en straal. Een binnendienstprofiel ziet geen Route-tab. Getest per niveau.

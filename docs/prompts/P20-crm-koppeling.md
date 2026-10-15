@@ -4,12 +4,12 @@
 |---|---|
 | Sprint | 10 (Agents en bronnen) |
 | Features | F02 CRM-koppeling (vijfde bron van de leadstroom), integratie CRM uit hoofdstuk 12 |
-| Hangt af van | P01 (rechten, functiecatalogus, sessie), P03 (accounts, contacten, eigen velden), P04 (import, ontdubbelen, herkomst per veld), P05 (`kiesReis`, meldpunt `lead-overgenomen`), P11 (leadtabel, leadgenerator met tabblad Koppelingen, `koppelingen` en `koppeling_runs`), P15 (Datacollectief als voorbeeld van een adapter met plafond), P17 (deals en uitkomsten die je terugschrijft) |
-| Bron in het bouwplan | F02 (Bronnen, tabblad Koppelingen, technisch deel); hoofdstuk 12 (rij CRM en de regels onder de tabel); 10.1 (herkomst en bronprioriteit); 15.1, 15.2, 15.3; F05 (toewijzing bij binnenkomst); F13 (slapende klanten uit besteldata); F14 (CRM als interne bron); F19 (bron CRM-veld); hoofdstuk 21 (risico CRM); open vraag 8; ADR-015; Bijlage A regels 4 en 21 |
+| Hangt af van | P01 (rechten, functiecatalogus, sessie), P03 (accounts, contacten, eigen velden), P04 (import, ontdubbelen, herkomst per veld), P05 (`kiesReis`, meldpunt `lead-overgenomen`), P11 (leadtabel, leadgenerator met tabblad Koppelingen, `koppelingen` en `koppeling_runs`), P15 (Datacollectief als voorbeeld van een adapter met plafond), P17 Funnel van de prospectreis en overdracht (overdrachtsflow met `POST /api/accounts/:id/overdragen`, `overdrachtPakket(account)` en de tabel `overdrachten`; deze prompt levert het doel CRM) |
+| Bron in het bouwplan | F02 (Bronnen, tabblad Koppelingen, technisch deel); hoofdstuk 12 (rij CRM en de regels onder de tabel); 13.5 (lokaal bouwen met mocks); F17 (overdracht na de eerste afspraak); 10.1 (herkomst en bronprioriteit); 15.1, 15.2, 15.3; F05 (toewijzing bij binnenkomst); F13 (slapende klanten uit besteldata); F14 (CRM als interne bron); F19 (bron CRM-veld); hoofdstuk 21 (risico CRM); open vraag 8; ADR-015; Bijlage A regels 4 en 21 |
 
 ## Lees eerst
 
-- Bouwplan-Dealtrace.md: F02 volledig (vooral "Bronnen", "Tabblad Koppelingen", het datamodel, de adapters en de acceptatiecriteria), hoofdstuk 12 met de slotalinea over adapters, mocks, `koppeling_runs` en `GET /api/config/status`, 10.1 (herkomst per gegeven en bronprioriteit), 15.1 (ontdubbelen), 15.3 (geheimen, AES-256-GCM), F05 "Toewijzing van accounts aan een reis", F13 "Terugkomregels" (slapende klanten), F19 (veldtoewijzing naar het CRM), ADR-015, risico "CRM-koppeling geeft dubbele of verkeerde data", Bijlage A regels 4 en 21.
+- Bouwplan-Dealtrace.md: F02 volledig (vooral "Bronnen", "Tabblad Koppelingen", het datamodel, de adapters en de acceptatiecriteria), hoofdstuk 12 met de slotalinea over adapters, mocks, `koppeling_runs` en `GET /api/config/status`, 10.1 (herkomst per gegeven en bronprioriteit), 15.1 (ontdubbelen), 15.3 (geheimen, AES-256-GCM), F05 "Toewijzing van accounts aan een reis", F13 "Terugkomregels" (slapende klanten), F19 (veldtoewijzing naar het CRM), F17 (overdracht en de tabel `overdrachten`), 13.5 (lokaal bouwen), ADR-015, ADR-021, risico "CRM-koppeling geeft dubbele of verkeerde data", Bijlage A regels 4 en 21.
 - DealDrive op commit 75bee61:
   - `server/api/integrations/hubspot/start.get.ts`, `callback.get.ts`, `status.get.ts`, `sync.post.ts`, `disconnect.post.ts` (OAuth-stroom; let op: zonder sessiecontrole)
   - `server/utils/hubspot-client.ts` (API-aanroepen), `server/utils/hubspot-mapper.ts` (veldtoewijzing, lege velden naar `undefined`, geld in centen)
@@ -21,11 +21,11 @@
 
 ### Wat je bouwt
 
-Een CRM-koppeling via één adapterlaag (eerst HubSpot) waarmee Dealtrace bedrijven en contacten uit het CRM leest voor ontdubbelen en het klantprofiel, en overgenomen leads, contactpersonen, uitkomsten en deals terugschrijft.
+Een CRM-koppeling via één adapterlaag (eerst HubSpot) waarmee Dealtrace bedrijven en contacten uit het CRM leest voor ontdubbelen en het klantprofiel, en overgenomen leads, contactpersonen, uitkomsten en eerste afspraken terugschrijft, plus de overdracht na de eerste afspraak naar het CRM (het CRM maakt de deal, B17).
 
 ### Waarom
 
-Een accountmanager mag geen bedrijf benaderen dat al klant is of al in het CRM als prospect van een collega staat, en wat hij in Dealtrace wint moet in het CRM terechtkomen zonder overtypen. In DealDrive hadden de HubSpot-endpoints geen sessiecontrole, stond de state in het geheugen en schreef de koppeling niets terug (Bijlage A regel 21). De leadgenerator miste een server en bronnen (regel 4); deze prompt voegt de vijfde bron toe aan de ene leadstroom (ADR-015).
+Een accountmanager mag geen bedrijf benaderen dat al klant is of al in het CRM als prospect van een collega staat, en wat hij in Dealtrace doet (uitkomsten, eerste afspraken, de overdracht) moet in het CRM terechtkomen zonder overtypen. Deals en offertes ontstaan in het CRM, niet in Dealtrace (ADR-021). In DealDrive hadden de HubSpot-endpoints geen sessiecontrole, stond de state in het geheugen en schreef de koppeling niets terug (Bijlage A regel 21). De leadgenerator miste een server en bronnen (regel 4); deze prompt voegt de vijfde bron toe aan de ene leadstroom (ADR-015).
 
 ### Gebruikers en niveaus
 
@@ -47,7 +47,7 @@ Opbouw van boven naar beneden (voorstel voor de indeling; de inhoud is vastgeleg
 1. Kruimelpad "Instellingen · Koppelingen", kicker "DATA EN AI", titel "CRM-koppeling".
 2. Keuze van het CRM: HubSpot (beschikbaar); Salesforce, Microsoft Dynamics, Pipedrive en AFAS met de pil "Volgt" (open vraag 8: HubSpot, dan Salesforce, dan Dynamics en AFAS op aanvraag).
 3. Status: niet verbonden, verbonden met datum en account, of fout in gewone taal. Knoppen "Verbind met HubSpot" (geel) of "Test verbinding" en "Ontkoppel". Foutvoorbeeld in de stijl van hoofdstuk 12: "De koppeling met HubSpot is verlopen. Verbind opnieuw om verder te synchroniseren." (tekst niet vastgelegd; voorstel).
-4. **Richting per object**: Bedrijven, Contacten, Deals, Activiteiten, elk met "Lezen", "Schrijven" of "Beide". Standaard bij een nieuwe koppeling: alles op "Lezen" (risico 21: "eerst lezen, dan schrijven"; standaardwaarde niet vastgelegd, voorstel).
+4. **Richting per object**: Bedrijven, Contacten, Activiteiten (pogingen, uitkomsten en eerste afspraken), elk met "Lezen", "Schrijven" of "Beide". Standaard bij een nieuwe koppeling: alles op "Lezen" (risico 21: "eerst lezen, dan schrijven"; standaardwaarde niet vastgelegd, voorstel). Daaronder de schakelaar "Overdracht naar dit CRM" (aan of uit): staat hij aan, dan is het CRM een keuze bij "Overdragen?" na een gehouden eerste afspraak (P17).
 5. **Veldtoewijzing** per object: tabel met CRM-veld, Dealtrace-veld (standaardvelden en eigen velden als `cf:<sleutel>`), richting en een **voorbeeld** uit het eerste CRM-record ("veldtoewijzing met voorbeeld", hoofdstuk 21).
 6. **Eigenaarsregel**: CRM-eigenaar naar Dealtrace-gebruiker op e-mailadres; lijst met niet gevonden eigenaren en een keuze "Wijs toe aan" (terugval niet vastgelegd; voorstel: de salesmanager van het team, zoals de eigenaarsregel van de motor in F15).
 7. **Synchronisatiemoment**: elk uur en op verzoek; knop "Synchroniseer nu".
@@ -69,7 +69,8 @@ Lege staat (niet verbonden): "Er is nog geen CRM gekoppeld. Verbind je CRM om te
 3. **Eerste synchronisatie.** "Synchroniseer nu": de adapter leest bedrijven en contacten; het log toont "Gelezen 1.240, geschreven 0, fouten 3". Klanten uit het CRM zijn nu treffers bij ontdubbelen en tellen mee in het profiel.
 4. **Schrijven aanzetten.** Beheerder zet Bedrijven en Contacten op "Beide". Bij de volgende "Neem over" in de leadgenerator schrijft Dealtrace het bedrijf met contactpersonen naar HubSpot en bewaart het externe id; de bronpil van de lead blijft wat hij was.
 5. **Uitkomst terugschrijven.** Een accountmanager rondt een belpoging af met "Gesproken, afspraak"; bij de volgende synchronisatie (of direct via de wachtrij van de adapter) staat in HubSpot een activiteit met kanaal, uitkomst en datum.
-6. **Fout.** Het token verloopt; de kaart toont de fout in gewone taal, de beheerder krijgt een melding en klikt "Verbind opnieuw".
+6. **Overdracht.** Na een gehouden eerste afspraak met vervolg kiest de accountmanager bij "Overdragen?" het CRM (P17). De adapter maakt in HubSpot een activiteit met de briefing "Overdracht" en zet het bedrijf op de eigenaar die de klantrelatie draagt; de deal maakt het CRM zelf. `overdrachten.status` wordt `verstuurd` en met het externe id `bevestigd`.
+7. **Fout.** Het token verloopt; de kaart toont de fout in gewone taal, de beheerder krijgt een melding en klikt "Verbind opnieuw".
 
 ### Filters en sorteren
 
@@ -83,16 +84,17 @@ Lege staat (niet verbonden): "Er is nog geen CRM gekoppeld. Verbind je CRM om te
 - Synchronisatie elk uur en op verzoek; webhooks van het CRM waar beschikbaar (hoofdstuk 12).
 - Ontdubbelen over alle bronnen: KvK gelijk is altijd een duplicaat; anders domein zonder `www.`; anders genormaliseerde naam (zonder B.V., N.V., Holding, Group) met Sørensen-Dice: 80 procent duplicaat, 60 procent mogelijk (15.1). Bij samenvoegen blijven beide id's bewaard in `data.samengevoegdUit[]`, zodat de koppeling blijft werken.
 - Een lagere bron overschrijft een hogere nooit stil: een veld met herkomst `hand`, `kvk` of `datacollectief` wordt niet door het CRM overschreven; het verschil verschijnt in het log.
-- Samenvoegen zet nooit een klant terug naar prospect (F02).
+- Samenvoegen zet nooit een klant terug naar prospect (F02). Dealtrace maakt zelf geen klant van een prospect; dat gebeurt in het CRM of DealDrive (B17).
 - Het klantprofiel ("Lijkt op mijn klanten") gebruikt alleen echte klanten, niet prospects (`leidZoekopdrachtAf`: top 3 SBI, top 6 postcodegebieden).
 - Een account dat via de CRM-synchronisatie binnenkomt, krijgt een reis via `kiesReis` (F05).
-- Slapende klanten: Dealtrace herkent ze uit besteldata van het CRM (3, 6 of 12 maanden niet besteld) en maakt er een herwinaccount van (F13). Niet vastgelegd welk CRM-veld de laatste orderdatum levert; voorstel: een verplicht toe te wijzen veld "Laatste order" in de veldtoewijzing van Bedrijven, zonder toewijzing geen herkenning.
+- Slapende klanten: Dealtrace herkent ze uit besteldata van het CRM (3, 6 of 12 maanden niet besteld) en maakt er een herwinaccount van (F13). Een verloren deal in het CRM (lifecyclestage of dealstatus, via de veldtoewijzing) brengt een overgedragen account via de terugkomregels terug als winback-kandidaat (7.2, 7.3). Niet vastgelegd welk CRM-veld de laatste orderdatum levert; voorstel: een verplicht toe te wijzen veld "Laatste order" in de veldtoewijzing van Bedrijven, zonder toewijzing geen herkenning.
 - Eigen velden met bron "CRM-veld" krijgen hun waarde uit de veldtoewijzing (F19).
+- De overdracht naar het CRM is idempotent op het overdracht-id: een tweede verzending maakt geen tweede activiteit; een mislukte verzending zet `overdrachten.status` op `mislukt` met de fout in gewone taal en een taak voor de eigenaar.
 - Elke run staat in `koppeling_runs`; kosten in het verbruik; foutmeldingen in gewone taal op de koppelingenpagina.
 
 ### Helpartikel
 
-"Koppelingen" (collectie Hoe werkt Dealtrace, categorie Inrichten, voor de beheerder): wat de CRM-koppeling leest en schrijft, eerst lezen en dan schrijven, veldtoewijzing met voorbeeld, eigenaarsregel, bronprioriteit en het synchronisatielog. Niet vastgelegd of er een apart artikel "CRM koppelen" komt; voorstel: een sectie in "Koppelingen".
+"Koppelingen" (collectie Hoe werkt Dealtrace, categorie Inrichten, voor de beheerder): wat de CRM-koppeling leest en schrijft, eerst lezen en dan schrijven, de overdracht na de eerste afspraak, veldtoewijzing met voorbeeld, eigenaarsregel, bronprioriteit en het synchronisatielog. Niet vastgelegd of er een apart artikel "CRM koppelen" komt; voorstel: een sectie in "Koppelingen".
 
 ## Deel 2: Technisch (hoe)
 
@@ -101,7 +103,7 @@ Lege staat (niet verbonden): "Er is nog geen CRM gekoppeld. Verbind je CRM om te
 - `koppelingen` (uit P11): `soort` in `'hubspot'|'salesforce'|'dynamics'|'pipedrive'|'afas'`, `status`, `geheimen` (versleuteld), `instellingen jsonb {veldtoewijzing, richting, eigenaarsregel, plafond}`.
 - `koppeling_runs`: `koppeling_id`, `start`, `eind`, `gelezen`, `geschreven`, `fouten jsonb`.
 - `leads.bron = 'crm'`, `leads.bron_ref` met het externe id.
-- Externe id's op records: niet vastgelegd in het bouwplan; voorstel `accounts.data.extern {hubspot: {id, bijgewerktOp}}`, idem op `contacts.data` en `deals.data`, plus `activiteiten.data.extern` met het id van de teruggeschreven activiteit, zodat schrijven idempotent is.
+- Externe id's op records: niet vastgelegd in het bouwplan; voorstel `accounts.data.extern {hubspot: {id, bijgewerktOp}}`, idem op `contacts.data`, `appointments.data` en `overdrachten.extern_id`, plus `activiteiten.data.extern` met het id van de teruggeschreven activiteit, zodat schrijven idempotent is.
 - OAuth-state: voorstel tabel `koppeling_states: state, organisation_id, gebruiker_id, verloopt_op` (10 minuten), ter vervanging van `hubspot-state.ts` in het geheugen.
 - Herkomst `crm` per veld in `data.herkomst`.
 - Migratie met RLS `org_isolation` op elke nieuwe tabel; app-rol zonder `bypassrls`.
@@ -120,6 +122,7 @@ Niet vastgelegd in het bouwplan welke namen, behalve `zoekDuplicaat` en `leidZoe
 | `crmNaarLead(bedrijf, contacten)` | CRM-bedrijf | leadstructuur van F02 | geen KvK; meerdere domeinen |
 | `isSlapend(laatsteOrder, nu, maanden)` | datum, nu, 3, 6 of 12 | boolean | geen datum; grens op de dag |
 | `schrijfplan(gebeurtenissen, richting)` | gebeurtenissen sinds laatste run | lijst schrijfacties | richting "Lezen" geeft niets; dubbel event één actie |
+| `overdrachtNaarCrm(pakket, toewijzing)` | pakket uit `overdrachtPakket(account)` van P17 (account, contacten, verslag, briefing "Overdracht", vervolgstap, reisgeschiedenis) | CRM-activiteit en bedrijfspatch | geen extern id van het bedrijf (eerst `schrijfBedrijf`); lege vervolgstap; tweede keer hetzelfde overdracht-id |
 
 `zoekDuplicaat(kandidaat, bestand)` uit `shared/ontdubbelen.ts` krijgt de CRM-records als extra bestand; unit-tests met treffers op KvK, domein en naam.
 
@@ -145,11 +148,11 @@ Geen. De CRM-gegevens gaan als feiten met herkomst `crm` het materiaal van de ag
 
 ### Integraties
 
-- Interface `CrmAdapter { leesBedrijven, leesContacten, schrijfBedrijf, schrijfContact, schrijfActiviteit }` (F02). Het bouwplan zegt dat deals worden teruggeschreven, maar de interface heeft daar geen methode voor. Niet vastgelegd; voorstel: voeg `schrijfDeal` toe en, voor slapende klanten, `leesOrders` of een veld "Laatste order" via de veldtoewijzing.
+- Interface `CrmAdapter { leesBedrijven, leesContacten, schrijfBedrijf, schrijfContact, schrijfActiviteit }` (F02). Hoofdstuk 12 noemt ook de overdracht na de eerste afspraak; de interface heeft daar geen methode voor. Niet vastgelegd; voorstel: voeg `schrijfOverdracht(pakket)` toe (het CRM maakt de deal; Dealtrace schrijft geen deals, B17) en, voor slapende klanten en verloren deals, `leesOrders` of de velden "Laatste order" en "Dealstatus" via de veldtoewijzing. `POST /api/accounts/:id/overdragen {naar: 'crm'}` uit P17 roept `schrijfOverdracht` aan.
 - `server/utils/bronnen/crm/hubspot.ts` implementeert de interface; Salesforce, Dynamics, Pipedrive en AFAS volgen via dezelfde interface (buiten deze prompt).
-- Mock `crm/mock.ts` met vaste fixtures in de lijn van de startset Voltvast (Bijlage C): enkele fictieve installatiebedrijven in branches br-01 en br-02 als klant, twee als prospect, één met hetzelfde KvK-nummer als een bestaand account in de seed, één zonder eigenaar. Geen echte bedrijfs- of persoonsgegevens.
+- Lokaal (13.5) draait de CRM-koppeling altijd op de mock; een echte HubSpot-verbinding is alleen nodig voor een handmatige proef. Mock `crm/mock.ts` met vaste fixtures in de lijn van de startset Voltvast (Bijlage C): enkele fictieve installatiebedrijven in branches br-01 en br-02 als klant, twee als prospect, één met hetzelfde KvK-nummer als een bestaand account in de seed, één zonder eigenaar. Geen echte bedrijfs- of persoonsgegevens.
 - Fouten: verlopen token, ontbrekende scope, limiet van het CRM (wacht en probeer opnieuw), veld bestaat niet meer; elke fout als regel in `koppeling_runs.fouten` en in gewone taal op de kaart.
-- Kosten: de CRM-koppeling zelf heeft geen bundel in 11.4; runs tellen wel in het verbruik (aantal aanroepen).
+- Kosten: de CRM-koppeling is geen AI en kost geen AI-credits (11.4); runs tellen wel in het verbruik (aantal aanroepen).
 
 ### Functiecatalogus
 
@@ -166,17 +169,17 @@ Ontdubbelen tegen het CRM is geen eigen functie maar gedrag van de leadgenerator
 ### Hergebruik uit DealDrive
 
 - `server/api/integrations/hubspot/*`: neem de OAuth-stroom over, voeg op elk endpoint de sessiecontrole toe, sla tokens versleuteld in `koppelingen` op in plaats van in `hubspot-state.ts` (vervalt).
-- `hubspot-mapper.ts`: neem de regels over (lege velden naar `undefined`, geld in centen); vervang de vaste lifecycle-naar-segment-tabel door de instelbare veldtoewijzing en map naar `account_kind` en `nb_status` van Dealtrace. Niet vastgelegd hoe lifecyclestages naar statussen gaan; voorstel: `customer` wordt klant, alle andere stages prospect met status `nieuw`, instelbaar in de veldtoewijzing.
+- `hubspot-mapper.ts`: neem de regels over (lege velden naar `undefined`, geld in centen); vervang de vaste lifecycle-naar-segment-tabel door de instelbare veldtoewijzing en map naar `account_kind` en `nb_status` van Dealtrace. Niet vastgelegd hoe lifecyclestages naar statussen gaan; voorstel: `customer` wordt klant (voor ontdubbelen, profiel en kansen langs de route, niet om te bewerken), alle andere stages prospect met status `nieuw`, instelbaar in de veldtoewijzing. De dealstappen van het CRM worden niet overgenomen; Dealtrace heeft geen pipeline (B17).
 - `hubspot-client.ts`: basis voor de adapter, achter de interface.
 
 ### Buiten scope
 
-Salesforce, Dynamics, Pipedrive en AFAS als werkende adapters; klik-om-te-bellen via telefonie (na sprint 12); de overdracht van een gewonnen klant naar het CRM als pakket (P17 en P23); LinkedIn Sales Navigator.
+Salesforce, Dynamics, Pipedrive en AFAS als werkende adapters; klik-om-te-bellen via telefonie (na sprint 12); de overdrachtsflow zelf (knop "Overdragen?", status `overgedragen`, briefing "Overdracht"; P17 en P18) en de overdracht naar DealDrive (P23); deals en offertes schrijven (vervallen, B17); LinkedIn Sales Navigator.
 
 ## Acceptatiecriteria
 
 1. Bijlage A regel 21: elk CRM-endpoint weigert een verzoek zonder sessie (401); tokens staan versleuteld per organisatie in de database, niet in het geheugen; de koppeling leest en schrijft.
-2. Bijlage A regel 4 (deel CRM): het CRM is een werkende bron in de leadgenerator met dezelfde leadstructuur, ontdubbeling en groepen als de andere bronnen; bundel en plafond worden op de server afgedwongen.
+2. Bijlage A regel 4 (deel CRM): het CRM is een werkende bron in de leadgenerator met dezelfde leadstructuur, ontdubbeling en groepen als de andere bronnen; het plafond wordt op de server afgedwongen.
 3. Een lead met hetzelfde KvK-nummer als een HubSpot-bedrijf staat in "Al in je bestand" (F02).
 4. Een veld met herkomst `hand` wordt bij synchronisatie niet overschreven; het log toont het verschil.
 5. Met richting "Lezen" schrijft Dealtrace niets naar het CRM; na "Beide" schrijft "Neem over" bedrijf en contacten één keer weg, en een tweede synchronisatie maakt geen dubbel record (extern id bewaard).
@@ -185,12 +188,13 @@ Salesforce, Dynamics, Pipedrive en AFAS als werkende adapters; klik-om-te-bellen
 8. Een gelijktijdige tweede "Synchroniseer nu" geeft 409; de geplande run elk uur draait per organisatie.
 9. Zonder koppeling is de bron CRM niet kiesbaar en zegt de koppelingenpagina wat er nodig is.
 10. Slapende klanten: een CRM-klant zonder order in 6 maanden wordt een herwinaccount met de terugkomregel "6 maanden niet besteld" (Voltvast hc-04).
-11. Cross-tenant: de OAuth-callback van organisatie A kan geen tokens in organisatie B zetten; getest in de wegwerp-Postgres.
-12. Niveau Beginner: ziet geen CRM-bron en geen koppelingenkaart; het ontdubbelen tegen het CRM werkt wel bij "Neem over" van een klaargezette lead.
-13. Niveau Gevorderd: ziet CRM-treffers in "Al in je bestand" en de bronpil "HubSpot"; kan niet synchroniseren (knop met slot en uitleg).
-14. Niveau Expert (accountmanager): kiest het CRM als bron en start "Synchroniseer nu"; kan de veldtoewijzing niet wijzigen (403 met `reden: 'rol'`). Beheerder kan alles.
-15. Telefoon (375, 390, 412 px): de koppelingenpagina opent via Meer met "Beter op een groot scherm", zonder horizontale scroll; de bronpil en het herkomstlabel zijn leesbaar op de compacte accountkaart.
-16. Alle tests draaien met de mock-adapter, zonder netwerk.
+11. Overdracht: met "Overdracht naar dit CRM" aan kiest "Overdragen?" (P17) het CRM; de mock-adapter ontvangt het pakket precies één keer, `overdrachten.status` wordt `bevestigd` met extern id; er wordt geen deal of offerte geschreven. Met de schakelaar uit is het CRM geen keuze.
+12. Cross-tenant: de OAuth-callback van organisatie A kan geen tokens in organisatie B zetten; getest in de wegwerp-Postgres.
+13. Niveau Beginner: ziet geen CRM-bron en geen koppelingenkaart; het ontdubbelen tegen het CRM werkt wel bij "Neem over" van een klaargezette lead.
+14. Niveau Gevorderd: ziet CRM-treffers in "Al in je bestand" en de bronpil "HubSpot"; kan niet synchroniseren (knop met slot en uitleg).
+15. Niveau Expert (accountmanager): kiest het CRM als bron en start "Synchroniseer nu"; kan de veldtoewijzing niet wijzigen (403 met `reden: 'rol'`). Beheerder kan alles.
+16. Telefoon (375, 390, 412 px): de koppelingenpagina opent via Meer met "Beter op een groot scherm", zonder horizontale scroll; de bronpil en het herkomstlabel zijn leesbaar op de compacte accountkaart.
+17. Alle tests draaien lokaal met de mock-adapter (13.5), zonder netwerk en zonder sleutel.
 
 ## Definition of Done
 
@@ -198,5 +202,5 @@ Hoofdstuk 19 geldt volledig. Specifiek voor deze prompt:
 
 - Adapter en mock met dezelfde interface; databasevrije tests voor `pasToewijzingToe`, `losConflictOp`, `eigenaarVoor` en `schrijfplan`.
 - `check:rechten` groen met de koppelingsendpoints; elk endpoint roept de sessiecontrole aan.
-- Geheimen alleen op Netlify per context; rotatie beschreven in `docs/HOE-HET-WERKT.md`.
+- Geheimen lokaal alleen in `.env.local` (13.5, nooit in git, met uitleg in `.env.example`), op staging en productie per Netlify-context; rotatie beschreven in `docs/HOE-HET-WERKT.md`.
 - Regels 4 (deel CRM) en 21 van Bijlage A afgevinkt in het sprintverslag.

@@ -1,8 +1,8 @@
 /* Dealtrace mockup · gedeelde schil en bediening.
    Bouwt de strook Mockup-instellingen, de zijbalk volgens tabel 6.1, de
    mobiele schil uit hoofdstuk 8 (compacte kop, onderbalk, schuifvensters),
-   de vergrendelde functies met hun uitlegflyout, en kleine interacties
-   (tabbladen, flyouts, toasts). Geen afhankelijkheden, geen netwerk. */
+   de functies die nog niet aanstaan met hun uitlegflyout, de AI-assistent
+   (F26) en kleine interacties (tabbladen, flyouts, toasts). Geen afhankelijkheden, geen netwerk. */
 (function () {
   'use strict';
 
@@ -93,7 +93,9 @@
     trending: '<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
     eye: '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
     flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/>',
-    stop: '<rect width="14" height="14" x="5" y="5" rx="2"/>'
+    stop: '<rect width="14" height="14" x="5" y="5" rx="2"/>',
+    funnel: '<path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z"/>',
+    send: '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>'
   };
   function ic(naam, klasse) {
     return '<svg class="icoon ' + (klasse || '') + '" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-' + naam + '"/></svg>';
@@ -123,9 +125,7 @@
     { k: 'belblokken', n: 'Belblokken', g: 'Werk', h: 'belblokken.html', i: 'phone' },
     { k: 'bezoeken', n: 'Bezoeken', g: 'Werk', h: 'bezoeken.html', i: 'map-pin' },
     { k: 'campagnes', n: 'Campagnes', g: 'Werk', h: 'campagnes.html', i: 'megaphone', pilBeginner: 'meedoen' },
-    { k: 'pipeline', n: 'Pipeline', g: 'Werk', i: 'kanban', min: 'gevorderd',
-      wat: 'Deals en offertes maken en opvolgen, van het eerste gesprek tot de getekende opdracht. Per fase zie je wat openstaat en wat de volgende stap is.',
-      tot: 'Leidt een afspraak tot een deal, dan zet je salesmanager hem voor je klaar. Je ziet de deal op de accountkaart.' },
+    { k: 'funnel', n: 'Funnel', g: 'Werk', h: 'funnel.html', i: 'funnel' },
     { k: 'prospects', n: 'Prospects', g: 'Prospects', h: 'prospects.html', i: 'building' },
     { k: 'contacten', n: 'Contacten', g: 'Prospects', i: 'users' },
     { k: 'leadgenerator', n: 'Leadgenerator', g: 'Prospects', h: 'leadgenerator.html', i: 'user-plus', min: 'gevorderd',
@@ -149,7 +149,7 @@
     { k: 'instellingen', n: 'Instellingen', g: 'Beheer', h: 'instellingen-belscripts.html', i: 'settings', rollen: ['beheerder', 'founder'], groot: true },
     { k: 'platform', n: 'Platformbeheer', g: 'Beheer', h: 'platform.html', i: 'server', rollen: ['founder'], groot: true }
   ];
-  /* Losse functies met een vergrendelde knop op de pagina (4.5). */
+  /* Losse functies met een knop met slot op de pagina, als ze nog niet aanstaan (4.4). */
   var FUNCTIES = {
     'campagne-maken': { n: 'Campagne maken', min: 'gevorderd',
       wat: 'Een campagne maken uit de acht standaardsoorten, met doelgroep, winpunt, script en planning. Het bord laat per account zien waar het staat.',
@@ -166,20 +166,6 @@
     'kansregels': { n: 'Eigen afstands- en kansregels', min: 'expert',
       wat: 'Eigen kansbronnen, een eigen straal en de laag met ongeplande prospects in je gebied instellen. Ook regiodagen plannen.',
       tot: 'Dealtrace gebruikt de standaardregels van je organisatie: hooguit 20 minuten omrijden.' }
-  };
-  var CRITERIA = {
-    gevorderd: [
-      ['Minimaal 20 werkdagen actief', '14 van 20', 70],
-      ['Minimaal 80 procent van de taken afgerond op de dag zelf, laatste 4 weken', '76 procent', 95],
-      ['Minimaal 100 uitkomsten vastgelegd', '63 van 100', 63],
-      ['Leerpad Beginner afgerond', '3 van 5 artikelen', 60]
-    ],
-    expert: [
-      ['Minimaal 60 werkdagen als Gevorderd', '22 van 60', 37],
-      ['Minimaal 2 eigen campagnes afgerond met een uitkomst', '1 van 2', 50],
-      ['Conversie prospect naar afspraak minimaal op teamgemiddelde', '9 procent, team 11 procent', 82],
-      ['Leerpad Gevorderd afgerond', '2 van 5 artikelen', 40]
-    ]
   };
 
   function magRol(item) { return !item.rollen || item.rollen.indexOf(staat.rol) >= 0; }
@@ -265,7 +251,7 @@
     if (slot.length) {
       nav += '<div class="sb-groep sb-slotgroep' + (staat.slotOpen ? ' sb-slotgroep--open' : '') + '">' +
         '<button type="button" class="sb-slotgroep-kop" aria-expanded="' + staat.slotOpen + '" data-slotgroep>' +
-        '<span class="sb-slotgroep-tekst">Nog te ontgrendelen</span><span class="sb-slotgroep-teller">' + slot.length + '</span>' + ic('chevron-down', 'icoon--14 sb-slotgroep-pijl') + '</button>' +
+        '<span class="sb-slotgroep-tekst">Nog niet aangezet</span><span class="sb-slotgroep-teller">' + slot.length + '</span>' + ic('chevron-down', 'icoon--14 sb-slotgroep-pijl') + '</button>' +
         '<div class="sb-slotgroep-lijst"' + (staat.slotOpen ? '' : ' hidden') + '>' +
         slot.map(function (it) {
           return '<a class="sb-link sb-link--slot" href="' + href(it) + '" aria-disabled="true" data-slot="' + it.k + '" title="' + it.n + '">' +
@@ -330,6 +316,7 @@
       : '<span class="mob-kop-titel">' + titel + '</span>';
     return '<div class="mob-kop" data-gen>' + links +
       '<button class="mob-icoonknop" type="button" aria-label="Zoeken" data-zoek>' + ic('search') + '</button>' +
+      '<button class="mob-icoonknop" type="button" aria-label="Vraag AI" title="Vraag AI" data-ai>' + ic('sparkles') + '</button>' +
       '<button class="mob-icoonknop" type="button" aria-label="Inspreken" data-inspreken>' + ic('mic') + '</button>' +
       '<button class="mob-icoonknop" type="button" aria-label="Meldingen" data-meldingen>' + ic('bell') + '<span class="mob-teller">4</span></button></div>';
   }
@@ -377,11 +364,12 @@
       return '<div class="meer-groep"><div class="meer-groep-kop">' + g + '</div>' + items + '</div>';
     }).join('');
     html += '<div class="meer-groep"><div class="meer-groep-kop">Jij</div>' +
+      '<button type="button" class="meer-item" data-ai>' + ic('sparkles') + 'AI-assistent<small>412 credits</small></button>' +
       '<a class="meer-item" href="helpcenter.html">' + ic('help') + 'Helpcenter</a>' +
       '<a class="meer-item" href="index.html#niet-uitgewerkt" data-stub="Mijn instellingen">' + ic('user') + 'Mijn instellingen</a>' +
       '<a class="meer-item" href="index.html#niet-uitgewerkt" data-stub="Uitloggen">' + ic('log-out') + 'Uitloggen</a></div>';
     if (slot.length) {
-      html += '<div class="meer-groep"><button type="button" class="meer-item meer-item--slot" aria-expanded="false" data-meer-slot>' + ic('lock') + 'Nog te ontgrendelen<small>' + slot.length + '</small></button>' +
+      html += '<div class="meer-groep"><button type="button" class="meer-item meer-item--slot" aria-expanded="false" data-meer-slot>' + ic('lock') + 'Nog niet aangezet<small>' + slot.length + '</small></button>' +
         '<div hidden data-meer-slotlijst>' + slot.map(function (it) {
           return '<button type="button" class="meer-item meer-item--slot" data-slot="' + it.k + '">' + ic(it.i) + it.n + ic('lock', 'icoon-slot') + '</button>';
         }).join('') + '</div></div>';
@@ -390,13 +378,13 @@
   }
 
   /* ===== Schuifvensters en vensters ===== */
-  function openSheet(titel, body, voet) {
+  function openSheet(titel, body, voet, kader) {
     sluitSheet();
     var html = '<div class="sheet-overlay" id="dt-sheet" data-sheet-overlay><div class="sheet" role="dialog" aria-modal="true" aria-label="' + titel + '">' +
       '<span class="sheet-greep" aria-hidden="true"></span>' +
       '<div class="sheet-kop"><span class="sheet-titel">' + titel + '</span><button class="sheet-sluit" type="button" data-sheet-sluit>Sluiten</button></div>' +
       '<div class="sheet-body">' + body + '</div>' + (voet ? '<div class="sheet-voet">' + voet + '</div>' : '') + '</div></div>';
-    document.body.insertAdjacentHTML('beforeend', html);
+    (kader || document.body).insertAdjacentHTML('beforeend', html);
   }
   function sluitSheet() { var s = document.getElementById('dt-sheet'); if (s) s.remove(); }
 
@@ -416,43 +404,37 @@
   function spraakHtml() {
     var acc = paginaKey() === 'account' ? 'Brontsma Installatietechniek (van dit scherm)' : 'Brontsma Installatietechniek';
     return '<div class="spraakgolf" aria-hidden="true"><span class="g1"></span><span class="g2"></span><span class="g3"></span><span class="g2"></span><span class="g3"></span><span class="g1"></span></div>' +
-      '<p class="tekst tekst--lees tekst--inkt">"Bel Hilde volgende week dinsdag over de offerte."</p>' +
+      '<p class="tekst tekst--lees tekst--inkt">"Bel Hilde volgende week dinsdag over de projectschouw."</p>' +
       '<article class="fo-blok fo-blok--agent mt-12"><span class="fo-blok-kicker">Concept</span>' +
       '<dl class="defs"><div class="def-rij"><dt>Soort</dt><dd>Taak · bellen</dd></div><div class="def-rij"><dt>Account</dt><dd>' + acc + '</dd></div>' +
-      '<div class="def-rij"><dt>Persoon</dt><dd>Hilde Brontsma</dd></div><div class="def-rij"><dt>Titel</dt><dd>Bel Hilde over de offerte</dd></div>' +
+      '<div class="def-rij"><dt>Persoon</dt><dd>Hilde Brontsma</dd></div><div class="def-rij"><dt>Titel</dt><dd>Bel Hilde over de projectschouw</dd></div>' +
       '<div class="def-rij"><dt>Datum</dt><dd>di 20 okt 2026</dd></div><div class="def-rij"><dt>Checks</dt><dd>Account bestaat · persoon gevonden · datum is een werkdag</dd></div></dl></article>' +
       '<p class="meta mt-8" data-max="beginner">Als Beginner maak je met spraak een taak of notitie. Afspraak en mail komen bij Gevorderd.</p>';
   }
 
-  /* ===== Vergrendeld: uitlegflyout (6.1) ===== */
+  /* ===== Nog niet aangezet: uitlegflyout (4.2, 6.1). Geen criteria, geen
+     voortgang en geen verzoekknop (B19): een functie aanzetten is een
+     besluit van de salesmanager. ===== */
   function slotFlyout(k) {
     var it = navItem(k);
     if (!it) return;
     var doel = it.min || 'gevorderd';
-    var stap = nIdx(staat.niveau) + 1 >= nIdx(doel) ? doel : 'gevorderd';
-    var crit = CRITERIA[stap].map(function (c) {
-      return '<div class="niveau-criterium"><span>' + c[0] + '</span><span class="meta tnum">' + c[1] + '</span>' +
-        '<div class="voortgang" role="progressbar" aria-valuenow="' + c[2] + '" aria-valuemin="0" aria-valuemax="100"><span class="voortgang-vul' + (c[2] >= 100 ? ' voortgang-vul--groen' : '') + '" style="width:' + c[2] + '%"></span></div></div>';
-    }).join('');
-    var extra = stap !== doel ? '<p class="meta">Eerst Gevorderd, daarna Expert. Hieronder de criteria voor de eerste stap.</p>' : '';
     var html = '<div class="fo-overlay" id="dt-slot" data-fo-overlay><aside class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" aria-labelledby="dt-slot-titel" tabindex="-1">' +
-      '<header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">' + groot(doel) + ' · vergrendeld</span>' +
-      '<h2 class="fo-titel" id="dt-slot-titel">' + it.n + '</h2><p class="fo-meta">Dit is een functie voor ' + groot(doel) + '. Je salesmanager kan hem voor je vrijgeven.</p></div>' +
+      '<header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">' + groot(doel) + ' · nog niet aangezet</span>' +
+      '<h2 class="fo-titel" id="dt-slot-titel">' + it.n + '</h2><p class="fo-meta">Deze functie hoort bij ' + groot(doel) + '. Wil je hem gebruiken, bespreek het dan met je salesmanager.</p></div>' +
       '<button type="button" class="fo-sluit" aria-label="Sluiten" data-fo-sluit>×</button></header>' +
       '<div class="fo-body">' +
       '<article class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Wat het doet</h3></header><p class="fo-tekst">' + it.wat + '</p></article>' +
-      '<article class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Wanneer het opengaat</h3></header>' + extra + crit +
-      '<p class="meta">De salesmanager bevestigt de overgang; een mens beslist.</p></article>' +
       '<article class="fo-blok fo-blok--accent"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Tot die tijd</h3></header><p class="fo-tekst">' + it.tot + '</p></article>' +
-      '<p><a class="tekst-link" href="helpcenter.html">Lees hoe het werkt</a></p></div>' +
-      '<footer class="fo-foot dd-acties"><button type="button" class="dd-act dd-act--primair" data-toast="Je vraag staat als taak bij je salesmanager." data-fo-sluit>Vraag je salesmanager</button><span class="dd-acties-vul fo-foot-vul"></span></footer>' +
+      '</div>' +
+      '<footer class="fo-foot dd-acties"><a class="dd-act dd-act--primair" href="helpcenter.html">' + ic('book', 'dd-act-icoon') + 'Lees hoe het werkt</a><span class="dd-acties-vul fo-foot-vul"></span><button type="button" class="dd-act" data-fo-sluit>Sluiten</button></footer>' +
       '</aside></div>';
     var oud = document.getElementById('dt-slot'); if (oud) oud.remove();
     document.body.insertAdjacentHTML('beforeend', html);
     var p = document.querySelector('#dt-slot .fo-panel'); if (p) p.focus();
   }
 
-  /* ===== Pagina vergrendeld of buiten de rol (6.1) ===== */
+  /* ===== Pagina die nog niet aanstaat, of buiten de rol (6.1) ===== */
   function renderPaginaSlot() {
     var main = document.querySelector('.app-shell-main');
     if (!main) return;
@@ -472,12 +454,11 @@
     } else if (min && nIdx(staat.niveau) < nIdx(min)) {
       var it = navItem(k) || { n: b.getAttribute('data-titel'), wat: '', tot: '' };
       html = '<section class="section" id="dt-paginaslot"><div class="container"><div class="slotblok">' +
-        '<span class="kicker kicker--streep">Vergrendeld</span><h1 class="title">' + it.n + '</h1>' +
-        '<p class="subtitle">Dit is een functie voor ' + groot(min) + '. Je salesmanager kan hem voor je vrijgeven.</p>' +
+        '<span class="kicker kicker--streep">Nog niet aangezet</span><h1 class="title">' + it.n + '</h1>' +
+        '<p class="subtitle">Deze functie hoort bij ' + groot(min) + '. Wil je hem gebruiken, bespreek het dan met je salesmanager.</p>' +
         '<article class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Wat het doet</h3></header><p class="fo-tekst">' + it.wat + '</p></article>' +
         '<article class="fo-blok fo-blok--accent"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Tot die tijd</h3></header><p class="fo-tekst">' + it.tot + '</p></article>' +
-        '<div class="toolbar-buttons mt-16"><button type="button" class="dd-actie dd-actie--primair" data-slot="' + k + '">' + ic('lock', 'dd-actie-icoon') + 'Wanneer gaat het open?</button>' +
-        '<a class="dd-actie dd-actie--secundair" href="helpcenter.html">Lees hoe het werkt</a></div></div></div></section>';
+        '<div class="toolbar-buttons mt-16"><a class="dd-actie dd-actie--primair" href="helpcenter.html">' + ic('book', 'dd-actie-icoon') + 'Lees hoe het werkt</a></div></div></div></section>';
     }
     if (html) {
       secties.forEach(function (s) { s.hidden = true; });
@@ -510,7 +491,69 @@
       scherm.insertAdjacentHTML('afterend', onderbalkHtml(tabKeyVoorFrame(tf.getAttribute('data-tab')), true));
     });
     document.querySelectorAll('[data-meer-inhoud]').forEach(function (e) { e.innerHTML = meerHtml(true); });
+    document.querySelectorAll('[data-ai-inhoud]').forEach(function (e) { e.innerHTML = aiBody(aiContext(e)); });
+    document.querySelectorAll('[data-ai-voet]').forEach(function (e) { e.innerHTML = aiInvoer(); });
   }
+
+  /* ===== AI-assistent (F26) =====
+     Laptop: flyout rechts van 480 px die open blijft terwijl je doorwerkt.
+     Telefoon: schuifvenster van onderen. Inhoud is een vast voorbeeld. */
+  var AI_CREDITS = '412 credits over deze maand';
+  function aiContext(el) {
+    var tf = el && el.closest ? el.closest('.tf') : null;
+    if (tf) return tf.getAttribute('data-ai-context') || ('Scherm: ' + (tf.getAttribute('data-titel') || 'Vandaag'));
+    var b = document.body;
+    return b.getAttribute('data-ai-context') || ('Scherm: ' + (b.getAttribute('data-titel') || 'Dealtrace'));
+  }
+  function aiBody(ctx) {
+    var vragen = ['Hoe begin ik dit gesprek?', 'Welke bezwaren kan ik verwachten?', 'Hoe werkt een belblok?', 'Wat staat er vandaag voor mij klaar?'];
+    return '<div class="ai-kopregel"><span class="ai-context">' + ctx + '<button type="button" aria-label="Context weghalen" title="Context weghalen" data-ai-chip-weg>' + ic('x', 'icoon--14') + '</button></span>' +
+      '<span class="ai-credits tnum">' + AI_CREDITS + '</span></div>' +
+      '<p class="bloklabel mt-16">Vraag bijvoorbeeld</p><div class="ai-voorstellen">' +
+      vragen.map(function (v) { return '<button type="button" class="ai-voorstel" data-ai-voorstel>' + v + '</button>'; }).join('') + '</div>' +
+      '<div class="ai-gesprek" aria-live="polite">' +
+      '<div class="ai-bericht ai-bericht--jij">Hoe begin ik het gesprek met Hilde Brontsma?</div>' +
+      '<div class="ai-bericht ai-bericht--ai">' +
+      '<p>Begin met de aanleiding, niet met jullie aanbod: "Ik zag dat jullie twee servicemonteurs zoeken. Groeien jullie in de woningbouw?"</p>' +
+      '<p>Vraag daarna hoe vaak een monteur op materiaal wacht. Dan past het winpunt: de gratis projectschouw binnen 48 uur. Sluit af met een concrete vraag om een kennismaking van 30 minuten.</p>' +
+      '<p>Let op: Hilde koopt nu online. Reken met de kosten van het hele project, niet met de prijs per stuk.</p>' +
+      '<div class="ai-bronnen"><span class="ai-bron">' + ic('book', 'icoon--14') + 'Helpcenter: Om de afspraak vragen</span>' +
+      '<span class="ai-bron">' + ic('compass', 'icoon--14') + 'Verhaal: kernzin Woningbouw</span>' +
+      '<span class="ai-bron">' + ic('lightbulb', 'icoon--14') + 'Inzicht: vacature 12 okt</span>' +
+      '<span class="ai-bron">' + ic('phone', 'icoon--14') + 'Tijdlijn: voicemail 6 okt</span></div>' +
+      '<div class="ai-acties"><button type="button" class="dd-act" data-toast="Concepttaak klaargezet: Bel Hilde Brontsma, do 16 okt. Jij beslist of hij blijft.">' + ic('square-check', 'dd-act-icoon') + 'Zet als taak klaar</button>' +
+      '<button type="button" class="dd-act" data-toast="Mailconcept staat bij Concepten. Er is niets verstuurd.">' + ic('mail', 'dd-act-icoon') + 'Maak mailconcept</button>' +
+      '<a class="dd-act" href="helpcenter.html">' + ic('book', 'dd-act-icoon') + 'Open het artikel</a>' +
+      '<a class="dd-act" href="account.html">' + ic('building', 'dd-act-icoon') + 'Open het account</a></div>' +
+      '<p class="meta mt-8">Dit antwoord kostte 3 credits.</p></div></div>';
+  }
+  function aiInvoer() {
+    return '<div class="ai-invoer">' +
+      '<input class="invoer" type="text" aria-label="Je vraag" placeholder="Stel je vraag aan de AI-assistent">' +
+      '<button type="button" class="dd-act dd-act--icoon" aria-label="Inspreken" title="Inspreken" data-toast="Spreek je vraag in.">' + ic('mic', 'dd-act-icoon') + '</button>' +
+      '<button type="button" class="dd-act dd-act--primair" data-ai-verstuur>' + ic('send', 'dd-act-icoon') + 'Verstuur</button></div>' +
+      '<p class="ai-regel">De assistent voert niets uit. Jij beslist.</p>';
+  }
+  function openAi(bron) {
+    var ctx = aiContext(bron);
+    var tf = bron && bron.closest ? bron.closest('.tf') : null;
+    var telefoon = tf || window.matchMedia('(max-width: 767px)').matches;
+    sluitAi();
+    if (telefoon) {
+      openSheet('AI-assistent', aiBody(ctx), aiInvoer(), tf);
+      var sh = document.querySelector('#dt-sheet .sheet'); if (sh) sh.classList.add('sheet--ai');
+      return;
+    }
+    var html = '<div class="fo-overlay ai-overlay" id="dt-ai"><aside class="fo-panel fo-panel--smal fo-panel--ai" role="dialog" aria-modal="false" aria-labelledby="dt-ai-titel" tabindex="-1">' +
+      '<header class="fo-head fo-head--donker"><div class="fo-head-tekst"><span class="fo-kicker">Vraag AI</span>' +
+      '<h2 class="fo-titel" id="dt-ai-titel">AI-assistent</h2><p class="fo-meta">Antwoorden uit het helpcenter, het verkoopverhaal en jouw gegevens.</p></div>' +
+      '<button type="button" class="fo-sluit" aria-label="Sluiten" data-fo-sluit>×</button></header>' +
+      '<div class="fo-body ai-body">' + aiBody(ctx) + '</div>' +
+      '<footer class="fo-foot ai-voet">' + aiInvoer() + '</footer></aside></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+    var p = document.querySelector('#dt-ai .fo-panel'); if (p) p.focus();
+  }
+  function sluitAi() { var a = document.getElementById('dt-ai'); if (a) a.remove(); }
 
   /* ===== Toasts ===== */
   function toast(tekst) {
@@ -541,7 +584,6 @@
     document.querySelectorAll('[data-veld="voornaam"]').forEach(function (e) { e.textContent = g.voornaam; });
     document.querySelectorAll('[data-veld="naam"]').forEach(function (e) { e.textContent = g.naam; });
     document.querySelectorAll('[data-veld="niveau"]').forEach(function (e) { e.textContent = groot(staat.niveau); });
-    document.querySelectorAll('[data-veld="volgend-niveau"]').forEach(function (e) { e.textContent = staat.niveau === 'beginner' ? 'Gevorderd' : 'Expert'; });
   }
   function renderAlles() {
     pasToe();
@@ -579,6 +621,24 @@
       var menu = el.parentNode.querySelector('.sb-gebruiker-menu');
       menu.hidden = !menu.hidden; el.setAttribute('aria-expanded', String(!menu.hidden));
       el.parentNode.classList.toggle('sb-gebruiker--open', !menu.hidden); return;
+    }
+    if ((el = e.target.closest('[data-ai]'))) { e.preventDefault(); openAi(el); return; }
+    if ((el = e.target.closest('[data-ai-chip-weg]'))) {
+      var chip = el.closest('.ai-context');
+      if (chip) chip.outerHTML = '<span class="ai-context ai-context--leeg">Zonder context</span>';
+      return;
+    }
+    if ((el = e.target.closest('[data-ai-voorstel]'))) {
+      var vak = el.closest('.fo-panel, .sheet');
+      var inv = vak && vak.querySelector('.ai-invoer .invoer');
+      if (inv) { inv.value = el.textContent; inv.focus(); }
+      return;
+    }
+    if ((el = e.target.closest('[data-ai-verstuur]'))) {
+      var inv2 = el.parentNode.querySelector('.invoer');
+      toast(inv2 && inv2.value.trim() ? 'Vraag verstuurd. Dit kost ongeveer 1 credit.' : 'Typ eerst je vraag, of kies een voorbeeld.');
+      if (inv2) inv2.value = '';
+      return;
     }
     if ((el = e.target.closest('[data-zoek]'))) { openSheet('Zoeken', ZOEK); return; }
     if ((el = e.target.closest('[data-meldingen]'))) { openSheet('Meldingen', MELDINGEN); return; }
@@ -622,7 +682,7 @@
     if ((el = e.target.closest('[data-fo-sluit]')) || e.target.matches('.fo-overlay, .mk-venster-overlay, .belmodus-achter')) {
       var laag = el ? el.closest('.fo-overlay, .mk-venster-overlay, .belmodus') : e.target;
       if (el && el.hasAttribute('data-toast')) toast(el.getAttribute('data-toast'));
-      if (laag) { if (laag.id === 'dt-slot') laag.remove(); else laag.hidden = true; }
+      if (laag) { if (laag.id === 'dt-slot' || laag.id === 'dt-ai') laag.remove(); else laag.hidden = true; }
       return;
     }
     if ((el = e.target.closest('[data-tab-knop]'))) {
@@ -661,6 +721,7 @@
     if (e.key === 'Escape') {
       sluitSheet();
       var s = document.getElementById('dt-slot'); if (s) { s.remove(); return; }
+      var a = document.getElementById('dt-ai'); if (a) { a.remove(); return; }
       var open = document.querySelectorAll('.fo-overlay:not([hidden]), .mk-venster-overlay:not([hidden]), .belmodus:not([hidden])');
       if (open.length) open[open.length - 1].hidden = true;
     }
@@ -715,6 +776,8 @@
     if (h === 'start') { var bm = document.getElementById('belmodus'); if (bm) bm.hidden = false; }
     var fo = h && document.getElementById(h);
     if (fo && fo.classList.contains('fo-overlay')) fo.hidden = false;
+    var tabKnop = h && document.querySelector('[data-tab-knop="' + h + '"]');
+    if (tabKnop) tabKnop.click();
   }
 
   plaatsSprite();

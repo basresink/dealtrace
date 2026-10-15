@@ -4,19 +4,19 @@
 |---|---|
 | Sprint | 10 (Agents en bronnen) |
 | Features | F14 AI-agents voor interne en externe bronnen; de agents Waarnemer, Verrijker, Profielbouwer en Notulist uit 11.3; signaalregels per doelgroep en concurrentsignalen |
-| Hangt af van | P01 (functiecatalogus, rechten), P03 (accountkaart, buying committee), P06 (motor, starterset SR14, SR15, SR16, SR19, SR23), P07 (inzichten en "Maak taak"), P08 (mandaten, Bewaker, bundel), P11 (KvK-adapter, `webBron`), P13 (meetingsoorten en verslag), P15 (Datacollectief-adapter), P28 (leesmodel, concurrenten), P32 (`shared/signalen.ts`, signaalkaart op de telefoon) |
+| Hangt af van | P01 (functiecatalogus, rechten), P03 (accountkaart, buying committee), P06 (motor, starterset SR14, SR15, SR16, SR19, SR23), P07 (inzichten en "Maak taak"), P08 (mandaten, Bewaker), P11 (KvK-adapter, `webBron`), P13 (meetingsoorten en verslag), P15 (Datacollectief-adapter), P28 (leesmodel, concurrenten), P32 (`shared/signalen.ts`, signaalkaart op de telefoon), P33 AI-assistent en credits (`creditsVoor`, reservering, meter) |
 | Bron in het bouwplan | F14; hoofdstuk 11 (11.1 tot en met 11.4); F06 (inzichten); F04 (buying committee); F09 en 8.5.3 (Notulist); F15 (triggerpatronen en starterset); F25 (concurrentnamen); 8.5.1, 8.5.5, 8.10; 15.1 en 15.2; Bijlage A regel 19 |
 
 ## Lees eerst
 
-- Bouwplan-Dealtrace.md: F14 volledig, hoofdstuk 11 (zes lagen, vangrails, agents en mandaten, mandaat per niveau, bundel), F06 (blok Inzichten en de regels), F04 (buying committee en "Stel voor met AI"), F09 (meetingsoorten, Notulist herkent concurrenten), F15 (patronen Trigger-heractivatie en Lead verlopen, starterset), F25 (Waarnemer zoekt concurrentnamen), 8.5.1 punt 3, 8.5.5, 8.10 (melding "Hete aanleiding"), 8.13 (signaaldetectoren), 15.1 (veroudering, geen verzonnen gegevens), 15.2 (AI-verwerking), 2.1 (geen bewijs, geen inzicht), Bijlage A regel 19.
+- Bouwplan-Dealtrace.md: F14 volledig, hoofdstuk 11 (zes lagen, vangrails, agents en mandaten, mandaat per niveau, credits per handeling in 11.4), F06 (blok Inzichten en de regels), F04 (buying committee en "Stel voor met AI"), F09 (meetingsoorten, Notulist herkent concurrenten), F15 (patronen Trigger-heractivatie en Lead verlopen, starterset), F25 (Waarnemer zoekt concurrentnamen), 8.5.1 punt 3, 8.5.5, 8.10 (melding "Hete aanleiding"), 8.13 (signaaldetectoren), 15.1 (veroudering, geen verzonnen gegevens), 15.2 (AI-verwerking), 2.1 (geen bewijs, geen inzicht), Bijlage A regel 19.
 - DealDrive op commit 75bee61 (`git -C /home/user/Dealdrive show 75bee61:<pad>`):
   - `server/utils/aiInsight.ts` (beoordeling met materiaal, drempel voor taakvoorstel)
   - `server/utils/webBron.ts` (websearch met URL-controle tegen de echte zoekresultaten, houdbaarheid, maximaal 3 zoekopdrachten)
   - `server/utils/agentExecutor.ts` (uitvoering, Pitstop-accent)
   - `server/utils/ruleEngine.ts` (AI-pass van de motor)
   - `server/utils/verslagAnalyse.ts` en `server/utils/dexVerslagAnalyse.ts` (verslag naar actiepunten en signalen)
-  - `shared/dexSignalen.ts` (detectoren en governor) en `server/utils/aiVerbruik.ts`, `shared/aiBundel.ts`
+  - `shared/dexSignalen.ts` (detectoren en governor); `server/utils/aiVerbruik.ts` en `shared/aiBundel.ts` alleen als achtergrond, de credits komen uit P33
   - `app/pages/inzichten.vue`, `app/components/InzichtFlyout.vue`
 
 ## Deel 1: Functioneel (wat en waarom)
@@ -34,7 +34,7 @@ Een accountmanager kan geen honderden websites, vacaturesites en registers bijho
 | Rol | Niveau | Wat |
 |---|---|---|
 | accountmanager | Beginner | Op Vandaag "Aanleiding van de dag" en de Prio-kolom; op Inzichten lezen en "Maak taak"; op de accountkaart het blok "Wat de agents zagen" |
-| accountmanager | Gevorderd | Plus "Door agents gedaan sinds gisteren" op Vandaag; filters op agent en bron; afwijzen met reden; "Inzicht met bron" handmatig toevoegen; "Laat opnieuw onderzoeken" (kost 1 dossier); agentpagina alleen lezen; signaalkaart met "Gedaan", "Later", "Weg" op de telefoon |
+| accountmanager | Gevorderd | Plus "Door agents gedaan sinds gisteren" op Vandaag; filters op agent en bron; afwijzen met reden; "Inzicht met bron" handmatig toevoegen; "Laat opnieuw onderzoeken" (dossier, 10 credits); agentpagina alleen lezen; signaalkaart met "Gedaan", "Later", "Weg" op de telefoon |
 | accountmanager | Expert | Plus filter per agent op Vandaag; "Waarom niet?" op Inzichten; bronnen per account aanvullen (eigen URL of trefwoord); eigen onderwerpen en bronnen voor de Waarnemer; eigen mandaat binnen het organisatiemaximum |
 | salesmanager | Gevorderd of Expert | Als accountmanager op zijn niveau, plus teamweergave van inzichten en acceptatie per regel (F06) |
 | beheerder | Expert | Agentpagina beheren: mandaat per agent binnen de platformmaxima, dagplafonds, aan of uit, "Agents pauzeren", Waarnemer-profielen per doelgroep |
@@ -61,7 +61,7 @@ Een accountmanager kan geen honderden websites, vacaturesites en registers bijho
 **3. Accountkaart** (`/accounts/:id`)
 
 - Blok "Wat de agents zagen": de laatste inzichten op dit account met agent, bron en datum. Lege staat: "De agents hebben nog niets gevonden bij dit account." (voorstel; tekst niet vastgelegd).
-- "Laat opnieuw onderzoeken" (Gevorderd), meta "Kost 1 dossier"; uitgeschakeld met tooltip "Je maandbundel voor dossiers is op." als de bundel op is.
+- "Laat opnieuw onderzoeken" (Gevorderd), meta "Kost 10 credits" (dossier, 11.4); uitgeschakeld met tooltip "De AI-credits van deze maand zijn op. Je beheerder kan extra credits aanvragen." als de credits op zijn.
 - "Bronnen om te volgen" (Expert): lijst met eigen URL's en trefwoorden, "+ Bron". Niet vastgelegd in het bouwplan hoe dit blok heet; voorstel "Bronnen om te volgen".
 
 **4. Agentpagina** (`/instellingen/agents`, beheerder; Gevorderd en Expert alleen lezen)
@@ -94,7 +94,7 @@ Van boven naar beneden:
 1. **Vacature wordt inzicht.** De wekelijkse Waarnemer-run vindt op een werkenbij-pagina een vacature servicemonteur. Het inzicht verschijnt in de feed met badge "EXTERN", bron "Web: vacatures", citaat, URL en datum. Op Vandaag wint hij "Aanleiding van de dag" als hij jonger dan 48 uur is en relevantie 85 of hoger heeft.
 2. **Maak taak.** Klik "+ Maak taak". De taak erft titel, prioriteit (Hoog bij relevantie 80 of meer, anders Middel), actiesoort, broninzicht en regel, met het label "Uit inzicht". Het inzicht krijgt status omgezet. Toast in verleden tijd.
 3. **Afwijzen.** Klik "Wijs af", kies "Te oud". Het inzicht krijgt status afgewezen; de reden telt in de rapportage per regel.
-4. **Opnieuw onderzoeken.** Op de accountkaart "Laat opnieuw onderzoeken". De Verrijker draait voor dit account, het dossier krijgt de datum van vandaag, 1 dossier gaat van de bundel af; nieuwe inzichten verschijnen in "Wat de agents zagen".
+4. **Opnieuw onderzoeken.** Op de accountkaart "Laat opnieuw onderzoeken". De Verrijker draait voor dit account, het dossier krijgt de datum van vandaag, 10 credits gaan van de pot van de organisatie af; nieuwe inzichten verschijnen in "Wat de agents zagen".
 5. **Agents pauzeren.** Beheerder klikt "Agents pauzeren", bevestigt. De Verzender stopt direct; de volgende mails in lopende campagnes komen als taak bij de eigenaar.
 6. **Handmatig inzicht.** "Inzicht met bron", vul account, titel, bron, citaat; "Opslaan". Het inzicht staat in de feed met bron "Handmatig".
 7. **Verslag analyseren.** Na "Rond af" of "Bewaar bezoek" loopt de Notulist: actiepunten worden concepttaken in Concepten, koopsignalen en concurrentnamen worden inzichten op het account.
@@ -106,7 +106,7 @@ Van boven naar beneden:
 - Een inzicht met zekerheid onder 60 krijgt geen taakvoorstel.
 - Een trigger haalt een account uit "wachtend" of "nee" terug (regel `trigger-heractivatie`) alleen als de afkoelperiode voor het voorgestelde kanaal voorbij is.
 - De Waarnemer volgt per run maximaal 25 accounts per regel; cadans minimaal wekelijks per account; AI-regels minimaal wekelijks.
-- Kosten per bron vallen in de bundel (11.4); blokkade vóór de aanroep, melding bij 80 procent.
+- Kosten van AI vallen in de AI-credits (11.4, via `creditsVoor` uit P33); reservering vóór de aanroep, melding bij 80 procent; automatische runs van de agents stoppen bij 10 procent van de pot. KvK- en Datacollectief-bevragingen zijn geen AI en tellen apart.
 - Bijwerken van een open inzicht door de motor zet het niet terug op ongelezen.
 - De Verrijker vult nooit een nummer of adres in dat niet op een bron staat; een patroon ("voornaam@domein") is een voorstel met de pil "aanname" (15.1).
 - Een contact met status vertrokken die beslisser was, geeft één inzicht "Beslisser vertrokken bij <account>" (F04).
@@ -115,8 +115,8 @@ Van boven naar beneden:
 
 ### Helpartikelen
 
-- "Inzichten beoordelen" (collectie Hoe werkt Dealtrace, leerpad Gevorderd): wat een inzicht is, bron en citaat lezen, "Maak taak", afwijzen met reden en waarom dat de regels bijstuurt.
-- "Agents en mandaten" (leerpad Expert en categorie Inrichten): de vier mandaatniveaus, mandaat per niveau, de Bewaker, "Agents pauzeren", de Waarnemer instellen per doelgroep.
+- "Inzichten beoordelen" (collectie Hoe werkt Dealtrace, categorie Dagelijks werk): wat een inzicht is, bron en citaat lezen, "Maak taak", afwijzen met reden en waarom dat de regels bijstuurt.
+- "Agents en mandaten" (collectie Hoe werkt Dealtrace, categorie Inrichten): de vier mandaatniveaus, mandaat per niveau, de Bewaker, "Agents pauzeren", de Waarnemer instellen per doelgroep.
 
 ## Deel 2: Technisch (hoe)
 
@@ -153,7 +153,7 @@ Niet vastgelegd in het bouwplan welke namen; voorstel (in `shared/agents.ts` en 
 | `PUT /api/agents/:agent/mandaat` | beheerder; Expert voor eigen mandaat | `{mandaat, dagplafond?, aan?}` | bijgewerkte stand | 422 boven organisatiemaximum; 422 als D omlaag zou gaan |
 | `POST /api/agents/pauzeer` | beheerder | `{pauze: boolean}` | stand | audit verplicht |
 | `GET /api/waarnemer/profielen`, `PUT /api/waarnemer/profielen` | lezen Gevorderd; schrijven Expert en beheerder | profiel per doelgroep | profiel | 422 bij cadans korter dan wekelijks |
-| `POST /api/accounts/:id/onderzoek` | Gevorderd | geen | run-id | 429 met "Je maandbundel voor dossiers is op." |
+| `POST /api/accounts/:id/onderzoek` | Gevorderd | geen | run-id | 402 (F26) met "De AI-credits van deze maand zijn op. Je beheerder kan extra credits aanvragen." |
 | `POST /api/signals/handmatig` | Gevorderd | `{accountId, titel, bron, url?, citaat}` | inzicht | 422 zonder bron of citaat |
 | `GET /api/signals/tegengehouden` | Expert | `?periode=` | lijst met reden | niet vastgelegd; voorstel |
 
@@ -161,15 +161,15 @@ Bestaande endpoints `POST /api/signals/:id/omzetten` en `POST /api/signals/:id/a
 
 ### AI-stappen
 
-| Agent | Mandaat | Materiaal | Schema | Bundelsoort |
+| Agent | Mandaat | Materiaal | Schema | Credits per handeling (11.4) |
 |---|---|---|---|---|
-| Waarnemer (intern) | A | activiteitenlog, uitkomsten, afspraken, deals, verslagen, CRM-velden | `{titel, beschrijving, relevantie, zekerheid, evidence[{citaat, bron, datum, url?}], winpuntVoorstel?, taakVoorstel?}` | Inzicht-beoordeling (intern): 0 / 8.000 / 8.000 |
-| Waarnemer (extern) | A | websearch op vacatures, nieuws, website; KvK-mutaties; aanbestedingen (optioneel) | idem, URL's verplicht uit de zoekresultaten | Webonderzoek (extern): 0 / 0 / 3.000; KvK-bevragingen 0 / 500 / 2.000 |
-| Verrijker | A | KvK, Datacollectief, website, CRM | `{velden[{veld, waarde, bron, datum, aanname?}]}`; meldt `dossier-compleet` als alle criteria een oordeel hebben | Dossier: 0 / 0 / 240; Datacollectief-records volgens contract |
-| Profielbouwer | A | dossier, website, verslagen, ingevoerde LinkedIn-informatie | `bouwCommittee`: `[{naam?, functie, rol, bron, zekerheid}]`, zekerheid onder 60 wordt "vermoedelijk" | Brief en committee: 0 / 500 / 500 |
-| Notulist | A voor het verslag; uitkomst kiest de mens | aantekeningen, transcript, agenda van de meetingsoort | `{perAgendapunt[], openVragen[], voorgesteldeUitkomst, koopsignalen[], bezwaren[], concurrenten[]}` | Notulist: 0 / 300 / 300 |
+| Waarnemer (intern) | A | activiteitenlog, uitkomsten, afspraken, overdrachten en terugmeldingen, verslagen, CRM-velden | `{titel, beschrijving, relevantie, zekerheid, evidence[{citaat, bron, datum, url?}], winpuntVoorstel?, taakVoorstel?}` | Inzicht-beoordeling (intern): 1 credit (Plus, Compleet) |
+| Waarnemer (extern) | A | websearch op vacatures, nieuws, website; KvK-mutaties; aanbestedingen (optioneel) | idem, URL's verplicht uit de zoekresultaten | Webonderzoek: 10 credits (Compleet); KvK-bevragingen zijn geen AI en tellen apart (0 / 500 / 2.000 per maand) |
+| Verrijker | A | KvK, Datacollectief, website, CRM | `{velden[{veld, waarde, bron, datum, aanname?}]}`; meldt `dossier-compleet` als alle criteria een oordeel hebben | Dossier: 10 credits (Compleet); Datacollectief-records volgens contract, buiten de credits |
+| Profielbouwer | A | dossier, website, verslagen, ingevoerde LinkedIn-informatie | `bouwCommittee`: `[{naam?, functie, rol, bron, zekerheid}]`, zekerheid onder 60 wordt "vermoedelijk" | Brief en buying committee: 3 credits (Plus, Compleet) |
+| Notulist | A voor het verslag; uitkomst kiest de mens | aantekeningen, transcript, agenda van de meetingsoort | `{perAgendapunt[], openVragen[], voorgesteldeUitkomst, koopsignalen[], bezwaren[], concurrenten[]}` | Notulist (verslaganalyse): 5 credits (Plus, Compleet) |
 
-Vangrails (11.2) voor elk: tool-use met JSON-schema en `additionalProperties false`, bij afwijking één keer opnieuw, daarna fout zonder opslag; bewijsplicht met `valideerBewijs`; elke handeling via `magHandelen` van de Bewaker; privégegevens gemaskeerd; namenfilter bij verkoopverhaal; blokkade vóór de aanroep als de bundel op is. Elke agent is één module `server/utils/agents/<naam>.ts` met `draai(context)`, aangeroepen door de motor of de weekjob (`netlify/functions/week`). Mock per agent met vaste fixtures uit de startset Voltvast (Bijlage C), bijvoorbeeld een vacature bij een fictieve installateur in br-01 en een nieuwsbericht dat cc-02 "Online webgroothandel" noemt. Golden master per prompt.
+Vangrails (11.2) voor elk: tool-use met JSON-schema en `additionalProperties false`, bij afwijking één keer opnieuw, daarna fout zonder opslag; bewijsplicht met `valideerBewijs`; elke handeling via `magHandelen` van de Bewaker; privégegevens gemaskeerd; namenfilter bij verkoopverhaal; reservering van de credits vóór de aanroep en blokkade als de credits op zijn (P33). Elke agent is één module `server/utils/agents/<naam>.ts` met `draai(context)`, aangeroepen door de motor of de weekjob (`netlify/functions/week`). Lokaal (13.5) draait elke agent op `AI_PROVIDER=mock` en elke adapter op zijn mock, zonder sleutel en zonder kosten. Mock per agent met vaste fixtures uit de startset Voltvast (Bijlage C), bijvoorbeeld een vacature bij een fictieve installateur in br-01 en een nieuwsbericht dat cc-02 "Online webgroothandel" noemt. Golden master per prompt.
 
 ### Integraties
 
@@ -177,7 +177,7 @@ Hergebruik de adapters uit P11 en P15: `server/utils/bronnen/kvk.ts` (mutaties),
 
 ### Functiecatalogus
 
-Niet vastgelegd in het bouwplan welke sleutels; voorstel (pakket afgeleid uit de bundel in 11.4, die op Starter 0 is):
+Niet vastgelegd in het bouwplan welke sleutels; voorstel (pakket afgeleid uit de kolom "Aan in pakket" in 11.4; het niveau is de startindeling, de founder zet functies per niveau aan of uit in `functies_per_niveau`, zie P09 Helpcenter basis en features per niveau):
 
 | Sleutel | Niveau | Pakket | Recht | Helpartikel |
 |---|---|---|---|---|
@@ -218,8 +218,8 @@ Zoeker (P11), Schrijver en Pitstop (P18), Coach (P21), Verzender, Berichtgever e
 10. De Notulist herkent "Online webgroothandel" (cc-02, Voltvast) in een verslag en zet een signaal op het account; een contactnaam uit de aantekeningen staat niet in de AI-aanroep (Bijlage C.9 punt 9).
 11. De Verrijker meldt `dossier-compleet` zodra alle zes criteria een oordeel hebben; hij vult geen telefoonnummer in zonder bron.
 12. Een bijgewerkt open inzicht blijft gelezen als het gelezen was.
-13. Is de bundel Webonderzoek op, dan start geen externe run en ziet de beheerder de melding; bij 80 procent volgt een melding.
-14. Niveau Beginner: ziet "Aanleiding van de dag", het blok "Wat de agents zagen" en "Maak taak"; geen filters op agent, geen "Inzicht met bron", geen signaalkaart op de telefoon; de agentpagina staat in "Nog te ontgrendelen" met uitleg; een directe aanroep van `GET /api/agents` geeft 403 met `reden: 'niveau'`.
+13. Zijn de AI-credits op, dan start geen externe run en ziet de beheerder de melding; bij 80 procent volgt een melding; onder 10 procent van de pot starten de automatische runs niet meer.
+14. Niveau Beginner: ziet "Aanleiding van de dag", het blok "Wat de agents zagen" en "Maak taak"; geen filters op agent, geen "Inzicht met bron", geen signaalkaart op de telefoon; de agentpagina staat in de groep "Nog niet aangezet" met uitleg en helpartikel; een directe aanroep van `GET /api/agents` geeft 403 met `reden: 'niveau'`.
 15. Niveau Gevorderd: ziet "Door agents gedaan sinds gisteren", filters op agent en bron, kan afwijzen met reden, handmatig toevoegen, "Laat opnieuw onderzoeken" en leest de agentpagina zonder bewerkknoppen.
 16. Niveau Expert: ziet "Waarom niet?", kan bronnen per account aanvullen en een Waarnemer-profiel per doelgroep opslaan; ziet regelcode en mandaatletter in de inzichtflyout.
 17. Telefoon (375, 390, 412 px): de signaalkaart op Vandaag handelt een inzicht af met één tik ("Gedaan", "Later" of "Weg", 8.7); de inzichtflyout opent als schuifvenster met tikdoelen van minimaal 44 px; geen horizontale scroll; "Gedaan" offline staat in de wachtrij en komt na herstel precies één keer aan.

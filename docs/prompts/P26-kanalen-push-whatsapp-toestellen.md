@@ -5,7 +5,7 @@
 | Sprint | 12 (Platform en afronding) |
 | Features | F24 Meldingen, zoeken, mobiel en offline (compleet: alle meldingssoorten, kanalen per soort, Web Push); integratie WhatsApp Business uit hoofdstuk 12 met de Berichtgever; kanalen en consent; tests op echte toestellen (8.15) en de prestatiebudgetten |
 | Hangt af van | P01 (meldingen basis, functiecatalogus), P27 (mobiele schil, inloggen met code, PWA), P31 (onderweg-meldingen: vertrek, briefing, verslag, recap, `shared/meldingsregels.ts`), P32 (Vandaag op de telefoon), P03 (consent per contact, bel-me-niet), P08 (Bewaker: consent, afkoeling, plafonds), P16 (mailreeksen, Verzender), P18 (concepten, Schrijver, mail versturen, `wa.me`-link), P30 (onderweg, offline dag), en elke eerdere prompt met een scherm voor de toesteltests |
-| Bron in het bouwplan | F24; 8.10; 8.15; 8.14 (PWA, meldingen, prestatiebudget); 8.6 (Rijmodus); 8.11; 8.16; hoofdstuk 12 (rijen WhatsApp Business, Mail, Telefonie); 11.3 (Berichtgever, Verzender, mandaat per niveau); 11.5 (lengte WhatsApp 60 woorden); 7.2 (afkoelperiode WhatsApp 180 dagen); F04 (toestemming en voorkeur); F16 punt 6 (afkoelperiodes en consent, frequentieplafond); F22 (Kanalen en consent, Bel-me-niet-lijst); 13.4; 15.2; 15.3; 16.4; hoofdstuk 19; open vragen 11 en 12; Bijlage A (geen regel noemt P26; regels 23 en 37 raken deze prompt) |
+| Bron in het bouwplan | F24; 8.10; 8.15; 8.14 (PWA, meldingen, prestatiebudget); 8.6 (Rijmodus); 8.11; 8.16; hoofdstuk 12 (rijen WhatsApp Business, Mail, Telefonie); 11.3 (Berichtgever, Verzender, mandaat per niveau); 11.5 (lengte WhatsApp 60 woorden); 7.2 (afkoelperiode WhatsApp 180 dagen); F04 (toestemming en voorkeur); F16 punt 6 (afkoelperiodes en consent, frequentieplafond); F22 (Kanalen en consent, Bel-me-niet-lijst); 13.4; 13.5 (lokaal bouwen en testen); 15.2; 15.3; 16.4; hoofdstuk 19; open vragen 11 en 12; Bijlage A (geen regel noemt P26; regels 23 en 37 raken deze prompt) |
 
 ## Lees eerst
 
@@ -35,8 +35,8 @@ Meldingen tellen in DealDrive alleen met de app open en "gelezen" gold per appar
 | iedereen | Beginner | Meldingen ontvangen in-app, per e-mail en als push; per soort aan of uit en stille uren in Mijn instellingen; meldingenpagina; WhatsApp-concept goedkeuren en openen in WhatsApp (mandaat C) |
 | iedereen | Gevorderd | Idem; handsfree en bundelen tijdens het belblok |
 | iedereen | Expert | Plus rijmodus, eigen meldingsplafond en stille uren per soort (8.11) |
-| salesmanager | Gevorderd of Expert | Meldingen over het team (campagne loopt achter, niveauvoorstel, concepten van het team die wachten) |
-| beheerder | Expert | Kanalen en consent, bel-me-niet-lijst, WhatsApp-koppeling en sjablonen, mailkoppeling; meldingen "leverancier werkt in je organisatie" en "bundel op 80 procent" |
+| salesmanager | rol | Meldingen over het team (campagne loopt achter, concepten van het team die wachten) |
+| beheerder | Expert | Kanalen en consent, bel-me-niet-lijst, WhatsApp-koppeling en sjablonen, mailkoppeling; meldingen "leverancier werkt in je organisatie" en "AI-credits op 80 procent" |
 | founder | n.v.t. | Geen eigen functies in deze prompt; ziet koppelingsfouten in Platformbeheer (P24) |
 
 ### Schermen
@@ -46,7 +46,7 @@ Meldingen tellen in DealDrive alleen met de app open en "gelezen" gold per appar
 - Rijen met een kleurbalk per soort: kritiek rood, hete aanleiding paars, dagstart blauw, herinnering geel, inzicht groen; per rij titel, tekst, tijd en "Openen", "Markeer gelezen", "Verberg".
 - Bovenaan "Alles gelezen" (niet vastgelegd; voorstel).
 - Lege staat: "Geen meldingen. Je hoort het hier zodra er iets voor je klaarstaat." (voorstel).
-- Soorten: herinnering (taak of afspraak); dagstart; nieuwe hete aanleiding bij een eigen account; concept klaar ter goedkeuring; afspraak gemaakt door een collega voor jou; kans klaargezet door de binnendienst; campagne loopt achter; niveauvoorstel en ontgrendeling; coachingafspraak gedeeld; leverancier werkt in je organisatie (beheerder); bundel op 80 procent (beheerder). Op de telefoon daarnaast vertrek, briefing, verslag en recap (8.10).
+- Soorten: herinnering (taak of afspraak); dagstart; nieuwe hete aanleiding bij een eigen account; concept klaar ter goedkeuring; afspraak gemaakt door een collega voor jou; kans klaargezet door de binnendienst; campagne loopt achter; functie voor je aangezet (met link naar het helpartikel, 4.4); coachingafspraak gedeeld; AI-credits op 80 procent (beheerder en gebruikers, 11.4); leverancier werkt in je organisatie (beheerder). Op de telefoon daarnaast vertrek, briefing, verslag en recap (8.10).
 
 **2. Mijn instellingen, Meldingen** (iedereen): per soort de kanalen "In de app", "E-mail", "Push" als schakelaars; stille uren (standaard 19:00 tot 07:00 en het weekend); tijd van de dagstart (standaard 07:45 op de telefoon, 8.10; F24 noemt 08:00 voor de dagstart in de app, zie Regels); toestellen met push en "Verwijder dit toestel"; "Uitloggen op alle toestellen". Expert: eigen dagplafond en stille uren per soort. "Foto's en opnames alleen via wifi versturen" staat onder Offline (8.8).
 
@@ -152,7 +152,7 @@ Meldingen tellen in DealDrive alleen met de app open en "gelezen" gold per appar
 
 ### AI-stappen
 
-- **Schrijver** (P18) maakt de WhatsApp-tekst, hooguit 60 woorden, met stijlcheck (11.5); bundelsoort "Concept".
+- **Schrijver** (P18) maakt de WhatsApp-tekst, hooguit 60 woorden, met stijlcheck (11.5); credits: soort Concept, 2 credits per handeling (11.4, via `creditsVoor` uit P33).
 - **Berichtgever**: mandaat C op elk niveau; voorstel en uitvoering via de Bewaker `magHandelen(agent, handeling, account, contact, nu)`: consent, afkoeling, ritme, frequentieplafond, werkuren. Mock die het versturen naar de provider nabootst.
 - Geen nieuwe AI-aanroep in de meldingenlaag.
 
@@ -162,6 +162,7 @@ Meldingen tellen in DealDrive alleen met de app open en "gelezen" gold per appar
 - **WhatsApp Business**: provider nog open (open vraag 11, voorstel Meta Cloud API via een Nederlandse provider); adapter `server/utils/bronnen/whatsapp.ts` met `verstuurSjabloon`, `dienSjabloonIn`, `ontvangStatus`; mock met vaste antwoorden; logging in `koppeling_runs`; kosten in het verbruik.
 - **Mail**: SMTP van de organisatie of gekoppelde mailbox (P18); e-mailmeldingen. Niet vastgelegd via welk kanaal e-mailmeldingen gaan; voorstel: een transactionele platformafzender, los van de SMTP van de organisatie, zodat meldingen ook zonder mailkoppeling werken.
 - **Telefonie**: buiten scope (na sprint 12).
+- **Lokaal** (13.5): push, WhatsApp en mail draaien op hun mock; geen sleutel en geen kosten. Op een echte telefoon test je lokaal via `pnpm dev --host` in hetzelfde wifi-netwerk; Web Push op iOS vraagt een geïnstalleerde PWA over HTTPS en wordt daarom op staging getest.
 
 ### Functiecatalogus
 
@@ -202,7 +203,7 @@ Aanvullend voor deze prompt (voorstel, binnen de bestaande scenario's): push op 
 
 **Toegankelijkheid**: VoiceOver en TalkBack op de schermen uit 8.5; tekstvergroting tot 200 procent zonder afgekapte knoppen; elk tikdoel minimaal 44 px.
 
-**Prestatiebudgetten** (meten op staging): middenklasse-Android over 4G: eerste weergave van Vandaag binnen 2,5 s (LCP), interactief binnen 3,5 s, volgende opening uit het dagpakket binnen 1 s, JavaScript voor de eerste weergave hooguit 250 KB gecomprimeerd, een tik binnen 100 ms zichtbare reactie (8.14); plus 13.4: Vandaag warm onder 1,0 s desktop en onder 2,0 s op 4G, bootstrap 600 accounts en 3.000 contacten onder 1,5 s en 2 MB, belmodus volgend gesprek onder 300 ms, kansen langs de route onder 800 ms, synchronisatie van 50 mutaties onder 800 ms, app-bundel zonder platformdeel onder 400 kB gezipt.
+**Prestatiebudgetten** (meten op staging; lokaal alleen als voorlopige meting): middenklasse-Android over 4G: eerste weergave van Vandaag binnen 2,5 s (LCP), interactief binnen 3,5 s, volgende opening uit het dagpakket binnen 1 s, JavaScript voor de eerste weergave hooguit 250 KB gecomprimeerd, een tik binnen 100 ms zichtbare reactie (8.14); plus 13.4: Vandaag warm onder 1,0 s desktop en onder 2,0 s op 4G, bootstrap 600 accounts en 3.000 contacten onder 1,5 s en 2 MB, belmodus volgend gesprek onder 300 ms, kansen langs de route onder 800 ms, synchronisatie van 50 mutaties onder 800 ms, app-bundel zonder platformdeel onder 400 kB gezipt.
 
 ### Hergebruik uit DealDrive
 
@@ -237,7 +238,7 @@ Telefonie-koppeling (na sprint 12, open vraag 12); automatisering in LinkedIn (A
 16. De vijf handmatige scenario's uit 8.15 zijn uitgevoerd en gehaald, inclusief hooguit 10 procent accuverbruik per dag.
 17. VoiceOver en TalkBack werken op de schermen uit 8.5; tekstvergroting tot 200 procent zonder afgekapte knoppen; elk tikdoel minimaal 44 px.
 18. De prestatiebudgetten uit 8.14 en 13.4 zijn gemeten op staging en gehaald.
-19. Alle adapters (push, WhatsApp, mail) draaien in tests met een mock, zonder netwerk.
+19. Alle adapters (push, WhatsApp, mail) draaien lokaal en in tests met een mock (13.5), zonder netwerk.
 
 ## Definition of Done
 

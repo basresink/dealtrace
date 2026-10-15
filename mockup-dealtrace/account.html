@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="../designsysteem/dealdrive-designsysteem.css">
 <link rel="stylesheet" href="mockup.css">
 </head>
-<body data-pagina="account" data-titel="Brontsma Installatietechniek" data-terug="prospects.html|Prospects">
+<body data-ai-context="Bij: Brontsma Installatietechniek" data-pagina="account" data-titel="Brontsma Installatietechniek" data-terug="prospects.html|Prospects">
 <div class="app-shell">
 <main class="app-shell-main" id="inhoud">
 <div class="alleen-telefoon">
@@ -51,9 +51,9 @@
   </section>
 
   <section>
-    <p class="bloklabel">Open taken en deals</p>
+    <p class="bloklabel">Open taken en afspraken</p>
     <div class="stapelrij"><span><span class="soortlabel">Bel</span>Poging 3: bel Hilde Brontsma · do 16 okt</span></div>
-    <p class="lege-regel">Nog geen deal.</p>
+    <p class="lege-regel">Nog geen eerste afspraak gepland.</p>
   </section>
 
   <details class="kaart">
@@ -111,6 +111,8 @@
         <a class="dd-actie dd-actie--secundair" href="belblokken.html#start"><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-phone"/></svg>Bel</a>
         <button type="button" class="dd-actie dd-actie--taak" data-open="fo-taak"><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Taak</button>
         <button type="button" class="dd-actie dd-actie--secundair" data-stub="Nieuwe afspraak"><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Afspraak</button>
+        <button type="button" class="dd-actie dd-actie--secundair" data-ai><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sparkles"/></svg>Vraag AI</button>
+        <a class="dd-actie dd-actie--secundair" href="helpcenter.html"><svg class="icoon dd-actie-icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-help"/></svg>Hulp</a>
       </div>
     </div>
     <div class="stuurstrip mt-16" aria-label="Stuurstrip">
@@ -128,8 +130,8 @@
     <div class="stat-strip">
       <div class="stat-item"><span class="stat-label">Open acties</span><span class="stat-value tnum">2</span><span class="stat-foot stat-foot--alert">1 achterstallig</span></div>
       <div class="stat-item"><span class="stat-label">Inzichten</span><span class="stat-value tnum">3</span><span class="stat-foot">1 ongezien</span></div>
-      <div class="stat-item"><span class="stat-label">Open offertes</span><span class="stat-value tnum">0</span><span class="stat-foot">nog geen</span></div>
-      <div class="stat-item"><span class="stat-label">Open deals</span><span class="stat-value tnum">0</span><span class="stat-foot">nog geen</span></div>
+      <div class="stat-item"><span class="stat-label">Eerstvolgende afspraak</span><span class="stat-value-tekst">nog geen</span><span class="stat-foot">doel: eerste afspraak</span></div>
+      <div class="stat-item"><span class="stat-label">Volgende stap</span><span class="stat-value-tekst">Bellen · do 16 okt</span><span class="stat-foot">poging 3 van 5</span></div>
       <div class="stat-item"><span class="stat-label">Laatste contact</span><span class="stat-value-tekst">9 okt · bellen</span><span class="stat-foot">5 dagen geleden</span></div>
       <div class="stat-item"><span class="stat-label">Eigenaar</span><span class="stat-value-tekst" data-veld="naam">Sanne Kuipers</span><span class="stat-foot">Binnendienst</span></div>
     </div>
@@ -186,7 +188,7 @@
         <div class="bewijs bewijs--ja"><svg class="icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-circle-check"/></svg><span>18 medewerkers, klasse B <span class="bewijs-bron">KvK</span></span></div>
         <div class="bewijs bewijs--ja"><svg class="icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-circle-check"/></svg><span>Groeisignaal: twee vacatures <span class="bewijs-bron">website, 12 okt</span></span></div>
         <div class="bewijs bewijs--onbekend"><svg class="icoon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-circle-dot"/></svg><span>Projecten bij woningcorporaties onbekend</span></div>
-        <button type="button" class="dd-act mt-8" data-toast="Dossier wordt vernieuwd.">Dossier vernieuwen · kost 1 dossier</button>
+        <button type="button" class="dd-act mt-8" data-toast="Dossier wordt vernieuwd.">Dossier vernieuwen · 10 credits</button>
       </article>
       <article class="kaart">
         <header class="kaart-kop"><h3 class="kaart-titel">Kwalificatie</h3><span class="band band--geel">BAND 3/4</span></header>
@@ -225,7 +227,7 @@
       <button type="button" class="tab" data-tab-knop="ac-taken">Taken <span class="tab-teller">2</span></button>
       <button type="button" class="tab" data-tab-knop="ac-contacten">Contacten</button>
       <button type="button" class="tab" data-tab-knop="ac-notities">Notities</button>
-      <button type="button" class="tab" data-tab-knop="ac-deals" data-min="gevorderd">Deals</button>
+      <button type="button" class="tab" data-tab-knop="ac-reis">Reis</button>
       <button type="button" class="tab" data-stub="Meer tabbladen">Meer</button>
     </nav>
     <div id="ac-tijdlijn" class="mt-16">
@@ -237,7 +239,11 @@
     <div id="ac-taken" class="mt-16" hidden><div class="taakregel"><span class="taakregel-tijd">16 okt</span><div><span class="soortlabel">Bel</span>Poging 3: bel Hilde Brontsma</div></div></div>
     <div id="ac-contacten" class="mt-16" hidden><p class="tekst">Hilde Brontsma, Gert Visscher, Anouk Postma.</p></div>
     <div id="ac-notities" class="mt-16" hidden><p class="lege-regel">Nog geen notities.</p></div>
-    <div id="ac-deals" class="mt-16" hidden><p class="lege-regel">Nog geen deal.</p></div>
+    <div id="ac-reis" class="mt-16" hidden>
+      <div class="taakregel"><span class="taakregel-tijd">2 okt</span><div><span class="soortlabel">Fase</span>Gekwalificeerd <span class="meta">· dossier compleet, BAND 3 van 4</span></div></div>
+      <div class="taakregel"><span class="taakregel-tijd">6 okt</span><div><span class="soortlabel">Fase</span>Benaderd <span class="meta">· nu: poging 3 van 5</span></div></div>
+      <p class="meta mt-8">Volgende fases: In gesprek, Afspraak gepland, Afspraak gehouden, Overgedragen. Na de eerste afspraak met vervolg draag je het account over aan DealDrive, het CRM of een collega.</p>
+    </div>
   </div>
 </section>
 

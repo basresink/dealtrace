@@ -4,12 +4,12 @@
 |---|---|
 | Sprint | 8 |
 | Features | F24 (meldingen, mobiel), hoofdstuk 8 (8.5.6, 8.6, 8.9, 8.10) |
-| Hangt af van | P01 (functiecatalogus, sync), P27 (mobiele schil, compacte kop met "Inspreken", Web Push basis), P03 (contacten, ontdubbelen), P07 (taken, notities), P08 (Bewaker, bundel), P10 (belmodus, "Hoe ging het?"), P13 (afspraken, meetingsoorten), P14 (routedienst, klaarzetten), P30 (Bezoek afronden, opname en bijlagen, dagpakket), P32 (Vandaag op de telefoon, "Lees voor") |
-| Bron in het bouwplan | 8.1, 8.2, 8.5.6, 8.6, 8.7, 8.8, 8.9, 8.10, 8.11, 8.14, 8.15, 8.16, F24, 11.2, 12 (rij Transcriptie), 15.2, 22 (open vragen 13 en 17) |
+| Hangt af van | P01 (functiecatalogus, sync), P27 (mobiele schil, compacte kop met "Inspreken", Web Push basis), P03 (contacten, ontdubbelen), P07 (taken, notities), P08 (Bewaker), P10 (belmodus, "Hoe ging het?"), P13 (afspraken, meetingsoorten), P14 (routedienst, klaarzetten), P30 (Bezoek afronden, opname en bijlagen, dagpakket), P32 (Vandaag op de telefoon, "Lees voor"), P33 AI-assistent en credits (`creditsVoor`, reservering; inspreken in de chat) |
+| Bron in het bouwplan | 8.1, 8.2, 8.5.6, 8.6, 8.7, 8.8, 8.9, 8.10, 8.11, 8.14, 8.15, 8.16, F24, 11.2, 11.4 (credits voor spraak en transcriptie), 12 (rij Transcriptie), 13.5 (lokaal bouwen), 15.2, 22 (open vragen 13 en 17) |
 
 ## Lees eerst
 
-- `Bouwplan-Dealtrace.md`: hoofdstuk 8 volledig, met nadruk op 8.5.6, 8.6, 8.9 en 8.10; F24 (meldingen); F09 (afspraak), F04 en 15.1 (ontdubbelen van contacten); 11.2 (vangrails), 11.3 (Notulist, mandaat); 12 (Transcriptie); 15.2 (spraakopnames, AI-verwerking); 19; 21 (risico's PWA op iOS en spraak buiten de EU); 22 (vragen 13, 17, 18); Bijlage B (rijen Telefoon, Meldingen en PWA, AI).
+- `Bouwplan-Dealtrace.md`: hoofdstuk 8 volledig, met nadruk op 8.5.6, 8.6, 8.9 en 8.10; F24 (meldingen); F09 (afspraak), F04 en 15.1 (ontdubbelen van contacten); 11.2 (vangrails), 11.3 (Notulist, mandaat), 11.4 (rijen Spraakopdracht en visitekaartje, Transcriptie); 12 (Transcriptie); 15.2 (spraakopnames, AI-verwerking); 19; 21 (risico's PWA op iOS en spraak buiten de EU); 22 (vragen 13, 17, 18); Bijlage B (rijen Telefoon, Meldingen en PWA, AI).
 - DealDrive op commit 75bee61: `app/pages/dex/spraak.vue`, `app/pages/dex/meldingen.vue`, `app/pages/dex/concept.vue`, `server/api/dex/opdracht.post.ts`, `server/utils/dexOpdracht.ts` (één zin wordt één concept; account uit een lijst van echte namen, daarna gecontroleerd), `server/api/dex/verslag-extract.post.ts`, `server/utils/dexVerslagAnalyse.ts`, `server/utils/dexPlafond.ts`, `shared/dexSignalen.ts`, `shared/dexRecap.ts`, `app/composables/useDexMeldingen.ts`, `app/components/TranscriptUpload.vue`, `server/utils/pushVerzenden.ts`, `server/utils/reminderSweep.ts`, `server/utils/overzichtSweep.ts`, `app/composables/useWebPush.ts`, `app/components/PushSoftPrompt.vue`, `public/push-sw.js`.
 
 ## Deel 1: Functioneel (wat en waarom)
@@ -42,7 +42,7 @@ Rijden is geen werkmoment (8.2 punt 7): onderweg leest Dealtrace voor en luister
 4. Bij twijfel over het account de vraag welke van twee namen je bedoelt, met twee knoppen.
 5. Knoppenrij: "Aanpassen" en "Bewaar" (primair).
 
-Voorbeeldzinnen uit het bouwplan: "Bel Marieke volgende week dinsdag over de offerte", "Noteer dat de DGA in september terug is". Lege of onverstaanbare opname: Niet vastgelegd in het bouwplan; voorstel: "Dat verstond ik niet. Probeer het nog eens of typ je opdracht."
+Voorbeeldzinnen uit het bouwplan: "Bel Marieke volgende week dinsdag over de projectschouw", "Noteer dat de DGA in september terug is". Lege of onverstaanbare opname: Niet vastgelegd in het bouwplan; voorstel: "Dat verstond ik niet. Probeer het nog eens of typ je opdracht."
 
 **Microfoon in tekstvelden**: elk tekstveld met een microfoon (verslag in Bezoek afronden, "Hoe ging het?", notitie, beschrijving) gebruikt dezelfde component `VerslagVeld.vue` (8.13). De opname komt uit P30; deze prompt voegt de transcriptie toe.
 
@@ -141,16 +141,17 @@ Testset `test:spreek` (8.14); tests op lengte en het ontbreken van opsommingstek
 
 ### AI-stappen
 
-| Stap | Agent en mandaat | Materiaal | Schema | Vangrails | Mock | Bundelsoort |
+| Stap | Agent en mandaat | Materiaal | Schema | Vangrails | Mock | Credits (11.4) |
 |---|---|---|---|---|---|---|
-| Spraakopdracht | Notulist-familie, A voor het concept; opslaan is een menselijke handeling | getranscribeerde zin, lijst eigen accounts (naam, plaats), contacten van het gekozen account | `{soort, accountNaam, persoonNaam?, titel, datum?, tijd?}` met `additionalProperties false` | account moet in de lijst staan; geen privégegevens; één herhaling bij schemafout | vaste zinnen met verwachte concepten | Niet vastgelegd in 11.4; voorstel: "Concept" |
-| Visitekaartje lezen | Profielbouwer-familie, A voor het conceptcontact | foto van het kaartje | `{naam, functie?, bedrijf?, telefoon?, email?}` | alleen wat op het kaartje staat; geen aanvulling uit het web | vaste foto's met verwachte velden | Niet vastgelegd in 11.4; voorstel: "Brief en committee" |
+| Spraakopdracht | Notulist-familie, A voor het concept; opslaan is een menselijke handeling | getranscribeerde zin, lijst eigen accounts (naam, plaats), contacten van het gekozen account | `{soort, accountNaam, persoonNaam?, titel, datum?, tijd?}` met `additionalProperties false` | account moet in de lijst staan; geen privégegevens; één herhaling bij schemafout | vaste zinnen met verwachte concepten | Spraakopdracht: 1 credit (Starter, Plus, Compleet) |
+| Visitekaartje lezen | Profielbouwer-familie, A voor het conceptcontact | foto van het kaartje | `{naam, functie?, bedrijf?, telefoon?, email?}` | alleen wat op het kaartje staat; geen aanvulling uit het web | vaste foto's met verwachte velden | Visitekaartje: 2 credits (Starter, Plus, Compleet) |
 
-De modelkeuze per soort staat in de AI-koppeling (F23). Golden masters voor beide prompts (19).
+De modelkeuze per soort staat in de AI-koppeling (F23). De prijs komt uit `creditsVoor` (P33), met reservering vóór de aanroep. Golden masters voor beide prompts (19).
 
 ### Integraties
 
-- Transcriptie (12): EU-dienst achter een adapter met mock; keuze na een proef met tien echte verslagen (open vraag 17). Adapter `server/utils/transcriptie.ts` (naam voorstel) met `transcribeer(opname, taal)`. Kosten per minuut in het verbruik; Niet vastgelegd in 11.4 als bundel; voorstel: eigen soort "Transcriptie (minuten)" met een plafond per pakket dat de founder zet.
+- Transcriptie (12): EU-dienst achter een adapter met mock; keuze na een proef met tien echte verslagen (open vraag 17). Adapter `server/utils/transcriptie.ts` (naam voorstel) met `transcribeer(opname, taal)`. Kosten in AI-credits: 1 credit per begonnen minuut (11.4, Starter, Plus, Compleet), via `creditsVoor` uit P33; bij 0 credits blijft de opname bewaard en wordt hij getranscribeerd zodra er weer credits zijn (voorstel).
+- Lokaal (13.5): transcriptie en AI op hun mock (`AI_PROVIDER=mock`), geen sleutel en geen kosten; op een echte telefoon test je via `pnpm dev --host` in hetzelfde wifi-netwerk; Web Push op iOS vraagt een geïnstalleerde PWA over HTTPS en wordt op staging getest.
 - Web Push: VAPID, `push_subscriptions`, `pushVerzenden.ts`, service worker uit P27.
 - Routedienst (P14) voor de reistijd in de vertrekmelding.
 - Opnemen van gesprekken: nee (open vraag 13); alleen aantekeningen, inspreken en geplakte transcripten.
@@ -162,15 +163,15 @@ Sleutels niet vastgelegd in het bouwplan; niveaus uit 8.6 en 8.11; voorstel:
 | Sleutel | Niveau | Pakket | Recht | Helpartikel |
 |---|---|---|---|---|
 | `spraak.inspreken` | Beginner | Starter | eigen records | "Inspreken in plaats van typen" |
-| `spraak.opdracht` (taak, notitie) | Beginner | Plus (AI, voorstel) | taken schrijven | idem |
-| `spraak.opdrachtUitgebreid` (afspraak, mail) | Gevorderd | Plus | afspraken schrijven | idem |
+| `spraak.opdracht` (taak, notitie) | Beginner | Starter (credits, 11.4) | taken schrijven | idem |
+| `spraak.opdrachtUitgebreid` (afspraak, mail) | Gevorderd | Starter (credits, 11.4) | afspraken schrijven | idem |
 | `spraak.voorlezen` | Beginner | Starter | ingelogd | idem |
 | `spraak.handsfree` | Gevorderd | Starter | ingelogd | "Dealtrace op je telefoon en offline" |
-| `contact.visitekaartje` | Gevorderd | Plus (AI, voorstel) | contacten schrijven | idem |
+| `contact.visitekaartje` | Gevorderd | Starter (credits, 11.4) | contacten schrijven | idem |
 | `meldingen.onderweg` | Beginner | Starter | ingelogd | "Meldingen instellen" |
 | `meldingen.perSoort` | Expert | Starter | ingelogd | idem |
 
-Op Starter zonder AI-bundel (11.4) werkt inspreken met transcriptie (geen taalmodel), maar niet de spraakopdracht en het visitekaartje (voorstel).
+Spraakopdracht, visitekaartje en transcriptie staan volgens 11.4 aan in elk pakket en kosten credits uit de pot van de organisatie. Zijn de credits op, dan werkt inspreken als opname die wacht en tikt de gebruiker zijn opdracht of contact zelf in. Het niveau is de startindeling; de founder zet functies per niveau aan of uit (P09 Helpcenter basis en features per niveau).
 
 ### Hergebruik uit DealDrive (8.13, Bijlage B)
 
@@ -203,14 +204,14 @@ Op Starter zonder AI-bundel (11.4) werkt inspreken met transcriptie (geen taalmo
 10. Offline (8.8, 8.15): inspreken in Bezoek afronden en een spraakopdracht slagen zonder verbinding, met zichtbare status, en worden na herstel precies één keer verwerkt (Playwright met `context.setOffline(true)`).
 11. Toestellen (8.15): getest op de vijf toestellen; scenario 4 (bellen via de carkit met handsfree, geen scherm nodig tussen twee gesprekken); VoiceOver en TalkBack op de spraakopdracht; tikdoelen minimaal 44 px.
 12. AI: elk antwoord binnen het schema of één herhaling, daarna een fout zonder opslag; mock en golden master aanwezig; privégegevens gemaskeerd.
-13. Niveaus (8.11): als Beginner spraakopdracht voor taak en notitie, geen afspraak of mail (vergrendeld met uitleg), geen visitekaartje; als Gevorderd ook afspraak, mail, visitekaartje en handsfree; als Expert ook meldingsregels per soort. Getest per niveau.
+13. Niveaus (8.11): als Beginner spraakopdracht voor taak en notitie, geen afspraak of mail (functie niet aangezet, met uitleg en helpartikel), geen visitekaartje; als Gevorderd ook afspraak, mail, visitekaartje en handsfree; als Expert ook meldingsregels per soort. Getest per niveau.
 14. Cross-tenant: opnames, transcripten en notificaties van organisatie A zijn onzichtbaar voor B (Storage-RLS en database).
 
 ## Definition of Done
 
 Hoofdstuk 19 geldt volledig. Specifiek voor deze prompt:
 
-- Transcriptie-adapter met mock; geen netwerk in tests; één echte proefrun met kosten per minuut in het sprintverslag (open vraag 17).
+- Transcriptie-adapter met mock; alles draait lokaal (13.5); geen netwerk in tests; één echte proefrun met kosten per minuut in het sprintverslag (open vraag 17).
 - Golden masters voor spraakopdracht en visitekaartje; testkaartjes zijn fictief (personen en bedrijven in de lijn van Voltvast, Bijlage C), nooit echte kaartjes.
 - Pushmeldingen gedemonstreerd op een echte iPhone (geïnstalleerde PWA) en een echte Android.
 - Helpartikelen "Inspreken in plaats van typen" en "Meldingen instellen" en het handboek bijgewerkt.

@@ -4,12 +4,12 @@
 |---|---|
 | Sprint | 11 (Sturen en maatwerk) |
 | Features | F20 Salesmanager: controle, analyse en coaching; Coach-agent (11.3); "Mijn resultaten" voor de accountmanager; telefoonweergave voor de salesmanager (8.12) |
-| Hangt af van | P01 (teams, rechten, functiecatalogus), P05 (reis en reisgeschiedenis), P06 (motor, `ritmeAfrekening`), P07 (taken, inzichten, uitkomsten), P08 (Bewaker, bundel), P09 (helpartikelen en groeipad met `niveauVoorstel`), P10 (belscripts en `belblok_sessies`), P12 (hercontactritme en terugkomregels), P13 (meetingsoorten, interne meeting), P16 (campagnes), P17 (deals, offertes, verlorenredenen), P18 (concepten en overname), P19 (agents en blokkades), P28 (leesmodel, branches, winpunten, ambitiedoelen), P32 (mobiele schil en onderbalk salesmanager) |
-| Bron in het bouwplan | F20; 8.12; 8.4 (onderbalk salesmanager); 5.3 (dag en week van de salesmanager); 3.2 en 3.3 (teams, rechten coachingnotities); 4.4 (groeipad); 10.2 (afgeleide tabellen); 11.3 en 11.4 (Coach, bundel); 16.1 tot en met 16.3 (KPI's); F25 (normen en rapporten); Bijlage A regel 44 |
+| Hangt af van | P01 (teams, rechten, functiecatalogus), P05 (reis en reisgeschiedenis), P06 (motor, `ritmeAfrekening`), P07 (taken, inzichten, uitkomsten), P08 (Bewaker), P09 Helpcenter basis en features per niveau (helpartikelen, `functies_per_niveau`, niveau per gebruiker), P10 (belscripts en `belblok_sessies`), P12 (hercontactritme en terugkomregels), P13 (meetingsoorten, interne meeting), P16 (campagnes), P17 Funnel van de prospectreis en overdracht (`shared/funnel.ts`, `nb_funnel_stand`, `overdrachten`, uitvalredenen), P18 (concepten en overname), P19 (agents en blokkades), P28 (leesmodel, branches, winpunten, ambitiedoelen), P32 (mobiele schil en onderbalk salesmanager), P33 AI-assistent en credits (`creditsVoor`, reservering, meter) |
+| Bron in het bouwplan | F20; 8.12; 8.4 (onderbalk salesmanager); 5.3 (dag en week van de salesmanager); 3.2 en 3.3 (teams, rechten coachingnotities); 4.2 (niveau kiezen, geen groeipad); F17 (funnel); 10.2 (afgeleide tabellen); 11.3 en 11.4 (Coach, credits); 16.1 tot en met 16.3 (KPI's); F25 (normen en rapporten); Bijlage A regel 44 |
 
 ## Lees eerst
 
-- Bouwplan-Dealtrace.md: F20 volledig, 8.12, 8.4, 5.3, 3.2, 3.3 (rij Coachingnotities en de alinea over `eigen` en teams), 4.4 en 4.5, 10.1 (afgeleide tabellen herberekenbaar), 10.2 (rij Afgeleid en Coaching), 11.3 (Coach), 11.4 (bundel Coach en verbetervoorstel), hoofdstuk 16, F05 (verbetervoorstel, versies vergelijken), F21 (artikelen voor de salesmanager en de new business-academie), F25 "Per niveau" en de normen in F20 "Uit het verkoopverhaal", Bijlage A regel 44.
+- Bouwplan-Dealtrace.md: F20 volledig, 8.12, 8.4, 5.3, 3.2, 3.3 (rij Coachingnotities en de alinea over `eigen` en teams), 4.1, 4.2 en 4.4 (niveau kiezen met "Wijzig niveau", geen groeipad), F17 (funnel, overdracht), 10.1 (afgeleide tabellen herberekenbaar), 10.2 (rij Afgeleid en Coaching), 11.3 (Coach), 11.4 (credits per handeling: Coach en verbetervoorstel), hoofdstuk 16, F05 (verbetervoorstel, versies vergelijken), F21 (artikelen voor de salesmanager en de new business-academie), F25 "Per niveau" en de normen in F20 "Uit het verkoopverhaal", Bijlage A regel 44.
 - DealDrive op commit 75bee61:
   - `app/pages/team.vue`, `app/pages/team-dashboard.vue`, `app/pages/team-weekrapport.vue`, `app/composables/useTeamPrestaties.ts`, `app/composables/useTeamBlokbeeld.ts`
   - `shared/dexCoaching.ts` (de pure kant van de coach: onderdelen, `herkenBron`, `heeftGrond`) en `server/utils/dexCoach.ts`
@@ -46,7 +46,8 @@ De salesmanager is in Dealtrace geen meekijker maar een volwaardige gebruiker me
 2. **Tabel per persoon**: naam met niveau en werkplek, taken op de dag afgerond (procent), achterstallig, pogingen (gedaan tegen norm), gesprekken en beslisser bereikt, afspraken (tegen doel), koude norm ("koud 3 van 5"), belblokken gepland en gehouden, bezoeken en kansen langs de route omgezet, concepten die wachten op goedkeuring, tempo-pil. Klik op een cel opent de onderliggende lijst.
 3. **Aandachtspunten** (maximaal vijf, uitgerekend): "Mark stopt gemiddeld na 2,1 pogingen (team 4,3)", "Sanne heeft 14 taken achterstallig", "3 campagnes lopen achter", "6 geparkeerde accounts komen deze week terug", "Eva heeft deze week geen belblok gehouden".
 4. **Werkverdeling**: accounts per persoon per fase en status, met "Verplaats" (bulk, met reden en audit).
-5. **Goedkeuringen**: campagnes boven capaciteit, conceptversies van reizen en scripts, niveauvoorstellen, roadmapwensen van het team.
+5. **Goedkeuringen**: campagnes boven capaciteit, conceptversies van reizen en scripts, roadmapwensen van het team.
+6. **Niveau per persoon**: per accountmanager het niveau, met "Wijzig niveau" (Beginner, Gevorderd, Expert); elke wijziging met audit (4.2). Dealtrace doet geen niveauvoorstellen; een hoger niveau is een besluit van de salesmanager (B19).
 
 Lege staat (geen team): "Je bent nog geen eigenaar van een team. Vraag je beheerder om je aan een team te koppelen." (tekst niet vastgelegd; voorstel).
 
@@ -54,9 +55,9 @@ Lege staat (geen team): "Je bent nog geen eigenaar van een team. Vraag je beheer
 
 `/coaching` toont de teamleden met datum van het laatste gesprek en open afspraken (overzicht niet vastgelegd in het bouwplan; voorstel). De **coachingkaart** (`/coaching/:gebruiker`) van boven naar beneden:
 
-1. Kop met naam, niveau, werkplek, voortgang naar het volgende niveau (de criteria uit 4.4 als balkjes).
-2. **Cijfers tegen norm en team** (laatste 4 weken met trend): activiteit (pogingen per dag, belblokken), bereik (gesproken, beslisser bereikt), conversie (gesprek naar afspraak, afspraak naar offerte, offerte naar klant), discipline (pogingen tot afspraak, taken op de dag, winpunt uitgevoerd, briefing geopend vóór gesprek), kwaliteit (AI-concept ongewijzigd of aangepast, doel gehaald per gesprek).
-3. **Trechter van deze persoon** naast die van het team: waar valt het weg?
+1. Kop met naam, niveau, werkplek en de knop "Wijzig niveau" (4.2); geen voortgangsbalk en geen criteria voor een volgend niveau (B19).
+2. **Cijfers tegen norm en team** (laatste 4 weken met trend): activiteit (pogingen per dag, belblokken), bereik (gesproken, beslisser bereikt), conversie (gesprek naar afspraak, afspraak gepland naar gehouden, gehouden naar overgedragen), discipline (pogingen tot afspraak, taken op de dag, winpunt uitgevoerd, briefing geopend vóór gesprek), kwaliteit (AI-concept ongewijzigd of aangepast, doel gehaald per gesprek).
+3. **Funnel van deze persoon** naast die van het team (F17): waar valt het weg?
 4. **Gesprekken om te bespreken**: de Coach kiest drie gesprekken of bezoeken van de afgelopen week (een goede, een verloren, een met een bezwaar dat vaker terugkomt) met verslag, uitkomst en script; de manager kan zelf kiezen.
 5. **Coachingpunten**: maximaal drie, uitgerekend en door de Coach voorgesteld met onderbouwing ("Bij koude acquisitie sluit je 2 van de 10 gesprekken met een afspraak; het team 4 van de 10. In 6 gesprekken werd het afsluitblok van het script niet gebruikt."), elk met een gekoppeld helpartikel uit de new business-academie (F21). Knop "Deel" per punt.
 6. **Afspraken**: doel, gedrag, termijn, vastgelegd als coachingnotitie van soort "Afspraak" met datum; de accountmanager ziet ze en kan reageren. Notities van soort "Privé" alleen voor managers van dat team.
@@ -68,17 +69,17 @@ Lege staat (geen team): "Je bent nog geen eigenaar van een team. Vraag je beheer
 
 | Tabblad | Inhoud |
 |---|---|
-| Trechter | per doelgroep en reis: accounts per fase, conversie tussen fases, doorlooptijd per fase, waar het stokt; forecast nieuwe klanten dit kwartaal uit conversie en capaciteit |
-| Activiteit | pogingen, gesprekken, afspraken per kanaal en per persoon; afspraken per poging |
+| Funnel | de funnel van de prospectreis (F17) per team, doelgroep en reis: accounts per fase, conversie tussen fases, doorlooptijd per fase, waar het stokt; verwachting eerste afspraken dit kwartaal uit conversie en capaciteit |
+| Activiteit | pogingen, gesprekken, afspraken per kanaal en per persoon; afspraken per poging (bij welke poging ontstaat de afspraak) |
 | Campagnes | per campagne en soort: bereik, afspraken, conversie, kosten per afspraak; vergelijken binnen dezelfde soort |
 | Scripts | per belscript en versie: gesprekken, afspraken, duur, top bezwaren (minimaal 30 gesprekken) |
 | Regels en agents | per regel acceptatie en opbrengst; per agent overname van concepten, blokkades per reden, kosten |
 | Reizen | per reisversie conversie per fase (minimaal 20 accounts per versie); het maandelijkse verbetervoorstel van de Coach met "Accepteer", "Wijs af", "Later" |
-| Bronnen | per leadbron (AI-zoeker, KvK, Datacollectief, import, CRM): leads, overgenomen, afspraken, klanten, kosten per klant |
+| Bronnen | per leadbron (AI-zoeker, KvK, Datacollectief, import, CRM): leads, overgenomen, eerste afspraken, overgedragen, kosten per eerste afspraak |
 | Regio | dekking en potentie per gebied (F18, `/analyse/regio` uit P14) |
 | Prospectmix | afgesproken verdeling koud, warm, referral, winback tegen werkelijk, per persoon, met campagnevoorstel bij achterstand |
 
-Uit het verkoopverhaal (F25): norm "Nieuwe gesprekken in primair of hoog" (gezond twee derde of meer, aandacht de helft tot twee derde, risico minder dan de helft); "Winpunt uitgevoerd" tegen norm 90 procent; rapport "Verloren aan" en "Gewonnen van" per concurrent en branche; ambitiedoelen als voortgangsbalk. Niet vastgelegd in welk tabblad deze rapporten staan; voorstel: "Verloren aan" en "Gewonnen van" onder Trechter, de branchenorm en de ambitiedoelen onder Prospectmix.
+Uit het verkoopverhaal (F25): norm "Nieuwe gesprekken in primair of hoog" (gezond twee derde of meer, aandacht de helft tot twee derde, risico minder dan de helft); "Winpunt uitgevoerd" tegen norm 90 procent; rapport "Verloren aan" (nee met een concurrent) per concurrent en branche; ambitiedoelen als voortgangsbalk. Niet vastgelegd in welk tabblad deze rapporten staan; voorstel: "Verloren aan" onder Funnel (naast de uitval per fase), de branchenorm en de ambitiedoelen onder Prospectmix.
 
 Elke grafiek is klikbaar naar de onderliggende lijst; elk tabblad heeft "Download CSV". Onder het minimum staat "Te weinig om te vergelijken".
 
@@ -89,7 +90,7 @@ Elke grafiek is klikbaar naar de onderliggende lijst; elk tabblad heeft "Downloa
 **6. Telefoonweergave op 390 px (8.12 en 8.4)**
 
 - Onderbalk salesmanager zonder eigen portefeuille: Team `/team`, Coaching `/coaching`, Acties `/acties`, Prospects `/prospects`, Meer.
-- Team op de telefoon: drie stapels met de handeling in de regel: "Gesprekken zonder verslag" (per persoon met aantal), "Deals zonder vervolg", "Achter op het ritme"; daaronder de aandachtspunten en "Wacht op jouw goedkeuring" (concepten en goedkeuringen van het team). De tabel per persoon wordt een lijst met per persoon één regel (naam, tempo-pil, achterstallig) die een schuifvenster met de cijfers opent. Opbouw niet vastgelegd in het bouwplan behalve de inhoud uit 8.12; voorstel zoals hier.
+- Team op de telefoon: drie stapels met de handeling in de regel: "Gesprekken zonder verslag" (per persoon met aantal), "Eerste afspraken nog niet overgedragen", "Achter op het ritme"; daaronder de aandachtspunten en "Wacht op jouw goedkeuring" (concepten en goedkeuringen van het team). De tabel per persoon wordt een lijst met per persoon één regel (naam, tempo-pil, achterstallig) die een schuifvenster met de cijfers opent. Opbouw niet vastgelegd in het bouwplan behalve de inhoud uit 8.12; voorstel zoals hier.
 - Coachingkaart op de telefoon: geschikt om voor te bereiden en tijdens een rit naast een verkoper te gebruiken; volgorde: kop met niveau, coachingpunten, afspraken (met "+ Afspraak"), cijfers (ingeklapt), gesprekken om te bespreken. Voorlezen van de coachingpunten met "Lees voor" is niet vastgelegd; voorstel: niet in deze prompt.
 - Analyse: alleen lezen, grafieken schermbreed onder elkaar, filters verborgen achter "Open op laptop".
 - Audit: lijst met filters in een schuifvenster.
@@ -103,7 +104,7 @@ Elke grafiek is klikbaar naar de onderliggende lijst; elk tabblad heeft "Downloa
 4. **Afspraak vastleggen.** "+ Afspraak": tekst, termijn; opslaan als coachingnotitie "Afspraak". De accountmanager krijgt de melding "Coachingafspraak gedeeld" (F24) en ziet hem in Mijn resultaten.
 5. **Gesprek plannen.** "Plan coachingsgesprek" maakt een interne meeting met de kaart als agenda.
 6. **Verbetervoorstel.** In Analyse, Reizen kiest hij "Accepteer" bij het voorstel van de Coach: er ontstaat een conceptversie van de reis (P22) met het voorstel erin; "Later" laat het voorstel 30 dagen staan (termijn niet vastgelegd; voorstel).
-7. **Niveauvoorstel.** In Goedkeuringen "Sanne is klaar voor Gevorderd" met de cijfers; "Verhoog niveau" of "Nog niet" met reden (4.4).
+7. **Niveau wijzigen.** In Team, Niveau per persoon (of op de coachingkaart) klikt hij bij Sanne "Wijzig niveau" en kiest Gevorderd; audit en toast. Sanne krijgt de toast "... staat nu voor je aan." met een link naar het helpartikel van elke functie die voor haar aangaat (4.4).
 8. **Zelfanalyse.** Een Expert-accountmanager klikt in Mijn resultaten "Wat kan ik deze week beter doen?"; de Coach geeft maximaal drie punten met onderbouwing en artikel.
 
 ### Filters en sorteren
@@ -121,11 +122,12 @@ Elke grafiek is klikbaar naar de onderliggende lijst; elk tabblad heeft "Downloa
 - De salesmanager ziet alleen zijn teams, server-side afgedwongen; een beheerder ziet alles.
 - Afrekening van het ritme per account, niet als som per klasse, met hetzelfde kanaal dat de motor voorschrijft (F16, regel 44).
 - Normen uit hoofdstuk 16, onder meer: pogingen tot afspraak gemiddeld 4 tot 5, conversie gesprek naar afspraak boven 15 procent, beslisser bereikt boven 20 procent, teamleden op tempo boven 70 procent, één coachingsgesprek per accountmanager per twee weken, coachingafspraken gehaald boven 60 procent.
+- De Coach doet geen niveauvoorstellen en rekent geen criteria voor een volgend niveau uit (B19); het niveau kiest de salesmanager met "Wijzig niveau".
 - Tempo-pil per persoon: niet vastgelegd in het bouwplan hoe die wordt berekend; voorstel: pogingen gedaan tegen norm in de periode, "Op schema" vanaf 90 procent, "Achter op schema" daaronder.
 
 ### Helpartikelen
 
-Categorie "Voor de salesmanager": "Team controleren", "Coachingsgesprek voorbereiden", "Analyse lezen", "Verbetervoorstellen beoordelen". Voor de accountmanager in de academie: "Je cijfers lezen" en "Feedback vragen aan je salesmanager" (categorie Jezelf verbeteren), plus "Je cijfers lezen en verbeteren" in het leerpad Expert.
+Categorie "Voor de salesmanager": "Team controleren", "Coachingsgesprek voorbereiden", "Analyse lezen", "Verbetervoorstellen beoordelen". Voor de accountmanager in de academie: "Je cijfers lezen" en "Feedback vragen aan je salesmanager" (categorie Jezelf verbeteren).
 
 ## Deel 2: Technisch (hoe)
 
@@ -144,13 +146,13 @@ Categorie "Voor de salesmanager": "Team controleren", "Coachingsgesprek voorbere
 | Functie | Invoer | Uitvoer | Randgevallen en tests |
 |---|---|---|---|
 | `kpi(gebruiker, periode, activiteiten)` | gebruiker, periode, activiteiten | metrieken met noemer | lege periode; feestdagen niet als werkdag (`shared/datum.ts`); intern overleg telt niet als klantcontact |
-| `trechter(accounts, reisgeschiedenis, periode)` | accounts, geschiedenis | aantallen per fase, conversie, doorlooptijd | account dat terugspringt; fasemapping na een nieuwe versie |
+| `funnelStand(geschiedenis, periode, filters)` (uit `shared/funnel.ts`, P17; in F20 `trechter` genoemd) | reisgeschiedenis, periode, filters op team en persoon | aantallen per fase, conversie, doorlooptijd | account dat terugspringt; fasemapping na een nieuwe versie; niet opnieuw bouwen, alleen per team en persoon aanroepen |
 | `aandachtspunten(team, kpis, normen)` | team, kpi's, normen | maximaal vijf punten met cijfers | minder dan vijf; gelijke ernst, vaste volgorde |
 | `coachVoorstel(kpis, team, verslagen)` | zie AI-stappen | maximaal drie punten | geen verslagen; onder minimum geen vergelijking |
 | `ritmeAfrekening(accounts, activiteiten, periode)` | per account | achterstand per account | stil account in een klasse die gemiddeld op schema ligt moet zichtbaar zijn (regel 44) |
 | `genoegOmTeVergelijken(n, soort)` | aantal, soort | boolean met melding | 29 en 30 gesprekken; 19 en 20 accounts |
 
-`kpi`, `trechter`, `aandachtspunten` en `coachVoorstel` zijn vastgelegd in F20; `ritmeAfrekening` in F16; `genoegOmTeVergelijken` is een voorstel.
+`kpi`, `aandachtspunten` en `coachVoorstel` zijn vastgelegd in F20, `funnelStand` in F17; `ritmeAfrekening` in F16; `genoegOmTeVergelijken` is een voorstel.
 
 ### Endpoints
 
@@ -163,7 +165,7 @@ Categorie "Voor de salesmanager": "Team controleren", "Coachingsgesprek voorbere
 | `GET /api/analyse/:tabblad?filters` | salesmanager; Regio ook accountmanager voor eigen accounts | filters | reeksen met aantallen | "Te weinig om te vergelijken" als vlag |
 | `GET /api/resultaten/mij` | iedereen | `?periode=` | eigen cijfers, teamgemiddelde vanaf Gevorderd, afspraken | geen namen van collega's |
 | `POST /api/accounts/verplaats` | salesmanager | `{accountIds, naarGebruiker, reden}` | aantal | niet vastgelegd welke route; voorstel; 422 zonder reden |
-| `POST /api/coaching/zelfanalyse` | Expert | geen | maximaal drie punten | niet vastgelegd; voorstel; 429 als de bundel op is |
+| `POST /api/coaching/zelfanalyse` | Expert | geen | maximaal drie punten | niet vastgelegd; voorstel; 402 als de AI-credits op zijn (F26) |
 
 CSV-export per tabblad: `GET /api/analyse/:tabblad?formaat=csv` (voorstel) met precies de getoonde rijen.
 
@@ -173,8 +175,8 @@ CSV-export per tabblad: `GET /api/analyse/:tabblad?formaat=csv` (voorstel) met p
 - **Materiaal**: activiteitenlog, conversies, verslagen van de laatste week, scriptgebruik per blok, helpartikelen van de academie (sleutels).
 - **Schema** `coachVoorstel`: `{punten[{tekst, onderbouwing {cijfers[], bron}, artikelSleutel}]}`, maximaal drie; `additionalProperties false`. Een punt zonder cijfers of zonder bestaande artikelsleutel wordt geschrapt (neem `heeftGrond` en `herkenBron` uit `shared/dexCoaching.ts` over).
 - **Vangrails**: namen van klanten en contactpersonen in vrije tekst gefilterd; geen vergelijking onder het minimum; geen privénotities in het materiaal.
-- **Mock**: vaste fixtures uit de startset Voltvast (Bijlage C) met fictieve teamleden van "Binnendienst" en "Team Noord".
-- **Bundelsoort**: "Coach en verbetervoorstel", Claude Opus, 0 / 50 / 50 per maand (11.4). Het maandelijkse verbetervoorstel per doelgroep draait in de maandjob (`netlify/functions/maand`).
+- **Mock**: lokaal (13.5) altijd `AI_PROVIDER=mock`, zonder sleutel en zonder kosten; vaste fixtures uit de startset Voltvast (Bijlage C) met fictieve teamleden van "Binnendienst" en "Team Noord".
+- **Credits**: "Coach en verbetervoorstel", Claude Opus, 20 credits per handeling (Plus, Compleet; 11.4), via `creditsVoor` uit P33 met reservering vóór de aanroep. Het maandelijkse verbetervoorstel per doelgroep draait in de maandjob (`netlify/functions/maand`, lokaal met `pnpm motor`); als automatische AI stopt het bij 10 procent van de pot.
 
 ### Integraties
 
@@ -188,7 +190,7 @@ Niet vastgelegd in het bouwplan welke sleutels; voorstel:
 |---|---|---|---|---|
 | `resultaten.eigen` | Beginner | Starter | eigen | Je cijfers lezen |
 | `resultaten.trend` | Gevorderd | Starter | eigen | Je cijfers lezen |
-| `resultaten.zelfanalyse` | Expert | Plus (bundel Coach) | eigen | Je cijfers lezen en verbeteren |
+| `resultaten.zelfanalyse` | Expert | Plus (credits, soort Coach) | eigen | Je cijfers lezen en verbeteren |
 | `team.controle` | Gevorderd | Starter | salesmanager | Team controleren |
 | `coaching.kaart` | Gevorderd | Starter | salesmanager | Coachingsgesprek voorbereiden |
 | `coaching.coachVoorstel` | Gevorderd | Plus | salesmanager | Coachingsgesprek voorbereiden |
@@ -196,7 +198,7 @@ Niet vastgelegd in het bouwplan welke sleutels; voorstel:
 | `analyse.verbetervoorstel` | Gevorderd | Plus | salesmanager | Verbetervoorstellen beoordelen |
 | `audit` | Gevorderd | Starter | salesmanager | Team controleren |
 
-De salesmanager is minimaal Gevorderd (4.1), dus het niveau Gevorderd is de ondergrens voor het managerdeel.
+Een salesmanager en een beheerder hebben standaard alle functies aan (4.1); de niveaukolom is de startindeling voor de accountmanager, die de founder per niveau aan of uit zet in `functies_per_niveau` (P09 Helpcenter basis en features per niveau).
 
 ### Hergebruik uit DealDrive
 
@@ -217,22 +219,24 @@ Opnames van gesprekken (meeluisteren is lezen van verslagen en Pitstop-concepten
 4. Een vergelijking onder het minimum toont "Te weinig om te vergelijken" (29 gesprekken per script, 19 accounts per reisversie).
 5. CSV-export bevat precies de getoonde rijen.
 6. Een salesmanager van Team Noord krijgt 403 op `/api/team?team=<Team Zuid>`; een beheerder niet.
-7. De Coach geeft hoogstens drie punten, elk met cijfers en een bestaand artikel; zonder bundel verschijnt de melding en blijft de kaart bruikbaar met de berekende cijfers.
+7. De Coach geeft hoogstens drie punten, elk met cijfers en een bestaand artikel; zonder AI-credits verschijnt de melding en blijft de kaart bruikbaar met de berekende cijfers.
 8. Aandachtspunten tonen er hoogstens vijf.
 9. "Verplaats" vraagt een reden en schrijft een auditregel per account; de audit toont de wijziging met filters op persoon, soort en periode.
 10. Mijn resultaten toont geen namen van collega's; vanaf Gevorderd het teamgemiddelde.
-11. Niveau Beginner: `/resultaten` met eigen cijfers en afspraken, geen trend en geen vergelijking (blok "Bij Gevorderd" als lege staat onderaan, 4.5).
-12. Niveau Gevorderd: trend en vergelijking met het teamgemiddelde; de zelfanalyse staat met slot en uitleg.
-13. Niveau Expert: "Wat kan ik deze week beter doen?" geeft punten; een salesmanager op niveau Gevorderd heeft volledig Team, Coaching, Analyse en Audit.
-14. Telefoon (375, 390, 412 px): de onderbalk van de salesmanager toont Team, Coaching, Acties, Prospects, Meer en licht op elke pagina eenduidig op; Team toont gesprekken zonder verslag, deals zonder vervolg en achterstand op het ritme zonder horizontale scroll; de coachingkaart is met één duim te gebruiken (tikdoelen minimaal 44 px); Analyse is alleen lezen met "Open op laptop".
+11. Niveau Beginner: `/resultaten` met eigen cijfers en afspraken, geen trend en geen vergelijking (hoogstens één lege staat onderaan met kicker "Nog niet aangezet" en "Deze functie hoort bij Gevorderd.", 4.4).
+12. Niveau Gevorderd: trend en vergelijking met het teamgemiddelde; de zelfanalyse staat als functie die niet aanstaat, met slot-icoon, uitleg en helpartikel, zonder verzoekknop.
+13. Niveau Expert: "Wat kan ik deze week beter doen?" geeft punten; een salesmanager heeft standaard alle functies aan en dus volledig Team, Coaching, Analyse en Audit.
+14. Telefoon (375, 390, 412 px): de onderbalk van de salesmanager toont Team, Coaching, Acties, Prospects, Meer en licht op elke pagina eenduidig op; Team toont gesprekken zonder verslag, eerste afspraken die nog niet zijn overgedragen en achterstand op het ritme zonder horizontale scroll; de coachingkaart is met één duim te gebruiken (tikdoelen minimaal 44 px); Analyse is alleen lezen met "Open op laptop".
 15. Een afspraak die de manager tijdens een rit op de telefoon vastlegt, staat offline in de wachtrij en komt na herstel precies één keer aan.
 16. De afgeleide tabellen zijn zonder verlies opnieuw te berekenen: een volledige herberekening geeft dezelfde cijfers.
+17. Het tabblad heet "Funnel"; de conversie op de coachingkaart is gesprek naar afspraak, afspraak gepland naar gehouden en gehouden naar overgedragen; nergens staan deals, offertes of een forecast van nieuwe klanten.
+18. "Wijzig niveau" gebruikt `POST /api/gebruikers/:id/niveau` uit P01 en schrijft `users.niveau` en een auditregel; er bestaan geen niveauvoorstellen, geen voortgangsbalk naar een volgend niveau en geen goedkeuring van een niveau in Goedkeuringen.
 
 ## Definition of Done
 
 Hoofdstuk 19 geldt volledig. Specifiek voor deze prompt:
 
-- Unit-tests voor `kpi`, `trechter`, `aandachtspunten`, `ritmeAfrekening` met grenzen en lege invoer; golden master voor `coachVoorstel`.
+- Unit-tests voor `kpi`, `aandachtspunten`, `ritmeAfrekening` en het aanroepen van `funnelStand` per team en persoon, met grenzen en lege invoer; golden master voor `coachVoorstel`.
 - Playwright-flow "coachingsgesprek" uit de teststrategie (hoofdstuk 19) groen op desktop en telefoon.
 - Prestatiebudget: `GET /api/team` voor een team van 10 personen onder 1,0 s warm (niet vastgelegd in 13.4; voorstel).
 - Regel 44 van Bijlage A afgevinkt in het sprintverslag; de helpartikelen voor de salesmanager staan erin.
