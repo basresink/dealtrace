@@ -12,7 +12,8 @@ import { verbindingsopties } from '../../shared/verbinding'
 import { APP_WACHTWOORD, BEHEER_URL, isLokaal } from './omgeving'
 import { startindeling } from '../../shared/functies'
 import { zorgVoorReizen } from './reisStart'
-import { zorgVoorRegels } from './regelStart'
+import { zorgVoorRegels, zorgVoorRitmes } from './regelStart'
+import { RITMES_STARTSET } from '../../shared/hercontact'
 
 const MAP = join(import.meta.dirname, 'migrations')
 
@@ -59,6 +60,9 @@ export async function migreer(url = BEHEER_URL, opties: { opnieuw?: boolean; sti
     // P06: de starterset van 23 regels voor organisaties zonder regels.
     const nRegels = await zorgVoorRegels(client)
     if (nRegels) log(`Regels: starterset geladen voor ${nRegels} organisaties.`)
+    // P07: de vier hercontactritmes van de startset.
+    const nRitmes = await zorgVoorRitmes(client, RITMES_STARTSET)
+    if (nRitmes) log(`Hercontactritmes: startset geladen voor ${nRitmes} organisaties.`)
   } finally {
     await client.end()
   }

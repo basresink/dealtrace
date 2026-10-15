@@ -9,9 +9,14 @@ export const SYNCBARE_TABELLEN = {
   // P05: alleen de mutatiesoorten account.nee en account.pauzeer, zodat "Zet nee"
   // offline kan (8.8). Een fasewissel gaat nooit rechtstreeks, alleen via het meldpunt.
   accounts: 'prospects',
+  // P07: taken (taak.afronden, taak.uitstellen) en inzichten (gelezen, afwijzen).
+  tasks: 'taken',
+  signals: 'taken',
 } as const
 
 export const ACCOUNT_MUTATIESOORTEN = ['account.nee', 'account.pauzeer'] as const
+export const TAAK_MUTATIESOORTEN = ['taak.afronden', 'taak.uitstellen'] as const
+export const INZICHT_MUTATIESOORTEN = ['inzicht.gelezen', 'inzicht.afwijzen'] as const
 
 export type SyncbareTabel = keyof typeof SYNCBARE_TABELLEN
 

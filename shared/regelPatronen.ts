@@ -128,7 +128,7 @@ export interface MotorAccount {
   gebeurtenissen?: { id: string; gebeurtenis: string; naarFaseId: string | null; op: string }[]
   afspraken?: { id: string; eerste: boolean; status: 'gepland' | 'gehouden' | 'geannuleerd' | 'niet-verschenen'; op: string; overgedragen?: boolean; uitkomst?: string | null }[]
   campagnes?: { id: string; achterstand: number }[]
-  ritme?: { actief: boolean; volgendePogingOp?: string | null; poging?: number; van?: number } | null
+  ritme?: { actief: boolean; volgendePogingOp?: string | null; poging?: number; van?: number; kanaal?: string | null } | null
   signalen?: { id: string; soort: string; op: string; extern: boolean }[]
   tussendoelen?: { id: string; gehaaldOp: string }[]
   partnerLeads?: { id: string; deadline: string; bevestigd: boolean }[]

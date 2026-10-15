@@ -328,6 +328,63 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'matrix.beheer', naam: 'Accountmatrix beheren', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'accountmatrix', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Klassen, segmenten, belmatrix, afspraakmatrix en capaciteit instellen.', totDieTijd: 'Geen.' },
   },
+  // P07: Vandaag, taken, inzichten en hercontactritme
+  {
+    sleutel: 'vandaag.basis', naam: 'Vandaag', pakket: 'starter', rollen: 'iedereen', helpartikel: 'vandaag', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Je dag op één pagina: taken, aanleiding van de dag, prioriteiten en je werkblok.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'vandaag.agentsGedaan', naam: 'Door agents gedaan', pakket: 'starter', rollen: 'iedereen', helpartikel: 'vandaag', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Wat de motor en de agents sinds gisteren voor je deden.', totDieTijd: 'Je ziet het resultaat in je taken.' },
+  },
+  {
+    sleutel: 'vandaag.week', naam: 'Jouw week', pakket: 'starter', rollen: 'iedereen', helpartikel: 'vandaag', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Vijf werkdagen met je taken, afspraken, belblokken en regiodagen.', totDieTijd: 'Vandaag toont je dag.' },
+  },
+  {
+    sleutel: 'vandaag.indeling', naam: 'Eigen volgorde op Vandaag', pakket: 'starter', rollen: 'iedereen', helpartikel: 'vandaag', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De volgorde van de blokken op Vandaag zelf kiezen.', totDieTijd: 'De standaardvolgorde.' },
+  },
+  {
+    sleutel: 'vandaag.eigenWeergaven', naam: 'Eigen weergaven op Vandaag', pakket: 'starter', rollen: 'iedereen', helpartikel: 'vandaag', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Eigen filters op de takenkolom van Vandaag.', totDieTijd: 'De standaardvolgorde van taken.' },
+  },
+  {
+    sleutel: 'vandaag.team', naam: 'Team vandaag', pakket: 'starter', rollen: MANAGERS, helpartikel: 'vandaag', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Wie in je team achterloopt en wat op goedkeuring wacht.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'taken.basis', naam: 'Taken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-taak-afronden-met-een-uitkomst', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Je taken in een lijst, afronden met een uitkomst en uitstellen.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'taken.horizon', naam: 'Horizon', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-taak-afronden-met-een-uitkomst', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Je taken in drie kolommen: vandaag, komende week, week 2 en 3.', totDieTijd: 'De lijst in groepen.' },
+  },
+  {
+    sleutel: 'taken.bulk', naam: 'Bulkacties', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-taak-afronden-met-een-uitkomst', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Meerdere taken tegelijk uitstellen, toewijzen of afronden.', totDieTijd: 'Per taak.' },
+  },
+  {
+    sleutel: 'taken.herhaling', naam: 'Herhaling en herinnering', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-taak-afronden-met-een-uitkomst', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een taak laten terugkomen en een herinnering vooraf.', totDieTijd: 'Maak de taak opnieuw.' },
+  },
+  {
+    sleutel: 'inzichten.afwijzen', naam: 'Inzichten afwijzen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-taak-afronden-met-een-uitkomst', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een inzicht afwijzen met reden; dat telt mee in de rapportage per regel.', totDieTijd: 'Markeer als gelezen.' },
+  },
+  {
+    sleutel: 'taken.sjablonen', naam: 'Eigen taaksjablonen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-taak-afronden-met-een-uitkomst', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Eigen sjablonen voor taken die je vaak maakt.', totDieTijd: 'Typ de taak zelf.' },
+  },
+  {
+    sleutel: 'ritme.lezen', naam: 'Hercontactritme lezen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'hercontactritme', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De ritmes met hun stappen en wat ze opleveren.', totDieTijd: 'Je ziet "poging 3 van 5" bij je taken.' },
+  },
+  {
+    sleutel: 'ritme.beheer', naam: 'Ritmes beheren', pakket: 'starter', rollen: MANAGERS, helpartikel: 'hercontactritme', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De stappen en parkeerduur van de ritmes aanpassen.', totDieTijd: 'Geen.' },
+  },
   // P02: platform (alleen founder, geen regels in functies_per_niveau) en de spiegel voor de beheerder.
   {
     sleutel: 'platform.klanten', naam: 'Klanten', pakket: 'starter', rollen: ['founder'], helpartikel: '', startNiveau: 'beginner',

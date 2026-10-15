@@ -102,3 +102,5 @@ grant select, insert on reistemplates, activiteitstemplates to dealtrace_platfor
 grant select, insert, delete on activity_rules to dealtrace_platform;
 revoke update, delete on rule_runs from dealtrace_app;
 grant update (eind_op, geraakt, taken, inzichten, geschoven, fouten, stappen) on rule_runs to dealtrace_app;
+-- P07: de startset van ritmes laadt de platformrol.
+grant select, insert on hercontactritmes to dealtrace_platform;

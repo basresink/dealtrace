@@ -35,6 +35,7 @@ onMounted(async () => {
     <ZoekVenster />
     <ConflictVenster />
     <ToastStapel />
+    <AfrondStrook />
     <HerbevestigVenster />
   </div>
 </template>

@@ -17,3 +17,14 @@ export async function zorgVoorRegels(client: Pick<pg.Client, 'query'>): Promise<
   }
   return orgs.length
 }
+
+/** De vier hercontactritmes van de startset (shared/hercontact.ts) voor organisaties zonder ritmes. */
+export async function zorgVoorRitmes(client: Pick<pg.Client, 'query'>, startset: { naam: string; bron: string; werkplek?: string; stappen: unknown[]; parkeerDagen: number }[]): Promise<number> {
+  const orgs = (await client.query(`select o.id from organisations o where o.status <> 'systeem' and not exists (select 1 from hercontactritmes r where r.organisation_id = o.id)`)).rows as { id: string }[]
+  for (const o of orgs) {
+    for (const r of startset) {
+      await client.query(`insert into hercontactritmes (organisation_id, naam, bron, data) values ($1, $2, $3, $4)`, [o.id, r.naam, r.bron, { stappen: r.stappen, parkeerDagen: r.parkeerDagen, werkplek: r.werkplek ?? 'alle' }])
+    }
+  }
+  return orgs.length
+}

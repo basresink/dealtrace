@@ -5,7 +5,8 @@ import type pg from 'pg'
 import { AFKOELING_STANDAARD, afkoelingVoorNee } from '../../shared/nbStatus'
 import { terugkomDatum, verkoopverhaalUitSeed } from '../../shared/verkoopverhaal'
 import { zorgVoorReizen } from './reisStart'
-import { zorgVoorRegels } from './regelStart'
+import { zorgVoorRegels, zorgVoorRitmes } from './regelStart'
+import { RITMES_STARTSET, kiesRitme, startRitme, type Ritme } from '../../shared/hercontact'
 
 export async function seedReis(client: Pick<pg.Client, 'query'>, orgId: string, voltvast: any) {
   const vv = verkoopverhaalUitSeed(voltvast.verkoopverhaal)
@@ -16,6 +17,16 @@ export async function seedReis(client: Pick<pg.Client, 'query'>, orgId: string, 
   }
   await zorgVoorReizen(client)
   await zorgVoorRegels(client)
+  await zorgVoorRitmes(client, RITMES_STARTSET)
+  // Prospects in Gekwalificeerd lopen in een hercontactritme (P07), poging 1 is nu aan de beurt.
+  const ritmes = (await client.query(`select id, naam, bron, status, data from hercontactritmes where organisation_id = $1`, [orgId])).rows
+    .map((r: any) => ({ id: r.id, naam: r.naam, bron: r.bron, status: r.status, werkplek: r.data.werkplek, stappen: r.data.stappen, parkeerDagen: r.data.parkeerDagen })) as Ritme[]
+  const zonderRitme = (await client.query(`select a.id, u.werkplek from accounts a left join users u on u.id = a.owner_id
+    where a.organisation_id = $1 and a.nb_status = 'in reis' and a.fase_id = 'gekwalificeerd' and not (a.data ? 'reis')`, [orgId])).rows as { id: string; werkplek: string | null }[]
+  for (const a of zonderRitme) {
+    const r = kiesRitme(ritmes, 'koud', (a.werkplek as any) ?? 'binnendienst')
+    if (r) await client.query(`update accounts set data = data || $2 where id = $1`, [a.id, JSON.stringify({ reis: { ritme: startRitme(r, new Date()) } })])
+  }
   // Accounts op nee of wachtend krijgen een reden en een terugkomdatum, zoals na "Zet nee".
   const open = (await client.query(`select id, nb_status, fase_sinds, owner_id from accounts where organisation_id = $1 and nb_status in ('nee', 'wachtend') and terug_op is null`, [orgId])).rows
   for (const [i, a] of open.entries()) {

@@ -15,6 +15,7 @@ export interface MotorGebruiker { id: string; naam: string; rol: string; werkple
 export interface NieuweTaak {
   regelId: string; onderwerp: string; accountId: string; ownerId: string; title: string; actionType: string; priority: string
   due: string; waarom: string; bewijs: string[]; herkomst: 'regel' | 'ritme' | 'startactiviteit'; geschoven?: boolean
+  poging?: { n: number; van: number; kanaal?: string | null }
 }
 export interface NieuwInzicht {
   regelId: string | null; onderwerp: string; accountId: string | null; ownerId: string; title: string; type: string; relevantie: number
@@ -61,6 +62,8 @@ export interface MotorUitvoer {
 
 const RITME_PATRONEN = new Set(['ritme', 'hercontact-vervolg'])
 const CONTACT = new Set(['bellen', 'bezoek'])
+const CONTACT_ACTIE = new Set(['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht'])
+const ACTIE_VAN_KANAAL: Record<string, string> = { bellen: 'bellen', mail: 'mailen', linkedin: 'linkedin', bezoek: 'bezoek', whatsapp: 'bericht' }
 
 /** De eigenaar van werk voor een account: accounteigenaar, anders een salesmanager van het team, anders de beheerder. */
 export function eigenaarVoor(a: MotorAccount, regel: Pick<Regel, 'data'> | null, gebruikers: MotorGebruiker[], beheerderId?: string | null): string | null {
@@ -151,6 +154,9 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
   for (const regel of regels) {
     for (const a of accounts) {
       if (!ruleTargetsAccount(regel, a, nu)) continue
+      // Een lopend hercontactritme regelt de pogingen: geen losse contacttaken ernaast.
+      if (a.ritme?.actief && regel.data.activiteit === 'taak' && CONTACT_ACTIE.has(regel.data.gevolg.actiesoort) && !RITME_PATRONEN.has(regel.data.trigger.patroon)) continue
+      if (a.ritme?.actief && regel.data.trigger.patroon === 'ritme' && regel.data.activiteit === 'taak') continue
       // Ritme: een ingevulde matrix is de poort; 0 is bewust uit, niet ingesteld valt terug op de standaard (gat 8, 43).
       let cadans = regel.cadansDagen
       if (regel.data.trigger.patroon === 'ritme' && regel.data.trigger.parameters?.matrix !== false) {
@@ -173,8 +179,10 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
       // Nooit twee ritmes tegelijk op één account.
       if (RITME_PATRONEN.has(regel.data.trigger.patroon) && regel.data.activiteit === 'taak') {
         const ander = ritmeNu.get(a.id)
-        if (ander && ander !== regel.id) continue
-        ritmeNu.set(a.id, regel.id)
+        // Het hercontactritme zelf ("hercontact") hoort bij de regel Hercontact-vervolg.
+        const eigen = ander === regel.id || (ander === 'hercontact' && regel.data.trigger.patroon === 'hercontact-vervolg')
+        if (ander && !eigen) continue
+        if (!ander) ritmeNu.set(a.id, regel.id)
       }
       const owner = eigenaarVoor(a, regel, inv.gebruikers, inv.beheerderId)
       if (!owner) { waarschuwingen.push(`Geen eigenaar voor ${a.naam}`); continue }
@@ -192,10 +200,14 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
       } else {
         const g = gebruiker.get(owner)
         const landing = landingsmoment({ termijnWerkdagen: regel.data.gevolg.termijnWerkdagen, gebiedId: a.gebiedId }, { werkplek: g?.werkplek ?? 'binnendienst' }, blokken, regiodagen, nu, inv.werkdagen)
+        const vervolg = regel.data.trigger.patroon === 'hercontact-vervolg' && a.ritme
         taken.push({
-          regelId: regel.id, onderwerp: sleutel, accountId: a.id, ownerId: owner, title: titel, actionType: regel.data.gevolg.actiesoort, priority: regel.prioriteit,
+          regelId: regel.id, onderwerp: sleutel, accountId: a.id, ownerId: owner,
+          title: vervolg ? `Poging ${a.ritme!.poging}: ${a.naam}` : titel,
+          actionType: vervolg ? ACTIE_VAN_KANAAL[a.ritme!.kanaal ?? 'bellen'] ?? 'bellen' : regel.data.gevolg.actiesoort, priority: regel.prioriteit,
           due: landing.toISOString(), waarom, bewijs: u.bewijs,
           herkomst: RITME_PATRONEN.has(regel.data.trigger.patroon) ? 'ritme' : 'regel',
+          ...(vervolg ? { poging: { n: a.ritme!.poging ?? 1, van: a.ritme!.van ?? 1, kanaal: a.ritme!.kanaal } } : {}),
         })
       }
     }
@@ -209,6 +221,8 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
           const owner = eigenaarVoor(a, null, inv.gebruikers, inv.beheerderId)
           const g = owner ? gebruiker.get(owner) : undefined
           if (!owner || (s.rol !== 'alle' && g?.werkplek !== s.rol)) continue
+          // Pogingen tot een afspraak lopen via het hercontactritme.
+          if (a.ritme?.actief && (s.actiesoort === 'bellen' || s.actiesoort === 'bezoek')) continue
           const sleutel = `${a.id}:${ev.id}:${s.naam}`
           const k = `start|${sleutel}`
           if (inv.open.has(k) || inv.laatst.has(k) || nieuwOpen.has(k)) continue

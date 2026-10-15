@@ -490,7 +490,7 @@ export const signals = pgTable('signals', {
   updatedAt: ts('updated_at').defaultNow().notNull(),
 })
 
-export interface TaskData { waarom?: string; bewijs?: string[]; herkomst?: string; uiterste?: string; geschoven?: boolean; poging?: { n: number; van: number; kanaal?: string; vorige?: string }; [k: string]: unknown }
+export interface TaskData { waarom?: string; bewijs?: string[]; herkomst?: string | { bron?: string; inzichtId?: string | null; regelId?: string | null; actiesoort?: string; uitvoerder?: string | null }; uiterste?: string; geschoven?: boolean; poging?: { n: number; van: number; kanaal?: string; vorige?: string }; [k: string]: unknown }
 export const tasks = pgTable('tasks', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
   organisationId: text('organisation_id').notNull(),
@@ -512,6 +512,19 @@ export const tasks = pgTable('tasks', {
   executor: text('executor'),
   executorStatus: text('executor_status'),
   data: jsonb('data').$type<TaskData>().notNull().default({}),
+  createdAt: ts('created_at').defaultNow().notNull(),
+  updatedAt: ts('updated_at').defaultNow().notNull(),
+})
+
+// P07: hercontactritmes (0007_hercontact.sql)
+export const hercontactritmes = pgTable('hercontactritmes', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  naam: text('naam').notNull(),
+  bron: text('bron').notNull(),
+  status: text('status').notNull().default('actief'),
+  versie: integer('versie').notNull().default(1),
+  data: jsonb('data').$type<{ stappen: import('../../shared/hercontact').RitmeStap[]; parkeerDagen: number; werkplek?: 'binnendienst' | 'buitendienst' | 'alle' }>().notNull(),
   createdAt: ts('created_at').defaultNow().notNull(),
   updatedAt: ts('updated_at').defaultNow().notNull(),
 })

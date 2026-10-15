@@ -10,7 +10,9 @@ import { rolMag } from '../../../shared/permissions'
 import { SYNCBARE_TABELLEN, isSyncbareTabel } from '../../../shared/syncTabellen'
 import { pasPatchToe } from '../../../shared/wisPatch'
 import { metOrganisatie, schema } from '../../utils/db'
-import { ACCOUNT_MUTATIESOORTEN } from '../../../shared/syncTabellen'
+import { ACCOUNT_MUTATIESOORTEN, INZICHT_MUTATIESOORTEN, TAAK_MUTATIESOORTEN } from '../../../shared/syncTabellen'
+import { AFWIJS_REDENEN, uitstellen } from '../../../shared/taken'
+import { magTaak, rondAf } from '../../utils/taken'
 import { isNeeReden } from '../../../shared/nbStatus'
 import { kan } from '../../utils/accounts'
 import { ReisFout, pauzeer, zetNee } from '../../utils/reis'
@@ -41,11 +43,12 @@ export default defineEventHandler(async (event) => {
   const { mutaties } = await readBody<{ mutaties?: Mutatie[] }>(event)
   if (!Array.isArray(mutaties) || mutaties.length > 200) throw createError({ statusCode: 400, statusMessage: 'Geef tussen 1 en 200 mutaties' })
   // Klantdata (accounts) gebruikt de actieve organisatie en de functierechten.
-  const klant = mutaties.some((m) => m?.tabel === 'accounts') ? await vereisOrganisatie(event) : null
+  const KLANTDATA = new Set(['accounts', 'tasks', 'signals'])
+  const klant = mutaties.some((m) => KLANTDATA.has(m?.tabel)) ? await vereisOrganisatie(event) : null
 
   const resultaten: Resultaat[] = []
   for (const m of mutaties) {
-    const orgId = m?.tabel === 'accounts' && klant ? klant.organisatie.id : organisatie.id
+    const orgId = KLANTDATA.has(m?.tabel) && klant ? klant.organisatie.id : organisatie.id
     resultaten.push(await metOrganisatie(orgId, async (tx): Promise<Resultaat> => {
       if (!m?.idempotentieSleutel || !m.recordId) return { status: 'geweigerd', recordId: m?.recordId ?? '', code: 400, reden: 'idempotentieSleutel en recordId zijn verplicht' }
 
@@ -78,6 +81,32 @@ export default defineEventHandler(async (event) => {
           if (e instanceof ReisFout) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 404 ? 404 : 422, reden: e.message }
           throw e
         }
+      } else if (m.tabel === 'tasks') {
+        // Afronden gaat door hetzelfde pad als de flyout (gat 11); idempotent op de sleutel.
+        const p = (m.patch ?? {}) as Record<string, any>
+        if (!(TAAK_MUTATIESOORTEN as readonly string[]).includes(p.soort)) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Alleen taak.afronden en taak.uitstellen mogen via de wachtrij' }
+        if (!klant || !kan(klant, 'taken.basis')) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Functie niet beschikbaar' }
+        const [t] = await tx.select().from(schema.tasks).where(eq(schema.tasks.id, m.recordId))
+        if (!t) return { status: 'geweigerd', recordId: m.recordId, code: 404, reden: 'Taak onbekend' }
+        if (t.ownerId && !(await magTaak(tx, klant, t.ownerId))) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Dit is niet jouw taak' }
+        const op = p.op && !Number.isNaN(Date.parse(p.op)) ? new Date(p.op) : new Date()
+        try {
+          if (p.soort === 'taak.afronden') await rondAf(tx, m.recordId, { uitkomst: p.uitkomst ?? null, laterOp: p.laterOp ?? null, reden: p.reden ?? null, toelichting: p.toelichting ?? null, sleutel: m.idempotentieSleutel }, gebruiker.id, op)
+          else await tx.update(schema.tasks).set({ dueDate: uitstellen(t, p.periode === 'week' ? 'week' : 'werkdag', op), updatedAt: new Date().toISOString() }).where(eq(schema.tasks.id, m.recordId))
+        } catch (e) {
+          if (e instanceof ReisFout) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 404 ? 404 : 422, reden: e.message }
+          throw e
+        }
+      } else if (m.tabel === 'signals') {
+        const p = (m.patch ?? {}) as Record<string, any>
+        if (!(INZICHT_MUTATIESOORTEN as readonly string[]).includes(p.soort)) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Alleen inzicht.gelezen en inzicht.afwijzen mogen via de wachtrij' }
+        const [s] = await tx.select().from(schema.signals).where(eq(schema.signals.id, m.recordId))
+        if (!s) return { status: 'geweigerd', recordId: m.recordId, code: 404, reden: 'Inzicht onbekend' }
+        if (p.soort === 'inzicht.afwijzen') {
+          if (!klant || !kan(klant, 'inzichten.afwijzen')) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Functie niet beschikbaar' }
+          if (!(AFWIJS_REDENEN as readonly string[]).includes(p.reden)) return { status: 'geweigerd', recordId: m.recordId, code: 422, reden: 'Kies een reden om af te wijzen' }
+          await tx.update(schema.signals).set({ status: 'afgewezen', data: { ...(s.data ?? {}), afwijsReden: p.reden }, updatedAt: new Date().toISOString() }).where(eq(schema.signals.id, m.recordId))
+        } else if (s.status === 'nieuw') await tx.update(schema.signals).set({ status: 'gelezen', updatedAt: new Date().toISOString() }).where(eq(schema.signals.id, m.recordId))
       } else if (m.tabel === 'notificaties') {
         const [n] = await tx.select().from(schema.notificaties).where(eq(schema.notificaties.id, m.recordId))
         if (!n) return { status: 'geweigerd', recordId: m.recordId, code: 404, reden: 'Melding onbekend' }

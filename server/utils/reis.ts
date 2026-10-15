@@ -15,6 +15,7 @@ import { terugkomDatum, type VerkoopverhaalStand } from '../../shared/verkoopver
 import { schrijfAudit } from './audit'
 import { schema } from './db'
 import { draaiMotor } from './motor'
+import { kiesRitme, startRitme, type Ritme, type RitmeStand } from '../../shared/hercontact'
 
 type Tx = Parameters<Parameters<ReturnType<typeof import('./db').gebruikDb>['transaction']>[0]>[0]
 type AccountRij = typeof schema.accounts.$inferSelect
@@ -236,6 +237,8 @@ export async function meldGebeurtenis(tx: Tx, m: Melding): Promise<{ fase: strin
     naarFaseId: naar, naarStatus: status, gebeurtenis: m.gebeurtenis, reden: m.reden ?? null, door: m.door, nu,
     data: Object.keys(data).length ? data : undefined, terugOp, terugRegelId: null,
   })
+  // Hercontactritme (P07): Gekwalificeerd start het ritme; heropvolging start winback.
+  if (naar === 'gekwalificeerd') await startRitmeVoorAccount(tx, a.id, { winback: m.gebeurtenis === 'heropvolging', nu })
   // Direct na de gebeurtenis: gebeurtenisregels en startactiviteiten voor dit ene account (motor, P06).
   if (!m.zonderMotor) await draaiMotor(tx, a.organisationId, { soort: 'gebeurtenis', door: m.door, accountIds: [a.id], nu })
   return { fase: naar ?? huidigeFase, status, gewisseld: true }
@@ -285,7 +288,7 @@ export async function zetNee(tx: Tx, accountId: string, invoer: NeeInvoer, door:
   await voerWisselUit(tx, a, reis, {
     naarFaseId: naarFase && naarFase !== a.faseId ? naarFase : null, naarStatus: 'nee', gebeurtenis: viaGeenVervolg ? 'geen-vervolg' : 'handmatig',
     reden: `Nee: ${invoer.reden}${invoer.toelichting ? ` (${invoer.toelichting})` : ''}`, door, nu,
-    data: { nee, wachtendTot: null, terugkom: { datum, regelId: regel?.id ?? null, reden: regel?.reden ?? invoer.reden, aanpak: regel?.aanpak ?? null, kanaal: regel ? voorstel.kanaal : null } },
+    data: { nee, wachtendTot: null, reis: { ...((a.data as any)?.reis ?? {}), ...((a.data as any)?.reis?.ritme ? { ritme: { ...(a.data as any).reis.ritme, actief: false } } : {}) }, terugkom: { datum, regelId: regel?.id ?? null, reden: regel?.reden ?? invoer.reden, aanpak: regel?.aanpak ?? null, kanaal: regel ? voorstel.kanaal : null } },
     terugOp: datum, terugRegelId: regel?.id ?? null,
   })
   if (invoer.verlorenAan) {
@@ -390,3 +393,42 @@ export function alsHttpFout(e: unknown): never {
 }
 
 export type { ReisData }
+
+// ---------------------------------------------------------------------------
+// Hercontactritme (P07): starten bij Gekwalificeerd en parkeren na de laatste poging
+// ---------------------------------------------------------------------------
+
+export async function laadRitmes(tx: Tx): Promise<Ritme[]> {
+  return (await tx.select().from(schema.hercontactritmes)).map((r) => ({ id: r.id, naam: r.naam, bron: r.bron as Ritme['bron'], status: r.status, werkplek: r.data.werkplek ?? 'alle', stappen: r.data.stappen, parkeerDagen: r.data.parkeerDagen }))
+}
+
+const WARM = new Set(['referral', 'signaal', 'beurs'])
+
+/** Start een hercontactritme voor een account zonder lopend ritme (bij Gekwalificeerd). */
+export async function startRitmeVoorAccount(tx: Tx, accountId: string, opties: { winback?: boolean; nu?: Date } = {}): Promise<RitmeStand | null> {
+  const [a] = await tx.select().from(schema.accounts).where(eq(schema.accounts.id, accountId))
+  if (!a || a.accountKind !== 'prospect') return null
+  const huidig = (a.data as any)?.reis?.ritme as RitmeStand | undefined
+  if (huidig?.actief && !opties.winback) return huidig
+  const [owner] = a.ownerId ? await tx.select({ werkplek: schema.users.werkplek }).from(schema.users).where(eq(schema.users.id, a.ownerId)) : []
+  const bron = opties.winback ? 'winback' : WARM.has(a.nbBron ?? '') ? 'warm' : 'koud'
+  const ritme = kiesRitme(await laadRitmes(tx), bron, (owner?.werkplek as any) ?? 'binnendienst')
+  if (!ritme) return null
+  const stand = startRitme(ritme, opties.nu ?? new Date())
+  await tx.update(schema.accounts).set({ data: { ...(a.data ?? {}), reis: { ...((a.data as any)?.reis ?? {}), ritme: stand } } }).where(eq(schema.accounts.id, accountId))
+  return stand
+}
+
+
+/** Na de laatste poging zonder reactie: gebeurtenis geparkeerd en een terugkomdatum. */
+export async function parkeerTot(tx: Tx, accountId: string, tot: string, door: string, nu = new Date()) {
+  await meldGebeurtenis(tx, { accountId, gebeurtenis: 'geparkeerd', door, nu, zonderMotor: true, reden: `Laatste poging zonder reactie; terug op ${tot}` })
+  const [a] = await tx.select().from(schema.accounts).where(eq(schema.accounts.id, accountId))
+  if (!a) return
+  await meldpuntAan(tx)
+  // Status wachtend, ook als de fase geen overgang naar Geparkeerd had.
+  await tx.update(schema.accounts).set({
+    nbStatus: ['nieuw', 'in reis'].includes(a.nbStatus) ? 'wachtend' : a.nbStatus, terugOp: tot,
+    data: { ...(a.data ?? {}), wachtendTot: tot, terugkom: { datum: tot, reden: 'Geen reactie na laatste poging', aanpak: 'Alleen bij een nieuwe aanleiding', kanaal: 'bellen' } },
+  }).where(eq(schema.accounts.id, accountId))
+}

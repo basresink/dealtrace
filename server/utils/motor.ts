@@ -59,6 +59,7 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
   const sinds = new Date(nu.getTime() - 7 * 864e5).toISOString()
   const ids = accountRijen.map((a) => a.id)
   const gebeurtenissen = ids.length ? await tx.select().from(schema.reisgeschiedenis).where(and(gte(schema.reisgeschiedenis.op, sinds), accountIds?.length ? inArray(schema.reisgeschiedenis.accountId, ids) : sql`true`)) : []
+  const ritmeDefs = await tx.select().from(schema.hercontactritmes)
   const contacten = ids.length ? await tx.select({ accountId: schema.contacts.accountId, first: schema.contacts.firstName, last: schema.contacts.lastName, rol: schema.contacts.rol, status: schema.contacts.status, data: schema.contacts.data }).from(schema.contacts).where(accountIds?.length ? inArray(schema.contacts.accountId, ids) : sql`true`) : []
 
   const accounts: MotorAccount[] = accountRijen.map((a) => {
@@ -76,6 +77,12 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
       bandScore: bandScore(a.data?.band as any), belMeNiet: !!primair?.data?.belMeNiet, nee: a.data?.nee ?? null, wachtendTot: a.data?.wachtendTot ?? null,
       contactNaam: primair ? `${primair.first ?? ''} ${primair.last}`.trim() : null,
       gebeurtenissen: gebeurtenissen.filter((g) => g.accountId === a.id && g.naarFaseId !== g.vanFaseId).map((g) => ({ id: g.id, gebeurtenis: g.gebeurtenis, naarFaseId: g.naarFaseId, op: g.op })),
+      ritme: (() => {
+        const st = (a.data as any)?.reis?.ritme
+        if (!st) return null
+        const def = ritmeDefs.find((r) => r.id === st.ritmeId)
+        return { actief: !!st.actief, volgendePogingOp: st.volgendeOp ?? null, poging: st.stap, van: def?.data.stappen.length ?? st.stap, kanaal: st.kanaal ?? null }
+      })(),
       signalen: ((a.data?.signalen as any[]) ?? []).map((s, i) => ({ id: s.id ?? `${a.id}-s${i}`, soort: s.soort, op: s.op, extern: s.extern !== false })),
     }
   })
@@ -98,7 +105,7 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
   const bezetting = new Map(bezettingRijen.map((b) => [`${b.owner_id}|${b.dag}`, b.n]))
   const ritmeRijen = (await tx.execute(sql`select account_id, rule_id from tasks where status in ('open', 'bezig') and data->>'herkomst' = 'ritme'`)).rows as { account_id: string; rule_id: string }[]
   const ritmeVan = new Map(ritmeRijen.map((r) => [r.account_id, r.rule_id]))
-  for (const a of accountRijen) if ((a.data as any)?.ritme?.actief) ritmeVan.set(a.id, 'hercontact')
+  for (const a of accountRijen) if ((a.data as any)?.reis?.ritme?.actief) ritmeVan.set(a.id, 'hercontact')
 
   const start = new Map<string, StartActiviteit[]>()
   for (const t of await tx.select().from(schema.activiteitstemplates)) {
@@ -137,7 +144,7 @@ export async function schrijfMotorUitvoer(tx: Tx, org: string, u: MotorUitvoer, 
   const tijd = nu.toISOString()
   const taken = u.taken.map((t) => ({
     organisationId: org, ownerId: t.ownerId, accountId: t.accountId, ruleId: t.regelId, onderwerp: t.onderwerp, actionType: t.actionType, title: t.title,
-    priority: t.priority, dueDate: t.due, executor: 'mens', data: { waarom: t.waarom, bewijs: t.bewijs, herkomst: t.herkomst, geschoven: t.geschoven || undefined }, createdAt: tijd, updatedAt: tijd,
+    priority: t.priority, dueDate: t.due, executor: 'mens', data: { waarom: t.waarom, bewijs: t.bewijs, herkomst: { bron: t.herkomst, regelId: t.regelId, actiesoort: t.actionType, uitvoerder: t.ownerId }, geschoven: t.geschoven || undefined, ...(t.poging ? { poging: { n: t.poging.n, van: t.poging.van, kanaal: t.poging.kanaal ?? undefined } } : {}) }, createdAt: tijd, updatedAt: tijd,
   }))
   for (let i = 0; i < taken.length; i += 500) await tx.insert(schema.tasks).values(taken.slice(i, i + 500))
   const inzichten = u.inzichten.map((s) => ({
