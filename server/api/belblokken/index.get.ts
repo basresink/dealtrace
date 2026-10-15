@@ -4,7 +4,7 @@ import { and, gte, eq, sql, inArray } from 'drizzle-orm'
 import { adviesMomenten, bellijstKop, bouwBellijst, blokduur, blokMoment, soortLabel, TOP } from '../../../shared/belblokken'
 import { metOrganisatie, schema } from '../../utils/db'
 import { kan } from '../../utils/accounts'
-import { agenda } from '../../utils/agenda'
+import { agenda, bezetVoor } from '../../utils/agenda'
 import { blokkenVan, laadBelKandidaten } from '../../utils/bellen'
 import { vereisFunctie } from '../../utils/sessie'
 
@@ -19,7 +19,8 @@ export default defineEventHandler(async (event) => {
     const lijst = bouwBellijst(kandidaten, nu, { alleenVandaag: vandaag, top: 15 })
     const sessies = await tx.select().from(schema.belblokSessies).where(and(eq(schema.belblokSessies.gebruikerId, ctx.gebruiker.id), gte(schema.belblokSessies.eindOp, nu.toISOString()), sql`${schema.belblokSessies.status} in ('gepland', 'bezig')`)).orderBy(schema.belblokSessies.startOp).limit(20)
     const tellers = sessies.length ? (await tx.select({ id: schema.tasks.belblokId, status: schema.tasks.status }).from(schema.tasks).where(inArray(schema.tasks.belblokId, sessies.map((s) => s.id)))) : []
-    const bezetExtern = await agenda().bezet(ctx.gebruiker.id, nu, new Date(nu.getTime() + 14 * 864e5))
+    // Gat 37: de gekoppelde agenda en de eigen afspraken tellen mee in de adviezen.
+    const bezetExtern = await bezetVoor(tx, ctx.gebruiker.id, nu, new Date(nu.getTime() + 14 * 864e5))
     const top5 = lijst.slice(0, 5)
     const duur = blokduur(top5.reduce((s, k) => s + k.duur, 0))
     return {
@@ -28,7 +29,7 @@ export default defineEventHandler(async (event) => {
       blokken: blokken.map((b) => ({ ...b, moment: blokMoment(b), soortLabel: soortLabel(b) })), eigenBlokken: eigen, voorkeuren,
       gepland: sessies.map((s) => ({ id: s.id, start: s.startOp, eind: s.eindOp, status: s.status, plek: s.data.plek, soort: s.data.soort, vastBlokId: s.vastBlokId, gesprekken: tellers.filter((t) => t.id === s.id).length, open: tellers.filter((t) => t.id === s.id && t.status === 'open').length })),
       advies: adviesMomenten([...bezetExtern, ...sessies.map((s) => ({ start: s.startOp, eind: s.eindOp }))], blokken, nu, { duur, lunch: voorkeuren.lunch }),
-      agenda: { gekoppeld: await agenda().gekoppeld(ctx.gebruiker.id) },
+      agenda: { gekoppeld: await agenda(tx).gekoppeld(ctx.gebruiker.id) },
       kan: { plannen: kan(ctx, 'belblok.plannen'), automatisch: kan(ctx, 'belblok.automatisch'), top: kan(ctx, 'belblok.plannen') ? [...TOP] : [5] },
     }
   })

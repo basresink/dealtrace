@@ -2,7 +2,7 @@
 titel: Koppelingen
 categorie: Inrichten
 collectie: product
-samenvatting: KvK en SalesDNA koppelen, testen, de bron per onderdeel kiezen en ontkoppelen.
+samenvatting: KvK, Datacollectief, SalesDNA en je agenda koppelen, testen en ontkoppelen.
 routes: /instellingen/koppelingen/salesdna
 ---
 
@@ -64,3 +64,14 @@ Klik **Ontkoppelen** en bevestig. De laatst bevestigde inhoud uit SalesDNA wordt
 ## Later
 
 De koppeling met je CRM komt in een volgende versie.
+
+## Je agenda koppelen
+
+Met een gekoppelde agenda van Microsoft 365 of Google telt wat daarin staat mee als bezet: bij vrije momenten voor een afspraak, bij het advies voor een belblok en bij het vullen van je dag. Afspraken die je in Dealtrace plant, komen in je agenda, met een Teams- of Meet-link als de afspraak online is.
+
+1. De beheerder zet de koppeling aan in **Mijn instellingen**, kaart **Gekoppelde agenda**, met **Agendakoppeling aan voor de organisatie**.
+2. Daarna koppelt iedereen vanaf Gevorderd zelf: **Mijn instellingen**, **Gekoppelde agenda**, **Koppel Microsoft 365** of **Koppel Google**.
+3. Geef toestemming bij Microsoft of Google. Terug in Dealtrace zie je "Agenda gekoppeld."
+
+Met **Ontkoppel** wis je de toegang weer. De toegang wordt versleuteld bewaard, met een eigen sleutel die alleen voor agenda's is. Werkt de koppeling niet meer, dan staat er "ontkoppeld, koppel opnieuw".
+

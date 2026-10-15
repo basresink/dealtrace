@@ -44,6 +44,15 @@ export async function zorgVoorBelscripts(client: Pick<pg.Client, 'query'>, start
   return orgs.length
 }
 
+/** P13: de zes meetingsoorten uit de startset voor elke organisatie (idempotent op slug). */
+export async function zorgVoorMeetingsoorten(client: Pick<pg.Client, 'query'>, startset: { slug: string; naam: string; type: string; duurMin: number; vorm: string; data: unknown }[]): Promise<number> {
+  const orgs = (await client.query(`select o.id from organisations o where o.status <> 'systeem' and not exists (select 1 from meetingsoorten m where m.organisation_id = o.id)`)).rows as { id: string }[]
+  for (const o of orgs) {
+    for (const m of startset) await client.query(`insert into meetingsoorten (organisation_id, slug, naam, type, duur_min, vorm, data) values ($1, $2, $3, $4, $5, $6, $7) on conflict (organisation_id, slug) do nothing`, [o.id, m.slug, m.naam, m.type, m.duurMin, m.vorm, m.data])
+  }
+  return orgs.length
+}
+
 /** P28: een organisatie met het oude verkoopverhaal in org_settings (P10 tot P12) krijgt het leesmodel uit de startset, bevestigd. */
 export async function zorgVoorVerkoopverhaal(client: pg.Client): Promise<number> {
   const orgs = (await client.query(`select s.organisation_id as id from org_settings s where s.key = 'verkoopverhaal'

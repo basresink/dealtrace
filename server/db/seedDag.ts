@@ -1,7 +1,7 @@
 // P32: een fixturedag voor Vandaag op de telefoon (acceptatiecriterium 18). Fictief en relatief
 // aan de dag van de seed: voor Lieke (u-05, buitendienst) drie afspraken, waarvan één eerste
 // afspraak die nog bevestigd moet worden, vijf belacties (één achterstallig, twee uit het ritme)
-// en een terugkomregel (hc-02, "Beslissing uitgesteld") die vandaag afloopt; voor Ruben (u-03,
+// en een terugkomregel (hc-02, "Beslissing uitgesteld") die vandaag afloopt; voor Sanne (u-03,
 // binnendienst) vijf belacties.
 import type pg from 'pg'
 import { nlMoment, nlTijdstip, plusDagen } from '../../shared/datum'
@@ -34,4 +34,23 @@ export async function seedDag(client: pg.Client, orgId: string, nu = new Date())
   }
   // De terugkomregel hc-02 loopt vandaag af bij een account van Lieke.
   await client.query(`update accounts set terug_op = $2, data = data || $3 where id = 'pr-g09' and organisation_id = $1`, [orgId, vandaag, JSON.stringify({ terugkom: { regelId: 'hc-02', reden: 'Beslissing uitgesteld' } })])
+  // P13: afspraken in de agenda van Lieke. De kennismaking van morgen plande Sanne (u-03, binnendienst)
+  // voor haar; de belafspraak overlapt hem, zodat een conflict te zien is.
+  const soort = async (slug: string) => (await client.query(`select id from meetingsoorten where organisation_id = $1 and slug = $2`, [orgId, slug])).rows[0]?.id as string | undefined
+  const werkdag = (n: number) => { let d = vandaag; let k = 0; while (k < n) { d = plusDagen(d, 1); const w = new Date(`${d}T12:00:00Z`).getUTCDay(); if (w !== 0 && w !== 6) k++ } return d }
+  const afspraken: [string, string, string, string, string, number, number, number, string][] = [
+    // id, account, soort, vorm, gepland door, werkdag, uur, duur, aanleiding
+    ['ap-seed-1', 'pr-g39', 'kennismaking', 'bezoek', 'u-03', 1, 10, 30, 'Vroeg om een kennismaking na het belblok'],
+    ['ap-seed-2', 'pr-g34', 'belafspraak', 'telefoon', 'u-05', 1, 10.25, 15, 'Terugbellen over de planning'],
+    ['ap-seed-3', 'pr-g44', 'inventarisatie', 'bezoek', 'u-05', 2, 13, 60, 'Leverplan per bouwfase'],
+  ]
+  for (const [id, account, slug, vorm, door, n, uur, duur, aanleiding] of afspraken) {
+    const ms = await soort(slug)
+    if (!ms) continue
+    const start = nlTijdstip(werkdag(n), Math.floor(uur), Math.round((uur % 1) * 60))
+    await client.query(`insert into appointments (id, organisation_id, owner_id, gepland_door, account_id, meetingsoort_id, vorm, status, start_at, end_at, data)
+      values ($1, $2, 'u-05', $3, $4, $5, $6, 'gepland', $7, $8, $9) on conflict (id) do nothing`,
+    [id, orgId, door, account, ms, vorm, start.toISOString(), new Date(start.getTime() + duur * 60_000).toISOString(), JSON.stringify({ aanleiding, herinnering: 15, briefing: door !== 'u-05' ? `Gepland door Sanne: ${aanleiding}` : null, herkomst: 'seed' })])
+  }
+  await client.query(`insert into org_settings (organisation_id, key, value) values ($1, 'agendaKoppeling', '{"aan": true}') on conflict (organisation_id, key) do nothing`, [orgId])
 }

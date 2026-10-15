@@ -21,8 +21,14 @@ export async function instelling(tx: Tx): Promise<DagInstelling & SignaalInstell
 /** Brondata van één gebruiker: eigen open taken, eigen accounts (plus accounts van eigen taken) en hun contacten. */
 export async function laadBron(tx: Tx, gebruikerId: string): Promise<DagBron & { inzichten: any[]; besluiten: BesluitRij[] }> {
   const taken = await rijen(tx, sql`select id, title, action_type, status, owner_id, account_id, contact_id, due_date, priority, data from tasks where owner_id = ${gebruikerId} and status in ('open', 'bezig')`)
+  // P13: geplande afspraken staan op de dag als afspraak (data.soort 'afspraak'), met hun eigen duur.
+  const afspraken = await rijen(tx, sql`select ap.id, ap.account_id, ap.contact_id, ap.vorm, ap.start_at, ap.end_at, m.naam as soort_naam, a.name as account_naam from appointments ap join meetingsoorten m on m.id = ap.meetingsoort_id left join accounts a on a.id = ap.account_id
+    where ap.owner_id = ${gebruikerId} and ap.status = 'gepland' and ap.start_at > now() - interval '2 days' and ap.start_at < now() + interval '14 days'`)
+  taken.push(...afspraken.map((ap) => ({ id: `afspraak:${ap.id}`, title: `${ap.soort_naam}${ap.account_naam ? ` met ${ap.account_naam}` : ''}`, action_type: ap.vorm === 'bezoek' ? 'bezoek' : 'taak', status: 'open', owner_id: gebruikerId, account_id: ap.account_id, contact_id: ap.contact_id, due_date: ap.start_at, priority: 'hoog',
+    data: { soort: 'afspraak', afspraakId: ap.id, duurMinuten: Math.round((new Date(ap.end_at).getTime() - new Date(ap.start_at).getTime()) / 60_000) } })))
   const accounts = await rijen(tx, sql`select id, name, owner_id, fase_id, nb_status, terug_op, laatste_contact_op, city, data from accounts
-    where owner_id = ${gebruikerId} or id in (select account_id from tasks where owner_id = ${gebruikerId} and status in ('open', 'bezig') and account_id is not null)`)
+    where owner_id = ${gebruikerId} or id in (select account_id from tasks where owner_id = ${gebruikerId} and status in ('open', 'bezig') and account_id is not null)
+      or id in (select account_id from appointments where owner_id = ${gebruikerId} and status = 'gepland' and account_id is not null)`)
   const ids = accounts.map((a) => a.id as string)
   const contacten = ids.length ? await rijen(tx, sql`select id, account_id, first_name, last_name, rol, status, data from contacts where account_id = any(string_to_array(${ids.join(',')}, ','))`) : []
   const inzichten = await rijen(tx, sql`select id, account_id, owner_id, title, relevance_score, status, created_at, bron from signals where status in ('nieuw', 'gelezen') and (owner_id = ${gebruikerId} or owner_id is null)`)

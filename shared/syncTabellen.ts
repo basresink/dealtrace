@@ -16,12 +16,15 @@ export const SYNCBARE_TABELLEN = {
   help_gelezen: 'persoonlijk',
   // P32: signaalbesluiten op Vandaag (Gedaan, Later, Weg), ook offline; recordId = signaalsleutel.
   signaal_besluiten: 'persoonlijk',
+  // P13: afspraak plannen (afspraak.nieuw) en afronden (afspraak.afronden), ook offline; recordId = afspraak-id.
+  appointments: 'afspraken',
 } as const
 
 export const ACCOUNT_MUTATIESOORTEN = ['account.nee', 'account.pauzeer'] as const
 export const TAAK_MUTATIESOORTEN = ['taak.afronden', 'taak.uitstellen'] as const
 export const INZICHT_MUTATIESOORTEN = ['inzicht.gelezen', 'inzicht.afwijzen'] as const
 export const SIGNAAL_MUTATIESOORTEN = ['signaal.besluit'] as const
+export const AFSPRAAK_MUTATIESOORTEN = ['afspraak.nieuw', 'afspraak.afronden'] as const
 
 export type SyncbareTabel = keyof typeof SYNCBARE_TABELLEN
 

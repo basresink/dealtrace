@@ -11,6 +11,8 @@ const route = useRoute()
 const { data: v, refresh } = await useFetch<any>('/api/vandaag', { query: computed(() => ({ dag: route.query.dag || undefined })), default: () => null })
 watch([versie, motorVersie], () => refresh())
 const open = ref<string | null>(null)
+// P13: een afspraak op de dag opent in de agenda, met de afspraakflyout.
+function openTaak(id: string | null) { if (id?.startsWith('afspraak:')) navigateTo(`/agenda?weergave=dag&afspraak=${id.slice(9)}`); else open.value = id }
 const nieuweTaak = ref(false)
 const nieuweProspect = ref(false)
 async function maakTaak(id: string) {
@@ -39,7 +41,7 @@ useHead({ title: 'Vandaag · Dealtrace' })
 
 <template>
   <div v-if="v">
-    <VandaagTelefoon class="vt-alleen-telefoon" :t="v.telefoon" :kan="v.kan" @open="(id) => (open = id)" @ververs="refresh()" />
+    <VandaagTelefoon class="vt-alleen-telefoon" :t="v.telefoon" :kan="v.kan" @open="openTaak" @ververs="refresh()" />
     <div class="vt-alleen-groot">
     <section class="section">
       <div class="container">
@@ -78,7 +80,7 @@ useHead({ title: 'Vandaag · Dealtrace' })
                 <span class="taak-meta tnum">{{ t.achterstallig ? 'over tijd' : tijd(t.dueDate) }}</span>
                 <div>
                   <div class="taak-labels"><span class="pil pil--leeg">{{ ACTIE_LABEL[t.actionType] ?? 'TAAK' }}</span><span v-if="t.concept" class="pil pil--paars">AI</span><span v-if="t.account?.fase" class="pil" :class="fasePil(t.account.fase.kleur)">{{ t.account.fase.label }}</span></div>
-                  <button type="button" class="taak-titel" @click="open = t.id">{{ t.title }}</button>
+                  <button type="button" class="taak-titel" @click="openTaak(t.id)">{{ t.title }}</button>
                   <p v-if="t.poging" class="taak-meta">poging {{ t.poging.n }} van {{ t.poging.van }}<template v-if="t.poging.vorige"> · vorige: {{ t.poging.vorige }}</template></p>
                 </div>
                 <span />
@@ -89,7 +91,7 @@ useHead({ title: 'Vandaag · Dealtrace' })
           <article class="kaart" data-test="kolom-afspraken">
             <header class="kaart-kop"><h2 class="kaart-titel">Afspraken <span class="pil pil--leeg tnum">{{ v.telefoon.dag.stapels.afspraken.length }}</span></h2></header>
             <p v-if="!v.telefoon.dag.stapels.afspraken.length" class="kaart-meta">Geen afspraken vandaag.</p>
-            <ul class="schakel-lijst"><li v-for="a in v.telefoon.dag.stapels.afspraken" :key="a.id" class="schakel-rij"><button type="button" class="taak-titel" @click="open = a.taakId">{{ a.tijd }} {{ a.accountNaam ?? a.titel }}</button><span v-if="a.zonderVerslag" class="pil pil--oranje">verslag</span></li></ul>
+            <ul class="schakel-lijst"><li v-for="a in v.telefoon.dag.stapels.afspraken" :key="a.id" class="schakel-rij"><button type="button" class="taak-titel" @click="openTaak(a.taakId)">{{ a.tijd }} {{ a.accountNaam ?? a.titel }}</button><span v-if="a.zonderVerslag" class="pil pil--oranje">verslag</span></li></ul>
           </article>
           <article class="kaart" data-test="kolom-prio">
             <header class="kaart-kop"><h2 class="kaart-titel">Prio <span class="pil pil--leeg tnum">{{ v.prio.length }}</span></h2></header>

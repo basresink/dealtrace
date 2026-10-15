@@ -443,6 +443,31 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'verkoopverhaal.mappings', naam: 'Mappings verkoopverhaal', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'ons-verhaal', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Branche naar SBI, verliesreden naar terugkomreden en ambitiedoelen beheren.', totDieTijd: 'Vraag je beheerder.' },
   },
+  // P13: agenda, afspraken en meetingsoorten (F09).
+  {
+    sleutel: 'agenda.basis', naam: 'Afspraken plannen en afronden', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-afspraak-plannen-afronden-en-overdragen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Een afspraak met een meetingsoort plannen en na afloop met één uitkomst afronden.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'agenda.aanDeBeurt', naam: 'Wie is er aan de beurt?', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-afspraak-plannen-afronden-en-overdragen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Hooguit acht voorstellen wie je nu moet spreken, met vormadvies.', totDieTijd: 'Je ziet je taken op Vandaag.' },
+  },
+  {
+    sleutel: 'agenda.voorCollega', naam: 'Afspraak plannen voor een collega', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-afspraak-plannen-afronden-en-overdragen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Als binnendienst een afspraak in de agenda van de buitendienst zetten, met diens vrije momenten.', totDieTijd: 'Je plant afspraken voor jezelf.' },
+  },
+  {
+    sleutel: 'agenda.koppeling', naam: 'Agenda koppelen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'koppelingen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Je agenda van Microsoft 365 of Google koppelen: bezet telt mee, afspraken komen erin.', totDieTijd: 'Je agenda staat alleen in Dealtrace.' },
+  },
+  {
+    sleutel: 'agenda.weekritmeSoort', naam: 'Weekritme per meetingsoort', pakket: 'plus', rollen: 'iedereen', helpartikel: 'een-afspraak-plannen-afronden-en-overdragen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Hoeveel afspraken per meetingsoort je deze week had.', totDieTijd: 'Je ziet het totaal.' },
+  },
+  {
+    sleutel: 'instellingen.meetingsoorten', naam: 'Meetingsoorten en uitkomsten', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'meetingsoorten-en-uitkomsten-inrichten', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Soorten afspraken met duur, agendapunten en uitkomsten met gevolg beheren.', totDieTijd: 'De startset van zes meetingsoorten.' },
+  },
   // P33: AI-assistent en credits (F26, 11.4). Op alle niveaus; de credits begrenzen, niet het niveau.
   {
     sleutel: 'assistent.chat', naam: 'AI-assistent', pakket: 'starter', rollen: 'iedereen', helpartikel: 'chatten-met-de-ai-assistent', startNiveau: 'beginner',
@@ -787,7 +812,7 @@ export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | u
 
 /** De feature (hoofdstuk 7, F01 tot en met F26) waar een functie bij hoort, voor het raster van de founder. */
 const FEATURE_GROEPEN: [RegExp, string][] = [
-  [/^nav\./, 'Navigatie'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
+  [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],

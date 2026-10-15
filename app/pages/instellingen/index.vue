@@ -30,6 +30,7 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
       { titel: 'Regels', tekst: 'Wat de motor zelf klaarzet: 23 regels uit de starterset en jullie eigen regels.', link: '/instellingen/regels', toon: true },
       { titel: 'Accountmatrix en ritmes', tekst: 'Klassen, belmatrix, afspraakmatrix en capaciteit.', link: '/instellingen/ritme', toon: true },
       { titel: 'Verkoopverhaal', tekst: 'Verhaal, belofte, branches, concurrenten, winpunten en terugkomregels.', link: '/instellingen/verkoopverhaal', toon: !!functie('verkoopverhaal.inrichten')?.beschikbaar },
+      { titel: 'Meetingsoorten en uitkomsten', tekst: 'Soorten afspraken met duur, agendapunten en uitkomsten met gevolg.', link: '/instellingen/meetingsoorten', toon: !!functie('instellingen.meetingsoorten')?.beschikbaar },
       { titel: 'Belscripts', tekst: 'Standaardscripts voor het belpaneel, met versies en resultaten.', link: '/instellingen/belscripts', toon: true },
       { titel: 'Eigen velden', tekst: 'Extra velden op prospects en contacten.', link: '/instellingen/eigen-velden', toon: beheerder.value },
       { titel: 'Prospectreizen', tekst: 'Doelgroepen, de standaardreis en reizen op maat.', link: '/reizen', toon: beheerder.value },
@@ -47,7 +48,7 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
     naam: 'Koppelingen',
     kaarten: [
       { titel: 'SalesDNA', tekst: 'Het verkoopverhaal automatisch uit SalesDNA, met bron per onderdeel.', link: '/instellingen/koppelingen/salesdna', toon: !!functie('koppeling.salesdna')?.beschikbaar },
-      { titel: 'Agenda en mail', tekst: 'Microsoft 365 en Google.', toon: beheerder.value },
+      { titel: 'Agenda', tekst: 'Microsoft 365 en Google: aanzetten voor de organisatie; ieder koppelt zelf in Mijn instellingen.', link: '/mij#agenda', toon: beheerder.value },
       { titel: 'Bronnen', tekst: 'KVK, Datacollectief en CRM.', toon: beheerder.value },
       { titel: 'DealDrive', tekst: 'Overdracht na de eerste afspraak.', toon: beheerder.value },
     ],

@@ -65,6 +65,8 @@ async function besluit(b: 'gedaan' | 'later' | 'weg') {
 }
 
 async function afgehandeld(r: any) {
+  // Een afspraak uit de agenda (P13) rond je af in de afspraakflyout.
+  if (String(r.taakId ?? '').startsWith('afspraak:')) { emit('open', r.taakId); return }
   if (r.contactTaak) { emit('open', r.taakId); return }
   if (await rondAf(r.taakId, { uitkomst: 'gedaan' }, { mobiel: true })) emit('ververs')
 }

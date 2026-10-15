@@ -8,6 +8,7 @@ import { schema } from './db'
 import { startersetRijen } from './motor'
 import { RITMES_STARTSET } from '../../shared/hercontact'
 import { STARTSET_SCRIPTS } from '../../shared/belscripts'
+import { MEETINGSOORTEN_START } from '../../shared/agenda'
 import { AFKOELING_STANDAARD } from '../../shared/nbStatus'
 import { STANDAARD_ACTIVITEITEN, STANDAARDREIS_NAAM, standaardReisData, standaardReisId } from '../../shared/reis'
 
@@ -85,6 +86,15 @@ export const STARTSET: StartsetOnderdeel[] = [
       for (const [i, s] of STARTSET_SCRIPTS.entries()) {
         const [b] = await tx.insert(schema.belscripts).values({ organisationId: org, naam: s.naam, doel: s.doel, status: 'actief', versie: 1, startset: `start-${i + 1}`, data: s.data }).returning({ id: schema.belscripts.id })
         await tx.insert(schema.belscriptVersies).values({ organisationId: org, belscriptId: b!.id, versie: 1, naam: s.naam, doel: s.doel, data: s.data, geactiveerdDoor: 'startset' })
+      }
+    },
+  },
+  {
+    sleutel: 'meetingsoorten',
+    naam: 'Zes meetingsoorten met uitkomsten (P13)',
+    async voerUit(tx, org) {
+      for (const m of MEETINGSOORTEN_START) {
+        await tx.execute(sql`insert into meetingsoorten (organisation_id, slug, naam, type, duur_min, vorm, data) values (${org}, ${m.slug}, ${m.naam}, ${m.type}, ${m.duurMin}, ${m.vorm}, ${JSON.stringify(m.data)}::jsonb) on conflict (organisation_id, slug) do nothing`)
       }
     },
   },

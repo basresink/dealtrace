@@ -62,6 +62,10 @@ async function verwijder() {
   try { await $fetch(`/api/tasks/${t.value.id}`, { method: 'DELETE' }); toast.toon('Taak verwijderd.'); emit('gewijzigd'); emit('sluit') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 const PRIO_STIP: Record<string, string> = { hoog: 'prio-stip--high', middel: 'prio-stip--medium', laag: 'prio-stip--low' }
+// P13: plannen vanuit de taak; de taak wordt aan de afspraak gekoppeld en sluit bij afronden (gat 32).
+const planOpen = ref(false)
+const kanPlannen = computed(() => !!functie('agenda.basis')?.beschikbaar && !!t.value?.account)
+function gepland(id: string) { planOpen.value = false; emit('gewijzigd'); emit('sluit'); navigateTo(`/agenda?afspraak=${id}`) }
 const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0, 10))
 </script>
 
@@ -109,6 +113,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
               <button v-for="u in UITKOMST_CODES" :key="u" type="button" class="uitkomst-knop" :class="{ 'uitkomst-knop--actief': uitkomst === u }" :data-test="`uitkomst-${u}`" @click="uitkomst = u">{{ UITKOMST_LABEL[u] }}</button>
             </div>
             <p v-else class="taak-meta">Deze taak heeft geen uitkomst nodig.</p>
+            <button v-if="uitkomst === 'afspraak' && kanPlannen" type="button" class="dd-act dd-act--primair mt-16" data-test="taak-plan-afspraak" @click="planOpen = true">Plan de afspraak</button>
             <label v-if="uitkomst === 'later'" class="veld mt-16"><span class="veld-label">Wanneer terug? <span class="veld-verplicht">*</span></span><input v-model="laterOp" type="date" class="invoer" :min="morgen" data-test="later-op"></label>
             <template v-if="uitkomst === 'geen_interesse'">
               <label class="veld mt-16"><span class="veld-label">Reden <span class="veld-verplicht">*</span></span><select v-model="reden" class="invoer" data-test="uitkomst-reden"><option value="" disabled>Kies een reden</option><option v-for="r in NEE_REDENEN.filter((x) => x !== 'Niet geschikt')" :key="r" :value="r">{{ r }}</option></select></label>
@@ -138,6 +143,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
           <button type="button" class="dd-act dd-act--icoon" title="Bewerken" aria-label="Bewerken" @click="startBewerken"><Icoon naam="Pencil" /></button>
           <button type="button" class="dd-act dd-act--icoon" title="Annuleren" aria-label="Annuleren" @click="annuleren = !annuleren"><Icoon naam="Ban" /></button>
           <button v-if="t.kan?.verwijderen" type="button" class="dd-act dd-act--icoon" title="Verwijderen" aria-label="Verwijderen" @click="verwijder"><Icoon naam="Trash2" /></button>
+          <button v-if="kanPlannen" type="button" class="dd-act" data-test="taak-afspraak" @click="planOpen = true"><Icoon naam="Plus" />Afspraak</button>
           <span class="dd-acties-vul fo-foot-vul" />
           <button v-if="volgende && functie('taken.horizon')?.beschikbaar" type="button" class="dd-act" :disabled="bezig || ongeldig" data-test="afronden-volgende" @click="doeAfronden(true)">Afronden en volgende</button>
           <button type="button" class="dd-act dd-act--primair" :disabled="bezig || ongeldig" data-test="afronden" @click="doeAfronden(false)">Afronden</button>
@@ -145,4 +151,5 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
       </aside>
     </div>
   </Teleport>
+  <PlanAfspraakFlyout v-if="t?.account" :open="planOpen" :account="{ id: t.account.id, naam: t.account.naam }" :task-id="t.id" :aanleiding="t.title" @sluit="planOpen = false" @gepland="gepland" />
 </template>

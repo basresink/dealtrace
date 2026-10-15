@@ -8,8 +8,9 @@ import { terugkomDatum, verkoopverhaalUitSeed } from '../../shared/verkoopverhaa
 import { laadStartsetBevestigd } from '../utils/vvProjectie'
 import * as schema from './schema'
 import { zorgVoorReizen } from './reisStart'
-import { zorgVoorBelscripts, zorgVoorRegels, zorgVoorRitmes } from './regelStart'
+import { zorgVoorBelscripts, zorgVoorMeetingsoorten, zorgVoorRegels, zorgVoorRitmes } from './regelStart'
 import { STARTSET_SCRIPTS } from '../../shared/belscripts'
+import { MEETINGSOORTEN_START } from '../../shared/agenda'
 import { RITMES_STARTSET, kiesRitme, startRitme, type Ritme } from '../../shared/hercontact'
 
 export async function seedReis(client: Pick<pg.Client, 'query'>, orgId: string, voltvast: any) {
@@ -47,6 +48,7 @@ export async function seedReis(client: Pick<pg.Client, 'query'>, orgId: string, 
   await zorgVoorRegels(client)
   await zorgVoorRitmes(client, RITMES_STARTSET)
   await zorgVoorBelscripts(client, STARTSET_SCRIPTS)
+  await zorgVoorMeetingsoorten(client, MEETINGSOORTEN_START)
   // Prospects in Gekwalificeerd lopen in een hercontactritme (P07), poging 1 is nu aan de beurt.
   const ritmes = (await client.query(`select id, naam, bron, status, data from hercontactritmes where organisation_id = $1`, [orgId])).rows
     .map((r: any) => ({ id: r.id, naam: r.naam, bron: r.bron, status: r.status, werkplek: r.data.werkplek, stappen: r.data.stappen, parkeerDagen: r.data.parkeerDagen })) as Ritme[]

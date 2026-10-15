@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     const [u] = await tx.select({ id: schema.users.id, werkplek: schema.users.werkplek, data: schema.users.data }).from(schema.users).where(eq(schema.users.id, ctx.gebruiker.id))
     const r = await planBlok(tx, ctx.organisatie.id, u!, { start: b.start, minuten: b.minuten, plek: b.plek, soort: b.soort, verhouding: b.verhouding, scriptId: b.scriptId ?? null, accountIds: b.accountIds.map(String).slice(0, 15), bezet: !!b.bezet, stil: !!b.stil })
     const eind = new Date(Date.parse(b.start) + b.minuten * 60_000).toISOString()
-    const bezet = b.bezet ? await agenda().zetBezet(ctx.gebruiker.id, { start: b.start, eind, titel: 'Belblok' }) : null
+    const bezet = b.bezet ? await agenda(tx).zetBezet(ctx.gebruiker.id, { start: b.start, eind, titel: 'Belblok' }) : null
     const wanneer = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(b.start))
     const toast = `Belblok gepland voor ${wanneer}. ${r.inBlok} ${r.inBlok === 1 ? 'gesprek' : 'gesprekken'}${r.geschoven ? `, ${r.geschoven} naar ${r.naar}` : r.inLijst ? `, ${r.inLijst} blijven in je bellijst` : ''}.`
     return { ...r, toast, agenda: bezet }

@@ -40,6 +40,18 @@ async function toonMinder(sleutel: string, tonen: boolean) {
   }
 }
 const g = computed(() => me.value!.gebruiker)
+
+// Gekoppelde agenda (P13): Microsoft 365 of Google; de beheerder zet de koppeling aan.
+const { data: agenda, refresh: herlaadAgenda } = await useFetch<any>('/api/koppelingen/agenda', { default: () => null })
+const route = useRoute()
+if (import.meta.client && route.query.agenda === 'gekoppeld') toast.toon('Agenda gekoppeld.')
+if (import.meta.client && route.query.agenda === 'fout') toast.toon('Koppelen is niet gelukt. Probeer het opnieuw.', 'fout')
+async function zetAgendaAan(aan: boolean) {
+  try { await $fetch('/api/koppelingen/agenda', { method: 'PUT', body: { aan } }); await herlaadAgenda() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+}
+async function ontkoppelAgenda(p: string) {
+  try { await $fetch(`/api/koppelingen/agenda/${p}`, { method: 'DELETE' }); toast.toon('Agenda ontkoppeld.'); await herlaadAgenda() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+}
 useHead({ title: 'Mijn instellingen · Dealtrace' })
 </script>
 
@@ -77,6 +89,20 @@ useHead({ title: 'Mijn instellingen · Dealtrace' })
             <ul v-if="ai.eigen.perSoort.length" class="schakel-lijst"><li v-for="s in ai.eigen.perSoort" :key="s.soort" class="schakel-rij"><span>{{ s.soort }}</span><span class="meta tnum">{{ s.handelingen }} keer · {{ s.credits }} credits</span></li></ul>
           </article>
           <MijnToestellen />
+          <article v-if="agenda" id="agenda" class="kaart" data-test="gekoppelde-agenda">
+            <header class="kaart-kop"><h2 class="kaart-titel">Gekoppelde agenda</h2></header>
+            <p class="kaart-meta">Wat in je agenda staat, telt mee als bezet. Afspraken uit Dealtrace komen erin, met een Teams- of Meet-link bij online.</p>
+            <p v-if="agenda.beheerder" class="schakel-rij"><span>Agendakoppeling aan voor de organisatie</span><Schakelaar :aan="agenda.aanDoorBeheerder" label="Agendakoppeling aan voor de organisatie" @wissel="zetAgendaAan" /></p>
+            <p v-if="!agenda.aanDoorBeheerder" class="meta">Je beheerder heeft de agendakoppeling nog niet aangezet.</p>
+            <p v-else-if="!agenda.magKoppelen" class="meta">Agenda koppelen: nog niet aangezet voor jouw niveau.</p>
+            <ul v-else class="schakel-lijst">
+              <li v-for="p in agenda.providers" :key="p.provider" class="schakel-rij">
+                <span>{{ p.naam }} <span class="meta">{{ p.status === 'actief' ? `gekoppeld${p.laatsteSync ? `, bijgewerkt ${new Date(p.laatsteSync).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' })}` : ''}` : p.status === 'fout' ? 'ontkoppeld, koppel opnieuw' : 'niet gekoppeld' }}</span></span>
+                <button v-if="p.status === 'actief'" type="button" class="dd-act" :data-test="`ontkoppel-${p.provider}`" @click="ontkoppelAgenda(p.provider)">Ontkoppel</button>
+                <a v-else class="dd-act dd-act--primair" :href="`/api/koppelingen/agenda/${p.provider}/start`" :data-test="`koppel-${p.provider}`">Koppel {{ p.naam }}</a>
+              </li>
+            </ul>
+          </article>
           <article class="kaart">
             <header class="kaart-kop"><h2 class="kaart-titel">Meldingen</h2></header>
             <ul class="schakel-lijst">

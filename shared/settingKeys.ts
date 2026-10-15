@@ -16,6 +16,7 @@ export const SETTING_KEYS = [
   'capaciteit', // {binnendienst, buitendienst}
   'helpVerborgen', // artikel-id's van platformartikelen die de beheerder verbergt (P09)
   'prospectplanning', // PlanningInstelling uit shared/planning.ts (P12)
+  'agendaKoppeling', // {aan: boolean}: de beheerder zet de agendakoppeling aan (P13)
   'dagritme', // DagInstelling en SignaalInstelling uit shared/dag.ts en shared/signalen.ts (P32)
   // Van de leverancier:
   'pakket',

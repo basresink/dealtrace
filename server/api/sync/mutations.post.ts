@@ -11,8 +11,9 @@ import { rolMag } from '../../../shared/permissions'
 import { SYNCBARE_TABELLEN, isSyncbareTabel } from '../../../shared/syncTabellen'
 import { pasPatchToe } from '../../../shared/wisPatch'
 import { metOrganisatie, schema } from '../../utils/db'
-import { ACCOUNT_MUTATIESOORTEN, INZICHT_MUTATIESOORTEN, SIGNAAL_MUTATIESOORTEN, TAAK_MUTATIESOORTEN } from '../../../shared/syncTabellen'
+import { ACCOUNT_MUTATIESOORTEN, AFSPRAAK_MUTATIESOORTEN, INZICHT_MUTATIESOORTEN, SIGNAAL_MUTATIESOORTEN, TAAK_MUTATIESOORTEN } from '../../../shared/syncTabellen'
 import { besluit } from '../../utils/dagritme'
+import { planAfspraak, rondAfAfspraak } from '../../utils/agenda'
 import { AFWIJS_REDENEN, uitstellen } from '../../../shared/taken'
 import { magTaak, rondAf } from '../../utils/taken'
 import { isNeeReden } from '../../../shared/nbStatus'
@@ -45,7 +46,7 @@ export default defineEventHandler(async (event) => {
   const { mutaties } = await readBody<{ mutaties?: Mutatie[] }>(event)
   if (!Array.isArray(mutaties) || mutaties.length > 200) throw createError({ statusCode: 400, statusMessage: 'Geef tussen 1 en 200 mutaties' })
   // Klantdata (accounts) gebruikt de actieve organisatie en de functierechten.
-  const KLANTDATA = new Set(['accounts', 'tasks', 'signals'])
+  const KLANTDATA = new Set(['accounts', 'tasks', 'signals', 'appointments'])
   const klant = mutaties.some((m) => KLANTDATA.has(m?.tabel)) ? await vereisOrganisatie(event) : null
 
   const resultaten: Resultaat[] = []
@@ -109,6 +110,21 @@ export default defineEventHandler(async (event) => {
           if (!(AFWIJS_REDENEN as readonly string[]).includes(p.reden)) return { status: 'geweigerd', recordId: m.recordId, code: 422, reden: 'Kies een reden om af te wijzen' }
           await tx.update(schema.signals).set({ status: 'afgewezen', data: { ...(s.data ?? {}), afwijsReden: p.reden }, updatedAt: new Date().toISOString() }).where(eq(schema.signals.id, m.recordId))
         } else if (s.status === 'nieuw') await tx.update(schema.signals).set({ status: 'gelezen', updatedAt: new Date().toISOString() }).where(eq(schema.signals.id, m.recordId))
+      } else if (m.tabel === 'appointments') {
+        // P13: plannen (afspraak.nieuw, recordId = nieuw id) en afronden (afspraak.afronden) via
+        // dezelfde regels als de flyout; idempotent op de sleutel, afronden ook op afspraak en uitkomst.
+        const p = (m.patch ?? {}) as Record<string, any>
+        if (!(AFSPRAAK_MUTATIESOORTEN as readonly string[]).includes(p.soort)) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Alleen afspraak.nieuw en afspraak.afronden mogen via de wachtrij' }
+        if (!klant || !kan(klant, 'agenda.basis')) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Functie niet beschikbaar' }
+        const op = p.op && !Number.isNaN(Date.parse(p.op)) ? new Date(p.op) : new Date()
+        try {
+          if (p.soort === 'afspraak.nieuw') await planAfspraak(tx, klant.organisatie.id, { id: gebruiker.id, naam: klant.gebruiker.naam, rol: klant.gebruiker.rol, mag: { voorCollega: kan(klant, 'agenda.voorCollega') } }, { ...p, id: m.recordId } as any, op)
+          else await rondAfAfspraak(tx, klant.organisatie.id, m.recordId, gebruiker.id, { uitkomst: String(p.uitkomst ?? ''), verslag: p.verslag ?? null, agendapunten: p.agendapunten ?? [], laterOp: p.laterOp ?? null, reden: p.reden ?? null, toelichting: p.toelichting ?? null, verlorenAan: p.verlorenAan ?? null, vervolgstap: p.vervolgstap ?? null, sleutel: m.idempotentieSleutel }, op)
+        } catch (e: any) {
+          if (e instanceof ReisFout) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 404 ? 404 : 422, reden: e.message }
+          if (e?.statusCode && [400, 403, 404, 409, 422].includes(e.statusCode)) return { status: 'geweigerd', recordId: m.recordId, code: e.statusCode === 409 ? 422 : e.statusCode, reden: e.message }
+          throw e
+        }
       } else if (m.tabel === 'signaal_besluiten') {
         // P32: Gedaan, Later of Weg; recordId is de signaalsleutel. Het besluit telt op de dag waarop het viel.
         const p = (m.patch ?? {}) as Record<string, any>
