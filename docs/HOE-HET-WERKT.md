@@ -516,6 +516,12 @@ De standaard uit de mockup staat in `app/assets/css/ui-standaard.css`, als laats
 - **API**: `GET /api/contacten` geeft nu ook `tellers`, `totaal`, `stand`, `meer` en per rij `inzichten` en `laatsteActiviteitOp` (vijf queries, geen N+1); `GET /api/contacten/export` (CSV, `prospects.export`). De regels staan in `shared/contactFilters.ts`.
 - **Paginakop**: vanaf 720 px staan de knoppen op de hoogte van de titel (`.sec-head--naast`), in PaginaKop, AccountLijst en ContactLijst; op de telefoon eronder.
 
+## Account, Mijn instellingen en de zijbalk (ronde na P33)
+
+- **Account** (`/mij`, opzet van SalesDNA /account): kop "Gebruikersmenu · Account"; links het profiel (foto, voor- en achternaam, functie, telefoon, mobiel en het e-mailadres om in te loggen, alleen lezen), rechts Organisatie en werkplek (met "Naar Instellingen" voor de beheerder), Inloggen (code per mail, aantal toestellen, uitloggen) en Tweestapsverificatie (`MijnTweestap`: instellen in een venster met sleutel en code, uitzetten na bevestigen; verplicht voor de founder, er voor de beheerder). Daaronder regels, routes, gekoppelde agenda, meldingen per kanaal en Toon minder. `GET`/`PUT /api/mij/profiel` (controle in `shared/profiel.ts`, naam wordt "voornaam achternaam", de velden in `users.data.profiel`), `POST`/`DELETE /api/mij/foto` (jpg of png tot 1 MB na verkleinen tot 256 px, gecontroleerd op de eerste bytes, bewaard als bijlage met `record_soort` `gebruiker`; `users.data.fotoId`). `/api/me` geeft `functie` en `foto`; de zijbalk toont de foto. Alles alleen lezen als de founder in een organisatie werkt.
+- **Mijn instellingen** (`/mijn-instellingen`, opzet van DealDrive): kop "Voorkeuren · Mijn instellingen", de onderdelen als kaarten die naar hun sectie springen (`#scripts`, `#ai-verbruik`, `#toestellen`, `#telefoon`, `#onderweg`, `#offline`) en een kaart naar Account. De blokken Mijn scripts, AI-verbruik, Toestellen en sessies (hooguit vijf, "Toon alle"), Telefoon, Meldingen voor onderweg en Offline staan hier, met hun oude data-test-attributen.
+- **Zijbalk:** de groep Plannen heet Planning (de cookie blijft `dt_plannen`, de knop `sb-planning`) en bevat ook Leadgenerator. Instellingen van de organisatie is weer een item in Beheer. De icoonrij: Account (`/mij`), Mijn instellingen (wieltje, voor iedereen), Helpcenter (`/helpcenter`), Meldingen (`/notificaties`, met teller) en Uitloggen; Meer en de compacte kop linken ook zo. Boven elke groepstitel 22 px lucht.
+
 ## Waar staat wat
 
 | Map | Inhoud |
