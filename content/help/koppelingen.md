@@ -107,4 +107,4 @@ Dealtrace synchroniseert elk uur. Vanaf Expert klik je **Synchroniseer nu**. Wer
 
 ## WhatsApp Business
 
-WhatsApp koppel je onder **Instellingen, Kanalen en consent**: provider kiezen, **Koppel**, **Test verbinding** en daarna sjablonen indienen. Zonder koppeling open je een goedgekeurd WhatsApp-concept in WhatsApp, met de tekst al ingevuld. Lees meer in [Kanalen en consent](/help/kanalen-en-consent).
+WhatsApp koppel je onder **Instellingen, Kanalen en consent**: provider kiezen, **Koppel**, **Test verbinding** en daarna sjablonen indienen. Zonder koppeling open je een goedgekeurd WhatsApp-concept in WhatsApp, met de tekst al ingevuld. Lees meer in [Kanalen en consent](/helpcenter/kanalen-en-consent).

@@ -1289,7 +1289,7 @@ a.acc-kanaal:focus-visible, .acc-tel:focus-visible { outline: 2px solid var(--ye
    vanaf 720 px staat de werkbalk rechts naast de titel; kicker en uitleg lopen
    links en onder door. Op de telefoon gewoon onder de tekst (zie .sec-head). */
 @media (min-width: 720px) {
-  .sec-head--naast { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--pagina-marge); align-items: start; }
+  .sec-head--naast { display: grid; grid-template-columns: minmax(min(260px, 40%), 1fr) auto; column-gap: var(--pagina-marge); align-items: start; }
   .sec-head--naast > .sec-head-tekst { display: contents; }
   .sec-head--naast > .sec-head-tekst > * { grid-column: 1 / -1; }
   .sec-head--naast > .sec-head-tekst > :first-child { grid-column: 1; grid-row: 1; justify-self: start; }

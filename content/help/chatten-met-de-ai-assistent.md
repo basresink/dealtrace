@@ -33,6 +33,6 @@ Onder een antwoord staan knoppen zoals **Zet als taak klaar** en **Maak mailconc
 
 ## Credits
 
-Elke vraag kost AI-credits uit de pot van je organisatie. Rechtsboven in de chat zie je hoeveel er deze maand over zijn. Zie [Abonnement, verbruik en AI-credits](/help/abonnement-verbruik-ai-credits).
+Elke vraag kost AI-credits uit de pot van je organisatie. Rechtsboven in de chat zie je hoeveel er deze maand over zijn. Zie [Abonnement, verbruik en AI-credits](/helpcenter/abonnement-verbruik-ai-credits).
 
 Je gesprekken bewaart Dealtrace 30 dagen, alleen voor jou. Je beheerder kan ze niet lezen. Offline werkt de assistent niet.

@@ -20,7 +20,7 @@ In **Mijn instellingen**, kaart **Meldingen**, kies je per soort hoe je hem krij
 | Inzicht | wat opvalt in je cijfers, de recap | alleen de app |
 | Dealtrace | een concept klaar ter goedkeuring, een afspraak die een collega voor je maakte, een functie die voor je aangaat, AI-credits op 80 procent | app en push |
 
-Zet je **In de app** uit, dan krijg je die soort helemaal niet. Op **Meldingen** filter je op soort en op **Ongelezen**, en met **Alles gelezen** ben je in een keer bij. Op je telefoon veeg je een melding naar links om hem gelezen te markeren.
+Zet je **In de app** uit, dan krijg je die soort helemaal niet. Op **Notificaties** (de bel) staan je meldingen als kaarten. Tik op een teller om op soort te filteren, kies **Ongelezen** of **Alles**, en met **Alles gelezen** ben je in een keer bij. Onder **Voorkeuren** zet je per soort de app, e-mail en push aan of uit. Op je telefoon veeg je een melding naar links om hem gelezen te markeren.
 
 ## Onderweg
 

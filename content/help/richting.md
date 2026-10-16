@@ -16,9 +16,9 @@ Op **Richting** lees je het verkoopverhaal van je organisatie. Iedereen kan het 
 - **Richting**: ambitie, visie en missie, en de ambitiedoelen met een balk, bijvoorbeeld "Vaste projectpartners: 112 van 400, doel 2029".
 - **Belofte**: wat jullie beloven, algemeen en per branche. Onder "Als de klant doorvraagt" staat het waardestatement.
 - **Branches**: op welke branches jullie je richten, met focus, horizon, het aantal accounts en hoeveel gesprekken dit kwartaal in die branche vielen.
-- **Concurrenten**: per concurrent wat ze goed doen, waar ze zwakker zijn en wat je zegt. Zie [Tegen wie we verkopen](/help/tegen-wie-we-verkopen).
-- **Winpunten**: per fase van de reis waarom klanten voor jullie kiezen. Zie [Een winpunt per gesprek](/help/een-winpunt-per-gesprek).
-- **Terugkomen**: wanneer je iemand opnieuw belt na een nee of als een klant stil wordt. Zie [Wanneer we iemand terugbellen](/help/wanneer-we-iemand-terugbellen).
+- **Concurrenten**: per concurrent wat ze goed doen, waar ze zwakker zijn en wat je zegt. Zie [Tegen wie we verkopen](/helpcenter/tegen-wie-we-verkopen).
+- **Winpunten**: per fase van de reis waarom klanten voor jullie kiezen. Zie [Een winpunt per gesprek](/helpcenter/een-winpunt-per-gesprek).
+- **Terugkomen**: wanneer je iemand opnieuw belt na een nee of als een klant stil wordt. Zie [Wanneer we iemand terugbellen](/helpcenter/wanneer-we-iemand-terugbellen).
 
 ## Statussen
 

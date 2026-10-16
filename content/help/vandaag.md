@@ -20,7 +20,7 @@ Vandaag is waar je werkdag begint: wat je nu doet, waarom, en wat er voor je kla
 
 ## Op je telefoon
 
-Op je telefoon ziet Vandaag er anders uit, maar rekent hetzelfde: je eerste zet, de telstrip en de stapels. Zie [Dealtrace op je telefoon en offline](/help/dealtrace-op-je-telefoon-en-offline). Op de laptop staat je eerste zet als één regel boven de kolommen, en de kolom Afspraken toont je afspraken van vandaag.
+Op je telefoon ziet Vandaag er anders uit, maar rekent hetzelfde: je eerste zet, de telstrip en de stapels. Zie [Dealtrace op je telefoon en offline](/helpcenter/dealtrace-op-je-telefoon-en-offline). Op de laptop staat je eerste zet als één regel boven de kolommen, en de kolom Afspraken toont je afspraken van vandaag.
 
 ## Vanaf Gevorderd
 

@@ -44,7 +44,7 @@ Wat je terugziet:
 - **Al klant in DealDrive?** Dealtrace vraagt: "Dit bedrijf is al klant in DealDrive. Overdragen als nieuwe kans bij een bestaande klant?" Met **Ja, draag over** gaat het pakket opnieuw, als nieuwe kans.
 - **Lukt het niet?** Dealtrace probeert het opnieuw na 1, 5 en 30 minuten, 2 en 12 uur. Daarna krijg je de taak "Overdracht naar DealDrive mislukt" met de reden in gewone taal en **Opnieuw proberen**. Het account blijft overgedragen.
 - **Gewonnen in DealDrive?** Je krijgt de vraag "Mag dit een bewijs worden?". Met **Ja** wordt het een suggestie voor je salesmanager, zonder namen. Het account blijft overgedragen; een klant maakt DealDrive.
-- **Verloren of slapend?** Dan komt het account via de terugkomregels op de terugkomdatum terug als winback. Zie [Wanneer we iemand terugbellen](/help/wanneer-we-iemand-terugbellen).
+- **Verloren of slapend?** Dan komt het account via de terugkomregels op de terugkomdatum terug als winback. Zie [Wanneer we iemand terugbellen](/helpcenter/wanneer-we-iemand-terugbellen).
 
 Staat de koppeling met DealDrive uit, dan krijg je een overdrachtstaak met de briefing om te mailen of te downloaden.
 
