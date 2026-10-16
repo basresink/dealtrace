@@ -77,4 +77,5 @@ const t = (s: string) => `${props.prefix}-${s}`
 <style scoped>
 .kck-leeg { position: absolute; top: 100%; left: 0; right: 0; z-index: 5; }
 .kck-wis { width: var(--touch-target-min); height: var(--touch-target-min); }
+.zoeklijst-item { min-height: var(--touch-target-min); }
 </style>
