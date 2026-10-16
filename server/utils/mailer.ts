@@ -26,3 +26,20 @@ export function laatsteTestcode(email: string): string | null {
   const l = laatste.get(email.toLowerCase())
   return l && Date.now() - l.op < 10 * 60_000 ? l.code : null
 }
+
+/** Meldingen per e-mail (P26): de platformafzender, los van de mailkoppeling van de organisatie. */
+export const MELDING_POSTVAK: { aan: string; onderwerp: string; tekst: string; op: string }[] = []
+export async function stuurMeldingMail(email: string, onderwerp: string, tekst: string): Promise<void> {
+  const sleutel = process.env.RESEND_API_KEY
+  if (sleutel && !email.endsWith('.test')) {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST', headers: { authorization: `Bearer ${sleutel}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ from: process.env.MAIL_AFZENDER || 'Dealtrace <meldingen@dealtrace.nl>', to: [email], subject: onderwerp, text: tekst }),
+      signal: AbortSignal.timeout(8000),
+    })
+    if (!res.ok) throw new Error(`Mail niet verstuurd (${res.status})`)
+    return
+  }
+  MELDING_POSTVAK.push({ aan: email, onderwerp, tekst, op: new Date().toISOString() })
+  if (MELDING_POSTVAK.length > 200) MELDING_POSTVAK.shift()
+}

@@ -2,7 +2,7 @@
 titel: Koppelingen
 categorie: Inrichten
 collectie: product
-samenvatting: KvK, Datacollectief, SalesDNA, DealDrive en je agenda koppelen, testen en ontkoppelen.
+samenvatting: KvK, Datacollectief, SalesDNA, DealDrive, WhatsApp Business en je agenda koppelen, testen en ontkoppelen.
 routes: /instellingen/koppelingen/salesdna, /instellingen/koppelingen/dealdrive
 ---
 
@@ -104,3 +104,7 @@ De CRM-koppeling voorkomt dat je een klant of een prospect van een collega opnie
 **Bronprioriteit.** Wat je zelf invulde, wint altijd. Daarna KvK, Datacollectief, CRM, SalesDNA, web, AI en import. Houdt Dealtrace zijn eigen waarde, dan zie je het verschil in het **synchronisatielog**.
 
 Dealtrace synchroniseert elk uur. Vanaf Expert klik je **Synchroniseer nu**. Werkt de koppeling niet meer, dan staat er in gewone taal wat er mis is en krijgt de beheerder een melding; met **Verbind opnieuw** herstel je hem.
+
+## WhatsApp Business
+
+WhatsApp koppel je onder **Instellingen, Kanalen en consent**: provider kiezen, **Koppel**, **Test verbinding** en daarna sjablonen indienen. Zonder koppeling open je een goedgekeurd WhatsApp-concept in WhatsApp, met de tekst al ingevuld. Lees meer in [Kanalen en consent](/help/kanalen-en-consent).

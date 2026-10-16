@@ -1155,3 +1155,17 @@ html.zonlicht body { color: #000; }
 .bf-rij { text-align: left; font: inherit; color: var(--ink); cursor: pointer; } .bf-rij:hover { border-color: var(--ink); }
 .dd-runs { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .kaart--rustig { background: var(--bg); color: var(--muted); border-style: dashed; }
+
+/* P26: meldingen, kanalen en rijmodus */
+.ml-auto { margin-left: auto; }
+.melding { min-height: 48px; }
+.kanaal-raster { display: grid; grid-template-columns: minmax(0, 1fr) repeat(3, 64px); gap: 6px 8px; align-items: center; }
+.kanaal-raster .kr-kop { font-size: 12px; color: var(--text-muted, #6b6b6b); text-align: center; }
+.kanaal-raster .kr-cel { display: flex; justify-content: center; }
+.rijmodus { position: fixed; inset: 0; z-index: 90; background: var(--bg, #fff); display: flex; flex-direction: column; gap: 16px; padding: 24px 16px calc(24px + env(safe-area-inset-bottom)); }
+.rijmodus-knop { min-height: 54px; font-size: 20px; font-weight: 700; border-radius: 12px; }
+.mt-auto { margin-top: auto; }
+@media (max-width: 480px) {
+  .kanaal-raster { grid-template-columns: minmax(0, 1fr) repeat(3, 52px); }
+  .kanaal-raster .veld-uitleg { display: none; }
+}

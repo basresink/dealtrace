@@ -3,6 +3,7 @@
 // loopt door magMelden (stille uren, dagplafond, per soort) en komt in melding_log, ook als hij
 // wordt overgeslagen, met de reden. De sleutel voorkomt dubbel versturen.
 import { sql } from 'drizzle-orm'
+import { houdtVast } from '../../shared/kanalen'
 import { meldingInstelling, magMelden, NOTIFICATIE_SOORT, onderwegMeldingen, type DueMelding, type MeldingInstelling, type MeldAfspraak, type OnderwegSoort } from '../../shared/meldingsregels'
 import { nlMoment, nlTijdstip } from '../../shared/datum'
 import { schatReistijd } from '../../shared/route'
@@ -27,6 +28,8 @@ export async function meld(tx: Tx, org: string, d: DueMelding, nu = new Date(), 
   const [al] = await rijen(tx, sql`select status from melding_log where gebruiker_id = ${d.gebruikerId} and sleutel = ${d.sleutel}`)
   if (al) return al.status as string
   const inst = await instellingVan(tx, d.gebruikerId)
+  // Rijmodus en belblok (P26): als de aanroeper het niet meegeeft, uit de gebruiker zelf.
+  if (!telling) { const [u] = await rijen(tx, sql`select data from users where id = ${d.gebruikerId}`); const v = houdtVast(u?.data, nu); telling = { rijmodus: v === 'rijmodus', inBelblok: v === 'belblok' } }
   const [t] = await rijen(tx, sql`select count(*)::int as n from melding_log where gebruiker_id = ${d.gebruikerId} and status = 'verstuurd' and soort not in ('dagstart', 'recap') and op >= ${nlTijdstip(nlMoment(nu).datum, 0).toISOString()} and op <= ${nu.toISOString()}`)
   const m = magMelden(inst, d.soort, nu, { vandaag: t?.n ?? 0, ...telling })
   if (!m.versturen) {
@@ -36,7 +39,8 @@ export async function meld(tx: Tx, org: string, d: DueMelding, nu = new Date(), 
     return m.uitstellenTot ? 'uitgesteld' : 'overgeslagen'
   }
   const id = crypto.randomUUID()
-  await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${id}, ${org}, ${d.gebruikerId}, ${NOTIFICATIE_SOORT[d.soort]}, ${d.titel}, ${d.tekst}, ${d.link}, ${nu.toISOString()}, ${JSON.stringify({ onderweg: d.soort, actie: d.actie })}::jsonb)`)
+  // Direct gepusht: de verzender (P26) slaat deze rij over.
+  await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data, kanalen_verstuurd) values (${id}, ${org}, ${d.gebruikerId}, ${NOTIFICATIE_SOORT[d.soort]}, ${d.titel}, ${d.tekst}, ${d.link}, ${nu.toISOString()}, ${JSON.stringify({ onderweg: d.soort, actie: d.actie })}::jsonb, '{"inApp": true, "push": true}'::jsonb)`)
   await tx.execute(sql`insert into melding_log (organisation_id, gebruiker_id, soort, sleutel, status, reden, op) values (${org}, ${d.gebruikerId}, ${d.soort}, ${d.sleutel}, 'verstuurd', null, ${nu.toISOString()}) on conflict (gebruiker_id, sleutel) do nothing`)
   await stuurPush(tx, d.gebruikerId, { id, titel: d.titel, tekst: d.tekst, link: d.link, actie: d.actie }).catch(() => 0)
   return 'verstuurd'

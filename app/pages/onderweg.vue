@@ -9,6 +9,8 @@ const { functie, me } = useMe()
 const toast = useToast()
 const { voegToe } = useSyncQueue()
 const { pakket, laad, bezig } = useDagpakket()
+// Expert: na "Navigeer" gaat de rijmodus aan (8.6).
+const rij = useRijmodus()
 onMounted(() => { void laad() })
 const dag = computed(() => pakket.value?.dagen?.[0] ?? null)
 const app = computed<Kaartapp>(() => ((me.value?.gebruiker as any)?.route?.kaartapp ?? 'google') as Kaartapp)
@@ -92,7 +94,7 @@ useHead({ title: 'Route · Dealtrace' })
         <p class="meta">{{ volgende.stop.adres || volgende.stop.plaats }}</p>
         <p v-if="vertrek" :class="{ 'ow-vertrek--rood': vertrek.rood }" data-test="ow-vertrek">Vertrek om {{ tijd(vertrek.vertrek) }} · {{ volgende.reistijdNaar }} min rijden</p>
         <div class="ow-knoppen">
-          <a class="dd-act dd-act--primair" :href="kaartLink({ adres: volgende.stop.adres, punt: volgende.stop.punt }, app) ?? undefined" target="_blank" rel="noopener" data-test="ow-navigeer"><Icoon naam="Navigation" />Navigeer</a>
+          <a class="dd-act dd-act--primair" :href="kaartLink({ adres: volgende.stop.adres, punt: volgende.stop.punt }, app) ?? undefined" target="_blank" rel="noopener" data-test="ow-navigeer" @click="rij.zet(true)"><Icoon naam="Navigation" />Navigeer</a>
           <a class="dd-act" :class="{ 'knop-uit': !volgende.stop.telefoon }" :href="telLink(volgende.stop.telefoon)" :aria-disabled="!volgende.stop.telefoon" :title="volgende.stop.telefoon ? undefined : 'Geen telefoonnummer bekend'"><Icoon naam="Phone" />Bel</a>
           <NuxtLink class="dd-act" :to="volgende.stop.soort === 'afspraak' ? `/agenda?afspraak=${volgende.stop.id}` : `/accounts/${volgende.stop.accountId}`">Pitstop</NuxtLink>
         </div>

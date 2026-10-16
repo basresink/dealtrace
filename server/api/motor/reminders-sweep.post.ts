@@ -1,8 +1,10 @@
 // POST /api/motor/reminders-sweep: elke 5 minuten (geplande functie, x-motor-secret).
-// Taken met een herinnering die aan de beurt is krijgen een melding; daarna verstuurd.
+// Taken met een herinnering die aan de beurt is krijgen een melding; daarna gaat de verzender (P26)
+// langs alle nieuwe meldingen: per soort naar de app, e-mail en push, met stille uren en bundelen.
 import { timingSafeEqual } from 'node:crypto'
 import { sql } from 'drizzle-orm'
 import { gebruikDb, metOrganisatie, schema } from '../../utils/db'
+import { verzendMeldingen } from '../../utils/meldingVerzender'
 
 export default defineEventHandler(async (event) => {
   const geheim = process.env.MOTOR_SECRET ?? ''
@@ -24,6 +26,7 @@ export default defineEventHandler(async (event) => {
       }
       return rijen.length
     })
+    await metOrganisatie(o.id, (tx) => verzendMeldingen(tx, o.id)).catch((e) => console.error(`verzender ${o.id}: ${e?.message}`))
   }
   return { aantal }
 })

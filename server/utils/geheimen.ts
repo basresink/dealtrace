@@ -4,7 +4,7 @@
 import { createCipheriv, createDecipheriv, createHmac, hkdfSync, randomBytes } from 'node:crypto'
 
 /** Eén sleutel per doel (15.3): agenda-tokens delen hun geheim niet met koppelingen of AI-sleutels. */
-export type GeheimDoel = 'koppelingen' | 'agenda' | 'mail' | 'afmelden' | 'crm' | 'dealdrive' | 'llm'
+export type GeheimDoel = 'koppelingen' | 'agenda' | 'mail' | 'afmelden' | 'crm' | 'dealdrive' | 'llm' | 'whatsapp'
 function sleutel(doel: GeheimDoel = 'koppelingen'): Buffer {
   // AI-sleutels hebben een eigen geheim (LLM_KEY_SECRET, regel 49); de rest leidt per doel af.
   const eigen = (doel === 'llm' && process.env.LLM_KEY_SECRET) || process.env.GEHEIMEN_SLEUTEL

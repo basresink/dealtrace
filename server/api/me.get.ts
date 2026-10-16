@@ -67,6 +67,7 @@ export default defineEventHandler(async (event) => {
       verborgen: gebruiker.verborgen,
       eigenPortefeuille: gebruiker.rol !== 'salesmanager' || (gebruiker.data as any)?.eigenPortefeuille === true,
       totpAan: !!(gebruiker.data as any)?.totp?.aan,
+      rijmodus: !!(gebruiker.data as any)?.rijmodus?.aan,
       route: { thuisbasis: (gebruiker.data as any)?.thuisbasis?.adres ?? (gebruiker.data as any)?.thuisbasis?.plaats ?? null, kaartapp: (gebruiker.data as any)?.kaartapp ?? 'google' },
     },
     echteRol,

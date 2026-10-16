@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
       const reactie = b?.reactie?.trim()
       if (!reactie) throw createError({ statusCode: 422, statusMessage: 'Schrijf je reactie' })
       await tx.execute(sql`update coaching_notities set data = data || ${JSON.stringify({ reactie: { tekst: reactie.slice(0, 1000), op: new Date().toISOString() } })}::jsonb where id = ${id}`)
-      await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${crypto.randomUUID()}, ${ctx.organisatie!.id}, ${n.manager_id}, 'info', 'Reactie op een coachingafspraak', ${reactie.slice(0, 200)}, ${`/coaching/${n.gebruiker_id}`}, now(), '{}'::jsonb)`)
+      await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${crypto.randomUUID()}, ${ctx.organisatie!.id}, ${n.manager_id}, 'systeem', 'Reactie op een coachingafspraak', ${reactie.slice(0, 200)}, ${`/coaching/${n.gebruiker_id}`}, now(), '{}'::jsonb)`)
       return { id }
     }
     if (!['salesmanager', 'beheerder'].includes(ctx.gebruiker.rol)) throw createError({ statusCode: 404, statusMessage: 'Notitie onbekend' })

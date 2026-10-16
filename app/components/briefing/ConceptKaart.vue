@@ -11,7 +11,7 @@ const aanpassen = ref(false)
 const tekst = ref('')
 const onderwerp = ref('')
 watch(() => props.concept, (x) => { tekst.value = x?.concept?.tekst ?? ''; onderwerp.value = x?.concept?.onderwerp ?? '' }, { immediate: true })
-const TYPE: Record<string, string> = { mail: 'Mail', linkedin: 'LinkedIn-bericht', belscript: 'Belscript', briefing: 'Bezoekbriefing' }
+const TYPE: Record<string, string> = { mail: 'Mail', linkedin: 'LinkedIn-bericht', whatsapp: 'WhatsApp-bericht', belscript: 'Belscript', briefing: 'Bezoekbriefing' }
 async function besluit(b: 'goedkeuren' | 'verwerpen', metTekst = false) {
   const body = { besluit: b, ...(metTekst ? { tekst: tekst.value, onderwerp: onderwerp.value } : {}) }
   try {
@@ -30,6 +30,19 @@ const bezig = ref(false)
 async function verstuur() {
   bezig.value = true
   try { const r = await $fetch<any>('/api/mail/verstuur', { method: 'POST', body: { conceptId: c.value.id } }); toast.toon(r.tekst); emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
+}
+// WhatsApp (P26): met koppeling, goedgekeurd sjabloon en opt-in "Verstuur via WhatsApp"; anders openen in WhatsApp.
+const { functie } = useMe()
+const wa = ref<{ gekoppeld: boolean; sjabloon: any; consent: string; mobiel: boolean } | null>(null)
+watch(() => [c.value?.status, c.value?.concept?.type], async () => {
+  if (import.meta.client && c.value?.concept?.type === 'whatsapp' && c.value.status === 'goedgekeurd' && c.value.accountId && functie('whatsapp.versturen')?.beschikbaar) {
+    try { wa.value = await $fetch('/api/whatsapp/stand', { query: { accountId: c.value.accountId } }) } catch { wa.value = null }
+  }
+}, { immediate: true })
+const waKan = computed(() => !!wa.value?.gekoppeld && !!wa.value.sjabloon && wa.value.consent === 'ja')
+async function verstuurWa() {
+  bezig.value = true
+  try { const r = await $fetch<any>('/api/whatsapp/verstuur', { method: 'POST', body: { conceptId: c.value.id } }); toast.toon(r.tekst); emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }
 async function kopieer() { try { await navigator.clipboard.writeText([c.value.concept.onderwerp, c.value.concept.tekst].filter(Boolean).join('\n\n')); toast.toon('Gekopieerd.') } catch { toast.toon('Kopiëren lukt hier niet.', 'let-op') } }
 </script>
@@ -68,7 +81,9 @@ async function kopieer() { try { await navigator.clipboard.writeText([c.value.co
       <template v-else-if="c.status === 'goedgekeurd'">
         <button v-if="c.concept?.type === 'mail'" type="button" class="dd-act dd-act--primair" :disabled="bezig" data-test="concept-verstuur" @click="verstuur">Verstuur</button>
         <a v-if="c.links?.mailto" :href="c.links.mailto" class="dd-act" data-test="concept-mailto">Verstuur via je mail</a>
-        <a v-if="c.links?.whatsapp" :href="c.links.whatsapp" target="_blank" rel="noopener" class="dd-act">WhatsApp</a>
+        <button v-if="c.concept?.type === 'whatsapp' && waKan" type="button" class="dd-act dd-act--primair" :disabled="bezig" data-test="concept-verstuur-wa" @click="verstuurWa">Verstuur via WhatsApp</button>
+        <a v-if="c.links?.whatsapp && !(c.concept?.type === 'whatsapp' && wa?.gekoppeld && wa.consent !== 'ja')" :href="c.links.whatsapp" target="_blank" rel="noopener" class="dd-act" data-test="concept-wa-link">{{ c.concept?.type === 'whatsapp' ? 'Open in WhatsApp' : 'WhatsApp' }}</a>
+        <span v-if="c.concept?.type === 'whatsapp' && wa?.gekoppeld && wa.consent !== 'ja'" class="meta">Geen toestemming voor WhatsApp</span>
         <button v-if="c.concept?.tekst" type="button" class="dd-act" @click="kopieer">Kopieer</button>
       </template>
     </div>

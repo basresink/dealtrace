@@ -133,6 +133,7 @@ export const notificaties = pgTable('notificaties', {
   verborgenOp: ts('verborgen_op'),
   op: ts('op').notNull(),
   data: jsonb('data').notNull(),
+  kanalenVerstuurd: jsonb('kanalen_verstuurd'),
 })
 
 export const persoonlijkeInstellingen = pgTable('persoonlijke_instellingen', {
@@ -321,6 +322,7 @@ export const belMeNiet = pgTable('bel_me_niet', {
   organisationId: text('organisation_id').notNull(),
   telefoonE164: text('telefoon_e164').notNull(),
   door: text('door'),
+  reden: text('reden'),
   op: ts('op').defaultNow().notNull(),
 })
 
@@ -783,5 +785,32 @@ export const vvVoorstellen = pgTable('vv_voorstellen', {
   tekst: text('tekst').notNull(),
   door: text('door').notNull(),
   status: text('status').notNull().default('open'),
+  op: ts('op').defaultNow().notNull(),
+})
+
+// P26: WhatsApp Business (0031_kanalen_whatsapp.sql)
+export const whatsappSjablonen = pgTable('whatsapp_sjablonen', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  naam: text('naam').notNull(),
+  taal: text('taal').notNull().default('nl'),
+  tekst: text('tekst').notNull(),
+  status: text('status').notNull().default('concept'),
+  externId: text('extern_id'),
+  reden: text('reden'),
+  door: text('door'),
+  updatedAt: ts('updated_at').defaultNow().notNull(),
+})
+
+export const whatsappBerichten = pgTable('whatsapp_berichten', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  conceptId: text('concept_id'),
+  accountId: text('account_id'),
+  contactId: text('contact_id'),
+  sjabloonId: text('sjabloon_id'),
+  externId: text('extern_id'),
+  status: text('status').notNull().default('verzonden'),
+  door: text('door'),
   op: ts('op').defaultNow().notNull(),
 })

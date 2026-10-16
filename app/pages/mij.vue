@@ -2,6 +2,7 @@
 // Mijn instellingen (F22): profiel, werkplek (alleen lezen), meldingen per soort
 // en "Toon minder". Meldingen lopen via de sync-wachtrij en werken ook offline.
 import { FUNCTIES } from '~~/shared/functies'
+import { kanalenVoor, MELDING_KANAAL_LABEL, MELDING_KANALEN, MELDING_SOORT_LABEL, MELDING_SOORT_UITLEG, MELDING_SOORTEN, type MeldingKanaal, type MeldingSoort } from '~~/shared/kanalen'
 import { NIVEAU_LABEL, ROL_LABEL, WERKPLEK_LABEL, type Niveau, type Rol, type Werkplek } from '~~/shared/types'
 
 const { me, laad, functie } = useMe()
@@ -10,19 +11,16 @@ const toast = useToast()
 const { data: ai } = await useFetch<any>('/api/assistent/credits', { default: () => null })
 const { data: pers } = await useFetch<{ id: string; data: Record<string, any>; versie: number }>('/api/mij/instellingen')
 
-const SOORTEN = [
-  { sleutel: 'kritiek', naam: 'Kritiek', uitleg: 'Iets wat vandaag misgaat als je niets doet.' },
-  { sleutel: 'hot', naam: 'Hete aanleiding', uitleg: 'Een prospect laat een signaal zien.' },
-  { sleutel: 'dagstart', naam: 'Dagstart', uitleg: 'Je dag in het kort, om half negen.' },
-  { sleutel: 'herinnering', naam: 'Herinnering', uitleg: 'Taken en afspraken die eraan komen.' },
-  { sleutel: 'inzicht', naam: 'Inzicht', uitleg: 'Wat opvalt in je cijfers.' },
-] as const
-
-const meldingen = computed<Record<string, boolean>>(() => pers.value?.data.meldingen ?? {})
-async function wisselMelding(soort: string, aan: boolean) {
+// Meldingen per soort en kanaal (P26): in de app, e-mail en push. Het oude veld meldingen[soort] = false
+// (P01) zet een soort helemaal uit; een keuze per kanaal vervangt dat.
+const kanalen = computed(() => pers.value?.data.kanalen ?? {})
+const keuze = (s: MeldingSoort) => kanalenVoor(s, kanalen.value, pers.value?.data.meldingen)
+async function wisselKanaal(s: MeldingSoort, k: MeldingKanaal, aan: boolean) {
   if (!pers.value) return
-  pers.value.data = { ...pers.value.data, meldingen: { ...meldingen.value, [soort]: aan } }
-  await voegToe({ tabel: 'persoonlijke_instellingen', op: 'patch', recordId: pers.value.id, patch: { meldingen: pers.value.data.meldingen } })
+  const nieuw = { ...kanalen.value, [s]: { ...keuze(s), [k]: aan } }
+  const meldingen = { ...(pers.value.data.meldingen ?? {}) }; delete meldingen[s]
+  pers.value.data = { ...pers.value.data, kanalen: nieuw, meldingen }
+  await voegToe({ tabel: 'persoonlijke_instellingen', op: 'patch', recordId: pers.value.id, patch: { kanalen: nieuw, meldingen } })
 }
 
 const magToonMinder = computed(() => functie('mij.toonMinder')?.beschikbaar)
@@ -130,14 +128,16 @@ useHead({ title: 'Mijn instellingen · Dealtrace' })
               </li>
             </ul>
           </article>
-          <article class="kaart">
+          <article class="kaart" data-test="mijn-meldingen">
             <header class="kaart-kop"><h2 class="kaart-titel">Meldingen</h2></header>
-            <ul class="schakel-lijst">
-              <li v-for="s in SOORTEN" :key="s.sleutel" class="schakel-rij">
-                <div><span class="schakel-naam">{{ s.naam }}</span><span class="veld-uitleg">{{ s.uitleg }}</span></div>
-                <Schakelaar :aan="meldingen[s.sleutel] !== false" :label="`Meldingen ${s.naam}`" @wissel="wisselMelding(s.sleutel, $event)" />
-              </li>
-            </ul>
+            <p class="kaart-meta">Kies per soort hoe je hem krijgt. Gelezen geldt op al je toestellen.</p>
+            <div class="kanaal-raster mt-8">
+              <span /><span v-for="k in MELDING_KANALEN" :key="k" class="kr-kop">{{ MELDING_KANAAL_LABEL[k] }}</span>
+              <template v-for="s in MELDING_SOORTEN" :key="s">
+                <div><span class="schakel-naam">{{ MELDING_SOORT_LABEL[s] }}</span><span class="veld-uitleg">{{ MELDING_SOORT_UITLEG[s] }}</span></div>
+                <span v-for="k in MELDING_KANALEN" :key="k" class="kr-cel"><Schakelaar :aan="keuze(s)[k]" :label="`${MELDING_SOORT_LABEL[s]}: ${MELDING_KANAAL_LABEL[k]}`" :data-test="`kanaal-${s}-${k}`" @wissel="wisselKanaal(s, k, $event)" /></span>
+              </template>
+            </div>
           </article>
         </div>
       </div>

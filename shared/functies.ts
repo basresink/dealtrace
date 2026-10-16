@@ -576,6 +576,27 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'meldingen.perSoort', naam: 'Meldingsregels per soort', pakket: 'starter', rollen: 'iedereen', helpartikel: 'meldingen-instellen', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Je eigen dagplafond en stille uren per soort melding.', totDieTijd: 'De standaard: zes per dag, stil van 19:00 tot 07:00 en in het weekend.' },
   },
+  // P26: meldingen per kanaal, rijmodus, kanalen en consent, WhatsApp Business.
+  {
+    sleutel: 'meldingen.kanalen', naam: 'Meldingen per soort en kanaal', pakket: 'starter', rollen: 'iedereen', helpartikel: 'meldingen-instellen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Per soort melding kiezen: in de app, per e-mail of als push. Gelezen geldt op al je toestellen.', totDieTijd: 'Je ziet alle meldingen in de app.' },
+  },
+  {
+    sleutel: 'meldingen.rijmodus', naam: 'Rijmodus', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Alleen grote knoppen voor voorlezen, inspreken en de volgende bellen; meldingen wachten tot je stopt en komen dan gebundeld.', totDieTijd: 'Meldingen komen binnen terwijl je rijdt; zet je telefoon zelf op stil.' },
+  },
+  {
+    sleutel: 'instellingen.kanalen', naam: 'Kanalen en consent', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'kanalen-en-consent', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Afkoelperiodes en frequentieplafond per kanaal, de voorwaarden voor mail, WhatsApp-sjablonen en de bel-me-niet-lijst.', totDieTijd: 'De standaard afkoelperiodes en één bericht per kanaal per 3 werkdagen.' },
+  },
+  {
+    sleutel: 'whatsapp.versturen', naam: 'WhatsApp versturen', pakket: 'plus', rollen: 'iedereen', helpartikel: 'concepten-goedkeuren-en-versturen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Een goedgekeurd WhatsApp-concept gaat via de koppeling uit een goedgekeurd sjabloon, alleen naar wie toestemming gaf.', totDieTijd: 'Je opent het bericht in WhatsApp met de tekst al ingevuld.' },
+  },
+  {
+    sleutel: 'koppeling.whatsapp', naam: 'WhatsApp Business koppelen', pakket: 'plus', rollen: ['beheerder'], helpartikel: 'koppelingen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'WhatsApp Business koppelen via de provider, met test, opt-in-tekst en sjablonen ter goedkeuring.', totDieTijd: 'WhatsApp gaat via de app van de gebruiker (wa.me).' },
+  },
   // P16: campagnes (F12). Meedoen voor iedereen; maken vanaf Gevorderd; alle soorten, tussendoelen en mailreeks op mandaat B voor Expert.
   {
     sleutel: 'campagnes.meedoen', naam: 'Meedoen aan campagnes', pakket: 'starter', rollen: 'iedereen', helpartikel: 'campagnes', startNiveau: 'beginner',
@@ -1117,7 +1138,7 @@ export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | u
 
 /** De feature (hoofdstuk 7, F01 tot en met F26) waar een functie bij hoort, voor het raster van de founder. */
 const FEATURE_GROEPEN: [RegExp, string][] = [
-  [/^(resultaten|coaching|analyse)\./, 'F20 Salesmanager en resultaten'], [/^waarnemer\.|^account\.(opnieuwOnderzoeken|bronnenVolgen)$/, 'F14 Agents en mandaten'], [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^campagnes\.|^instellingen\.campagnesoorten/, 'F12 Campagnes'], [/^(funnel|overdracht)\.|^instellingen\.funnelNormen|^koppelingen\.dealdrive/, 'F17 Funnel en overdracht'], [/^(briefing|pitstop|concepten|mail)\.|^koppeling\.mail|^instellingen\.mailsjablonen/, 'F11 Briefings, Pitstop en mail'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
+  [/^(resultaten|coaching|analyse)\./, 'F20 Salesmanager en resultaten'], [/^waarnemer\.|^account\.(opnieuwOnderzoeken|bronnenVolgen)$/, 'F14 Agents en mandaten'], [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^campagnes\.|^instellingen\.campagnesoorten/, 'F12 Campagnes'], [/^(funnel|overdracht)\.|^instellingen\.funnelNormen|^koppelingen\.dealdrive/, 'F17 Funnel en overdracht'], [/^(briefing|pitstop|concepten|mail|whatsapp)\.|^koppeling\.(mail|whatsapp)|^instellingen\.(mailsjablonen|kanalen)/, 'F11 Briefings, Pitstop en mail'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|reizen|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],

@@ -25,6 +25,7 @@ export const SETTING_KEYS = [
   'funnelNormen', // Normen uit shared/funnel.ts: {faseId: {conversie, doorlooptijd}} (P17)
   'overdracht', // {vasteOntvanger}: vaste ontvanger in DealDrive of het CRM (P17)
   'dagritme', // DagInstelling en SignaalInstelling uit shared/dag.ts en shared/signalen.ts (P32)
+  'kanalenUit', // Kanaal[] uit shared/nbStatus.ts die de beheerder uitzet (P26)
   // Van de leverancier:
   'pakket',
   'aiCredits',

@@ -104,14 +104,15 @@ export async function bewaarUitkomst(tx: Tx, o: { soort: 'afspraak' | 'taak'; id
 
 // ── Pitstop (Schrijver, mandaat A, soort concept) ───────────────────────────
 
-const TYPE_VAN: Record<string, 'mail' | 'linkedin' | 'belscript' | 'briefing'> = { mailen: 'mail', linkedin: 'linkedin', bellen: 'belscript', bezoek: 'briefing', taak: 'briefing', bericht: 'linkedin' }
+const TYPE_VAN: Record<string, 'mail' | 'linkedin' | 'whatsapp' | 'belscript' | 'briefing'> = { mailen: 'mail', linkedin: 'linkedin', bellen: 'belscript', bezoek: 'briefing', taak: 'briefing', bericht: 'whatsapp' }
 const SCHEMA: Record<string, JsonSchema> = {
   mail: { type: 'object', required: ['onderwerp', 'tekst'], additionalProperties: false, properties: { onderwerp: { type: 'string', maxLength: 120 }, tekst: { type: 'string', maxLength: 1500 }, winpuntId: { type: 'string' } } },
   linkedin: { type: 'object', required: ['tekst'], additionalProperties: false, properties: { tekst: { type: 'string', maxLength: 900 }, winpuntId: { type: 'string' } } },
+  whatsapp: { type: 'object', required: ['tekst'], additionalProperties: false, properties: { tekst: { type: 'string', maxLength: 600 }, winpuntId: { type: 'string' } } },
   belscript: { type: 'object', required: ['tekst'], additionalProperties: false, properties: { tekst: { type: 'string', maxLength: 1800 }, winpuntId: { type: 'string' } } },
   briefing: { type: 'object', required: ['blokken'], additionalProperties: false, properties: { blokken: { type: 'object', additionalProperties: false, properties: { opening: { type: 'string', maxLength: 600 }, winpunt: { type: 'string', maxLength: 600 }, doel: { type: 'string', maxLength: 600 } } }, winpuntId: { type: 'string' } } },
 }
-const KANAAL: Record<string, SchrijfKanaal> = { mail: 'mail', linkedin: 'linkedin', belscript: 'belscript', briefing: 'belscript' }
+const KANAAL: Record<string, SchrijfKanaal> = { mail: 'mail', linkedin: 'linkedin', whatsapp: 'whatsapp', belscript: 'belscript', briefing: 'belscript' }
 
 /** "Bereid voor": een concept per actiesoort, binnen de lengtegrens en met stijlscore 7 of hoger (anders één keer opnieuw). */
 export async function bereidVoor(tx: Tx, org: string, gebruiker: any, o: { soort: 'afspraak' | 'taak'; id: string }, nu = new Date(), opties: { automatisch?: boolean } = {}) {

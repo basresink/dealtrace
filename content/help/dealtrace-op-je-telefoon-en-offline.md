@@ -13,7 +13,7 @@ Dealtrace is één app voor laptop en telefoon. Op de telefoon zie je bovenin ee
 ## Installeren
 
 - **Android**: na je tweede dag vraagt Dealtrace of je hem op je beginscherm wilt zetten. Tik **Installeren**.
-- **iPhone**: open Dealtrace in Safari, tik onderin op Deel en kies **Zet op beginscherm**.
+- **iPhone**: open Dealtrace in Safari, tik onderin op Deel en kies **Zet op beginscherm**. Pushmeldingen werken op een iPhone alleen zo, vanaf iOS 16.4. Na de installatie vraagt Dealtrace of het meldingen mag sturen.
 
 ## De onderbalk
 

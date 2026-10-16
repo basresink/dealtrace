@@ -2,10 +2,27 @@
 titel: Meldingen instellen
 categorie: Aan de slag
 collectie: product
-samenvatting: Welke meldingen Dealtrace onderweg stuurt, stille uren, het dagplafond en push op je telefoon.
+samenvatting: Per soort kiezen tussen de app, e-mail en push, stille uren, het dagplafond, bundelen en de rijmodus.
 ---
 
 # Meldingen instellen
+
+## Per soort en kanaal
+
+In **Mijn instellingen**, kaart **Meldingen**, kies je per soort hoe je hem krijgt: **In de app**, **E-mail** of **Push**.
+
+| Soort | Bijvoorbeeld | Standaard |
+|---|---|---|
+| Kritiek | een koppeling werkt niet, een factuur staat open | app, e-mail en push |
+| Hete aanleiding | een nieuw signaal op een eigen account, een account dat aan jou is overgedragen | app en push |
+| Dagstart | je afspraken en belacties van vandaag | app en push |
+| Herinnering | een taak of afspraak, vertrek, briefing en verslag | app en push |
+| Inzicht | wat opvalt in je cijfers, de recap | alleen de app |
+| Dealtrace | een concept klaar ter goedkeuring, een afspraak die een collega voor je maakte, een functie die voor je aangaat, AI-credits op 80 procent | app en push |
+
+Zet je **In de app** uit, dan krijg je die soort helemaal niet. Op **Meldingen** filter je op soort en op **Ongelezen**, en met **Alles gelezen** ben je in een keer bij. Op je telefoon veeg je een melding naar links om hem gelezen te markeren.
+
+## Onderweg
 
 Dealtrace stuurt onderweg alleen wat je op dat moment helpt:
 
@@ -21,7 +38,15 @@ Dealtrace stuurt onderweg alleen wat je op dat moment helpt:
 
 ## Stille uren en dagplafond
 
-Van 19:00 tot 07:00 en in het weekend is het stil. Een vertrek-, briefing- of verslagmelding die dan zou komen, vervalt; een andere melding zie je in de app en krijgt geen push. Per dag krijg je hooguit zes meldingen voor onderweg; de dagstart en de recap tellen niet mee. Tijdens een belblok worden meldingen gebundeld.
+Van 19:00 tot 07:00 en in het weekend is het stil. Een vertrek-, briefing- of verslagmelding die dan zou komen, vervalt; een andere melding zie je in de app, en de push of mail komt na de stille uren. Per dag krijg je hooguit zes meldingen voor onderweg; de dagstart en de recap tellen niet mee.
+
+## Bundelen
+
+Tijdens een belblok met **Meldingen stil** en tijdens de rijmodus houdt Dealtrace meldingen vast. Stop je, dan krijg je ze in een keer: een push met hoeveel meldingen er per soort liggen.
+
+## Rijmodus (Expert)
+
+Zet de rijmodus aan in **Mijn instellingen**, of tik **Navigeer** op Route: hij gaat dan vanzelf aan. Je ziet alleen grote knoppen voor **Lees voor**, **Inspreken** en **Bel volgende**. Tik **Stop rijmodus** als je er bent.
 
 ## Zelf instellen
 

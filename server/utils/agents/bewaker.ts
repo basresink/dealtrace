@@ -150,7 +150,9 @@ export async function toets(tx: Tx, org: string, v: Voorstel, nu = new Date(), s
   }
   const plafond = v.gebruiker?.data?.mandaat?.[v.agent]?.dagplafond ?? st.mandaten[v.agent]?.dagplafond ?? null
   if (plafond != null && (v.vandaagGedaan ?? 0) >= plafond) ctx.dagplafondBereikt = true
-  const b = magHandelen(v.agent, v.handeling, nu, ctx)
+  // Een kanaal dat de beheerder in Kanalen en consent uitzette (P26), gaat nooit.
+  const uit = v.kanaal ? ((await tx.execute(sql`select value from org_settings where key = 'kanalenUit'`)).rows[0] as any)?.value : null
+  const b = Array.isArray(uit) && uit.includes(v.kanaal) ? { mag: false, uitvoering: 'geblokkeerd' as const, reden: `Kanaal ${v.kanaal} staat uit` } : magHandelen(v.agent, v.handeling, nu, ctx)
   if (!b.mag) {
     await logAgentRun(tx, org, { agent: v.agent, handeling: v.handeling, mandaat, uitkomst: 'geblokkeerd', gebruikerId: v.gebruiker?.id, accountId: v.accountId, contactId: v.contactId, reden: b.reden }, nu)
   }

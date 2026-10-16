@@ -21,7 +21,7 @@ function mockPitstop(m: any) {
   const waarom = m.aanleiding ? `Ik zag dat ${String(m.aanleiding).replace(/\.$/, '').replace(/^./, (c: string) => c.toLowerCase())}.` : 'Ik zie dat jullie planning vaak om materiaal draait.'
   const vraag = 'Past een kwartier volgende week om te kijken of dit jullie monteurs tijd scheelt?'
   if (m.type === 'mail') return { onderwerp: m.winpunt?.titel ?? 'Levering per bouwfase', tekst: `${waarom} Wij helpen jullie met ${w}. ${vraag}`, ...(m.winpunt ? { winpuntId: m.winpunt.id } : {}) }
-  if (m.type === 'linkedin') return { tekst: `${waarom} ${w}. ${vraag}`, ...(m.winpunt ? { winpuntId: m.winpunt.id } : {}) }
+  if (m.type === 'linkedin' || m.type === 'whatsapp') return { tekst: `${waarom} ${w}. ${vraag}`, ...(m.winpunt ? { winpuntId: m.winpunt.id } : {}) }
   if (m.type === 'belscript') return { tekst: `Opening: ${waarom}\nWinpunt: ${w}.\nVraag: ${vraag}${(m.bezwaren ?? []).length ? `\nAls je hoort: "${m.bezwaren[0].bezwaar}" Antwoord: ${m.bezwaren[0].antwoord}` : ''}`, ...(m.winpunt ? { winpuntId: m.winpunt.id } : {}) }
   return { blokken: { opening: `${waarom} ${vraag}`, winpunt: w }, ...(m.winpunt ? { winpuntId: m.winpunt.id } : {}) }
 }

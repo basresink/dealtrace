@@ -68,5 +68,6 @@ onBeforeUnmount(() => { window.removeEventListener('keydown', toets); document.r
     <Onderbalk />
     <MeerVenster />
     <InstallVraag />
+    <RijmodusScherm />
   </div>
 </template>

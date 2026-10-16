@@ -22,7 +22,7 @@ Na goedkeuren:
 
 - **Verstuur** gaat via de mail van je organisatie, binnen consent, afkoelperiode en werkuren. Houdt de Bewaker hem tegen, dan zie je waarom, bijvoorbeeld een afkoelperiode.
 - **Verstuur via je mail** opent je mailapp met ontvanger, onderwerp en tekst ingevuld.
-- Een tekst voor WhatsApp opent WhatsApp met de tekst ingevuld.
+- Een WhatsApp-bericht (hooguit 60 woorden) gaat met **Verstuur via WhatsApp** via de koppeling, als je organisatie WhatsApp heeft gekoppeld, er een goedgekeurd sjabloon is en het contact toestemming gaf. Anders opent **Open in WhatsApp** de app met de tekst ingevuld. Zonder toestemming zie je "Geen toestemming voor WhatsApp"; bel of mail dan.
 
 Een opvolgmail versturen: tik op Concepten bij de bel (op de telefoon onder Meer) (1), open het concept (2), **Goedkeuren** (3), **Verstuur via je mail** (4).
 

@@ -8,6 +8,7 @@ const { functie } = useMe()
 const { voegToe } = useSyncQueue()
 const toast = useToast()
 const expert = computed(() => !!functie('meldingen.perSoort')?.beschikbaar)
+const rij = useRijmodus()
 const i = computed<MeldingInstelling>(() => ({ ...MELDING_STANDAARD, ...(props.pers?.data.onderweg ?? {}) }))
 async function zet(deel: Partial<MeldingInstelling>) {
   if (!props.pers) return
@@ -46,6 +47,7 @@ async function wisselPush(aan: boolean) {
   <article v-if="functie('meldingen.onderweg')?.beschikbaar" class="kaart" data-test="onderweg-meldingen">
     <header class="kaart-kop"><h2 class="kaart-titel">Meldingen voor onderweg</h2></header>
     <p class="kaart-meta">Hooguit {{ i.dagplafond }} per dag. Stil van {{ String(i.stilVan).padStart(2, '0') }}:00 tot {{ String(i.stilTot).padStart(2, '0') }}:00{{ i.weekendStil ? ' en in het weekend' : '' }}.</p>
+    <p v-if="rij.mag.value" class="schakel-rij"><span>Rijmodus <span class="veld-uitleg">Grote knoppen; meldingen wachten tot je stopt. Gaat ook aan na "Navigeer".</span></span><Schakelaar :aan="rij.aan.value" label="Rijmodus" data-test="rijmodus-schakelaar" @wissel="rij.zet($event)" /></p>
     <p class="schakel-rij"><span>Push op dit toestel</span><Schakelaar :aan="pushStand === 'aan'" :uit="pushStand === 'niet'" label="Push op dit toestel" @wissel="wisselPush" /></p>
     <p v-if="pushStand === 'niet' && iosZonderPwa" class="meta">Op een iPhone werken pushmeldingen alleen als je Dealtrace op je beginscherm zet (iOS 16.4 of nieuwer).</p>
     <p v-else-if="pushStand === 'niet'" class="meta">Deze browser ondersteunt geen pushmeldingen.</p>

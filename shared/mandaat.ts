@@ -35,7 +35,7 @@ export const AGENTS: AgentDef[] = [
   { sleutel: 'gids', naam: 'Gids', platformMax: 'A', organisatieMax: 'A', perNiveau: { beginner: 'A', gevorderd: 'A', expert: 'A' }, gebouwd: false, omschrijving: 'Helpt je de app te leren kennen.' },
   { sleutel: 'schrijver', naam: 'Schrijver', platformMax: 'A', organisatieMax: 'A', perNiveau: { beginner: 'C', gevorderd: 'A', expert: 'A' }, gebouwd: true, omschrijving: 'Schrijft concepten; een Beginner keurt elk concept per stuk goed.' },
   { sleutel: 'verzender', naam: 'Verzender', platformMax: 'B', organisatieMax: 'B', perNiveau: { beginner: 'uit', gevorderd: 'B', expert: 'B' }, gebouwd: true, omschrijving: 'Verstuurt vervolgmails binnen een goedgekeurd kader; de eerste mail en elke mail aan een beslisser per stuk.' },
-  { sleutel: 'berichtgever', naam: 'Berichtgever', platformMax: 'C', organisatieMax: 'C', perNiveau: { beginner: 'C', gevorderd: 'C', expert: 'C' }, gebouwd: false, omschrijving: 'Stelt WhatsApp-berichten voor.' },
+  { sleutel: 'berichtgever', naam: 'Berichtgever', platformMax: 'C', organisatieMax: 'C', perNiveau: { beginner: 'C', gevorderd: 'C', expert: 'C' }, gebouwd: true, omschrijving: 'Verstuurt een goedgekeurd WhatsApp-bericht uit een goedgekeurd sjabloon, alleen met opt-in.' },
   { sleutel: 'linkedin', naam: 'LinkedIn-assistent', platformMax: 'C', organisatieMax: 'C', perNiveau: { beginner: 'C', gevorderd: 'C', expert: 'C' }, gebouwd: false, omschrijving: 'Stelt LinkedIn-berichten voor.' },
   { sleutel: 'bewaker', naam: 'Bewaker', platformMax: 'A', organisatieMax: 'A', perNiveau: { beginner: 'A', gevorderd: 'A', expert: 'A' }, gebouwd: true, omschrijving: 'Toetst elke handeling vooraf; kan alleen blokkeren en melden.' },
 ]

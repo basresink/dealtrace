@@ -9,6 +9,7 @@ import {
 } from '../../shared/belblokken'
 import { nlMoment, nlTijdstip } from '../../shared/datum'
 import { schema } from './db'
+import { verzendMeldingen } from './meldingVerzender'
 import { kiesScript, scriptWaarden, bezwarenMetConcurrent, type Belscript } from '../../shared/belscripts'
 import { meldGebeurtenis, verkoopverhaal } from './reis'
 import { rondAf } from './taken'
@@ -323,6 +324,8 @@ export async function stopBlok(tx: Tx, sessieId: string, gebruikerId: string, nu
   const resultaat = blokResultaat(s.data.gesprekken ?? [])
   await tx.update(schema.belblokSessies).set({ status: 'klaar', gestoptOp: s.gestoptOp ?? nu.toISOString(), data: { ...s.data, resultaat } }).where(eq(schema.belblokSessies.id, sessieId))
   await zetStil(tx, gebruikerId, null)
+  // Wat tijdens het blok bleef liggen, komt nu gebundeld binnen (P26, regel 37).
+  if (s.data.stil) await verzendMeldingen(tx, s.organisationId, nu, gebruikerId).catch(() => null)
   const resterend = await tx.select({ id: schema.tasks.id, accountId: schema.tasks.accountId }).from(schema.tasks).where(and(eq(schema.tasks.belblokId, sessieId), inArray(schema.tasks.status, ['open', 'bezig'])))
   return { resultaat, resterend: resterend.length, resterendeAccounts: resterend.map((x) => x.accountId).filter(Boolean) as string[] }
 }
