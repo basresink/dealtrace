@@ -51,10 +51,10 @@ const totaal = computed(() => kolommen.value.reduce((s, k) => s + k.aantal, 0))
         <p v-if="!k.dagen.length" class="hz-leeg">Niets gepland.</p>
         <template v-for="(d, i) in k.dagen" :key="d.dag">
           <div class="hz-dag" :class="{ 'hz-dag--eerste': i === 0 }">{{ dagLabel(d.dag) }}</div>
-          <button v-for="it in d.items" :key="it.id" type="button" class="hz-item" :data-test="it.id" @click="it.taakId && emit('open', it.taakId)">
-            <span class="hz-icoon" :class="`hz-icoon--${it.soort}`" aria-hidden="true"><Icoon :naam="ICOON[it.soort]" :grootte="16" /></span>
-            <span class="hz-body"><span class="hz-item-titel">{{ it.titel }}</span><span v-if="it.meta" class="hz-meta">{{ it.meta }}</span><span v-if="it.tag" class="hz-tag" :class="{ 'hz-tag--rood': it.tag === 'Over tijd' }">{{ it.tag }}</span></span>
-            <span class="hz-tijd tnum">{{ it.tijd }}</span>
+          <button v-for="it in d.items" :key="it.id" type="button" class="hz-item item-rij" :data-test="it.id" @click="it.taakId && emit('open', it.taakId)">
+            <span class="item-tijd" :class="{ 'item-tijd--rood': it.tag === 'Over tijd' }">{{ it.tijd || '·' }}</span>
+            <span class="item-icoon" :class="`item-icoon--${it.soort}`" aria-hidden="true"><Icoon :naam="ICOON[it.soort]" :grootte="16" /></span>
+            <span class="item-body"><span class="item-naam">{{ it.titel }}</span><span v-if="it.meta" class="item-meta">{{ it.meta }}</span><span v-if="it.tag" class="pil" :class="it.tag === 'Over tijd' ? 'pil--rood' : it.afspraak ? 'pil--groen' : 'pil--grijs'">{{ it.tag }}</span></span>
           </button>
         </template>
       </div>
@@ -82,18 +82,6 @@ const totaal = computed(() => kolommen.value.reduce((s, k) => s + k.aantal, 0))
 .hz-leeg { padding: 40px 0; text-align: center; font-size: 13px; font-style: italic; color: var(--muted); }
 .hz-dag { margin: 18px 0 6px; padding-top: 12px; border-top: 1px dashed var(--border); font-size: 10px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
 .hz-dag--eerste { margin-top: 0; padding-top: 0; border-top: none; }
-.hz-item { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px; align-items: start; width: 100%; min-height: var(--touch-target-min); padding: 12px 0; background: transparent; border: none; border-bottom: 1px solid var(--border); font-family: inherit; text-align: left; cursor: pointer; transition: padding-left var(--transition-fast); }
-.hz-item:hover { padding-left: 4px; }
-.hz-icoon { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: var(--ink); color: var(--yellow); }
-.hz-icoon--call { background: var(--yellow); color: var(--ink); }
-.hz-icoon--visit { background: var(--green); color: #fff; }
-.hz-icoon--email { background: var(--blue); color: #fff; }
-.hz-icoon--urgent { background: var(--red); color: #fff; }
-.hz-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.hz-item-titel { font-size: 13px; font-weight: 700; line-height: 1.35; color: var(--ink); }
-.hz-meta { font-size: 11px; line-height: 1.4; color: var(--muted); }
-.hz-tag { width: fit-content; margin-top: 4px; padding: 1px 6px; font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: var(--surface); color: var(--ink); }
-.hz-tag--rood { background: var(--red); color: #fff; }
-.hz-tijd { font-size: 12px; font-weight: 700; color: var(--ink); }
 .hz-nul { margin-top: 16px; padding: 24px; border: 1px solid var(--border); background: var(--surface); text-align: center; font-size: 14px; color: var(--muted); }
+.hz-item.item-rij { grid-template-columns: 44px 36px minmax(0, 1fr); }
 </style>

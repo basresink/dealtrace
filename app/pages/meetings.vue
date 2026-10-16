@@ -43,7 +43,7 @@ useHead({ title: 'Meetings · Dealtrace' })
   <div>
     <PaginaKop kicker="Plannen · Meetings" titel="Je meetings, vier weken vooruit" :uitleg="`${meetings.length} ${meetings.length === 1 ? 'meeting' : 'meetings'} tot ${dagLang(tot)}. Klik een meeting voor doel, briefing en verslag.`" helpartikel="agenda">
       <template #acties>
-        <button type="button" class="dd-actie dd-actie--secundair" data-test="meetings-afspraak" @click="plan()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+        <button type="button" class="dd-actie dd-actie--zwart" data-test="meetings-afspraak" @click="plan()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
         <NuxtLink to="/agenda" class="dd-actie dd-actie--secundair"><Icoon naam="Calendar" class="dd-actie-icoon" />Agenda</NuxtLink>
       </template>
     </PaginaKop>
@@ -60,10 +60,10 @@ useHead({ title: 'Meetings · Dealtrace' })
           <header class="kaart-kop"><h2 class="kaart-titel">{{ w.label }}</h2><span class="meta tnum">{{ w.meetings.length }}</span></header>
           <ul class="mt-lijst">
             <li v-for="m in w.meetings" :key="m.id">
-              <button type="button" class="mt-rij" :data-test="`meeting-${m.id}`" @click="zet('afspraak', m.id)">
-                <span class="mt-wanneer tnum"><strong>{{ dagLang(dagVan(m.start)) }}</strong><span>{{ tijd(m.start) }} tot {{ tijd(m.eind) }}</span></span>
-                <span class="mt-wat"><span class="mt-naam">{{ m.accountNaam ?? m.soort.naam }}</span><span class="meta">{{ m.soort.naam }} · {{ VORM[m.vorm] ?? m.vorm }}<template v-if="m.locatie"> · {{ m.locatie }}</template><template v-if="m.geplandDoor"> · gepland door {{ m.geplandDoor }}</template></span></span>
-                <span class="pil" :class="`ag-kleur--${m.soort.kleur ?? 'grijs'}`">{{ m.soort.naam }}</span>
+              <button type="button" class="mt-rij item-rij" :data-test="`meeting-${m.id}`" @click="zet('afspraak', m.id)">
+                <span class="item-tijd">{{ tijd(m.start) }}<small>{{ dagLang(dagVan(m.start)) }}</small></span>
+                <span class="item-icoon" :class="`item-icoon--${m.vorm === 'bezoek' ? 'visit' : m.vorm === 'telefoon' ? 'call' : 'note'}`" aria-hidden="true"><Icoon :naam="m.vorm === 'bezoek' ? 'MapPin' : m.vorm === 'telefoon' ? 'Phone' : 'Calendar'" :grootte="16" /></span>
+                <span class="item-body"><span class="item-naam mt-naam">{{ m.accountNaam ?? m.soort.naam }}</span><span class="item-meta">{{ tijd(m.start) }} tot {{ tijd(m.eind) }} · {{ VORM[m.vorm] ?? m.vorm }}<template v-if="m.locatie"> · {{ m.locatie }}</template><template v-if="m.geplandDoor"> · gepland door {{ m.geplandDoor }}</template></span><span class="pil" :class="m.vorm === 'bezoek' ? 'pil--groen' : 'pil--blauw'">{{ m.soort.naam }}</span></span>
               </button>
             </li>
           </ul>
@@ -89,12 +89,4 @@ useHead({ title: 'Meetings · Dealtrace' })
 <style scoped>
 .mt-scheider { width: 1px; align-self: stretch; background: var(--border); margin: 0 4px; }
 .mt-lijst { list-style: none; margin: 0; padding: 0; }
-.mt-rij { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 16px; align-items: center; width: 100%; min-height: var(--touch-target-min); padding: 12px 0; background: none; border: 0; border-bottom: 1px solid var(--border); color: inherit; font: inherit; text-align: left; cursor: pointer; }
-.mt-lijst li:last-child .mt-rij { border-bottom: 0; }
-.mt-rij:hover .mt-naam { color: var(--yellow-dark); }
-.mt-wanneer { display: flex; flex-direction: column; font-size: 13px; color: var(--muted); }
-.mt-wanneer strong { color: var(--ink); }
-.mt-wat { display: flex; flex-direction: column; min-width: 0; }
-.mt-naam { font-weight: 600; color: var(--ink); transition: color var(--transition-fast); }
-@media (max-width: 600px) { .mt-rij { grid-template-columns: 1fr; gap: 4px; } }
 </style>

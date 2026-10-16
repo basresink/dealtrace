@@ -466,6 +466,17 @@ De motor zet zelf taken en inzichten klaar op basis van regels. De matrix is de 
 - **Snelheid**: online kost elke databasevraag een rondreis van de Netlify-function naar Supabase in Frankfurt. `server/utils/kortGeheugen.ts` bewaart de organisatiecontext (organisatie, "iedereen ziet alles", functies per niveau) 30 seconden en de geldigheid van een toestel 15 seconden per serverinstantie; wie die gegevens wijzigt (features per niveau, instellingen, pakket, contract, gebruikersstand, aanvragen, uitloggen, toestel intrekken) wist ze meteen. `/api/vandaag` leest alleen de primaire branches in plaats van het hele verkoopverhaal. Gemeten lokaal: Vandaag laden van 92 naar 57 databasevragen met het korte geheugen (de verkoopverhaal-aanpassing scheelt daarna nog negen vragen), `/api/notificaties` van 13 naar 6. De grootste winst zit in de regio van de functions: zet die in Netlify op Frankfurt (eu-central-1), naast de database.
 - **Seed**: `server/db/seedEva.ts` vult Testgebruiker Eva Ervaren (u-07) voor de komende vier weken op alle onderdelen (accounts in alle fases, taken, afspraken, belblokken, inzichten met een aanleiding van de dag, concepten, meldingen, een campagne, regiodag en coaching), relatief aan het moment van seeden en alleen op werkdagen; getest in `tests/db/eva.test.ts`.
 
+## UI-standaard (knoppen, filters, tags, rijen en kaarten)
+
+De standaard uit de mockup staat in `app/assets/css/ui-standaard.css`, als laatste stylesheet in `nuxt.config.ts`. Hij legt één opmaak over de bestaande klassen, zodat elke pagina dezelfde knoppen en rijen toont.
+
+- **Knoppen:** vier varianten op 44 px (in een rij 36 px), radius 2, 13 px vet. Geel (`.dd-actie--primair`) is de ene primaire actie, zoals "+ Taak". Zwart met gele tekst (`.dd-actie--zwart`) is de tweede belangrijke actie, zoals "+ Afspraak" op Vandaag, Acties, Agenda, Meetings en Belblokken. Rand (`.dd-actie--secundair`, `.dd-act`) is de standaard. Rood met rand (`--gevaar`) is verwijderen. In de paginakop is elke knop 44 px.
+- **Filters:** pillen van 36 px (`.filter-pil`), actief zwart met gele tekst en een teller; keuzegroep van 40 px.
+- **Tags (`.pil`):** uppercase 10 px vet en gevuld. Blauw voor de actiesoort, rood voor urgent of risico, paars voor AI of inzicht, groen voor bezoek, grijs voor de rest.
+- **Rij (`.item-rij`):** tijd (over tijd in rood), icoon van 36 px per soort (bellen geel, bezoek groen, mail blauw, urgent rood, overig zwart), naam 14 px, meta 12 px grijs, tags en rechts een kleine knop. TaakKaart, de horizon op /acties en /meetings gebruiken deze rij; de taakrij rondt af met de knop "Afronden" in plaats van het vinkje links.
+- **Kaarten:** rand 1 px, binnenmarge 24 px (16 px op de telefoon).
+- **Telefoon:** onder 720 px is elk tikdoel minstens 44 px; de rij zet de tijd boven de naam.
+
 ## Waar staat wat
 
 | Map | Inhoud |

@@ -89,14 +89,14 @@ if (import.meta.client && route.query.melding === 'gekoppeld') toast.toon('Agend
   <div>
     <PaginaKop kicker="Start · Agenda" :titel="kop" uitleg="Je afspraken, belblokken en wat er in je gekoppelde agenda staat." helpartikel="agenda">
       <template #acties>
-        <button type="button" class="dd-actie dd-actie--primair" data-test="plan-afspraak-knop" @click="plan()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+        <button type="button" class="dd-actie dd-actie--zwart" data-test="plan-afspraak-knop" @click="plan()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
         <NuxtLink v-if="functie('briefing.bewerken')?.beschikbaar" to="/briefings" class="dd-actie dd-actie--secundair" data-test="briefings-knop"><Icoon naam="ScrollText" class="dd-actie-icoon" />Briefings</NuxtLink>
       </template>
     </PaginaKop>
     <section class="section">
       <div class="container">
         <div class="kop-rij ag-werkbalk">
-          <div class="keuzegroep keuzegroep--klein" role="group" aria-label="Weergave">
+          <div class="keuzegroep" role="group" aria-label="Weergave">
             <button v-for="w in (['dag', 'week', 'maand'] as const)" :key="w" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': weergave === w }" :aria-pressed="weergave === w" :data-test="`weergave-${w}`" @click="zet({ weergave: w })">{{ w[0]!.toUpperCase() + w.slice(1) }}</button>
           </div>
           <div class="ag-nav">

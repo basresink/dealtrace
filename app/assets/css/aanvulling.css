@@ -501,12 +501,12 @@
 /* P07: taken, inzichten en Vandaag */
 .afrond-strook { position: fixed; left: 50%; transform: translateX(-50%); bottom: 72px; z-index: 60; display: flex; align-items: center; gap: 16px; padding: 10px 16px; background: var(--ink); color: var(--wit); border-radius: var(--radius); box-shadow: 0 4px 16px rgba(0,0,0,.2); }
 .afrond-strook .dd-act { background: var(--yellow); color: var(--ink); border-color: var(--yellow); min-height: 44px; }
-.taak-kaart { display: grid; grid-template-columns: auto auto 1fr auto; gap: 8px 12px; align-items: start; padding: 12px 0; border-bottom: 1px solid var(--border); position: relative; touch-action: pan-y; background: var(--wit); }
-.taak-kaart--achter { border-left: 3px solid var(--red, #c62828); padding-left: 8px; }
+.taak-kies { margin-top: 10px; }
 .taak-vink { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 50%; background: var(--wit); cursor: pointer; }
 .taak-vink:hover { border-color: var(--ink); }
 .taak-labels { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
-.taak-titel { font-weight: 600; color: var(--ink); background: none; border: 0; padding: 0; text-align: left; font: inherit; cursor: pointer; }
+.taak-titel { background: none; border: 0; padding: 0; text-align: left; font-family: inherit; cursor: pointer; }
+.taak-titel:hover { color: var(--yellow-dark); }
 .taak-meta { font-size: var(--fs-meta); color: var(--muted); }
 .taak-verval--over { color: var(--red, #c62828); font-weight: 600; }
 .taak-groep + .taak-groep { margin-top: 24px; }
@@ -531,8 +531,6 @@
 @media (max-width: 767px) {
   .vandaag-kolommen, .horizon { grid-template-columns: 1fr; }
   .week-raster { grid-template-columns: repeat(5, minmax(56px, 1fr)); overflow-x: auto; }
-  .taak-kaart { grid-template-columns: auto 1fr; }
-  .taak-kaart .taak-rechts { grid-column: 2; }
   .afrond-strook { bottom: 16px; width: calc(100% - 96px); justify-content: space-between; }
 }
 

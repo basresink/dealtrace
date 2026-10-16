@@ -50,7 +50,7 @@ useHead({ title: 'Vandaag · Dealtrace' })
           </div>
           <div class="toolbar-buttons">
             <button type="button" class="dd-actie dd-actie--primair" data-test="vandaag-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
-            <button type="button" class="dd-actie dd-actie--secundair" data-test="vandaag-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Calendar" class="dd-actie-icoon" />Afspraak</button>
+            <button type="button" class="dd-actie dd-actie--zwart" data-test="vandaag-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
             <button v-if="v.kan.nieuwProspect" type="button" class="dd-actie dd-actie--secundair" data-test="vandaag-prospect" @click="nieuweProspect = true"><Icoon naam="UserPlus" class="dd-actie-icoon" />Prospect</button>
             <HulpKnop artikel="vandaag" />
           </div>

@@ -144,7 +144,7 @@ async function bewaarOffline() { await dagpakket.bewaarVoorOffline(String(route.
             </div>
           </div>
           <div class="toolbar-buttons">
-            <button v-if="aiAan" type="button" class="dd-act ai-knop" data-test="vraag-ai" @click="openAi({ accountId: a.id, label: a.naam })"><Icoon naam="Sparkles" class="dd-actie-icoon" />Vraag AI</button>
+            <button v-if="aiAan" type="button" class="dd-actie dd-actie--secundair ai-knop" data-test="vraag-ai" @click="openAi({ accountId: a.id, label: a.naam })"><Icoon naam="Sparkles" class="dd-actie-icoon" />Vraag AI</button>
             <button v-if="functie('contact.visitekaartje')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair alleen-telefoon" data-test="scan-visitekaartje" @click="kaartjeOpen = true"><Icoon naam="Camera" class="dd-actie-icoon" />Scan visitekaartje</button>
             <button v-if="!inPakket && functie('onderweg.dagpakket')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair alleen-telefoon" data-test="bewaar-offline" @click="bewaarOffline"><Icoon naam="Download" class="dd-actie-icoon" />Bewaar voor offline</button>
             <button v-if="kanKlaarzetten" type="button" class="dd-actie dd-actie--secundair" data-test="klaarzetten-knop" @click="klaarOpen = true"><Icoon naam="MapPin" class="dd-actie-icoon" />Klaarzetten voor buitendienst</button>

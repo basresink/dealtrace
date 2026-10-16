@@ -27,12 +27,12 @@ useHead({ title: 'Belblokken · Dealtrace' })
   <div>
     <NietAangezetKop v-if="!aan" sleutel="belblok.uitvoeren" />
     <template v-else>
-      <PaginaKop kicker="Activiteiten · Bellen" titel="Een blok is een blok. Wie het vult, kies jij." uitleg="Vaste belblokken die zichzelf vullen, én de mogelijkheid om er nu een Top 5 in te schuiven. Wat niet past schuift door naar het eerstvolgende blok." helpartikel="belblokken">
+      <PaginaKop kicker="Plannen · Belblokken" titel="Een blok is een blok. Wie het vult, kies jij." uitleg="Vaste belblokken die zichzelf vullen, én de mogelijkheid om er nu een Top 5 in te schuiven. Wat niet past schuift door naar het eerstvolgende blok." helpartikel="belblokken">
         <template #acties>
           <button type="button" class="dd-actie dd-actie--secundair bb-zoek" aria-label="Zoeken" data-test="belblokken-zoek" @click="zoekenOpen = true"><Icoon naam="Search" class="dd-actie-icoon" /></button>
           <NuxtLink v-if="volgende" :to="`/belblokken/${volgende.id}`" class="dd-actie dd-actie--secundair" data-test="start-belblok" :title="`Volgende blok ${tijd(volgende.start)} · ${volgende.open} gesprekken`"><Icoon naam="Phone" class="dd-actie-icoon" />Start belblok</NuxtLink>
           <button type="button" class="dd-actie dd-actie--taak" data-test="belblokken-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
-          <button type="button" class="dd-actie dd-actie--primair" data-test="belblokken-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+          <button type="button" class="dd-actie dd-actie--zwart" data-test="belblokken-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
         </template>
       </PaginaKop>
 

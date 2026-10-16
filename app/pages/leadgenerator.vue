@@ -146,8 +146,8 @@ useHead({ title: 'Leadgenerator · Dealtrace' })
     <template v-else>
       <PaginaKop :kicker="kicker" titel="Leadgenerator" uitleg="Bedrijven die passen bij je doelgroep, met bewijs, bron en datum." helpartikel="leadgenerator">
         <template v-if="kanRonde && tab === 'zoeken'" #acties>
-          <button type="button" class="dd-act" data-test="zoekopdracht-aanpassen" @click="paneel = !paneel">Zoekopdracht aanpassen</button>
-          <button type="button" class="dd-act dd-act--primair" :disabled="bezig === 'ronde'" data-test="nieuwe-ronde" @click="nieuweRonde"><Icoon naam="Sparkles" class="dd-act-icoon" />{{ bezig === 'ronde' ? 'Bezig…' : 'Nieuwe ronde' }}</button>
+          <button type="button" class="dd-actie dd-actie--secundair" data-test="zoekopdracht-aanpassen" @click="paneel = !paneel">Zoekopdracht aanpassen</button>
+          <button type="button" class="dd-actie dd-actie--primair" :disabled="bezig === 'ronde'" data-test="nieuwe-ronde" @click="nieuweRonde"><Icoon naam="Sparkles" class="dd-actie-icoon" />{{ bezig === 'ronde' ? 'Bezig…' : 'Nieuwe ronde' }}</button>
         </template>
       </PaginaKop>
       <section class="section section--laatste">

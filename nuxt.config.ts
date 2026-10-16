@@ -4,7 +4,7 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   ssr: true,
   components: [{ path: '~/components', pathPrefix: false }],
-  css: ['~/assets/css/dealtrace.css', '~/assets/css/aanvulling.css'],
+  css: ['~/assets/css/dealtrace.css', '~/assets/css/aanvulling.css', '~/assets/css/ui-standaard.css'],
   app: {
     head: {
       htmlAttrs: { lang: 'nl' },

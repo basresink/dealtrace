@@ -1,0 +1,183 @@
+/* ============================================================================
+   UI-standaard (mockup "Dealtrace UI-standaard")
+   ----------------------------------------------------------------------------
+   Laatste stylesheet: legt één standaard over de bestaande klassen, zodat elke
+   pagina dezelfde knoppen, filters, tags, rijen en kaarten toont.
+
+   Knoppen: vier varianten, twee maten (44 en 36 px), radius 2, 13 px vet.
+     geel   .dd-actie--primair, --taak, --mail, .dd-act--geel   de ene primaire actie
+     zwart  .dd-actie--zwart, --afspraak, --deal, --download,
+            .dd-act--primair                                    tweede belangrijke actie
+     rand   .dd-actie--secundair, .dd-act                       standaard
+     rood   .dd-actie--gevaar, .dd-act--gevaar                  verwijderen
+   Tekstlink: vet met gele streep.
+   Filters: pillen van 36 px, actief zwart met gele tekst; keuzegroep van 40 px.
+   Tags (.pil): uppercase 10 px vet, gevuld: blauw actiesoort, rood urgent of
+   risico, paars AI, groen bezoek, grijs overig.
+   Rij (.item-rij): tijd, icoon van 36 px, naam en meta, tag, kleine knop.
+   Kaarten: rand 1 px, binnenmarge 24 px (16 px op de telefoon).
+   Op de telefoon blijft elk tikdoel minstens 44 px.
+   ========================================================================== */
+
+:root { --kaart-padding: 24px; --knop-h-standaard: 44px; --knop-h-rij: 36px; }
+@media (max-width: 719px) { :root { --kaart-padding: 16px; } }
+
+/* ---------- Knoppen ---------- */
+.dd-actie {
+  gap: 8px;
+  min-height: var(--knop-h-standaard);
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+.dd-actie--primair,
+.dd-actie--taak,
+.dd-actie--mail { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+.dd-actie--primair:hover:not(:disabled),
+.dd-actie--primair.is-hover,
+.dd-actie--taak:hover:not(:disabled),
+.dd-actie--mail:hover:not(:disabled) { background: var(--yellow-dark); border-color: var(--yellow-dark); color: var(--ink); }
+
+.dd-actie--zwart,
+.dd-actie--afspraak,
+.dd-actie--deal,
+.dd-actie--download { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.dd-actie--zwart:hover:not(:disabled),
+.dd-actie--zwart.is-hover { background: var(--ink-soft); border-color: var(--ink-soft); }
+
+.dd-actie--secundair,
+.dd-actie--icoon { background: var(--wit); color: var(--ink); border-color: var(--border-strong); }
+.dd-actie--secundair:hover:not(:disabled),
+.dd-actie--icoon:hover:not(:disabled) { border-color: var(--ink); }
+
+.dd-actie--gevaar { background: var(--wit); color: var(--red); border-color: var(--red); }
+
+.dd-actie--icoon { width: var(--knop-h-standaard); padding: 0; }
+.dd-actie--klein { min-height: var(--knop-h-rij); padding: 0 12px; font-size: 12px; }
+
+/* Kleine knop in een rij: dezelfde varianten op 36 px. */
+.dd-act {
+  gap: 6px;
+  min-height: var(--knop-h-rij);
+  padding: 0 12px;
+  background: var(--wit);
+  border-color: var(--border-strong);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.dd-act--primair { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.dd-act--geel { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+.dd-act--geel:hover:not(:disabled) { background: var(--yellow-dark); border-color: var(--yellow-dark); }
+.dd-act--gevaar { color: var(--red); border-color: var(--red); }
+.dd-act--icoon { width: var(--knop-h-rij); height: var(--knop-h-rij); min-height: var(--knop-h-rij); padding: 0; }
+
+/* In de paginakop is elke knop 44 px, ook een kleine variant. */
+.toolbar-buttons > .dd-act { min-height: var(--knop-h-standaard); padding: 0 18px; font-size: 13px; }
+
+/* Tekstlink met gele streep. */
+.tekst-link { font-weight: 700; border-bottom-width: 2px; padding-bottom: 1px; }
+
+/* ---------- Filters ---------- */
+.filter-pil {
+  min-height: var(--knop-h-rij);
+  padding: 0 14px;
+  background: var(--wit);
+  color: var(--ink);
+  border-color: var(--border-strong);
+  font-size: 12px;
+  font-weight: 600;
+}
+.filter-pil--aan { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.pil-teller { padding: 0 6px; font-size: 11px; font-weight: 800; background: var(--surface); color: var(--ink); }
+.filter-pil--aan .pil-teller { background: rgba(254, 216, 0, 0.2); color: var(--yellow); }
+
+.keuzegroep-knop { min-height: 40px; padding: 0 16px; background: var(--wit); color: var(--ink); font-size: 12px; font-weight: 600; }
+.keuzegroep-knop--aan,
+.keuzegroep-knop--aan:hover { background: var(--ink); color: var(--yellow); }
+.keuzegroep--klein .keuzegroep-knop { min-height: 32px; padding: 0 11px; font-size: 11px; }
+
+/* ---------- Tags ---------- */
+.pil {
+  padding: 1px 7px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 0;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+}
+.pil--grijs { background: var(--surface); color: var(--ink); }
+.pil--geel { background: var(--yellow); color: var(--ink); }
+.pil--zwart { background: var(--ink); color: var(--yellow); }
+.pil--rood, .pil--rood-vol { background: var(--red); color: var(--wit); }
+.pil--oranje, .pil--oranje-vol { background: var(--orange); color: var(--wit); }
+.pil--groen, .pil--groen-vol { background: var(--green); color: var(--wit); }
+.pil--blauw, .pil--blauw-vol { background: var(--blue); color: var(--wit); }
+.pil--paars, .pil--paars-vol { background: var(--purple); color: var(--wit); }
+.pil--leeg { background: transparent; color: var(--muted); border: 1px dashed var(--border-strong); }
+
+/* ---------- Rij voor taken en afspraken ---------- */
+.item-rij {
+  display: grid;
+  grid-template-columns: 56px 36px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  width: 100%;
+  padding: 12px 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.item-rij:last-child,
+li:last-child > .item-rij { border-bottom: 0; }
+button.item-rij { cursor: pointer; }
+button.item-rij:hover .item-naam { color: var(--yellow-dark); }
+.item-tijd { padding-top: 2px; font-size: 12px; font-weight: 700; color: var(--ink); font-feature-settings: "tnum"; }
+.item-tijd small { display: block; font-size: 10px; font-weight: 500; color: var(--muted); }
+.item-tijd--rood, .item-tijd .rood { color: var(--red); }
+.item-icoon { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: var(--ink); color: var(--yellow); }
+.item-icoon--call { background: var(--yellow); color: var(--ink); }
+.item-icoon--visit { background: var(--green); color: var(--wit); }
+.item-icoon--email { background: var(--blue); color: var(--wit); }
+.item-icoon--urgent { background: var(--red); color: var(--wit); }
+.item-body { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; }
+.item-naam { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--ink); transition: color var(--transition-fast); }
+.item-meta { font-size: 12px; line-height: 1.4; color: var(--muted); }
+.item-acties { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+@media (max-width: 599px) {
+  .item-rij { grid-template-columns: 36px minmax(0, 1fr); }
+  .item-rij > .item-tijd { grid-column: 1 / -1; padding-top: 0; }
+  .item-rij > .item-acties { grid-column: 2; justify-content: flex-start; }
+}
+
+/* Taakrij (TaakKaart): bredere tijdkolom voor "2 dagen over tijd", vinkje voor bulk ervoor. */
+.taak-kaart { grid-template-columns: 72px 36px minmax(0, 1fr) auto; position: relative; touch-action: pan-y; background: var(--wit); }
+.taak-kaart--bulk { grid-template-columns: 20px 72px 36px minmax(0, 1fr) auto; }
+@media (max-width: 767px) {
+  .taak-kaart { grid-template-columns: 36px minmax(0, 1fr); }
+  .taak-kaart--bulk { grid-template-columns: 20px 36px minmax(0, 1fr); }
+  .taak-kaart > .item-tijd { grid-column: 1 / -1; padding-top: 0; }
+  .taak-kaart--bulk > .item-tijd { grid-column: 2 / -1; }
+  .taak-kaart--bulk > .item-icoon { grid-column: 2; }
+  .taak-kaart--bulk > .item-body, .taak-kaart--bulk > .item-acties { grid-column: 3; }
+  .taak-kaart > .item-acties { grid-column: -2; justify-content: flex-start; }
+}
+
+/* ---------- Kaarten en tellers ---------- */
+.kaart { border: 1px solid var(--border); }
+
+/* ---------- Telefoon: tikdoelen minstens 44 px ---------- */
+@media (max-width: 719px) {
+  .dd-act,
+  .dd-actie--klein,
+  .filter-pil,
+  .keuzegroep-knop { min-height: var(--touch-target-min); }
+  .dd-act--icoon { width: var(--touch-target-min); height: var(--touch-target-min); }
+}

@@ -29,7 +29,7 @@ const subtitel = computed(() => (niveau.value === 'expert' && props.stand ? prop
         </div>
         <div class="toolbar-buttons">
           <slot name="acties" />
-          <button v-if="aiAan" type="button" class="dd-act ai-knop" data-test="vraag-ai" @click="openAi()"><Icoon naam="Sparkles" class="dd-actie-icoon" />Vraag AI</button>
+          <button v-if="aiAan" type="button" class="dd-actie dd-actie--secundair ai-knop" data-test="vraag-ai" @click="openAi()"><Icoon naam="Sparkles" class="dd-actie-icoon" />Vraag AI</button>
           <template v-if="werkbalk && niveau !== 'beginner'">
             <button type="button" class="dd-actie dd-actie--secundair" @click="emit('werkbalk', 'weergave')">Weergave</button>
             <button type="button" class="dd-actie dd-actie--secundair" @click="emit('werkbalk', 'filters')"><Icoon naam="Filter" class="dd-actie-icoon" />Filters</button>
