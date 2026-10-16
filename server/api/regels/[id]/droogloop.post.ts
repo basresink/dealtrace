@@ -18,7 +18,8 @@ export default defineEventHandler(async (event) => {
     const oud = regelUitRij(rij)
     const regel = b?.regel ? { ...schoonRegel(b.regel, oud), id: oud.id, scope: oud.scope, eigenaarId: oud.eigenaarId, teamId: oud.teamId } : oud
     const { invoer } = await laadMotorInvoer(tx, ctx.organisatie.id, new Date())
-    const d = droogloop(regel, invoer.accounts, invoer.nu, { laatst: invoer.laatst, open: invoer.open })
+    // B05: dezelfde poort als de motor (lopend ritme, matrix en cadans per klasse, nooit twee ritmes).
+    const d = droogloop(regel, invoer.accounts, invoer.nu, { laatst: invoer.laatst, open: invoer.open }, undefined, { belmatrix: invoer.belmatrix, afspraakmatrix: invoer.afspraakmatrix, ritmeVan: invoer.ritmeVan })
     const namen = new Map(invoer.gebruikers.map((g) => [g.id, g.naam]))
     return { ...d, perPersoon: Object.entries(d.perPersoon).map(([id, n]) => ({ id, naam: namen.get(id) ?? id, taken: n })).sort((a, b) => b.taken - a.taken) }
   })

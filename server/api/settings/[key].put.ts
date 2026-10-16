@@ -5,7 +5,7 @@ import { isSettingKey, isVerborgen } from '../../../shared/settingKeys'
 import { rolMag } from '../../../shared/permissions'
 import { KANALEN } from '../../../shared/nbStatus'
 import { AGENT_INSTELLINGEN } from '../../../shared/mandaat'
-import { valideerMatrix } from '../../../shared/ritmematrix'
+import { klasseGrensFouten, valideerMatrix } from '../../../shared/ritmematrix'
 import { overlap, valideerRegios, type Regio } from '../../../shared/gebieden'
 import { schrijfAudit } from '../../utils/audit'
 import { wijsRegiosToe } from '../../utils/bezoeken'
@@ -31,10 +31,14 @@ export default defineEventHandler(async (event) => {
   if (key === 'capaciteit') {
     const v = value as any
     if (!v || ![v.binnendienst, v.buitendienst].every((n) => Number.isInteger(n) && n >= 0 && n <= 200)) throw createError({ statusCode: 422, statusMessage: 'Geef per werkplek een aantal tussen 0 en 200' })
+    if (v.startactiviteiten != null && !(Number.isInteger(v.startactiviteiten) && v.startactiviteiten >= 1 && v.startactiviteiten <= 200)) throw createError({ statusCode: 422, statusMessage: 'Het dagplafond voor startactiviteiten is 1 tot 200' })
   }
   if (key === 'klassen') {
     const v = value as any[]
     if (!Array.isArray(v) || v.some((k) => !k?.id || !String(k.naam ?? '').trim() || (k.code && String(k.code).length > 2))) throw createError({ statusCode: 422, statusMessage: 'Elke klasse heeft een naam en een code van hooguit 2 tekens' })
+    // B02: grenzen per klasse (vanaf en tot, in medewerkers).
+    const fouten = klasseGrensFouten(v)
+    if (fouten.length) throw createError({ statusCode: 422, statusMessage: fouten.join('; ') })
   }
   if (key === 'afkoeling') {
     // Afkoelperiode per kanaal in dagen (7.2): elk kanaal een geheel getal van 0 tot 730.

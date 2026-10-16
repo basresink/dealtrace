@@ -106,7 +106,7 @@ export function belmomenten(activiteiten: KpiActiviteit[], gebruikerId: string):
     if (a.door !== gebruikerId || a.soort !== 'gebeld' || a.intern) continue
     const m = nlMoment(new Date(a.op))
     const dag = wd(m.datum)
-    if (dag === 0 || dag === 6) continue
+    if (dag === 0 || dag === 6 || m.uur < 8 || m.uur > 17) continue
     const k = `${dag}|${m.uur}`
     const x = per.get(k) ?? { weekdag: dag, uur: m.uur, pogingen: 0, opgenomen: 0, afspraken: 0, procent: 0 }
     x.pogingen++

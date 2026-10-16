@@ -27,7 +27,9 @@ const perSoort = computed(() => MELDING_SOORTEN.map((s) => {
 }))
 const zichtbaar = computed(() => alle.value.filter((n) => (!soort.value || soortVan(n.soort) === soort.value) && (!alleenOngelezen.value || !n.gelezenOp || bijgewerkt.has(n.id))))
 const titel = computed(() => (ongelezen.value.length === 0 ? 'Alles bijgewerkt.' : `${ongelezen.value.length} ${ongelezen.value.length === 1 ? 'melding' : 'meldingen'} ongelezen.`))
-watch(ongelezen, (o) => { ongelezenTeller.value = o.length }, { immediate: true })
+// De teller bij de bel pas na het laden bijwerken: de zijbalk is op de server al getekend voor deze pagina
+// zijn meldingen had, dus een wijziging tijdens het tekenen gaf een hydration-mismatch (B10).
+onMounted(() => { watch(ongelezen, (o) => { ongelezenTeller.value = o.length }, { immediate: true }) })
 
 function vervang(id: string, nieuw: Partial<Melding> | null) {
   alle.value = nieuw ? alle.value.map((x) => (x.id === id ? { ...x, ...nieuw } : x)) : alle.value.filter((x) => x.id !== id)

@@ -100,4 +100,33 @@ test.describe('nieuwe prospect', () => {
       await request.delete(`/api/accounts/${id}`)
     }
   })
+
+  test('testronde: klasse schuift mee met medewerkers, een kleine prospect krijgt een klasse en de dubbelcheck kijkt naar getal en plaats', async ({ request }) => {
+    await apiLogin(request, 'u-03')
+    const ids: string[] = []
+    const basis = uniekeNaam()
+    try {
+      // B01: 12 medewerkers is klasse C; naar 300 wordt het A. Een met de hand gekozen klasse blijft staan.
+      const r1 = await (await request.post('/api/accounts', { data: { naam: `${basis} Omvang12`, plaats: 'Utrecht', medewerkers: 12 } })).json(); ids.push(r1.id)
+      expect(r1.klasse).toBe('kl-c-prospects')
+      expect((await request.put(`/api/accounts/${r1.id}`, { data: { medewerkers: 300 } })).status()).toBe(200)
+      expect((await (await request.get(`/api/accounts/${r1.id}`)).json()).klasse).toBe('kl-a-prospects')
+      const r2 = await (await request.post('/api/accounts', { data: { naam: `${uniekeNaam()} Hand`, medewerkers: 12, klasse: 'kl-b-prospects' } })).json(); ids.push(r2.id)
+      await request.put(`/api/accounts/${r2.id}`, { data: { medewerkers: 300 } })
+      expect((await (await request.get(`/api/accounts/${r2.id}`)).json()).klasse).toBe('kl-b-prospects')
+      // B02: 5 medewerkers geeft de laagste klasse, niet "geen klasse".
+      const r3 = await (await request.post('/api/accounts', { data: { naam: `${uniekeNaam()} Klein`, medewerkers: 5 } })).json(); ids.push(r3.id)
+      expect(r3.klasse).toBeTruthy()
+      // B12: zelfde naam met een ander getal in een andere plaats is hooguit mogelijk dubbel (geen 409).
+      const r4 = await request.post('/api/accounts', { data: { naam: `${basis} Omvang60`, plaats: 'Amersfoort', medewerkers: 60 } })
+      expect(r4.status()).toBe(200)
+      const a4 = await r4.json(); ids.push(a4.id)
+      expect(a4.mogelijkDuplicaat?.id).toBe(r1.id)
+      // Exact dezelfde naam in dezelfde plaats blijft zeker dubbel.
+      expect((await request.post('/api/accounts', { data: { naam: `${basis} Omvang12`, plaats: 'Utrecht' } })).status()).toBe(409)
+    } finally {
+      await apiLogin(request, 'u-06')
+      for (const id of ids) await request.delete(`/api/accounts/${id}`)
+    }
+  })
 })

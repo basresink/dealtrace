@@ -4,8 +4,8 @@ import { eq, sql } from 'drizzle-orm'
 import { AFKOELING_STANDAARD, KANAAL_LABEL, KANALEN } from '../../shared/nbStatus'
 import { pastInDoelgroep } from '../../shared/reis'
 import {
-  AFSPRAAKMATRIX_STANDAARD, BELMATRIX_STANDAARD, CAPACITEIT_STANDAARD, FREQUENTIEPLAFOND_STANDAARD, KLASSEN_STANDAARD,
-  geldendeCel, jaartotaal, klasseCode, leesMatrix, ritmeLabel, type Klasse,
+  AFSPRAAKMATRIX_STANDAARD, BELMATRIX_STANDAARD, CAPACITEIT_STANDAARD, FREQUENTIEPLAFOND_STANDAARD, KLASSEN_STANDAARD, STARTPLAFOND_STANDAARD,
+  klasseCode, klasseGrenzen, leesMatrix, ritmeLabel, verwachtingVoorMij, type Klasse,
 } from '../../shared/ritmematrix'
 import { kan } from '../utils/accounts'
 import { metOrganisatie, schema } from '../utils/db'
@@ -16,31 +16,31 @@ export default defineEventHandler(async (event) => {
   const ctx = await vereisOrganisatie(event)
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
     const instellingen = new Map((await tx.select().from(schema.orgSettings)).map((r) => [r.key, r.value]))
-    const klassen = ((instellingen.get('klassen') as Klasse[]) ?? []).map((k) => ({ ...k, code: klasseCode(k) ?? undefined }))
+    // B02: elke klasse met zijn grenzen (vanaf en tot, in medewerkers); zonder eigen grenzen de standaard voor die code.
+    const klassen = ((instellingen.get('klassen') as Klasse[]) ?? []).map((k) => {
+      const g = klasseGrenzen(k)
+      return { ...k, code: klasseCode(k) ?? undefined, standaardGrenzen: k.minMedewerkers == null ? g : null }
+    })
     // Alleen de kolommen die hier nodig zijn; de doelgroepvelden (met een klein deel van data) alleen als er segmenten zijn (B09).
     const a = schema.accounts
-    const accounts = await tx.select({ id: a.id, klasse: a.klasse, accountKind: a.accountKind, ownerId: a.ownerId }).from(a)
+    const accounts = await tx.select({ id: a.id, klasse: a.klasse, accountKind: a.accountKind, ownerId: a.ownerId, nbStatus: a.nbStatus }).from(a)
     const segmentDefs = (instellingen.get('segmenten') as any[]) ?? []
     const doelgroepRijen = segmentDefs.length
       ? await tx.select({ klasse: a.klasse, postcode: a.postcode, gebiedId: a.gebiedId, nbBron: a.nbBron, vvBrancheId: a.vvBrancheId, data: sql<any>`jsonb_build_object('customFields', ${a.data}->'customFields', 'medewerkers', ${a.data}->'medewerkers', 'sbi', ${a.data}->'sbi', 'tags', ${a.data}->'tags')` }).from(a)
       : []
     const bel = leesMatrix(instellingen.get('belmatrix'), {})
     const afspraak = leesMatrix(instellingen.get('afspraakmatrix'), {})
-    const codes = [...new Set([...klassen.map((k) => k.code!), ...KLASSEN_STANDAARD.map((k) => k.code!)])].sort()
+    // Alleen de klassen die de organisatie heeft; zonder eigen klassen de standaard (A tot D).
+    const codes = [...new Set((klassen.length ? klassen : KLASSEN_STANDAARD).map((k) => k.code!).filter(Boolean))].sort()
     const doelgroepAccounts = doelgroepRijen.map((r) => alsDoelgroepAccount(r))
     const segmenten = segmentDefs.map((s) => ({ ...s, leden: doelgroepAccounts.filter((d) => pastInDoelgroep(d, { data: { eigenVeldFilters: s.filters ?? [] } })).length }))
     const reizen = await tx.select({ id: schema.reistemplates.id, naam: schema.reistemplates.naam, data: schema.reistemplates.data }).from(schema.reistemplates)
-    // Wat betekent dit voor mij: verwachte belmomenten en bezoeken deze week voor je eigen accounts.
-    const eigen = accounts.filter((x) => x.ownerId === ctx.gebruiker.id)
+    // Wat betekent dit voor mij: verwachte belmomenten en bezoeken deze week, met dezelfde afbakening als
+    // de ritmeregels (B07): alleen eigen prospects in reis, geen nee, overgedragen of klanten.
+    const eigen = accounts.filter((a) => a.ownerId === ctx.gebruiker.id)
     const codeVan = (id: string | null) => klasseCode(klassen.find((k) => k.id === id) ?? null)
-    let bellen = 0
-    let bezoeken = 0
-    for (const x of eigen) {
-      const type = x.accountKind as 'prospect' | 'klant'
-      bellen += (jaartotaal(geldendeCel(bel.matrix, type, codeVan(x.klasse), BELMATRIX_STANDAARD)) ?? 0) / 52
-      bezoeken += (jaartotaal(geldendeCel(afspraak.matrix, 'bezoek', codeVan(x.klasse), AFSPRAAKMATRIX_STANDAARD)) ?? 0) / 52
-    }
-    const cap = (instellingen.get('capaciteit') as typeof CAPACITEIT_STANDAARD) ?? CAPACITEIT_STANDAARD
+    const verwachting = verwachtingVoorMij(eigen.map((a) => ({ type: a.accountKind as 'prospect' | 'klant', nbStatus: a.nbStatus, klasseCode: codeVan(a.klasse) })), bel.matrix, afspraak.matrix)
+    const cap = { ...CAPACITEIT_STANDAARD, startactiviteiten: STARTPLAFOND_STANDAARD, ...((instellingen.get('capaciteit') as object | undefined) ?? {}) } as typeof CAPACITEIT_STANDAARD & { startactiviteiten: number }
     const [mij] = await tx.select({ werkplek: schema.users.werkplek }).from(schema.users).where(eq(schema.users.id, ctx.gebruiker.id))
     const cel = (m: typeof bel.matrix, standaard: typeof BELMATRIX_STANDAARD, rij: string, code: string) => {
       const eigen = m[rij]?.[code]
@@ -59,7 +59,7 @@ export default defineEventHandler(async (event) => {
       segmenten,
       reizen: reizen.map((r) => ({ id: r.id, naam: r.naam, eigenRitme: !!r.data.overschrijvingen && Object.keys(r.data.overschrijvingen).length > 0 })),
       voorMij: kan(ctx, 'regels.lezen') || ctx.gebruiker.niveau !== 'beginner'
-        ? { bellen: Math.round(bellen), bezoeken: Math.round(bezoeken), capaciteit: mij?.werkplek === 'buitendienst' ? cap.buitendienst * 2 : cap.binnendienst * 5, werkplek: mij?.werkplek ?? 'binnendienst', accounts: eigen.length }
+        ? { bellen: Math.round(verwachting.bellen), bezoeken: Math.round(verwachting.bezoeken), capaciteit: mij?.werkplek === 'buitendienst' ? cap.buitendienst * 2 : cap.binnendienst * 5, werkplek: mij?.werkplek ?? 'binnendienst', accounts: verwachting.accounts }
         : null,
       waarschuwingen: [...bel.waarschuwingen, ...afspraak.waarschuwingen],
       kan: { beheer: kan(ctx, 'matrix.beheer'), voorstellen: kan(ctx, 'matrix.voorstellen') },

@@ -31,8 +31,14 @@ function zetCel(sleutel: 'belmatrix' | 'afspraakmatrix', rij: string, code: stri
   cel.label = cel.waarde ? ritmeLabel(cel.waarde) : `niet ingesteld (standaard ${ritmeLabel(cel.standaard)})`
   bewaarLater(sleutel, () => matrixWaarde(sleutel))
 }
-function zetKlassen() { bewaarLater('klassen', () => data.value.klassen.map(({ aantal, ...k }: any) => k)) }
-function nieuweKlasse() { data.value.klassen.push({ id: `kl-${Date.now()}`, code: '', naam: '', omschrijving: '', tabblad: 'Prospects', aantal: 0 }) }
+function zetKlassen() { bewaarLater('klassen', () => data.value.klassen.map(({ aantal, standaardGrenzen, ...k }: any) => k)) }
+// Grenzen per klasse (B02): leeg "tot" is zonder bovengrens; leeg "vanaf" volgt de standaard voor de code.
+function zetGrens(k: any, veld: 'minMedewerkers' | 'maxMedewerkers', w: string) {
+  k[veld] = w === '' ? null : Math.max(0, Math.round(Number(w)))
+  if (veld === 'minMedewerkers' && k.minMedewerkers !== null) k.standaardGrenzen = null
+  zetKlassen()
+}
+function nieuweKlasse() { data.value.klassen.push({ id: `kl-${Date.now()}`, code: '', naam: '', omschrijving: '', tabblad: 'Prospects', minMedewerkers: null, maxMedewerkers: null, aantal: 0 }) }
 const voorstel = ref<any>(null)
 async function stelVoor(toepassen = false) {
   try {
@@ -66,7 +72,7 @@ useHead({ title: 'Accountmatrix · Instellingen · Dealtrace' })
 
         <article v-if="data.voorMij" class="kaart mt-16" data-test="voor-mij">
           <h2 class="kaart-titel">Wat betekent dit voor mij</h2>
-          <p class="kaart-meta">Voor je {{ data.voorMij.accounts }} accounts verwacht de matrix deze week ongeveer <strong class="tnum">{{ data.voorMij.bellen }}</strong> belmomenten en <strong class="tnum">{{ data.voorMij.bezoeken }}</strong> bezoeken. Je capaciteit: {{ data.voorMij.capaciteit }} {{ data.voorMij.werkplek === 'buitendienst' ? 'bezoeken' : 'beltaken' }} per week.</p>
+          <p class="kaart-meta">Voor je {{ data.voorMij.accounts }} prospects in reis verwacht de matrix deze week ongeveer <strong class="tnum">{{ data.voorMij.bellen }}</strong> belmomenten en <strong class="tnum">{{ data.voorMij.bezoeken }}</strong> bezoeken. Je capaciteit: {{ data.voorMij.capaciteit }} {{ data.voorMij.werkplek === 'buitendienst' ? 'bezoeken' : 'beltaken' }} per week.</p>
         </article>
 
         <span class="kicker kicker--streep mt-16">1 · Accountklassen</span>
@@ -78,14 +84,20 @@ useHead({ title: 'Accountmatrix · Instellingen · Dealtrace' })
             <button type="button" class="dd-act dd-act--primair mt-8" data-test="klasse-toepassen" @click="stelVoor(true)">Pas toe</button>
           </div>
           <table class="tabel tabel--kaarten">
-            <thead><tr><th>Code</th><th>Naam</th><th>Omschrijving</th><th>Tabblad</th><th>Accounts</th></tr></thead>
-            <tbody><tr v-for="k in data.klassen" :key="k.id">
+            <thead><tr><th>Code</th><th>Naam</th><th>Vanaf (medewerkers)</th><th>Tot en met</th><th>Omschrijving</th><th>Tabblad</th><th>Accounts</th></tr></thead>
+            <tbody><tr v-for="k in data.klassen" :key="k.id" :data-test="`klasse-${k.id}`">
               <td><input v-model="k.code" class="invoer invoer--klein" maxlength="2" :disabled="!beheer" aria-label="Code" @input="zetKlassen"></td>
               <td><input v-model="k.naam" class="invoer invoer--klein" :disabled="!beheer" aria-label="Naam" @input="zetKlassen"></td>
+              <template v-if="(k.tabblad ?? 'Prospects') !== 'Klanten'">
+                <td><input class="invoer invoer--klein" type="number" min="0" :value="k.minMedewerkers ?? ''" :placeholder="k.standaardGrenzen?.min != null ? String(k.standaardGrenzen.min) : ''" :disabled="!beheer" :aria-label="`${k.naam || 'Klasse'} vanaf`" data-test="klasse-vanaf" @input="zetGrens(k, 'minMedewerkers', ($event.target as HTMLInputElement).value)"></td>
+                <td><input class="invoer invoer--klein" type="number" min="0" :value="k.maxMedewerkers ?? ''" :placeholder="k.standaardGrenzen ? (k.standaardGrenzen.max != null ? String(k.standaardGrenzen.max) : 'geen') : 'geen'" :disabled="!beheer" :aria-label="`${k.naam || 'Klasse'} tot en met`" data-test="klasse-tot" @input="zetGrens(k, 'maxMedewerkers', ($event.target as HTMLInputElement).value)"></td>
+              </template>
+              <template v-else><td class="meta">n.v.t.</td><td class="meta">n.v.t.</td></template>
               <td><input v-model="k.omschrijving" class="invoer invoer--klein" :disabled="!beheer" aria-label="Omschrijving" @input="zetKlassen"></td>
               <td>{{ k.tabblad ?? 'Prospects' }}</td><td class="tnum">{{ k.aantal }}</td>
             </tr></tbody>
           </table>
+          <p class="kaart-meta mt-8" data-test="klasse-uitleg">De klasse volgt uit het aantal medewerkers met deze grenzen. Valt een bedrijf onder de laagste grens, dan krijgt het de laagste klasse; zonder aantal medewerkers blijft de klasse leeg. Een met de hand gekozen klasse blijft staan.</p>
           <button v-if="beheer" type="button" class="dd-act mt-8" @click="nieuweKlasse">+ Klasse</button>
         </div>
 
@@ -133,6 +145,7 @@ useHead({ title: 'Accountmatrix · Instellingen · Dealtrace' })
             <label class="veld"><span class="veld-label">per aantal werkdagen (buiten het ritme)</span><input v-model.number="data.frequentieplafond.werkdagen" type="number" min="1" class="invoer" :disabled="!beheer" @input="zetPlafond"></label>
             <label class="veld"><span class="veld-label">Dagplafond binnendienst (beltaken)</span><input v-model.number="data.capaciteit.binnendienst" type="number" min="0" class="invoer" :disabled="!beheer" @input="zetCapaciteit"></label>
             <label class="veld"><span class="veld-label">Dagplafond buitendienst (bezoeken per regiodag)</span><input v-model.number="data.capaciteit.buitendienst" type="number" min="0" class="invoer" :disabled="!beheer" @input="zetCapaciteit"></label>
+            <label class="veld"><span class="veld-label">Dagplafond startactiviteiten (per persoon)</span><input v-model.number="data.capaciteit.startactiviteiten" type="number" min="1" class="invoer" :disabled="!beheer" data-test="startplafond" @input="zetCapaciteit"></label>
           </div>
         </div>
 

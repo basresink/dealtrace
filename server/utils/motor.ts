@@ -9,7 +9,7 @@ import { fase as zoekFase } from '../../shared/reis'
 import type { MotorAccount, Regel, RegelData } from '../../shared/regelPatronen'
 import { regiodagenVoor, type Regio } from '../../shared/gebieden'
 import { nlMoment } from '../../shared/datum'
-import { BELMATRIX_STANDAARD, CAPACITEIT_STANDAARD, klasseCode, leesMatrix, type Klasse } from '../../shared/ritmematrix'
+import { AFSPRAAKMATRIX_STANDAARD, BELMATRIX_STANDAARD, CAPACITEIT_STANDAARD, klasseCode, leesMatrix, type Klasse } from '../../shared/ritmematrix'
 import { leadOnderhoud } from './leads'
 import { benaderdDitJaar, leesPlanning, POGING_SOORTEN, potentieVan, vensterVan, verkoopjaar } from '../../shared/planning'
 import { schema } from './db'
@@ -138,6 +138,10 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
   const bezettingRijen = (await tx.execute(sql`select owner_id, to_char(due_date at time zone 'Europe/Amsterdam', 'YYYY-MM-DD') as dag, count(*)::int as n
     from tasks where status in ('open', 'bezig') and action_type in ('bellen', 'bezoek') and due_date is not null group by 1, 2`)).rows as { owner_id: string; dag: string; n: number }[]
   const bezetting = new Map(bezettingRijen.map((b) => [`${b.owner_id}|${b.dag}`, b.n]))
+  // B08: open startactiviteiten per persoon per dag, voor het startplafond.
+  const startRijen = (await tx.execute(sql`select owner_id, to_char(due_date at time zone 'Europe/Amsterdam', 'YYYY-MM-DD') as dag, count(*)::int as n
+    from tasks where status in ('open', 'bezig') and rule_id = 'start' and due_date is not null group by 1, 2`)).rows as { owner_id: string; dag: string; n: number }[]
+  const bezettingStart = new Map(startRijen.map((b) => [`${b.owner_id}|${b.dag}`, b.n]))
   const ritmeRijen = (await tx.execute(sql`select account_id, rule_id from tasks where status in ('open', 'bezig') and data->>'herkomst' = 'ritme'`)).rows as { account_id: string; rule_id: string }[]
   const ritmeVan = new Map(ritmeRijen.map((r) => [r.account_id, r.rule_id]))
   for (const a of accountRijen) if ((a.data as any)?.reis?.ritme?.actief) ritmeVan.set(a.id, 'hercontact')
@@ -158,6 +162,9 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
 
   const bel = leesMatrix(await instelling(tx, 'belmatrix'), BELMATRIX_STANDAARD)
   waarschuwingen.push(...bel.waarschuwingen)
+  // B06: de rij Bezoek van de afspraakmatrix is poort en interval voor het bezoekritme.
+  const afspraak = leesMatrix(await instelling(tx, 'afspraakmatrix'), AFSPRAAKMATRIX_STANDAARD)
+  waarschuwingen.push(...afspraak.waarschuwingen)
   const capWaarde = (await instelling(tx, 'capaciteit')) as any
   const capaciteit = capWaarde && Number.isInteger(capWaarde.binnendienst) && Number.isInteger(capWaarde.buitendienst) ? capWaarde : CAPACITEIT_STANDAARD
   if (capWaarde && capaciteit === CAPACITEIT_STANDAARD) waarschuwingen.push('Capaciteit ongeldig; de standaard geldt')
@@ -166,7 +173,7 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
 
   return {
     invoer: {
-      nu, regels, accounts, gebruikers, laatst, open, bezetting, ritmeVan, belmatrix: bel.matrix, capaciteit, werkdagen, startactiviteiten: start, regelLog,
+      nu, regels, accounts, gebruikers, laatst, open, bezetting, bezettingStart, ritmeVan, belmatrix: bel.matrix, afspraakmatrix: afspraak.matrix, capaciteit, werkdagen, startactiviteiten: start, regelLog,
       regiodagen: regiodagenVoor(((await instelling(tx, 'gebieden')) as Regio[] | undefined) ?? [], nlMoment(nu).datum, 28, (werkdagen?.feestdagen as string[] | undefined) ?? []),
       beheerderId: gebruikers.find((g) => g.rol === 'beheerder' && g.status !== 'gearchiveerd')?.id ?? null,
       accountIds, aiToegestaan: org_?.pakket === 'plus' || org_?.pakket === 'compleet',

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // Het logovlak van een prospect of klant (opzet uit DealDrive, AccountLogo). De initialen staan er altijd;
-// laadt het logo (eigen logo-URL of het favicon van het domein), dan schuift het eroverheen. Laadt het niet,
-// of is het de wereldbol van 16 px die de favicon-dienst bij een onbekend domein geeft, dan blijven de
-// initialen staan.
+// laadt het logo (eigen logo-URL of het favicon van het domein via onze eigen route /api/logo), dan schuift
+// het eroverheen. Geeft de route geen logo (204), laadt het niet of is het kleiner dan 32 px, dan blijven
+// de initialen staan. Bij een testdomein vraagt het vlak niets op (B11).
 import { accountLogoUrl } from '~~/shared/logo'
 
 const props = withDefaults(defineProps<{

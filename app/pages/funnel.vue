@@ -226,6 +226,7 @@ useHead({ title: 'Funnel · Dealtrace' })
 .fr-redenen { display: flex; flex-wrap: wrap; gap: 4px; min-width: 220px; max-width: 360px; white-space: normal; }
 .fr-reden { cursor: pointer; border: 0; font: inherit; white-space: normal; text-align: left; max-width: 100%; }
 @media (max-width: 720px) {
+  .fr-tabel-knop, .fr-reden { min-height: var(--touch-target-min); }
   .chart-block { padding: 16px; }
   .fr-keuzes { width: 100%; min-width: 0; }
   .fr-keuze { width: 100%; min-width: 0; justify-content: space-between; }

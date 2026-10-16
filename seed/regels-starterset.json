@@ -166,13 +166,13 @@
  },
  {
   "code": "SR05",
-  "naam": "Bezoekritme A en B",
+  "naam": "Bezoekritme prospect",
   "categorie": "Ritme",
   "motor": "regel",
   "cadansDagen": 91,
   "prioriteit": "middel",
   "data": {
-   "omschrijving": "Het bezoekritme voor A en B is aan de beurt, op de regiodag.",
+   "omschrijving": "Het bezoekritme van de klasse uit de afspraakmatrix is aan de beurt, op de regiodag.",
    "activiteit": "taak",
    "bron": "intern",
    "specifiekeBron": "",
@@ -180,7 +180,7 @@
     "patroon": "ritme",
     "parameters": {
      "actiesoort": "bezoek",
-     "matrix": false
+     "matrix": true
     }
    },
    "afbakening": {
@@ -189,10 +189,6 @@
     ],
     "statussen": [
      "in reis"
-    ],
-    "klassen": [
-     "A",
-     "B"
     ]
    },
    "gevolg": {

@@ -91,6 +91,7 @@ const ICOON: Record<string, string> = { mail: 'Mail', whatsapp: 'MessageCircle',
 .ck-titel { font-family: var(--font-serif); font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 10px; color: var(--ink); overflow-wrap: anywhere; }
 .ck-titel-knop { all: unset; cursor: pointer; }
 .ck-titel-knop:focus-visible { outline: 2px solid var(--yellow-dark); outline-offset: 2px; }
+@media (max-width: 719px) { .ck-titel-knop { display: flex; align-items: center; min-height: var(--touch-target-min); } }
 .ck-tekst { font-size: 14px; line-height: 1.55; color: var(--ink-soft); margin: 0 0 14px; display: -webkit-box; -webkit-line-clamp: 4; line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .ck-contact { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin: 0 0 14px; }
 .ck-voet { margin-top: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid var(--border); }

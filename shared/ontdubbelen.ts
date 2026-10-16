@@ -1,5 +1,7 @@
 // Ontdubbelen (15.1): KvK gelijk is altijd een duplicaat; anders domein zonder
 // www.; anders genormaliseerde naam met Sørensen-Dice (80 procent zeker, 60 mogelijk).
+// Een naamtreffer met een ander getal in de naam of een andere plaats is hooguit
+// "mogelijk dubbel" (B12): Vestiging 2 in Utrecht is niet zeker Vestiging 1 in Zwolle.
 
 export interface AccountKandidaat { id?: string; name: string; kvk?: string | null; domein?: string | null; city?: string | null; postcode?: string | null; accountKind?: string }
 export type Duplicaat = { soort: 'zeker' | 'mogelijk' | 'geen'; match?: AccountKandidaat; op?: 'kvk' | 'domein' | 'naam'; gelijkenis?: number }
@@ -40,6 +42,16 @@ export function dice(a: string, b: string): number {
   return totaal ? (2 * gedeeld) / totaal : 0
 }
 
+const getallen = (naam: string) => (normaliseerNaam(naam).match(/\d+/g) ?? []).join(' ')
+const plaats = (p?: string | null) => normaliseerNaam(p ?? '')
+
+/** Een naamtreffer is alleen zeker als de getallen in de naam gelijk zijn en de plaats niet verschilt (B12). */
+function naamUitslag(kandidaat: AccountKandidaat, m: AccountKandidaat, g: number): Duplicaat {
+  if (g < 0.6) return { soort: 'geen' }
+  const zeker = g >= 0.8 && getallen(kandidaat.name) === getallen(m.name) && !(plaats(kandidaat.city) && plaats(m.city) && plaats(kandidaat.city) !== plaats(m.city))
+  return { soort: zeker ? 'zeker' : 'mogelijk', match: m, op: 'naam', gelijkenis: g }
+}
+
 export function zoekDuplicaat(kandidaat: AccountKandidaat, bestand: AccountKandidaat[]): Duplicaat {
   const anderen = bestand.filter((b) => !kandidaat.id || b.id !== kandidaat.id)
   const kvk = kandidaat.kvk?.replace(/\D/g, '')
@@ -63,18 +75,14 @@ export function zoekDuplicaat(kandidaat: AccountKandidaat, bestand: AccountKandi
       const g = dice(naam, normaliseerNaam(b.name))
       if (!besteMetPc || g > besteMetPc.g) besteMetPc = { m: b, g }
     }
-    if (besteMetPc && besteMetPc.g >= 0.8) return { soort: 'zeker', match: besteMetPc.m, op: 'naam', gelijkenis: besteMetPc.g }
-    if (besteMetPc && besteMetPc.g >= 0.6) return { soort: 'mogelijk', match: besteMetPc.m, op: 'naam', gelijkenis: besteMetPc.g }
-    return { soort: 'geen' }
+    return besteMetPc ? naamUitslag(kandidaat, besteMetPc.m, besteMetPc.g) : { soort: 'geen' }
   }
   let beste: { m: AccountKandidaat; g: number } | null = null
   for (const b of anderen) {
     const g = dice(naam, normaliseerNaam(b.name))
     if (!beste || g > beste.g) beste = { m: b, g }
   }
-  if (beste && beste.g >= 0.8) return { soort: 'zeker', match: beste.m, op: 'naam', gelijkenis: beste.g }
-  if (beste && beste.g >= 0.6) return { soort: 'mogelijk', match: beste.m, op: 'naam', gelijkenis: beste.g }
-  return { soort: 'geen' }
+  return beste ? naamUitslag(kandidaat, beste.m, beste.g) : { soort: 'geen' }
 }
 
 export interface ContactKandidaat { id?: string; accountId: string; firstName?: string | null; lastName: string; email?: string | null }

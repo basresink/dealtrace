@@ -48,11 +48,11 @@ async function kiesKvk(r: any) {
   } catch (e) { kvk.fout = foutTekst(e) }
 }
 let t: any
-watch(() => [f.naam, f.website], () => {
+watch(() => [f.naam, f.website, f.plaats], () => {
   clearTimeout(t)
   t = setTimeout(async () => {
     if (f.naam.trim().length < 3) { dubbel.value = null; return }
-    const d = await $fetch<any>('/api/accounts/dubbelcheck', { query: { naam: f.naam, domein: f.website } })
+    const d = await $fetch<any>('/api/accounts/dubbelcheck', { query: { naam: f.naam, domein: f.website, plaats: f.plaats || undefined } })
     dubbel.value = d.soort === 'geen' ? null : d
   }, 300)
 })

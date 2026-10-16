@@ -3,6 +3,14 @@
 // gegenereerde set "Testinstallatie ..." om lijst en filters te vullen.
 import type pg from 'pg'
 import { berekenScore, laatsteContact } from '../../shared/score'
+import { klasseVoorOmvang, type Klasse } from '../../shared/ritmematrix'
+
+// B02: de vaste accounts krijgen een aantal medewerkers dat bij hun klasse past (A 250 of meer,
+// B 50 tot 250, C 10 tot 50, D onder 10). Het oude veld Aantal monteurs blijft een los eigen veld.
+const MEDEWERKERS: Record<string, number> = {
+  'pr-01': 280, 'pr-02': 120, 'pr-03': 30, 'pr-04': 310, 'pr-05': 420, 'pr-06': 95, 'pr-07': 75,
+  'pr-08': 260, 'pr-09': 60, 'pr-10': 25, 'pr-11': 55, 'pr-12': 18,
+}
 
 const PLAATSEN = ['Amersfoort', 'Zwolle', 'Groningen', 'Assen', 'Utrecht', 'Apeldoorn', 'Deventer', 'Leeuwarden', 'Emmen', 'Lelystad', 'Hoogeveen', 'Meppel', 'Harderwijk', 'Veenendaal', 'Zeist']
 const WOORDEN = ['Koperslag', 'Stroomlijn', 'Warmtepunt', 'Buizerd', 'Lichtbaak', 'Netwerk', 'Klimaatdijk', 'Zonneweide', 'Pompstation', 'Kabelbaan', 'Schakelveld', 'Leidingkade', 'Watervoort', 'Luchtsluis', 'Dakgoot', 'Vonkdal', 'Ampère', 'Thermiek', 'Radiator', 'Gasveld', 'Spanning', 'Ketelhuis', 'Meterkast', 'Zekering', 'Grondkabel', 'Ventiel', 'Draadloos', 'Isolatie', 'Boiler', 'Warmtenet', 'Installatiehof', 'Lasdraad', 'Spoorweg', 'Krachtstroom', 'Gelijkstroom', 'Wisselstroom', 'Aardlek', 'Schemer', 'Leidingdal', 'Montagehof']
@@ -19,7 +27,12 @@ function rng(seed: number) {
 
 export async function seedAccounts(client: pg.Client, org: { id: string }, bron: any) {
   const nu = new Date()
-  const klassen = bron.organisatie.accountklassen.map((k: any) => ({ id: k.id, naam: k.naam, tabblad: k.tabblad }))
+  const klassen: Klasse[] = bron.organisatie.accountklassen.map((k: any) => ({
+    id: k.id, naam: k.naam, tabblad: k.tabblad,
+    ...(k.omschrijving ? { omschrijving: k.omschrijving } : {}),
+    ...(k.minMedewerkers !== undefined ? { minMedewerkers: k.minMedewerkers, maxMedewerkers: k.maxMedewerkers ?? null } : {}),
+  }))
+  const prospectKlassen = klassen.filter((k) => k.tabblad !== 'Klanten')
   await client.query(`insert into org_settings (organisation_id, key, value) values ($1, 'klassen', $2) on conflict (organisation_id, key) do update set value = excluded.value`, [org.id, JSON.stringify(klassen)])
 
   await client.query(
@@ -46,7 +59,9 @@ export async function seedAccounts(client: pg.Client, org: { id: string }, bron:
       id: a.id, name: a.naam, kind: a.account_kind, klasse: a.klasse, owner: a.owner_id, status: a.account_kind === 'klant' ? 'klant' : a.nb_status,
       city: a.plaats, postcode: a.postcode, kvk: a.kvk, domein: a.domein, lat: a.lat, lng: a.lng, branche: a.vv_branche_id ?? null, leverancier: a.huidige_leverancier_id ?? null, gebied: a.gebied_id ?? null,
       data: { website: `https://${a.domein}`, telefoon: `+3133${String(1000000 + Number(a.kvk.slice(-4))).slice(-7)}`, provincie: a.provincie, sbi: a.sbi,
-        customFields: { aantal_monteurs: a.aantal_monteurs, segment }, herkomst: { 'cf.aantal_monteurs': { bron: 'import', op: '2026-09-01' } },
+        ...(MEDEWERKERS[a.id] ? { medewerkers: MEDEWERKERS[a.id] } : {}),
+        customFields: { aantal_monteurs: a.aantal_monteurs, segment },
+        herkomst: { 'cf.aantal_monteurs': { bron: 'import', op: '2026-09-01' }, ...(MEDEWERKERS[a.id] ? { medewerkers: { bron: 'import', op: '2026-09-01' }, klasse: { bron: 'voorstel uit medewerkers', op: '2026-09-01' } } : {}) },
         ...(a.id === 'pr-01' ? { aanleiding: { tekst: 'Plant woningbouw in Hoogland', op: new Date(nu.getTime() - 3 * 864e5).toISOString(), heet: true, bron: 'notitie' } } : {}),
         ...(a.id === 'pr-04' ? { aanleiding: { tekst: 'Vacature projectleider elektra', op: new Date(nu.getTime() - 10 * 864e5).toISOString(), bron: 'web' } } : {}) },
     })
@@ -65,13 +80,24 @@ export async function seedAccounts(client: pg.Client, org: { id: string }, bron:
     const id = `pr-g${String(i + 1).padStart(2, '0')}`
     const city = PLAATSEN[Math.floor(r() * PLAATSEN.length)]!
     const status = STATUSSEN[Math.floor(r() * STATUSSEN.length)]!
-    const klasse = ['kl-a-prospects', 'kl-b-prospects', 'kl-c-prospects', null][Math.floor(r() * 4)]!
+    // B02: het aantal medewerkers ligt binnen de grenzen van de klasse en de klasse volgt eruit; een op vier
+    // heeft nog geen omvang en dus geen klasse. (Zelfde verdeling over A, B, C en leeg als voorheen.)
+    const omvangR = r() * 4
+    const band = [[250, 450], [50, 249], [10, 49], null][Math.floor(omvangR)]
+    const medewerkers = band ? Math.round(band[0]! + (omvangR - Math.floor(omvangR)) * (band[1]! - band[0]!)) : null
+    const klasse = klasseVoorOmvang(medewerkers, prospectKlassen)
     const heeftAanleiding = r() < 0.3
     const domein = `${woord.toLowerCase().replace(/[^a-z]/g, '')}${i}.test`
     accounts.push({
       id, name: `Testinstallatie ${woord}${i >= WOORDEN.length ? ' Noord' : ''}`, kind: 'prospect', klasse, owner: eigenaars[i % eigenaars.length]!, status, city, domein,
       data: { website: `https://${domein}`, ...(r() < 0.8 ? { telefoon: `+3130${String(2000000 + i * 137).slice(-7)}` } : {}),
-        customFields: { aantal_monteurs: Math.floor(r() * 60) + 2, segment: r() < 0.7 ? 'installateur' : 'zonnepanelen' },
+        ...(medewerkers !== null ? { medewerkers, herkomst: { medewerkers: { bron: 'import', op: '2026-09-01' }, klasse: { bron: 'voorstel uit medewerkers', op: '2026-09-01' } } } : {}),
+        // Zonder omvang ook geen Aantal monteurs: dat oude veld telt anders als omvang (omvangVan).
+        customFields: (() => {
+          const monteurs = Math.floor(r() * 60) + 2
+          const segment = r() < 0.7 ? 'installateur' : 'zonnepanelen'
+          return medewerkers === null ? { segment } : { aantal_monteurs: Math.min(monteurs, medewerkers), segment }
+        })(),
         ...(heeftAanleiding ? { aanleiding: { tekst: AANLEIDINGEN[i % AANLEIDINGEN.length]!, op: new Date(nu.getTime() - Math.floor(r() * 40) * 864e5).toISOString(), heet: r() < 0.3, bron: 'web' } } : {}) },
     })
     const aantal = Math.floor(r() * 4)

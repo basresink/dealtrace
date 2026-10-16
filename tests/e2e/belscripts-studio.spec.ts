@@ -126,6 +126,7 @@ test.describe('Belscript Studio', () => {
     if (c.data.blokken.some((b: any) => b.status === 'voorgesteld')) expect((await request.post(`/api/belscripts/prospect/${c.conceptId}/bewaar`, { data: { blokken: [] } })).status()).toBe(422)
     await login(page, 'u-01')
     await ga(page, '/belblokken')
+    await page.getByTestId('kop-meer').click()
     await page.getByTestId('naar-belscripts').click()
     await expect(page).toHaveURL(/\/belscripts/)
   })

@@ -20,6 +20,9 @@ const dag = (iso: string) => new Date(iso).toLocaleDateString('nl-NL', { day: 'n
 const { data: concepten, refresh: ververs } = useFetch<any>('/api/concepten', { query: { status: 'alle' }, immediate: gesprek.value, default: () => ({ concepten: [] }) })
 const mijnConcept = computed(() => (concepten.value?.concepten ?? []).find((c: any) => (props.onderwerp === 'taak' ? c.taskId : c.afspraakId) === props.id))
 const open = ref(!props.ingeklapt)
+// Voorlezen bestaat alleen in de browser: de knop pas na het laden tonen, anders verschilt de serverrender (B10).
+const gemonteerd = ref(false)
+onMounted(() => { gemonteerd.value = true })
 const bewerk = ref<string | null>(null)
 const tekst = ref('')
 async function bewaar(blok: string) {
@@ -57,7 +60,7 @@ const { functie } = useMe()
   <section v-if="data" class="bf" data-test="briefing">
     <header class="bf-kop">
       <span class="fo-kicker" data-test="briefing-soort">{{ data.soortLabel }}</span>
-      <button v-if="functie('spraak.voorlezen')?.beschikbaar && vl.kan()" type="button" class="dd-act" :aria-pressed="vl.spreekt.value" data-test="briefing-lees-voor" @click="vl.spreekt.value ? vl.stop() : vl.lees(data.drieRegels.join('. '))"><Icoon :naam="vl.spreekt.value ? 'VolumeX' : 'Volume2'" />{{ vl.spreekt.value ? 'Stop' : 'Lees voor' }}</button>
+      <button v-if="gemonteerd && functie('spraak.voorlezen')?.beschikbaar && vl.kan()" type="button" class="dd-act" :aria-pressed="vl.spreekt.value" data-test="briefing-lees-voor" @click="vl.spreekt.value ? vl.stop() : vl.lees(data.drieRegels.join('. '))"><Icoon :naam="vl.spreekt.value ? 'VolumeX' : 'Volume2'" />{{ vl.spreekt.value ? 'Stop' : 'Lees voor' }}</button>
       <button v-if="ingeklapt" type="button" class="dd-tekstknop" :aria-expanded="open" @click="open = !open">{{ open ? 'Minder' : 'Hele briefing' }}</button>
     </header>
     <article v-if="data.contact" class="bf-contact" data-test="briefing-contact">

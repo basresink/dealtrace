@@ -51,6 +51,11 @@ const zelf = ref<any[] | null>(null)
 const bezig = ref(false)
 async function zelfanalyse() { bezig.value = true; try { zelf.value = (await $fetch<any>('/api/coaching/zelfanalyse', { method: 'POST' })).punten } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false } }
 useHead({ title: 'Mijn dashboard · Dealtrace' })
+// Weekreview en Weekstart onder Meer, zodat de knoppenrij op 1280 px op één regel blijft (B14).
+const meerItems = computed(() => [
+  ...(functie('dagritme.weekreview')?.beschikbaar ? [{ label: 'Weekreview', icoon: 'NotebookPen', to: '/weekreview', test: 'knop-weekreview' }] : []),
+  ...(functie('dagritme.weekstart')?.beschikbaar ? [{ label: 'Weekstart', icoon: 'CalendarRange', to: '/weekstart', test: 'knop-weekstart' }] : []),
+])
 </script>
 
 <template>
@@ -58,8 +63,7 @@ useHead({ title: 'Mijn dashboard · Dealtrace' })
     <RapportKop v-model:open="filtersOpen" :kicker="`Mijn dashboard · ${data?.periode.label ?? 'Deze maand'}`" titel="Waar sta jij?" subtitel="Jouw pogingen, gesprekken, afspraken en reis over de gekozen periode. Activiteit telt op wat jij deed; prospects en dekking op wat jij in beheer hebt." :filter-aantal="filterAantal" helpartikel="je-cijfers-lezen">
       <template #acties>
         <NuxtLink to="/data-kwaliteit" class="dd-actie dd-actie--secundair" data-test="knop-data" title="Datakwaliteit"><Icoon naam="Database" class="dd-actie-icoon" />Data</NuxtLink>
-        <NuxtLink v-if="functie('dagritme.weekreview')?.beschikbaar" to="/weekreview" class="dd-actie dd-actie--secundair" data-test="knop-weekreview"><Icoon naam="NotebookPen" class="dd-actie-icoon" />Weekreview</NuxtLink>
-        <NuxtLink v-if="functie('dagritme.weekstart')?.beschikbaar" to="/weekstart" class="dd-actie dd-actie--secundair" data-test="knop-weekstart"><Icoon naam="CalendarRange" class="dd-actie-icoon" />Weekstart</NuxtLink>
+        <KopMeer :items="meerItems" />
       </template>
     </RapportKop>
     <RapportPeriode v-if="filtersOpen && data" :opties="DASHBOARD_PERIODE_OPTIES" :waarde="data.periode.sleutel" :van="data.periode.van" :tot="data.periode.tot" :vandaag="vandaag" :eigen-label="EIGEN_PERIODE_LABEL" :reset="data.periode.sleutel !== 'maand'" @kies="kiesPeriode" @datum="(van, tot) => zet({ periode: 'eigen', van, tot })" @reset="kiesPeriode('maand')" />

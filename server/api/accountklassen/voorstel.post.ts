@@ -1,7 +1,7 @@
 // POST /api/accountklassen/voorstel {accountIds?, toepassen?}: klasse uit het aantal
 // medewerkers (beheerder). "Pas toe" zet de klasse en schrijft herkomst per veld.
 import { eq, inArray } from 'drizzle-orm'
-import { klasseVoorOmvang, type Klasse } from '../../../shared/ritmematrix'
+import { klasseVoorOmvang, omvangVan, type Klasse } from '../../../shared/ritmematrix'
 import { schrijfAudit } from '../../utils/audit'
 import { metOrganisatie, schema } from '../../utils/db'
 import { vereisFunctie } from '../../utils/sessie'
@@ -14,8 +14,8 @@ export default defineEventHandler(async (event) => {
     const klassen = ((k?.value as Klasse[]) ?? []).filter((x) => x.tabblad !== 'Klanten')
     const accounts = await tx.select().from(schema.accounts).where(b?.accountIds?.length ? inArray(schema.accounts.id, b.accountIds) : eq(schema.accounts.accountKind, 'prospect'))
     const voorstel = accounts.filter((a) => !a.klasse).map((a) => {
-      const m = a.data?.medewerkers ?? (a.data?.customFields as any)?.aantal_monteurs
-      return { accountId: a.id, naam: a.name, medewerkers: m ?? null, klasse: klasseVoorOmvang(m == null ? null : Number(m), klassen) }
+      const m = omvangVan(a.data as any)
+      return { accountId: a.id, naam: a.name, medewerkers: m, klasse: klasseVoorOmvang(m, klassen.length ? klassen : undefined) }
     })
     if (b?.toepassen) {
       const op = new Date().toISOString()

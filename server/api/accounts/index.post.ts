@@ -27,7 +27,8 @@ export default defineEventHandler(async (event) => {
   const domein = normaliseerDomein(b.website)
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
     const bestand = await tx.select({ id: schema.accounts.id, name: schema.accounts.name, kvk: schema.accounts.kvk, domein: schema.accounts.domein, city: schema.accounts.city }).from(schema.accounts)
-    const d = zoekDuplicaat({ name: naam, kvk: basis.kvk, domein }, bestand)
+    // B12: de plaats gaat mee; een andere plaats of een ander getal in de naam is hooguit mogelijk dubbel.
+    const d = zoekDuplicaat({ name: naam, kvk: basis.kvk, domein, city: b.plaats?.trim() || null }, bestand)
     if (d.soort === 'zeker') throw createError({ statusCode: 409, statusMessage: `Bedoel je ${d.match!.name}${d.match!.city ? ` in ${d.match!.city}` : ''}? Al in je bestand.`, data: d })
     const velden = await eigenVeldenVoor(tx, 'account', effectiefNiveau(ctx))
     const herkomst: Record<string, any> = {}

@@ -88,7 +88,7 @@ useHead({ title: 'Meetings · Dealtrace' })
 <template>
   <div>
     <PaginaKop helpartikel="agenda">
-      <template #kicker><span class="kicker kicker--streep" data-test="meetings-kicker">Meetings · Komende 30 dagen<template v-if="vandaagAantal"> · {{ vandaagAantal }} vandaag</template></span></template>
+      <template #kicker><span class="kicker kicker--streep" data-test="meetings-kicker">Meetings · 30 dagen<template v-if="vandaagAantal"> · {{ vandaagAantal }} vandaag</template></span></template>
       <template #titel><h1 class="title title--groot">Elk gesprek op het juiste moment.</h1></template>
       <template #uitleg><p class="subtitle subtitle--groot">Online meetings, belafspraken en intern overleg rond je klanten. Voor bezoeken op locatie is er <NuxtLink to="/bezoeken" class="mt-sublink" data-test="meetings-bezoeken">Bezoeken</NuxtLink>.</p></template>
       <template #acties>
@@ -140,10 +140,10 @@ useHead({ title: 'Meetings · Dealtrace' })
               >
                 <div class="mt-tijd"><span class="tnum">{{ tijd(m.start) }}</span><span class="mt-duur tnum">{{ duur(m) }}</span></div>
                 <div class="mt-body">
-                  <div class="mt-regel1"><span class="mt-vorm" :class="`mt-vorm--${vormVan(m)}`">{{ VORM[vormVan(m)] }}</span><span class="mt-naam">{{ m.accountNaam ?? m.soort.naam }}</span><span v-if="voorbij(m)" class="pil pil--grijs" data-test="meeting-afgelopen">Afgelopen</span></div>
+                  <div class="mt-regel1"><span class="mt-vorm" :class="`mt-vorm--${vormVan(m)}`">{{ VORM[vormVan(m)] }}</span><span class="mt-naam">{{ m.accountNaam ?? m.soort.naam }}</span><span v-if="voorbij(m)" class="pil pil--grijs" data-test="mt-afgelopen">Afgelopen</span></div>
                   <span class="mt-sub">{{ m.soort.naam }}<template v-if="m.contactNaam"> · {{ m.contactNaam }}</template><template v-if="vormVan(m) === 'intern'"> · telt niet als klantcontact</template><template v-if="m.geplandDoor"> · gepland door {{ naam(m.geplandDoor) }}</template></span>
                   <div v-if="m.meetinglink || m.accountId || voorbij(m)" class="mt-acties">
-                    <button v-if="voorbij(m)" type="button" class="mt-link" data-test="meeting-verslag" @click.stop="zet('afspraak', m.id)">Verslag maken</button>
+                    <button v-if="voorbij(m)" type="button" class="mt-link" data-test="mt-verslag" @click.stop="zet('afspraak', m.id)">Verslag maken</button>
                     <a v-if="m.meetinglink && !voorbij(m)" :href="m.meetinglink" target="_blank" rel="noopener noreferrer" class="mt-link" @click.stop>Deelnemen ↗</a>
                     <NuxtLink v-if="m.accountId" :to="`/accounts/${m.accountId}`" class="mt-link mt-link--stil" @click.stop>Klantkaart</NuxtLink>
                   </div>

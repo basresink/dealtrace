@@ -61,7 +61,8 @@ test.describe('Weekreview', () => {
     await expect(page.getByTestId('wr-eigen-voornemen')).toHaveAttribute('aria-pressed', 'true')
     const vierde = page.locator('[data-test^="wr-voorstel-"][aria-pressed="false"]').first()
     if (await vierde.count()) { await vierde.click(); await expect(page.getByText('Hooguit drie voornemens.')).toBeVisible(); await expect(vierde).toHaveAttribute('aria-pressed', 'false') }
-    await page.getByTestId('wr-delen').click()
+    if ((await page.getByTestId('wr-delen').getAttribute('aria-checked')) !== 'true') await page.getByTestId('wr-delen').click()
+    await expect(page.getByTestId('wr-delen')).toHaveAttribute('aria-checked', 'true')
     await page.getByTestId('wr-zet-in').click()
     await expect(page.getByTestId('wr-ingepland')).toContainText('Elke afspraak met een tweede contact')
     await expect(page.getByTestId('wr-ingepland').locator('li')).toHaveCount(3)
@@ -126,6 +127,7 @@ test.describe('Weekstart en dagstart', () => {
     await ga(page, '/')
     await expect(page.locator('[data-test="dagritme-strook"]:visible')).toHaveCount(1)
     await ga(page, '/mijn-dashboard')
+    await page.getByTestId('kop-meer').click()
     await expect(page.getByTestId('knop-weekreview')).toHaveAttribute('href', '/weekreview')
     await expect(page.getByTestId('knop-weekstart')).toHaveAttribute('href', '/weekstart')
   })

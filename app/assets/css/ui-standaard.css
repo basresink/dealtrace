@@ -180,6 +180,15 @@ button.item-rij:hover .item-naam { color: var(--yellow-dark); }
   .filter-pil,
   .keuzegroep-knop { min-height: var(--touch-target-min); }
   .dd-act--icoon { width: var(--touch-target-min); height: var(--touch-target-min); }
+  /* B15: velden, kleine keuzegroepen, klikbare chips, dagkiezer en rijen ook 44 px. */
+  .invoer, .invoer--klein, .keuzegroep--klein .keuzegroep-knop, button.chip, a.chip, .vt-chip, .vt-regel-tekst, .taak-titel { min-height: var(--touch-target-min); }
+  .vt-regel-tekst, .taak-titel { align-content: center; }
+  label:has(> input[type=checkbox]), label:has(> input[type=radio]) { min-height: var(--touch-target-min); display: inline-flex; align-items: center; }
+  /* Links in een tekstregel (account in een taakrij, bron, artikellijsten): een groter tikvlak met
+     verticale padding. Bij een inline-element verandert dat de regelhoogte niet; de negatieve marge
+     houdt een link die als blok staat (in een flexrij) even hoog. */
+  .item-meta a, .meta a, .bewijs-bron a, .hc-lijst li > a, .hs-mail { padding-block: 15px; margin-block: -15px; }
+  .taak-kaart--bulk { grid-template-columns: 44px 36px minmax(0, 1fr); }
 }
 
 /* "Bel" onder een telefoonveld in een venster (Info, Contact-info). */

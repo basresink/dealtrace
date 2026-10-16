@@ -2,6 +2,8 @@
 // keuzelijsten (gat 16), gebruikt door editor, Excel, droogloop en motor.
 // Alle functies zijn puur en krijgen `nu` mee.
 import { magBenaderen, type Kanaal } from './nbStatus'
+import { dice } from './ontdubbelen'
+import { AFSPRAAKMATRIX_STANDAARD, BELMATRIX_STANDAARD, geldendeCel, intervalDagen, type Matrix } from './ritmematrix'
 
 export const PATROON_SLEUTELS = [
   'datum-drempel', 'inactiviteit', 'ritme', 'gebeurtenis', 'te-lang-in-fase', 'lead-verlopen', 'jaarplanning-venster',
@@ -170,7 +172,7 @@ export function evaluateTrigger(regel: Pick<Regel, 'data'>, a: MotorAccount, nu:
       return { vuurt: true, reden: zonder ? `Nog geen contact sinds het account er ${d} dagen geleden bij kwam` : `Al ${d} dagen geen contact`, bewijs: [zonder ? `aangemaakt ${a.aangemaaktOp.slice(0, 10)}` : `${p.veld} = ${w.slice(0, 10)}`] }
     }
     case 'ritme':
-      return { vuurt: true, reden: 'Het ritme van deze klasse is aan de beurt', bewijs: [a.klasseCode ? `klasse ${a.klasseCode}` : 'zonder klasse'] }
+      return { vuurt: true, reden: a.klasseCode ? `Volgens de matrix voor klasse ${a.klasseCode}` : 'Volgens het ritme, zonder klasse', bewijs: [a.klasseCode ? `klasse ${a.klasseCode}` : 'zonder klasse'] }
     case 'gebeurtenis': {
       const hit = [...(a.gebeurtenissen ?? [])].sort((x, y) => y.op.localeCompare(x.op)).find((g) => (p.gebeurtenis ? g.gebeurtenis === p.gebeurtenis : true) && (p.fase ? g.naarFaseId === p.fase : !!p.gebeurtenis))
       return hit ? { vuurt: true, reden: p.fase ? `Fase betreden op ${datumKort(hit.op)}` : `Gebeurtenis "${hit.gebeurtenis}" op ${datumKort(hit.op)}`, bewijs: [`${hit.gebeurtenis} ${hit.op.slice(0, 10)}`], sleutel: `${a.id}:${hit.id}` } : nee()
@@ -268,9 +270,15 @@ export function vulSjabloon(sjabloon: string, ctx: { account?: string | null; co
   return sjabloon.replace(/\{(account|contact|afspraak)\}/g, (_, k: string) => (ctx as any)[k] || leeg[k]!).trim()
 }
 
-/** "Waarom krijg ik dit?" in gewone taal: omschrijving plus de trigger. */
+const zinVan = (t: string) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()
+/** Herhaalt de reden de omschrijving? Letterparen (Dice) van 70 procent of meer tellen als herhaling (B16). */
+const herhaalt = (omschrijving: string, reden: string) => dice(zinVan(omschrijving), zinVan(reden)) >= 0.7
+
+/** "Waarom krijg ik dit?" in gewone taal: omschrijving plus de trigger, zonder dezelfde reden twee keer. */
 export function waaromTekst(regel: Pick<Regel, 'naam' | 'data'>, uitslag: Pick<TriggerUitslag, 'reden'>): string {
-  return `${regel.data.omschrijving || regel.naam} ${uitslag.reden}.`.replace(/\.\./g, '.').trim()
+  const basis = regel.data.omschrijving || regel.naam
+  const reden = uitslag.reden && !herhaalt(basis, uitslag.reden) ? ` ${uitslag.reden}.` : ''
+  return `${basis}${reden}`.replace(/\.\./g, '.').trim().replace(/([^.!?])$/, '$1.')
 }
 
 export function triggerInWoorden(regel: Pick<Regel, 'data'>): string {
@@ -297,27 +305,70 @@ export function valideerRegel(r: Partial<Regel>): string[] {
   return f
 }
 
+const RITME_PATRONEN = new Set(['ritme', 'hercontact-vervolg'])
+const CONTACT_ACTIE = new Set(['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht'])
+
+/** De matrices en lopende ritmes die de poort van een regel nodig heeft. */
+export interface PoortContext {
+  belmatrix?: Matrix | null
+  afspraakmatrix?: Matrix | null
+  /** Accounts met een lopend ritme (hercontact of matrix) van een regel. */
+  ritmeVan?: Map<string, string>
+}
+
+/**
+ * De poort van de motor voor één regel en één account, gedeeld door motor en droogloop (B05): afbakening,
+ * geen losse contacttaak naast een lopend hercontactritme, de matrix als poort en cadans voor een
+ * ritmeregel (bellen uit de belmatrix, bezoek uit de rij Bezoek van de afspraakmatrix, B06) en nooit
+ * twee ritmes op één account. Geeft de cadans in dagen, of null als de regel dit account overslaat.
+ */
+export function regelPoort(regel: Regel, a: MotorAccount, nu: Date, ctx: PoortContext = {}): { cadans: number } | null {
+  if (!ruleTargetsAccount(regel, a, nu)) return null
+  const patroon = regel.data.trigger.patroon
+  if (a.ritme?.actief && regel.data.activiteit === 'taak' && CONTACT_ACTIE.has(regel.data.gevolg.actiesoort) && !RITME_PATRONEN.has(patroon)) return null
+  if (a.ritme?.actief && patroon === 'ritme' && regel.data.activiteit === 'taak') return null
+  let cadans = regel.cadansDagen
+  // Ritme: een ingevulde matrix is de poort; 0 is bewust uit, niet ingesteld valt terug op de standaard (gat 8, 43).
+  if (patroon === 'ritme' && regel.data.trigger.parameters?.matrix !== false) {
+    const soort = regel.data.trigger.parameters?.actiesoort ?? regel.data.gevolg.actiesoort
+    const cel = soort === 'bezoek'
+      ? geldendeCel(ctx.afspraakmatrix, 'bezoek', a.klasseCode ?? null, AFSPRAAKMATRIX_STANDAARD)
+      : geldendeCel(ctx.belmatrix, a.type, a.klasseCode ?? null, BELMATRIX_STANDAARD)
+    const interval = intervalDagen(cel)
+    if (!interval) return null
+    cadans = interval
+  }
+  if (RITME_PATRONEN.has(patroon) && regel.data.activiteit === 'taak') {
+    const ander = ctx.ritmeVan?.get(a.id)
+    const eigen = ander === regel.id || (ander === 'hercontact' && patroon === 'hercontact-vervolg')
+    if (ander && !eigen) return null
+  }
+  return { cadans }
+}
+
 export interface Droogloop { geraakt: number; taken: number; perPersoon: Record<string, number>; vraagtBevestiging: boolean }
 
-/** Wat de regel nu zou doen: hoeveel accounts hij raakt en hoeveel taken de volgende run maakt. */
+/** Wat de regel nu zou doen: hoeveel accounts hij raakt en hoeveel taken de volgende run maakt, met dezelfde poort als de motor. */
 export function droogloop(
   regel: Regel, accounts: MotorAccount[], nu: Date,
   geschiedenis: { laatst: Map<string, string>; open: Set<string> } = { laatst: new Map(), open: new Set() },
   eigenaarVan: (a: MotorAccount) => string | null = (a) => a.ownerId ?? null,
+  poort: PoortContext = {},
 ): Droogloop {
   let geraakt = 0
   let taken = 0
   const perPersoon: Record<string, number> = {}
   for (const a of accounts) {
-    if (!ruleTargetsAccount(regel, a, nu)) continue
+    const p = regelPoort(regel, a, nu, poort)
+    if (!p) continue
     const u = evaluateTrigger(regel, a, nu)
     if (!u.vuurt) continue
     geraakt++
     const sleutel = u.sleutel ?? a.id
-    if (geschiedenis.open.has(`${regel.id}|${sleutel}`) || !cadansVerstreken(regel.cadansDagen, geschiedenis.laatst.get(`${regel.id}|${sleutel}`), nu)) continue
+    if (geschiedenis.open.has(`${regel.id}|${sleutel}`) || !cadansVerstreken(p.cadans, geschiedenis.laatst.get(`${regel.id}|${sleutel}`), nu)) continue
     taken++
-    const p = eigenaarVan(a) ?? 'niemand'
-    perPersoon[p] = (perPersoon[p] ?? 0) + 1
+    const wie = eigenaarVan(a) ?? 'niemand'
+    perPersoon[wie] = (perPersoon[wie] ?? 0) + 1
   }
   return { geraakt, taken, perPersoon, vraagtBevestiging: Object.values(perPersoon).some((n) => n > 50) }
 }

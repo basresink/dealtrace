@@ -329,6 +329,43 @@ test.describe('nieuwe taak en taakvenster in de opzet van DealDrive', () => {
   })
 })
 
+test.describe('Taken: portie per groep, titel en kop (B09, B14, B17)', () => {
+  test('met per krijgt elke groep een portie en het totaal; toon vraagt per groep meer; titel = statkaart Vandaag', async ({ request }) => {
+    await apiLogin(request, 'u-07')
+    const alles = await (await request.get('/api/tasks')).json()
+    const groot = alles.groepen.find((g: any) => g.taken.length > 3)
+    expect(groot, 'een groep met meer dan drie taken').toBeTruthy()
+    const deel = await (await request.get('/api/tasks?per=2')).json()
+    const g = deel.groepen.find((x: any) => x.naam === groot.naam)
+    expect(g.taken).toHaveLength(2)
+    expect(g.totaal).toBe(groot.taken.length)
+    const meer = await (await request.get(`/api/tasks?per=2&toon=${encodeURIComponent(`${groot.naam}:3`)}`)).json()
+    expect(meer.groepen.find((x: any) => x.naam === groot.naam).taken).toHaveLength(3)
+    // Zonder per alles (API en andere schermen), en de horizon alleen bij weergave=horizon.
+    expect(alles.horizon).toBeNull()
+    // Eén definitie: het getal in de titel is de statkaart Vandaag.
+    if (alles.tellers.vandaag) expect(alles.titel).toBe(`${alles.tellers.vandaag} ${alles.tellers.vandaag === 1 ? 'taak' : 'taken'} vandaag.`)
+  })
+
+  test('/taken: standaard paginakop met zoeken, AI en hulp; Toon meer haalt de volgende portie op', async ({ page }) => {
+    await login(page, 'u-07')
+    await ga(page, '/taken')
+    const knoppen = page.getByTestId('kop-knoppen')
+    await expect(knoppen.getByTestId('kop-zoeken')).toBeVisible()
+    await expect(knoppen.getByTestId('hulp-knop')).toBeVisible()
+    await expect(knoppen.locator('button', { hasText: /^Hulp$/ })).toHaveCount(0)
+    const statVandaag = await page.getByTestId('stat-vandaag').locator('.stat-num').textContent()
+    if (Number(statVandaag)) await expect(page.getByTestId('acties-titel')).toHaveText(new RegExp(`^${statVandaag} (taak|taken) vandaag\\.$`))
+    const meer = page.locator('[data-test^="toon-meer-"]').first()
+    if (await meer.count()) {
+      const groep = page.locator('.taak-groep').filter({ has: meer })
+      const voor = await groep.locator('.taak-kaart').count()
+      await meer.click()
+      await expect.poll(() => groep.locator('.taak-kaart').count()).toBeGreaterThan(voor)
+    }
+  })
+})
+
 test.describe('Taken: nieuwe URL, horizon in het filter en Briefings', () => {
   test('/acties stuurt door naar /taken met de query; ?tab=inzichten gaat naar /inzichten; geen tabblad Inzichten', async ({ page }) => {
     await login(page, 'u-03')

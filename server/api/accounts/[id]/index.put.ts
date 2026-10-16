@@ -1,5 +1,7 @@
 // PUT /api/accounts/:id: patch; null wist (gat 10). Eigenaar alleen salesmanager en
 // beheerder, klasse vanaf Gevorderd. account_kind en status klant zijn niet te zetten (B17).
+// Een nieuw aantal medewerkers leidt de klasse opnieuw af, tenzij die met de hand gekozen is
+// (herkomst klasse "hand"); daarna draait de motor voor dit account (nieuw interval).
 import { geocodeerOntbrekend, wijsRegiosToe } from '../../../utils/bezoeken'
 import { eq } from 'drizzle-orm'
 import { normaliseerTelefoon } from '../../../../shared/contactgegevens'
@@ -7,6 +9,9 @@ import { normaliseerDomein } from '../../../../shared/ontdubbelen'
 import { schrijfAudit } from '../../../utils/audit'
 import { effectiefNiveau, eigenVeldenVoor, herbereken, kan } from '../../../utils/accounts'
 import { metOrganisatie, schema } from '../../../utils/db'
+import { klassenVan } from '../../../utils/leads'
+import { draaiMotor } from '../../../utils/motor'
+import { klasseNaOmvangWijziging, klasseVoorOmvang, omvangVan } from '../../../../shared/ritmematrix'
 import { vereisFunctie, weigerFunctie } from '../../../utils/sessie'
 import { pasDataToe, pasEigenVeldenToe } from '../../../utils/velden'
 
@@ -48,6 +53,30 @@ export default defineEventHandler(async (event) => {
       const velden = await eigenVeldenVoor(tx, 'account', effectiefNiveau(ctx))
       data.customFields = pasEigenVeldenToe(a.data?.customFields, b.customFields, velden, { rol: ctx.gebruiker.rol, eigenaar: a.ownerId === ctx.gebruiker.id }, data.herkomst, ctx.gebruiker.id)
     }
+    // Klasse en herkomst (B01): met de hand gekozen blijft staan; anders volgt de klasse de omvang.
+    const op = new Date().toISOString()
+    const herkomstKlasse = (a.data as any)?.herkomst?.klasse as { bron?: string } | undefined
+    let klasseAfgeleid = false
+    if ('klasse' in b) {
+      if (b.klasse) data.herkomst = { ...data.herkomst, klasse: { bron: 'hand', op, door: ctx.gebruiker.id } }
+      else { const { klasse: _weg, ...rest } = data.herkomst ?? {}; data.herkomst = rest }
+    } else if (a.accountKind === 'prospect' && ('medewerkers' in b || b.customFields)) {
+      const oudeOmvang = omvangVan(a.data as any)
+      const nieuweOmvang = omvangVan(data)
+      if (nieuweOmvang !== oudeOmvang) {
+        const klassen = (await klassenVan(tx)).filter((k) => k.tabblad !== 'Klanten')
+        const r = klasseNaOmvangWijziging({ klasse: a.klasse, bron: herkomstKlasse?.bron, oudeOmvang }, nieuweOmvang, klassen)
+        if (r) {
+          set.klasse = r.klasse
+          data.herkomst = { ...data.herkomst, klasse: { bron: 'voorstel uit medewerkers', op } }
+          klasseAfgeleid = true
+        } else if (!herkomstKlasse && a.klasse) {
+          // Nog geen herkomst: leg vast of de klasse bij de omvang past of bewust anders gekozen is.
+          const past = a.klasse === klasseVoorOmvang(nieuweOmvang, klassen.length ? klassen : undefined)
+          data.herkomst = { ...data.herkomst, klasse: past ? { bron: 'voorstel uit medewerkers', op } : { bron: 'hand', op } }
+        }
+      }
+    }
     set.data = data
     // P14: een nieuw adres krijgt een nieuw punt en een nieuwe regio (terugval op postcode of plaats).
     const adresAnders = ('plaats' in b && (b.plaats || null) !== a.city) || ('postcode' in b && (b.postcode || null) !== a.postcode) || ('adres' in b && b.adres !== (a.data as any)?.adres)
@@ -58,6 +87,11 @@ export default defineEventHandler(async (event) => {
     if ('eigenaarId' in b || 'klasse' in b) {
       await schrijfAudit(tx, { organisationId: ctx.organisatie.id, actorId: ctx.gebruiker.id, action: 'eigenaarId' in b ? 'account.eigenaar' : 'account.klasse', resourceType: 'accounts', resourceId: id, changes: { eigenaarId: b.eigenaarId, klasse: b.klasse } })
     }
-    return { ok: true }
+    if (klasseAfgeleid) {
+      await schrijfAudit(tx, { organisationId: ctx.organisatie.id, actorId: ctx.gebruiker.id, action: 'account.klasse', resourceType: 'accounts', resourceId: id, changes: { van: a.klasse, klasse: set.klasse, bron: 'voorstel uit medewerkers' } })
+    }
+    // Een nieuwe klasse geeft een nieuw interval: de motor draait meteen voor dit account.
+    if (klasseAfgeleid || ('klasse' in b && (b.klasse || null) !== a.klasse)) await draaiMotor(tx, ctx.organisatie.id, { soort: 'gebeurtenis', door: ctx.gebruiker.id, accountIds: [id] })
+    return { ok: true, klasse: set.klasse !== undefined ? set.klasse : a.klasse }
   })
 })

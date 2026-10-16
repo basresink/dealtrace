@@ -5,11 +5,11 @@
 // als lege stap in het verslag.
 import { nlMoment, nlTijdstip, voegWerkdagenToe, volgendWerkmoment, volgendeWerkdag, type WerkdagInstelling } from './datum'
 import {
-  ACTIESOORT_LABEL, cadansVerstreken, evaluateTrigger, regelLevertRuis, ruleTargetsAccount, vulSjabloon, waaromTekst,
+  ACTIESOORT_LABEL, cadansVerstreken, evaluateTrigger, regelLevertRuis, regelPoort, ruleTargetsAccount, vulSjabloon, waaromTekst,
   type MotorAccount, type Regel,
 } from './regelPatronen'
 import { bewaakTaken, type Tegengehouden } from './planner'
-import { BELMATRIX_STANDAARD, CAPACITEIT_STANDAARD, geldendeCel, intervalDagen, type Matrix } from './ritmematrix'
+import { CAPACITEIT_STANDAARD, STARTPLAFOND_STANDAARD, type Matrix } from './ritmematrix'
 
 export interface MotorGebruiker { id: string; naam: string; rol: string; werkplek: 'binnendienst' | 'buitendienst'; niveau: string; teamId: string | null; status?: string }
 
@@ -42,7 +42,11 @@ export interface MotorInvoer {
   /** Accounts met een lopend ritme (hercontact of matrix) van een andere regel. */
   ritmeVan: Map<string, string>
   belmatrix?: Matrix
-  capaciteit?: { binnendienst: number; buitendienst: number }
+  /** Afspraakmatrix: de rij Bezoek is poort en interval voor een bezoekritme (B06). */
+  afspraakmatrix?: Matrix
+  capaciteit?: { binnendienst: number; buitendienst: number; startactiviteiten?: number }
+  /** Open startactiviteiten per gebruiker per dag (YYYY-MM-DD), voor het startplafond (B08). */
+  bezettingStart?: Map<string, number>
   werkdagen?: WerkdagInstelling
   /** Regiodagen per gebruiker (P14): taken voor de buitendienst landen op de regiodag van het account. */
   regiodagen?: { gebiedId: string; gebruikerId: string; datum: string }[]
@@ -69,7 +73,6 @@ export interface MotorUitvoer {
 
 const RITME_PATRONEN = new Set(['ritme', 'hercontact-vervolg'])
 const CONTACT = new Set(['bellen', 'bezoek'])
-const CONTACT_ACTIE = new Set(['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht'])
 const ACTIE_VAN_KANAAL: Record<string, string> = { bellen: 'bellen', mail: 'mailen', linkedin: 'linkedin', bezoek: 'bezoek', whatsapp: 'bericht' }
 
 /** De eigenaar van werk voor een account: accounteigenaar, anders een salesmanager van het team, anders de beheerder. */
@@ -115,25 +118,31 @@ export function uitersteDatum(termijnWerkdagen: number, nu: Date, inst: WerkdagI
 }
 
 /**
- * Dagplafond per uitvoerder (standaard binnendienst 40 beltaken, buitendienst 6 bezoeken):
- * wat erboven valt schuift naar de volgende werkdag.
+ * Dagplafond per uitvoerder (standaard binnendienst 40 beltaken, buitendienst 6 bezoeken): wat erboven
+ * valt schuift naar de volgende werkdag. Startactiviteiten hebben daarnaast een eigen plafond
+ * (standaard 10 per dag, B08), zodat een import van 50 prospects over werkdagen gespreid wordt.
  */
-export function verdeelCapaciteit<T extends { ownerId: string; due: string; actionType: string }>(
-  taken: T[], gebruikers: Pick<MotorGebruiker, 'id' | 'werkplek'>[], plafonds = CAPACITEIT_STANDAARD,
-  bezetting: Map<string, number> = new Map(), inst: WerkdagInstelling = {},
+export function verdeelCapaciteit<T extends { ownerId: string; due: string; actionType: string; herkomst?: string }>(
+  taken: T[], gebruikers: Pick<MotorGebruiker, 'id' | 'werkplek'>[], plafonds: { binnendienst: number; buitendienst: number; startactiviteiten?: number } = CAPACITEIT_STANDAARD,
+  bezetting: Map<string, number> = new Map(), inst: WerkdagInstelling = {}, bezettingStart: Map<string, number> = new Map(),
 ): { geland: T[]; geschoven: T[] } {
   const telling = new Map(bezetting)
+  const startTelling = new Map(bezettingStart)
+  const startPlafond = Number.isInteger(plafonds.startactiviteiten) && plafonds.startactiviteiten! > 0 ? plafonds.startactiviteiten! : STARTPLAFOND_STANDAARD
   const geland: T[] = []
   const geschoven: T[] = []
   for (const t of taken) {
     const g = gebruikers.find((x) => x.id === t.ownerId)
-    const telt = g && CONTACT.has(t.actionType) && (g.werkplek === 'binnendienst' ? t.actionType === 'bellen' : t.actionType === 'bezoek')
-    if (!telt) { geland.push(t); continue }
-    const plafond = g!.werkplek === 'binnendienst' ? plafonds.binnendienst : plafonds.buitendienst
+    const telt = !!g && CONTACT.has(t.actionType) && (g.werkplek === 'binnendienst' ? t.actionType === 'bellen' : t.actionType === 'bezoek')
+    const start = t.herkomst === 'startactiviteit'
+    if (!telt && !start) { geland.push(t); continue }
+    const plafond = g?.werkplek === 'buitendienst' ? plafonds.buitendienst : plafonds.binnendienst
+    const vol = (dag: string) => (telt && (telling.get(`${t.ownerId}|${dag}`) ?? 0) >= plafond) || (start && (startTelling.get(`${t.ownerId}|${dag}`) ?? 0) >= startPlafond)
     let dag = nlMoment(new Date(t.due)).datum
     let verschoven = false
-    for (let i = 0; i < 60 && (telling.get(`${t.ownerId}|${dag}`) ?? 0) >= plafond; i++) { dag = volgendeWerkdag(dag, inst); verschoven = true }
-    telling.set(`${t.ownerId}|${dag}`, (telling.get(`${t.ownerId}|${dag}`) ?? 0) + 1)
+    for (let i = 0; i < 60 && vol(dag); i++) { dag = volgendeWerkdag(dag, inst); verschoven = true }
+    if (telt) telling.set(`${t.ownerId}|${dag}`, (telling.get(`${t.ownerId}|${dag}`) ?? 0) + 1)
+    if (start) startTelling.set(`${t.ownerId}|${dag}`, (startTelling.get(`${t.ownerId}|${dag}`) ?? 0) + 1)
     if (verschoven) { const n = { ...t, due: nlTijdstip(dag, 9).toISOString(), geschoven: true }; geschoven.push(n); geland.push(n) } else geland.push(t)
   }
   return { geland, geschoven }
@@ -160,18 +169,10 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
 
   for (const regel of regels) {
     for (const a of accounts) {
-      if (!ruleTargetsAccount(regel, a, nu)) continue
-      // Een lopend hercontactritme regelt de pogingen: geen losse contacttaken ernaast.
-      if (a.ritme?.actief && regel.data.activiteit === 'taak' && CONTACT_ACTIE.has(regel.data.gevolg.actiesoort) && !RITME_PATRONEN.has(regel.data.trigger.patroon)) continue
-      if (a.ritme?.actief && regel.data.trigger.patroon === 'ritme' && regel.data.activiteit === 'taak') continue
-      // Ritme: een ingevulde matrix is de poort; 0 is bewust uit, niet ingesteld valt terug op de standaard (gat 8, 43).
-      let cadans = regel.cadansDagen
-      if (regel.data.trigger.patroon === 'ritme' && regel.data.trigger.parameters?.matrix !== false) {
-        const cel = geldendeCel(inv.belmatrix, a.type, a.klasseCode ?? null, BELMATRIX_STANDAARD)
-        const interval = intervalDagen(cel)
-        if (!interval) continue
-        cadans = interval
-      }
+      // Dezelfde poort als de droogloop (B05): afbakening, lopend ritme, matrix en cadans, nooit twee ritmes.
+      const poort = regelPoort(regel, a, nu, { belmatrix: inv.belmatrix, afspraakmatrix: inv.afspraakmatrix, ritmeVan: ritmeNu })
+      if (!poort) continue
+      const cadans = poort.cadans
       const u = evaluateTrigger(regel, a, nu)
       if (!u.vuurt) continue
       geraakt++
@@ -183,14 +184,8 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
         continue
       }
       if (!cadansVerstreken(cadans, inv.laatst.get(k), nu)) continue
-      // Nooit twee ritmes tegelijk op één account.
-      if (RITME_PATRONEN.has(regel.data.trigger.patroon) && regel.data.activiteit === 'taak') {
-        const ander = ritmeNu.get(a.id)
-        // Het hercontactritme zelf ("hercontact") hoort bij de regel Hercontact-vervolg.
-        const eigen = ander === regel.id || (ander === 'hercontact' && regel.data.trigger.patroon === 'hercontact-vervolg')
-        if (ander && !eigen) continue
-        if (!ander) ritmeNu.set(a.id, regel.id)
-      }
+      // Nooit twee ritmes tegelijk op één account: de poort sloeg een ander ritme al over; dit ritme claimt het account.
+      if (RITME_PATRONEN.has(regel.data.trigger.patroon) && regel.data.activiteit === 'taak' && !ritmeNu.has(a.id)) ritmeNu.set(a.id, regel.id)
       const owner = eigenaarVoor(a, regel, inv.gebruikers, inv.beheerderId)
       if (!owner) { waarschuwingen.push(`Geen eigenaar voor ${a.naam}`); continue }
       const titel = vulSjabloon(regel.data.gevolg.taaksjabloon || `${ACTIESOORT_LABEL[regel.data.gevolg.actiesoort] ?? 'Opvolgen'}: {account}`, { account: a.naam, contact: a.contactNaam })
@@ -221,6 +216,8 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
   }
 
   // Startactiviteiten bij "fase betreden" (F05): één taak per account, fase en activiteit.
+  const terugRegels = regels.filter((r) => r.data.trigger.patroon === 'geparkeerd-terug' && r.data.activiteit === 'taak')
+  const opTerugdatumGevolgd = (a: MotorAccount) => terugRegels.some((r) => ruleTargetsAccount(r, { ...a, nbStatus: a.nbStatus === 'in reis' ? 'wachtend' : a.nbStatus, wachtendTot: null }, nlTijdstip(a.terugOp!.slice(0, 10), 12)))
   if (inv.startactiviteiten) {
     for (const a of accounts) {
       for (const ev of (a.gebeurtenissen ?? []).filter((g) => g.naarFaseId)) {
@@ -233,8 +230,14 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
           const sleutel = `${a.id}:${ev.id}:${s.naam}`
           const k = `start|${sleutel}`
           if (inv.open.has(k) || inv.laatst.has(k) || nieuwOpen.has(k)) continue
+          // Terugkomtaak (B04): landt op de terugkomdatum, niet meteen. Volgt een actieve regel "Geparkeerd terug"
+          // het account op die dag zelf op, dan komt er geen tweede taak.
+          const terugkom = s.actiesoort === 'terugkom' && !!a.terugOp
+          if (terugkom && opTerugdatumGevolgd(a)) continue
           nieuwOpen.add(k)
-          const landing = landingsmoment({ termijnWerkdagen: s.termijnWerkdagen, gebiedId: a.gebiedId }, { werkplek: g?.werkplek ?? 'binnendienst' }, blokken, regiodagenVan(a.ownerId), nu, inv.werkdagen)
+          const landing = terugkom
+            ? nlTijdstip(voegWerkdagenToe(a.terugOp!.slice(0, 10), 0, inv.werkdagen), 9)
+            : landingsmoment({ termijnWerkdagen: s.termijnWerkdagen, gebiedId: a.gebiedId }, { werkplek: g?.werkplek ?? 'binnendienst' }, blokken, regiodagenVan(a.ownerId), nu, inv.werkdagen)
           const actionType = s.actiesoort === 'bellen' || s.actiesoort === 'bezoek' ? s.actiesoort : s.actiesoort === 'mail' ? 'mailen' : 'taak'
           taken.push({
             regelId: 'start', onderwerp: sleutel, accountId: a.id, contactId: a.contactId ?? null, ownerId: owner, title: `${s.naam}: ${a.naam}`, actionType, priority: 'middel',
@@ -249,7 +252,7 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
   const { toegestaan, tegengehouden } = bewaakTaken(taken, new Map(accounts.map((a) => [a.id, a])), nu)
 
   // Planner: capaciteit per uitvoerder per dag.
-  const { geland, geschoven } = verdeelCapaciteit(toegestaan, inv.gebruikers, inv.capaciteit ?? CAPACITEIT_STANDAARD, inv.bezetting, inv.werkdagen)
+  const { geland, geschoven } = verdeelCapaciteit(toegestaan, inv.gebruikers, inv.capaciteit ?? CAPACITEIT_STANDAARD, inv.bezetting, inv.werkdagen, inv.bezettingStart)
   const perPersoon = new Map<string, { aantal: number; naar: string }>()
   for (const t of geschoven) {
     const p = perPersoon.get(t.ownerId) ?? { aantal: 0, naar: t.due }

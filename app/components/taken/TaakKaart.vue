@@ -24,7 +24,7 @@ function eind() {
 
 <template>
   <div class="taak-kaart item-rij" :class="{ 'taak-kaart--achter': taak.achterstallig, 'taak-kaart--bulk': bulk }" :style="dx ? { transform: `translateX(${dx}px)` } : undefined" :data-test="`taak-${taak.id}`" @contextmenu="emit('menu', $event)" @touchstart.passive="begin" @touchmove.passive="beweeg" @touchend="eind">
-    <input v-if="bulk" type="checkbox" :checked="gekozen" class="taak-kies" :aria-label="`Kies ${taak.title}`" @change="emit('kies')">
+    <label v-if="bulk" class="taak-kies-vak"><input type="checkbox" :checked="gekozen" class="taak-kies" :aria-label="`Kies ${taak.title}`" @change="emit('kies')"></label>
     <span class="item-tijd taak-rechts" :class="{ 'item-tijd--rood taak-verval--over': taak.achterstallig }">{{ tijd.hoofd }}<small v-if="tijd.onder">{{ tijd.onder }}</small></span>
     <span class="item-icoon" :class="`item-icoon--${soort}`" aria-hidden="true"><Icoon :naam="ICOON[soort]!" :grootte="16" /></span>
     <div class="item-body">
@@ -41,3 +41,9 @@ function eind() {
     <div class="item-acties"><button type="button" class="dd-act" :aria-label="`Rond ${taak.title} af`" data-test="vink" @click="emit('vink')">Afronden</button></div>
   </div>
 </template>
+
+<style scoped>
+/* Het vinkje voor bulk staat in een label: op de telefoon een tikvlak van 44 bij 44 px (B15). */
+.taak-kies-vak { display: flex; justify-content: center; align-items: flex-start; cursor: pointer; }
+@media (max-width: 719px) { .taak-kies-vak { width: 44px; min-height: 44px; margin: -6px 0 0; } .taak-kies-vak .taak-kies { width: 20px; height: 20px; margin-top: 12px; } }
+</style>

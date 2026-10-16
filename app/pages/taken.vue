@@ -11,7 +11,7 @@ const { rondAf, versie } = useAfronden()
 const motorVersie = useState('motorVersie', () => 0)
 function zet(p: Record<string, string | undefined>) { const q: Record<string, any> = { ...route.query, ...p }; for (const k of Object.keys(q)) if (!q[k]) delete q[k]; router.replace({ query: q }) }
 // Eerste portie per groep; "Toon meer" haalt per groep de volgende portie op (B09).
-const PORTIE = 25
+const PORTIE = 15
 const toon = ref<Record<string, number>>({})
 const query = computed(() => ({ ...route.query, per: PORTIE, toon: Object.entries(toon.value).map(([g, n]) => `${g}:${n}`).join(',') || undefined }))
 watch(() => ['q', 'eigenaar', 'prioriteit', 'actiesoort', 'herkomst', 'periode', 'fase'].map((k) => route.query[k] ?? '').join('|'), () => { toon.value = {} })

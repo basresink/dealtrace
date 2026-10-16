@@ -43,9 +43,15 @@ export function kiesRitme(ritmes: Ritme[], bron: 'koud' | 'warm' | 'winback', we
     ?? actief.find((r) => r.bron === bron) ?? actief.find((r) => r.bron === 'koud') ?? null
 }
 
-export function startRitme(ritme: Ritme, nu: Date): RitmeStand {
+/**
+ * Start het ritme. De start telt vanaf het eerste werkmoment: wie na 18:00 of in het weekend kwalificeert,
+ * begint het ritme op de volgende werkdag om 9:00, zodat poging 2 drie dagen na de echte eerste poging
+ * valt en niet op dezelfde dag (B03).
+ */
+export function startRitme(ritme: Ritme, nu: Date, inst: WerkdagInstelling = {}): RitmeStand {
   const eerste = ritme.stappen[0]!
-  return { ritmeId: ritme.id, stap: 1, gestartOp: nu.toISOString(), volgendeOp: nu.toISOString(), kanaal: eerste.kanaal, actief: true, geschiedenis: [] }
+  const start = volgendWerkmoment(nu, inst)
+  return { ritmeId: ritme.id, stap: 1, gestartOp: start.toISOString(), volgendeOp: nu.toISOString(), kanaal: eerste.kanaal, actief: true, geschiedenis: [] }
 }
 
 export interface UitkomstResultaat {
@@ -59,18 +65,14 @@ export interface UitkomstResultaat {
 }
 
 /**
- * Moment van een stap: start plus dagOffset, nooit eerder dan het volgende werkmoment. Schoof de vorige
- * poging op (bijvoorbeeld een start na 18:00 of in het weekend), dan telt de afstand tussen de stappen
- * vanaf het werkelijke moment van de vorige poging (`nu`, het moment van de uitkomst): poging 2 valt
- * nooit samen met poging 1 (B03).
+ * Moment van een stap: start plus dagOffset, nooit eerder dan het volgende werkmoment en nooit op de dag
+ * van de vorige poging zelf (minimaal de volgende werkdag na de uitkomst, B03).
  */
-function momentVoorStap(stand: RitmeStand, stap: RitmeStap, nu: Date, inst: WerkdagInstelling, vorigeOffset = 0): Date {
-  const dagNa = (datum: string, n: number) => voegWerkdagenToe(new Date(Date.parse(`${datum}T12:00:00Z`) + n * 864e5).toISOString().slice(0, 10), 0, inst)
-  const volgensSchema = dagNa(nlMoment(new Date(stand.gestartOp)).datum, stap.dagOffset)
-  const naVorige = dagNa(nlMoment(nu).datum, Math.max(0, stap.dagOffset - vorigeOffset))
-  const gepland = nlTijdstip(naVorige > volgensSchema ? naVorige : volgensSchema, 9)
-  const vroegst = volgendWerkmoment(nu, inst)
-  return gepland.getTime() > vroegst.getTime() ? gepland : vroegst
+function momentVoorStap(stand: RitmeStand, stap: RitmeStap, nu: Date, inst: WerkdagInstelling): Date {
+  const start = nlMoment(new Date(stand.gestartOp)).datum
+  const volgensSchema = voegWerkdagenToe(new Date(Date.parse(`${start}T12:00:00Z`) + stap.dagOffset * 864e5).toISOString().slice(0, 10), 0, inst)
+  const minimaal = voegWerkdagenToe(nlMoment(nu).datum, 1, inst)
+  return nlTijdstip(volgensSchema > minimaal ? volgensSchema : minimaal, 9)
 }
 
 /**
@@ -110,7 +112,7 @@ export function verwerkUitkomst(stand: RitmeStand, ritme: Ritme, uitkomst: Uitko
       }
       const volgende = ritme.stappen[stapNu]!
       // Voicemail: een korte volgende stap, mail binnen 1 werkdag.
-      const op = uitkomst === 'voicemail' ? nlTijdstip(voegWerkdagenToe(nlMoment(nu).datum, 1, inst), 9) : momentVoorStap(stand, volgende, nu, inst, ritme.stappen[stapNu - 1]?.dagOffset ?? 0)
+      const op = uitkomst === 'voicemail' ? nlTijdstip(voegWerkdagenToe(nlMoment(nu).datum, 1, inst), 9) : momentVoorStap(stand, volgende, nu, inst)
       const kanaal: RitmeKanaal = uitkomst === 'voicemail' ? 'mail' : volgende.kanaal
       return { stand: { ...basis, stap: stapNu + 1, volgendeOp: op.toISOString(), kanaal }, actie: 'volgende', volgende: { stap: stapNu + 1, van, kanaal, op: op.toISOString() } }
     }

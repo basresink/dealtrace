@@ -22,7 +22,7 @@ async function leesKop(page: Page) {
 }
 
 test.describe('paginakop', () => {
-  for (const pad of ['/', '/agenda', '/meetings', '/prospects/alle', '/bezoeken', '/campagnes/cp-01']) {
+  for (const pad of ['/', '/agenda', '/meetings', '/prospects/alle', '/bezoeken', '/belblokken', '/campagnes/cp-01', '/taken', '/inzichten', '/mijn-dashboard', '/funnel']) {
     test(`${pad}: zoeken, AI en hulp vooraan, knoppen op titelhoogte en uitleg niet onder de knoppen`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 900 })
       await login(page, 'u-01')
@@ -86,6 +86,19 @@ test.describe('paginakop', () => {
     const rij = (await knoppen.boundingBox())!
     expect(rij.y).toBeGreaterThanOrEqual(u.y + u.height - 1)
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+  })
+
+  test('telefoon: geen hydration-mismatch op notificaties, agenda en het campagnebord (B10)', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    const fouten: string[] = []
+    page.on('console', (m) => { if (/Hydration/i.test(m.text())) fouten.push(m.text().slice(0, 200)) })
+    await login(page, 'u-01')
+    for (const pad of ['/notificaties', '/agenda', '/campagnes/cp-01']) {
+      await page.context().clearCookies({ name: 'dt-schermklasse' })
+      await ga(page, pad)
+      await page.waitForLoadState('networkidle')
+    }
+    expect(fouten).toEqual([])
   })
 
   test('weergave staat in het filterpaneel (alle prospects en agenda)', async ({ page }) => {

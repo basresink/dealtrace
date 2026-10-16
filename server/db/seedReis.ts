@@ -34,16 +34,21 @@ export async function seedReis(client: Pick<pg.Client, 'query'>, orgId: string, 
       nee: { reden: 'Geen behoefte', op: neeOp, door: 'u-03', afkoeling: { ...AFKOELING_STANDAARD, mail: 60 } },
       terugkom: { datum: bewakerTerug, regelId: null, reden: 'Geen behoefte', aanpak: null, kanaal: 'bellen' },
     })])
-  // P12: prospectplanning. De Voltvast-klassen A en B tellen als groot, C als middel; 50 extra
+  // P12: prospectplanning. De Voltvast-klassen A en B tellen als groot, C als middel, D als klein; 50 extra
   // fictieve prospects van u-07, waarvan 36 grote zonder poging in het lopende verkoopjaar.
   await client.query(`insert into org_settings (organisation_id, key, value) values ($1, 'prospectplanning', $2) on conflict (organisation_id, key) do nothing`,
-    [orgId, JSON.stringify({ startmaand: 1, vensters: { groot: 2, middel: 5, klein: 12 }, potentieBron: 'klasse', klassePotentie: { 'kl-a-prospects': 'groot', 'kl-b-prospects': 'groot', 'kl-c-prospects': 'middel' } })])
+    [orgId, JSON.stringify({ startmaand: 1, vensters: { groot: 2, middel: 5, klein: 12 }, potentieBron: 'klasse', klassePotentie: { 'kl-a-prospects': 'groot', 'kl-b-prospects': 'groot', 'kl-c-prospects': 'middel', 'kl-d-prospects': 'klein' } })])
   const PLAATSEN = ['Zwolle', 'Assen', 'Groningen', 'Leeuwarden', 'Emmen', 'Meppel', 'Kampen', 'Deventer', 'Apeldoorn', 'Amersfoort']
   for (let i = 1; i <= 50; i++) {
+    // B02: de klasse past bij het aantal medewerkers (A 250 of meer, B 50 tot 250, C 10 tot 50); de laatste vier zonder omvang en klasse.
     const klasse = i <= 18 ? 'kl-a-prospects' : i <= 36 ? 'kl-b-prospects' : i <= 46 ? 'kl-c-prospects' : null
-    await client.query(`insert into accounts (id, organisation_id, name, account_kind, owner_id, nb_status, klasse, city, nb_bron, fase_sinds, vv_branche_id, data)
-      values ($1, $2, $3, 'prospect', 'u-07', 'nieuw', $4, $5, 'import', now(), $6, '{"customFields": {}}') on conflict (id) do nothing`,
-      [`pl-${String(i).padStart(2, '0')}`, orgId, `Testplanning Installatie ${String(i).padStart(2, '0')}`, klasse, PLAATSEN[i % PLAATSEN.length], i % 3 === 0 ? 'br-02' : 'br-01'])
+    const medewerkers = i <= 18 ? 250 + i * 11 : i <= 36 ? 50 + (i - 18) * 10 : i <= 46 ? 10 + (i - 36) * 3 : null
+    const data = medewerkers === null ? { customFields: {} } : { customFields: {}, medewerkers, herkomst: { medewerkers: { bron: 'import' }, klasse: { bron: 'voorstel uit medewerkers' } } }
+    // B08: vijf importen van tien prospects, verspreid over drie weken, in plaats van vijftig op één dag.
+    const dagenGeleden = [1, 6, 11, 16, 21][i % 5]!
+    await client.query(`insert into accounts (id, organisation_id, name, account_kind, owner_id, nb_status, klasse, city, nb_bron, fase_sinds, created_at, vv_branche_id, data)
+      values ($1, $2, $3, 'prospect', 'u-07', 'nieuw', $4, $5, 'import', now() - make_interval(days => $7::int), now() - make_interval(days => $7::int), $6, $8) on conflict (id) do nothing`,
+      [`pl-${String(i).padStart(2, '0')}`, orgId, `Testplanning Installatie ${String(i).padStart(2, '0')}`, klasse, PLAATSEN[i % PLAATSEN.length], i % 3 === 0 ? 'br-02' : 'br-01', dagenGeleden, JSON.stringify(data)])
   }
   await zorgVoorReizen(client)
   await zorgVoorRegels(client)

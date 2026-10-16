@@ -86,12 +86,33 @@ test.describe('accountmatrix', () => {
     await expect(page.getByTestId('voor-mij')).toContainText('belmomenten')
     await login(page, 'u-06')
     await ga(page, '/instellingen/ritme')
-    const cel = page.getByTestId('cel-belmatrix-prospect-D')
+    // De matrix toont alleen de klassen die de organisatie heeft (testronde B02); C bestaat altijd.
+    const cel = page.getByTestId('cel-belmatrix-prospect-C')
     await cel.fill('0')
     await expect(page.getByTestId('opslagstatus')).toHaveText('Opgeslagen')
-    await expect(page.getByTestId('label-belmatrix-prospect-D')).toHaveText('bewust uit (0)')
+    await expect(page.getByTestId('label-belmatrix-prospect-C')).toHaveText('bewust uit (0)')
     await cel.fill('')
-    await expect(page.getByTestId('label-belmatrix-prospect-D')).toContainText('niet ingesteld')
+    await expect(page.getByTestId('label-belmatrix-prospect-C')).toContainText('niet ingesteld')
     await expect(page.getByTestId('opslagstatus')).toHaveText('Opgeslagen')
+  })
+
+  test('testronde B02 en B07: grenzen per klasse en de verwachting telt alleen prospects in reis', async ({ page, request }) => {
+    await apiLogin(request, 'u-06')
+    const r = await (await request.get('/api/ritme')).json()
+    // Elke klasse van de prospects heeft grenzen: eigen, of de standaard voor zijn code.
+    for (const k of r.klassen.filter((x: any) => x.tabblad !== 'Klanten')) expect(k.minMedewerkers ?? k.standaardGrenzen?.min, k.naam).not.toBeUndefined()
+    // De matrix toont geen kolom voor een klasse die de organisatie niet heeft.
+    const codes = new Set(r.klassen.map((k: any) => k.code))
+    expect(r.codes.every((c: string) => codes.has(c))).toBe(true)
+    // Een ongeldige grens wordt geweigerd.
+    expect((await request.put('/api/settings/klassen', { data: { value: [{ id: 'kl-x', naam: 'X · Fout', minMedewerkers: 50, maxMedewerkers: 10 }] } })).status()).toBe(422)
+    await login(page, 'u-06')
+    await ga(page, '/instellingen/ritme')
+    const rij = page.getByTestId('klasse-kl-a-prospects')
+    await expect(rij.getByTestId('klasse-vanaf')).toBeVisible()
+    const vanaf = rij.getByTestId('klasse-vanaf')
+    expect(`${await vanaf.inputValue()}${await vanaf.getAttribute('placeholder')}`).toContain('250')
+    await expect(page.getByTestId('klasse-uitleg')).toContainText('laagste klasse')
+    await expect(page.getByTestId('voor-mij')).toContainText('prospects in reis')
   })
 })

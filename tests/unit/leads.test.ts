@@ -36,7 +36,8 @@ describe('klasse en beoordeling', () => {
   it('klasse uit de klassen van de organisatie, niet uit een vaste standaard; zonder medewerkers null', () => {
     expect(klasseUitMedewerkers(60, VOLTVAST)).toBe('kl-b-prospects')
     expect(klasseUitMedewerkers(300, VOLTVAST)).toBe('kl-a-prospects')
-    expect(klasseUitMedewerkers(5, VOLTVAST)).toBe(null)
+    // B02: onder de laagste grens valt een bedrijf in de laagste klasse, nooit zonder klasse.
+    expect(klasseUitMedewerkers(5, VOLTVAST)).toBe('kl-c-prospects')
     expect(klasseUitMedewerkers(null, VOLTVAST)).toBe(null)
     expect(klasseUitMedewerkers(49, [])).toBe('C')
     expect(klasseUitMedewerkers(50, [])).toBe('B')

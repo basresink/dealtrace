@@ -62,17 +62,34 @@
     "accountklassen": [
       {
         "id": "kl-a-prospects",
-        "naam": "A · Aantal monteurs (Prospects)",
+        "naam": "A · Groot",
+        "omschrijving": "250 medewerkers of meer",
+        "minMedewerkers": 250,
+        "maxMedewerkers": null,
         "tabblad": "Prospects"
       },
       {
         "id": "kl-b-prospects",
-        "naam": "B · Aantal monteurs (Prospects)",
+        "naam": "B · Middel",
+        "omschrijving": "50 tot en met 249 medewerkers",
+        "minMedewerkers": 50,
+        "maxMedewerkers": 249,
         "tabblad": "Prospects"
       },
       {
         "id": "kl-c-prospects",
-        "naam": "C · Aantal monteurs (Prospects)",
+        "naam": "C · Klein",
+        "omschrijving": "10 tot en met 49 medewerkers",
+        "minMedewerkers": 10,
+        "maxMedewerkers": 49,
+        "tabblad": "Prospects"
+      },
+      {
+        "id": "kl-d-prospects",
+        "naam": "D · Zeer klein",
+        "omschrijving": "Minder dan 10 medewerkers (de laagste klasse)",
+        "minMedewerkers": 0,
+        "maxMedewerkers": 9,
         "tabblad": "Prospects"
       },
       {
@@ -1177,7 +1194,7 @@
           "klassen": [
             "kl-a-prospects"
           ],
-          "klassen_betekenis": "A · Aantal monteurs (Prospects)"
+          "klassen_betekenis": "A · Groot (Prospects)"
         }
       }
     }
