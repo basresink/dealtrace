@@ -17,7 +17,9 @@ test.describe('import', () => {
     const lijst = await (await request.get('/api/accounts?eigenaar=iedereen&pagina=10')).json()
     const domeinen = lijst.rijen.map((r: any) => r.domein).filter(Boolean).slice(0, 50)
     expect(domeinen.length).toBe(50)
-    const csv = maakImportCsv(1000, { bestaandeDomeinen: domeinen }).replaceAll('Testimport', `Testimp${Date.now() % 100000}`).replaceAll(/9950(\d{4})/g, (_, n) => `9${String(Date.now() % 1000).padStart(3, '0')}${n}`)
+    // Eén tijdstempel voor het hele bestand: per rij Date.now() gaf de dubbele rijen soms een ander KvK-nummer.
+    const stempel = Date.now()
+    const csv = maakImportCsv(1000, { bestaandeDomeinen: domeinen }).replaceAll('Testimport', `Testimp${stempel % 100000}`).replaceAll(/9950(\d{4})/g, (_, n) => `9${String(stempel % 1000).padStart(3, '0')}${n}`)
     const { controle, uitkomst } = await importeer(request, csv, 'Beurs Vakdagen 2026')
     expect(controle).toMatchObject({ nieuw: 900, alInBestand: 50, dubbelInBestand: 30, fouten: 20 })
     expect(uitkomst).toMatchObject({ nieuw: 900, samengevoegd: 50 })

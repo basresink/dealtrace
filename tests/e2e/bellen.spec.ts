@@ -40,8 +40,16 @@ test.describe('Belblokken en belmodus', () => {
     const lijst = await (await request.get('/api/belblokken')).json()
     const vrij = lijst.bellijst.filter((k: any) => !k.belblokId).slice(0, 2)
     test.skip(!vrij.length, 'Geen vrije kandidaten meer')
-    const start = new Date(Date.now() + 3 * 3600_000); start.setUTCMinutes(0, 0, 0)
-    const p = await (await request.post('/api/belblokken/plan', { data: { start: start.toISOString(), minuten: 30, accountIds: vrij.map((k: any) => k.accountId) } })).json()
+    // Zoek een vrij uur: een vast blok uit de seed (of een blok uit een eerdere test) op hetzelfde uur geeft
+    // terecht 409. Met een vaste "nu plus 3 uur" faalde de test daardoor alleen op bepaalde tijden van de dag.
+    let p: any = null
+    for (let uur = 3; uur <= 30 && !p?.sessieId; uur++) {
+      const start = new Date(Date.now() + uur * 3600_000); start.setUTCMinutes(0, 0, 0)
+      const r = await request.post('/api/belblokken/plan', { data: { start: start.toISOString(), minuten: 30, accountIds: vrij.map((k: any) => k.accountId) } })
+      if (r.ok()) p = await r.json()
+      else expect(r.status()).toBe(409)
+    }
+    expect(p?.sessieId).toBeTruthy()
     await login(page, 'u-03')
     await ga(page, `/belblokken/${p.sessieId}`)
     await page.getByTestId('uitkomst-later').click()
