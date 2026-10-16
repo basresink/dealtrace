@@ -29,7 +29,7 @@ test.describe('Vandaag', () => {
     await ga(page, '/')
     const rijen = page.locator('[data-test^=vandaag-taak-]')
     await expect(rijen).toHaveCount(8)
-    const totaal = Number(await page.getByTestId('kolom-taken').locator('.pil').first().textContent())
+    const totaal = Number(await page.getByTestId('kolom-taken').locator('.vp-num').first().textContent())
     await expect(page.getByTestId('nog-meer')).toHaveText(`nog ${totaal - 8} meer →`)
     await expect(rijen.first()).toHaveClass(/taak-kaart--achter/)
     await expect(page.getByTestId('werkblok')).toContainText('BEZOEKDAG')

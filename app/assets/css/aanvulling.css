@@ -812,12 +812,10 @@ html.zonlicht body { color: #000; }
 .rij-tussen { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
 .vv-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 
-/* P32: Vandaag op de telefoon (8.5.1). Onder 768 px de telefoonweergave, daarboven de laptop. */
-.vt-alleen-telefoon { display: none; }
-@media (max-width: 767px) {
-  .vt-alleen-telefoon { display: block; }
-  .vt-alleen-groot { display: none; }
-}
+/* P32: Vandaag op de telefoon (8.5.1). Onder 768 px de telefoonweergave, daarboven de laptop. Met
+   !important, omdat .vt (display: grid) anders de verberging op de laptop overschrijft. */
+@media (min-width: 768px) { .vt-alleen-telefoon { display: none !important; } }
+@media (max-width: 767px) { .vt-alleen-groot { display: none !important; } }
 .vt { padding: 12px 16px 24px; display: grid; gap: 12px; }
 .vt-groet { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; touch-action: pan-y; }
 .vt-groet-tekst { margin: 0; font-size: 17px; line-height: 1.3; }

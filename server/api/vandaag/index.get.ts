@@ -49,10 +49,21 @@ export default defineEventHandler(async (event) => {
     // Inzichten: aanleiding van de dag en prio.
     const signals = await tx.select().from(schema.signals).where(and(eq(schema.signals.ownerId, mijn), inArray(schema.signals.status, ['nieuw', 'gelezen'])))
     const aanleiding = kiesAanleidingVanDeDag(signals.map((s) => ({ ...s, createdAt: s.createdAt })), mijn, new Set(eigen.map((a) => a.id)), nu)
-    const prio: { soort: string; tekst: string; link: string }[] = []
-    for (const s of signals.filter((x) => x.status === 'nieuw' && x.relevanceScore >= 75 && x.id !== aanleiding?.id).slice(0, 2)) prio.push({ soort: 'aanleiding', tekst: s.title, link: `/acties?tab=inzichten&inzicht=${s.id}` })
-    for (const a of eigen.filter((x) => x.terugOp && x.terugOp <= v && ['wachtend', 'nee'].includes(x.nbStatus))) prio.push({ soort: 'terug', tekst: `${a.naam} komt vandaag terug`, link: `/accounts/${a.id}` })
-    for (const t of taken.filter((x) => x.actionType !== 'taak' && /bevestig|overdr/i.test(x.title))) prio.push({ soort: 'afspraak', tekst: t.title, link: `/acties?taak=${t.id}` })
+    // Prio (DealDrive-opzet): per regel de naam, de reden en een label; tekst en link blijven voor de telefoon.
+    type Prio = { soort: string; tekst: string; link: string; naam: string; reden: string; label: string; labelSoort: 'hot' | 'risico' | 'info' }
+    const prio: Prio[] = []
+    for (const s of signals.filter((x) => x.status === 'nieuw' && x.relevanceScore >= 75 && x.id !== aanleiding?.id).slice(0, 2)) prio.push({ soort: 'aanleiding', tekst: s.title, link: `/acties?tab=inzichten&inzicht=${s.id}`, naam: (s.accountId && per.get(s.accountId)?.naam) || s.title, reden: s.accountId ? s.title : (s.data?.waarom ?? ''), label: s.relevanceScore >= 85 ? 'Hot' : 'Aanleiding', labelSoort: 'hot' })
+    for (const a of eigen.filter((x) => x.terugOp && x.terugOp <= v && ['wachtend', 'nee'].includes(x.nbStatus))) prio.push({ soort: 'terug', tekst: `${a.naam} komt vandaag terug`, link: `/accounts/${a.id}`, naam: a.naam, reden: 'Komt vandaag terug uit de wachtstand', label: 'Terug', labelSoort: 'info' })
+    for (const t of taken.filter((x) => x.actionType !== 'taak' && /bevestig|overdr/i.test(x.title))) prio.push({ soort: 'afspraak', tekst: t.title, link: `/acties?taak=${t.id}`, naam: (t.accountId && per.get(t.accountId)?.naam) || t.title, reden: t.title, label: 'Afspraak', labelSoort: 'risico' })
+    for (const t of taken.filter((x) => isAchterstallig(x, nu) && x.priority === 'hoog' && !prio.some((p) => p.link === `/acties?taak=${x.id}`)).slice(0, 2)) prio.push({ soort: 'achter', tekst: t.title, link: `/acties?taak=${t.id}`, naam: (t.accountId && per.get(t.accountId)?.naam) || t.title, reden: t.title, label: 'Risico', labelSoort: 'risico' })
+
+    // Inzichten bij prospects in de laatste 48 uur (eigen accounts), hoogste relevantie eerst, één per account.
+    const grens48 = new Date(nu.getTime() - 48 * 3600_000).toISOString()
+    const prospectSignalen = signals
+      .filter((s) => s.id !== aanleiding?.id && s.accountId && per.get(s.accountId)?.kind === 'prospect' && s.createdAt >= grens48)
+      .sort((a, b) => b.relevanceScore - a.relevanceScore || b.createdAt.localeCompare(a.createdAt))
+      .filter((s, i, l) => l.findIndex((x) => x.accountId === s.accountId) === i).slice(0, 6)
+      .map((s) => ({ id: s.id, titel: s.title, tekst: s.data?.waarom ?? null, bron: s.bron, bronNaam: (s.data as any)?.specifiekeBron ?? (s.agent ? s.agent[0]!.toUpperCase() + s.agent.slice(1) : s.bron === 'extern' ? 'Extern' : 'Intern'), op: s.createdAt, relevantie: s.relevanceScore, type: s.type, account: { id: s.accountId!, naam: per.get(s.accountId!)?.naam ?? '' } }))
 
     const gevorderd = ctx.gebruiker.niveau !== 'beginner' || ctx.organisatie.iedereenAlles
     const [mij] = await tx.select({ werkplek: schema.users.werkplek, data: schema.users.data }).from(schema.users).where(eq(schema.users.id, mijn))
@@ -114,7 +125,8 @@ export default defineEventHandler(async (event) => {
         kicker: vandaagKicker(nu),
         samenvatting: samenvattingsregel({ taken: vandaagEnEerder.length, uitCampagnes: vandaagEnEerder.filter((t) => t.campaignId).length, volgendeKoud: volgendeKoud ? `${String(nlMoment(new Date(volgendeKoud.dueDate!)).uur).padStart(2, '0')}:${String(nlMoment(new Date(volgendeKoud.dueDate!)).minuut).padStart(2, '0')}` : null }),
       },
-      aanleiding: aanleiding ? { id: aanleiding.id, titel: aanleiding.title, bron: aanleiding.bron, waarom: aanleiding.data?.waarom ?? null, bewijs: aanleiding.data?.bewijs ?? [], relevantie: aanleiding.relevanceScore, account: aanleidingAccount ? { id: aanleidingAccount.id, naam: aanleidingAccount.naam } : null } : null,
+      aanleiding: aanleiding ? { id: aanleiding.id, titel: aanleiding.title, bron: aanleiding.bron, bronNaam: (aanleiding.data as any)?.specifiekeBron ?? (aanleiding.agent ? aanleiding.agent[0]!.toUpperCase() + aanleiding.agent.slice(1) : aanleiding.bron === 'extern' ? 'Extern' : 'Intern'), op: aanleiding.createdAt, waarom: aanleiding.data?.waarom ?? null, bewijs: aanleiding.data?.bewijs ?? [], relevantie: aanleiding.relevanceScore, account: aanleidingAccount ? { id: aanleidingAccount.id, naam: aanleidingAccount.naam } : null } : null,
+      prospectSignalen,
       taken: { lijst: geordend.slice(0, 8).map(taakUit), meer: Math.max(0, geordend.length - 8), totaal: geordend.length },
       afspraken: { lijst: [] as unknown[], totaal: 0 },
       prio: prio.slice(0, 4),

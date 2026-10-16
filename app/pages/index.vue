@@ -1,11 +1,10 @@
 <script setup lang="ts">
-// Vandaag op de laptop (F01): kop, aanleiding van de dag, drie kolommen (taken,
-// afspraken, prio), werkblok, concepten; vanaf Gevorderd agents, datakwaliteit en
-// jouw week in eigen volgorde; voor de salesmanager "Team vandaag".
-import { ACTIE_LABEL, CONTACT_ACTIES } from '~~/shared/taken'
-import { fasePil } from '~/utils/accountWeergave'
+// Vandaag op de laptop (F01), in de opzet van DealDrive: kop, de aanleiding van de dag groot, één
+// kaart met drie kolommen (taken, afspraken, prio), de inzichten bij je prospects van de laatste
+// 48 uur, dan werkblok en concepten; vanaf Gevorderd agents, datakwaliteit en jouw week in eigen
+// volgorde; voor de salesmanager "Team vandaag".
 const toast = useToast()
-const { rondAf, versie } = useAfronden()
+const { versie } = useAfronden()
 const motorVersie = useState('motorVersie', () => 0)
 const route = useRoute()
 const { data: v, refresh } = await useFetch<any>('/api/vandaag', { query: computed(() => ({ dag: route.query.dag || undefined })), default: () => null })
@@ -15,14 +14,10 @@ const open = ref<string | null>(null)
 function openTaak(id: string | null) { if (id?.startsWith('afspraak:')) navigateTo(`/agenda?weergave=dag&afspraak=${id.slice(9)}`); else open.value = id }
 const nieuweTaak = ref(false)
 const nieuweProspect = ref(false)
+const nieuweAfspraak = ref(false)
 async function maakTaak(id: string) {
   try { await $fetch(`/api/signals/${id}/omzetten`, { method: 'POST', body: {} }); toast.toon('Taak gemaakt uit het inzicht.'); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
-async function vink(t: any) {
-  if (CONTACT_ACTIES.has(t.actionType)) { open.value = t.id; return }
-  if (await rondAf(t.id, { uitkomst: 'gedaan' })) await refresh()
-}
-const tijd = (iso: string | null) => (iso ? new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(iso)) : '')
 const dagNaam = (d: string) => new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric', timeZone: 'UTC' }).format(new Date(`${d}T12:00:00Z`))
 async function verplaats(blok: string, richting: -1 | 1) {
   const l = [...v.value.volgorde]
@@ -55,54 +50,32 @@ useHead({ title: 'Vandaag · Dealtrace' })
           </div>
           <div class="toolbar-buttons">
             <button type="button" class="dd-actie dd-actie--primair" data-test="vandaag-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
+            <button type="button" class="dd-actie dd-actie--secundair" data-test="vandaag-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Calendar" class="dd-actie-icoon" />Afspraak</button>
             <button v-if="v.kan.nieuwProspect" type="button" class="dd-actie dd-actie--secundair" data-test="vandaag-prospect" @click="nieuweProspect = true"><Icoon naam="UserPlus" class="dd-actie-icoon" />Prospect</button>
             <HulpKnop artikel="vandaag" />
           </div>
         </div>
       </div>
     </section>
+    <section v-if="v.aanleiding" class="section vd-hero">
+      <div class="container">
+        <AanleidingHero :a="v.aanleiding" @maak-taak="maakTaak" />
+      </div>
+    </section>
+    <section class="section section--alt">
+      <div class="container">
+        <p v-if="v.telefoon.focus" class="kaart vt-focusregel mb-16" data-test="focusregel"><span class="kicker">Je eerste zet</span> {{ v.telefoon.focus.wat }} · <span class="meta">{{ v.telefoon.focus.waarom }}</span></p>
+        <VandaagPaneel :taken="v.taken" :afspraken="v.telefoon.dag.stapels.afspraken" :prio="v.prio" :dag="route.query.dag as string | undefined" @open="openTaak" />
+      </div>
+    </section>
+    <section class="section section--alt">
+      <div class="container">
+        <ProspectSignalen :lijst="v.prospectSignalen ?? []" />
+      </div>
+    </section>
     <section class="section section--laatste">
       <div class="container">
-        <article v-if="v.aanleiding" class="kaart aanleiding-blok" data-test="aanleiding-van-de-dag">
-          <span class="kicker">Aanleiding van de dag</span>
-          <h2 class="kaart-titel mt-8">{{ v.aanleiding.titel }}</h2>
-          <p class="taak-meta"><template v-if="v.aanleiding.account">{{ v.aanleiding.account.naam }} · </template>{{ v.aanleiding.bron === 'extern' ? 'Extern' : 'Intern' }}<template v-if="v.aanleiding.bewijs?.[0]"> · {{ v.aanleiding.bewijs[0] }}</template></p>
-          <p v-if="v.aanleiding.waarom" class="mt-8">{{ v.aanleiding.waarom }}</p>
-          <div class="reis-knoppen mt-16"><button type="button" class="dd-act dd-act--primair" data-test="aanleiding-maak-taak" @click="maakTaak(v.aanleiding.id)">Maak taak</button><NuxtLink v-if="v.aanleiding.account" class="dd-act" :to="`/accounts/${v.aanleiding.account.id}`">Open kaart</NuxtLink></div>
-        </article>
-
-        <p v-if="v.telefoon.focus" class="kaart vt-focusregel" data-test="focusregel"><span class="kicker">Je eerste zet</span> {{ v.telefoon.focus.wat }} · <span class="meta">{{ v.telefoon.focus.waarom }}</span></p>
-        <div class="vandaag-kolommen mt-16">
-          <article class="kaart" data-test="kolom-taken">
-            <header class="kaart-kop"><h2 class="kaart-titel">Taken <span class="pil pil--leeg tnum">{{ v.taken.totaal }}</span></h2></header>
-            <LegeStaat v-if="!v.taken.lijst.length" titel="Niets te doen." tekst="De motor zet nieuwe pogingen klaar zodra ze aan de beurt zijn." />
-            <ul class="schakel-lijst">
-              <li v-for="t in v.taken.lijst" :key="t.id" class="taak-kaart" :class="{ 'taak-kaart--achter': t.achterstallig }" :data-test="`vandaag-taak-${t.id}`">
-                <button type="button" class="taak-vink" :aria-label="`Rond ${t.title} af`" @click="vink(t)"><Icoon naam="CircleCheck" /></button>
-                <span class="taak-meta tnum">{{ t.achterstallig ? 'over tijd' : tijd(t.dueDate) }}</span>
-                <div>
-                  <div class="taak-labels"><span class="pil pil--leeg">{{ ACTIE_LABEL[t.actionType] ?? 'TAAK' }}</span><span v-if="t.concept" class="pil pil--paars">AI</span><span v-if="t.account?.fase" class="pil" :class="fasePil(t.account.fase.kleur)">{{ t.account.fase.label }}</span></div>
-                  <button type="button" class="taak-titel" @click="openTaak(t.id)">{{ t.title }}</button>
-                  <p v-if="t.poging" class="taak-meta">poging {{ t.poging.n }} van {{ t.poging.van }}<template v-if="t.poging.vorige"> · vorige: {{ t.poging.vorige }}</template></p>
-                </div>
-                <span />
-              </li>
-            </ul>
-            <NuxtLink v-if="v.taken.meer" to="/acties" class="tekst-link mt-8" data-test="nog-meer">nog {{ v.taken.meer }} meer →</NuxtLink>
-          </article>
-          <article class="kaart" data-test="kolom-afspraken">
-            <header class="kaart-kop"><h2 class="kaart-titel">Afspraken <span class="pil pil--leeg tnum">{{ v.telefoon.dag.stapels.afspraken.length }}</span></h2></header>
-            <p v-if="!v.telefoon.dag.stapels.afspraken.length" class="kaart-meta">Geen afspraken vandaag.</p>
-            <ul class="schakel-lijst"><li v-for="a in v.telefoon.dag.stapels.afspraken" :key="a.id" class="schakel-rij"><button type="button" class="taak-titel" @click="openTaak(a.taakId)">{{ a.tijd }} {{ a.accountNaam ?? a.titel }}</button><span v-if="a.zonderVerslag" class="pil pil--oranje">verslag</span></li></ul>
-          </article>
-          <article class="kaart" data-test="kolom-prio">
-            <header class="kaart-kop"><h2 class="kaart-titel">Prio <span class="pil pil--leeg tnum">{{ v.prio.length }}</span></h2></header>
-            <p v-if="!v.prio.length" class="kaart-meta">Niets dringends.</p>
-            <ul class="schakel-lijst"><li v-for="(p, i) in v.prio" :key="i" class="schakel-rij"><NuxtLink :to="p.link">{{ p.tekst }}</NuxtLink></li></ul>
-          </article>
-        </div>
-
-        <div class="vandaag-blokken mt-16">
+        <div class="vandaag-blokken">
           <article class="kaart kaart--geel" data-test="werkblok">
             <span class="kicker">{{ v.werkblok.titel }}</span>
             <p class="mt-8">{{ v.werkblok.tekst }}</p>
@@ -142,5 +115,6 @@ useHead({ title: 'Vandaag · Dealtrace' })
     <TaakFlyout :open="!!open" :taak-id="open" @sluit="open = null" @klaar="refresh()" @gewijzigd="refresh()" />
     <NieuweTaakFlyout :open="nieuweTaak" @sluit="nieuweTaak = false" @gemaakt="nieuweTaak = false; refresh()" />
     <NieuweProspectFlyout :open="nieuweProspect" @sluit="nieuweProspect = false" @aangemaakt="(id) => navigateTo(`/accounts/${id}`)" @bestaand="(id) => navigateTo(`/accounts/${id}`)" />
+    <PlanAfspraakFlyout :open="nieuweAfspraak" @sluit="nieuweAfspraak = false" @gepland="(id: string) => { nieuweAfspraak = false; navigateTo(`/agenda?weergave=dag&afspraak=${id}`) }" />
   </div>
 </template>

@@ -449,6 +449,12 @@ De motor zet zelf taken en inzichten klaar op basis van regels. De matrix is de 
 - **Opgelost onderweg**: coachingmeldingen gebruikten de soort `info`, die de check op `notificaties` weigert; ze zijn nu `systeem`.
 - **Toesteltests (8.15)**: de Playwright-projecten voor 375, 390 en 412 px stonden al. Wat deze omgeving niet kan: de handmatige scenario's op echte toestellen, VoiceOver en TalkBack, accuverbruik, push op een geïnstalleerde PWA en de prestatiebudgetten op staging. Die staan als open punt in `docs/sprintverslag-P26.md`.
 
+## Vandaag in de opzet van DealDrive
+
+- **Laptop** (`app/pages/index.vue`): de kop met Taak, Afspraak, Prospect en Hulp; de aanleiding van de dag groot (`AanleidingHero`: vlak met initialen en het label Aanleiding, kop, waarom, bron, tijd en relevantie, "Open klantkaart" en "Maak taak"); één kaart Vandaag met datum, Agenda en drie kolommen Taken, Afspraken en Prio (`VandaagPaneel`); de inzichten bij je eigen prospects van de laatste 48 uur (`ProspectSignalen`, hooguit zes, één per account, zonder de aanleiding van de dag); daaronder werkblok, concepten, agents, datakwaliteit, week en team zoals voorheen. De componenten volgen `LeadCard` en `VandaagPanel` uit DealDrive, met de tokens van Dealtrace.
+- **API** (`/api/vandaag`): `aanleiding` heeft nu `bronNaam` en `op`; elke prio-regel heeft `naam`, `reden`, `label` en `labelSoort` (achterstallige taken met prioriteit hoog komen erbij als Risico); nieuw is `prospectSignalen`. De aanleiding blijft de regel uit F01: nieuw, relevantie 85 of hoger, jonger dan 48 uur, op een eigen account.
+- **Telefoon**: ongewijzigd. Een CSS-fout uit P32 is opgelost: `.vt` (display: grid) overschreef de verberging, waardoor de telefoonweergave ook op de laptop stond.
+
 ## Waar staat wat
 
 | Map | Inhoud |
