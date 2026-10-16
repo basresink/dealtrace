@@ -14,6 +14,7 @@ test.describe('kaart info', () => {
     await login(page, 'u-01')
     await page.request.put('/api/accounts/pr-06/extra-bronnen', { data: { bronnen: [] } })
     await ga(page, '/accounts/pr-06')
+    await page.getByTestId('kop-meer').click()
     await page.getByTestId('info-knop').click()
     const fly = page.getByTestId('info-flyout')
     await expect(fly).toContainText('Bedrijfsgegevens')
@@ -77,6 +78,7 @@ test.describe('kaart info', () => {
 
     // In het venster Contacten van het account: kicker, uitleg, foto en de link naar de contactkaart.
     await ga(page, '/accounts/pr-06')
+    await page.getByTestId('kop-meer').click()
     await page.getByTestId('contacten-knop').click()
     const fly = page.getByTestId('contacten-flyout')
     await expect(fly.getByTestId('cf-kicker')).toHaveText(/Contactpersonen · \d+/)
@@ -99,6 +101,7 @@ test.describe('kaart info', () => {
     await login(page, 'u-01')
     await page.request.put('/api/contacten/ct-07', { data: { extraBronnen: [] } })
     await ga(page, '/contacten/ct-07')
+    await page.getByTestId('kop-meer').click()
     await page.getByTestId('contact-info-knop').click()
     const fly = page.getByTestId('contact-info-flyout')
     await expect(fly).toContainText('Contactgegevens')

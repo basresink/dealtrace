@@ -116,6 +116,27 @@ test.describe('Belscript Studio', () => {
     await expect(bm.getByTestId('sb-activiteit')).not.toContainText('geen opengeklapt')
   })
 
+  test('taakvenster: een beltaak gebruikt de bewaarde versie van de prospect', async ({ page }) => {
+    await login(page, 'u-01')
+    const { prospecten } = await (await page.request.get('/api/belscripts/prospecten')).json()
+    const p = prospecten.find((x: any) => x.versies > 0)
+    expect(p, 'de vorige test bewaarde een versie').toBeTruthy()
+    const r = await page.request.post('/api/tasks', { data: { title: `Bel met versie ${Date.now().toString(36)}`, actionType: 'bellen', accountId: p.accountId } })
+    expect(r.ok()).toBe(true)
+    const taak = await r.json()
+    const taakId = taak.id ?? taak.task?.id
+    try {
+      const paneel = await (await page.request.get(`/api/bellen/taak/${taakId}`)).json()
+      expect(paneel.item?.prospectVersie?.id).toBeTruthy()
+      await ga(page, `/taken?taak=${taakId}`)
+      const bp = page.getByTestId('belpaneel')
+      await bp.locator('summary').click()
+      await expect(bp.getByTestId('script-keuze')).toHaveValue(`pv:${paneel.item.prospectVersie.id}`)
+    } finally {
+      await page.request.post(`/api/tasks/${taakId}/annuleren`, { data: { reden: 'Test opgeruimd' } })
+    }
+  })
+
   test('zonder besluit over een AI-blok geen versie (422); Belblokken linkt naar Belscripts', async ({ page, request }) => {
     await apiLogin(request, 'u-01')
     const keuze = await (await request.get('/api/belscripts/prospecten')).json()

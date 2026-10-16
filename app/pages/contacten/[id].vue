@@ -1,12 +1,13 @@
 <script setup lang="ts">
 // Contactkaart (F04) in de opzet van DealDrive: kop met avatar en rol, kruimel, functie en account (link),
 // naam met rolpil, contactgegevens (mail, telefoon, mobiel, LinkedIn), de stuurstrip van het account en rechts
-// Vraag AI, Info, Briefing en Bel. Daaronder de statstrook en dezelfde tabbladen als de accountkaart
+// Briefing, Bel en Volgen, met Info en Invloed onder Meer. Daaronder de statstrook en dezelfde tabbladen als de accountkaart
 // (KaartTabbladen), met alleen wat bij dit contact hoort. Reis en kwalificatie tonen de stand van het account
 // met een verwijzing naar de accountkaart; eigen velden staan in het Info-venster. De avatar toont de foto van
 // het contact (uploaden, wijzigen en verwijderen via het potlood), anders de initialen. Op de telefoon een
 // plakkende actiebalk.
 import { CONTACTROL_LABEL, ROLLEN_CONTACT, type ContactRol } from '~~/shared/contactgegevens'
+import type { KopMeerItem } from '~/components/algemeen/KopMeer.vue'
 import { STATUS_LABEL, initialen, telLink, toonTelefoon } from '~/utils/accountWeergave'
 const route = useRoute()
 const toast = useToast()
@@ -34,6 +35,11 @@ const briefingOpen = ref(false)
 const volgenOpen = ref(false)
 // F8: de invloedskaart van het account, met dit contact geselecteerd.
 const invloedOpen = ref(false)
+// Kop: Briefing, Bel en Volgen in de rij; Info en Invloed onder Meer, zodat de rij op één regel past.
+const meerItems = computed<KopMeerItem[]>(() => [
+  { label: 'Info', icoon: 'Info', test: 'contact-info-knop', actie: () => { infoOpen.value = true } },
+  ...(c.value?.account ? [{ label: 'Invloed', icoon: 'Network', test: 'knop-invloed', actie: () => { invloedOpen.value = true } }] : []),
+])
 
 // Kop: avatar met initialen in een vaste kleur per naam, de rol als gekleurde pil.
 const KLEUR = ['#194c8f', '#1e7c4a', '#c0392b', '#4c1d95', '#b45309', '#0a0a0a', '#0f766e']
@@ -103,11 +109,10 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
           </div>
           <div class="ck-acties">
             <KopIconen :ai="{ accountId: c.accountId, label: c.account?.naam ?? c.naam }" />
-            <button type="button" class="dd-actie dd-actie--secundair" data-test="contact-info-knop" @click="infoOpen = true"><Icoon naam="Info" class="dd-actie-icoon" />Info</button>
             <button v-if="c.account" type="button" class="dd-actie dd-actie--zwart" data-test="briefing-knop" @click="briefingOpen = true">Briefing</button>
             <a v-if="belNummer" class="dd-actie dd-actie--primair alleen-groot" :href="telLink(belNummer)" data-test="bel-knop"><Icoon naam="Phone" class="dd-actie-icoon" />Bel</a>
             <button v-if="c.account && functie('prospects.volgen')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair" data-test="knop-volgen" @click="volgenOpen = true"><Icoon naam="Route" class="dd-actie-icoon" />Volgen</button>
-            <button v-if="c.account" type="button" class="dd-actie dd-actie--secundair" data-test="knop-invloed" @click="invloedOpen = true"><Icoon naam="Network" class="dd-actie-icoon" />Invloed</button>
+            <KopMeer :items="meerItems" />
           </div>
         </div>
       </div>
@@ -210,7 +215,7 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
 .ck-stuurstrip dt { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .ck-stuurstrip dd { margin: 0; }
 .ck-acties { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
-@media (min-width: 1000px) { .ck-acties { grid-column: auto; justify-content: flex-end; max-width: 520px; } }
+@media (min-width: 1000px) { .ck-acties { grid-column: auto; justify-content: flex-end; max-width: 600px; } }
 
 /* Statstrook */
 .ck-stats { padding: 24px 0; background: var(--bg); border-bottom: 1px solid var(--border); }
@@ -240,4 +245,6 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
   .ck-contactstrip a { min-height: 44px; }
   .ck-stats { padding: 12px 0; }
 }
+/* Telefoon: Briefing, Volgen en Meer passen naast hulp op één regel. */
+@media (max-width: 767px) { .ck-acties :deep(.dd-actie:not(.dd-actie--icoon)) { padding-left: 12px; padding-right: 12px; } }
 </style>

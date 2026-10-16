@@ -30,6 +30,7 @@ test.describe('contactkaart', () => {
     // Deals en Eigen velden hebben geen tabblad meer; eigen velden staan in het Info-venster.
     await expect(page.getByTestId('tab-deals')).toHaveCount(0)
     await expect(page.getByTestId('tab-eigenvelden')).toHaveCount(0)
+    await page.getByTestId('kop-meer').click()
     await page.getByTestId('contact-info-knop').click()
     await expect(page.getByTestId('contact-info-flyout')).toBeVisible()
     await page.keyboard.press('Escape')

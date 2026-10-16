@@ -196,7 +196,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
           </article>
           <details v-if="t.actionType === 'bellen' && functie('belscript.kiezen')?.beschikbaar" class="fo-blok" data-test="belpaneel" @toggle="laadBelpaneel">
             <summary class="fo-blok-titel">Belscript</summary>
-            <BelScript v-if="belpaneel?.item" :scripts="belpaneel.scripts" :voorstel="belpaneel.item.voorstel" :waarden="belpaneel.item.waarden" :extra-bezwaren="belpaneel.item.extraBezwaren" :meldingen="belpaneel.item.meldingen" :account-id="belpaneel.item.accountId" :contact-id="belpaneel.item.contactId" :ai-aan="belpaneel.kan.ai" compact />
+            <BelScript v-if="belpaneel?.item" :scripts="belpaneel.scripts" :voorstel="belpaneel.item.voorstel" :waarden="belpaneel.item.waarden" :extra-bezwaren="belpaneel.item.extraBezwaren" :meldingen="belpaneel.item.meldingen" :account-id="belpaneel.item.accountId" :contact-id="belpaneel.item.contactId" :ai-aan="belpaneel.kan.ai" :prospect-versie="belpaneel.item.prospectVersie" compact />
             <p v-else-if="belpaneel" class="meta">Geen script voor deze taak.</p>
           </details>
           <GespreksverslagBlok

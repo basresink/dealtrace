@@ -518,7 +518,8 @@
 @media (max-width: 767px) {
   .vandaag-kolommen, .horizon { grid-template-columns: 1fr; }
   .week-raster { grid-template-columns: repeat(5, minmax(56px, 1fr)); overflow-x: auto; }
-  .afrond-strook { bottom: 16px; width: calc(100% - 96px); justify-content: space-between; }
+  /* Boven de onderbalk, inclusief de safe-area van iOS. */
+  .afrond-strook { bottom: calc(var(--onderbalk-veilig) + 8px); width: calc(100% - 32px); justify-content: space-between; }
 }
 
 /* P08: mandaatpillen (14): A zwart met geel, B geel met inkt, C wit met inktrand, D gestippeld. */

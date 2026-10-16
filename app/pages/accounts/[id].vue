@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Accountkaart (F03, 8.5.5) in de opzet van DealDrive: kop met logovlak, kruimel, branche en plaats, naam met
-// klassepil, website en de stuurstrip; rechts Info, Contacten en Briefing. Het logovlak toont het logo
+// klassepil, website en de stuurstrip; rechts Briefing en Volgen, de rest onder Meer. Het logovlak toont het logo
 // (eigen logo-URL of het favicon van de website) en anders de initialen. Daaronder de statstrook over de
 // volle breedte, de aanleiding en de tabbladen Tijdlijn, Inzichten, Taken, Notities, E-mails, Afspraken,
 // Gespreksverslagen, Campagnes en Documenten, plus Reis en kwalificatie. Eigen velden staan in het
@@ -8,6 +8,7 @@
 // contactkaart, en tonen bij elk item het contact.
 // Op de telefoon compact met een plakkende actiebalk (Bellen, Mail, WhatsApp, Navigeer).
 import { CONTACTROL_LABEL, type ContactRol } from '~~/shared/contactgegevens'
+import type { KopMeerItem } from '~/components/algemeen/KopMeer.vue'
 import { STATUS_LABEL, STATUS_PIL, datumKort, fasePil, klasseKort, telLink, toonTelefoon } from '~/utils/accountWeergave'
 const route = useRoute()
 const { functie, me } = useMe()
@@ -107,6 +108,23 @@ const kanKlaarzetten = computed(() => !!functie('bezoeken.klaarzetten')?.beschik
 const dagpakket = useDagpakket()
 const inPakket = computed(() => !!dagpakket.account(String(route.params.id)))
 async function bewaarOffline() { await dagpakket.bewaarVoorOffline(String(route.params.id), a.value?.naam ?? ''); toast.toon('Bewaard voor offline.') }
+// Kop: Briefing en Volgen staan altijd in de rij (met Overdragen als dat kan); de rest staat onder Meer,
+// zodat de rij op een laptop van 1280 px op één regel past en de telefoon compact begint. Scannen en
+// offline bewaren zijn alleen voor de telefoon.
+const schermklasse = useSchermklasse()
+const meerItems = computed<KopMeerItem[]>(() => {
+  const telefoon = schermklasse.value === 'telefoon'
+  const aantal = a.value?.contacten.filter((c: any) => c.status !== 'vertrokken').length ?? 0
+  const items: KopMeerItem[] = [
+    { label: 'Info', icoon: 'Info', test: 'info-knop', actie: () => { infoOpen.value = true } },
+    { label: `Contacten (${aantal})`, icoon: 'Users', test: 'contacten-knop', actie: () => { contactenOpen.value = true } },
+    { label: 'Invloed', icoon: 'Network', test: 'knop-invloed', actie: () => { invloedOpen.value = true } },
+  ]
+  if (kanKlaarzetten.value) items.push({ label: 'Klaarzetten', icoon: 'MapPin', test: 'klaarzetten-knop', actie: () => { klaarOpen.value = true } })
+  if (telefoon && functie('contact.visitekaartje')?.beschikbaar) items.push({ label: 'Scan visitekaartje', icoon: 'Camera', test: 'scan-visitekaartje', actie: () => { kaartjeOpen.value = true } })
+  if (telefoon && !inPakket.value && functie('onderweg.dagpakket')?.beschikbaar) items.push({ label: 'Bewaar voor offline', icoon: 'Download', test: 'bewaar-offline', actie: bewaarOffline })
+  return items
+})
 
 // Kop: logovlak met initialen in een vaste kleur per naam, klassepil in de kleur van de letter.
 const MERK = ['#194c8f', '#1e7c4a', '#c0392b', '#4c1d95', '#b45309', '#0a0a0a', '#0f766e']
@@ -174,15 +192,10 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
           </div>
           <div class="ak-acties">
             <KopIconen artikel="de-accountkaart-lezen" :ai="{ accountId: a.id, label: a.naam }" />
-            <button v-if="functie('contact.visitekaartje')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair alleen-telefoon" data-test="scan-visitekaartje" @click="kaartjeOpen = true"><Icoon naam="Camera" class="dd-actie-icoon" />Scan visitekaartje</button>
-            <button v-if="!inPakket && functie('onderweg.dagpakket')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair alleen-telefoon" data-test="bewaar-offline" @click="bewaarOffline"><Icoon naam="Download" class="dd-actie-icoon" />Bewaar voor offline</button>
-            <button v-if="kanKlaarzetten" type="button" class="dd-actie dd-actie--secundair" data-test="klaarzetten-knop" @click="klaarOpen = true"><Icoon naam="MapPin" class="dd-actie-icoon" />Klaarzetten</button>
             <button v-if="a.kanOverdragen && functie('overdracht.basis')?.beschikbaar" type="button" class="dd-actie dd-actie--primair" data-test="overdragen-knop" @click="overdragenOpen = true"><Icoon naam="ArrowRight" class="dd-actie-icoon" />Overdragen</button>
-            <button type="button" class="dd-actie dd-actie--secundair" data-test="info-knop" @click="infoOpen = true">Info</button>
-            <button type="button" class="dd-actie dd-actie--secundair" data-test="contacten-knop" @click="contactenOpen = true">Contacten <span class="ak-teller tnum">{{ a.contacten.filter((c: any) => c.status !== 'vertrokken').length }}</span></button>
             <button type="button" class="dd-actie dd-actie--zwart" data-test="briefing-knop" @click="briefingOpen = true">Briefing</button>
             <button v-if="functie('prospects.volgen')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair" data-test="knop-volgen" @click="volgenOpen = true"><Icoon naam="Route" class="dd-actie-icoon" />Volgen</button>
-            <button type="button" class="dd-actie dd-actie--secundair" data-test="knop-invloed" @click="invloedOpen = true"><Icoon naam="Network" class="dd-actie-icoon" />Invloed</button>
+            <KopMeer :items="meerItems" />
           </div>
         </div>
 
@@ -218,7 +231,7 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
     <!-- Aanleiding, verkoopverhaal en overdracht -->
     <section v-if="a.aanleiding || a.overdracht || (a.soort === 'prospect' && (a.concurrenten.length || a.huidigeLeverancier))" class="ak-sectie ak-sectie--wit">
       <div class="container stapel">
-        <div v-if="a.aanleiding" class="account-aanleiding alleen-groot" :class="{ 'account-aanleiding--heet': a.aanleiding.heet }" data-test="aanleiding"><strong>Waarom nu:</strong> {{ a.aanleiding.tekst }} <span class="meta">· {{ a.aanleiding.bron }} · {{ datumKort(a.aanleiding.op) }}</span></div>
+        <div v-if="a.aanleiding" class="account-aanleiding alleen-groot" :class="{ 'account-aanleiding--heet': a.aanleiding.heet }" data-test="aanleiding"><span><strong>Waarom nu:</strong> {{ a.aanleiding.tekst }} <span class="meta">· {{ a.aanleiding.bron }} · {{ datumKort(a.aanleiding.op) }}</span></span></div>
         <div v-if="a.soort === 'prospect' && (a.concurrenten.length || a.huidigeLeverancier)" class="ak-leverancier" data-test="leverancier">
           <label class="veld veld--rij"><span class="veld-label">Huidige leverancier</span>
             <select v-if="a.kanLeverancier" class="invoer invoer--klein" :value="a.huidigeLeverancier?.id ?? ''" data-test="leverancier-kies" @change="zetLeverancier(($event.target as HTMLSelectElement).value)"><option value="">Onbekend</option><option v-for="c in a.concurrenten" :key="c.id" :value="c.id">{{ c.naam }}</option></select>
@@ -351,7 +364,7 @@ select.ak-klasse { cursor: pointer; min-height: 26px; }
 .ak-stuurstrip dt { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .ak-stuurstrip dd { margin: 0; }
 .ak-acties { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
-@media (min-width: 1000px) { .ak-acties { grid-column: auto; justify-content: flex-end; max-width: 560px; margin-top: 22px; } }
+@media (min-width: 1000px) { .ak-acties { grid-column: auto; justify-content: flex-end; max-width: 640px; margin-top: 22px; } }
 .ak-teller { padding: 1px 6px; font-size: 10px; font-weight: 800; background: var(--ink); color: var(--yellow); }
 .dd-actie--zwart .ak-teller { background: var(--yellow); color: var(--ink); }
 
@@ -381,4 +394,6 @@ select.ak-klasse { cursor: pointer; min-height: 26px; }
   .ak-kop { padding: 20px 0; }
   .ak-merk { margin-top: 20px; }
 }
+/* Telefoon: Briefing, Volgen en Meer passen naast hulp op één regel. */
+@media (max-width: 767px) { .ak-acties :deep(.dd-actie:not(.dd-actie--icoon)) { padding-left: 12px; padding-right: 12px; } }
 </style>

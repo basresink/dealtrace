@@ -29,6 +29,7 @@ test.describe('prospects', () => {
   test('snel contactpersoon als beslisser vult het buying committee', async ({ page }) => {
     await login(page, 'u-03')
     await ga(page, '/accounts/pr-03?tab=kwalificatie')
+    await page.getByTestId('kop-meer').click()
     await page.getByTestId('contacten-knop').click()
     await page.getByTestId('snel-contact').click()
     const naam = `Testbeslisser${Date.now() % 100000}`

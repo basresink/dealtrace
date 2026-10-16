@@ -144,7 +144,7 @@ const tabs = computed(() => [
             <div class="toolbar-buttons">
               <button type="button" class="dd-actie dd-actie--primair" data-test="tl-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
               <button type="button" class="dd-actie dd-actie--zwart" data-test="tl-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
-              <button v-if="kanMail" type="button" class="dd-actie dd-actie--primair" data-test="tl-mail" @click="mailOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Mail</button>
+              <button v-if="kanMail" type="button" class="dd-actie dd-actie--secundair" data-test="tl-mail" @click="mailOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Mail</button>
               <button type="button" class="dd-actie dd-actie--secundair" :aria-expanded="tlFiltersOpen" data-test="tl-filters" @click="tlFiltersOpen = !tlFiltersOpen"><Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="tlFilter !== 'alles'" class="ak-teller">1</span><Icoon naam="ChevronDown" :grootte="14" /></button>
             </div>
           </div>
