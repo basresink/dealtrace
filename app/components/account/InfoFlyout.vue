@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Info-flyout (520 px, F03): basisvelden, eigen velden per sectie, eigenaar (gat 9),
 // klasse, herkomst en scoreopbouw (Expert). Elke wijziging bewaart zichzelf.
-import { SCORE_DELEN } from '~/utils/accountWeergave'
+import { SCORE_DELEN, telLink } from '~/utils/accountWeergave'
 const props = defineProps<{ open: boolean; account: any }>()
 const emit = defineEmits<{ sluit: []; gewijzigd: []; verwijder: [] }>()
 const toast = useToast()
@@ -43,7 +43,7 @@ function bewaarCf(sleutel: string) { bewaar({ customFields: { [sleutel]: cf[sleu
             <div class="formulier-raster">
               <label class="veld"><span class="veld-label">Naam</span><input v-model="f.naam" class="invoer" @change="bewaar({ naam: f.naam })"></label>
               <label class="veld"><span class="veld-label">Plaats</span><input v-model="f.plaats" class="invoer" @change="bewaar({ plaats: f.plaats || null })"></label>
-              <label class="veld"><span class="veld-label">Telefoon</span><input v-model="f.telefoon" class="invoer" type="tel" @change="bewaar({ telefoon: f.telefoon || null })"></label>
+              <label class="veld"><span class="veld-label">Telefoon</span><input v-model="f.telefoon" class="invoer" type="tel" @change="bewaar({ telefoon: f.telefoon || null })"><a v-if="f.telefoon" class="dd-act veld-bel" :href="telLink(f.telefoon)" :aria-label="`Bel ${f.telefoon}`"><Icoon naam="Phone" :grootte="14" />Bel</a></label>
               <label class="veld"><span class="veld-label">Website</span><input v-model="f.website" class="invoer" @change="bewaar({ website: f.website || null })"></label>
               <template v-if="!beginner">
                 <label class="veld"><span class="veld-label">Adres</span><input v-model="f.adres" class="invoer" @change="bewaar({ adres: f.adres || null })"></label>

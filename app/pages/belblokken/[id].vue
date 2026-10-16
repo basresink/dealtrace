@@ -2,6 +2,7 @@
 // De belmodus (F07): schermvullend. Links het script, midden de gesprekskaart, rechts de
 // wachtrij. Elke uitkomst rondt af via rondTaakAf en opent direct het volgende gesprek (de
 // hele wachtrij is vooraf geladen). Na het laatste gesprek of "Stop blok" het blokresultaat.
+import { telLink } from '~/utils/accountWeergave'
 import { UITKOMST_KNOPPEN, uitkomstNaarCode, type KnopSleutel } from '~~/shared/belblokken'
 import { herkenAntwoord, spreekBelOpening } from '~~/shared/spreek'
 import { NEE_REDENEN } from '~~/shared/nbStatus'
@@ -124,7 +125,7 @@ useHead({ title: 'Belmodus · Dealtrace' })
           <h2 class="kop-blok mt-4"><NuxtLink :to="`/accounts/${huidig.accountId}`" target="_blank">{{ huidig.kaart.account.naam }}</NuxtLink></h2>
           <p class="meta">{{ [huidig.kaart.account.plaats, huidig.kaart.account.fase, huidig.kaart.account.klasse ? `klasse ${huidig.kaart.account.klasse}` : null].filter(Boolean).join(' · ') }}</p>
           <p v-if="huidig.kaart.contact" class="tekst tekst--inkt mt-12"><strong>{{ huidig.kaart.contact.naam }}</strong>{{ huidig.kaart.contact.functie ? ` · ${huidig.kaart.contact.functie}` : '' }} · {{ huidig.kaart.contact.rol }}</p>
-          <a v-if="huidig.telefoon" class="dd-actie dd-actie--primair mt-8" :href="`tel:${huidig.telefoon}`" data-test="bel-link"><Icoon naam="Phone" class="dd-actie-icoon" />Bel {{ huidig.telefoon }}</a>
+          <a v-if="huidig.telefoon" class="dd-actie dd-actie--primair mt-8" :href="telLink(huidig.telefoon)" data-test="bel-link"><Icoon naam="Phone" class="dd-actie-icoon" />Bel {{ huidig.telefoon }}</a>
           <p v-else class="meta mt-8">Geen telefoonnummer bekend.</p>
           <p class="rij-aanleiding mt-16" :class="{ 'rij-aanleiding--heet': huidig.heet }">{{ huidig.reden }}</p>
           <dl class="defs mt-12">

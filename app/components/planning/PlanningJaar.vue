@@ -3,6 +3,7 @@
 // met inplannen in belblokken en indelen, de jaarkalender (jaar of kwartaal) met legenda per
 // potentie, het maanddetail met wat aan de beurt is en wat is blijven liggen, en de prospects
 // buiten de planning. De rekenregels staan in shared/planning.ts; hier alleen de weergave.
+import { telLink } from '~/utils/accountWeergave'
 import { POTENTIES, POTENTIE_LABEL, maandInJaar, type Potentie } from '~~/shared/planning'
 const toast = useToast()
 const route = useRoute()
@@ -202,7 +203,7 @@ const bezoek = ref<{ id: string; naam: string } | null>(null)
               <span class="pj-status" :class="benaderd(a) ? 'pj-status--ja' : 'pj-status--nee'">{{ a.status }}</span>
               <span class="pj-contact tnum">{{ a.pogingen }} {{ a.pogingen === 1 ? 'contactmoment' : 'contactmomenten' }}</span>
               <span class="pj-acties">
-                <a v-if="a.telefoon" class="dd-act" :href="`tel:${a.telefoon}`" data-test="bel"><Icoon naam="Phone" />Bel</a>
+                <a v-if="a.telefoon" class="dd-act" :href="telLink(a.telefoon)" data-test="bel"><Icoon naam="Phone" />Bel</a>
                 <NuxtLink v-else class="dd-act" :to="`/accounts/${a.id}`" data-test="bel"><Icoon naam="Phone" />Bel</NuxtLink>
                 <button type="button" class="dd-act" data-test="plan-bezoek" @click="bezoek = { id: a.id, naam: a.naam }">Plan bezoek</button>
               </span>

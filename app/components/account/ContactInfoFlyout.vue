@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Info-flyout van de contactkaart (opzet uit DealDrive, 520 px): gegevens, toestemming en voorkeur,
 // "Bel me niet", vertrokken en (Expert) verhuizen naar een ander bedrijf. Elke wijziging bewaart zichzelf.
+import { telLink } from '~/utils/accountWeergave'
 import { CONTACTROL_LABEL, ROLLEN_CONTACT } from '~~/shared/contactgegevens'
 const props = defineProps<{ open: boolean; contact: any }>()
 const emit = defineEmits<{ sluit: []; gewijzigd: [] }>()
@@ -46,8 +47,8 @@ async function verhuis() {
               <label class="veld"><span class="veld-label">Functie</span><input v-model="f.functie" class="invoer" data-test="ci-functie" @change="bewaar({ functie: f.functie || null })"></label>
               <label class="veld"><span class="veld-label">Rol</span><select class="invoer" :value="contact.rol" @change="bewaar({ rol: ($event.target as HTMLSelectElement).value })"><option v-for="r in ROLLEN_CONTACT" :key="r" :value="r">{{ CONTACTROL_LABEL[r] }}</option></select></label>
               <label class="veld"><span class="veld-label">E-mail</span><input v-model="f.email" class="invoer" type="email" @change="bewaar({ email: f.email || null })"></label>
-              <label class="veld"><span class="veld-label">Telefoon</span><input v-model="f.telefoon" class="invoer" type="tel" @change="bewaar({ telefoon: f.telefoon || null })"></label>
-              <label class="veld"><span class="veld-label">Mobiel</span><input v-model="f.mobiel" class="invoer" type="tel" @change="bewaar({ mobiel: f.mobiel || null })"></label>
+              <label class="veld"><span class="veld-label">Telefoon</span><input v-model="f.telefoon" class="invoer" type="tel" @change="bewaar({ telefoon: f.telefoon || null })"><a v-if="f.telefoon" class="dd-act veld-bel" :href="telLink(f.telefoon)" :aria-label="`Bel ${f.telefoon}`"><Icoon naam="Phone" :grootte="14" />Bel</a></label>
+              <label class="veld"><span class="veld-label">Mobiel</span><input v-model="f.mobiel" class="invoer" type="tel" @change="bewaar({ mobiel: f.mobiel || null })"><a v-if="f.mobiel" class="dd-act veld-bel" :href="telLink(f.mobiel)" :aria-label="`Bel ${f.mobiel}`"><Icoon naam="Phone" :grootte="14" />Bel</a></label>
               <label class="veld"><span class="veld-label">LinkedIn</span><input v-model="f.linkedin" class="invoer" @change="bewaar({ linkedin: f.linkedin || null })"></label>
             </div>
           </article>

@@ -23,7 +23,8 @@ export function datumKort(t: string | null | undefined): string {
 }
 
 /** Telefoonlink voor een E.164-nummer. */
-export const telLink = (n: string) => `tel:${n.replace(/\s/g, '')}`
+/** Alleen cijfers en een plus aan het begin, zodat ook 030-200 13 70 of (06) 1234 5678 op elke telefoon belt. */
+export const telLink = (n: string) => `tel:${n.trim().replace(/(?!^\+)[^\d]/g, '')}`
 
 export const SCORE_DELEN: Record<string, string> = {
   aanleiding: 'Versheid van aanleidingen', bereikbaarheid: 'Bereikbaarheid', fit: 'Fit met de doelgroep', momentum: 'Momentum', recentheid: 'Recentheid van contact',

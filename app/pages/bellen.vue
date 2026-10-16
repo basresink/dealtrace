@@ -2,6 +2,7 @@
 // Bellen op de telefoon (8.5.4): de bellijst van vandaag met per regel een belknop (mobiel
 // eerst). Na terugkeer in de app vraagt "Hoe ging het?" met vier tegels de uitkomst; bij
 // "Gesproken" volgt de uitkomst uit het script. Offline gaat de uitkomst via de wachtrij.
+import { telLink } from '~/utils/accountWeergave'
 import { HOE_GING_HET, uitkomstNaarCode, type TegelSleutel } from '~~/shared/belblokken'
 import { NEE_REDENEN } from '~~/shared/nbStatus'
 import { voegWerkdagenToe } from '~~/shared/datum'
@@ -71,7 +72,7 @@ useHead({ title: 'Bellen · Dealtrace' })
                 <div class="rij-sub">{{ i.contactNaam ?? 'geen contact' }} · {{ i.reden }}</div>
                 <p v-if="i.eersteRegel" class="bel-eerste-regel">{{ i.eersteRegel }}</p>
               </div>
-              <a v-if="i.telefoon" :href="`tel:${i.telefoon}`" class="dd-actie dd-actie--primair bel-knop" :data-test="`bel-${i.accountId}`" @click="bel(i)"><Icoon naam="Phone" class="dd-actie-icoon" />Bel {{ i.telefoon }}</a>
+              <a v-if="i.telefoon" :href="telLink(i.telefoon)" class="dd-actie dd-actie--primair bel-knop" :data-test="`bel-${i.accountId}`" @click="bel(i)"><Icoon naam="Phone" class="dd-actie-icoon" />Bel {{ i.telefoon }}</a>
               <button v-else type="button" class="dd-act bel-knop" @click="bel(i); vraag = true">Geen nummer · uitkomst</button>
             </div>
           </div>

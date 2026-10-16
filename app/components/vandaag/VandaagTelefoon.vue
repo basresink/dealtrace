@@ -134,6 +134,7 @@ const stapels = computed(() => d.value.volgorde.filter((k: string) => d.value.st
           </button>
           <div class="vt-regel-acties">
             <template v-if="k === 'afspraken'">
+              <a v-if="r.contact?.tel" :href="r.contact.tel" class="dd-act vt-knop" data-test="vt-bel-afspraak">Bel</a>
               <a v-if="r.navigeer" :href="r.navigeer" target="_blank" rel="noopener" class="dd-act vt-knop" data-test="vt-navigeer">Navigeer</a>
               <button v-else type="button" class="dd-act vt-knop" disabled title="Geen adres bekend">Navigeer</button>
               <button v-if="r.zonderVerslag" type="button" class="dd-act dd-act--primair vt-knop" @click="emit('open', r.taakId)">Verslag</button>
@@ -144,7 +145,7 @@ const stapels = computed(() => d.value.volgorde.filter((k: string) => d.value.st
               <button type="button" class="dd-act vt-knop" data-test="vt-uitkomst" @click="emit('open', r.taakId)">Uitkomst</button>
             </template>
             <template v-else-if="k === 'acties'">
-              <a v-if="r.contactTaak && r.contact?.tel && r.actionType === 'bellen'" :href="r.contact.tel" class="dd-act vt-knop">Bel</a>
+              <a v-if="r.contactTaak && r.contact?.tel" :href="r.contact.tel" class="dd-act vt-knop">Bel</a>
               <button type="button" class="dd-act vt-knop" data-test="vt-afgehandeld" @click="afgehandeld(r)">{{ r.contactTaak ? 'Uitkomst' : 'Afgehandeld' }}</button>
             </template>
             <template v-else>
