@@ -20,7 +20,7 @@ const fout = (s: number, m: string): never => { throw Object.assign(new Error(m)
 const lijstSql = (ids: string[]) => sql`string_to_array(${ids.join(',')}, ',')`
 const kortNaam = (n: string) => String(n ?? '').replace(/^Testgebruiker /, '')
 
-export interface Kijker { id: string; rol: string }
+type Kijker = { id: string; rol: string }
 
 /** Wie telt mee: eigen, team (salesmanager: zijn teams, beheerder: iedereen) of één persoon uit het team. */
 export async function analyseBereik(tx: Tx, g: Kijker, q: { scope?: unknown; persoon?: unknown }) {
