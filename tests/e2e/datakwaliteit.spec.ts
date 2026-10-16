@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { apiLogin, login } from './hulp'
+import { apiLogin, ga, login } from './hulp'
 
 test.describe('datakwaliteit', () => {
   test('knop Data op Mijn dashboard opent de score en de categorieen', async ({ page }) => {
@@ -35,7 +35,7 @@ test.describe('datakwaliteit', () => {
     const c = d.categorieen.find((x: any) => x.aantal && !x.link)
     test.skip(!c, 'geen categorie met een lijst in de testdata')
     await login(page, 'u-06')
-    await page.goto('/data-kwaliteit')
+    await ga(page, '/data-kwaliteit')
     const kaart = page.locator(`[data-categorie="${c.sleutel}"]`)
     await kaart.getByTestId('dk-uitklap').click()
     const lijst = kaart.getByTestId('dk-lijst')

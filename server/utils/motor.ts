@@ -46,8 +46,12 @@ export function startersetRijen(org: string) {
 
 /** "Starterset terugzetten": de regels van de organisatie worden precies de 23 van de starterset. */
 export async function zetStartersetTerug(tx: Tx, org: string) {
+  // Een regel met dezelfde code houdt zijn id: open taken en inzichten blijven dan aan de regel hangen
+  // en de motor ontdubbelt erop (anders kwam elk open inzicht na het terugzetten nog een keer).
+  const oud = await tx.select({ id: schema.activityRules.id, code: schema.activityRules.code }).from(schema.activityRules).where(eq(schema.activityRules.scope, 'organisatie'))
+  const idVan = new Map(oud.filter((r) => r.code).map((r) => [r.code!, r.id]))
   await tx.delete(schema.activityRules).where(eq(schema.activityRules.scope, 'organisatie'))
-  return tx.insert(schema.activityRules).values(startersetRijen(org)).returning()
+  return tx.insert(schema.activityRules).values(startersetRijen(org).map((r) => (idVan.has(r.code) ? { ...r, id: idVan.get(r.code)! } : r))).returning()
 }
 
 async function instelling(tx: Tx, key: string): Promise<unknown> {
