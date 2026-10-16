@@ -33,8 +33,8 @@ useHead({ title: 'Richting · Dealtrace' })
   <div v-if="data">
     <PaginaKop kicker="Richting · Verkoopverhaal" titel="Ons verhaal" helpartikel="ons-verhaal">
       <template #acties>
-        <span class="pil pil--leeg" data-test="vv-bron">{{ data.bron === 'salesdna' ? `Uit SalesDNA${data.bronBijgewerkt ? ` · bijgewerkt ${datum(data.bronBijgewerkt)}` : ''}` : 'Eigen inrichting' }}</span>
-        <span v-if="data.kan.inrichten && st?.bron === 'salesdna'" class="meta" data-test="wijzig-in-salesdna">Wijzigen doe je in SalesDNA</span>
+        <span class="pil pil--leeg vv-bron" data-test="vv-bron">{{ data.bron === 'salesdna' ? `Uit SalesDNA${data.bronBijgewerkt ? ` · bijgewerkt ${datum(data.bronBijgewerkt)}` : ''}` : 'Eigen inrichting' }}</span>
+        <span v-if="data.kan.inrichten && st?.bron === 'salesdna'" class="meta vv-bron" data-test="wijzig-in-salesdna">Wijzigen doe je in SalesDNA</span>
         <NuxtLink v-else-if="data.kan.inrichten" class="dd-act" to="/instellingen/verkoopverhaal" data-test="inrichten">Inrichten</NuxtLink>
       </template>
     </PaginaKop>
@@ -142,3 +142,8 @@ useHead({ title: 'Richting · Dealtrace' })
     </div>
   </div>
 </template>
+
+<style scoped>
+/* De bronpil staat midden op de hoogte van de knoppen in de kop (B22). */
+.vv-bron { align-self: center; }
+</style>

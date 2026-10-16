@@ -31,7 +31,7 @@ async function openCel(r: any, metriek: string, label: string) {
 }
 const persoon = ref<any>(null)
 // Werkverdeling en Verplaats.
-const verplaats = ref<{ van: string; fase: string } | null>(null)
+const verplaats = ref<{ van: string; fase: string; label?: string } | null>(null)
 const naar = ref('')
 const reden = ref('')
 async function doeVerplaats() {
@@ -108,7 +108,7 @@ useHead({ title: 'Team · Dealtrace' })
                 <h2 class="kaart-titel">Werkverdeling</h2>
                 <ul class="schakel-lijst">
                   <li v-for="p in data.werkverdeling" :key="p.id" class="schakel-rij tm-verdeling"><strong>{{ kort(p.naam) }}</strong>
-                    <span class="chips"><button v-for="f in p.fases" :key="`${f.fase}-${f.status}`" type="button" class="chip" :title="`Verplaats ${f.fase}`" @click="verplaats = { van: p.id, fase: f.fase }">{{ f.fase }} · {{ f.aantal }}</button></span></li>
+                    <span class="chips"><button v-for="f in p.fases" :key="`${f.fase}-${f.status}`" type="button" class="chip" :title="`Verplaats ${f.label ?? f.fase}`" @click="verplaats = { van: p.id, fase: f.fase, label: f.label }">{{ f.label ?? f.fase }} · {{ f.aantal }}</button></span></li>
                 </ul>
               </article>
               <article class="kaart" data-test="goedkeuringen">
@@ -149,7 +149,7 @@ useHead({ title: 'Team · Dealtrace' })
       <Teleport to="body">
         <div v-if="verplaats" class="fo-overlay" @click.self="verplaats = null">
           <form class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" @submit.prevent="doeVerplaats">
-            <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Verplaats</span><h2 class="fo-titel">Accounts in {{ verplaats.fase }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="verplaats = null"><Icoon naam="X" /></button></header>
+            <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Verplaats</span><h2 class="fo-titel">Accounts in {{ verplaats.label ?? verplaats.fase }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="verplaats = null"><Icoon naam="X" /></button></header>
             <div class="fo-body fo-body--formulier">
               <label class="veld"><span class="veld-label">Naar</span><select v-model="naar" class="invoer" required data-test="verplaats-naar"><option value="" disabled>Kies een collega</option><option v-for="r in data.rijen.filter((x: any) => x.id !== verplaats!.van)" :key="r.id" :value="r.id">{{ kort(r.naam) }}</option></select></label>
               <label class="veld"><span class="veld-label">Reden</span><input v-model="reden" class="invoer" required placeholder="Bijvoorbeeld: verlof" data-test="verplaats-reden"></label>

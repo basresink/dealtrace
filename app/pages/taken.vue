@@ -10,7 +10,12 @@ const { functie } = useMe()
 const { rondAf, versie } = useAfronden()
 const motorVersie = useState('motorVersie', () => 0)
 function zet(p: Record<string, string | undefined>) { const q: Record<string, any> = { ...route.query, ...p }; for (const k of Object.keys(q)) if (!q[k]) delete q[k]; router.replace({ query: q }) }
-const query = computed(() => ({ ...route.query }))
+// Eerste portie per groep; "Toon meer" haalt per groep de volgende portie op (B09).
+const PORTIE = 25
+const toon = ref<Record<string, number>>({})
+const query = computed(() => ({ ...route.query, per: PORTIE, toon: Object.entries(toon.value).map(([g, n]) => `${g}:${n}`).join(',') || undefined }))
+watch(() => ['q', 'eigenaar', 'prioriteit', 'actiesoort', 'herkomst', 'periode', 'fase'].map((k) => route.query[k] ?? '').join('|'), () => { toon.value = {} })
+function toonMeer(g: { naam: string; taken: unknown[] }) { toon.value = { ...toon.value, [g.naam]: g.taken.length + PORTIE } }
 const { data, refresh } = await useFetch<any>('/api/tasks', { query, default: () => ({ groepen: [], tellers: {}, kan: {}, teamleden: [], titel: '' }) })
 watch([versie, motorVersie], () => { refresh() })
 const weergave = computed(() => (route.query.weergave === 'horizon' && data.value.kan.horizon ? 'horizon' : 'lijst'))
@@ -68,24 +73,19 @@ const nieuweAfspraak = ref(false)
 
 <template>
   <div>
-    <section class="section">
-      <div class="container">
-        <div class="sec-head">
-          <div>
-            <span class="kicker kicker--streep">Taken</span>
-            <h1 class="title title--groot" data-test="acties-titel">{{ data.titel }}</h1>
-            <p v-if="data.tellers.achterstallig" class="subtitle tekst-rood">{{ data.tellers.achterstallig }} {{ data.tellers.achterstallig === 1 ? 'taak staat' : 'taken staan' }} over tijd.</p>
-          </div>
-          <div class="toolbar-buttons">
-            <button type="button" class="dd-actie dd-actie--primair" data-test="taak-nieuw" @click="nieuw = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
-            <button type="button" class="dd-actie dd-actie--zwart" data-test="afspraak-nieuw" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
-            <NuxtLink to="/briefings" class="dd-actie dd-actie--secundair" data-test="briefings-knop"><Icoon naam="ScrollText" class="dd-actie-icoon" />Briefings</NuxtLink>
-            <HulpKnop artikel="een-taak-afronden-met-een-uitkomst" />
-            <button type="button" class="dd-actie dd-actie--secundair" :aria-expanded="filtersOpen" data-test="filters-knop" @click="filtersOpen = !filtersOpen"><Icoon naam="Filter" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="tk-teller" data-test="filters-teller">{{ actieveFilters }}</span></button>
-          </div>
-        </div>
-      </div>
-    </section>
+    <PaginaKop kicker="Taken" helpartikel="een-taak-afronden-met-een-uitkomst">
+      <template #titel><h1 class="title title--groot" data-test="acties-titel">{{ data.titel }}</h1></template>
+      <template #uitleg>
+        <p v-if="data.tellers.achterstallig" class="subtitle subtitle--groot tekst-rood" data-test="taken-over-tijd">{{ data.tellers.achterstallig }} {{ data.tellers.achterstallig === 1 ? 'taak staat' : 'taken staan' }} over tijd.</p>
+        <p v-else class="subtitle subtitle--groot">Je open taken op volgorde van vervaldatum.</p>
+      </template>
+      <template #acties>
+        <button type="button" class="dd-actie dd-actie--primair" data-test="taak-nieuw" @click="nieuw = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
+        <button type="button" class="dd-actie dd-actie--zwart" data-test="afspraak-nieuw" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+        <NuxtLink to="/briefings" class="dd-actie dd-actie--secundair" data-test="briefings-knop"><Icoon naam="ScrollText" class="dd-actie-icoon" />Briefings</NuxtLink>
+        <button type="button" class="dd-actie dd-actie--secundair" :aria-expanded="filtersOpen" data-test="filters-knop" @click="filtersOpen = !filtersOpen"><Icoon naam="Filter" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="tk-teller" data-test="filters-teller">{{ actieveFilters }}</span></button>
+      </template>
+    </PaginaKop>
 
     <section class="section section--laatste">
       <div class="container">
@@ -119,8 +119,9 @@ const nieuweAfspraak = ref(false)
         <HorizonPaneel v-if="weergave === 'horizon' && data.horizon" class="mt-16" :horizon="data.horizon" @open="openUitHorizon" />
         <template v-else>
           <div v-for="g in data.groepen" :key="g.naam" class="taak-groep mt-16" :data-test="`groep-${g.naam}`">
-            <h2 class="kicker kicker--streep">{{ g.naam }} <span class="pil pil--leeg">{{ g.taken.length }}</span></h2>
+            <h2 class="kicker kicker--streep">{{ g.naam }} <span class="pil pil--leeg">{{ g.totaal ?? g.taken.length }}</span></h2>
             <TaakKaart v-for="t in g.taken" :key="t.id" :taak="t" :bulk="data.kan.bulk" :gekozen="gekozen.has(t.id)" @open="open = t.id" @vink="vink(t)" @uitstel="stelUit(t)" @menu="openMenu($event, t)" @kies="kies(t.id)" />
+            <button v-if="g.totaal > g.taken.length" type="button" class="dd-actie dd-actie--secundair tk-meer" :data-test="`toon-meer-${g.naam}`" @click="toonMeer(g)">Toon meer <span class="tnum">({{ g.taken.length }} van {{ g.totaal }})</span></button>
           </div>
         </template>
       </div>
@@ -147,6 +148,7 @@ const nieuweAfspraak = ref(false)
 </template>
 
 <style scoped>
+.tk-meer { margin-top: 8px; }
 .tk-weergave { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .tk-teller { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px; border-radius: 2px; background: var(--ink); color: var(--yellow); font-size: 11px; font-weight: 700; }
 </style>

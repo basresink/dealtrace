@@ -58,6 +58,8 @@ const weken = computed(() => {
 const nu = ref<number | null>(null)
 onMounted(() => { nu.value = Date.now() })
 const eerstvolgende = computed(() => (nu.value === null ? null : meetings.value.find((m: any) => Date.parse(m.eind) >= nu.value!)?.id ?? null))
+/** Meetings van vandaag die al voorbij zijn: grijs met "Afgelopen" en de knop Verslag maken (B18). Pas na het laden. */
+const voorbij = (m: any) => nu.value !== null && Date.parse(m.eind) < nu.value
 
 const afspraakId = computed(() => (route.query.afspraak as string) || null)
 const planOpen = ref(false)
@@ -133,15 +135,16 @@ useHead({ title: 'Meetings · Dealtrace' })
             <div v-for="d in w.dagen" :key="d.iso" class="mt-dag">
               <div class="mt-dag-kop"><h2 class="mt-dag-titel">{{ d.titel }}</h2><span class="mt-dag-n tnum">{{ d.items.length }} {{ d.items.length === 1 ? 'meeting' : 'meetings' }}</span></div>
               <div
-                v-for="m in d.items" :key="m.id" class="mt-kaart" :class="{ 'mt-kaart--nu': m.id === eerstvolgende }" role="button" tabindex="0" :data-test="`meeting-${m.id}`"
+                v-for="m in d.items" :key="m.id" class="mt-kaart" :class="{ 'mt-kaart--nu': m.id === eerstvolgende, 'mt-kaart--voorbij': voorbij(m) }" role="button" tabindex="0" :data-test="`meeting-${m.id}`"
                 @click="zet('afspraak', m.id)" @keydown.enter.prevent="zet('afspraak', m.id)"
               >
                 <div class="mt-tijd"><span class="tnum">{{ tijd(m.start) }}</span><span class="mt-duur tnum">{{ duur(m) }}</span></div>
                 <div class="mt-body">
-                  <div class="mt-regel1"><span class="mt-vorm" :class="`mt-vorm--${vormVan(m)}`">{{ VORM[vormVan(m)] }}</span><span class="mt-naam">{{ m.accountNaam ?? m.soort.naam }}</span></div>
+                  <div class="mt-regel1"><span class="mt-vorm" :class="`mt-vorm--${vormVan(m)}`">{{ VORM[vormVan(m)] }}</span><span class="mt-naam">{{ m.accountNaam ?? m.soort.naam }}</span><span v-if="voorbij(m)" class="pil pil--grijs" data-test="meeting-afgelopen">Afgelopen</span></div>
                   <span class="mt-sub">{{ m.soort.naam }}<template v-if="m.contactNaam"> · {{ m.contactNaam }}</template><template v-if="vormVan(m) === 'intern'"> · telt niet als klantcontact</template><template v-if="m.geplandDoor"> · gepland door {{ naam(m.geplandDoor) }}</template></span>
-                  <div v-if="m.meetinglink || m.accountId" class="mt-acties">
-                    <a v-if="m.meetinglink" :href="m.meetinglink" target="_blank" rel="noopener noreferrer" class="mt-link" @click.stop>Deelnemen ↗</a>
+                  <div v-if="m.meetinglink || m.accountId || voorbij(m)" class="mt-acties">
+                    <button v-if="voorbij(m)" type="button" class="mt-link" data-test="meeting-verslag" @click.stop="zet('afspraak', m.id)">Verslag maken</button>
+                    <a v-if="m.meetinglink && !voorbij(m)" :href="m.meetinglink" target="_blank" rel="noopener noreferrer" class="mt-link" @click.stop>Deelnemen ↗</a>
                     <NuxtLink v-if="m.accountId" :to="`/accounts/${m.accountId}`" class="mt-link mt-link--stil" @click.stop>Klantkaart</NuxtLink>
                   </div>
                 </div>
@@ -206,6 +209,9 @@ useHead({ title: 'Meetings · Dealtrace' })
 .mt-kaart:hover { background: var(--surface); }
 .mt-kaart:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .mt-kaart--nu { border-color: var(--ink); border-left: 3px solid var(--yellow); }
+.mt-kaart--voorbij { background: var(--surface); }
+.mt-kaart--voorbij .mt-tijd, .mt-kaart--voorbij .mt-naam { color: var(--muted); }
+button.mt-link { padding: 0; background: none; border: 0; cursor: pointer; font-family: inherit; }
 .mt-tijd { display: grid; gap: 2px; align-content: start; font-size: 14px; font-weight: 700; }
 .mt-duur { font-size: var(--fs-label); font-weight: 400; color: var(--muted); }
 .mt-body { display: grid; gap: 3px; min-width: 0; }

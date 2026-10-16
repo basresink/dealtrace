@@ -160,14 +160,14 @@ const uren = Array.from({ length: 25 }, (_, i) => i)
             :style="b.stijl" :data-test="`afspraak-${b.id}`" :title="`${tijd(b.data.start)} tot ${tijd(b.data.eind)} · ${b.data.accountNaam ?? b.data.soort.naam} · ${b.data.soort.naam}`"
             @click.stop="emit('afspraak', b.id)"
           >
-            <span class="ar-tijd tnum">{{ tijd(b.data.start) }}<template v-if="!b.kort">–{{ tijd(b.data.eind) }}</template></span>
+            <span class="ar-tijd tnum">{{ tijd(b.data.start) }}<template v-if="!b.kort">-{{ tijd(b.data.eind) }}</template></span>
             <span class="ar-titel">{{ b.data.accountNaam ?? b.data.soort.naam }}</span>
             <span v-if="!b.krap" class="ar-sub">{{ b.data.soort.naam }} · {{ VORM[b.data.vorm] ?? b.data.vorm }}<template v-if="toonEigenaar"> · {{ naam(b.data.ownerNaam) }}</template></span>
             <span v-if="b.data.geplandDoor && !b.krap" class="ar-sub ar-door">Gepland door {{ naam(b.data.geplandDoor) }}</span>
             <span v-if="conflict.has(b.id) && !b.kort" class="ar-merk">Conflict</span>
           </button>
           <NuxtLink v-else-if="b.soort === 'belblok'" :to="`/belblokken/${b.id}`" class="ar-blok ar-blok--belblok" :class="{ 'ar-blok--kort': b.kort, 'ar-blok--krap': b.krap }" :style="b.stijl" :data-test="`belblok-${b.id}`" :title="`${tijd(b.data.start)} tot ${tijd(b.data.eind)} · Belblok`" @click.stop>
-            <span class="ar-tijd tnum">{{ tijd(b.data.start) }}<template v-if="!b.kort">–{{ tijd(b.data.eind) }}</template></span>
+            <span class="ar-tijd tnum">{{ tijd(b.data.start) }}<template v-if="!b.kort">-{{ tijd(b.data.eind) }}</template></span>
             <span class="ar-titel">Belblok<template v-if="b.data.gesprekken"> · {{ b.data.gesprekken }} {{ b.data.gesprekken === 1 ? 'gesprek' : 'gesprekken' }}</template><template v-if="b.data.status === 'bezig'"> · loopt</template></span>
           </NuxtLink>
           <button v-else-if="b.soort === 'taak' && b.data.length === 1" type="button" class="ar-blok ar-blok--taak ar-blok--kort" :style="b.stijl" :data-test="`taak-${b.data[0].id}`" :title="`${tijd(b.data[0].due)} · ${b.data[0].titel}${b.data[0].accountNaam ? ` · ${b.data[0].accountNaam}` : ''}`" @click.stop="emit('taak', b.data[0].id)">

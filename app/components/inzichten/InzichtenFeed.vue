@@ -62,14 +62,22 @@ defineExpose({ refresh })
 
 <template>
   <div class="if">
-    <section :class="props.metKop ? 'section' : 'if-werkbalk-sectie'">
+    <!-- Op /inzichten de standaard paginakop (zoeken, AI en hulp vooraan); als tabblad alleen de knoppen. -->
+    <PaginaKop v-if="props.metKop" kicker="Accounts · Inzichten" uitleg="Interne en externe inzichten uit je CRM, nieuws, vacatures, KvK en bedrijfssites, gefilterd op je accounts. Elk inzicht heeft een AI-context en directe acties." helpartikel="inzichten">
+      <template #titel><h1 class="title title--groot" data-test="inzichten-titel">Wat speelt er bij je accounts?</h1></template>
+      <template #acties>
+        <div class="keuzegroep" role="radiogroup" aria-label="Soort account" data-test="filter-soort">
+          <button v-for="[k, l] in SOORTEN" :key="k" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': q('soort') === k }" :aria-pressed="q('soort') === k" @click="zet({ soort: k || undefined })">{{ l }}</button>
+        </div>
+        <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'if-filters--aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="inzicht-filters" @click="filtersOpen = !filtersOpen">
+          <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="if-teller">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="if-pijl" :class="{ 'if-pijl--open': filtersOpen }" />
+        </button>
+        <button v-if="magMetBron" type="button" class="dd-actie dd-actie--secundair" data-test="inzicht-met-bron-knop" @click="metBron = true"><Icoon naam="Plus" class="dd-actie-icoon" />Inzicht</button>
+      </template>
+    </PaginaKop>
+    <section v-else class="if-werkbalk-sectie">
       <div class="container">
-        <div :class="props.metKop ? 'sec-head' : 'if-werkbalk'">
-          <div v-if="props.metKop">
-            <span class="kicker kicker--streep">Accounts · Inzichten</span>
-            <h1 class="title title--groot" data-test="inzichten-titel">Wat speelt er bij je accounts?</h1>
-            <p class="subtitle subtitle--groot">Interne en externe inzichten uit je CRM, nieuws, vacatures, KvK en bedrijfssites, gefilterd op je accounts. Elk inzicht heeft een AI-context en directe acties.</p>
-          </div>
+        <div class="if-werkbalk">
           <div class="toolbar-buttons if-knoppen">
             <div class="keuzegroep" role="radiogroup" aria-label="Soort account" data-test="filter-soort">
               <button v-for="[k, l] in SOORTEN" :key="k" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': q('soort') === k }" :aria-pressed="q('soort') === k" @click="zet({ soort: k || undefined })">{{ l }}</button>
@@ -78,7 +86,6 @@ defineExpose({ refresh })
               <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="if-teller">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="if-pijl" :class="{ 'if-pijl--open': filtersOpen }" />
             </button>
             <button v-if="magMetBron" type="button" class="dd-actie dd-actie--secundair" data-test="inzicht-met-bron-knop" @click="metBron = true"><Icoon naam="Plus" class="dd-actie-icoon" />Inzicht</button>
-            <HulpKnop v-if="props.metKop" artikel="inzichten" />
           </div>
         </div>
       </div>

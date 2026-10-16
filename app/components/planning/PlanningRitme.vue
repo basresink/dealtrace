@@ -36,7 +36,7 @@ const BRON: Record<string, string> = { koud: 'Koud', warm: 'Warm', winback: 'Win
               </dl>
               <button v-if="data.kan.beheer" type="button" class="dd-act mt-8" :data-test="`ritme-bewerk-${r.naam}`" @click="start(r)">Stappen aanpassen</button>
               <div v-else class="mt-8">
-                <label class="veld"><span class="veld-label">Stel wijziging voor</span><input v-model="voorstel[r.id]" class="invoer"></label>
+                <div class="veld"><label class="veld-label" :for="`ritme-voorstel-${r.id}`">Jouw voorstel voor dit ritme</label><textarea :id="`ritme-voorstel-${r.id}`" v-model="voorstel[r.id]" class="invoer" rows="2" :aria-label="`Jouw voorstel voor ${r.naam}`" placeholder="Bijvoorbeeld: poging 3 een dag later" :data-test="`ritme-voorstel-${r.naam}`" /></div>
                 <button type="button" class="dd-act mt-8" :disabled="!voorstel[r.id]?.trim()" @click="stelVoor(r.id)">Stel wijziging voor</button>
               </div>
             </article>

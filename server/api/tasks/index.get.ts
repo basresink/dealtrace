@@ -1,5 +1,7 @@
 // GET /api/tasks: taken met filters (in de URL), groepen, tellers en horizon (F06).
 // Standaard "Van mij"; de salesmanager kiest teamleden (alleen zijn teams, server-side).
+// Met `per` (taken.vue) krijgt elke groep een eerste portie; `toon=Groep:n,...` vraagt per groep meer.
+// Zonder `per` komen alle taken mee (API-gebruik en tests). De horizon rekent alleen bij weergave=horizon.
 import { and, eq, inArray, isNull, or } from 'drizzle-orm'
 import { GROEPEN, groepVan, horizon, isAchterstallig, ordenTaken } from '../../../shared/taken'
 import { nlMoment } from '../../../shared/datum'
@@ -54,11 +56,15 @@ export default defineEventHandler(async (event) => {
     if (lijstVan('fase').length) lijst = lijst.filter((t) => t.account?.fase && lijstVan('fase').includes(t.account.fase.id))
     if (q.q) lijst = lijst.filter((t) => `${t.title} ${t.account?.naam ?? ''} ${t.contact?.naam ?? ''}`.toLowerCase().includes(q.q!.toLowerCase()))
     const geordend = ordenTaken(lijst, nu)
-    const h = kan(ctx, 'taken.horizon') ? horizon(geordend, nu) : null
+    const h = kan(ctx, 'taken.horizon') && q.weergave === 'horizon' ? horizon(geordend, nu) : null
+    const portieGrootte = Number(q.per) > 0 ? Math.min(Number(q.per), 500) : 0
+    const toon = new Map((q.toon ?? '').split(',').map((x) => x.split(':')).filter((x) => x.length === 2 && Number(x[1]) > 0).map(([g, n]) => [g!, Number(n)]))
+    const portie = (g: string) => (portieGrootte ? Math.max(portieGrootte, toon.get(g) ?? 0) : Infinity)
     return {
-      titel: tellers.vandaag + tellers.achterstallig ? `${tellers.vandaag + tellers.achterstallig} ${tellers.vandaag + tellers.achterstallig === 1 ? 'taak' : 'taken'} vandaag${tellers.achterstallig ? `, ${tellers.achterstallig} over tijd` : ''}.` : 'Niets te doen.',
+      // Eén definitie met de statkaarten: "vandaag" is wat vandaag vervalt; over tijd staat apart in de uitleg.
+      titel: tellers.vandaag ? `${tellers.vandaag} ${tellers.vandaag === 1 ? 'taak' : 'taken'} vandaag.` : tellers.achterstallig ? 'Niets nieuws voor vandaag.' : 'Niets te doen.',
       tellers,
-      groepen: GROEPEN.map((g) => ({ naam: g, taken: geordend.filter((t) => t.groep === g) })).filter((g) => g.taken.length),
+      groepen: GROEPEN.map((g) => { const alle = geordend.filter((t) => t.groep === g); return { naam: g, totaal: alle.length, taken: alle.slice(0, portie(g)) } }).filter((g) => g.totaal),
       horizon: h,
       teamleden: users.filter((u) => teamleden.includes(u.id) && u.id !== ctx.gebruiker.id).map((u) => ({ id: u.id, naam: u.naam })),
       kan: { horizon: kan(ctx, 'taken.horizon'), bulk: kan(ctx, 'taken.bulk'), herhaling: kan(ctx, 'taken.herhaling'), team: ctx.gebruiker.rol === 'salesmanager' || ctx.gebruiker.rol === 'beheerder', verwijderen: ctx.gebruiker.rol === 'beheerder' },
