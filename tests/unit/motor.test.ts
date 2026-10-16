@@ -221,6 +221,13 @@ describe('starterset (gat 8, 41)', () => {
     // Niet ingesteld (null) valt terug op de standaard.
     expect(motorRun(invoer({ regels: [sr04], accounts: [a], belmatrix: { prospect: { C: null } } })).taken).toHaveLength(1)
   })
+  it('een motortaak krijgt het primaire contact (beslisser) mee als contactId, en null zonder contact', () => {
+    const sr04 = regel('SR04')
+    const met = acc({ klasseCode: 'C', laatsteContactOp: dagen(10), contactId: 'c-beslisser', contactNaam: 'Petra Testbeek' })
+    expect(motorRun(invoer({ regels: [sr04], accounts: [met] })).taken[0]).toMatchObject({ accountId: met.id, contactId: 'c-beslisser' })
+    const zonder = acc({ klasseCode: 'C', laatsteContactOp: dagen(10) })
+    expect(motorRun(invoer({ regels: [sr04], accounts: [zonder] })).taken[0]!.contactId).toBeNull()
+  })
 })
 
 describe('motorRun (F15)', () => {

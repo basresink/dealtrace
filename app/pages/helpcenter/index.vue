@@ -29,7 +29,7 @@ useHead({ title: 'Helpcenter · Dealtrace' })
 
 <template>
   <div>
-    <PaginaKop kicker="Ondersteuning" titel="Helpcenter" uitleg="Uitleg over elk scherm en over new business. Kom je er niet uit? Vraag de AI-assistent of mail support." helpartikel="helpcenter">
+    <PaginaKop kicker="Ondersteuning" titel="Helpcenter" uitleg="Uitleg over elk scherm, over new business en over nieuwe klanten werven. Kom je er niet uit? Vraag de AI-assistent of mail support." helpartikel="helpcenter">
       <template v-if="beheerAan" #acties><NuxtLink to="/instellingen/help" class="dd-actie dd-actie--secundair" data-test="help-beheer"><Icoon naam="Pencil" class="dd-actie-icoon" />Artikelen beheren</NuxtLink></template>
     </PaginaKop>
     <section class="section hc-sectie">

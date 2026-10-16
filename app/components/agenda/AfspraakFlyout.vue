@@ -206,7 +206,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
             <div class="af-def"><dt>Wanneer</dt><dd class="tnum">{{ wanneer }} <span class="meta">· {{ duurLabel }}</span></dd></div>
             <div class="af-def"><dt>Toegewezen aan</dt><dd>{{ eigenaar }}</dd></div>
             <div v-if="a.account" class="af-def"><dt>Klant</dt><dd><NuxtLink :to="`/accounts/${a.account.id}`" class="tekst-link" data-test="af-account" @click="emit('sluit')">{{ a.account.naam }}</NuxtLink></dd></div>
-            <div v-if="a.account" class="af-def"><dt>Contactpersoon</dt><dd><NuxtLink v-if="a.contact" :to="`/contacten/${a.contact.id}`" class="tekst-link" data-test="af-contact" @click="emit('sluit')">{{ a.contact.naam }}</NuxtLink><template v-if="a.contact && (a.contact.functie || a.contact.rol)"> <span class="meta">· {{ a.contact.functie ?? a.contact.rol }}</span></template><span v-if="!a.contact" class="meta">Geen contactpersoon gekoppeld</span></dd></div>
+            <div v-if="a.account" class="af-def"><dt>Contactpersoon</dt><dd><NuxtLink v-if="a.contact" :to="`/contacten/${a.contact.id}`" class="tekst-link" data-test="af-contact" @click="emit('sluit')">{{ a.contact.naam }}</NuxtLink><span v-if="a.contact && (a.contact.functie || a.contact.rol)" class="meta">&nbsp;· {{ a.contact.functie ?? a.contact.rol }}</span><span v-if="!a.contact" class="meta">Geen contactpersoon gekoppeld</span></dd></div>
             <div v-if="a.beschrijving" class="af-def"><dt>Beschrijving</dt><dd class="af-pre">{{ a.beschrijving }}</dd></div>
             <div v-if="a.locatie" class="af-def"><dt>Locatie</dt><dd>{{ a.locatie }}</dd></div>
             <div v-if="a.meetinglink" class="af-def"><dt>Meeting</dt><dd><a :href="a.meetinglink" target="_blank" rel="noopener" class="tekst-link">Open de meetinglink</a></dd></div>
@@ -409,5 +409,6 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
   .af-def { grid-template-columns: 1fr; gap: 2px; }
   .af-rij3 { grid-template-columns: 1fr 1fr; }
   .af-an-kop .dd-act, .af-vb-deel .dd-act { min-height: 44px; }
+  .af-def dd a, .af-account-naam, .fo-head .taak-meta a { display: inline-flex; align-items: center; min-height: 44px; }
 }
 </style>

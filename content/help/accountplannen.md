@@ -21,7 +21,7 @@ Elke kaart toont of het account een prospect of een klant is, de status, de eige
 
 ## Een plan maken
 
-Kies **+ Accountplan** op het overzicht, of **+ Accountplan** in het tabblad **Reis en kwalificatie** van de accountkaart. Vanaf de accountkaart staat het account al ingevuld. Geef het plan een titel met de periode erin, zoals "Accountplan 2027", en vul **Geldig van** en **Geldig tot** in. Na de einddatum staat het plan vanzelf bij Verlopen.
+Kies **+ Accountplan** op het overzicht, of **+ Accountplan** op de accountkaart, in het tabblad **Reis en kwalificatie** (bij een klant: **Kwalificatie**). Vanaf de accountkaart staat het account al ingevuld. Geef het plan een titel met de periode erin, zoals "Accountplan 2027", en vul **Geldig van** en **Geldig tot** in. Na de einddatum staat het plan vanzelf bij Verlopen.
 
 ## De blokken
 

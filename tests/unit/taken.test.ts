@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { RITMES_STARTSET, afrondTekst, kiesRitme, ritmeRapport, startRitme, valideerRitme, verwerkUitkomst, type Ritme } from '../../shared/hercontact'
 import { nlMoment } from '../../shared/datum'
-import { groepVan, horizon, ordenTaken, rondTaakAf, uitstellen, vervalLabel, voorinvullingUitInzicht, type Taak } from '../../shared/taken'
+import { PRIORITEITEN, PRIO_LABEL, TAAK_TYPES, groepVan, herhalingAantal, horizon, isDringend, isPrioriteit, ordenTaken, rondTaakAf, uitstellen, vervalLabel, volgendeStap, voorinvullingUitInzicht, type Taak } from '../../shared/taken'
 import { kiesAanleidingVanDeDag, samenvattingsregel, vandaagKicker } from '../../shared/vandaag'
 
 const NU = new Date('2026-10-14T08:00:00Z') // woensdag 10:00 in Nederland
@@ -144,6 +144,35 @@ describe('ordenen, horizon en uitstellen', () => {
     expect(voorinvullingUitInzicht({ id: 's', title: 'x', type: 'vacature', relevanceScore: 80, accountNaam: 'Teeuwen Bouw' })).toMatchObject({ title: 'Volg op: vacature bij Teeuwen Bouw', priority: 'hoog', actionType: 'taak', herkomst: 'inzicht', signalId: 's' })
     expect(voorinvullingUitInzicht({ id: 's', title: 'x', type: 'v', relevanceScore: 79 }).priority).toBe('middel')
     expect(voorinvullingUitInzicht({ id: 's', title: 'x', type: 'v', relevanceScore: 50, data: { voorstel: { title: 'Bel over vacature', actionType: 'bellen', priority: 'laag' } } })).toMatchObject({ title: 'Bel over vacature', actionType: 'bellen' })
+  })
+})
+
+describe('nieuwe taak in de opzet van DealDrive', () => {
+  it('vier prioriteiten met urgent; urgent gaat voor hoog in de volgorde', () => {
+    expect(PRIORITEITEN.map((p) => PRIO_LABEL[p])).toEqual(['Laag', 'Middel', 'Hoog', 'Urgent'])
+    expect([isPrioriteit('urgent'), isPrioriteit('hoog'), isPrioriteit('normaal'), isPrioriteit(undefined)]).toEqual([true, true, false, false])
+    expect([isDringend('urgent'), isDringend('hoog'), isDringend('middel')]).toEqual([true, true, false])
+    const t = (id: string, priority: string) => ({ id, priority, dueDate: '2026-10-14T12:00:00Z' })
+    expect(ordenTaken([t('a', 'hoog'), t('b', 'laag'), t('c', 'urgent'), t('d', 'middel')], NU).map((x) => x.id)).toEqual(['c', 'a', 'd', 'b'])
+  })
+  it('type als knoppen: Te doen, Bellen, Mailen, Bericht, Bezoek en LinkedIn, elk een actiesoort', () => {
+    expect(TAAK_TYPES.map((x) => x.label)).toEqual(['Te doen', 'Bellen', 'Mailen', 'Bericht', 'Bezoek', 'LinkedIn'])
+    expect(TAAK_TYPES.map((x) => x.id)).toEqual(['taak', 'bellen', 'mailen', 'bericht', 'bezoek', 'linkedin'])
+  })
+  it('herhalingAantal: wekelijks tot en met de einddatum, werkdagen zonder weekend, hooguit 52', () => {
+    const eerste = '2026-10-14T08:00:00Z' // woensdag
+    expect(herhalingAantal(eerste, 'wekelijks', '2026-11-04')).toBe(4)
+    expect(herhalingAantal(eerste, 'wekelijks', '2026-10-14')).toBe(1)
+    expect(herhalingAantal(eerste, 'werkdag', '2026-10-20')).toBe(5) // wo, do, vr, ma, di
+    expect(herhalingAantal(eerste, 'werkdag', '2028-01-01')).toBe(52)
+    expect(herhalingAantal('', 'wekelijks', '2026-11-04')).toBe(1)
+  })
+  it('volgendeStap: urgent, over tijd, laatste poging, inzicht en standaard', () => {
+    expect(volgendeStap({ priority: 'urgent', dueDate: null }, NU)).toMatch(/^Pak deze nu op/)
+    expect(volgendeStap({ priority: 'middel', dueDate: '2026-10-10T08:00:00Z' }, NU)).toMatch(/over tijd/)
+    expect(volgendeStap({ priority: 'middel', dueDate: null, poging: { n: 5, van: 5 } }, NU)).toMatch(/Laatste poging/)
+    expect(volgendeStap({ priority: 'middel', dueDate: null, herkomst: 'inzicht' }, NU)).toMatch(/inzicht/)
+    expect(volgendeStap({ priority: 'middel', dueDate: null }, NU)).toBe('Plan een concreet moment en leg de uitkomst vast zodra het gedaan is.')
   })
 })
 
