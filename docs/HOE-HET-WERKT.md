@@ -477,6 +477,16 @@ De standaard uit de mockup staat in `app/assets/css/ui-standaard.css`, als laats
 - **Kaarten:** rand 1 px, binnenmarge 24 px (16 px op de telefoon).
 - **Telefoon:** onder 720 px is elk tikdoel minstens 44 px; de rij zet de tijd boven de naam.
 
+## Accountkaart in de opzet van DealDrive
+
+`app/pages/accounts/[id].vue` volgt de klantkaart van DealDrive:
+
+- **Kop:** een logovlak met initialen, de kruimel, branche, plaats en land, de naam met de klassepil (gekleurd per letter, te wijzigen voor wie mag), de fase- en statuspil, website en telefoon, en de stuurstrip: laatste actie, call en bezoek, reis en fase. Rechts: Info, Contacten, Briefing (zwart, opent de Pitstop in een venster) en Bel.
+- **Statstrook:** open acties met het aantal achterstallige, inzichten met het aantal ongeziene, score, open deals, laatste contact en eigenaar.
+- **Daaronder:** de aanleiding, de huidige leverancier met "Zo zeg je het" en de stand van een overdracht.
+- **Tabbladen**, met het actieve tabblad in de URL (`?tab=`): Tijdlijn (inzichten, taken, afspraken, deals en contactmomenten samen, met + Taak, + Afspraak, + Mail en een filter per soort), Inzichten, Taken (per groep: achterstallig, vandaag, deze week, later, afgerond), Notities, E-mails, Afspraken, Gespreksverslagen (verslag van een afspraak, transcript en notitie bij een belpoging), Deals (overdrachten en wat DealDrive terugmeldt), Campagnes, Documenten, Reis en kwalificatie (agents, BAND, ritme, reis, buying committee, Datacollectief) en Eigen velden.
+- **API:** `GET /api/accounts/:id/tabbladen` levert alle tabbladen in één keer, met één query per soort. `POST /api/accounts/:id/mail` maakt van een zelfgeschreven mail een goedgekeurd concept en verstuurt dat langs de Bewaker (`mail.versturen`). `POST /api/accounts/:id/documenten` en `DELETE /api/accounts/:id/documenten/:docId` beheren documenten: PDF, Office, tekst en afbeeldingen tot 8 MB, in `bijlagen` met soort `document` en een naam (migratie 0033).
+
 ## Waar staat wat
 
 | Map | Inhoud |

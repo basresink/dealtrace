@@ -11,7 +11,7 @@ test('Zet nee als schuifvenster, in hooguit 3 tikken, en offline precies één k
   expect(r.status()).toBe(200)
   const id = (await r.json()).id
   await login(page, 'u-02')
-  await ga(page, `/accounts/${id}`)
+  await ga(page, `/accounts/${id}?tab=kwalificatie`)
   await expect(page.getByTestId('fasepil')).toBeVisible()
   await expect(page.getByTestId('statuspil')).toBeVisible()
   const breed = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
@@ -36,6 +36,6 @@ test('Zet nee als schuifvenster, in hooguit 3 tikken, en offline precies één k
   const regels = (await (await page.request.get(`/api/accounts/${id}/reisgeschiedenis`)).json()).regels
   expect(regels.filter((r: any) => r.reden?.startsWith('Nee:'))).toHaveLength(1)
   await login(page, 'u-02')
-  await ga(page, `/accounts/${id}`)
+  await ga(page, `/accounts/${id}?tab=kwalificatie`)
   await expect(page.getByTestId('terug-op-mobiel')).toContainText('Terug op')
 })
