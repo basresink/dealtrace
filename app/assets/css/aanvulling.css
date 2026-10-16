@@ -1153,3 +1153,4 @@ html.zonlicht body { color: #000; }
 .cn-acties .dd-act { min-height: 44px; }
 .cn-noot { margin: 0; }
 .bf-rij { text-align: left; font: inherit; color: var(--ink); cursor: pointer; } .bf-rij:hover { border-color: var(--ink); }
+.dd-runs { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }

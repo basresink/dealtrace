@@ -26,4 +26,11 @@ Bij **Prospectplanning**, tabblad **Terugkomregels**, zie je:
 - **Komt binnenkort terug**: jouw accounts die in de komende 30 dagen terugkomen. Met **Pas datum aan** kies je een andere datum met een reden.
 - Voor Expert de opbrengst per regel, en **Stel wijziging voor** om een regel aan een ander ritme te koppelen. Je salesmanager beslist.
 
+## Winback na DealDrive
+
+Na de overdracht loopt het vervolg in DealDrive. DealDrive meldt terug als het misgaat:
+
+- **Deal verloren**: de reden uit DealDrive gaat via de redenmapping naar een terugkomregel. "Prijs" wordt bijvoorbeeld "Prijs te hoog: over een halfjaar, bezoek, accountmanager". Op de terugkomdatum staat er een taak, met op de accountkaart aan wie de deal verloren ging.
+- **Klant slapend**: bestelt een klant 3, 6 of 12 maanden niet, dan wordt het een herwinaccount met de regel uit de lijst slapend, bijvoorbeeld "6 maanden niet besteld: direct bellen".
+
 De regels zelf richt de beheerder in bij het verkoopverhaal.

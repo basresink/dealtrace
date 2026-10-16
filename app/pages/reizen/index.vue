@@ -54,9 +54,9 @@ useHead({ title: 'Prospectreizen · Dealtrace' })
                 <td><strong>{{ d.naam }}</strong><br v-if="d.data.omschrijving"><span class="meta">{{ d.data.omschrijving }}</span></td>
                 <td><span class="pil" :class="d.status === 'actief' ? 'pil--groen' : 'pil--grijs'">{{ STATUS[d.status] }}</span></td>
                 <td class="tnum">{{ d.prioriteit }}</td>
-                <td>{{ (d.data.brancheIds ?? []).map(branche).join(', ') || '–' }}</td>
+                <td>{{ (d.data.brancheIds ?? []).map(branche).join(', ') || '-' }}</td>
                 <td class="tnum">{{ d.aantal }}</td>
-                <td>{{ d.reis?.naam ?? '–' }}</td>
+                <td>{{ d.reis?.naam ?? '-' }}</td>
                 <td><button v-if="magDoelgroepen" type="button" class="dd-act" @click="wijzig(d)">Wijzigen</button></td>
               </tr>
             </tbody>

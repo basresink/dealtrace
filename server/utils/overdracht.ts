@@ -6,7 +6,8 @@ import { sql } from 'drizzle-orm'
 import { magOverdragen, NAAR_LABEL, overdrachtBriefing, overdrachtPakket, volgendePoging, type OverdrachtNaar, type PakketContext } from '../../shared/funnel'
 import { STANDAARD_FASES } from '../../shared/reis'
 import { schrijfAudit } from './audit'
-import { koppelingVoor, type DealDriveKoppeling, type DealDriveStand } from './dealdriveAdapter'
+import { bodyHash, type DealDriveKoppeling, type DealDriveStand } from './dealdriveAdapter'
+import { dealdriveInrichting, dealdriveKoppeling } from './dealdrive'
 import { gebruikDb } from './db'
 import { meldGebeurtenis, ReisFout } from './reis'
 import { leesStand } from './vvProjectie'
@@ -22,8 +23,7 @@ const FASE_LABEL_VAN = (id: string) => STANDAARD_FASES.find((f) => f.id === id)?
 const kort = (n: string) => n.replace(/^Testgebruiker /, '')
 
 export async function dealdriveStand(tx: Tx): Promise<DealDriveStand> {
-  const [k] = await rijen(tx, sql`select status, instellingen->>'stand' as stand from koppelingen where soort = 'dealdrive'`)
-  return (k?.status === 'actief' && ['mock', 'http'].includes(k.stand) ? k.stand : 'uit') as DealDriveStand
+  return (await dealdriveInrichting(tx)).stand
 }
 const crmGekoppeld = async (tx: Tx) => !!(await rijen(tx, sql`select 1 from koppelingen where soort in ('hubspot', 'salesforce', 'dynamics', 'pipedrive', 'afas') and status = 'actief'`)).length
 
@@ -149,14 +149,18 @@ export const overdrachtUit = (o: Rij) => ({ id: o.id as string, accountId: o.acc
 export async function verstuurOverdracht(tx: Tx, id: string, nu = new Date(), koppeling?: DealDriveKoppeling | null) {
   const [o] = await rijen(tx, sql`select o.*, a.name, a.owner_id from overdrachten o join accounts a on a.id = o.account_id where o.id = ${id}`)
   if (!o || o.naar !== 'dealdrive' || !['klaar'].includes(o.status) || o.data?.alKlant) return null
-  const k = koppeling !== undefined ? koppeling : koppelingVoor(await dealdriveStand(tx), (await rijen(tx, sql`select name as naam, kvk from accounts where account_kind = 'klant'`)).map((r) => ({ naam: r.naam, kvk: r.kvk })))
+  const k = koppeling !== undefined ? koppeling : await dealdriveKoppeling(tx)
   if (!k) return null
-  const [run] = await rijen(tx, sql`insert into koppeling_runs (organisation_id, soort, handeling, start) values (${o.organisation_id}, 'dealdrive', 'overdragen', ${nu.toISOString()}) returning id`)
+  // Het logboek bewaart geen body: alleen het overdracht-id en een hash van het pakket.
+  const [run] = await rijen(tx, sql`insert into koppeling_runs (organisation_id, soort, handeling, start, fouten) values (${o.organisation_id}, 'dealdrive', 'overdragen', ${nu.toISOString()}, '[]'::jsonb) returning id`)
   let r: Awaited<ReturnType<DealDriveKoppeling['overdragen']>>
   try { r = await k.overdragen(o.pakket) } catch (e: any) { r = { ok: false, code: 'fout', bericht: e?.message ?? 'Onbekende fout', tijdelijk: true } }
   await tx.execute(sql`update koppeling_runs set eind = now(), geschreven = ${r.ok ? 1 : 0}, fouten = ${JSON.stringify(r.ok ? [] : [r.bericht])}::jsonb where id = ${run!.id}`)
   if (r.ok) {
-    await tx.execute(sql`update overdrachten set status = ${r.bevestigd ? 'bevestigd' : 'verstuurd'}, extern_id = ${r.accountId}, extern_url = ${r.url}, pogingen = pogingen + 1, laatste_fout = null, volgende_poging_op = null, data = data || ${JSON.stringify({ dealId: r.dealId, verstuurdOp: nu.toISOString() })}::jsonb where id = ${id}`)
+    await tx.execute(sql`update overdrachten set status = ${r.bevestigd ? 'bevestigd' : 'verstuurd'}, extern_id = ${r.accountId}, extern_url = ${r.url}, pogingen = pogingen + 1, laatste_fout = null, volgende_poging_op = null, data = data || ${JSON.stringify({ dealId: r.dealId, verstuurdOp: nu.toISOString(), pakketHash: bodyHash(JSON.stringify(o.pakket)), antwoord: r.status })}::jsonb where id = ${id}`)
+    // De link op de accountkaart (accounts.data.extern.dealdrive).
+    const dd = { accountId: r.accountId, url: r.url, overgedragenOp: new Date(o.op).toISOString(), eigenaar: r.eigenaar ?? null, overdrachtId: id }
+    await tx.execute(sql`update accounts set data = jsonb_set(coalesce(data, '{}'::jsonb), '{extern}', coalesce(data->'extern', '{}'::jsonb) || jsonb_build_object('dealdrive', ${JSON.stringify(dd)}::jsonb)) where id = ${o.account_id}`)
     return 'verstuurd'
   }
   if (r.code === 'al_klant') {

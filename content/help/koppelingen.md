@@ -2,8 +2,8 @@
 titel: Koppelingen
 categorie: Inrichten
 collectie: product
-samenvatting: KvK, Datacollectief, SalesDNA en je agenda koppelen, testen en ontkoppelen.
-routes: /instellingen/koppelingen/salesdna
+samenvatting: KvK, Datacollectief, SalesDNA, DealDrive en je agenda koppelen, testen en ontkoppelen.
+routes: /instellingen/koppelingen/salesdna, /instellingen/koppelingen/dealdrive
 ---
 
 # Koppelingen
@@ -35,7 +35,7 @@ Werkt de sleutel niet meer, dan staat er "De Datacollectief-sleutel werkt niet m
 
 ## SalesDNA koppelen
 
-Met SalesDNA komt jullie verkoopverhaal automatisch binnen. Dealtrace leest alleen versies die in SalesDNA zijn bevestigd en schrijft niets terug. Je vindt de koppeling onder **Instellingen, Koppelingen, SalesDNA**. Alleen de beheerder richt hem in.
+Met SalesDNA komt jullie verkoopverhaal automatisch binnen. Dealtrace leest alleen versies die in SalesDNA zijn bevestigd. Terug gaan alleen suggesties die je salesmanager vrijgeeft, in kader 2; verder schrijft Dealtrace niets in SalesDNA. Je vindt de koppeling onder **Instellingen, Koppelingen, SalesDNA**. Alleen de beheerder richt hem in.
 
 1. Vul het **adres van SalesDNA** en het **geheim** in. Na opslaan zie je van het geheim alleen een vingerafdruk van acht tekens.
 2. Klik **Test verbinding**. Werkt het, dan staat er "Verbinding werkt".
@@ -61,13 +61,19 @@ Verdwijnt een concurrent of branche uit SalesDNA, dan blijft de verwijzing op ac
 
 Klik **Ontkoppelen** en bevestig. De laatst bevestigde inhoud uit SalesDNA wordt jullie eigen inrichting. Daarna bewerk je hem zelf.
 
-## Later
-
-De koppeling met je CRM komt in een volgende versie.
-
 ## DealDrive
 
-Na een eerste afspraak met vervolg draag je een account over aan DealDrive. Bij **Instellingen**, **Koppelingen** zie je de stand: **uit**, **mock** (de testomgeving) of gekoppeld. De stand zet de leverancier. Staat de koppeling uit, dan krijg je bij overdragen een overdrachtstaak met de briefing om te mailen of te downloaden; de status van het account wordt wel Overgedragen.
+Na een eerste afspraak met vervolg draag je een account over aan DealDrive. Bij **Instellingen**, **Koppelingen**, **DealDrive** zie je de stand:
+
+- **Uit**: bij overdragen krijg je een overdrachtstaak met de briefing om te mailen of te downloaden. De status van het account wordt wel Overgedragen. Zolang DealDrive de ontvangende kant nog niet heeft, staat de koppeling voor klanten op uit; je ziet dan "Nog niet beschikbaar: DealDrive bouwt de ontvangende kant."
+- **Mock**: de testomgeving met vaste antwoorden.
+- **Aan**: de echte koppeling. Je ziet "Gekoppeld met DealDrive" met de datum van de laatste overdracht.
+
+De stand, het adres van DealDrive en het gedeelde geheim richt de leverancier in. Jij ziet de stand, klikt **Test verbinding** en ziet de lijst **Mislukte overdrachten** met de reden en **Opnieuw proberen**. Het logboek bewaart geen inhoud, alleen wat er gebeurde en of het lukte.
+
+Een mislukte overdracht betekent: DealDrive nam hem na de laatste poging niet aan. Het account blijft overgedragen; de eigenaar krijgt een taak en jij een melding. Veelvoorkomende redenen staan er in gewone taal bij, zoals "DealDrive herkent de handtekening niet. Controleer of het gedeelde geheim aan beide kanten hetzelfde is."
+
+Bij import en in de Leadgenerator kijkt Dealtrace ook in DealDrive: je ziet de pil **Al klant in DealDrive** of **Prospect in DealDrive** met de eigenaar. Een klant van DealDrive benader je niet, tenzij je salesmanager het toestaat.
 
 ## Mail
 

@@ -59,6 +59,9 @@ export async function laadFunnel(tx: Tx, f: FunnelFilters, opties: { details: bo
   const gesprek = fase('in-gesprek').accounts.binnen
   const [bes] = gesprek.length && opties.details ? await rijen(tx, sql`select count(distinct ac.account_id)::int as n from activiteiten ac join contacts c on c.id = ac.contact_id where c.rol = 'beslisser' and ac.op <= ${f.tot} and ac.account_id = any(string_to_array(${lijst(gesprek)}, ','))`) : [{ n: 0 }]
   const noShow = gesch.filter((g) => g.gebeurtenis === 'afspraak-niet-verschenen').length
+  // P23: "gewonnen na overdracht" uit de terugmelding deal.gewonnen van DealDrive; het account blijft overgedragen.
+  const over = fase('overgedragen').accounts.binnen
+  const [gew] = over.length && opties.details ? await rijen(tx, sql`select count(distinct account_id)::int as n from overdrachten where data ? 'gewonnen' and account_id = any(string_to_array(${lijst(over)}, ','))`) : [{ n: 0 }]
   return {
     kop, stok, normen, aantalAccounts: betrokken.length,
     fases: stand.map((s, i) => ({
@@ -69,7 +72,8 @@ export async function laadFunnel(tx: Tx, f: FunnelFilters, opties: { details: bo
         norm: normen[s.faseId] ?? null, uitval: uitvalPerReden(s),
         extra: s.faseId === 'benaderd' ? (gemPogingen != null ? `${gemPogingen.toLocaleString('nl-NL')} pogingen gemiddeld` : null)
           : s.faseId === 'in-gesprek' ? (gesprek.length ? `${conversie(gesprek.length, bes?.n ?? 0)}% beslisser bereikt` : null)
-          : s.faseId === 'afspraak-gehouden' ? (fase('afspraak-gepland').binnengekomen ? `${conversie(fase('afspraak-gepland').binnengekomen, noShow)}% no-show` : null) : null,
+          : s.faseId === 'afspraak-gehouden' ? (fase('afspraak-gepland').binnengekomen ? `${conversie(fase('afspraak-gepland').binnengekomen, noShow)}% no-show` : null)
+          : s.faseId === 'overgedragen' ? (gew?.n ? `${gew.n} gewonnen na overdracht` : null) : null,
       } : {}),
     })),
     pogingen: opties.details ? pogingTotAfspraak(pogingen) : null,

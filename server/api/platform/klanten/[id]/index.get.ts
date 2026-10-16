@@ -5,6 +5,8 @@ import { FUNCTIES, pakketBevat } from '../../../../../shared/functies'
 import { schema } from '../../../../utils/db'
 import { STARTSET } from '../../../../utils/orgStarter'
 import { alsPlatform, requireFounder } from '../../../../utils/platform'
+import { ontsleutel } from '../../../../utils/geheimen'
+import { vingerafdruk } from '../../../../utils/salesdnaWebhook'
 
 export default defineEventHandler(async (event) => {
   await requireFounder(event)
@@ -25,9 +27,13 @@ export default defineEventHandler(async (event) => {
       const groep = f.zijbalk?.groep ?? 'Overig'
       ;(groepen[groep] ??= []).push({ sleutel: f.sleutel, naam: f.naam, stand: pakketBevat({ pakket: o.pakket as any, features: o.features ?? {} }, f) ? 'live' : 'pakket te laag' })
     }
-    const [dd] = (await tx.execute(sql`select status, instellingen->>'stand' as stand from koppelingen where organisation_id = ${id} and soort = 'dealdrive'`)).rows as any[]
+    const [dd] = (await tx.execute(sql`select * from dealtrace_platform_dealdrive(${id})`)).rows as any[]
+    const ddGeheim = ontsleutel(dd?.geheimen, 'dealdrive')?.geheim
+    const runs = (await tx.execute(sql`select * from dealtrace_platform_dealdrive_runs(${id})`)).rows as any[]
     return {
-      dealdrive: dd?.status === 'actief' ? dd.stand : 'uit',
+      dealdrive: dd?.status === 'actief' ? (dd.instellingen?.stand === 'http' ? 'aan' : dd.instellingen?.stand) : 'uit',
+      dealdriveInrichting: { basisUrl: dd?.instellingen?.basisUrl ?? '', organisatieId: dd?.instellingen?.organisatieId ?? '', geheimVingerafdruk: ddGeheim ? vingerafdruk(ddGeheim) : null, getestOp: dd?.getest_op ?? null,
+        runs: runs.map((r) => ({ handeling: r.handeling, start: new Date(r.start).toISOString(), ok: !(r.fouten ?? []).length, fout: (r.fouten ?? [])[0] ?? null })) },
       id: o.id, naam: o.name, pakket: o.pakket, contract: o.contract ?? {}, contact: o.data?.contact ?? {},
       gebruikersStand: o.data?.gebruikersStand ?? 'aanvragen', toegangLeverancier: o.data?.toegangLeverancier ?? 'altijd',
       gebruikers, aanvragen, gezondheid: g ?? null, functies: groepen,

@@ -11,6 +11,7 @@ import { draaiWaarnemer } from '../../utils/agents/waarnemer'
 import { actieveCrm, syncCrm } from '../../utils/crm'
 import { herberekenKpi } from '../../utils/team'
 import { maandVerbetervoorstel } from '../../utils/agents/coach'
+import { maakBundel } from '../../utils/suggesties'
 import { nlMoment, plusDagen } from '../../../shared/datum'
 
 export default defineEventHandler(async (event) => {
@@ -37,6 +38,11 @@ export default defineEventHandler(async (event) => {
         if (vandaag.endsWith('-01')) await maandVerbetervoorstel(tx, o.id)
       })
     } catch (e) { console.error('kpi', o.id, (e as Error).message) }
+    // P23: op maandag de wekelijkse bundel suggesties naar SalesDNA (idempotent per kwartaal en sleutel).
+    try {
+      const m = nlMoment(new Date())
+      if (new Date(`${m.datum}T12:00:00Z`).getUTCDay() === 1 && m.uur >= 6) await metOrganisatie(o.id, (tx) => maakBundel(tx, o.id))
+    } catch (e) { console.error('suggesties', o.id, (e as Error).message) }
     // P33: vervallen reserveringen vrijgeven en gesprekken ouder dan 30 dagen verwijderen.
     try { await metOrganisatie(o.id, (tx) => ruimOp(tx)) } catch { /* volgende ronde opnieuw */ }
   }

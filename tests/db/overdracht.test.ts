@@ -56,12 +56,12 @@ describe('overdragen (gat 1 en 27)', () => {
       expect((await rij(tx, sql`select nb_status from accounts where id = 'pr-02'`)).nb_status).toBe('gescoord')
     })
   })
-  it('mock: verstuurd en bevestigd met het externe id uit de fixture', async () => {
+  it('mock: verstuurd met het externe id uit de fixture (bevestigd volgt met de terugmelding, P23)', async () => {
     await inOrg(ORG, async (tx) => {
       const r = await o.draagOver(tx, ORG, anouk, 'pr-02', { naar: 'dealdrive', vervolgstap: stap })
       expect(await o.verstuurOverdracht(tx, r.id)).toBe('verstuurd')
       const x = await rij(tx, sql`select status, extern_id, extern_url from overdrachten where id = ${r.id}`)
-      expect(x).toEqual({ status: 'bevestigd', extern_id: 'acc_dd_5520', extern_url: 'https://dealdrive.test/accounts/acc_dd_5520' })
+      expect(x).toEqual({ status: 'verstuurd', extern_id: 'acc_dd_5520', extern_url: 'https://dealdrive.test/accounts/acc_dd_5520' })
       expect((await rij(tx, sql`select count(*)::int as n from koppeling_runs where soort = 'dealdrive'`)).n).toBe(1)
     })
   })
@@ -114,7 +114,7 @@ describe('overdragen (gat 1 en 27)', () => {
       expect(fout.data.reden).toBe('al_klant')
       await o.draagOver(tx, ORG, anouk, 'pr-02', { naar: 'dealdrive', vervolgstap: stap, sleutel: 'ja', alsNieuweKansBijKlant: true })
       expect(await o.verstuurOverdracht(tx, r.id)).toBe('verstuurd')
-      expect((await rij(tx, sql`select status, pakket->>'alsNieuweKansBijKlant' as k from overdrachten where id = ${r.id}`))).toEqual({ status: 'bevestigd', k: 'true' })
+      expect((await rij(tx, sql`select status, pakket->>'alsNieuweKansBijKlant' as k from overdrachten where id = ${r.id}`))).toEqual({ status: 'verstuurd', k: 'true' })
     })
   })
   it('mislukt versturen: opnieuw volgens het schema, daarna mislukt met een taak; status en fase blijven staan', async () => {

@@ -16,10 +16,21 @@ import l04v3 from '../../../seed/webhooks/testgevallen/L0.4-waarde-belofte-v3-bl
 import l06v2 from '../../../seed/webhooks/testgevallen/L0.6-branches-v2-hernoemd.bevestigd.json'
 
 export interface SublaagBericht { eventId: string; soort: string; tijd?: string; onderwerpId: string; titel?: string; versie: number; status?: string; verouderd?: boolean; verouderdDoor?: unknown; bevestigdOp?: string; bijgewerktOp?: string; inhoud?: any; context?: any; reden?: string }
+export interface SuggestieUit { id: string; onderwerpId: string; kader: 2; veld: string; regelExternId: string | null; soort: string; tekst: string; bewijs: unknown }
+export interface SuggestieBundel { eventId: string; tijd: string; week: string; suggesties: SuggestieUit[] }
+export type StuurAntwoord = { ok: true; ontvangen: string[]; statussen: { suggestieId: string; status: 'overgenomen' | 'afgewezen' }[] } | { ok: false; reden: string }
 export interface SalesdnaBron {
   ping(): Promise<{ ok: true } | { ok: false; reden: string }>
   haalSublagen(): Promise<SublaagBericht[]>
   haalSublaag(onderwerpId: string): Promise<SublaagBericht | null>
+  /** P23: de vrijgegeven suggesties naar kader 2 (F25 Uitgaand). */
+  stuurSuggesties(bundel: SuggestieBundel): Promise<StuurAntwoord>
+}
+/** Wat de mock ontving (voor tests): de laatste bundel met de headers. */
+export const mockVerzonden: { bundel: SuggestieBundel; headers: Record<string, string> }[] = []
+/** Headers van een uitgaand verzoek naar SalesDNA: HMAC-SHA256 over "<tijd>\n<body>" met event-id en tijd (15.3). */
+export function suggestieHeaders(body: string, geheim: string, eventId: string, tijd: string): Record<string, string> {
+  return { 'content-type': 'application/json', 'X-Dealtrace-Event-Id': eventId, 'X-Dealtrace-Tijd': tijd, 'X-Dealtrace-Signature': `sha256=${createHmac('sha256', geheim).update(`${tijd}\n${body}`).digest('hex')}` }
 }
 
 const body = (f: any) => structuredClone(f.body) as SublaagBericht
@@ -33,7 +44,7 @@ export const MOCK_FIXTURES = {
 /** Mock-overrides voor tests: per onderwerp een andere versie, of null voor "bestaat niet". */
 export const mockOverrides = new Map<string, SublaagBericht | null>()
 
-function mock(set: 'basis' | 'testgevallen'): SalesdnaBron {
+function mock(set: 'basis' | 'testgevallen', geheim = ''): SalesdnaBron {
   const alle = () => {
     const lijst = MOCK_FIXTURES[set].map((b) => mockOverrides.has(b.onderwerpId) ? mockOverrides.get(b.onderwerpId)! : b).filter(Boolean) as SublaagBericht[]
     for (const [k, v] of mockOverrides) if (v && !lijst.some((b) => b.onderwerpId === k)) lijst.push(v)
@@ -43,6 +54,11 @@ function mock(set: 'basis' | 'testgevallen'): SalesdnaBron {
     ping: async () => ({ ok: true }),
     haalSublagen: async () => alle(),
     haalSublaag: async (id) => alle().find((b) => b.onderwerpId === id) ?? null,
+    // De mock ontvangt en geeft daarna per suggestie een status terug (zoals suggestie.status).
+    stuurSuggesties: async (bundel) => {
+      mockVerzonden.push({ bundel, headers: suggestieHeaders(JSON.stringify(bundel), geheim, bundel.eventId, bundel.tijd) })
+      return { ok: true, ontvangen: bundel.suggesties.map((x) => x.id), statussen: bundel.suggesties.map((x) => ({ suggestieId: x.id, status: 'overgenomen' as const })) }
+    },
   }
 }
 
@@ -67,11 +83,21 @@ function echt(adres: string, geheim: string): SalesdnaBron {
     },
     async haalSublagen() { const j: any = await haal('/api/koppelingen/dealtrace/sublagen'); return (j?.sublagen ?? j ?? []) as SublaagBericht[] },
     async haalSublaag(id) { return (await haal(`/api/koppelingen/dealtrace/sublagen/${encodeURIComponent(id)}`)) as SublaagBericht | null },
+    async stuurSuggesties(bundel) {
+      const body = JSON.stringify(bundel)
+      try {
+        const r = await fetch(`${basis}/api/koppelingen/dealtrace/suggesties`, { method: 'POST', body, headers: suggestieHeaders(body, geheim, bundel.eventId, bundel.tijd), signal: AbortSignal.timeout(15000) })
+        if (r.status === 401 || r.status === 403) return { ok: false, reden: 'SalesDNA weigert de handtekening. Controleer het geheim en koppel opnieuw.' }
+        if (!r.ok) return { ok: false, reden: `SalesDNA antwoordt met fout ${r.status}. Probeer het later opnieuw.` }
+        const j: any = await r.json().catch(() => ({}))
+        return { ok: true, ontvangen: Array.isArray(j?.ontvangen) ? j.ontvangen : bundel.suggesties.map((x) => x.id), statussen: [] }
+      } catch { return { ok: false, reden: 'SalesDNA is niet bereikbaar op dit adres.' } }
+    },
   }
 }
 
 export const isMockAdres = (adres: string) => /^mock(:|$)/.test(adres.trim())
 export function salesdnaBron(adres: string, geheim: string): SalesdnaBron {
-  if (isMockAdres(adres)) return mock(adres.trim() === 'mock:testgevallen' ? 'testgevallen' : 'basis')
+  if (isMockAdres(adres)) return mock(adres.trim() === 'mock:testgevallen' ? 'testgevallen' : 'basis', geheim)
   return echt(adres, geheim)
 }

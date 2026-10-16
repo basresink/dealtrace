@@ -17,6 +17,7 @@ import { draai as draaiPlanner } from './agents/planner'
 import { vulBelblokken } from './bellen'
 import { achterstandPerAccount, sluitAf } from './campagnes'
 import { verstuurWachtrij } from './overdracht'
+import { verwerkTerugmeldingen, vraagStandOp } from './dealdrive'
 import { bouwFunnelStand } from './funnel'
 import { automatischVoorbereiden } from './briefing'
 
@@ -226,6 +227,9 @@ export async function draaiMotor(tx: Tx, org: string, opties: RunOpties) {
       await leadOnderhoud(tx, org, nu)
       // Overdracht (P17): de wachtrij naar DealDrive en de afgeleide funnelstand van vandaag.
       await verstuurWachtrij(tx, nu)
+      // P23: achtergebleven terugmeldingen van DealDrive en de stand-opvraag als overdracht.verwerkt uitblijft.
+      await verwerkTerugmeldingen(tx, org, nu)
+      await vraagStandOp(tx, nu)
       await bouwFunnelStand(tx, org, nlMoment(nu).datum)
       // Pitstop (P18): automatisch voorbereiden voor regels die dat vragen, hooguit 10 per run.
       const voorbereid = await automatischVoorbereiden(tx, org, nu.toISOString(), nu)

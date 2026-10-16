@@ -66,7 +66,10 @@ export default defineEventHandler(async (event) => {
     // P17: de laatste overdracht en of er nu overgedragen kan worden.
     const [ov] = (await tx.execute(sql`select o.*, u.name as door_naam from overdrachten o left join users u on u.id = o.door where o.account_id = ${a.id} order by o.op desc limit 1`)).rows as any[]
     const [afv] = (await tx.execute(sql`select 1 from appointments where account_id = ${a.id} and status = 'afgerond' and coalesce((data->>'overdragen')::boolean, false) limit 1`)).rows as any[]
-    const overdracht = ov ? { id: ov.id, naar: ov.naar, status: ov.status, op: new Date(ov.op).toISOString(), door: String(ov.door_naam ?? '').replace(/^Testgebruiker /, ''), externUrl: ov.extern_url, laatsteFout: ov.laatste_fout, alKlant: !!ov.data?.alKlant } : null
+    const overdracht = ov ? { id: ov.id, naar: ov.naar, status: ov.status, op: new Date(ov.op).toISOString(), door: String(ov.door_naam ?? '').replace(/^Testgebruiker /, ''), externUrl: ov.extern_url, laatsteFout: ov.laatste_fout, alKlant: !!ov.data?.alKlant,
+      // P23: de link, de eigenaar in DealDrive, gewonnen na overdracht en de vraag of het een bewijs mag worden.
+      dealdrive: ov.naar === 'dealdrive' ? { eigenaar: (a.data as any)?.extern?.dealdrive?.eigenaar ?? null, gewonnenOp: (a.data as any)?.extern?.dealdrive?.gewonnenOp ?? null, bewijsVraag: (a.data as any)?.extern?.dealdrive?.bewijsVraag ?? null } : null,
+      winback: (a.data as any)?.winback ?? (a.data as any)?.herwin ?? null } : null
     // P19: wat de agents zagen (laatste inzichten op dit account) en de bronnen om te volgen.
     const agentInzichten = (await tx.execute(sql`select id, title, agent, type, bron, relevance_score, status, created_at, data->'bron' as bron_info from signals
       where account_id = ${a.id} and status in ('nieuw', 'gelezen', 'omgezet') and agent is not null order by created_at desc limit 5`)).rows.map((r: any) => ({

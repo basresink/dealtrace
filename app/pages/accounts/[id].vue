@@ -29,6 +29,11 @@ const infoOpen = ref(false)
 // P17: overdracht na de eerste afspraak.
 const overdragenOpen = ref(route.query.overdragen === '1')
 const OV_NAAR: Record<string, string> = { dealdrive: 'DealDrive', crm: 'het CRM', collega: 'een collega' }
+const OV_STATUS: Record<string, string> = { klaar: 'Klaar', verstuurd: 'Verstuurd', bevestigd: 'Bevestigd', mislukt: 'Mislukt' }
+// P23: het antwoord op "Mag dit een bewijs worden?" na een gewonnen deal in DealDrive.
+async function bewijs(ja: boolean) {
+  try { await $fetch(`/api/accounts/${route.params.id}/bewijs`, { method: 'POST', body: { ja } }); toast.toon(ja ? 'Je salesmanager krijgt het als suggestie.' : 'Genoteerd. Er gaat niets naar je salesmanager.'); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+}
 async function overdrachtOpnieuw() {
   try { const r = await $fetch<any>(`/api/overdrachten/${a.value.overdracht.id}/opnieuw`, { method: 'POST' }); toast.toon(r.status === 'mislukt' ? 'Opnieuw mislukt.' : 'Overdracht opnieuw verstuurd.'); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
@@ -176,11 +181,18 @@ async function bewaarOffline() { await dagpakket.bewaarVoorOffline(String(route.
     <section class="section">
       <div class="container">
         <div v-if="a.overdracht" class="kaart ov-stand mb-16" :class="{ 'kaart--geel': a.overdracht.status === 'mislukt' }" data-test="overdracht-regel">
-          <span>Overgedragen aan {{ OV_NAAR[a.overdracht.naar] }} op {{ new Date(a.overdracht.op).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Amsterdam' }) }} door {{ a.overdracht.door }}</span>
-          <span class="pil" :class="{ 'pil--leeg': a.overdracht.status !== 'mislukt' }">{{ a.overdracht.status }}</span>
+          <span>Overgedragen aan {{ OV_NAAR[a.overdracht.naar] }} op {{ new Date(a.overdracht.op).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Amsterdam' }) }} · {{ a.overdracht.door }}<template v-if="a.overdracht.dealdrive?.eigenaar"> · in DealDrive bij {{ a.overdracht.dealdrive.eigenaar }}</template></span>
+          <span class="pil" :class="{ 'pil--leeg': !['mislukt', 'bevestigd'].includes(a.overdracht.status), 'pil--groen': a.overdracht.status === 'bevestigd' }" data-test="overdracht-pil">{{ OV_STATUS[a.overdracht.status] ?? a.overdracht.status }}</span>
+          <span v-if="a.overdracht.dealdrive?.gewonnenOp" class="pil pil--groen" data-test="gewonnen-na-overdracht">Gewonnen na overdracht</span>
+          <span v-if="a.overdracht.winback" class="meta" data-test="winback">{{ a.overdracht.winback.maanden ? `Herwinnen: ${a.overdracht.winback.reden}` : `Verloren in DealDrive: ${a.overdracht.winback.reden}${a.overdracht.winback.verlorenAan ? ` aan ${a.overdracht.winback.verlorenAan}` : ''}` }} · terug op {{ new Date(a.overdracht.winback.datum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) }}</span>
           <a v-if="a.overdracht.externUrl" :href="a.overdracht.externUrl" target="_blank" rel="noopener" class="filter-link">Open in DealDrive</a>
           <button v-if="a.overdracht.status === 'mislukt'" type="button" class="dd-act" data-test="overdracht-opnieuw" @click="overdrachtOpnieuw">Opnieuw proberen</button>
           <span v-if="a.overdracht.laatsteFout" class="meta">{{ a.overdracht.laatsteFout }}</span>
+        </div>
+        <div v-if="a.overdracht?.dealdrive?.bewijsVraag === 'open' && functie('overdracht.bewijsVoorstel')?.beschikbaar" class="kaart kaart--geel ov-stand mb-16" data-test="bewijs-vraag">
+          <span><strong>Mag dit een bewijs worden?</strong> De deal na jouw overdracht is in DealDrive gewonnen. Ja maakt er een suggestie van voor je salesmanager, zonder namen.</span>
+          <button type="button" class="dd-act dd-act--primair" data-test="bewijs-ja" @click="bewijs(true)">Ja</button>
+          <button type="button" class="dd-act" data-test="bewijs-nee" @click="bewijs(false)">Nee</button>
         </div>
         <div class="stat-grid stat-grid--6 alleen-groot" data-test="statstrook">
           <div class="stat-card"><span class="stat-label">Open acties</span><span class="stat-num tnum">{{ a.openTaken }}</span></div>

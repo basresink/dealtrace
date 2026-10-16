@@ -28,7 +28,7 @@ import { magOverschrijven } from '../../shared/herkomst'
 import { voegContactenSamen } from '../../shared/ontdubbelen'
 import { emailHash } from './importer'
 import { schema } from './db'
-import { zoekAccounts } from './dealdriveAdapter'
+import { zoekInDealdrive } from './dealdrive'
 import { voerAiStapUit } from './llm-provider'
 import { draaiMotor } from './motor'
 import { alsDoelgroepAccount, instapVelden, laadInstapContext, schrijfInstap, verkoopverhaal } from './reis'
@@ -211,7 +211,7 @@ export async function draaiRonde(tx: Tx, org: { id: string; pakket: Pakket }, g:
   for (const k of kandidaten.values()) {
     if (leadSleutels(k.feiten).some((s) => weg.has(s)) || !pastNaBijsturing(k.feiten, stuur)) continue
     k.feiten.contacten = zonderAfgemeld(k.feiten.contacten ?? [], onderdrukt)
-    const dd = await ddTreffer(k.feiten)
+    const dd = await ddTreffer(tx, k.feiten)
     const b = beoordeelLead(k.feiten, z, klassen, nu)
     const tekst = [k.feiten.naam, ...(k.feiten.zinnen ?? []).map((x) => x.tekst)].join(' ')
     const data = { ...k.feiten, bewijs: b.bewijs, score: b.score, beoordeeld: b.beoordeeld, vvBrancheId: brancheUitSbi(k.feiten.sbi, mapping, tekst), bronzin: k.bronzin ?? null, url: k.url ?? null, dealdrive: dd }
@@ -233,9 +233,9 @@ export async function draaiRonde(tx: Tx, org: { id: string; pakket: Pakket }, g:
   return { rondeId: ronde!.id, bewaard: false, aantal, credits, kvk: kvkVoor, dc: dcVoor, melding }
 }
 
-async function ddTreffer(f: LeadFeiten): Promise<LeadRij['data']['dealdrive']> {
+async function ddTreffer(tx: Tx, f: LeadFeiten): Promise<LeadRij['data']['dealdrive']> {
   try {
-    const t = await zoekAccounts({ kvk: f.kvk, domein: f.domein, naam: f.naam })
+    const t = await zoekInDealdrive(tx, { kvk: f.kvk, domein: f.domein, naam: f.naam })
     const h = t?.[0]
     return h ? { soort: h.soort, eigenaar: h.eigenaar, accountId: h.accountId } : null
   } catch {

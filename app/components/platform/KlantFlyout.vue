@@ -17,10 +17,15 @@ async function laad() {
 }
 watch(() => props.id, laad, { immediate: true })
 
-// P17: de stand van de DealDrive-koppeling (uit of mock; http volgt).
+// P17 en P23: de DealDrive-koppeling inrichten (basis-URL, organisatie-id, geheim schrijf-alleen) en de stand.
+const dd = reactive({ basisUrl: '', organisatieId: '', geheim: '' })
+watch(klant, (k) => { if (k) Object.assign(dd, { basisUrl: k.dealdriveInrichting?.basisUrl ?? '', organisatieId: k.dealdriveInrichting?.organisatieId ?? '', geheim: '' }) })
 async function zetDealdrive(stand: string) {
-  if (stand === klant.value.dealdrive) return
-  try { await $fetch(String(`/api/platform/klanten/${props.id}/dealdrive`), { method: 'PUT', body: { stand } }); toast.toon(`DealDrive staat op ${stand}.`); await laad() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+  try {
+    await $fetch(String(`/api/platform/klanten/${props.id}/dealdrive`), { method: 'PUT', body: { stand, basisUrl: dd.basisUrl, organisatieId: dd.organisatieId, ...(dd.geheim ? { geheim: dd.geheim } : {}) } })
+    toast.toon(stand === klant.value.dealdrive ? 'De DealDrive-koppeling is bewaard.' : `DealDrive staat op ${({ uit: 'uit', mock: 'mock', aan: 'aan' } as Record<string, string>)[stand]}.`)
+    await laad()
+  } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 // Pakketwissel met bevestiging: wat de klant wint en verliest.
 const voorstel = ref<{ naar: Pakket; wint: string[]; verliest: string[] } | null>(null)
@@ -111,10 +116,19 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 
           <article class="fo-blok" data-test="klant-dealdrive">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Koppeling DealDrive</h3></header>
-            <div class="keuzegroep" role="group" aria-label="DealDrive">
-              <button v-for="[s, l] in [['uit', 'Uit'], ['mock', 'Mock'], ['http', 'Http']]" :key="s" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': klant.dealdrive === s }" :aria-pressed="klant.dealdrive === s" :disabled="s === 'http'" :data-test="`dealdrive-${s}`" @click="zetDealdrive(s)">{{ l }}</button>
+            <p class="veld-uitleg alleen-groot-melding">Beter op een groot scherm.</p>
+            <div class="formulier-raster">
+              <label class="veld"><span class="veld-label">Basis-URL van DealDrive</span><input v-model="dd.basisUrl" class="invoer" type="url" placeholder="https://dealdrive.voorbeeld.test" data-test="dealdrive-url"></label>
+              <label class="veld"><span class="veld-label">Organisatie-id in DealDrive</span><input v-model="dd.organisatieId" class="invoer" data-test="dealdrive-org"></label>
+              <label class="veld"><span class="veld-label">Gedeeld geheim</span><input v-model="dd.geheim" class="invoer" type="password" autocomplete="off" :placeholder="klant.dealdriveInrichting?.geheimVingerafdruk ? `Bewaard (${klant.dealdriveInrichting.geheimVingerafdruk})` : 'Minstens 32 tekens'" data-test="dealdrive-geheim"></label>
             </div>
-            <p class="veld-uitleg">Uit: overdragen geeft een overdrachtstaak met briefing. Mock: de fixtures uit seed/dealdrive-mock. Http komt in een volgende versie.</p>
+            <div class="keuzegroep mt-16" role="group" aria-label="DealDrive">
+              <button v-for="[s, l] in [['uit', 'Uit'], ['mock', 'Mock'], ['aan', 'Aan']]" :key="s" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': klant.dealdrive === s }" :aria-pressed="klant.dealdrive === s" :data-test="`dealdrive-${s}`" @click="zetDealdrive(s)">{{ l }}</button>
+            </div>
+            <p class="veld-uitleg">Uit: overdragen geeft een overdrachtstaak met briefing. Mock: de vaste antwoorden uit seed/dealdrive-mock. Aan: de echte koppeling; zolang DealDrive de ontvangende kant niet heeft, blijft een klant op uit.</p>
+            <ul v-if="klant.dealdriveInrichting?.runs?.length" class="dd-runs mt-8">
+              <li v-for="r in klant.dealdriveInrichting.runs" :key="r.start" class="veld-uitleg">{{ new Date(r.start).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) }} · {{ r.handeling }} · {{ r.ok ? 'gelukt' : r.fout }}</li>
+            </ul>
           </article>
           <article class="fo-blok">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Gebruikers en aanvragen</h3></header>

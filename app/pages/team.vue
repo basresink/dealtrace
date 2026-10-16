@@ -47,6 +47,11 @@ async function zetNiveau(reden?: string) {
   try { await $fetch(`/api/gebruikers/${n.id}/niveau`, { method: 'POST', body: { niveau: n.naar, reden } }); toast.toon(`${n.naam} staat nu op ${NIVEAU_LABEL[n.naar as 'beginner'].toLowerCase()}.`); niveauVraag.value = null; await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 const kort = (n: string) => n.replace(/^Testgebruiker /, '')
+// P23: de wekelijkse bundel suggesties naar SalesDNA, als regel onder de goedkeuringen.
+const suggestiesAan = computed(() => !!functie('salesdna.suggesties.vrijgeven')?.beschikbaar)
+const { data: sg, refresh: verversSg } = await useFetch<any>('/api/salesdna/suggesties', { immediate: aan.value && suggestiesAan.value, default: () => null })
+const sgOpen = computed({ get: () => route.query.suggesties === '1', set: (v: boolean) => zet('suggesties', v ? '1' : '') })
+const sgRegel = computed(() => sg.value ? `Suggesties naar SalesDNA · week ${Number(String(sg.value.week).split('-W')[1])} · ${sg.value.open} ${sg.value.open === 1 ? 'suggestie' : 'suggesties'}` : null)
 useHead({ title: 'Team · Dealtrace' })
 </script>
 
@@ -108,8 +113,11 @@ useHead({ title: 'Team · Dealtrace' })
               </article>
               <article class="kaart" data-test="goedkeuringen">
                 <h2 class="kaart-titel">Wacht op jouw goedkeuring</h2>
-                <p v-if="!data.goedkeuringen.length" class="kaart-meta">Niets.</p>
-                <ul v-else class="schakel-lijst"><li v-for="g in data.goedkeuringen" :key="g.id" class="schakel-rij"><NuxtLink :to="g.link">{{ g.titel }}</NuxtLink><span class="meta">{{ g.soort }}</span></li></ul>
+                <p v-if="!data.goedkeuringen.length && !sg?.open" class="kaart-meta">Niets.</p>
+                <ul class="schakel-lijst">
+                  <li v-if="suggestiesAan && sgRegel" class="schakel-rij" data-test="suggesties-regel"><button type="button" class="tekst-link" @click="sgOpen = true">{{ sgRegel }}</button><span class="meta">SalesDNA</span></li>
+                  <li v-for="g in data.goedkeuringen" :key="g.id" class="schakel-rij"><NuxtLink :to="g.link">{{ g.titel }}</NuxtLink><span class="meta">{{ g.soort }}</span></li>
+                </ul>
               </article>
             </div>
 
@@ -152,6 +160,7 @@ useHead({ title: 'Team · Dealtrace' })
       </Teleport>
       <BevestigVenster :open="!!niveauVraag" :titel="`Niveau van ${niveauVraag?.naam ?? ''} wijzigen?`" :tekst="`Van ${NIVEAU_LABEL[(niveauVraag?.van ?? 'beginner') as 'beginner']} naar ${NIVEAU_LABEL[(niveauVraag?.naar ?? 'beginner') as 'beginner']}. Functies die aangaan, krijgen een melding met uitleg.`" bevestig="Wijzig niveau" :met-reden="!!niveauVraag && NIVEAUS.indexOf(niveauVraag.naar as any) < NIVEAUS.indexOf(niveauVraag.van as any)" @bevestigd="zetNiveau" @geannuleerd="niveauVraag = null; refresh()" />
     </template>
+    <SuggestiesFlyout :open="sgOpen" @sluit="sgOpen = false" @gewijzigd="verversSg()" />
   </div>
 </template>
 

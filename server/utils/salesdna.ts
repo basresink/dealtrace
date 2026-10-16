@@ -91,6 +91,7 @@ export async function verwerkWachtende(org: string, u: Pick<Uitvoerder, 'inOrg'>
 /** Eén bericht toepassen. Geeft het resultaat voor het logboek. */
 export async function verwerkBericht(tx: Tx, org: string, b: SublaagBericht): Promise<string> {
   if (b.soort === 'ping') return 'verwerkt'
+  if (b.soort === 'suggestie.status') return verwerkSuggestieStatus(tx, b as any)
   const onderdeel = ONDERWERP_NAAR_ONDERDEEL[b.onderwerpId]
   if (!onderdeel) return 'verwerkt'
   const [spiegel] = await rijen(tx, sql`select * from salesdna_sublagen where organisation_id = ${org} and onderwerp_id = ${b.onderwerpId}`)
@@ -118,6 +119,17 @@ export async function verwerkBericht(tx: Tx, org: string, b: SublaagBericht): Pr
       return 'verwerkt'
     }
   }
+  return 'verwerkt'
+}
+
+/**
+ * P23: SalesDNA meldt wat er met een suggestie gebeurde (kader 2). Alleen een verstuurde suggestie
+ * verandert; een dubbel event vangt de ontvanger al af (event-id), een tweede status verandert niets.
+ */
+export async function verwerkSuggestieStatus(tx: Tx, b: { suggestieId?: string; status?: string; tijd?: string }): Promise<string> {
+  const naar = b.status === 'overgenomen' ? 'overgenomen' : b.status === 'afgewezen' ? 'afgewezen_salesdna' : null
+  if (!b.suggestieId || !naar) return 'verwerkt'
+  await tx.execute(sql`update salesdna_suggesties set status = ${naar}, extern_status_op = ${b.tijd ?? new Date().toISOString()} where id = ${b.suggestieId} and status = 'verstuurd'`)
   return 'verwerkt'
 }
 

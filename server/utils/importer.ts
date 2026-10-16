@@ -9,7 +9,8 @@ import { magOverschrijven, type Bron } from '../../shared/herkomst'
 import { contactDuplicaat, zoekDuplicaat } from '../../shared/ontdubbelen'
 import { berekenScore } from '../../shared/score'
 import { schema } from './db'
-import { zoekAccounts, type DealDriveTreffer } from './dealdriveAdapter'
+import type { DealDriveTreffer } from './dealdriveAdapter'
+import { zoekInDealdrive } from './dealdrive'
 import { heeftMx } from './mx'
 
 type Tx = Parameters<Parameters<ReturnType<typeof import('./db').gebruikDb>['transaction']>[0]>[0]
@@ -61,7 +62,7 @@ export async function controleer(tx: Tx, rijen: string[][], koppeling: ImportDoe
       else if (r.fouten.length) { regel.categorie = 'fouten'; regel.keuze = 'overslaan' }
       if (regel.categorie === 'nieuw' && !dealdriveFout) {
         try {
-          const t = await zoekAccounts({ kvk: r.account.kvk, domein: r.account.domein, naam: r.account.naam })
+          const t = await zoekInDealdrive(tx, { kvk: r.account.kvk, domein: r.account.domein, naam: r.account.naam })
           const treffer = t?.[0]
           if (treffer) { regel.dealdrive = treffer; regel.categorie = treffer.soort === 'klant' ? 'dealdriveKlant' : 'dealdriveProspect'; regel.keuze = treffer.soort === 'klant' ? 'overslaan' : 'nieuw' }
         } catch { dealdriveFout = true }

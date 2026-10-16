@@ -638,6 +638,15 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'overdracht.basis', naam: 'Overdragen na de eerste afspraak', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-afspraak-plannen-afronden-en-overdragen', startNiveau: 'beginner',
     uitleg: { watHetDoet: 'Na een eerste afspraak met vervolg het account overdragen aan DealDrive, het CRM of een collega, met briefing.', totDieTijd: 'Geen.' },
   },
+  // P23: overdracht naar DealDrive en het bewijs na een gewonnen deal (F17, F25).
+  {
+    sleutel: 'overdracht.dealdrive', naam: 'Overdragen aan DealDrive', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-goede-overdracht', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Na de eerste afspraak gaat het account met briefing naar DealDrive; je ziet de link en de bevestiging op de accountkaart.', totDieTijd: 'Je krijgt een overdrachtstaak met de briefing om te mailen of te downloaden.' },
+  },
+  {
+    sleutel: 'overdracht.bewijsVoorstel', naam: 'Gewonnen deal als bewijs', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-goede-overdracht', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Na een gewonnen deal in DealDrive beantwoord je "Mag dit een bewijs worden?"; ja wordt een suggestie voor de salesmanager.', totDieTijd: 'De gewonnen deal telt mee in de funnel; je salesmanager kiest zelf bewijs.' },
+  },
   {
     sleutel: 'instellingen.funnelNormen', naam: 'Normen per fase', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'funnel', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Conversie- en doorlooptijdnormen per fase van de funnel.', totDieTijd: 'De standaardnormen gelden.' },
@@ -737,6 +746,15 @@ export const FUNCTIES: readonly Functie[] = [
   {
     sleutel: 'koppeling.salesdna.bronPerOnderdeel', naam: 'Bron per onderdeel kiezen', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'koppelingen', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Per onderdeel kiezen of SalesDNA of de eigen inrichting de bron is, met vergelijken en een controlelijst.', totDieTijd: 'Alles komt uit de eigen inrichting.' },
+  },
+  // P23: suggesties naar SalesDNA en de DealDrive-koppeling (F25, hoofdstuk 12).
+  {
+    sleutel: 'salesdna.suggesties.vrijgeven', naam: 'Suggesties naar SalesDNA vrijgeven', pakket: 'plus', rollen: ['salesmanager', 'beheerder'], helpartikel: 'verbetervoorstellen-beoordelen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De wekelijkse bundel suggesties met bewijs beoordelen, aanpassen en vrijgeven naar kader 2 in SalesDNA.', totDieTijd: 'Wat Dealtrace leert, blijft in Dealtrace; je past het verkoopverhaal zelf aan.' },
+  },
+  {
+    sleutel: 'koppelingen.dealdrive', naam: 'DealDrive-koppeling', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'koppelingen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'De stand van de DealDrive-koppeling, Test verbinding en de lijst mislukte overdrachten. De founder richt de koppeling in.', totDieTijd: 'Overdrachten gaan als taak met briefing.' },
   },
   // P27: inloggen met code en de mobiele schil (F24, hoofdstuk 8).
   {
@@ -1070,11 +1088,11 @@ export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | u
 
 /** De feature (hoofdstuk 7, F01 tot en met F26) waar een functie bij hoort, voor het raster van de founder. */
 const FEATURE_GROEPEN: [RegExp, string][] = [
-  [/^(resultaten|coaching|analyse)\./, 'F20 Salesmanager en resultaten'], [/^waarnemer\.|^account\.(opnieuwOnderzoeken|bronnenVolgen)$/, 'F14 Agents en mandaten'], [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^campagnes\.|^instellingen\.campagnesoorten/, 'F12 Campagnes'], [/^(funnel|overdracht)\.|^instellingen\.funnelNormen/, 'F17 Funnel en overdracht'], [/^(briefing|pitstop|concepten|mail)\.|^koppeling\.mail|^instellingen\.mailsjablonen/, 'F11 Briefings, Pitstop en mail'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
+  [/^(resultaten|coaching|analyse)\./, 'F20 Salesmanager en resultaten'], [/^waarnemer\.|^account\.(opnieuwOnderzoeken|bronnenVolgen)$/, 'F14 Agents en mandaten'], [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^campagnes\.|^instellingen\.campagnesoorten/, 'F12 Campagnes'], [/^(funnel|overdracht)\.|^instellingen\.funnelNormen|^koppelingen\.dealdrive/, 'F17 Funnel en overdracht'], [/^(briefing|pitstop|concepten|mail)\.|^koppeling\.mail|^instellingen\.mailsjablonen/, 'F11 Briefings, Pitstop en mail'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|reizen|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],
-  [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^auth\.|^schil\./, 'F24 Inloggen en telefoon'], [/^richting\.|^verkoopverhaal\.|^account\.huidigeLeverancier|^koppeling\.salesdna/, 'F25 Verkoopverhaal en Richting'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^leads\.|^koppeling\.kvk|^koppeling\.crm|^leadgenerator\.crm|^onderweg\.kvk|datacollectief/, 'F02 Leadgenerator'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
+  [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^auth\.|^schil\./, 'F24 Inloggen en telefoon'], [/^richting\.|^verkoopverhaal\.|^account\.huidigeLeverancier|^koppeling\.salesdna|^salesdna\./, 'F25 Verkoopverhaal en Richting'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^leads\.|^koppeling\.kvk|^koppeling\.crm|^leadgenerator\.crm|^onderweg\.kvk|datacollectief/, 'F02 Leadgenerator'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
 ]
 export function featureGroep(sleutel: string): string {
   return FEATURE_GROEPEN.find(([r]) => r.test(sleutel))?.[1] ?? 'Overig'

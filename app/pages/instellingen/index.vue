@@ -57,7 +57,7 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
       { titel: 'Agenda', tekst: 'Microsoft 365 en Google: aanzetten voor de organisatie; ieder koppelt zelf in Mijn instellingen.', link: '/mij#agenda', toon: beheerder.value },
       { titel: 'CRM', tekst: 'HubSpot: lezen voor ontdubbelen en klantprofiel, terugschrijven van leads, uitkomsten en de overdracht.', link: '/instellingen/koppelingen/crm', toon: !!functie('koppeling.crm')?.beschikbaar || !!functie('koppeling.crmSync')?.beschikbaar },
       { titel: 'Bronnen', tekst: 'KVK en Datacollectief in de leadgenerator.', link: '/leadgenerator?tab=koppelingen', toon: beheerder.value },
-      { titel: 'DealDrive', tekst: 'Overdracht na de eerste afspraak.', toon: beheerder.value },
+      { titel: 'DealDrive', tekst: 'Overdracht na de eerste afspraak: stand, Test verbinding en mislukte overdrachten.', link: '/instellingen/koppelingen/dealdrive', toon: !!functie('koppelingen.dealdrive')?.beschikbaar },
     ],
   },
 ] as { naam: string; kaarten: Kaart[] }[]).map((g) => ({ ...g, kaarten: g.kaarten.filter((k) => k.toon) })).filter((g) => g.kaarten.length))
