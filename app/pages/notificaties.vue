@@ -104,7 +104,7 @@ useHead({ title: 'Notificaties · Dealtrace' })
 
 <style scoped>
 .nt-sectie { padding-top: 0; }
-.nt-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--kaart-gap); margin-bottom: 20px; }
+.nt-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--kaart-gap); margin-bottom: 20px; }
 @media (min-width: 720px) { .nt-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (min-width: 1100px) { .nt-stats { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
 .nt-stat { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; padding: 14px 16px; background: var(--wit); border: 1px solid var(--border); border-left: 3px solid var(--border-strong); text-align: left; font: inherit; color: var(--ink); cursor: pointer; transition: border-color var(--transition-fast); }
@@ -128,7 +128,10 @@ useHead({ title: 'Notificaties · Dealtrace' })
 @media (min-width: 720px) { .nt-raster { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1100px) { .nt-raster { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 719px) {
-  .nt-stat { min-height: var(--touch-target-min); padding: 12px; }
+  .nt-stats { gap: 8px; }
+  .nt-stat { min-height: var(--touch-target-min); padding: 10px; gap: 2px; }
+  .nt-stat-num { font-size: 20px; }
+  .nt-stat-voet { font-size: 10px; }
   .nt-pillen .filter-pil { min-height: var(--touch-target-min); }
 }
 </style>

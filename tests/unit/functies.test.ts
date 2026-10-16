@@ -27,9 +27,22 @@ describe('zijbalk per niveau (6.1)', () => {
 
   it('volgorde in Werk volgt het werkplekprofiel', () => {
     const werk = (w: GebruikerContext['werkplek']) =>
-      zijbalkVoor(gebruiker({ werkplek: w }), org, stand).groepen.find((g) => g.naam === 'Plannen')!.items.map((i) => i.naam)
+      zijbalkVoor(gebruiker({ werkplek: w }), org, stand).groepen.find((g) => g.naam === 'Planning')!.items.map((i) => i.naam)
     expect(werk('binnendienst').indexOf('Belblokken')).toBeLessThan(werk('binnendienst').indexOf('Bezoeken'))
     expect(werk('buitendienst').indexOf('Bezoeken')).toBeLessThan(werk('buitendienst').indexOf('Belblokken'))
+  })
+
+  it('Leadgenerator staat in Planning, na Campagnes; Prospects houdt Prospects en Contacten', () => {
+    const z = zijbalkVoor(gebruiker({ niveau: 'gevorderd' }), org, stand)
+    const planning = z.groepen.find((g) => g.naam === 'Planning')!.items.map((i) => i.sleutel)
+    expect(planning).toContain('nav.leadgenerator')
+    expect(planning.indexOf('nav.campagnes')).toBeLessThan(planning.indexOf('nav.leadgenerator'))
+    expect(z.groepen.find((g) => g.naam === 'Prospects')!.items.map((i) => i.sleutel)).toEqual(['nav.prospects', 'nav.contacten'])
+  })
+
+  it('Instellingen van de organisatie is een gewoon item in Beheer voor de beheerder', () => {
+    const z = zijbalkVoor(gebruiker({ rol: 'beheerder', niveau: 'expert' }), org, stand)
+    expect(z.groepen.find((g) => g.naam === 'Beheer')?.items.map((i) => [i.sleutel, i.route])).toContainEqual(['nav.instellingen', '/instellingen'])
   })
 
   it('Beginner ziet de labels meedoen en lezen', () => {
@@ -51,9 +64,9 @@ describe('zijbalk per niveau (6.1)', () => {
     expect(sm.groepen.find((g) => g.naam === 'Manager')?.items).toHaveLength(4)
   })
 
-  it('Rapportages: Mijn dashboard op /mijn-dashboard en Funnel, na Prospects en voor Plannen', () => {
+  it('Rapportages: Mijn dashboard op /mijn-dashboard en Funnel, na Prospects en voor Planning', () => {
     const z = zijbalkVoor(gebruiker(), org, stand)
-    expect(z.groepen.map((g) => g.naam)).toEqual(['Start', 'Activiteiten', 'Prospects', 'Rapportages', 'Plannen'])
+    expect(z.groepen.map((g) => g.naam)).toEqual(['Start', 'Activiteiten', 'Prospects', 'Rapportages', 'Planning'])
     expect(z.groepen.some((g) => (g.naam as string) === 'Resultaten')).toBe(false)
     expect(z.groepen.find((g) => g.naam === 'Rapportages')!.items.map((i) => [i.naam, i.route])).toEqual([['Mijn dashboard', '/mijn-dashboard'], ['Funnel', '/funnel']])
   })

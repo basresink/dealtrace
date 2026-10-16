@@ -58,7 +58,7 @@ test('Mijn instellingen: toestellen en "Uitloggen op alle toestellen" maakt elke
   // Twee toestellen van dezelfde gebruiker (hier via de ontwikkelinlog, om de codelimiet niet te raken).
   for (const c of [a, b]) expect((await c.request.post('/api/sessie/ontwikkel', { data: { gebruikerId: 'u-t2' } })).status()).toBe(200)
   const p = await a.newPage()
-  await p.goto('/mij'); await p.waitForLoadState('networkidle')
+  await p.goto('/mijn-instellingen'); await p.waitForLoadState('networkidle')
   await expect(p.getByTestId('toestellen')).toContainText('dit toestel')
   await p.getByTestId('uit-alle').click()
   await p.getByTestId('bevestig').click()

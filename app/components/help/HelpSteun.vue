@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // "Verder zoeken" onderaan het helpcenter: de andere ingangen en contact met support (opzet van DealDrive).
-const props = defineProps<{ zonder?: 'instructies' | 'academie' }>()
+const props = defineProps<{ zonder?: 'instructies' | 'academie' | 'ingangen' }>()
 const { functie } = useMe()
 const aiAan = computed(() => !!functie('assistent.chat')?.beschikbaar)
 const { openen: openAi } = useAssistent()
@@ -11,12 +11,12 @@ const { openen: openAi } = useAssistent()
     <div class="container">
       <h2 class="hs-titel">Verder zoeken</h2>
       <div class="hs-raster">
-        <NuxtLink v-if="props.zonder !== 'instructies'" to="/helpcenter/instructies" class="hs-kaart">
+        <NuxtLink v-if="props.zonder !== 'instructies' && props.zonder !== 'ingangen'" to="/helpcenter/instructies" class="hs-kaart">
           <h3 class="hs-kaart-titel">Hoe werkt Dealtrace</h3>
           <p class="hs-kaart-tekst">Uitleg over elk scherm, per onderwerp. Je ziet alleen wat bij jouw rol hoort.</p>
           <span class="hs-cta">Open de instructies</span>
         </NuxtLink>
-        <NuxtLink v-if="props.zonder !== 'academie'" to="/helpcenter/academie" class="hs-kaart">
+        <NuxtLink v-if="props.zonder !== 'academie' && props.zonder !== 'ingangen'" to="/helpcenter/academie" class="hs-kaart">
           <h3 class="hs-kaart-titel">New business-academie</h3>
           <p class="hs-kaart-tekst">Bellen, schrijven, bezwaren en op pad: zo doe je het, met voorbeelden en controlevragen.</p>
           <span class="hs-cta">Open de academie</span>

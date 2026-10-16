@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { login } from './hulp'
 
-for (const pad of ['/', '/meldingen', '/mij', '/prospects']) {
+for (const pad of ['/', '/notificaties', '/mij', '/mijn-instellingen', '/prospects']) {
   test(`geen horizontale scroll op ${pad}`, async ({ page }) => {
     await login(page, 'u-02')
     await page.goto(pad)

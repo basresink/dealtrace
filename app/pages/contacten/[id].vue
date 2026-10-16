@@ -49,6 +49,7 @@ const laatsteContact = computed(() => {
   const dagen = Math.floor((Date.now() - Date.parse(d)) / 864e5)
   return dagen < 1 ? 'vandaag' : dagen < 31 ? `${dagen} ${dagen === 1 ? 'dag' : 'dagen'}` : `${Math.floor(dagen / 30)} mnd`
 })
+const ontbrekend = computed(() => ((a.value?.ontbrekendeRollen ?? []) as string[]).map((r) => CONTACTROL_LABEL[r as ContactRol] ?? r).join(', '))
 const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter((b: any) => b?.ja).length : 0))
 </script>
 
@@ -60,7 +61,6 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
         <NuxtLink to="/contacten/alle" class="ck-kruimel" data-test="kruimel"><Icoon naam="ArrowLeft" :grootte="12" /> Alle contacten</NuxtLink>
         <div class="ck-kop-binnen">
           <div class="ck-avatar" :style="{ background: kleur }" aria-hidden="true">
-            <span class="ck-avatar-rol" :class="`ck-rol--${c.rol}`">{{ CONTACTROL_LABEL[c.rol as ContactRol] ?? c.rol }}</span>
             <span class="ck-initialen">{{ initialen(c.naam) }}</span>
           </div>
           <div class="ck-info">
@@ -115,7 +115,7 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
           <article class="kaart">
             <header class="kaart-kop"><h2 class="kaart-titel">{{ roepnaam }} in het buying committee</h2></header>
             <p class="kaart-meta">Rol: <strong>{{ CONTACTROL_LABEL[c.rol as ContactRol] ?? c.rol }}</strong><template v-if="c.functie"> · {{ c.functie }}</template></p>
-            <p v-if="a?.ontbrekendeRollen?.length" class="kaart-meta mt-8">Nog niet bekend bij {{ c.account?.naam }}: {{ a.ontbrekendeRollen.map((r: string) => CONTACTROL_LABEL[r as ContactRol] ?? r).join(', ') }}.</p>
+            <p v-if="a?.ontbrekendeRollen?.length" class="kaart-meta mt-8">Nog niet bekend bij {{ c.account?.naam }}: {{ ontbrekend }}.</p>
           </article>
           <article v-if="a" class="kaart">
             <header class="kaart-kop"><h2 class="kaart-titel">Reis van {{ a.naam }}</h2></header>
@@ -163,14 +163,13 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
 .ck-avatar { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 4 / 3; }
 .ck-avatar::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.15)); pointer-events: none; }
 .ck-initialen { position: relative; z-index: 1; font-family: var(--font-serif); font-size: 40px; font-weight: 700; letter-spacing: -0.02em; color: #fff; }
-.ck-avatar-rol { position: absolute; top: 8px; left: 8px; z-index: 2; padding: 3px 7px; font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
 .ck-eyebrow { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
 .ck-account { color: var(--ink); text-decoration: none; border-bottom: 2px solid var(--yellow); }
 .ck-account:hover { color: var(--ink-soft); }
 .ck-titel { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin: 6px 0 0; font-family: var(--font-serif); font-size: clamp(26px, 3.4vw, 36px); font-weight: 700; line-height: 1.1; letter-spacing: -0.01em; color: var(--ink); }
 .ck-rolpil { appearance: none; min-height: 26px; padding: 3px 8px; border: 1px solid transparent; border-radius: 2px; font-family: var(--font-serif); font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.4; cursor: pointer; }
 .ck-rolpil option { background: #fff; color: var(--ink); font-family: Inter, sans-serif; text-transform: none; }
-.ck-rol--beslisser, .ck-avatar-rol.ck-rol--beslisser { background: var(--ink); color: var(--yellow); }
+.ck-rol--beslisser { background: var(--ink); color: var(--yellow); }
 .ck-rol--champion { background: var(--green); color: #fff; }
 .ck-rol--beinvloeder { background: var(--yellow); color: var(--ink); }
 .ck-rol--gebruiker { background: var(--blue); color: #fff; }
@@ -210,9 +209,9 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
   .ck-kop-binnen { grid-template-columns: 76px minmax(0, 1fr); gap: 14px; }
   .ck-avatar { aspect-ratio: 1; }
   .ck-initialen { font-size: 24px; }
-  .ck-avatar-rol { display: none; }
   .ck-kruimel { min-height: 44px; margin-bottom: 4px; }
-  .ck-rolpil { min-height: 44px; }
+  /* Tikdoel van 44 px; de pil zelf blijft klein (transparante rand). */
+  .ck-rolpil { min-height: 44px; border-width: 9px 0; border-color: transparent; background-clip: padding-box; }
   .ck-contactstrip a { min-height: 44px; }
   .ck-stats { padding: 12px 0; }
 }

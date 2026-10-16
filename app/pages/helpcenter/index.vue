@@ -109,7 +109,7 @@ useHead({ title: 'Helpcenter · Dealtrace' })
         </template>
       </div>
     </section>
-    <HelpSteun />
+    <HelpSteun zonder="ingangen" />
   </div>
 </template>
 

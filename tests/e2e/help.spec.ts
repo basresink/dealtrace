@@ -5,7 +5,7 @@ import { apiLogin, ga, login } from './hulp'
 test.describe.configure({ mode: 'serial' })
 
 const ROUTES = [
-  '/', '/acties', '/acties?tab=inzichten', '/prospects', '/contacten', '/reizen', '/meldingen', '/mij', '/leadgenerator', '/help',
+  '/', '/acties', '/acties?tab=inzichten', '/prospects', '/contacten', '/reizen', '/notificaties', '/mij', '/leadgenerator', '/helpcenter',
   '/instellingen', '/instellingen/regels', '/instellingen/ritme', '/instellingen/agents', '/instellingen/gebruikers', '/instellingen/niveaus',
   '/instellingen/audit', '/instellingen/eigen-velden', '/instellingen/nee-redenen', '/instellingen/organisatie', '/instellingen/abonnement', '/planning',
 ]
@@ -37,7 +37,7 @@ test.describe('Hulp per scherm', () => {
 test.describe('Helpcenter', () => {
   test('Aan de slag: vijf artikelen; markeer als gelezen geeft een vinkje, zonder teller of balk', async ({ page }) => {
     await login(page, 'u-05')
-    await ga(page, '/help')
+    await ga(page, '/helpcenter')
     await expect(page.getByTestId('aan-de-slag').locator('li')).toHaveCount(5)
     await expect(page.locator('progress, .voortgang')).toHaveCount(0)
     await expect(page.getByText(/van 5 gelezen/)).toHaveCount(0)
@@ -46,13 +46,13 @@ test.describe('Helpcenter', () => {
     // Een kort artikel telt bij openen als gelezen; anders klik je "Markeer als gelezen".
     if (await page.getByTestId('markeer-gelezen').isEnabled()) await page.getByTestId('markeer-gelezen').click()
     await expect(page.getByTestId('markeer-gelezen')).toHaveText('Gelezen')
-    await ga(page, '/help')
+    await ga(page, '/helpcenter')
     await expect(page.getByTestId('aan-de-slag-je-eerste-dag-in-dealtrace').getByTestId('gelezen-vinkje')).toBeVisible()
   })
 
   test('zoeken vindt "Poging" zonder accenten; niets gevonden geeft de lege staat', async ({ page }) => {
     await login(page, 'u-01')
-    await ga(page, '/help')
+    await ga(page, '/helpcenter')
     await page.getByTestId('help-zoek').fill('Pogíng')
     await expect(page.getByTestId('help-resultaten')).toContainText('Wat betekent poging 3 van 5')
     await page.getByTestId('help-zoek').fill('zebrastreepjeswoord')
@@ -61,7 +61,7 @@ test.describe('Helpcenter', () => {
 
   test('Was dit nuttig? Nee vraagt een reden en bedankt', async ({ page }) => {
     await login(page, 'u-01')
-    await ga(page, '/help/hercontactritme')
+    await ga(page, '/helpcenter/hercontactritme')
     await page.getByTestId('nuttig-nee').click()
     await expect(page.getByTestId('nuttig-verstuur')).toBeDisabled()
     await page.getByTestId('nuttig-reden').selectOption('Onduidelijk')
@@ -120,12 +120,12 @@ test.describe('Features per niveau (founder)', () => {
 
 test.describe('Helpcenter op de telefoon', () => {
   for (const breedte of [375, 390, 412]) {
-    test(`${breedte} px: /help en een artikel zonder horizontale scroll; hulp als schuifvenster`, async ({ page }) => {
+    test(`${breedte} px: /helpcenter en een artikel zonder horizontale scroll; hulp als schuifvenster`, async ({ page }) => {
       await page.setViewportSize({ width: breedte, height: 800 })
       await login(page, 'u-01')
-      await ga(page, '/help')
+      await ga(page, '/helpcenter')
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(breedte)
-      await ga(page, '/help/vandaag')
+      await ga(page, '/helpcenter/vandaag')
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(breedte)
       await ga(page, '/acties')
       await page.getByTestId('hulp-knop').click()

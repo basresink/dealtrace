@@ -2,12 +2,12 @@ import { expect, test } from '@playwright/test'
 import { login } from './hulp'
 
 test.describe('zijbalk per niveau', () => {
-  test('Beginner buitendienst: 13 items met Plannen open, en Bezoeken voor Belblokken', async ({ page }) => {
+  test('Beginner buitendienst: 13 items met Planning open, en Bezoeken voor Belblokken', async ({ page }) => {
     await login(page, 'u-02')
     const items = page.locator('.sb-nav .sb-groep:not(.sb-slotgroep) .sb-link')
-    // Plannen is een uitklapmenu: dicht 8 items, open 13.
+    // Planning is een uitklapmenu: dicht 8 items, open 13.
     await expect(items).toHaveCount(8)
-    await page.getByTestId('sb-plannen').click()
+    await page.getByTestId('sb-planning').click()
     await expect(items).toHaveCount(13)
     const sleutels = await items.evaluateAll((els) => els.map((e) => e.getAttribute('data-sleutel')))
     expect(sleutels.indexOf('nav.bezoeken')).toBeLessThan(sleutels.indexOf('nav.belblokken'))
@@ -41,6 +41,25 @@ test.describe('zijbalk per niveau', () => {
     }
   })
 
+  test('icoonrij: account, mijn instellingen, helpcenter, notificaties en uitloggen; Planning met Leadgenerator', async ({ page }) => {
+    await login(page, 'u-01')
+    const rij = page.getByTestId('sb-iconen')
+    await expect(rij.locator('a.sb-icoonknop')).toHaveCount(4)
+    expect(await rij.locator('a.sb-icoonknop').evaluateAll((els) => els.map((e) => e.getAttribute('href')))).toEqual(['/mij', '/mijn-instellingen', '/helpcenter', '/notificaties'])
+    await expect(rij.getByTestId('sb-uitloggen')).toBeVisible()
+    // Leadgenerator staat onder Planning, niet meer onder Prospects.
+    await expect(page.locator('.sb-groep[data-groep="Prospects"] [data-sleutel="nav.leadgenerator"]')).toHaveCount(0)
+    await page.getByTestId('sb-planning').click()
+    await expect(page.locator('.sb-groep[data-groep="Planning"] [data-sleutel="nav.leadgenerator"]')).toBeVisible()
+    await expect(page.getByTestId('sb-planning')).toContainText('Planning')
+    // Meer lucht boven elke groepstitel (behalve de eerste).
+    const pad = await page.locator('.sb-groep[data-groep="Prospects"] .sb-groep-kop').evaluate((e) => parseFloat(getComputedStyle(e).paddingTop))
+    expect(pad).toBeGreaterThanOrEqual(20)
+    await rij.getByTestId('sb-mijn-instellingen').click()
+    await expect(page).toHaveURL(/\/mijn-instellingen$/)
+    await expect(page.getByTestId('toestellen')).toBeVisible()
+  })
+
   test('/resultaten stuurt door naar /mijn-dashboard met de query', async ({ page }) => {
     await login(page, 'u-01')
     await page.goto('/resultaten?bron=melding')
@@ -70,8 +89,9 @@ test.describe('zijbalk per niveau', () => {
 
   test('beheerder ziet de managergroep en de instellingen', async ({ page }) => {
     await login(page, 'u-06')
-    // Instellingen staat in de icoonrij onderaan de zijbalk.
-    await expect(page.locator('.sb-icoonknop[data-sleutel="nav.instellingen"]')).toBeVisible()
+    // Instellingen van de organisatie is een gewoon item in de groep Beheer.
+    await expect(page.locator('.sb-groep[data-groep="Beheer"] .sb-link[data-sleutel="nav.instellingen"]')).toHaveAttribute('href', '/instellingen')
+    await expect(page.locator('.sb-icoonknop[data-sleutel="nav.instellingen"]')).toHaveCount(0)
     await page.goto('/instellingen/gebruikers')
     await expect(page.getByTestId('gebruikers-tabel')).toBeVisible()
   })

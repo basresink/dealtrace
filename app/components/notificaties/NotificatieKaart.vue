@@ -40,7 +40,7 @@ function klik(e: MouseEvent) {
       <p v-if="melding.tekst" class="nkaart-tekst">{{ melding.tekst }}</p>
       <div class="nkaart-voet">
         <button v-if="melding.link" type="button" class="nkaart-knop nkaart-knop--open" data-test="melding-open" @click="emit('open')">Openen<Icoon naam="ArrowRight" :grootte="14" /></button>
-        <button v-if="!melding.gelezenOp" type="button" class="nkaart-knop" data-test="melding-gelezen" @click="emit('gelezen')">Markeer gelezen</button>
+        <button v-if="!melding.gelezenOp" type="button" class="nkaart-knop" aria-label="Markeer gelezen" title="Markeer gelezen" data-test="melding-gelezen" @click="emit('gelezen')"><Icoon naam="CircleCheck" :grootte="14" />Gelezen</button>
         <span v-else class="nkaart-gelezen"><Icoon naam="CircleCheck" :grootte="14" />Gelezen</span>
         <button type="button" class="nkaart-knop nkaart-knop--stil" data-test="melding-verberg" @click="emit('verberg')">Verberg</button>
       </div>
@@ -78,7 +78,7 @@ function klik(e: MouseEvent) {
 .nkaart-knop:hover { border-color: var(--ink); }
 .nkaart-knop--open { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
 .nkaart-knop--open:hover { background: var(--ink-soft); }
-.nkaart-knop--stil { margin-left: auto; background: transparent; border-color: transparent; color: var(--muted); font-weight: 600; }
+.nkaart-knop--stil { margin-left: auto; padding: 0 8px; background: transparent; border-color: transparent; color: var(--muted); font-weight: 600; }
 .nkaart-knop--stil:hover { color: var(--ink); border-color: var(--border); }
 .nkaart-gelezen { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--green); }
 @media (max-width: 719px) {

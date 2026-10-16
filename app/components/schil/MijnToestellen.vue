@@ -4,6 +4,16 @@
 const toast = useToast()
 const { data: toestellen, refresh } = await useFetch<any[]>('/api/mij/toestellen', { default: () => [] })
 const bevestig = ref(false)
+// Lange lijsten ingekort: dit toestel en de laatst gebruikte eerst (de API sorteert op laatst gezien).
+const MAX = 5
+const alles = ref(false)
+const zichtbaar = computed(() => {
+  const l = toestellen.value ?? []
+  if (alles.value || l.length <= MAX) return l
+  const dit = l.find((t) => t.ditToestel)
+  const rest = l.filter((t) => !t.ditToestel).slice(0, dit ? MAX - 1 : MAX)
+  return dit ? [dit, ...rest] : rest
+})
 async function uitAlle() {
   bevestig.value = false
   await $fetch('/api/auth/uitloggen', { method: 'POST', body: { alleToestellen: true } })
@@ -24,11 +34,12 @@ const wanneer = (t: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric'
   <article id="toestellen" class="kaart mi-sectie" data-test="toestellen">
     <header class="kaart-kop"><h2 class="kaart-titel">Toestellen en sessies</h2></header>
     <div class="lijst">
-      <div v-for="t in toestellen" :key="t.id" class="rij rij--compact">
+      <div v-for="t in zichtbaar" :key="t.id" class="rij rij--compact">
         <div class="rij-info"><span class="rij-titel">{{ t.label }}<span v-if="t.ditToestel" class="pil pil--leeg"> dit toestel</span></span><div class="rij-sub">Laatst gezien {{ wanneer(t.laatstGezien) }}</div></div>
         <div class="rij-rechts"><button type="button" class="dd-act" @click="uitEen(t)">Uitloggen</button></div>
       </div>
     </div>
+    <button v-if="toestellen.length > MAX" type="button" class="dd-act mt-8" data-test="toestellen-alle" :aria-expanded="alles" @click="alles = !alles">{{ alles ? 'Toon minder' : `Toon alle ${toestellen.length}` }}</button>
     <button type="button" class="dd-act mt-16" data-test="uit-alle" @click="bevestig = true">Uitloggen op alle toestellen</button>
     <BevestigVenster :open="bevestig" titel="Uitloggen op alle toestellen?" tekst="Elke sessie wordt ongeldig, ook op je laptop. Daarna log je opnieuw in met een code." bevestig="Uitloggen" @geannuleerd="bevestig = false" @bevestigd="uitAlle" />
   </article>
