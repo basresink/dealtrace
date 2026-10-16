@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Contactkaart (F04) in de opzet van DealDrive: kop met avatar en rol, kruimel, functie en account (link),
 // naam met rolpil, contactgegevens (mail, telefoon, mobiel, LinkedIn), de stuurstrip van het account en rechts
-// Briefing, Bel en Volgen, met Info en Invloed onder Meer. Daaronder de statstrook en dezelfde tabbladen als de accountkaart
+// Briefing, Volgen en Invloed, met Info en Bel onder Meer. Daaronder de statstrook en dezelfde tabbladen als de accountkaart
 // (KaartTabbladen), met alleen wat bij dit contact hoort. Reis en kwalificatie tonen de stand van het account
 // met een verwijzing naar de accountkaart; eigen velden staan in het Info-venster. De avatar toont de foto van
 // het contact (uploaden, wijzigen en verwijderen via het potlood), anders de initialen. Op de telefoon een
@@ -35,11 +35,19 @@ const briefingOpen = ref(false)
 const volgenOpen = ref(false)
 // F8: de invloedskaart van het account, met dit contact geselecteerd.
 const invloedOpen = ref(false)
-// Kop: Briefing, Bel en Volgen in de rij; Info en Invloed onder Meer, zodat de rij op één regel past.
-const meerItems = computed<KopMeerItem[]>(() => [
-  { label: 'Info', icoon: 'Info', test: 'contact-info-knop', actie: () => { infoOpen.value = true } },
-  ...(c.value?.account ? [{ label: 'Invloed', icoon: 'Network', test: 'knop-invloed', actie: () => { invloedOpen.value = true } }] : []),
-])
+// Kop: Briefing, Volgen en Invloed in de rij; Info en Bel onder Meer, zodat de rij op 1280 px op één regel
+// past. Op de telefoon staan hulp, Volgen, Invloed en Meer in de rij en Briefing onder Meer; bellen gaat
+// daar via de actiebalk.
+const schermklasse = useSchermklasse()
+const telefoon = computed(() => schermklasse.value === 'telefoon')
+const meerItems = computed<KopMeerItem[]>(() => {
+  const items: KopMeerItem[] = []
+  if (telefoon.value && c.value?.account) items.push({ label: 'Briefing', icoon: 'FileText', test: 'briefing-knop', actie: () => { briefingOpen.value = true } })
+  items.push({ label: 'Info', icoon: 'Info', test: 'contact-info-knop', actie: () => { infoOpen.value = true } })
+  const nummer = c.value && !c.value.belMeNiet ? c.value.mobiel ?? c.value.telefoon ?? null : null
+  if (!telefoon.value && nummer) items.push({ label: 'Bel', icoon: 'Phone', test: 'bel-knop', href: telLink(nummer) })
+  return items
+})
 
 // Kop: avatar met initialen in een vaste kleur per naam, de rol als gekleurde pil.
 const KLEUR = ['#194c8f', '#1e7c4a', '#c0392b', '#4c1d95', '#b45309', '#0a0a0a', '#0f766e']
@@ -109,9 +117,9 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
           </div>
           <div class="ck-acties">
             <KopIconen :ai="{ accountId: c.accountId, label: c.account?.naam ?? c.naam }" />
-            <button v-if="c.account" type="button" class="dd-actie dd-actie--zwart" data-test="briefing-knop" @click="briefingOpen = true">Briefing</button>
-            <a v-if="belNummer" class="dd-actie dd-actie--primair alleen-groot" :href="telLink(belNummer)" data-test="bel-knop"><Icoon naam="Phone" class="dd-actie-icoon" />Bel</a>
+            <button v-if="c.account && !telefoon" type="button" class="dd-actie dd-actie--zwart" data-test="briefing-knop" @click="briefingOpen = true">Briefing</button>
             <button v-if="c.account && functie('prospects.volgen')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair" data-test="knop-volgen" @click="volgenOpen = true"><Icoon naam="Route" class="dd-actie-icoon" />Volgen</button>
+            <button v-if="c.account" type="button" class="dd-actie dd-actie--secundair" data-test="knop-invloed" @click="invloedOpen = true"><Icoon naam="Network" class="dd-actie-icoon" />Invloed</button>
             <KopMeer :items="meerItems" />
           </div>
         </div>
@@ -215,7 +223,7 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
 .ck-stuurstrip dt { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .ck-stuurstrip dd { margin: 0; }
 .ck-acties { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
-@media (min-width: 1000px) { .ck-acties { grid-column: auto; justify-content: flex-end; max-width: 600px; } }
+@media (min-width: 1000px) { .ck-acties { grid-column: auto; justify-content: flex-end; max-width: 620px; } }
 
 /* Statstrook */
 .ck-stats { padding: 24px 0; background: var(--bg); border-bottom: 1px solid var(--border); }
@@ -245,6 +253,6 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
   .ck-contactstrip a { min-height: 44px; }
   .ck-stats { padding: 12px 0; }
 }
-/* Telefoon: Briefing, Volgen en Meer passen naast hulp op één regel. */
-@media (max-width: 767px) { .ck-acties :deep(.dd-actie:not(.dd-actie--icoon)) { padding-left: 12px; padding-right: 12px; } }
+/* Telefoon: Volgen, Invloed en Meer passen naast hulp op één regel. */
+@media (max-width: 767px) { .ck-acties { gap: 6px; } .ck-acties :deep(.dd-actie:not(.dd-actie--icoon)) { gap: 6px; padding-left: 10px; padding-right: 10px; } }
 </style>

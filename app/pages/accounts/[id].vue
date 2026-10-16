@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Accountkaart (F03, 8.5.5) in de opzet van DealDrive: kop met logovlak, kruimel, branche en plaats, naam met
-// klassepil, website en de stuurstrip; rechts Briefing en Volgen, de rest onder Meer. Het logovlak toont het logo
+// klassepil, website en de stuurstrip; rechts Briefing, Volgen en Invloed, de rest onder Meer. Het logovlak toont het logo
 // (eigen logo-URL of het favicon van de website) en anders de initialen. Daaronder de statstrook over de
 // volle breedte, de aanleiding en de tabbladen Tijdlijn, Inzichten, Taken, Notities, E-mails, Afspraken,
 // Gespreksverslagen, Campagnes en Documenten, plus Reis en kwalificatie. Eigen velden staan in het
@@ -108,21 +108,25 @@ const kanKlaarzetten = computed(() => !!functie('bezoeken.klaarzetten')?.beschik
 const dagpakket = useDagpakket()
 const inPakket = computed(() => !!dagpakket.account(String(route.params.id)))
 async function bewaarOffline() { await dagpakket.bewaarVoorOffline(String(route.params.id), a.value?.naam ?? ''); toast.toon('Bewaard voor offline.') }
-// Kop: Briefing en Volgen staan altijd in de rij (met Overdragen als dat kan); de rest staat onder Meer,
-// zodat de rij op een laptop van 1280 px op één regel past en de telefoon compact begint. Scannen en
-// offline bewaren zijn alleen voor de telefoon.
+// Kop: Volgen en Invloed staan altijd in de rij. Op een laptop ook Briefing, of Overdragen als dat kan
+// (Briefing gaat dan onder Meer), zodat de rij op 1280 px op één regel past. Op de telefoon staan alleen
+// hulp, Volgen, Invloed en Meer in de rij; Overdragen, Briefing, scannen en offline bewaren staan onder Meer.
 const schermklasse = useSchermklasse()
+const telefoon = computed(() => schermklasse.value === 'telefoon')
+const kanOverdragen = computed(() => !!a.value?.kanOverdragen && !!functie('overdracht.basis')?.beschikbaar)
+const briefingInRij = computed(() => !telefoon.value && !kanOverdragen.value)
 const meerItems = computed<KopMeerItem[]>(() => {
-  const telefoon = schermklasse.value === 'telefoon'
   const aantal = a.value?.contacten.filter((c: any) => c.status !== 'vertrokken').length ?? 0
-  const items: KopMeerItem[] = [
+  const items: KopMeerItem[] = []
+  if (telefoon.value && kanOverdragen.value) items.push({ label: 'Overdragen', icoon: 'ArrowRight', test: 'overdragen-knop', actie: () => { overdragenOpen.value = true } })
+  if (!briefingInRij.value) items.push({ label: 'Briefing', icoon: 'FileText', test: 'briefing-knop', actie: () => { briefingOpen.value = true } })
+  items.push(
     { label: 'Info', icoon: 'Info', test: 'info-knop', actie: () => { infoOpen.value = true } },
     { label: `Contacten (${aantal})`, icoon: 'Users', test: 'contacten-knop', actie: () => { contactenOpen.value = true } },
-    { label: 'Invloed', icoon: 'Network', test: 'knop-invloed', actie: () => { invloedOpen.value = true } },
-  ]
+  )
   if (kanKlaarzetten.value) items.push({ label: 'Klaarzetten', icoon: 'MapPin', test: 'klaarzetten-knop', actie: () => { klaarOpen.value = true } })
-  if (telefoon && functie('contact.visitekaartje')?.beschikbaar) items.push({ label: 'Scan visitekaartje', icoon: 'Camera', test: 'scan-visitekaartje', actie: () => { kaartjeOpen.value = true } })
-  if (telefoon && !inPakket.value && functie('onderweg.dagpakket')?.beschikbaar) items.push({ label: 'Bewaar voor offline', icoon: 'Download', test: 'bewaar-offline', actie: bewaarOffline })
+  if (telefoon.value && functie('contact.visitekaartje')?.beschikbaar) items.push({ label: 'Scan visitekaartje', icoon: 'Camera', test: 'scan-visitekaartje', actie: () => { kaartjeOpen.value = true } })
+  if (telefoon.value && !inPakket.value && functie('onderweg.dagpakket')?.beschikbaar) items.push({ label: 'Bewaar voor offline', icoon: 'Download', test: 'bewaar-offline', actie: bewaarOffline })
   return items
 })
 
@@ -192,9 +196,10 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
           </div>
           <div class="ak-acties">
             <KopIconen artikel="de-accountkaart-lezen" :ai="{ accountId: a.id, label: a.naam }" />
-            <button v-if="a.kanOverdragen && functie('overdracht.basis')?.beschikbaar" type="button" class="dd-actie dd-actie--primair" data-test="overdragen-knop" @click="overdragenOpen = true"><Icoon naam="ArrowRight" class="dd-actie-icoon" />Overdragen</button>
-            <button type="button" class="dd-actie dd-actie--zwart" data-test="briefing-knop" @click="briefingOpen = true">Briefing</button>
+            <button v-if="kanOverdragen && !telefoon" type="button" class="dd-actie dd-actie--primair" data-test="overdragen-knop" @click="overdragenOpen = true"><Icoon naam="ArrowRight" class="dd-actie-icoon" />Overdragen</button>
+            <button v-if="briefingInRij" type="button" class="dd-actie dd-actie--zwart" data-test="briefing-knop" @click="briefingOpen = true">Briefing</button>
             <button v-if="functie('prospects.volgen')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair" data-test="knop-volgen" @click="volgenOpen = true"><Icoon naam="Route" class="dd-actie-icoon" />Volgen</button>
+            <button type="button" class="dd-actie dd-actie--secundair" data-test="knop-invloed" @click="invloedOpen = true"><Icoon naam="Network" class="dd-actie-icoon" />Invloed</button>
             <KopMeer :items="meerItems" />
           </div>
         </div>
@@ -364,7 +369,7 @@ select.ak-klasse { cursor: pointer; min-height: 26px; }
 .ak-stuurstrip dt { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .ak-stuurstrip dd { margin: 0; }
 .ak-acties { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
-@media (min-width: 1000px) { .ak-acties { grid-column: auto; justify-content: flex-end; max-width: 640px; margin-top: 22px; } }
+@media (min-width: 1000px) { .ak-acties { grid-column: auto; justify-content: flex-end; max-width: 660px; margin-top: 22px; } }
 .ak-teller { padding: 1px 6px; font-size: 10px; font-weight: 800; background: var(--ink); color: var(--yellow); }
 .dd-actie--zwart .ak-teller { background: var(--yellow); color: var(--ink); }
 
@@ -394,6 +399,6 @@ select.ak-klasse { cursor: pointer; min-height: 26px; }
   .ak-kop { padding: 20px 0; }
   .ak-merk { margin-top: 20px; }
 }
-/* Telefoon: Briefing, Volgen en Meer passen naast hulp op één regel. */
-@media (max-width: 767px) { .ak-acties :deep(.dd-actie:not(.dd-actie--icoon)) { padding-left: 12px; padding-right: 12px; } }
+/* Telefoon: Volgen, Invloed en Meer passen naast hulp op één regel. */
+@media (max-width: 767px) { .ak-acties { gap: 6px; } .ak-acties :deep(.dd-actie:not(.dd-actie--icoon)) { gap: 6px; padding-left: 10px; padding-right: 10px; } }
 </style>

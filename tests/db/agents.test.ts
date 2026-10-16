@@ -66,10 +66,10 @@ describe('Waarnemer', () => {
   })
   it('een vacature van 121 dagen vervalt; van 31 dagen geen taakvoorstel', async () => {
     await inOrg(ORG, async (tx) => {
-      await draaiWaarnemer(tx, ORG, nu, { accountIds: ['pl-49'], zoeker: vacature(121) as any })
-      expect((await rij(tx, sql`select data->>'tegenhoudReden' as r from signals where account_id = 'pl-49' and type = 'vacature'`)).r).toBe('Te oud: vacature ouder dan 120 dagen')
-      await draaiWaarnemer(tx, ORG, nu, { accountIds: ['pl-48'], zoeker: vacature(31) as any })
-      const s = await rij(tx, sql`select status, data->'voorstel' as voorstel from signals where account_id = 'pl-48' and type = 'vacature'`)
+      await draaiWaarnemer(tx, ORG, nu, { accountIds: ['pl-46'], zoeker: vacature(121) as any })
+      expect((await rij(tx, sql`select data->>'tegenhoudReden' as r from signals where account_id = 'pl-46' and type = 'vacature'`)).r).toBe('Te oud: vacature ouder dan 120 dagen')
+      await draaiWaarnemer(tx, ORG, nu, { accountIds: ['pl-44'], zoeker: vacature(31) as any })
+      const s = await rij(tx, sql`select status, data->'voorstel' as voorstel from signals where account_id = 'pl-44' and type = 'vacature'`)
       expect(s).toEqual({ status: 'nieuw', voorstel: null })
     })
   })

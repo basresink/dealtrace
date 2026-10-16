@@ -24,34 +24,38 @@ test.describe('accountkaart', () => {
     await page.keyboard.press('Escape')
     await ga(page, '/accounts/pr-06?tab=kwalificatie')
     await expect(page.getByTestId('band')).toBeVisible()
+    // Met Overdragen in de rij staat Briefing onder Meer.
+    if (!(await page.getByTestId('briefing-knop').isVisible())) await page.getByTestId('kop-meer').click()
     await page.getByTestId('briefing-knop').click()
     await expect(page.getByTestId('briefing-flyout')).toBeVisible()
   })
 
-  test('kop op één regel op 1280 en compact op de telefoon; één gele knop in de tijdlijn; aanleiding met spaties', async ({ page }) => {
+  test('kop op één regel op 1280 en 390 met Volgen en Invloed; één gele knop in de tijdlijn; aanleiding met spaties', async ({ page }) => {
     await login(page, 'u-07')
     await page.setViewportSize({ width: 1280, height: 900 })
     await ga(page, '/accounts/eva-a04')
-    // Laptop: alle knoppen in de kop op één regel; Info, Contacten en Invloed staan onder Meer.
+    // Laptop: alle knoppen in de kop op één regel; Briefing, Volgen en Invloed zichtbaar, Info en Contacten onder Meer.
     const tops = await page.locator('.ak-acties > button, .ak-acties > a, .ak-acties > div').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)))
     expect(new Set(tops).size).toBe(1)
-    await expect(page.getByTestId('knop-volgen')).toBeVisible()
+    for (const id of ['briefing-knop', 'knop-volgen', 'knop-invloed']) await expect(page.locator('.ak-acties').getByTestId(id)).toBeVisible()
     await page.getByTestId('kop-meer').click()
-    for (const id of ['info-knop', 'contacten-knop', 'knop-invloed']) await expect(page.getByTestId('kop-meer-menu').getByTestId(id)).toBeVisible()
+    for (const id of ['info-knop', 'contacten-knop']) await expect(page.getByTestId('kop-meer-menu').getByTestId(id)).toBeVisible()
+    await expect(page.getByTestId('kop-meer-menu').getByTestId('knop-invloed')).toHaveCount(0)
     await expect(page.getByTestId('kop-meer-menu').getByTestId('scan-visitekaartje')).toHaveCount(0)
     await page.keyboard.press('Escape')
     // Aanleiding met spaties; in de tijdlijn alleen + Taak geel, + Mail met rand.
     await expect(page.getByTestId('aanleiding')).toHaveText(/^Waarom nu: Won een .+ · web · /)
     await expect(page.getByTestId('tl-taak')).toHaveClass(/dd-actie--primair/)
     if (await page.getByTestId('tl-mail').count()) await expect(page.getByTestId('tl-mail')).toHaveClass(/dd-actie--secundair/)
-    // Telefoon: hulp, Briefing, Volgen en Meer op één regel; de rest onder Meer.
+    // Telefoon: hulp, Volgen, Invloed en Meer op één regel; Briefing en de rest onder Meer.
     await page.setViewportSize({ width: 390, height: 844 })
     await ga(page, '/accounts/eva-a04')
     await expect(page.getByTestId('knop-volgen')).toBeVisible()
     const rij = await page.locator('.ak-acties > button, .ak-acties > div, .ak-acties .kop-iconen > button').evaluateAll((els) => els.filter((e) => (e as HTMLElement).offsetParent).map((e) => Math.round(e.getBoundingClientRect().top)))
     expect(new Set(rij).size).toBe(1)
+    await expect(page.getByTestId('knop-invloed')).toBeVisible()
     await page.getByTestId('kop-meer').click()
-    await expect(page.getByTestId('kop-meer-menu').getByTestId('info-knop')).toBeVisible()
+    for (const id of ['briefing-knop', 'info-knop']) await expect(page.getByTestId('kop-meer-menu').getByTestId(id)).toBeVisible()
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
   })
 

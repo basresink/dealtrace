@@ -36,6 +36,31 @@ test.describe('contactkaart', () => {
     await page.keyboard.press('Escape')
   })
 
+  test('kop: Briefing, Volgen en Invloed op één regel op 1280; op 390 hulp, Volgen, Invloed en Meer', async ({ page }) => {
+    await login(page, 'u-01')
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await ga(page, '/contacten/ct-07')
+    const acties = page.locator('.ck-acties')
+    for (const id of ['briefing-knop', 'knop-volgen', 'knop-invloed']) await expect(acties.getByTestId(id)).toBeVisible()
+    const ids = await acties.locator('[data-test]').evaluateAll((els) => els.map((e) => e.getAttribute('data-test')))
+    expect(ids.indexOf('knop-invloed')).toBe(ids.indexOf('knop-volgen') + 1)
+    const tops = await page.locator('.ck-acties > button, .ck-acties > div').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)))
+    expect(new Set(tops).size).toBe(1)
+    await page.getByTestId('kop-meer').click()
+    await expect(page.getByTestId('kop-meer-menu').getByTestId('contact-info-knop')).toBeVisible()
+    await expect(page.getByTestId('kop-meer-menu').getByTestId('bel-knop')).toHaveAttribute('href', /^tel:/)
+    await page.keyboard.press('Escape')
+    await page.setViewportSize({ width: 390, height: 844 })
+    await ga(page, '/contacten/ct-07')
+    await expect(page.getByTestId('knop-invloed')).toBeVisible()
+    const rij = await page.locator('.ck-acties > button, .ck-acties > div, .ck-acties .kop-iconen > button').evaluateAll((els) => els.filter((e) => (e as HTMLElement).offsetParent).map((e) => Math.round(e.getBoundingClientRect().top)))
+    expect(new Set(rij).size).toBe(1)
+    await page.getByTestId('kop-meer').click()
+    await page.getByTestId('kop-meer-menu').getByTestId('briefing-knop').click()
+    await expect(page.getByTestId('briefing-flyout')).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+  })
+
   test('een notitie op de contactkaart staat op de accountkaart met de naam van het contact', async ({ page }) => {
     await login(page, 'u-01')
     const tekst = `Testnotitie contact ${Date.now() % 100000}`
