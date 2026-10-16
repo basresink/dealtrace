@@ -51,6 +51,54 @@ test.describe('beltaak: transcript en gespreksverslag', () => {
     await expect(page.getByTestId('verslag-flyout')).toContainText('Kort belgesprek over de levering')
   })
 
+  test('verslag en transcript na het afronden staan bij de vastgelegde belactiviteit op account- en contactkaart', async ({ page }) => {
+    const z = Date.now().toString(36)
+    const titel = `Bel over de planning ${z}`
+    await apiLogin(page.request, 'u-07')
+    const r = await page.request.post('/api/tasks', { data: { title: titel, actionType: 'bellen', accountId: 'eva-a08', contactId: 'eva-a08-c1' } })
+    const { id } = await r.json()
+    // Een eerste verslag voor het afronden gaat mee naar de belactiviteit.
+    expect((await page.request.put(`/api/tasks/${id}/verslag`, { data: { tekst: `Eerste verslag ${z}.` } })).ok()).toBe(true)
+    const af = await page.request.post(`/api/tasks/${id}/afronden`, { data: { uitkomst: 'voicemail', idempotentieSleutel: `vs-${z}` } })
+    expect(af.ok()).toBe(true)
+
+    // Na het afronden: het verslag aanpassen en een transcript toevoegen in het taakvenster.
+    await ga(page, `/taken?taak=${id}`)
+    const blok = page.getByTestId('tf-verslagblok')
+    await blok.getByTestId('vv-tekst').fill(`Teruggebeld na de voicemail ${z}. De planner wil in maart een demo.`)
+    const bewaard = page.waitForResponse((x) => x.url().endsWith(`/api/tasks/${id}/verslag`) && x.request().method() === 'PUT')
+    await page.getByTestId('tf-verslag-bewaar').click()
+    const antwoord = await (await bewaard).json()
+    expect(antwoord.activiteitId).toBeTruthy()
+    await page.getByTestId('tf-transcript-bestand').setInputFiles({ name: 'gesprek.txt', mimeType: 'text/plain', buffer: Buffer.from(`Klant: We willen in maart een demo ${z}.`) })
+    await page.getByTestId('tf-transcript-bewaar').click()
+    await expect(page.getByTestId('tf-transcript')).toContainText('gesprek.txt')
+
+    for (const kaart of ['/accounts/eva-a08', '/contacten/eva-a08-c1']) {
+      // Tijdlijn: de belactiviteit toont het nieuwste verslag en opent verslag en transcript samen.
+      await ga(page, `${kaart}?tab=tijdlijn`)
+      const tl = page.getByTestId('tijdlijn')
+      const moment = tl.locator('.tl-kaart', { hasText: `Teruggebeld na de voicemail ${z}` })
+      await expect(moment).toHaveCount(1)
+      await expect(moment).toContainText('Met transcript')
+      await expect(tl).not.toContainText(`Eerste verslag ${z}.`)
+      await moment.locator('.tl-titel').click()
+      const fly = page.getByTestId('verslag-flyout')
+      await expect(fly).toContainText('Belactiviteit · Gesprek met transcript')
+      await expect(fly.getByTestId('vf-verslag')).toContainText(`De planner wil in maart een demo.`)
+      await expect(fly.getByTestId('vf-transcript')).toContainText(`We willen in maart een demo ${z}.`)
+      await fly.locator('.fo-sluit').click()
+
+      // Gespreksverslagen: één regel bij de belactiviteit, niet meer los bij de taak.
+      await ga(page, `${kaart}?tab=verslagen`)
+      await expect(page.getByRole('button', { name: titel, exact: true })).toHaveCount(1)
+      await expect(page.getByRole('button', { name: `Transcript: ${titel}` })).toHaveCount(0)
+      await page.getByRole('button', { name: titel, exact: true }).click()
+      await expect(page.getByTestId('verslag-flyout').getByTestId('vf-transcript')).toBeVisible()
+      await page.getByTestId('verslag-flyout').locator('.fo-sluit').click()
+    }
+  })
+
   test('geen blok bij een taak van een ander type', async ({ page }) => {
     await apiLogin(page.request, 'u-07')
     const r = await page.request.post('/api/tasks', { data: { title: `Offerte nalopen ${Date.now().toString(36)}`, actionType: 'taak', accountId: 'eva-a08' } })

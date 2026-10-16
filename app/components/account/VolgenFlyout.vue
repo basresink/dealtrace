@@ -106,6 +106,9 @@ function stapMeta(s: any): string {
   if (s.kanaal === 'bellen') return `Landt in je belblok ${dag(s.geplandOp)}`
   return `Concept volgt een dag eerder · ${dag(s.geplandOp)}`
 }
+function stappenTekst(s: { stappen: { dag: number; kanaal: string }[]; einde: { dag: number } }) {
+  return `${s.stappen.map((x) => `Dag ${x.dag} ${(REEKS_KANAAL_LABEL[x.kanaal as keyof typeof REEKS_KANAAL_LABEL] ?? x.kanaal).toLowerCase()}`).join(' · ')} · dag ${s.einde.dag} terug naar het ritme`
+}
 const factorBreedte = (p: number) => `${Math.min(100, Math.abs(p) * 2)}%`
 const titelKicker = computed(() => (props.contactId ? `Volgen · ${props.contactNaam ?? 'contact'} bij ${props.naam}` : `Volgen · ${props.naam}`))
 </script>
@@ -253,7 +256,7 @@ const titelKicker = computed(() => (props.contactId ? `Volgen · ${props.contact
                     <legend class="veld-label">Sjabloon</legend>
                     <label v-for="s in d.sjablonen" :key="s.id" class="vl-sjabloon" :class="{ 'vl-sjabloon--aan': start.sjabloonId === s.id }" :data-test="`vr-sjabloon-${s.sleutel}`">
                       <input v-model="start.sjabloonId" type="radio" name="vl-sjabloon" :value="s.id">
-                      <span><b>{{ s.naam }}</b><span class="item-meta"> · na "{{ s.na }}"</span><span class="vl-sjabloon-stappen">{{ s.stappen.map((x: any) => `Dag ${x.dag} ${REEKS_KANAAL_LABEL[x.kanaal as 'mail'].toLowerCase()}`).join(' · ') }} · dag {{ s.einde.dag }} terug naar het ritme</span></span>
+                      <span><b>{{ s.naam }}</b><span class="item-meta"> · na "{{ s.na }}"</span><span class="vl-sjabloon-stappen">{{ stappenTekst(s) }}</span></span>
                     </label>
                   </fieldset>
                   <div class="vl-rij2">

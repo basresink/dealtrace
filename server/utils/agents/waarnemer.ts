@@ -139,7 +139,7 @@ async function volgExtraBronnen(tx: Tx, org: string, accounts: Rij[], profielVoo
     where account_id = any(string_to_array(${ids.join(',')}, ',')) and jsonb_typeof(data->'extraBronnen') = 'array' and jsonb_array_length(data->'extraBronnen') > 0`)
   const perAccount = extraBronnenPerAccount(accounts as any, contacten as any)
   const metBronnen = accounts.filter((a) => perAccount.has(a.id))
-  const kandidaten = selecteerAccounts(metBronnen.map((a) => ({ ...a, id: a.id as string, laatstBekeken: (a.w?.extraBronnen ?? null) as string | null })), Math.min(...metBronnen.map((a) => profielVoor(a.doelgroep_id ?? null).cadansDagen), 7), nu)
+  const kandidaten = selecteerAccounts(metBronnen.map((a) => ({ ...a, id: a.id as string, laatstBekeken: (a.w?.extraBronnen ?? null) as string | null })) as (Rij & { id: string; laatstBekeken: string | null })[], Math.min(...metBronnen.map((a) => profielVoor(a.doelgroep_id ?? null).cadansDagen), 7), nu)
   for (const a of kandidaten) {
     uit.bekeken++
     const vorige = (a.w?.bronVingerafdruk ?? {}) as Record<string, string>

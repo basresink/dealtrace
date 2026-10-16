@@ -13,7 +13,7 @@ create table activiteit_verslagen (
   tekst           text not null default '' check (length(tekst) <= 50000),
   bron            text not null default 'getypt' check (bron in ('getypt', 'ingesproken')),
   door            text references users(id) on delete set null,
-  op              timestamptz not null default now()
+  op              timestamptz not null default clock_timestamp()
 );
 create index activiteit_verslagen_activiteit_idx on activiteit_verslagen (activiteit_id, op desc);
 

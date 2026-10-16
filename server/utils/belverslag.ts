@@ -48,8 +48,8 @@ export async function belactiviteitVanTaak(tx: Tx, taakId: string): Promise<{ id
 export async function verslagNaAfronden(tx: Tx, taakId: string, verslag: { tekst: string; bron: string } | null, door: string): Promise<string | null> {
   const act = await belactiviteitVanTaak(tx, taakId)
   if (!act) return null
-  await tx.execute(sql`insert into activiteit_verslagen (organisation_id, activiteit_id, task_id, tekst, bron, door)
-    values (${act.organisation_id}, ${act.id}, ${taakId}, ${verslag?.tekst ?? ''}, ${verslag?.bron === 'ingesproken' ? 'ingesproken' : 'getypt'}, ${door})`)
+  await tx.execute(sql`insert into activiteit_verslagen (organisation_id, activiteit_id, task_id, tekst, bron, door, op)
+    values (${act.organisation_id}, ${act.id}, ${taakId}, ${verslag?.tekst ?? ''}, ${verslag?.bron === 'ingesproken' ? 'ingesproken' : 'getypt'}, ${door}, clock_timestamp())`)
   return act.id
 }
 

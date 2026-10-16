@@ -30,6 +30,11 @@ test.describe('paginakop', () => {
       const { kop, knoppen, volgorde } = await leesKop(page)
       expect(volgorde.slice(0, 3)).toEqual(['kop-zoeken', 'vraag-ai', 'hulp-knop'])
       expect(volgorde.length, 'na de iconen volgen de knoppen van de pagina').toBeGreaterThan(3)
+      // Op 1280 px past de knoppenrij op één regel (minder gebruikte acties staan onder Meer).
+      const tops = await knoppen.evaluate((el) => [...el.querySelectorAll('button, a')]
+        .filter((x) => (x as HTMLElement).offsetParent !== null && !x.closest('ul'))
+        .map((x) => x.getBoundingClientRect().top))
+      expect(Math.max(...tops) - Math.min(...tops), 'de knoppenrij loopt niet door naar een tweede regel').toBeLessThan(20)
       for (const id of ['kop-zoeken', 'vraag-ai', 'hulp-knop']) {
         const b = (await knoppen.getByTestId(id).boundingBox())!
         expect(Math.round(b.width)).toBe(44)
