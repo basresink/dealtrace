@@ -173,7 +173,7 @@ test.describe('Notificaties in de opzet van DealDrive', () => {
       const lijn = await page.getByTestId('paginakop').evaluate((el) => el.closest('section')!.getBoundingClientRect().bottom)
       return (await page.getByTestId('melding-stats').boundingBox())!.y - lijn
     }
-    expect(await ruimte()).toBeGreaterThanOrEqual(12)
+    await expect.poll(ruimte).toBeGreaterThanOrEqual(12)
     const kaarten = page.getByTestId('melding')
     expect(await kaarten.count()).toBeGreaterThanOrEqual(3)
     const [a, b, c] = await Promise.all([0, 1, 2].map((i) => kaarten.nth(i).boundingBox()))
@@ -184,7 +184,7 @@ test.describe('Notificaties in de opzet van DealDrive', () => {
     expect(Math.abs(d!.y - e!.y)).toBeLessThan(2)
     expect(f!.y).toBeGreaterThan(d!.y + 10)
     await page.setViewportSize({ width: 390, height: 844 })
-    expect(await ruimte()).toBeGreaterThanOrEqual(12)
+    await expect.poll(ruimte).toBeGreaterThanOrEqual(12)
     const [g, h] = await Promise.all([0, 1].map((i) => kaarten.nth(i).boundingBox()))
     expect(h!.y).toBeGreaterThan(g!.y + 10)
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)

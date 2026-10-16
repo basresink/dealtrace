@@ -11,8 +11,8 @@ test.describe('zijbalk per niveau', () => {
     await expect(items).toHaveCount(13)
     const sleutels = await items.evaluateAll((els) => els.map((e) => e.getAttribute('data-sleutel')))
     expect(sleutels.indexOf('nav.bezoeken')).toBeLessThan(sleutels.indexOf('nav.belblokken'))
-    // Nog niet aangezet: Inzichten, Accountplannen, Leadgenerator, Prospectplanning en Prospectreizen.
-    await expect(page.locator('.sb-slotgroep-teller')).toHaveText('5')
+    // Nog niet aangezet: Inzichten, Kennisbank, Accountplannen, Leadgenerator, Prospectplanning en Prospectreizen.
+    await expect(page.locator('.sb-slotgroep-teller')).toHaveText('6')
     await expect(page.getByTestId('gebruikersblok')).toHaveText('ACCOUNTMANAGER · BEGINNER')
   })
 
