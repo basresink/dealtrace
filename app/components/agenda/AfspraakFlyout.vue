@@ -181,7 +181,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
           <div class="fo-head-tekst">
             <span class="fo-kicker af-kicker" data-test="af-kicker"><span v-if="a" class="af-stip" :style="{ background: KLEUR[a.soort.kleur] ?? 'var(--ink)' }" aria-hidden="true" />{{ kicker }}</span>
             <h2 id="af-titel" class="fo-titel" data-test="af-titel">{{ a ? a.titel : 'Laden…' }}</h2>
-            <p v-if="a?.account" class="taak-meta">
+            <p v-if="a?.account" class="taak-meta af-kop-links">
               <NuxtLink :to="`/accounts/${a.account.id}`" class="tekst-link" data-test="af-kop-account" @click="emit('sluit')">{{ a.account.naam }}</NuxtLink><template v-if="a.contact"> · <NuxtLink :to="`/contacten/${a.contact.id}`" class="tekst-link" data-test="af-kop-contact" @click="emit('sluit')">{{ a.contact.naam }}</NuxtLink></template>
             </p>
             <p v-if="a" class="taak-meta">{{ wanneer }} · {{ VORM[a.vorm] }} · {{ eigenaar }}</p>
@@ -348,7 +348,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
           <span class="dd-acties-vul fo-foot-vul" />
           <button type="button" class="dd-act dd-act--geel" :disabled="bezig || !vp.datum || !vp.start" data-test="af-verplaats-bewaar" @click="bewaarVerplaatsen">Bewaar nieuw moment</button>
         </footer>
-        <footer v-else-if="a && a.status === 'gepland'" class="fo-foot dd-acties">
+        <footer v-else-if="a && a.status === 'gepland'" class="fo-foot dd-acties af-foot">
           <template v-if="!afronden">
             <button type="button" class="dd-act" data-test="af-verplaats" @click="startVerplaatsen"><Icoon naam="CalendarRange" />Verplaats</button>
             <button type="button" class="dd-act" data-test="af-niet-verschenen" @click="zetStatus('niet_verschenen')">Niet verschenen</button>
@@ -356,9 +356,9 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
           </template>
           <button v-else type="button" class="dd-act" @click="afronden = false">Terug</button>
           <span class="dd-acties-vul fo-foot-vul" />
-          <NuxtLink v-if="a.account && !opKlantkaart && !afronden" :to="`/accounts/${a.account.id}`" class="dd-act dd-act--icoon" title="Open klantkaart" aria-label="Open klantkaart" @click="emit('sluit')"><Icoon naam="ArrowRight" /></NuxtLink>
-          <button v-if="!afronden" type="button" class="dd-act dd-act--geel" data-test="af-rond-af" @click="afronden = true; verplaatsen = false">Rond af</button>
-          <button v-else type="button" class="dd-act dd-act--primair" :disabled="bezig || ongeldig" data-test="af-bewaar" @click="rondAf">Bewaar</button>
+          <NuxtLink v-if="a.account && !opKlantkaart && !afronden" :to="`/accounts/${a.account.id}`" class="dd-act dd-act--icoon af-naar-kaart" title="Open klantkaart" aria-label="Open klantkaart" @click="emit('sluit')"><Icoon naam="ArrowRight" /></NuxtLink>
+          <button v-if="!afronden" type="button" class="dd-act dd-act--geel af-hoofd" data-test="af-rond-af" @click="afronden = true; verplaatsen = false">Rond af</button>
+          <button v-else type="button" class="dd-act dd-act--primair af-hoofd" :disabled="bezig || ongeldig" data-test="af-bewaar" @click="rondAf">Bewaar</button>
         </footer>
         <footer v-else-if="a?.account && !opKlantkaart" class="fo-foot dd-acties">
           <span class="dd-acties-vul fo-foot-vul" />
@@ -409,6 +409,10 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
   .af-def { grid-template-columns: 1fr; gap: 2px; }
   .af-rij3 { grid-template-columns: 1fr 1fr; }
   .af-an-kop .dd-act, .af-vb-deel .dd-act { min-height: 44px; }
-  .af-def dd a, .af-account-naam, .fo-head .taak-meta a { display: inline-flex; align-items: center; min-height: 44px; }
+  .af-def dd a, .af-account-naam { display: inline-block; padding: 13px 0; border-bottom: 0; text-decoration: underline; text-decoration-color: var(--yellow); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  .af-kop-links { display: none; }
+  .af-foot { flex-wrap: wrap; }
+  .af-foot .fo-foot-vul, .af-foot .af-naar-kaart { display: none; }
+  .af-foot .af-hoofd { flex: 1 1 100%; order: 9; }
 }
 </style>

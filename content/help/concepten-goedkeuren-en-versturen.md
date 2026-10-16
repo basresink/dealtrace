@@ -2,7 +2,7 @@
 titel: Concepten goedkeuren en versturen
 categorie: Dagelijks werk
 collectie: product
-samenvatting: Wat agents voor je klaarzetten, goedkeuren, aanpassen of verwerpen, en een mail versturen in vier tikken.
+samenvatting: Wat agents voor je klaarzetten, goedkeuren, aanpassen of afwijzen, en een mail versturen in vier tikken.
 routes: /concepten
 ---
 
@@ -12,7 +12,7 @@ Bij **Concepten** staat alles wat agents voor je klaarzetten: een opvolgmail, ee
 
 - **Goedkeuren**: zoals het is.
 - **Aanpassen**: je wijzigt de tekst en keurt goed.
-- **Verwerpen**: het concept verdwijnt.
+- **Afwijzen**: het concept verdwijnt.
 
 Goedkeuren kan ook zonder verbinding; het besluit gaat mee zodra je weer verbinding hebt.
 

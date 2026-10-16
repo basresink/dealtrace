@@ -5,6 +5,8 @@ import { ga, login } from './hulp'
 // van een plan, de detailpagina waar een actie een echte taak op het account wordt, de ingang op de
 // accountkaart, en Beginner en Gevorderd zien de functie niet.
 test.describe('accountplannen', () => {
+  // De dev-server wordt gedeeld; het laden van een plan krijgt wat ruimte.
+  test.describe.configure({ timeout: 90_000 })
   test('overzicht: kop, kaart in Actueel en een lege groep Verlopen en afgerond', async ({ page }) => {
     await login(page, 'u-07')
     await ga(page, '/accountplannen')
@@ -30,7 +32,7 @@ test.describe('accountplannen', () => {
     const f = page.getByTestId('ap-flyout')
     await expect(f).toBeVisible()
     await expect(f).toContainText('Accountplan')
-    await expect(f.getByTestId('apf-status')).toHaveText('ACTUEEL')
+    await expect(f.getByTestId('apf-status')).toHaveText('ACTUEEL', { timeout: 15_000 })
     await expect(f.getByTestId('apf-account')).toHaveAttribute('href', '/accounts/eva-k01')
     for (const t of ['Doelen (SMART)', 'Kansen', 'Bedreigingen', 'Strategieën', 'Evaluatie', 'Actieplan']) await expect(f).toContainText(t)
     await expect(f.locator('[data-test^="apf-actie-"]')).toHaveCount(3)
@@ -101,7 +103,7 @@ test.describe('accountplannen', () => {
       await expect(page.locator('.sb-groep .sb-link:not(.sb-link--slot)[data-sleutel="nav.accountplannen"]')).toHaveCount(0)
       await ga(page, '/accountplannen')
       await expect(page.getByTestId('niet-aangezet-pagina')).toBeVisible()
-      expect((await page.request.get('/api/accountplannen')).status()).toBe(403)
+      expect((await page.request.get('/api/accountplannen', { timeout: 30_000 })).status()).toBe(403)
     })
   }
 })

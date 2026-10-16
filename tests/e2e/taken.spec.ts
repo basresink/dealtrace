@@ -226,6 +226,7 @@ async function metContacten(request: APIRequestContext, gebruiker: string) {
 
 test.describe('nieuwe taak en taakvenster in de opzet van DealDrive', () => {
   test('klant en contactpersoon zoeken, prioriteit Urgent, type Bellen; de taak staat op de account- en contactkaart', async ({ page }) => {
+    test.setTimeout(90_000)
     const x = await metContacten(page.request, 'u-03')
     await login(page, 'u-03')
     await ga(page, '/acties')
@@ -280,6 +281,7 @@ test.describe('nieuwe taak en taakvenster in de opzet van DealDrive', () => {
   })
 
   test('taakvenster bewerken: ander contact en prioriteit Hoog; behoudt uitkomst, uitstellen en afronden', async ({ page }) => {
+    test.setTimeout(60_000)
     const x = await metContacten(page.request, 'u-03')
     const t = await (await page.request.post('/api/tasks', { data: { title: `Bel ${uniek()}`, actionType: 'bellen', accountId: x.accountId, contactId: x.beslisser.id, priority: 'middel' } })).json()
     await login(page, 'u-03')

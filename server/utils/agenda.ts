@@ -164,7 +164,9 @@ async function planEen(tx: Tx, org: string, door: Planner, p: PlanInvoer, nu = n
     if (al) return { id, eerste: false, tekst: 'Deze afspraak stond al in de agenda.' }
   }
   // Contact hoort bij de klant (anders niet koppelen); collega's uitnodigen: actieve gebruikers, niet de eigenaar.
-  const [ct] = p.contactId && a ? await rijen(tx, sql`select id from contacts where id = ${p.contactId} and account_id = ${a.id}`) : []
+  // Zonder contactId (undefined) de beslisser van de klant, anders het eerste actieve contact; null is bewust geen contact.
+  const [ct] = !a ? [] : p.contactId ? await rijen(tx, sql`select id from contacts where id = ${p.contactId} and account_id = ${a.id}`)
+    : p.contactId === undefined ? await rijen(tx, sql`select id from contacts where account_id = ${a.id} and status <> 'vertrokken' order by (rol = 'beslisser') desc, last_name limit 1`) : []
   const uitgenodigd = [...new Set((p.collegaUitnodigen ?? []).filter((u) => typeof u === 'string' && u !== owner))].slice(0, 10)
   const collegas = uitgenodigd.length ? (await rijen(tx, sql`select id from users where id = any(string_to_array(${uitgenodigd.join(',')}, ',')) and status = 'actief'`)).map((u) => u.id as string) : []
   const titel = String(p.titel ?? '').trim().slice(0, 140) || null

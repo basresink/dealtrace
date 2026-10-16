@@ -61,46 +61,46 @@ useHead({ title: 'Concepten · Dealtrace' })
     <template v-else>
       <PaginaKop :kicker="`Concepten · ${wachten} ${wachten === 1 ? 'wacht' : 'wachten'}`" titel="Concepten" uitleg="Wat agents voor je klaarzetten. Jij keurt goed, past aan of wijst af; niets gaat zonder jou de deur uit." helpartikel="concepten-goedkeuren-en-versturen">
         <template #acties>
-          <label v-if="team" class="keuze cp-team"><input type="checkbox" :checked="q('team') === '1'" data-test="concepten-team" @change="zet({ team: ($event.target as HTMLInputElement).checked ? '1' : undefined })"> Ook van mijn team</label>
+          <label v-if="team" class="keuze cpg-team"><input type="checkbox" :checked="q('team') === '1'" data-test="concepten-team" @change="zet({ team: ($event.target as HTMLInputElement).checked ? '1' : undefined })"> Ook van mijn team</label>
         </template>
       </PaginaKop>
 
-      <section class="cp-werkbalk-sectie">
+      <section class="cpg-werkbalk-sectie">
         <div class="container">
-          <div class="cp-werkbalk">
-            <label class="zoekveld cp-zoek"><span class="sr-only">Zoek op account</span><Icoon naam="Search" :grootte="16" class="cp-zoek-icoon" /><input v-model="zoekTekst" type="search" class="zoekinvoer" placeholder="Zoek op account of contact" data-test="concepten-zoek"></label>
-            <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'cp-filters--aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="concepten-filters" @click="filtersOpen = !filtersOpen">
-              <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="cp-teller">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="cp-pijl" :class="{ 'cp-pijl--open': filtersOpen }" />
+          <div class="cpg-werkbalk">
+            <label class="zoekveld cpg-zoek"><span class="sr-only">Zoek op account</span><Icoon naam="Search" :grootte="16" class="cpg-zoek-icoon" /><input v-model="zoekTekst" type="search" class="zoekinvoer" placeholder="Zoek op account of contact" data-test="concepten-zoek"></label>
+            <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'cpg-filters--aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="concepten-filters" @click="filtersOpen = !filtersOpen">
+              <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="cpg-teller">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="cpg-pijl" :class="{ 'cpg-pijl--open': filtersOpen }" />
             </button>
           </div>
-          <div class="cp-groep cp-groep--strook" role="group" aria-label="Status" data-test="filter-status">
+          <div class="cpg-groep cpg-groep--strook" role="group" aria-label="Status" data-test="filter-status"><span class="filter-label">Status</span>
             <button v-for="[k, l] in STATUSSEN" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('status') === k }" :aria-pressed="q('status') === k" :data-test="`status-${k || 'open'}`" @click="zet({ status: k || undefined })">{{ l }}<span class="pil-teller tnum">{{ tel('status', k || 'open') }}</span></button>
           </div>
-          <div class="cp-groep cp-groep--strook" role="group" aria-label="Soort" data-test="filter-soort">
+          <div class="cpg-groep cpg-groep--strook" role="group" aria-label="Soort" data-test="filter-soort"><span class="filter-label">Soort</span>
             <button v-for="[k, l] in SOORTEN" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('type') === k }" :aria-pressed="q('type') === k" :data-test="`soort-${k || 'alle'}`" @click="zet({ type: k || undefined })">{{ l }}<span class="pil-teller tnum">{{ k ? tel('soort', k) : somSoort }}</span></button>
           </div>
-          <div v-if="filtersOpen" class="cp-paneel" data-test="concepten-filterpaneel">
-            <div class="cp-groep" role="group" aria-label="Agent" data-test="filter-agent"><span class="filter-label">Agent</span>
+          <div v-if="filtersOpen" class="cpg-paneel" data-test="concepten-filterpaneel">
+            <div class="cpg-groep" role="group" aria-label="Agent" data-test="filter-agent"><span class="filter-label">Agent</span>
               <button v-for="[k, l] in AGENTS" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('agent') === k }" :aria-pressed="q('agent') === k" :data-test="`agent-${k || 'alle'}`" @click="zet({ agent: k || undefined })">{{ l }}<span class="pil-teller tnum">{{ k ? tel('agent', k) : somAgent }}</span></button>
             </div>
-            <div class="cp-groep" role="group" aria-label="Periode" data-test="filter-periode"><span class="filter-label">Periode</span>
+            <div class="cpg-groep" role="group" aria-label="Periode" data-test="filter-periode"><span class="filter-label">Periode</span>
               <button v-for="[k, l] in PERIODES" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('sinds') === k }" :aria-pressed="q('sinds') === k" :data-test="`sinds-${k || 'alles'}`" @click="zet({ sinds: k || undefined })">{{ l }}</button>
             </div>
-            <div v-if="actieveFilters" class="cp-groep cp-groep--eind"><button type="button" class="dd-act" data-test="concepten-reset" @click="resetFilters">Reset filters</button></div>
+            <div v-if="actieveFilters" class="cpg-groep cpg-groep--eind"><button type="button" class="dd-act" data-test="concepten-reset" @click="resetFilters">Reset filters</button></div>
           </div>
         </div>
       </section>
 
       <section class="section section--laatste">
         <div class="container">
-          <div class="cp-feedkop">
-            <h2 class="cp-feedtitel tnum" data-test="concepten-aantal">{{ data.totaal }} {{ data.totaal === 1 ? 'concept' : 'concepten' }}</h2>
-            <span class="cp-feedmeta">Klik op een kaart voor het volledige concept<template v-if="data.totaal > data.concepten.length"> · de nieuwste {{ data.concepten.length }} staan hier</template></span>
+          <div class="cpg-feedkop">
+            <h2 class="cpg-feedtitel tnum" data-test="concepten-aantal">{{ data.totaal }} {{ data.totaal === 1 ? 'concept' : 'concepten' }}</h2>
+            <span class="cpg-feedmeta">Klik op een kaart voor het volledige concept<template v-if="data.totaal > data.concepten.length"> · de nieuwste {{ data.concepten.length }} staan hier</template></span>
           </div>
           <LegeStaat v-if="!data.concepten.length" kicker="Niets gevonden" :titel="actieveFilters ? 'Geen concepten in dit filter.' : 'Geen concepten.'" :tekst="actieveFilters ? 'Probeer een breder filter of een andere periode.' : 'Wat agents voor je klaarzetten, verschijnt hier.'">
             <button v-if="actieveFilters" type="button" class="dd-act mt-8" @click="resetFilters">Toon alles</button>
           </LegeStaat>
-          <div v-else class="cp-raster" data-test="concepten">
+          <div v-else class="cpg-raster" data-test="concepten">
             <ConceptRasterKaart v-for="c in data.concepten" :key="c.id" :concept="c" :met-eigenaar="q('team') === '1'" @open="open = c" @gewijzigd="kaartGewijzigd" />
           </div>
         </div>
@@ -112,30 +112,30 @@ useHead({ title: 'Concepten · Dealtrace' })
 </template>
 
 <style scoped>
-.cp-werkbalk-sectie { padding: 0 0 8px; }
-.cp-werkbalk { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-.cp-zoek { flex: 1 1 260px; max-width: 420px; display: flex; align-items: center; }
-.cp-zoek .zoekinvoer { width: 100%; min-height: 44px; padding-left: 36px; }
-.cp-zoek-icoon { position: absolute; left: 12px; color: var(--muted); pointer-events: none; }
-.cp-filters--aan { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
-.cp-teller { display: inline-flex; align-items: center; height: 18px; padding: 0 7px; margin-left: 2px; background: var(--yellow); color: var(--ink); font-size: 11px; font-weight: 800; border-radius: 2px; }
-.cp-pijl { transition: transform var(--transition-fast); }
-.cp-pijl--open { transform: rotate(180deg); }
-.cp-groep { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.cp-groep .filter-label { min-width: 72px; }
-.cp-groep--strook + .cp-groep--strook { margin-top: 8px; }
-.cp-groep--eind { justify-content: flex-end; }
-.cp-paneel { display: flex; flex-direction: column; gap: 12px; background: var(--wit); border: 1px solid var(--border); padding: 16px 18px; margin-top: 12px; }
-.cp-feedkop { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
-.cp-feedtitel { font-family: var(--font-serif); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 0; color: var(--ink); }
-.cp-feedmeta { font-size: 12px; color: var(--muted); }
-.cp-raster { display: grid; grid-template-columns: 1fr; gap: var(--kaart-gap); align-items: stretch; }
-@media (min-width: 720px) { .cp-raster { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1100px) { .cp-raster { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.cpg-werkbalk-sectie { padding: 0 0 8px; }
+.cpg-werkbalk { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.cpg-zoek { flex: 1 1 260px; max-width: 420px; display: flex; align-items: center; }
+.cpg-zoek .zoekinvoer { width: 100%; min-height: 44px; padding-left: 36px; }
+.cpg-zoek-icoon { position: absolute; left: 12px; color: var(--muted); pointer-events: none; }
+.cpg-filters--aan { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.cpg-teller { display: inline-flex; align-items: center; height: 18px; padding: 0 7px; margin-left: 2px; background: var(--yellow); color: var(--ink); font-size: 11px; font-weight: 800; border-radius: 2px; }
+.cpg-pijl { transition: transform var(--transition-fast); }
+.cpg-pijl--open { transform: rotate(180deg); }
+.cpg-groep { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.cpg-groep .filter-label { min-width: 72px; }
+.cpg-groep--strook + .cpg-groep--strook { margin-top: 8px; }
+.cpg-groep--eind { justify-content: flex-end; }
+.cpg-paneel { display: flex; flex-direction: column; gap: 12px; background: var(--wit); border: 1px solid var(--border); padding: 16px 18px; margin-top: 12px; }
+.cpg-feedkop { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.cpg-feedtitel { font-family: var(--font-serif); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 0; color: var(--ink); }
+.cpg-feedmeta { font-size: 12px; color: var(--muted); }
+.cpg-raster { display: grid; grid-template-columns: 1fr; gap: var(--kaart-gap); align-items: stretch; }
+@media (min-width: 720px) { .cpg-raster { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .cpg-raster { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 719px) {
-  .cp-zoek { max-width: none; flex-basis: 100%; }
-  .cp-groep .filter-label { width: 100%; }
-  .cp-groep .filter-pil { min-height: var(--touch-target-min); }
-  .cp-team { min-height: var(--touch-target-min); display: inline-flex; align-items: center; gap: 6px; }
+  .cpg-zoek { max-width: none; flex-basis: 100%; }
+  .cpg-groep .filter-label { width: 100%; }
+  .cpg-groep .filter-pil { min-height: var(--touch-target-min); }
+  .cpg-team { min-height: var(--touch-target-min); display: inline-flex; align-items: center; gap: 6px; }
 }
 </style>

@@ -30,7 +30,7 @@ async function actiesVan(tx: Tx, planIds: string[]) {
 }
 
 /** Het overzicht: alle plannen van de organisatie (of van één account), met account, eigenaar en voortgang. */
-export async function lijst(tx: Tx, opties: { accountId?: string | null } = {}, nu = new Date()) {
+export async function accountplanLijst(tx: Tx, opties: { accountId?: string | null } = {}, nu = new Date()) {
   const vandaag = vandaagNl(nu)
   const rijen = await tx.select({ p: schema.accountplannen, accountNaam: schema.accounts.name, soort: schema.accounts.accountKind, eigenaar: schema.users.name })
     .from(schema.accountplannen)
@@ -55,7 +55,7 @@ async function leesPlan(tx: Tx, id: string): Promise<PlanRij> {
 }
 
 /** Eén plan met blokken, beslissers, acties (taken) en de contactpersonen van het account om uit te kiezen. */
-export async function detail(tx: Tx, id: string, g: PlanGebruiker, nu = new Date()) {
+export async function accountplanDetail(tx: Tx, id: string, g: PlanGebruiker, nu = new Date()) {
   const p = await leesPlan(tx, id)
   const [a] = await tx.select({ id: schema.accounts.id, naam: schema.accounts.name, soort: schema.accounts.accountKind, plaats: schema.accounts.city }).from(schema.accounts).where(eq(schema.accounts.id, p.accountId))
   const [eigenaar] = p.ownerId ? await tx.select({ naam: schema.users.name }).from(schema.users).where(eq(schema.users.id, p.ownerId)) : []
@@ -84,7 +84,7 @@ async function controleerContacten(tx: Tx, accountId: string, ids: string[]) {
 }
 
 /** Een nieuw plan voor een account. De maker is de eigenaar. */
-export async function maak(tx: Tx, organisationId: string, g: PlanGebruiker, b: PlanInvoer & { accountId?: unknown }) {
+export async function maakAccountplan(tx: Tx, organisationId: string, g: PlanGebruiker, b: PlanInvoer & { accountId?: unknown }) {
   const { patch, fouten } = controleerPlan(b, true)
   if (fouten.length) throw fout(422, fouten[0]!)
   const accountId = typeof b.accountId === 'string' ? b.accountId : ''
@@ -100,7 +100,7 @@ export async function maak(tx: Tx, organisationId: string, g: PlanGebruiker, b: 
 }
 
 /** Wijzigt titel, periode, status, blokken (alleen wat meekomt; leeg wist) of beslissers. */
-export async function wijzig(tx: Tx, organisationId: string, id: string, g: PlanGebruiker, b: PlanInvoer) {
+export async function wijzigAccountplan(tx: Tx, organisationId: string, id: string, g: PlanGebruiker, b: PlanInvoer) {
   const p = await leesPlan(tx, id)
   if (!(await mag(tx, g, p.ownerId))) throw fout(403, 'Dit is niet jouw accountplan')
   const { patch, fouten } = controleerPlan(b, false)
@@ -120,7 +120,7 @@ export async function wijzig(tx: Tx, organisationId: string, id: string, g: Plan
 }
 
 /** Verwijdert het plan; de acties blijven als taak op het account staan (accountplan_id gaat op null). */
-export async function verwijder(tx: Tx, organisationId: string, id: string, g: PlanGebruiker) {
+export async function verwijderAccountplan(tx: Tx, organisationId: string, id: string, g: PlanGebruiker) {
   const p = await leesPlan(tx, id)
   if (!(await mag(tx, g, p.ownerId))) throw fout(403, 'Dit is niet jouw accountplan')
   await tx.delete(schema.accountplannen).where(eq(schema.accountplannen.id, id))
@@ -129,7 +129,7 @@ export async function verwijder(tx: Tx, organisationId: string, id: string, g: P
 }
 
 /** Een actie toevoegen: een taak op het account (en het gekozen contact) op de datum om 09:00. */
-export async function voegActieToe(tx: Tx, organisationId: string, id: string, g: PlanGebruiker, b: { titel?: unknown; datum?: unknown; contactId?: unknown }) {
+export async function voegPlanActieToe(tx: Tx, organisationId: string, id: string, g: PlanGebruiker, b: { titel?: unknown; datum?: unknown; contactId?: unknown }) {
   const p = await leesPlan(tx, id)
   if (!(await mag(tx, g, p.ownerId))) throw fout(403, 'Dit is niet jouw accountplan')
   const titel = typeof b.titel === 'string' ? b.titel.trim() : ''
@@ -154,7 +154,7 @@ async function leesActie(tx: Tx, planId: string, taakId: string) {
 }
 
 /** Afvinken rondt de taak af via rondAf; uitvinken zet hem weer open. */
-export async function zetActie(tx: Tx, planId: string, taakId: string, g: PlanGebruiker, klaar: boolean) {
+export async function zetPlanActie(tx: Tx, planId: string, taakId: string, g: PlanGebruiker, klaar: boolean) {
   const p = await leesPlan(tx, planId)
   if (!(await mag(tx, g, p.ownerId))) throw fout(403, 'Dit is niet jouw accountplan')
   const t = await leesActie(tx, planId, taakId)
@@ -168,7 +168,7 @@ export async function zetActie(tx: Tx, planId: string, taakId: string, g: PlanGe
 }
 
 /** Uit het plan halen: de taak wordt geannuleerd met een reden. */
-export async function haalActieWeg(tx: Tx, planId: string, taakId: string, g: PlanGebruiker) {
+export async function haalPlanActieWeg(tx: Tx, planId: string, taakId: string, g: PlanGebruiker) {
   const p = await leesPlan(tx, planId)
   if (!(await mag(tx, g, p.ownerId))) throw fout(403, 'Dit is niet jouw accountplan')
   const t = await leesActie(tx, planId, taakId)
