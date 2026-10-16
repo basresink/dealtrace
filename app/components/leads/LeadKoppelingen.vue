@@ -2,7 +2,7 @@
 // Tabblad Koppelingen (F02, 12): de kaart KvK. De beheerder plakt de sleutel, test hem en
 // slaat hem op (eerst testen, dan opslaan) en zet een maandplafond; een Expert gebruikt de bron.
 // De sleutel komt nooit terug naar het scherm. Datacollectief (P15) op dezelfde manier, met een
-// vingerafdruk, het tegoed, een maandplafond in records en de laatste runs. CRM komt met P20.
+// vingerafdruk, het tegoed, een maandplafond in records en de laatste runs. Het CRM (P20) staat in CrmKaart.
 const toast = useToast()
 const { data: kvk, refresh } = await useFetch<any>('/api/koppelingen/kvk', { default: () => null })
 const sleutel = ref('')
@@ -108,9 +108,6 @@ const datum = (d: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', 
         </template>
       </template>
     </article>
-    <article class="kaart">
-      <header class="kaart-kop"><h3 class="kaart-titel">CRM</h3><span class="pil pil--grijs">Komt later</span></header>
-      <p class="tekst">Ontdubbelen tegen je CRM en overgenomen leads terugschrijven, in twee richtingen.</p>
-    </article>
+    <CrmKaart />
   </div>
 </template>

@@ -5,6 +5,7 @@ export default defineEventHandler(() => {
   return {
     authModus: c.authModus,
     aiProvider: c.aiProvider,
-    sleutels: { anthropic: Boolean(c.anthropicSleutel) },
+    sleutels: { anthropic: Boolean(c.anthropicSleutel), hubspot: Boolean(process.env.HUBSPOT_CLIENT_ID && process.env.HUBSPOT_CLIENT_SECRET) },
+    crmModus: process.env.CRM_MODUS === 'http' ? 'http' : 'mock',
   }
 })

@@ -4,6 +4,7 @@
 import { sql } from 'drizzle-orm'
 import { metOrganisatie } from '../../../utils/db'
 import { draagOver, magAccount, overdrachtUit, verstuurOverdracht } from '../../../utils/overdracht'
+import { verstuurCrmOverdracht } from '../../../utils/crm'
 import { vereisFunctie } from '../../../utils/sessie'
 
 export default defineEventHandler(async (event) => {
@@ -20,8 +21,8 @@ export default defineEventHandler(async (event) => {
     })
   })
   // Versturen is een aparte stap: een storing bij DealDrive draait de overdracht niet terug.
-  if (r.naar === 'dealdrive' && r.status === 'klaar') {
-    const uitkomst = await metOrganisatie(org, (tx) => verstuurOverdracht(tx, r.id)).catch(() => null)
+  if ((r.naar === 'dealdrive' || r.naar === 'crm') && r.status === 'klaar') {
+    const uitkomst = await metOrganisatie(org, (tx) => (r.naar === 'crm' ? verstuurCrmOverdracht(tx, r.id) : verstuurOverdracht(tx, r.id))).catch(() => null)
     const na = await metOrganisatie(org, async (tx) => overdrachtUit(((await tx.execute(sql`select * from overdrachten where id = ${r.id}`)).rows as any[])[0]))
     if (uitkomst === 'al_klant') return { ...na, tekst: 'Dit bedrijf is al klant in DealDrive. Overdragen als nieuwe kans bij een bestaande klant?' }
     return { ...r, ...na }

@@ -134,6 +134,7 @@ async function bewaarOffline() { await dagpakket.bewaarVoorOffline(String(route.
             <div class="ak-contactstrip mt-8">
               <a v-if="a.website" :href="a.website" target="_blank" rel="noopener"><Icoon naam="Globe" :grootte="16" /> Website</a>
               <a v-if="a.telefoon" :href="telLink(a.telefoon)"><Icoon naam="Phone" :grootte="16" /> {{ toonTelefoon(a.telefoon) }}</a>
+              <a v-if="a.crm" :href="a.crm.url" target="_blank" rel="noopener" data-test="open-crm"><Icoon naam="Link" :grootte="16" /> Open in {{ a.crm.label }}</a>
               <a v-if="a.linkedin" :href="a.linkedin" target="_blank" rel="noopener"><Icoon naam="Linkedin" :grootte="16" /> LinkedIn</a>
             </div>
           </div>

@@ -80,6 +80,8 @@ export default defineEventHandler(async (event) => {
       website: a.data?.website ?? null, telefoon: a.data?.telefoon ?? null, email: a.data?.email ?? null, linkedin: a.data?.linkedin ?? null,
       adres: a.data?.adres ?? null, branche: a.data?.branche ?? null, land: a.data?.land ?? 'NL', medewerkers: a.data?.medewerkers ?? null,
       aanleiding: a.data?.aanleiding ?? null, dossier: a.data?.dossier ?? null, band: a.data?.band ?? {},
+      // P20: het extern id uit het CRM; de link alleen met een echte koppeling (de mock heeft geen portaal).
+      crm: (a.data as any)?.extern?.hubspot?.id ? { label: 'HubSpot', id: (a.data as any).extern.hubspot.id, url: `https://app.hubspot.com/contacts/${process.env.HUBSPOT_PORTAAL ?? '0'}/company/${(a.data as any).extern.hubspot.id}` } : null,
       agentInzichten, volgBronnen: kan(ctx, 'account.bronnenVolgen') ? (a.data as any)?.volgBronnen ?? [] : [],
       herkomst: niveau === 'expert' ? a.data?.herkomst ?? {} : {},
       customFields: zichtbareCustomFields(a.data?.customFields, velden),

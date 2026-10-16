@@ -1,6 +1,7 @@
 // GET /api/leads/context: wat het tabblad Zoeken nodig heeft om een zoekopdracht samen te
 // stellen: doelgroepen, branches met SBI uit het verkoopverhaal, zoeksjablonen, "Lijkt op mijn
 // klanten" (alleen klanten), klassen, thuisbasis, bronnen met hun stand, team en reizen.
+import { actieveCrm } from '../../utils/crm'
 import { eq, ne } from 'drizzle-orm'
 import { AFWIJSREDENEN, leidZoekopdrachtAf, zoeksjablonen } from '../../../shared/leadGenerator'
 import { kan } from '../../utils/accounts'
@@ -28,6 +29,7 @@ export default defineEventHandler(async (event) => {
     const team = manager ? (await tx.select({ id: schema.users.id, naam: schema.users.name, werkplek: schema.users.werkplek, rol: schema.users.role }).from(schema.users)).filter((u) => u.rol !== 'founder') : []
     const reizen = (await tx.select({ id: schema.reistemplates.id, naam: schema.reistemplates.naam, status: schema.reistemplates.status, isStandaard: schema.reistemplates.isStandaard }).from(schema.reistemplates)).filter((r) => r.status === 'actief')
     const aiAan = kan(ctx, 'leads.aiZoeker')
+    const crmK = await actieveCrm(tx)
     return {
       doelgroepen, klassen: (await klassenVan(tx)).filter((k) => k.tabblad !== 'Klanten'),
       branches: (vv.branches ?? []).map((b) => ({ ...b, sbi: mapping.find((m) => m.brancheId === b.id)?.sbiCodes ?? [] })),
@@ -37,6 +39,7 @@ export default defineEventHandler(async (event) => {
       bronnen: {
         kvk: { beschikbaar: kvk.gekoppeld && kan(ctx, 'leads.kvk'), reden: !kvk.gekoppeld ? (kvk.pakketPlafond ? 'KvK is nog niet gekoppeld' : 'Onderdeel van Plus') : !kan(ctx, 'leads.kvk') ? 'Nog niet aangezet' : null },
         datacollectief: { beschikbaar: dc.gekoppeld && dcAan && dc.gebruikt < dc.plafond, reden: !dc.pakketPlafond ? 'Onderdeel van Compleet' : !dc.gekoppeld ? 'Datacollectief niet gekoppeld' : !dcAan ? 'Nog niet aangezet' : dc.gebruikt >= dc.plafond ? 'Je maandplafond voor Datacollectief-records is op.' : null },
+        ...(kan(ctx, 'leadgenerator.crm') || crmK ? { crm: { beschikbaar: !!crmK && kan(ctx, 'leadgenerator.crm'), reden: !crmK ? 'Er is nog geen CRM gekoppeld' : !kan(ctx, 'leadgenerator.crm') ? 'Nog niet aangezet' : null } } : {}),
         ai: { beschikbaar: aiAan, reden: aiAan ? null : ctx.organisatie!.pakket !== 'compleet' ? 'Onderdeel van Compleet' : 'Nog niet aangezet' },
       },
       meters: { credits: credits.over, kvk: { gebruikt: kvk.gebruikt, plafond: kvk.plafond }, dc: dc.pakketPlafond ? { gebruikt: dc.gebruikt, plafond: dc.plafond, gekoppeld: dc.gekoppeld } : null },

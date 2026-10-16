@@ -8,6 +8,7 @@ import { MotorBezig, draaiMotor } from '../../utils/motor'
 
 import { ruimOp } from '../../utils/credits'
 import { draaiWaarnemer } from '../../utils/agents/waarnemer'
+import { actieveCrm, syncCrm } from '../../utils/crm'
 
 export default defineEventHandler(async (event) => {
   const geheim = process.env.MOTOR_SECRET ?? ''
@@ -23,6 +24,8 @@ export default defineEventHandler(async (event) => {
     try { uit[o.id] = await metOrganisatie(o.id, (tx) => draaiMotor(tx, o.id, { soort: 'uur' })) } catch (e) { uit[o.id] = { fout: e instanceof MotorBezig ? 'bezig' : (e as Error).message } }
     // P19: de Waarnemer; de cadans per account (minimaal wekelijks) bepaalt wie aan de beurt is.
     try { await metOrganisatie(o.id, (tx) => draaiWaarnemer(tx, o.id)) } catch (e) { console.error('waarnemer', o.id, (e as Error).message) }
+    // P20: de CRM-synchronisatie elk uur per organisatie (dezelfde code als Synchroniseer nu).
+    try { await metOrganisatie(o.id, async (tx) => { if (await actieveCrm(tx)) await syncCrm(tx, o.id, { handeling: 'uur' }) }) } catch (e) { console.error('crm', o.id, (e as Error).message) }
     // P33: vervallen reserveringen vrijgeven en gesprekken ouder dan 30 dagen verwijderen.
     try { await metOrganisatie(o.id, (tx) => ruimOp(tx)) } catch { /* volgende ronde opnieuw */ }
   }

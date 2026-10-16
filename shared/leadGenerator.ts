@@ -388,7 +388,8 @@ export function leidZoekopdrachtAf(accounts: { accountKind?: string | null; sbi?
   }
 }
 
-export interface RondeVerbruik { rondesVandaag: number; stand: CreditsStand | null; kvk: { gekoppeld: boolean; gebruikt: number; plafond: number }; dc?: { gekoppeld: boolean; gebruikt: number; plafond: number } }
+export interface RondeVerbruik { rondesVandaag: number; stand: CreditsStand | null; kvk: { gekoppeld: boolean; gebruikt: number; plafond: number }; dc?: { gekoppeld: boolean; gebruikt: number; plafond: number }; crm?: { gekoppeld: boolean } }
+export const CRM_NIET_GEKOPPELD = 'Er is nog geen CRM gekoppeld. Je beheerder verbindt het CRM bij Instellingen, Koppelingen.'
 /** Mag deze ronde? Op de server afgedwongen (429, 400, 403, 402). */
 export function magRonde(v: RondeVerbruik, pakket: Pakket, bronnen: string[]): { mag: boolean; status?: 400 | 402 | 403 | 429; reden?: string } {
   if (v.rondesVandaag >= GRENZEN.rondesPerDag) return { mag: false, status: 429, reden: DAGGRENS_TEKST }
@@ -401,6 +402,10 @@ export function magRonde(v: RondeVerbruik, pakket: Pakket, bronnen: string[]): {
     if (!DC_PER_PAKKET[pakket]) return { mag: false, status: 403, reden: 'Datacollectief is onderdeel van Compleet' }
     if (!v.dc?.gekoppeld) return { mag: false, status: 400, reden: DC_NIET_GEKOPPELD }
     if (v.dc.gebruikt >= v.dc.plafond) return { mag: false, status: 429, reden: DC_PLAFOND_TEKST }
+  }
+  if (bronnen.includes('crm')) {
+    if (pakket === 'starter') return { mag: false, status: 403, reden: 'De CRM-koppeling is onderdeel van Plus' }
+    if (!v.crm?.gekoppeld) return { mag: false, status: 400, reden: CRM_NIET_GEKOPPELD }
   }
   if (bronnen.includes('ai')) {
     if (!soortAanIn('zoekronde', pakket)) return { mag: false, status: 403, reden: 'De AI-zoeker is onderdeel van Compleet' }

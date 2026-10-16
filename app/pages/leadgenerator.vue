@@ -136,7 +136,7 @@ const kicker = computed(() => `Leadgenerator · ${leads.value.length} gevonden`)
 const fmt = (n: number) => new Intl.NumberFormat('nl-NL').format(n)
 const datumKort = (d?: string | null) => (d ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short' }).format(new Date(d)) : '')
 const contactRegel = (l: any) => { const c = (l.feiten.contacten ?? [])[0]; return c ? `${c.naam}${c.functie ? ` · ${c.functie}` : ''}${c.functie && /eigenaar|directeur/i.test(c.functie) ? ' · beslisser' : ''}` : 'contactpersoon onbekend' }
-const alBekendTekst = (l: any) => (l.alBekend?.dealdrive ? `Al ${l.alBekend.dealdrive.soort} in DealDrive${l.alBekend.dealdrive.eigenaar ? ` · ${l.alBekend.dealdrive.eigenaar}` : ''}` : l.status === 'overgenomen' ? 'Overgenomen' : 'Gelijk aan een account in je bestand')
+const alBekendTekst = (l: any) => (l.alBekend?.crm ? `Al ${l.alBekend.crm.soort} in het CRM${l.alBekend.crm.eigenaar ? ` · ${l.alBekend.crm.eigenaar}` : ''}` : l.alBekend?.dealdrive ? `Al ${l.alBekend.dealdrive.soort} in DealDrive${l.alBekend.dealdrive.eigenaar ? ` · ${l.alBekend.dealdrive.eigenaar}` : ''}` : l.status === 'overgenomen' ? 'Overgenomen' : 'Gelijk aan een account in je bestand')
 useHead({ title: 'Leadgenerator · Dealtrace' })
 </script>
 
@@ -190,7 +190,7 @@ useHead({ title: 'Leadgenerator · Dealtrace' })
                 <label class="veld"><span class="veld-label">Aanleiding</span><input v-model="z.aanleiding" class="invoer" placeholder="Bijvoorbeeld werft servicemonteurs" maxlength="200" data-test="zp-aanleiding"></label>
                 <div class="veld"><span class="veld-label">Bronnen</span>
                   <div class="rijtje">
-                    <label v-for="b in (['ai', 'kvk', 'datacollectief'] as const)" :key="b" class="vink" :title="context.bronnen[b].reden ?? ''"><input type="checkbox" :checked="bronnen.includes(b)" :disabled="!context.bronnen[b].beschikbaar" :data-test="`zp-bron-${b}`" @change="wisselBron(b)"> {{ BRON_LABEL[b] }}<span v-if="!context.bronnen[b].beschikbaar" class="meta"> · {{ context.bronnen[b].reden }}</span></label>
+                    <label v-for="b in (['ai', 'kvk', 'datacollectief', 'crm'] as const).filter((x) => context.bronnen[x])" :key="b" class="vink" :title="context.bronnen[b].reden ?? ''"><input type="checkbox" :checked="bronnen.includes(b)" :disabled="!context.bronnen[b].beschikbaar" :data-test="`zp-bron-${b}`" @change="wisselBron(b)"> {{ BRON_LABEL[b] }}<span v-if="!context.bronnen[b].beschikbaar" class="meta"> · {{ context.bronnen[b].reden }}</span></label>
                   </div>
                 </div>
               </div>
@@ -218,6 +218,7 @@ useHead({ title: 'Leadgenerator · Dealtrace' })
                   <div v-for="l in gr.leads" :key="l.id" class="rij rij--compact" :data-lead="l.naam">
                     <div class="rij-info"><h3 class="rij-titel">{{ l.naam }}</h3><div class="rij-sub">{{ l.plaats }} · {{ alBekendTekst(l) }}</div></div>
                     <div class="rij-rechts">
+                      <span v-if="l.alBekend?.crm" class="pil" :class="l.alBekend.crm.soort === 'klant' ? 'pil--rood' : 'pil--blauw'" data-test="crm-pil">Al {{ l.alBekend.crm.soort }} in het CRM</span>
                       <span v-if="l.alBekend?.dealdrive" class="pil" :class="l.alBekend.dealdrive.soort === 'klant' ? 'pil--rood' : 'pil--blauw'" data-test="dd-pil">Al {{ l.alBekend.dealdrive.soort }} in DealDrive</span>
                       <NuxtLink v-if="l.alBekend?.accountId" class="dd-act" :to="`/accounts/${l.alBekend.accountId}`" data-test="open-kaart">Open kaart</NuxtLink>
                     </div>

@@ -1,6 +1,8 @@
 // De leadstroom op de server (F02, ADR-015): een ronde met de bronnen AI-zoeker en KvK,
 // ontdubbelen tegen het bestand en DealDrive, beoordelen, het dossier, overnemen als
 // prospect met eerste taak en afwijzen met reden. Rekenregels staan in shared/leadGenerator.ts.
+import { CRM_LABEL } from '../../shared/crm'
+import { actieveCrm, crmBestand, crmLeads, naNeemOver } from './crm'
 import { and, desc, eq, gte, inArray, sql } from 'drizzle-orm'
 import { normaliseerTelefoon } from '../../shared/contactgegevens'
 import { creditsVoor, magVragen } from '../../shared/credits'
@@ -112,7 +114,7 @@ export interface RondeUitkomst { rondeId: string; bewaard: boolean; aantal: numb
  */
 export async function draaiRonde(tx: Tx, org: { id: string; pakket: Pakket }, g: LeadGebruiker, z: Zoekopdracht, bronnen: string[], opties: { automatisch?: boolean; nu?: Date } = {}): Promise<RondeUitkomst> {
   const nu = opties.nu ?? new Date()
-  const bron = [...new Set(bronnen.filter((b) => b === 'ai' || b === 'kvk' || b === 'datacollectief'))]
+  const bron = [...new Set(bronnen.filter((b) => b === 'ai' || b === 'kvk' || b === 'datacollectief' || b === 'crm'))]
   const mapping = await brancheMapping(tx)
   const branche = sbiVoorBranche(z.brancheId, mapping)
   // De branche uit het verkoopverhaal levert de SBI-codes als de zoekopdracht er geen noemt.
@@ -125,13 +127,14 @@ export async function draaiRonde(tx: Tx, org: { id: string; pakket: Pakket }, g:
   const status = await kvkStatus(tx, org.pakket, nu)
   const dcS = await dcStatus(tx, org.pakket, nu)
   const stand = await creditsStandVoor(tx, org.id, nu)
-  const m = magRonde({ rondesVandaag: opties.automatisch ? 0 : await rondesVandaag(tx, g.id, nu), stand, kvk: { gekoppeld: status.gekoppeld, gebruikt: status.gebruikt, plafond: status.plafond }, dc: { gekoppeld: dcS.gekoppeld, gebruikt: dcS.gebruikt, plafond: dcS.plafond } }, org.pakket, bron)
+  const m = magRonde({ rondesVandaag: opties.automatisch ? 0 : await rondesVandaag(tx, g.id, nu), stand, kvk: { gekoppeld: status.gekoppeld, gebruikt: status.gebruikt, plafond: status.plafond }, dc: { gekoppeld: dcS.gekoppeld, gebruikt: dcS.gebruikt, plafond: dcS.plafond }, crm: { gekoppeld: !!(await actieveCrm(tx)) } }, org.pakket, bron)
   if (!m.mag) fout(m.status!, m.reden!)
 
   const [ronde] = await tx.insert(schema.leadRondes).values({ organisationId: org.id, gebruikerId: g.id, zoekopdracht: z, hash, bronnen: bron, automatisch: !!opties.automatisch, gestartOp: nu.toISOString() }).returning()
   const op = nu.toISOString()
-  const kandidaten = new Map<string, { feiten: LeadFeiten; bron: 'ai' | 'kvk' | 'datacollectief'; bronzin?: string; url?: string }>()
-  const voegToe = (f: LeadFeiten, b: 'ai' | 'kvk' | 'datacollectief', extra: { bronzin?: string; url?: string } = {}) => {
+  type Bron5 = 'ai' | 'kvk' | 'datacollectief' | 'crm'
+  const kandidaten = new Map<string, { feiten: LeadFeiten; bron: Bron5; bronzin?: string; url?: string }>()
+  const voegToe = (f: LeadFeiten, b: Bron5, extra: { bronzin?: string; url?: string } = {}) => {
     const s = leadSleutels(f)
     const bestaand = [...kandidaten.values()].find((k) => leadSleutels(k.feiten).some((x) => s.includes(x)))
     // Samenvoegen: wat er al staat blijft (bronprioriteit), contactpersonen van Datacollectief komen erbij.
@@ -153,6 +156,8 @@ export async function draaiRonde(tx: Tx, org: { id: string; pakket: Pakket }, g:
         if (p) voegToe(feitenUitProfiel(p, op), 'kvk')
       }
     }
+    // CRM (P20): prospects uit het CRM die nog geen account zijn, met hun contactpersonen.
+    if (bron.includes('crm')) for (const c of await crmLeads(tx, z, op, GRENZEN.bedrijvenPerRonde)) voegToe({ ...c, crmId: c.crmId, crmEigenaar: c.eigenaar } as LeadFeiten, 'crm')
     // Datacollectief: een selectie op de doelgroep met contactpersonen; elk record telt.
     if (bron.includes('datacollectief')) {
       dc = await dcContext(tx, org.pakket)
@@ -217,7 +222,7 @@ export async function draaiRonde(tx: Tx, org: { id: string; pakket: Pakket }, g:
     } else {
       await tx.insert(schema.leads).values({
         organisationId: org.id, naam: k.feiten.naam, kvk: k.feiten.kvk ?? null, domein: k.feiten.domein ?? null, postcode: k.feiten.postcode ?? null, plaats: k.feiten.plaats ?? null,
-        bron: k.bron, bronRef: ronde!.id, rondeId: ronde!.id, gevondenDoor: g.id, gevondenOp: op, dossierOp: k.feiten.dossierOp ?? null, data,
+        bron: k.bron, bronRef: k.bron === 'crm' ? (k.feiten as any).crmId ?? ronde!.id : ronde!.id, rondeId: ronde!.id, gevondenDoor: g.id, gevondenOp: op, dossierOp: k.feiten.dossierOp ?? null, data,
       })
     }
     aantal++
@@ -251,7 +256,7 @@ async function zoekLead(tx: Tx, f: Pick<LeadFeiten, 'naam' | 'kvk' | 'domein' | 
 export interface LeadVoorScherm {
   id: string; naam: string; plaats: string | null; status: string; bron: string; bronLabel: string; accountId: string | null
   klasse: string | null; feiten: LeadFeiten; bewijs: Bewijs[]; score: number; groep: LeadGroep; dossierOp: string | null
-  alBekend: { accountId?: string; naam?: string; dealdrive?: { soort: string; eigenaar?: string } } | null
+  alBekend: { accountId?: string; naam?: string; dealdrive?: { soort: string; eigenaar?: string }; crm?: { naam: string; soort: string; eigenaar?: string } } | null
   vvBrancheId: string | null; gevondenOp: string
 }
 
@@ -260,17 +265,23 @@ const feitenVan = (l: LeadRij): LeadFeiten => ({ ...l.data, naam: l.naam, kvk: l
 export async function leadsVoorScherm(tx: Tx, rijen: LeadRij[], z: Zoekopdracht, nu = new Date()): Promise<LeadVoorScherm[]> {
   const klassen = await klassenVan(tx)
   const accounts = await bestand(tx)
+  const crm = await crmBestand(tx)
+  const crmK = await actieveCrm(tx)
+  const crmLabel = crmK ? CRM_LABEL[crmK.soort as 'hubspot'] ?? 'CRM' : 'CRM'
   const batches = new Map((await tx.select({ id: schema.importBatches.id, label: schema.importBatches.bronLabel }).from(schema.importBatches)).map((b) => [b.id, b.label]))
   return rijen.map((l) => {
     const f = feitenVan(l)
     const d = l.status === 'overgenomen' ? null : zoekDuplicaat({ name: l.naam, kvk: l.kvk, domein: l.domein, postcode: l.postcode }, accounts)
     const eigen = l.accountId ? accounts.find((a) => a.id === l.accountId) : d?.soort === 'zeker' ? d.match : undefined
-    const alBekend = eigen ? { accountId: eigen.id, naam: eigen.name } : l.data.dealdrive ? { dealdrive: { soort: l.data.dealdrive.soort, eigenaar: l.data.dealdrive.eigenaar } } : null
+    // P20: ook een treffer in het gekoppelde CRM is "Al in je bestand" (niet voor een lead die uit het CRM komt).
+    const c = !eigen && l.status !== 'overgenomen' && l.bron !== 'crm' ? zoekDuplicaat({ name: l.naam, kvk: l.kvk, domein: l.domein, postcode: l.postcode }, crm) : null
+    const crmTreffer = c?.soort === 'zeker' ? (c.match as (typeof crm)[number]) : null
+    const alBekend = eigen ? { accountId: eigen.id, naam: eigen.name } : crmTreffer ? { crm: { naam: crmTreffer.name, soort: crmTreffer.klant ? 'klant' : 'prospect', eigenaar: crmTreffer.eigenaar ?? undefined } } : l.data.dealdrive ? { dealdrive: { soort: l.data.dealdrive.soort, eigenaar: l.data.dealdrive.eigenaar } } : null
     const b = beoordeelLead(f, z, klassen, nu)
     const klasse = klasseUitMedewerkers(f.medewerkers, klassen)
     return {
       id: l.id, naam: l.naam, plaats: l.plaats, status: l.status, bron: l.bron, accountId: l.accountId,
-      bronLabel: l.bron === 'import' ? `Import: ${batches.get(l.bronRef ?? '') ?? 'bestand'}` : l.bron === 'kvk' ? 'KvK' : l.bron === 'ai' ? 'AI-zoeker' : l.bron === 'datacollectief' ? 'Datacollectief' : l.bron,
+      bronLabel: l.bron === 'import' ? `Import: ${batches.get(l.bronRef ?? '') ?? 'bestand'}` : l.bron === 'kvk' ? 'KvK' : l.bron === 'ai' ? 'AI-zoeker' : l.bron === 'datacollectief' ? 'Datacollectief' : l.bron === 'crm' ? crmLabel : l.bron,
       klasse: klasse ? klasseCode(klassen.find((k) => k.id === klasse) ?? { id: klasse, naam: klasse }) : null,
       feiten: f, bewijs: b.bewijs, score: b.score, groep: groepeerLead({ alBekend: !!alBekend, bewijs: b.bewijs, dossierOp: l.dossierOp }, nu), dossierOp: l.dossierOp, alBekend,
       vvBrancheId: l.data.vvBrancheId ?? null, gevondenOp: l.gevondenOp,
@@ -423,7 +434,17 @@ export async function neemOver(tx: Tx, org: string, door: LeadGebruiker, leadId:
   const [eigenaar] = await tx.select({ id: schema.users.id, werkplek: schema.users.werkplek, data: schema.users.data, naam: schema.users.name }).from(schema.users).where(eq(schema.users.id, eigenaarId))
   if (!eigenaar) fout(422, 'Deze eigenaar bestaat niet in je organisatie')
   const f = feitenVan(l!)
-  const p = await maakProspect(tx, org, door.id, eigenaar!.id, f, { nbBron: 'leadgenerator', reisId: b.reisId, notitie: bewijsNotitie(l!), leadId: l!.id })
+  // P20: ontdubbelen tegen het CRM, ook voor een Beginner bij een klaargezette lead.
+  if (l!.bron !== 'crm') {
+    const c = zoekDuplicaat({ name: f.naam, kvk: f.kvk, domein: f.domein, postcode: f.postcode }, await crmBestand(tx))
+    if (c.soort === 'zeker') {
+      const m = c.match as Awaited<ReturnType<typeof crmBestand>>[number]
+      if (m.klant) fout(422, `${m.name} is al klant in het CRM. Een klant wordt nooit terug een prospect.`)
+      fout(409, `${m.name} staat al in het CRM${m.eigenaar ? ` bij ${m.eigenaar}` : ''}.`)
+    }
+  }
+  const p = await maakProspect(tx, org, door.id, eigenaar!.id, f, { nbBron: l!.bron === 'crm' ? 'crm' : 'leadgenerator', reisId: b.reisId, notitie: bewijsNotitie(l!), leadId: l!.id })
+  await naNeemOver(tx, org, p.id, { bron: l!.bron, data: { ...l!.data, crmId: (l!.data as any)?.crmId ?? (l!.bron === 'crm' ? l!.bronRef : null) } })
   const stap: EersteStap = b.eersteStap ?? (eigenaar!.werkplek === 'buitendienst' ? 'bezoek' : 'belblok')
   const taak = await eersteTaak(tx, org, eigenaar!, { id: p.id, naam: p.naam }, stap)
   await tx.update(schema.leads).set({ status: 'overgenomen', accountId: p.id, updatedAt: new Date().toISOString() }).where(eq(schema.leads.id, l!.id))

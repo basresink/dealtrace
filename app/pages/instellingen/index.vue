@@ -55,7 +55,8 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
     kaarten: [
       { titel: 'SalesDNA', tekst: 'Het verkoopverhaal automatisch uit SalesDNA, met bron per onderdeel.', link: '/instellingen/koppelingen/salesdna', toon: !!functie('koppeling.salesdna')?.beschikbaar },
       { titel: 'Agenda', tekst: 'Microsoft 365 en Google: aanzetten voor de organisatie; ieder koppelt zelf in Mijn instellingen.', link: '/mij#agenda', toon: beheerder.value },
-      { titel: 'Bronnen', tekst: 'KVK, Datacollectief en CRM.', toon: beheerder.value },
+      { titel: 'CRM', tekst: 'HubSpot: lezen voor ontdubbelen en klantprofiel, terugschrijven van leads, uitkomsten en de overdracht.', link: '/instellingen/koppelingen/crm', toon: !!functie('koppeling.crm')?.beschikbaar || !!functie('koppeling.crmSync')?.beschikbaar },
+      { titel: 'Bronnen', tekst: 'KVK en Datacollectief in de leadgenerator.', link: '/leadgenerator?tab=koppelingen', toon: beheerder.value },
       { titel: 'DealDrive', tekst: 'Overdracht na de eerste afspraak.', toon: beheerder.value },
     ],
   },

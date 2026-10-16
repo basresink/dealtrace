@@ -11,6 +11,7 @@ import { gebruikDb } from './db'
 import { meldGebeurtenis, ReisFout } from './reis'
 import { leesStand } from './vvProjectie'
 import { teamLeden } from './planning'
+import { crmOverdrachtStand, verstuurCrmOverdracht } from './crm'
 
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
 type Rij = Record<string, any>
@@ -43,6 +44,7 @@ export async function voorbereiding(tx: Tx, accountId: string, door: { id: strin
   const m = magOverdragen({ nbStatus: a!.nb_status }, ap ? { eerste: true, status: ap.status, overdragen: true } : null, !!loopt && !loopt.data?.alKlant)
   const stand = await dealdriveStand(tx)
   const crm = await crmGekoppeld(tx)
+  const crmStand = await crmOverdrachtStand(tx)
   const [inst] = await rijen(tx, sql`select value from org_settings where key = 'overdracht'`)
   const collegas = await rijen(tx, sql`select id, name as naam from users where status = 'actief' and role in ('accountmanager', 'salesmanager') and id <> ${door.id} order by name`)
   const ctx = ap ? await context(tx, accountId, ap, { omschrijving: ap.data?.vervolgstap ?? '' }) : null
@@ -50,7 +52,8 @@ export async function voorbereiding(tx: Tx, accountId: string, door: { id: strin
     mag: m, alKlant: loopt?.data?.alKlant ? { overdrachtId: loopt.id } : null, overdracht: loopt ? overdrachtUit(loopt) : null,
     keuzes: {
       dealdrive: { kan: true, reden: stand === 'uit' ? 'DealDrive is nog niet gekoppeld. Je krijgt een overdrachtstaak met de briefing.' : null },
-      crm: { kan: true, reden: crm ? null : 'Het CRM is nog niet gekoppeld. Je krijgt een overdrachtstaak met de briefing.' },
+      // P20: met een gekoppeld CRM is het alleen een keuze als "Overdracht naar dit CRM" aan staat.
+      crm: crmStand === 'uit' ? { kan: false, reden: 'Overdracht naar het CRM staat uit. Je beheerder zet dit aan bij de CRM-koppeling.' } : { kan: true, reden: crm ? null : 'Het CRM is nog niet gekoppeld. Je krijgt een overdrachtstaak met de briefing.' },
       collega: { kan: collegas.length > 0, reden: collegas.length ? null : 'Er is geen collega om aan over te dragen.' },
     },
     collegas, ontvanger: (inst?.value as any)?.vasteOntvanger ?? null,
@@ -113,7 +116,9 @@ export async function draagOver(tx: Tx, org: string, door: { id: string; naam: s
     pakket = overdrachtPakket({ ...ctx, overdrachtId: id, op: nu.toISOString(), door: { email: door.email, naam: kort(door.naam) }, nieuweEigenaar: collega?.email ?? inv.ontvanger ?? null, alsNieuweKansBijKlant: !!inv.alsNieuweKansBijKlant })
   } catch (e: any) { return fout(422, e.message) }
   const stand = await dealdriveStand(tx)
-  const versturen = inv.naar === 'dealdrive' && stand !== 'uit'
+  const crmStand = inv.naar === 'crm' ? await crmOverdrachtStand(tx) : null
+  if (crmStand === 'uit') fout(422, 'Overdracht naar het CRM staat uit')
+  const versturen = (inv.naar === 'dealdrive' && stand !== 'uit') || crmStand === 'aan'
   await tx.execute(sql`insert into overdrachten (id, organisation_id, account_id, afspraak_id, naar, naar_gebruiker_id, ontvanger, status, pakket, sleutel, op, door, volgende_poging_op, data)
     values (${id}, ${org}, ${accountId}, ${ap!.id}, ${inv.naar}, ${collega?.id ?? null}, ${inv.ontvanger ?? null}, 'klaar', ${JSON.stringify(pakket)}::jsonb, ${sleutel}, ${nu.toISOString()}, ${door.id}, ${versturen ? nu.toISOString() : null}, ${JSON.stringify({ stand: inv.naar === 'dealdrive' ? stand : null })}::jsonb)`)
   // Reis: overgedragen, status en fase (via de statusmachine; een account buiten de reis wordt alsnog gezet).
@@ -134,7 +139,7 @@ export async function draagOver(tx: Tx, org: string, door: { id: string; naam: s
   }
   await tx.execute(sql`insert into activiteiten (organisation_id, account_id, soort, door, op, data) values (${org}, ${accountId}, 'overdracht', ${door.id}, ${nu.toISOString()}, ${JSON.stringify({ overdrachtId: id, naar: inv.naar, gebeurtenis: 'overgedragen', tekst: `Overgedragen aan ${naamCollega ?? NAAR_LABEL[inv.naar]}` })}::jsonb)`)
   await schrijfAudit(tx, { organisationId: org, actorId: door.id, action: 'account.overdragen', resourceType: 'accounts', resourceId: accountId, changes: { overdrachtId: id, naar: inv.naar, naarGebruikerId: collega?.id ?? null, vervolgstap: inv.vervolgstap.omschrijving } })
-  const tekst = collega ? `${a!.name} is overgedragen aan ${naamCollega}.` : versturen ? `${a!.name} is overgedragen aan DealDrive.` : `${a!.name} is overgedragen. De overdrachtstaak met briefing staat klaar.`
+  const tekst = collega ? `${a!.name} is overgedragen aan ${naamCollega}.` : versturen ? `${a!.name} is overgedragen aan ${inv.naar === 'crm' ? 'het CRM' : 'DealDrive'}.` : `${a!.name} is overgedragen. De overdrachtstaak met briefing staat klaar.`
   return { ...overdrachtUit((await rijen(tx, sql`select * from overdrachten where id = ${id}`))[0]!), tekst, versturen }
 }
 
@@ -177,9 +182,9 @@ export async function verstuurOverdracht(tx: Tx, id: string, nu = new Date(), ko
 
 /** De wachtrij: alles met status klaar en een verstreken volgende poging. */
 export async function verstuurWachtrij(tx: Tx, nu = new Date()) {
-  const lijst = await rijen(tx, sql`select id from overdrachten where status = 'klaar' and naar = 'dealdrive' and volgende_poging_op is not null and volgende_poging_op <= ${nu.toISOString()} order by volgende_poging_op limit 50`)
+  const lijst = await rijen(tx, sql`select id, naar from overdrachten where status = 'klaar' and naar in ('dealdrive', 'crm') and volgende_poging_op is not null and volgende_poging_op <= ${nu.toISOString()} order by volgende_poging_op limit 50`)
   let n = 0
-  for (const o of lijst) if (await verstuurOverdracht(tx, o.id, nu)) n++
+  for (const o of lijst) if (await (o.naar === 'crm' ? verstuurCrmOverdracht(tx, o.id, nu) : verstuurOverdracht(tx, o.id, nu))) n++
   return n
 }
 
@@ -189,7 +194,7 @@ export async function opnieuw(tx: Tx, id: string, nu = new Date()) {
   if (!o) fout(404, 'Overdracht niet gevonden')
   if (o!.status !== 'mislukt') fout(409, 'Alleen een mislukte overdracht probeer je opnieuw')
   await tx.execute(sql`update overdrachten set status = 'klaar', pogingen = 0, laatste_fout = null, volgende_poging_op = ${nu.toISOString()} where id = ${id}`)
-  await tx.execute(sql`update tasks set status = 'klaar', uitkomst = 'gedaan', updated_at = now() where data->>'overdrachtId' = ${id} and title like 'Overdracht naar DealDrive mislukt%' and status = 'open'`)
+  await tx.execute(sql`update tasks set status = 'klaar', uitkomst = 'gedaan', updated_at = now() where data->>'overdrachtId' = ${id} and (title like 'Overdracht naar DealDrive mislukt%' or title like 'Overdracht naar het CRM mislukt%') and status = 'open'`)
   return o!
 }
 

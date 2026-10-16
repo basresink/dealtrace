@@ -83,3 +83,18 @@ Met een gekoppelde agenda van Microsoft 365 of Google telt wat daarin staat mee 
 
 Met **Ontkoppel** wis je de toegang weer. De toegang wordt versleuteld bewaard, met een eigen sleutel die alleen voor agenda's is. Werkt de koppeling niet meer, dan staat er "ontkoppeld, koppel opnieuw".
 
+
+## CRM koppelen (HubSpot)
+
+De CRM-koppeling voorkomt dat je een klant of een prospect van een collega opnieuw benadert, en zet wat je in Dealtrace doet terug in je CRM. Deals en offertes maakt het CRM zelf.
+
+1. Ga naar **Instellingen**, **CRM** en klik **Verbind met HubSpot**. Geef toestemming in HubSpot. Terug in Dealtrace zie je "HubSpot is gekoppeld."
+2. **Eerst lezen, dan schrijven.** Een nieuwe koppeling leest alleen: bedrijven en contacten komen binnen voor ontdubbelen en het klantprofiel. Klanten uit het CRM worden klant-accounts. Zet een object pas op **Schrijven** of **Beide** als de veldtoewijzing klopt. Vanaf dat moment gaan overgenomen leads, contactpersonen en uitkomsten van pogingen naar het CRM, elk precies één keer.
+3. **Veldtoewijzing met voorbeeld.** Per veld zie je welke waarde uit het eerste CRM-record binnenkomt. Een eigen veld koppel je als `cf:sleutel`. Een leeg veld in het CRM wist niets in Dealtrace.
+4. **Eigenaarsregel.** De eigenaar in het CRM wordt de gebruiker met hetzelfde e-mailadres. Is het adres onbekend, dan kies je wie het krijgt; de onbekende adressen staan in een lijst.
+5. **Overdracht naar dit CRM.** Staat deze schakelaar aan, dan kies je het CRM bij "Overdragen?" na een gehouden eerste afspraak. Dealtrace zet een activiteit met de briefing bij het bedrijf.
+6. **Slapende klanten.** Wijs het veld "Laatste order" toe. Een klant die 3, 6 of 12 maanden niet bestelde, krijgt een herwintaak met de terugkomregel.
+
+**Bronprioriteit.** Wat je zelf invulde, wint altijd. Daarna KvK, Datacollectief, CRM, SalesDNA, web, AI en import. Houdt Dealtrace zijn eigen waarde, dan zie je het verschil in het **synchronisatielog**.
+
+Dealtrace synchroniseert elk uur. Vanaf Expert klik je **Synchroniseer nu**. Werkt de koppeling niet meer, dan staat er in gewone taal wat er mis is en krijgt de beheerder een melding; met **Verbind opnieuw** herstel je hem.
