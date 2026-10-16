@@ -381,29 +381,16 @@
 .werkbalk .zoekinvoer { flex: 1 1 220px; min-width: 0; min-height: 44px; }
 .filterpaneel { display: grid; gap: 12px; padding: 16px; background: var(--wit); border: 1px solid var(--border); border-radius: var(--radius); }
 .dd-tekstknop { background: none; border: 0; color: var(--ink); text-decoration: underline; cursor: pointer; font: inherit; min-height: 44px; }
-.account-lijst { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
-.account-lijst--kaarten { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
-.account-rij { background: var(--wit); border: 1px solid var(--border); border-radius: var(--radius); }
-.account-rij:hover { border-color: var(--ink); }
-.account-rij-link { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; color: inherit; text-decoration: none; min-height: 44px; }
-.account-lijst--compact .account-rij-link { padding: 8px 12px; align-items: center; }
-.account-lijst--kaarten .account-rij-link { flex-direction: column; }
 .account-logo { flex: 0 0 40px; height: 40px; display: grid; place-items: center; border-radius: var(--radius); background: var(--surface, #f2f1ec); font-weight: 800; font-size: 13px; }
 .account-logo--a { background: var(--ink); color: var(--yellow); }
 .account-logo--b { background: var(--yellow); color: var(--ink); }
-.account-hoofd { flex: 1; min-width: 0; display: grid; gap: 4px; }
 .account-naam { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; overflow-wrap: anywhere; }
-.account-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: var(--fs-meta); color: var(--muted); }
 .account-aanleiding { font-size: var(--fs-meta); padding: 4px 8px; background: var(--surface, #f2f1ec); border-left: 2px solid var(--purple, #6b3fa0); }
 .account-aanleiding--heet { border-left-color: var(--red, #c62828); color: var(--red, #c62828); }
-.account-contacten { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
-.contact-bol { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--wit); font-size: 11px; font-weight: 700; }
 .contextmenu { position: fixed; z-index: 100; min-width: 200px; background: var(--wit); border: 1px solid var(--ink); border-radius: var(--radius); display: grid; padding: 4px 0; }
 .contextmenu a, .contextmenu button { padding: 10px 14px; min-height: 44px; display: flex; align-items: center; color: var(--ink); text-decoration: none; background: none; border: 0; font: inherit; text-align: left; cursor: pointer; }
 .contextmenu a:hover, .contextmenu button:hover { background: var(--surface, #f2f1ec); }
-@media (max-width: 767px) { .account-contacten { display: none; } .account-lijst--kaarten { grid-template-columns: 1fr; } }
 .top-kaart { position: relative; text-decoration: none; color: inherit; display: grid; gap: 6px; }
-.top-rang { position: absolute; top: 12px; right: 16px; font-family: var(--font-serif); font-size: 28px; font-weight: 700; color: var(--muted); }
 .mt-8 { margin-top: 8px; }
 .ak-kop { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
 .ak-contactstrip { display: flex; flex-wrap: wrap; gap: 4px 16px; }
@@ -1189,3 +1176,111 @@ html.zonlicht body { color: #000; }
 /* Vandaag: kop en pijlknoppen van de blokken naast elkaar, ook in een smalle kaart. */
 .vandaag-blokken .kaart-kop { flex-wrap: nowrap; align-items: flex-start; gap: 8px; }
 .vandaag-blokken .kaart-kop .reis-knoppen { flex-wrap: nowrap; flex-shrink: 0; }
+
+/* ---------- Prospects: Top deze week en de accountrij (opzet DealDrive) ---------- */
+.kicker--paars { color: var(--purple); }
+.kicker--paars.kicker--streep::before { background: var(--purple); }
+
+.top-raster { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 700px) { .top-raster { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1000px) { .top-raster { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.top-kaart-dd {
+  display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 18px 20px;
+  background: var(--wit); border: 1px solid var(--border); border-top: 3px solid var(--purple);
+  color: inherit; text-decoration: none; transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+.top-kaart-dd:hover { border-color: var(--purple); transform: translateY(-2px); }
+.top-kaart-dd:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.top-kaart-dd--heet { border-top-color: var(--red); }
+.top-kaart-dd--warm { border-top-color: var(--orange); }
+.top-kaart-dd--lauw { border-top-color: var(--yellow); }
+.top-kaart-dd--koud { border-top-color: var(--blue); }
+.top-kaart-kop { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; }
+.top-rang-pil { padding: 0 8px; background: var(--purple); color: var(--wit); font-family: var(--font-serif); font-size: 18px; font-weight: 700; line-height: 1.4; }
+.top-kaart-naam { margin: 0; font-family: var(--font-serif); font-size: 19px; font-weight: 700; line-height: 1.25; letter-spacing: -0.005em; color: var(--ink); overflow-wrap: anywhere; }
+.top-kaart-meta { font-size: 12px; color: var(--muted); }
+.top-kaart-aanleiding { margin-top: 4px; padding: 8px 10px; background: var(--surface); border-left: 3px solid var(--purple); font-size: 13px; font-style: italic; line-height: 1.4; color: var(--ink-soft); }
+.top-kaart-voet { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); }
+.top-kaart-tag { padding: 3px 7px; background: var(--purple); color: var(--wit); font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.top-kaart-open { margin-left: auto; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); }
+
+/* Klassepil: A zwart met geel, B blauw, C oranje, D grijs, overig paars, geen klasse gestippeld. */
+.klasse-pil {
+  display: inline-flex; align-items: center; padding: 2px 8px; border: 1px solid transparent; border-radius: 2px;
+  background: var(--ink); color: var(--wit); font-family: var(--font-sans); font-size: 10px; font-weight: 800;
+  letter-spacing: 0.04em; line-height: 1.4; text-transform: uppercase; white-space: nowrap;
+}
+.klasse-pil--a { background: var(--ink); color: var(--yellow); }
+.klasse-pil--b { background: var(--blue); }
+.klasse-pil--c { background: var(--orange); }
+.klasse-pil--d { background: var(--muted); }
+.klasse-pil--overig { background: var(--purple); }
+.klasse-pil--geen { background: transparent; color: var(--muted); border: 1px dashed var(--border-strong); }
+
+/* Alle prospects en klanten: kruimel, werkbalk met keuzemenu's en de lijst in één witte kaart. */
+.lijst-kruimel { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; letter-spacing: 0.2em; text-decoration: none; }
+.lijst-kruimel:hover { color: var(--ink); }
+.lijst-werkbalk { flex-wrap: wrap; }
+.keuzemenu-houder { position: relative; }
+.keuzemenu-pijl { transition: transform var(--transition-fast); }
+.keuzemenu-pijl--open { transform: rotate(180deg); }
+.keuzemenu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 60; min-width: 200px; margin: 0; padding: 4px 0; list-style: none; background: var(--wit); border: 1px solid var(--ink); border-radius: var(--radius); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12); }
+.keuzemenu-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 8px 14px; background: none; border: 0; font: inherit; font-size: 13px; color: var(--ink); text-align: left; cursor: pointer; }
+.keuzemenu-item:hover { background: var(--surface); }
+.keuzemenu-item--aan { font-weight: 700; box-shadow: inset 3px 0 0 var(--yellow); }
+.dd-actie--filters-aan { border-color: var(--ink); }
+.lijst-aantal { margin: 0 0 12px; }
+
+.acc-lijst { margin: 0; padding: 0; list-style: none; background: var(--wit); border: 1px solid var(--border); }
+.acc-rij {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px;
+  min-height: var(--touch-target-comfortable, 48px); padding: 20px 24px; border-bottom: 1px solid var(--border); background: var(--wit);
+  transition: background var(--transition-fast);
+}
+.acc-rij:last-child { border-bottom: 0; }
+.acc-rij:hover { background: var(--surface); }
+.acc-logo { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; flex-shrink: 0; color: var(--wit); font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+.acc-info { min-width: 0; }
+.acc-naam { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 4px; font-family: var(--font-serif); font-size: 18px; font-weight: 700; letter-spacing: -0.005em; color: var(--ink); overflow-wrap: anywhere; }
+.acc-link { color: inherit; text-decoration: none; }
+.acc-link::after { content: ''; position: absolute; inset: 0; }
+.acc-link:focus-visible { outline: none; }
+.acc-link:focus-visible::after { outline: 2px solid var(--yellow); outline-offset: -2px; }
+.acc-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-bottom: 8px; font-size: 12px; color: var(--muted); }
+.acc-kanaal { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; flex-shrink: 0; border: 1px solid var(--border); border-radius: 2px; background: var(--wit); color: var(--muted); text-decoration: none; }
+a.acc-kanaal:hover { border-color: var(--ink); color: var(--ink); }
+a.acc-kanaal:focus-visible, .acc-tel:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.acc-kanaal--leeg { z-index: auto; opacity: 0.35; }
+.acc-tel { position: relative; z-index: 1; color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--border-strong); }
+.acc-tel:hover { color: var(--ink); border-bottom-color: var(--yellow); }
+.acc-regel { padding-left: 12px; border-left: 3px solid var(--yellow); font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+.acc-contacten { display: flex; align-items: center; flex-shrink: 0; padding-left: 8px; }
+.acc-contact { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin-left: -8px; border: 2px solid var(--wit); border-radius: 2px; color: var(--wit); font-size: 11px; font-weight: 800; }
+.acc-contact:first-child { margin-left: 0; }
+.acc-contact--rest { background: var(--surface); color: var(--muted); }
+.acc-geen-contact { font-size: 11px; font-style: italic; color: var(--muted-light); white-space: nowrap; }
+
+/* Compact: dichter opeen, kleiner logovlak, geen regel. */
+.acc-lijst--compact .acc-rij { padding: 10px 20px; gap: 12px; }
+.acc-lijst--compact .acc-logo { width: 40px; height: 40px; font-size: 13px; }
+.acc-lijst--compact .acc-naam { font-size: 16px; margin-bottom: 2px; }
+.acc-lijst--compact .acc-sub { margin-bottom: 0; }
+
+/* Kaarten: dezelfde rij als kaart in een raster. */
+.acc-lijst--kaarten { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); background: transparent; border: 0; }
+.acc-lijst--kaarten .acc-rij { grid-template-columns: auto minmax(0, 1fr); align-items: start; border: 1px solid var(--border); }
+.acc-lijst--kaarten .acc-rij:last-child { border-bottom: 1px solid var(--border); }
+.acc-lijst--kaarten .acc-contacten { grid-column: 1 / -1; padding-left: 0; }
+
+/* Telefoon: contacten onder de inhoud, kanalen als tikdoel van 44 px. */
+@media (max-width: 799px) {
+  .acc-rij { grid-template-columns: auto minmax(0, 1fr); padding: 16px; }
+  .acc-contacten { grid-column: 1 / -1; padding-left: 70px; }
+  .acc-lijst--compact .acc-contacten { display: none; }
+}
+@media (max-width: 719px) {
+  .acc-kanaal { width: 44px; height: 44px; }
+  .acc-tel { display: inline-flex; align-items: center; min-height: 44px; border-bottom: 0; text-decoration: underline; }
+  .acc-lijst--kaarten { grid-template-columns: 1fr; }
+  .lijst-kruimel { min-height: 44px; }
+}

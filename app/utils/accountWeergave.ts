@@ -38,3 +38,33 @@ export function toonTelefoon(n: string | null | undefined): string {
 
 /** Pil in de kleur van de reisfase (tokens via de pilvarianten). */
 export const fasePil = (kleur: string | null | undefined) => `pil--${kleur || 'grijs'}`
+
+/** Klasselabel voor een pil: "A · Corporate" zonder de toelichting tussen haakjes. */
+export function klasseLabel(id: string | null | undefined, klassen: { id: string; naam: string }[]): string {
+  if (!id) return ''
+  const k = klassen.find((x) => x.id === id)
+  return k ? k.naam.replace(/\s*\([^)]*\)\s*$/, '').trim() : id
+}
+
+/** Kleurvariant van de klassepil op de letter: a zwart, b blauw, c oranje, d grijs. */
+export function klasseKleur(id: string | null | undefined, klassen: { id: string; naam: string }[]): string {
+  if (!id) return 'geen'
+  const letter = klasseKort(id, klassen).toLowerCase()
+  return ['a', 'b', 'c', 'd'].includes(letter) ? letter : 'overig'
+}
+
+const NAAM_KLEUREN = ['var(--blue)', 'var(--green)', 'var(--purple)', 'var(--orange)', 'var(--red)', 'var(--ink)']
+/** Vaste kleur per naam of id: hetzelfde bedrijf houdt dezelfde kleur. */
+export function kleurUitNaam(naam: string): string {
+  let som = 0
+  for (let i = 0; i < naam.length; i++) som = (som * 31 + naam.charCodeAt(i)) >>> 0
+  return NAAM_KLEUREN[som % NAAM_KLEUREN.length]!
+}
+
+/** "1 aug", met jaartal als het niet dit jaar is; zonder datum "geen". */
+export function datumActiviteit(t: string | null | undefined, nu = new Date()): string {
+  if (!t) return 'geen'
+  const d = new Date(t)
+  const opties: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', ...(d.getFullYear() === nu.getFullYear() ? {} : { year: 'numeric' }) }
+  return new Intl.DateTimeFormat('nl-NL', opties).format(d).replace('.', '')
+}

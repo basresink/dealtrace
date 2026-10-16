@@ -1,8 +1,9 @@
 <script setup lang="ts">
-// De lijst voor prospects en klanten (F03): zoeken, filters met meerekenende
-// tellers (in de URL), sortering, weergaven, contextmenu en "Toon meer".
-import { BEREIK_LABEL, CONTACT_LABEL, STATUS_LABEL, STATUS_PIL, datumKort, initialen, klasseKort, telLink } from '~/utils/accountWeergave'
-import { CONTACTROL_LABEL } from '~~/shared/contactgegevens'
+// De lijst voor prospects en klanten (F03), in de opzet van DealDrive: kop met kruimel,
+// werkbalk (zoeken, nieuw, weergave, sortering, filters), een uitklapbare filterstrook
+// met meerekenende tellers (in de URL) en één witte kaart met AccountRij-rijen.
+// Contextmenu en "Toon meer" blijven.
+import { BEREIK_LABEL, CONTACT_LABEL, STATUS_LABEL, telLink } from '~/utils/accountWeergave'
 
 const props = defineProps<{ soort: 'prospect' | 'klant' }>()
 const route = useRoute()
@@ -12,6 +13,17 @@ const pagina = ref(1)
 const weergave = useCookie<'lijst' | 'compact' | 'kaarten'>('dt_weergave', { default: () => 'lijst' })
 const filtersOpen = ref(false)
 const nieuwOpen = ref(false)
+const nieuweTaak = ref(false)
+const nieuweAfspraak = ref(false)
+const taakAccount = ref<{ id: string; naam: string } | null>(null)
+const afspraakAccount = ref<{ id: string; naam: string } | null>(null)
+const keuzemenu = ref<'weergave' | 'sortering' | null>(null)
+const zoekOpen = ref(!!route.query.q)
+const zoekVeld = ref<HTMLInputElement | null>(null)
+async function wisselZoek() {
+  zoekOpen.value = !zoekOpen.value
+  if (zoekOpen.value) { await nextTick(); zoekVeld.value?.focus() }
+}
 const query = computed(() => ({ ...route.query, soort: props.soort, pagina: String(pagina.value) }))
 const { data, pending, refresh } = await useFetch<any>('/api/accounts', { query, default: () => ({ rijen: [], tellers: {}, klassen: [], eigenVelden: [], kan: {}, totaal: 0, aantal: 0 }) })
 const zoek = ref(String(route.query.q ?? ''))
@@ -32,6 +44,14 @@ function wissel(groep: string, waarde: string) {
 }
 const eigenaar = computed(() => String(route.query.eigenaar ?? 'mij'))
 const sort = computed(() => String(route.query.sort ?? 'score'))
+const SORTERINGEN = [['score', 'Score'], ['naam', 'Naam'], ['laatsteContact', 'Laatste contact'], ['klasse', 'Klasse'], ['dagenInFase', 'Dagen in fase']] as const
+const WEERGAVEN = [['lijst', 'Lijst', 'List'], ['compact', 'Compact', 'LayoutList'], ['kaarten', 'Kaarten', 'LayoutGrid']] as const
+const sortLabel = computed(() => SORTERINGEN.find((x) => x[0] === sort.value)?.[1] ?? 'Score')
+const EIGENAAR = [['mij', 'Van mij'], ['team', 'Team'], ['iedereen', 'Iedereen']] as const
+const eigenaarLabel = computed(() => EIGENAAR.find((x) => x[0] === eigenaar.value)?.[1] ?? 'Van mij')
+function kiesSortering(w: string) { keuzemenu.value = null; zetQuery({ sort: w === 'score' ? undefined : w }) }
+function kiesWeergave(w: 'lijst' | 'compact' | 'kaarten') { keuzemenu.value = null; weergave.value = w }
+function wisselMenu(m: 'weergave' | 'sortering') { menu.value = null; keuzemenu.value = keuzemenu.value === m ? null : m }
 const actieveFilters = computed(() => ['status', 'fase', 'klasse', 'aanleiding', 'laatsteContact', 'bereikbaarheid', ...Object.keys(route.query).filter((k) => k.startsWith('cf.'))].reduce((s, k) => s + lijst(k).length, 0))
 const teller = (groep: string, w: string) => data.value.tellers?.[groep]?.[w] ?? 0
 const groepen = computed(() => {
@@ -51,8 +71,13 @@ const groepen = computed(() => {
 // Contextmenu (rechtsklik of lang drukken).
 const menu = ref<{ x: number; y: number; rij: any } | null>(null)
 function openMenu(e: MouseEvent, rij: any) { e.preventDefault(); menu.value = { x: Math.min(e.clientX, window.innerWidth - 220), y: e.clientY, rij } }
-onMounted(() => window.addEventListener('click', () => { menu.value = null }))
-const primair = (r: any) => r.contacten.find((c: any) => c.rol === 'beslisser') ?? r.contacten[0]
+function sluitMenus() { menu.value = null; keuzemenu.value = null }
+function opEscape(e: KeyboardEvent) { if (e.key === 'Escape' && (menu.value || keuzemenu.value)) sluitMenus() }
+onMounted(() => { window.addEventListener('click', sluitMenus); window.addEventListener('keydown', opEscape) })
+onBeforeUnmount(() => { window.removeEventListener('click', sluitMenus); window.removeEventListener('keydown', opEscape) })
+const primair = (r: any) => r.contacten.find((c: any) => c.id === r.primairContact) ?? r.contacten.find((c: any) => c.rol === 'beslisser') ?? r.contacten[0]
+function taakVoor(r: any | null) { taakAccount.value = r ? { id: r.id, naam: r.name } : null; nieuweTaak.value = true }
+function afspraakVoor(r: any | null) { afspraakAccount.value = r ? { id: r.id, naam: r.name } : null; nieuweAfspraak.value = true }
 
 async function aangemaakt(id: string) { nieuwOpen.value = false; await navigateTo(`/accounts/${id}`) }
 const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ ...(route.query as any), soort: props.soort }).toString()}`)
@@ -64,31 +89,47 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
       <div class="container">
         <div class="sec-head">
           <div>
-            <NuxtLink v-if="soort === 'prospect'" to="/prospects" class="kruimel"><Icoon naam="ArrowLeft" :grootte="14" /> Prospects · {{ data.totaal }} prospects totaal</NuxtLink>
+            <NuxtLink v-if="soort === 'prospect'" to="/prospects" class="kicker kicker--paars lijst-kruimel"><Icoon naam="ArrowLeft" :grootte="14" /> Prospects · {{ data.totaal }} prospects totaal</NuxtLink>
+            <span v-else class="kicker kicker--streep">Klanten · {{ data.totaal }} {{ data.totaal === 1 ? 'klant' : 'klanten' }} totaal</span>
             <h1 class="title title--groot">{{ soort === 'prospect' ? 'Alle prospects' : 'Klanten' }}</h1>
-            <p v-if="soort === 'klant'" class="subtitle">Klanten komen uit DealDrive of je CRM, voor kansen langs de route en winback. Dealtrace maakt zelf geen klant van een prospect.</p>
+            <p v-if="soort === 'prospect'" class="subtitle subtitle--groot">Alle prospects van jouw organisatie, te filteren op accountklasse en functie. Klanten zie je op <NuxtLink to="/klanten" class="tekst-link">Klanten →</NuxtLink></p>
+            <p v-else class="subtitle subtitle--groot">Klanten komen uit DealDrive of je CRM, voor kansen langs de route en winback. Dealtrace maakt zelf geen klant van een prospect.</p>
+          </div>
+          <div class="toolbar-buttons lijst-werkbalk" data-test="werkbalk">
+            <button type="button" class="dd-actie dd-actie--icoon" :aria-expanded="zoekOpen" aria-label="Zoeken" title="Zoeken" data-test="zoek-knop" @click="wisselZoek"><Icoon naam="Search" /></button>
+            <button v-if="soort === 'prospect'" type="button" class="dd-actie dd-actie--zwart" data-test="nieuwe-prospect" @click="nieuwOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Prospect</button>
+            <button type="button" class="dd-actie dd-actie--secundair" data-test="lijst-taak" @click="taakVoor(null)"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
+            <button type="button" class="dd-actie dd-actie--secundair" data-test="lijst-afspraak" @click="afspraakVoor(null)"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+            <div v-if="data.kan?.weergaven" class="keuzemenu-houder">
+              <button type="button" class="dd-actie dd-actie--secundair" aria-haspopup="menu" :aria-expanded="keuzemenu === 'weergave'" data-test="weergave-knop" @click.stop="wisselMenu('weergave')">
+                <Icoon :naam="WEERGAVEN.find((w) => w[0] === weergave)?.[2] ?? 'List'" class="dd-actie-icoon" />Weergave<Icoon naam="ChevronDown" :grootte="14" class="keuzemenu-pijl" :class="{ 'keuzemenu-pijl--open': keuzemenu === 'weergave' }" />
+              </button>
+              <ul v-if="keuzemenu === 'weergave'" class="keuzemenu" role="menu" @click.stop>
+                <li v-for="w in WEERGAVEN" :key="w[0]"><button type="button" role="menuitemradio" :aria-checked="weergave === w[0]" class="keuzemenu-item" :class="{ 'keuzemenu-item--aan': weergave === w[0] }" @click="kiesWeergave(w[0])"><Icoon :naam="w[2]" :grootte="16" />{{ w[1] }}</button></li>
+              </ul>
+            </div>
+            <div class="keuzemenu-houder">
+              <button type="button" class="dd-actie dd-actie--secundair" aria-haspopup="menu" :aria-expanded="keuzemenu === 'sortering'" :aria-label="`Sortering: ${sortLabel}`" data-test="sortering" @click.stop="wisselMenu('sortering')">
+                <Icoon naam="ArrowUpDown" class="dd-actie-icoon" />{{ sortLabel }}<Icoon naam="ChevronDown" :grootte="14" class="keuzemenu-pijl" :class="{ 'keuzemenu-pijl--open': keuzemenu === 'sortering' }" />
+              </button>
+              <ul v-if="keuzemenu === 'sortering'" class="keuzemenu" role="menu" @click.stop>
+                <li v-for="o in SORTERINGEN" :key="o[0]"><button type="button" role="menuitemradio" :aria-checked="sort === o[0]" class="keuzemenu-item" :class="{ 'keuzemenu-item--aan': sort === o[0] }" :data-test="`sorteer-${o[0]}`" @click="kiesSortering(o[0])">{{ o[1] }}</button></li>
+              </ul>
+            </div>
+            <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'dd-actie--filters-aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="filters-knop" @click="filtersOpen = !filtersOpen">
+              <Icoon naam="Filter" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="pil-teller pil-teller--zwart">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="keuzemenu-pijl" :class="{ 'keuzemenu-pijl--open': filtersOpen }" />
+            </button>
+            <a v-if="data.kan?.export" :href="exportUrl" class="dd-actie dd-actie--icoon" aria-label="Exporteren" title="Exporteren" data-test="exporteren"><Icoon naam="Download" /></a>
           </div>
         </div>
-        <div class="werkbalk" data-test="werkbalk">
-          <input v-model="zoek" class="invoer zoekinvoer" type="search" placeholder="Zoek op naam of plaats" aria-label="Zoeken" data-test="zoek">
-          <button v-if="soort === 'prospect'" type="button" class="dd-actie dd-actie--primair" data-test="nieuwe-prospect" @click="nieuwOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Prospect</button>
-          <div v-if="data.kan?.weergaven" class="keuzegroep keuzegroep--klein" role="group" aria-label="Weergave">
-            <button v-for="w in (['lijst', 'compact', 'kaarten'] as const)" :key="w" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': weergave === w }" :aria-pressed="weergave === w" @click="weergave = w">{{ { lijst: 'Lijst', compact: 'Compact', kaarten: 'Kaarten' }[w] }}</button>
-          </div>
-          <label class="veld veld--rij"><span class="sr-only">Sortering</span>
-            <select class="invoer invoer--klein" :value="sort" aria-label="Sortering" data-test="sortering" @change="zetQuery({ sort: ($event.target as HTMLSelectElement).value === 'score' ? undefined : ($event.target as HTMLSelectElement).value })">
-              <option value="score">Score</option><option value="naam">Naam</option><option value="laatsteContact">Laatste contact</option><option value="klasse">Klasse</option><option value="dagenInFase">Dagen in fase</option>
-            </select>
-          </label>
-          <button type="button" class="dd-actie dd-actie--secundair" :aria-expanded="filtersOpen" data-test="filters-knop" @click="filtersOpen = !filtersOpen"><Icoon naam="Filter" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="pil-teller pil-teller--zwart">{{ actieveFilters }}</span></button>
-          <a v-if="data.kan?.export" :href="exportUrl" class="dd-actie dd-actie--secundair"><Icoon naam="Download" class="dd-actie-icoon" />Exporteren</a>
-        </div>
-        <div class="filters mt-16">
-          <div class="filter-groep" role="group" aria-label="Eigenaar">
-            <button v-for="e in [['mij', 'Van mij'], ['team', 'Team'], ['iedereen', 'Iedereen']]" :key="e[0]" type="button" class="filter-pil" :class="{ 'filter-pil--aan': eigenaar === e[0] }" :aria-pressed="eigenaar === e[0]" :data-test="`eigenaar-${e[0]}`" @click="zetQuery({ eigenaar: e[0] === 'mij' ? undefined : e[0] })">{{ e[1] }}</button>
-          </div>
+        <div v-if="zoekOpen" class="werkbalk">
+          <input ref="zoekVeld" v-model="zoek" class="invoer zoekinvoer" type="search" placeholder="Zoek op naam of plaats" aria-label="Zoeken" data-test="zoek">
         </div>
         <div v-show="filtersOpen" class="filterpaneel mt-16" data-test="filterpaneel">
+          <div class="filter-groep" role="group" aria-label="Eigenaar">
+            <span class="filter-label">Eigenaar</span>
+            <button v-for="e in EIGENAAR" :key="e[0]" type="button" class="filter-pil" :class="{ 'filter-pil--aan': eigenaar === e[0] }" :aria-pressed="eigenaar === e[0]" :data-test="`eigenaar-${e[0]}`" @click="zetQuery({ eigenaar: e[0] === 'mij' ? undefined : e[0] })">{{ e[1] }}</button>
+          </div>
           <div v-for="g in groepen" :key="g.sleutel" class="filter-groep">
             <span class="filter-label">{{ g.label }}</span>
             <button
@@ -100,33 +141,12 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
         </div>
       </div>
     </section>
-    <section class="section section--laatste">
+    <section class="section section--alt section--laatste">
       <div class="container">
-        <p class="meta" data-test="aantal">{{ data.aantal }} {{ data.aantal === 1 ? 'resultaat' : 'resultaten' }}</p>
+        <p class="meta lijst-aantal"><span data-test="aantal">{{ data.aantal }} {{ data.aantal === 1 ? 'resultaat' : 'resultaten' }}</span> · {{ eigenaarLabel }} · gesorteerd op {{ sortLabel.toLowerCase() }}</p>
         <div v-if="!data.rijen.length && !pending" class="lege-staat"><p class="lege-staat-titel">Niets gevonden.</p><button type="button" class="dd-act" @click="router.replace({ query: { eigenaar: 'iedereen' } })">Toon alles</button></div>
-        <ul v-else class="account-lijst" :class="`account-lijst--${weergave}`" data-test="account-lijst">
-          <li v-for="r in data.rijen" :key="r.id" class="account-rij" :data-account="r.id" @contextmenu="openMenu($event, r)">
-            <NuxtLink :to="`/accounts/${r.id}`" class="account-rij-link">
-              <span class="account-logo" :class="`account-logo--${r.klasse ? klasseKort(r.klasse, data.klassen).toLowerCase() : 'geen'}`">{{ initialen(r.name) }}</span>
-              <span class="account-hoofd">
-                <span class="account-naam"><strong>{{ r.name }}</strong>
-                  <span v-if="r.klasse" class="pil pil--zwart">{{ klasseKort(r.klasse, data.klassen) }}</span>
-                  <span class="pil" :class="STATUS_PIL[r.nbStatus]">{{ STATUS_LABEL[r.nbStatus] ?? r.nbStatus }}</span>
-                </span>
-                <span v-if="weergave !== 'compact'" class="account-meta">
-                  <span v-if="r.branche">{{ r.branche }}</span><span v-if="r.city">{{ r.city }}</span>
-                  <span v-if="r.telefoon">{{ r.telefoon }}</span>
-                  <span>Laatste contact: {{ datumKort(r.laatsteContactOp) }}</span>
-                  <span v-if="data.kan?.alleFilters">Score {{ r.score }}</span>
-                </span>
-                <span v-if="r.aanleiding && weergave !== 'compact'" class="account-aanleiding" :class="{ 'account-aanleiding--heet': r.aanleiding.heet }">{{ r.aanleiding.tekst }}</span>
-              </span>
-              <span class="account-contacten">
-                <template v-if="r.contacten.length"><span v-for="c in r.contacten" :key="c.id" class="contact-bol" :title="`${c.naam} · ${CONTACTROL_LABEL[c.rol as keyof typeof CONTACTROL_LABEL] ?? c.rol}`">{{ initialen(c.naam) }}</span></template>
-                <span v-else class="meta">Geen contactpersoon</span>
-              </span>
-            </NuxtLink>
-          </li>
+        <ul v-else class="acc-lijst" :class="`acc-lijst--${weergave}`" data-test="account-lijst">
+          <AccountRij v-for="r in data.rijen" :key="r.id" :rij="r" :klassen="data.klassen" :weergave="weergave" :toon-score="!!data.kan?.alleFilters" @contextmenu="openMenu($event, r)" />
         </ul>
         <button v-if="data.meer" type="button" class="dd-act mt-16" data-test="toon-meer" @click="pagina++">Toon meer</button>
       </div>
@@ -136,8 +156,12 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
         <NuxtLink role="menuitem" :to="`/accounts/${menu.rij.id}`">Open kaart</NuxtLink>
         <a v-if="primair(menu.rij)?.telefoon || menu.rij.telefoon" role="menuitem" :href="telLink(primair(menu.rij)?.telefoon ?? menu.rij.telefoon)">Bel primaire contact</a>
         <a v-if="primair(menu.rij)?.email" role="menuitem" :href="`mailto:${primair(menu.rij).email}`">Stuur e-mail</a>
+        <button type="button" role="menuitem" @click="taakVoor(menu.rij)">Nieuwe taak</button>
+        <button type="button" role="menuitem" @click="afspraakVoor(menu.rij)">Plan afspraak</button>
       </div>
     </Teleport>
     <NieuweProspectFlyout :open="nieuwOpen" @sluit="nieuwOpen = false" @aangemaakt="aangemaakt" @bestaand="(id) => navigateTo(`/accounts/${id}`)" />
+    <NieuweTaakFlyout :open="nieuweTaak" :account="taakAccount" @sluit="nieuweTaak = false" @gemaakt="nieuweTaak = false; refresh()" />
+    <PlanAfspraakFlyout :open="nieuweAfspraak" :account="afspraakAccount" @sluit="nieuweAfspraak = false" @gepland="(id: string) => { nieuweAfspraak = false; navigateTo(`/agenda?weergave=dag&afspraak=${id}`) }" />
   </div>
 </template>

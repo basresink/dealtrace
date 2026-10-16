@@ -9,6 +9,8 @@ const props = defineProps<{
   stand?: string
   helpartikel?: string
   werkbalk?: boolean
+  /** Kleur van de kicker en zijn streep (standaard geel). */
+  accent?: 'paars'
 }>()
 const emit = defineEmits<{ werkbalk: [actie: 'weergave' | 'filters' | 'sortering' | 'opgeslagen' | 'download'] }>()
 const { me, functie } = useMe()
@@ -23,7 +25,7 @@ const subtitel = computed(() => (niveau.value === 'expert' && props.stand ? prop
     <div class="container">
       <div class="sec-head">
         <div>
-          <span class="kicker kicker--streep">{{ kicker }}</span>
+          <span class="kicker kicker--streep" :class="{ 'kicker--paars': accent === 'paars' }">{{ kicker }}</span>
           <h1 class="title title--groot">{{ titel }}</h1>
           <p v-if="subtitel" class="subtitle subtitle--groot">{{ subtitel }}</p>
         </div>
