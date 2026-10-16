@@ -3,7 +3,7 @@
 import type { Zijbalk } from '~~/shared/zijbalk'
 
 export interface Me {
-  gebruiker: { id: string; naam: string; email: string; rol: string; niveau: string; werkplek: string; verborgen?: string[]; eigenPortefeuille?: boolean; totpAan?: boolean }
+  gebruiker: { id: string; naam: string; email: string; rol: string; niveau: string; werkplek: string; verborgen?: string[]; eigenPortefeuille?: boolean; totpAan?: boolean; functie?: string | null; foto?: string | null }
   /** De echte rol; de founder die in een organisatie werkt, heeft daar de rechten van een beheerder. */
   echteRol: string
   werkIn: { organisatie: string; organisatieId: string; modus: 'meekijken' | 'wijzigen'; reden: string; resterendMs: number; resterend: string } | null

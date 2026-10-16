@@ -41,7 +41,7 @@ onMounted(async () => {
   await telOngelezen()
   // "Leadgenerator staat nu voor je aan." (4.4), één keer per functie.
   const nieuw = me.value?.nogTonen ?? []
-  for (const f of nieuw) toon(`${f.naam} staat nu voor je aan.`, 'succes', f.helpartikel ? { tekst: 'Lees hoe het werkt', naar: `/help/${f.helpartikel}` } : undefined)
+  for (const f of nieuw) toon(`${f.naam} staat nu voor je aan.`, 'succes', f.helpartikel ? { tekst: 'Lees hoe het werkt', naar: `/helpcenter/${f.helpartikel}` } : undefined)
   if (nieuw.length) await $fetch('/api/mij/gezien', { method: 'POST' })
 })
 onBeforeUnmount(() => { window.removeEventListener('keydown', toets); document.removeEventListener('touchstart', start); document.removeEventListener('touchend', eind) })

@@ -44,7 +44,7 @@ useHead({ title: 'Mijn dashboard · Dealtrace' })
           <h2 class="kaart-titel">Afspraken uit je coachingsgesprek</h2>
           <p v-if="!data.afspraken.length && !data.punten.length" class="kaart-meta">Nog geen afspraken.</p>
           <ul class="schakel-lijst">
-            <li v-for="p in data.punten" :key="p.tekst" class="schakel-rij"><span><strong>Coachingpunt</strong>: {{ p.tekst }}<br><span class="meta">{{ (p.onderbouwing?.cijfers ?? []).join(' · ') }}<template v-if="p.artikelSleutel"> · <NuxtLink :to="`/help/${p.artikelSleutel}`">artikel</NuxtLink></template></span></span></li>
+            <li v-for="p in data.punten" :key="p.tekst" class="schakel-rij"><span><strong>Coachingpunt</strong>: {{ p.tekst }}<br><span class="meta">{{ (p.onderbouwing?.cijfers ?? []).join(' · ') }}<template v-if="p.artikelSleutel"> · <NuxtLink :to="`/helpcenter/${p.artikelSleutel}`">artikel</NuxtLink></template></span></span></li>
             <li v-for="a in data.afspraken" :key="a.id" class="schakel-rij rs-afspraak"><span>{{ a.tekst }}<br><span class="meta">{{ a.termijn ? `Termijn ${a.termijn}` : '' }} · {{ a.status === 'open' ? 'Open' : a.status === 'gehaald' ? 'Gehaald' : 'Niet gehaald' }}<template v-if="a.reactie"> · Je reageerde: {{ a.reactie.tekst }}</template></span></span>
               <form class="rs-reageer" @submit.prevent="reageer(a.id)"><input v-model="reactie[a.id]" class="invoer invoer--klein" placeholder="Hoe gaat het?" :aria-label="`Reactie op ${a.tekst}`"><button type="submit" class="dd-act" :disabled="!reactie[a.id]?.trim()">Reageer</button></form></li>
           </ul>
@@ -55,7 +55,7 @@ useHead({ title: 'Mijn dashboard · Dealtrace' })
           <template v-if="data.kan.zelfanalyse">
             <button type="button" class="dd-act dd-act--primair" :disabled="bezig" data-test="zelfanalyse-knop" @click="zelfanalyse"><Icoon naam="Sparkles" class="dd-actie-icoon" />Vraag de Coach</button>
             <span class="meta"> Kost 20 credits</span>
-            <ul v-if="zelf" class="schakel-lijst mt-8"><li v-for="p in zelf" :key="p.tekst" class="schakel-rij"><span>{{ p.tekst }}<br><span class="meta">{{ p.onderbouwing.cijfers.join(' · ') }} · <NuxtLink :to="`/help/${p.artikelSleutel}`">artikel</NuxtLink></span></span></li></ul>
+            <ul v-if="zelf" class="schakel-lijst mt-8"><li v-for="p in zelf" :key="p.tekst" class="schakel-rij"><span>{{ p.tekst }}<br><span class="meta">{{ p.onderbouwing.cijfers.join(' · ') }} · <NuxtLink :to="`/helpcenter/${p.artikelSleutel}`">artikel</NuxtLink></span></span></li></ul>
           </template>
           <button v-else type="button" class="dd-act knop-slot" data-test="zelfanalyse-slot" @click="toonUitleg('resultaten.zelfanalyse')"><Icoon naam="Lock" :grootte="14" /> Vraag de Coach</button>
         </article>

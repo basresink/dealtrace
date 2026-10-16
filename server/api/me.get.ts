@@ -68,6 +68,9 @@ export default defineEventHandler(async (event) => {
       eigenPortefeuille: gebruiker.rol !== 'salesmanager' || (gebruiker.data as any)?.eigenPortefeuille === true,
       totpAan: !!(gebruiker.data as any)?.totp?.aan,
       rijmodus: !!(gebruiker.data as any)?.rijmodus?.aan,
+      // Profiel (Account op /mij): functie en de profielfoto (een bijlage van de gebruiker).
+      functie: (gebruiker.data as any)?.profiel?.functie ?? null,
+      foto: (gebruiker.data as any)?.fotoId ? `/api/bijlagen/${(gebruiker.data as any).fotoId}` : null,
       route: { thuisbasis: (gebruiker.data as any)?.thuisbasis?.adres ?? (gebruiker.data as any)?.thuisbasis?.plaats ?? null, kaartapp: (gebruiker.data as any)?.kaartapp ?? 'google' },
     },
     echteRol,

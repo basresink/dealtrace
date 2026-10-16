@@ -2,7 +2,7 @@
 // Plan een afspraak (F09): klant, contactpersoon (beslissers eerst), meetingsoort (vult duur en
 // agenda), vorm, datum, start, duur, voor wie (Gevorderd: een collega met diens vrije momenten),
 // locatie, herinnering, aanleiding en beschrijving. Op de telefoon een schuifvenster van onderen.
-const props = defineProps<{ open: boolean; account?: { id: string; naam: string } | null; taskId?: string | null; aanleiding?: string | null; voorWie?: string | null; voorstel?: { datum?: string; start?: string; duurMin?: number; vorm?: string; soort?: string } | null }>()
+const props = defineProps<{ open: boolean; account?: { id: string; naam: string } | null; taskId?: string | null; aanleiding?: string | null; voorWie?: string | null; voorstel?: { datum?: string; start?: string; duurMin?: number; vorm?: string; soort?: string } | null; contactId?: string | null }>()
 const emit = defineEmits<{ sluit: []; gepland: [id: string] }>()
 const { functie, me } = useMe()
 const toast = useToast()
@@ -36,7 +36,7 @@ watch(soort, (s) => { if (s) { f.duurMin = s.duurMin; f.vorm = s.vorm; f.herinne
 watch(klant, async (k) => {
   contacten.value = []; f.contactId = ''
   if (!k) return
-  try { const a: any = await $fetch(`/api/accounts/${k.id}`); contacten.value = (a.contacten ?? []).filter((c: any) => c.status !== 'vertrokken').sort((x: any, y: any) => Number(y.rol === 'beslisser') - Number(x.rol === 'beslisser')); f.contactId = a.primairContactId ?? contacten.value[0]?.id ?? '' } catch { /* geen contacten */ }
+  try { const a: any = await $fetch(`/api/accounts/${k.id}`); contacten.value = (a.contacten ?? []).filter((c: any) => c.status !== 'vertrokken').sort((x: any, y: any) => Number(y.rol === 'beslisser') - Number(x.rol === 'beslisser')); f.contactId = (props.contactId && contacten.value.some((c: any) => c.id === props.contactId) ? props.contactId : null) ?? a.primairContactId ?? contacten.value[0]?.id ?? '' } catch { /* geen contacten */ }
 }, { immediate: true })
 let timer: any
 watch(zoek, (q) => { clearTimeout(timer); timer = setTimeout(async () => { treffers.value = q.length >= 2 ? await $fetch<any[]>('/api/accounts/kies', { query: { q } }) : [] }, 250) })

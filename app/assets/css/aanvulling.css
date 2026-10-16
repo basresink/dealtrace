@@ -1284,3 +1284,15 @@ a.acc-kanaal:focus-visible, .acc-tel:focus-visible { outline: 2px solid var(--ye
   .acc-lijst--kaarten { grid-template-columns: 1fr; }
   .lijst-kruimel { min-height: 44px; }
 }
+
+/* Paginakop met de knoppen op de hoogte van de titel (zoals DealDrive /prospects):
+   vanaf 720 px staat de werkbalk rechts naast de titel; kicker en uitleg lopen
+   links en onder door. Op de telefoon gewoon onder de tekst (zie .sec-head). */
+@media (min-width: 720px) {
+  .sec-head--naast { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--pagina-marge); align-items: start; }
+  .sec-head--naast > .sec-head-tekst { display: contents; }
+  .sec-head--naast > .sec-head-tekst > * { grid-column: 1 / -1; }
+  .sec-head--naast > .sec-head-tekst > :first-child { grid-column: 1; grid-row: 1; justify-self: start; }
+  .sec-head--naast > .sec-head-tekst > .title { grid-column: 1; grid-row: 2; }
+  .sec-head--naast > .toolbar-buttons { grid-column: 2; grid-row: 2; align-self: start; justify-content: flex-end; max-width: min(660px, 58vw); margin-top: 12px; }
+}

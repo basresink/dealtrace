@@ -57,7 +57,7 @@ useHead({ title: computed(() => `Coaching ${kort(k.value?.persoon?.naam ?? '')} 
             <p v-if="!punten.length" class="kaart-meta">Nog geen coachingpunten. Schrijf er zelf een of laat de Coach er hoogstens drie voorstellen.</p>
             <div v-for="(p, i) in punten" :key="i" class="cg-punt">
               <textarea v-model="p.tekst" class="invoer" rows="2" :aria-label="`Coachingpunt ${i + 1}`" @change="bewaarPunten()" />
-              <p v-if="p.onderbouwing?.cijfers?.length" class="meta">{{ p.onderbouwing.cijfers.join(' · ') }}<template v-if="p.artikelSleutel"> · <NuxtLink :to="`/help/${p.artikelSleutel}`">artikel</NuxtLink></template></p>
+              <p v-if="p.onderbouwing?.cijfers?.length" class="meta">{{ p.onderbouwing.cijfers.join(' · ') }}<template v-if="p.artikelSleutel"> · <NuxtLink :to="`/helpcenter/${p.artikelSleutel}`">artikel</NuxtLink></template></p>
               <div class="dd-acties"><span v-if="p.gedeeld" class="pil pil--groen">Gedeeld</span><button v-else type="button" class="dd-act dd-act--primair" :data-test="`deel-${i}`" @click="deel(i)">Deel</button><button type="button" class="dd-act" @click="punten.splice(i, 1); bewaarPunten()">Weg</button></div>
             </div>
             <button v-if="k.sessie && punten.length < 3" type="button" class="dd-act mt-8" @click="punten.push({ tekst: '', gedeeld: false })">+ Punt</button>

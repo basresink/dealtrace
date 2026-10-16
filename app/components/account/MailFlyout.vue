@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // "+ Mail" op de accountkaart: zelf een mail schrijven aan de beslisser. Gaat langs de Bewaker en de
 // mailkoppeling, net als een goedgekeurd concept, en komt in de tijdlijn en het tabblad E-mails.
-const props = defineProps<{ open: boolean; account: { id: string; naam: string }; aan?: string | null }>()
+const props = defineProps<{ open: boolean; account: { id: string; naam: string }; aan?: string | null; contactId?: string | null }>()
 const emit = defineEmits<{ sluit: []; verstuurd: [] }>()
 const toast = useToast()
 const onderwerp = ref('')
@@ -11,7 +11,7 @@ watch(() => props.open, (o) => { if (o) { onderwerp.value = ''; tekst.value = ''
 async function verstuur() {
   bezig.value = true
   try {
-    const r = await $fetch<any>(`/api/accounts/${props.account.id}/mail`, { method: 'POST', body: { onderwerp: onderwerp.value, tekst: tekst.value } })
+    const r = await $fetch<any>(`/api/accounts/${props.account.id}/mail`, { method: 'POST', body: { onderwerp: onderwerp.value, tekst: tekst.value, contactId: props.contactId ?? undefined } })
     toast.toon(r.tekst ?? 'Verstuurd.'); emit('verstuurd')
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }

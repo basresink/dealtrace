@@ -47,7 +47,7 @@ useHead({ title: 'Helpartikelen · Dealtrace' })
             <article v-if="kennisbankAan" class="kaart" data-test="kennisbank"><label class="veld veld--rij"><input type="checkbox" :checked="data.kennisbank" @change="zetKennisbank(($event.target as HTMLInputElement).checked)"> <span>Eigen artikelen gebruiken als bron voor de AI-assistent</span></label></article>
             <table class="tabel tabel--kaarten" data-test="help-beheerlijst"><thead><tr><th>Titel</th><th>Categorie</th><th>Herkomst</th><th>Status</th><th>Gelezen</th><th>Nuttig</th><th /></tr></thead>
               <tbody><tr v-for="a in data.artikelen" :key="a.id" :class="{ 'rij--grijs': a.verborgen }">
-                <td data-label="Titel"><NuxtLink :to="`/help/${a.slug}`">{{ a.titel }}</NuxtLink></td><td data-label="Categorie">{{ a.categorie }}</td>
+                <td data-label="Titel"><NuxtLink :to="`/helpcenter/${a.slug}`">{{ a.titel }}</NuxtLink></td><td data-label="Categorie">{{ a.categorie }}</td>
                 <td data-label="Herkomst">{{ a.herkomst === 'eigen' ? 'Eigen' : 'Dealtrace' }}</td><td data-label="Status">{{ a.verborgen ? 'Verborgen' : STATUS[a.status] }}</td>
                 <td data-label="Gelezen" class="tnum">{{ a.gelezen }}</td><td data-label="Nuttig" class="tnum">{{ a.nuttig }} ja · {{ a.nietNuttig }} nee</td>
                 <td><button v-if="a.herkomst === 'eigen'" type="button" class="dd-act" @click="open(a)">Bewerk</button><button v-else type="button" class="dd-act" :data-test="`verberg-${a.slug}`" @click="verberg(a)">{{ a.verborgen ? 'Toon' : 'Verberg' }}</button></td>
@@ -57,7 +57,7 @@ useHead({ title: 'Helpartikelen · Dealtrace' })
             <article class="kaart" data-test="zonder-antwoord"><h2 class="kaart-titel">Gezocht of gevraagd zonder antwoord</h2><p v-if="!stat.zonderResultaat.length" class="kaart-meta">Niets. Iedereen vond wat hij zocht.</p>
               <ul class="schakel-lijst"><li v-for="z in stat.zonderResultaat" :key="z.term + z.soort" class="schakel-rij"><span>{{ z.term }}</span><span class="meta">{{ z.soort === 'vraag' ? 'vraag aan de AI' : 'zoekterm' }} · {{ z.aantal }}×</span></li></ul></article>
             <article class="kaart"><h2 class="kaart-titel">Niet nuttig</h2><p v-if="!stat.nietNuttig.length" class="kaart-meta">Nog geen.</p>
-              <ul class="schakel-lijst"><li v-for="n in stat.nietNuttig" :key="n.slug + n.reden" class="schakel-rij"><NuxtLink :to="`/help/${n.slug}`">{{ n.titel }}</NuxtLink><span class="meta">{{ n.reden ?? 'zonder reden' }} · {{ n.aantal }}×</span></li></ul></article>
+              <ul class="schakel-lijst"><li v-for="n in stat.nietNuttig" :key="n.slug + n.reden" class="schakel-rij"><NuxtLink :to="`/helpcenter/${n.slug}`">{{ n.titel }}</NuxtLink><span class="meta">{{ n.reden ?? 'zonder reden' }} · {{ n.aantal }}×</span></li></ul></article>
           </template>
         </div>
       </section>

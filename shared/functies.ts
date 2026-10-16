@@ -15,7 +15,7 @@ import type {
 } from './types'
 import { NIVEAUS, PAKKETTEN } from './types'
 
-export type ZijbalkGroep = 'Start' | 'Activiteiten' | 'Prospects' | 'Rapportages' | 'Plannen' | 'Manager' | 'Beheer'
+export type ZijbalkGroep = 'Start' | 'Activiteiten' | 'Prospects' | 'Rapportages' | 'Planning' | 'Manager' | 'Beheer'
 
 export interface Functie {
   sleutel: string
@@ -60,22 +60,22 @@ export const FUNCTIES: readonly Functie[] = [
   },
   {
     sleutel: 'nav.belblokken', naam: 'Belblokken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'belblokken', startNiveau: 'beginner',
-    zijbalk: { groep: 'Plannen', route: '/belblokken', icoon: 'Phone' },
+    zijbalk: { groep: 'Planning', route: '/belblokken', icoon: 'Phone' },
     uitleg: { watHetDoet: 'Vaste tijdvakken om te bellen, met een gevulde bellijst en een gekozen script.', totDieTijd: 'Je salesmanager zet belblokken voor je klaar.' },
   },
   {
     sleutel: 'nav.bezoeken', naam: 'Bezoeken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'bezoeken', startNiveau: 'beginner',
-    zijbalk: { groep: 'Plannen', route: '/bezoeken', icoon: 'MapPin' },
+    zijbalk: { groep: 'Planning', route: '/bezoeken', icoon: 'MapPin' },
     uitleg: { watHetDoet: 'Je route van de dag met kansen langs de route en bezoeken afronden.', totDieTijd: 'Je bezoeken staan in je agenda.' },
   },
   {
     sleutel: 'nav.meetings', naam: 'Meetings', pakket: 'starter', rollen: 'iedereen', helpartikel: 'agenda', startNiveau: 'beginner',
-    zijbalk: { groep: 'Plannen', route: '/meetings', icoon: 'Handshake' },
+    zijbalk: { groep: 'Planning', route: '/meetings', icoon: 'Handshake' },
     uitleg: { watHetDoet: 'Je meetings van de komende weken per soort, met doel, briefing en verslag.', totDieTijd: 'Je meetings staan in je agenda.' },
   },
   {
     sleutel: 'nav.campagnes', naam: 'Campagnes', pakket: 'starter', rollen: 'iedereen', helpartikel: 'campagnes', startNiveau: 'beginner',
-    zijbalk: { groep: 'Plannen', route: '/campagnes', icoon: 'Megaphone', beginnerLabel: 'meedoen' },
+    zijbalk: { groep: 'Planning', route: '/campagnes', icoon: 'Megaphone', beginnerLabel: 'meedoen' },
     uitleg: { watHetDoet: 'Acties over een groep accounts met een soort, een boodschap en een ritme.', totDieTijd: 'Je doet mee aan campagnes van je salesmanager.' },
   },
   {
@@ -90,7 +90,7 @@ export const FUNCTIES: readonly Functie[] = [
   },
   {
     sleutel: 'nav.leadgenerator', naam: 'Leadgenerator', pakket: 'starter', rollen: 'iedereen', helpartikel: 'leadgenerator', startNiveau: 'gevorderd',
-    zijbalk: { groep: 'Prospects', route: '/leadgenerator', icoon: 'UserPlus' },
+    zijbalk: { groep: 'Planning', route: '/leadgenerator', icoon: 'UserPlus' },
     uitleg: { watHetDoet: 'Nieuwe prospects vinden via de AI-zoeker, KvK, Datacollectief, import of je CRM. Elke lead komt met bewijs en een reden waarom hij past.', totDieTijd: 'Je salesmanager zet leads voor je klaar; die verschijnen als taak op Vandaag.' },
   },
   {
@@ -105,17 +105,17 @@ export const FUNCTIES: readonly Functie[] = [
   },
   {
     sleutel: 'nav.planning', naam: 'Prospectplanning', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospectplanning', startNiveau: 'gevorderd',
-    zijbalk: { groep: 'Plannen', route: '/planning', icoon: 'CalendarRange' },
+    zijbalk: { groep: 'Planning', route: '/planning', icoon: 'CalendarRange' },
     uitleg: { watHetDoet: 'Je jaar- en maandplanning: wie je wanneer benadert, en wanneer een geparkeerd account terugkomt.', totDieTijd: 'De motor zet de volgende poging voor je klaar.' },
   },
   {
     sleutel: 'nav.richting', naam: 'Richting', pakket: 'starter', rollen: 'iedereen', helpartikel: 'richting', startNiveau: 'beginner',
-    zijbalk: { groep: 'Plannen', route: '/richting', icoon: 'Compass', beginnerLabel: 'lezen' },
+    zijbalk: { groep: 'Planning', route: '/richting', icoon: 'Compass', beginnerLabel: 'lezen' },
     uitleg: { watHetDoet: 'Het verkoopverhaal van je organisatie: verhaal, belofte, concurrenten, winpunten.', totDieTijd: 'Niets; Richting is voor iedereen te lezen.' },
   },
   {
     sleutel: 'nav.reizen', naam: 'Prospectreizen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'doelgroepen-en-reizen', startNiveau: 'expert', altijdVoor: MANAGERS,
-    zijbalk: { groep: 'Plannen', route: '/reizen', icoon: 'Route' },
+    zijbalk: { groep: 'Planning', route: '/reizen', icoon: 'Route' },
     uitleg: { watHetDoet: 'Een eigen prospectreis per doelgroep bouwen, met fases, overgangen en startactiviteiten.', totDieTijd: 'Je werkt met de standaardreis die je salesmanager heeft gekozen.' },
   },
   {

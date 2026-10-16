@@ -53,7 +53,7 @@ watch(() => route.fullPath, () => sluit())
           <div v-else-if="artikel" class="help-tekst" v-html="html" />
         </div>
         <footer class="fo-foot dd-acties">
-          <NuxtLink v-if="artikel" class="dd-act" :to="`/help/${artikel.slug}`" @click="sluit"><Icoon naam="BookOpen" class="dd-act-icoon" />Open in het helpcenter</NuxtLink>
+          <NuxtLink v-if="artikel" class="dd-act" :to="`/helpcenter/${artikel.slug}`" @click="sluit"><Icoon naam="BookOpen" class="dd-act-icoon" />Open in het helpcenter</NuxtLink>
           <span class="dd-acties-vul fo-foot-vul" />
           <button type="button" class="dd-act" @click="sluit">Sluiten</button>
         </footer>

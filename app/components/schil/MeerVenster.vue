@@ -8,6 +8,7 @@ const { toon: toonNietAangezet } = useNietAangezet()
 const open = useState<boolean>('meerOpen', () => false)
 const uitgeklapt = ref(false)
 const conceptenTeller = useState<number>('conceptenTeller', () => 0)
+const ongelezen = useState<number>('ongelezen', () => 0)
 const aiAan = computed(() => !!functie('assistent.chat')?.beschikbaar)
 const { openen: openAi } = useAssistent()
 const lijst = computed(() => me.value ? meerItems(me.value.zijbalk, tabsVoor(me.value.gebruiker.werkplek, me.value.gebruiker.rol, me.value.gebruiker.eigenPortefeuille !== false)) : { groepen: [], nietAangezet: [] })
@@ -33,8 +34,10 @@ async function uitloggen() {
           <section class="meer-groep">
             <h3 class="meer-kop">Jij</h3>
             <NuxtLink v-if="functie('concepten.inbox')?.beschikbaar" to="/concepten" class="meer-item" data-route="/concepten" @click="open = false"><Icoon naam="Inbox" :grootte="20" /><span>Concepten</span><span v-if="conceptenTeller" class="pil-teller">{{ conceptenTeller }}</span></NuxtLink>
-            <NuxtLink to="/help" class="meer-item" @click="open = false"><Icoon naam="CircleHelp" :grootte="20" /><span>Helpcenter</span></NuxtLink>
-            <NuxtLink to="/mij" class="meer-item" data-route="/mij" @click="open = false"><Icoon naam="UserCog" :grootte="20" /><span>Mijn instellingen</span></NuxtLink>
+            <NuxtLink to="/notificaties" class="meer-item" data-route="/notificaties" @click="open = false"><Icoon naam="Bell" :grootte="20" /><span>Meldingen</span><span v-if="ongelezen" class="pil-teller">{{ ongelezen > 9 ? '9+' : ongelezen }}</span></NuxtLink>
+            <NuxtLink to="/helpcenter" class="meer-item" data-route="/helpcenter" @click="open = false"><Icoon naam="CircleHelp" :grootte="20" /><span>Helpcenter</span></NuxtLink>
+            <NuxtLink to="/mij" class="meer-item" data-route="/mij" @click="open = false"><Icoon naam="CircleUser" :grootte="20" /><span>Account</span></NuxtLink>
+            <NuxtLink to="/mijn-instellingen" class="meer-item" data-route="/mijn-instellingen" @click="open = false"><Icoon naam="Settings" :grootte="20" /><span>Mijn instellingen</span></NuxtLink>
             <NuxtLink to="/roadmap" class="meer-item" data-route="/roadmap" @click="open = false"><Icoon naam="Route" :grootte="20" /><span>Roadmap</span></NuxtLink>
             <button type="button" class="meer-item" data-test="meer-uitloggen" @click="uitloggen"><Icoon naam="LogOut" :grootte="20" /><span>Uitloggen</span></button>
           </section>

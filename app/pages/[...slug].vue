@@ -7,7 +7,7 @@ const { functie: meFunctie } = useMe()
 const pad = computed(() => `/${([] as string[]).concat(route.params.slug as string[]).join('/')}`)
 const f = computed(() => FUNCTIES.find((x) => x.zijbalk && (pad.value === x.zijbalk.route || pad.value.startsWith(`${x.zijbalk.route}/`))))
 const stand = computed(() => (f.value ? meFunctie(f.value.sleutel) : undefined))
-const titel = computed(() => f.value?.naam ?? (pad.value.startsWith('/help') ? 'Helpcenter' : pad.value === '/roadmap' ? 'Roadmap' : 'Pagina'))
+const titel = computed(() => f.value?.naam ?? ((pad.value.startsWith('/helpcenter') || pad.value.startsWith('/help/')) ? 'Helpcenter' : pad.value === '/roadmap' ? 'Roadmap' : 'Pagina'))
 useHead({ title: () => `${titel.value} · Dealtrace` })
 </script>
 

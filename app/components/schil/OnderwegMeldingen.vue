@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Meldingen voor onderweg in Mijn instellingen (P31, 8.10): per soort aan of uit, stille uren, de
+// Meldingen voor onderweg in Mijn instellingen (/mijn-instellingen, P31, 8.10): per soort aan of uit, stille uren, de
 // tijd van de dagstart, push op dit toestel aan of uit; Expert ook een eigen dagplafond en stille
 // uren per soort. Opgeslagen in de persoonlijke instellingen via de wachtrij (werkt offline).
 import { MELDING_STANDAARD, ONDERWEG_LABEL, ONDERWEG_SOORTEN, type MeldingInstelling, type OnderwegSoort } from '~~/shared/meldingsregels'
@@ -44,7 +44,7 @@ async function wisselPush(aan: boolean) {
 </script>
 
 <template>
-  <article v-if="functie('meldingen.onderweg')?.beschikbaar" class="kaart" data-test="onderweg-meldingen">
+  <article v-if="functie('meldingen.onderweg')?.beschikbaar" id="onderweg" class="kaart mi-sectie" data-test="onderweg-meldingen">
     <header class="kaart-kop"><h2 class="kaart-titel">Meldingen voor onderweg</h2></header>
     <p class="kaart-meta">Hooguit {{ i.dagplafond }} per dag. Stil van {{ String(i.stilVan).padStart(2, '0') }}:00 tot {{ String(i.stilTot).padStart(2, '0') }}:00{{ i.weekendStil ? ' en in het weekend' : '' }}.</p>
     <p v-if="rij.mag.value" class="schakel-rij"><span>Rijmodus <span class="veld-uitleg">Grote knoppen; meldingen wachten tot je stopt. Gaat ook aan na "Navigeer".</span></span><Schakelaar :aan="rij.aan.value" label="Rijmodus" data-test="rijmodus-schakelaar" @wissel="rij.zet($event)" /></p>

@@ -2,7 +2,7 @@
 // Nieuwe taak ("Wat moet er gebeuren?", F06). Beginner: klant, titel, actiesoort,
 // vervaldatum. Gevorderd ook prioriteit, toegewezen aan, herhaling, herinnering en beschrijving.
 import { ACTIE_LABEL } from '~~/shared/taken'
-const props = defineProps<{ open: boolean; account?: { id: string; naam: string } | null; teamleden?: { id: string; naam: string }[]; actiesoort?: string; voorgevuld?: { accountId?: string | null; titel?: string; actiesoort?: string; aanleiding?: string } | null }>()
+const props = defineProps<{ open: boolean; account?: { id: string; naam: string } | null; teamleden?: { id: string; naam: string }[]; actiesoort?: string; voorgevuld?: { accountId?: string | null; titel?: string; actiesoort?: string; aanleiding?: string } | null; contact?: { id: string; naam: string } | null }>()
 const emit = defineEmits<{ sluit: []; gemaakt: [] }>()
 const { functie } = useMe()
 const toast = useToast()
@@ -25,7 +25,7 @@ let timer: any
 watch(zoek, (q) => { clearTimeout(timer); timer = setTimeout(async () => { treffers.value = q.length >= 2 ? await $fetch<any[]>('/api/accounts/kies', { query: { q } }) : [] }, 250) })
 async function maak() {
   try {
-    await $fetch('/api/tasks', { method: 'POST', body: { ...f, accountId: klant.value?.id, dueDate: f.dueDate ? new Date(f.dueDate).toISOString() : undefined, ownerId: f.ownerId || undefined, herhaling: f.herhaling || undefined, herinnering: f.herinnering ? { minuten: Number(f.herinnering), kanaal: 'in-app' } : undefined, ...(props.voorgevuld ? { aanleiding: props.voorgevuld.aanleiding, herkomst: 'assistent' } : {}) } })
+    await $fetch('/api/tasks', { method: 'POST', body: { ...f, accountId: klant.value?.id, contactId: props.contact && klant.value?.id === props.account?.id ? props.contact.id : undefined, dueDate: f.dueDate ? new Date(f.dueDate).toISOString() : undefined, ownerId: f.ownerId || undefined, herhaling: f.herhaling || undefined, herinnering: f.herinnering ? { minuten: Number(f.herinnering), kanaal: 'in-app' } : undefined, ...(props.voorgevuld ? { aanleiding: props.voorgevuld.aanleiding, herkomst: 'assistent' } : {}) } })
     toast.toon('Taak gemaakt.'); emit('gemaakt')
   } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }

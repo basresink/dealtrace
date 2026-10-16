@@ -45,7 +45,7 @@ export async function verzendMeldingen(tx: Tx, org: string, nu = new Date(), all
     // Meer dan één push tegelijk (na de rijmodus, een belblok of de stille uren): één gebundelde push.
     if (push.length > 1) {
       const b = bundel(push.map((x) => ({ soort: x.r.soort, titel: x.r.titel })))
-      await stuurPush(tx, gid, { id: push[0]!.r.id, titel: bundelTitel(b), tekst: b.map((x) => x.tekst || x.titel).join(' · ').slice(0, 180), link: '/meldingen' }).catch(() => 0)
+      await stuurPush(tx, gid, { id: push[0]!.r.id, titel: bundelTitel(b), tekst: b.map((x) => x.tekst || x.titel).join(' · ').slice(0, 180), link: '/notificaties' }).catch(() => 0)
       tel.gebundeld++
     } else if (push.length === 1) {
       const r = push[0]!.r

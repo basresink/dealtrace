@@ -37,7 +37,7 @@ useHead({ title: 'Verbruik · Instellingen · Dealtrace' })
             <div class="pot-vulling" :class="{ 'pot-vulling--rood': data.stand.procent >= 90, 'pot-vulling--geel': data.stand.procent >= 80 && data.stand.procent < 90 }" :style="{ width: `${Math.min(100, data.stand.procent)}%` }" />
             <span class="pot-streep" style="left: 80%" title="Melding bij 80 procent" /><span class="pot-streep" style="left: 90%" title="Agents stoppen bij 10 procent over" />
           </div>
-          <p class="meta mt-8">Bij 80 procent krijgt iedereen een melding. Bij 10 procent over stoppen agents en automatische voorbereiding; wat jullie zelf vragen gaat door. <NuxtLink to="/help/abonnement-verbruik-ai-credits">Lees hoe het werkt</NuxtLink></p>
+          <p class="meta mt-8">Bij 80 procent krijgt iedereen een melding. Bij 10 procent over stoppen agents en automatische voorbereiding; wat jullie zelf vragen gaat door. <NuxtLink to="/helpcenter/abonnement-verbruik-ai-credits">Lees hoe het werkt</NuxtLink></p>
           <p v-if="data.stand.extra" class="meta">Inclusief {{ getal(data.stand.extra) }} extra credits deze maand.</p>
           <button v-if="data.kan.beheer" type="button" class="dd-act mt-8" data-test="extra-aanvragen" @click="extra.open = !extra.open">Extra credits aanvragen</button>
           <form v-if="extra.open" class="vv-velden mt-8" data-test="extra-form" @submit.prevent="vraagExtra">

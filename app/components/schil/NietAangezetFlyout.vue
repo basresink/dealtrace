@@ -43,7 +43,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
           </article>
         </div>
         <footer class="fo-foot dd-acties">
-          <NuxtLink class="dd-act dd-act--primair" :to="`/help/${f.helpartikel}`" @click="sluit"><Icoon naam="BookOpen" class="dd-act-icoon" />Lees hoe het werkt</NuxtLink>
+          <NuxtLink class="dd-act dd-act--primair" :to="`/helpcenter/${f.helpartikel}`" @click="sluit"><Icoon naam="BookOpen" class="dd-act-icoon" />Lees hoe het werkt</NuxtLink>
           <span class="dd-acties-vul fo-foot-vul" />
           <button type="button" class="dd-act" @click="sluit">Sluiten</button>
         </footer>

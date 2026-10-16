@@ -23,8 +23,8 @@ const subtitel = computed(() => (niveau.value === 'expert' && props.stand ? prop
 <template>
   <section class="section">
     <div class="container">
-      <div class="sec-head">
-        <div>
+      <div class="sec-head sec-head--naast">
+        <div class="sec-head-tekst">
           <span class="kicker kicker--streep" :class="{ 'kicker--paars': accent === 'paars' }">{{ kicker }}</span>
           <h1 class="title title--groot">{{ titel }}</h1>
           <p v-if="subtitel" class="subtitle subtitle--groot">{{ subtitel }}</p>

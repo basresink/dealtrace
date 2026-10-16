@@ -9,7 +9,7 @@ const ongelezen = useState<number>('ongelezen', () => 0)
 const inspreken = useState('spraak-open', () => false)
 const aiAan = computed(() => !!functie('assistent.chat')?.beschikbaar)
 const { openen: openAi } = useAssistent()
-const items = computed(() => [...(me.value?.zijbalk.groepen.flatMap((g) => g.items) ?? []), { naam: 'Mijn instellingen', route: '/mij' }, { naam: 'Meldingen', route: '/meldingen' }, { naam: 'Helpcenter', route: '/help' }, { naam: 'Prospects', route: '/accounts' }])
+const items = computed(() => [...(me.value?.zijbalk.groepen.flatMap((g) => g.items) ?? []), { naam: 'Account', route: '/mij' }, { naam: 'Mijn instellingen', route: '/mijn-instellingen' }, { naam: 'Meldingen', route: '/notificaties' }, { naam: 'Meldingen', route: '/meldingen' }, { naam: 'Helpcenter', route: '/helpcenter' }, { naam: 'Helpcenter', route: '/help' }, { naam: 'Prospects', route: '/accounts' }])
 const item = computed(() => {
   const p = route.path
   return items.value.filter((i) => (i.route === '/' ? p === '/' : p === i.route || p.startsWith(`${i.route}/`))).sort((a, b) => b.route.length - a.route.length)[0]
@@ -28,7 +28,7 @@ const teller = computed(() => (ongelezen.value > 9 ? '9+' : String(ongelezen.val
       <button type="button" class="mk-knop" aria-label="Zoeken" data-test="mk-zoeken" @click="zoekenOpen = true"><Icoon naam="Search" :grootte="22" /></button>
       <button v-if="aiAan" type="button" class="mk-knop" aria-label="Vraag AI" data-test="mk-ai" @click="openAi()"><Icoon naam="Sparkles" :grootte="22" /></button>
       <button type="button" class="mk-knop" aria-label="Inspreken" data-test="mk-inspreken" @click="inspreken = true"><Icoon naam="Mic" :grootte="22" /></button>
-      <NuxtLink to="/meldingen" class="mk-knop" aria-label="Meldingen" data-test="mk-meldingen"><Icoon naam="Bell" :grootte="22" /><span v-if="ongelezen" class="mk-teller">{{ teller }}</span></NuxtLink>
+      <NuxtLink to="/notificaties" class="mk-knop" aria-label="Meldingen" data-test="mk-meldingen"><Icoon naam="Bell" :grootte="22" /><span v-if="ongelezen" class="mk-teller">{{ teller }}</span></NuxtLink>
     </div>
   </header>
 </template>

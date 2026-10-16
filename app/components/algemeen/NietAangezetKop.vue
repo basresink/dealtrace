@@ -24,7 +24,7 @@ const niveau = computed(() => {
         <h2 class="kop-kaart mt-16">Tot die tijd</h2>
         <p class="tekst mt-8">{{ f.uitleg.totDieTijd }}</p>
         <div class="dd-acties mt-16">
-          <NuxtLink class="dd-act dd-act--primair" :to="`/help/${f.helpartikel}`"><Icoon naam="BookOpen" class="dd-act-icoon" />Lees hoe het werkt</NuxtLink>
+          <NuxtLink class="dd-act dd-act--primair" :to="`/helpcenter/${f.helpartikel}`"><Icoon naam="BookOpen" class="dd-act-icoon" />Lees hoe het werkt</NuxtLink>
         </div>
       </div>
     </div>

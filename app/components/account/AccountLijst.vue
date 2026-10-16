@@ -87,8 +87,8 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
   <div>
     <section class="section">
       <div class="container">
-        <div class="sec-head">
-          <div>
+        <div class="sec-head sec-head--naast">
+          <div class="sec-head-tekst">
             <NuxtLink v-if="soort === 'prospect'" to="/prospects" class="kicker kicker--paars lijst-kruimel"><Icoon naam="ArrowLeft" :grootte="14" /> Prospects · {{ data.totaal }} prospects totaal</NuxtLink>
             <span v-else class="kicker kicker--streep">Klanten · {{ data.totaal }} {{ data.totaal === 1 ? 'klant' : 'klanten' }} totaal</span>
             <h1 class="title title--groot">{{ soort === 'prospect' ? 'Alle prospects' : 'Klanten' }}</h1>

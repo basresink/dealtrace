@@ -1,5 +1,5 @@
 // POST /api/tasks: nieuwe taak ("Wat moet er gebeuren?"). Beginner: klant, titel, actiesoort,
-// vervaldatum. Gevorderd ook contactpersoon, prioriteit, toegewezen aan, herhaling,
+// vervaldatum (en de contactpersoon vanaf de contactkaart). Gevorderd ook prioriteit, toegewezen aan, herhaling,
 // herinnering en beschrijving. Standaard het volgende hele werkuur.
 import { eq } from 'drizzle-orm'
 import { volgendWerkmoment } from '../../../shared/datum'
@@ -29,8 +29,11 @@ export default defineEventHandler(async (event) => {
     if (gevorderd && b?.herinnering?.minuten) data.herinnering = { minuten: Math.min(2880, Math.max(5, Number(b.herinnering.minuten))), kanaal: ['in-app', 'email', 'beide'].includes(b.herinnering.kanaal) ? b.herinnering.kanaal : 'in-app', verstuurd: false }
     if (gevorderd && b?.beschrijving) data.beschrijving = String(b.beschrijving).slice(0, 2000)
     if (b?.aanleiding) data.aanleiding = String(b.aanleiding).slice(0, 500)
+    // De contactpersoon (vanaf de contactkaart voor iedereen) moet bij het account horen.
+    let contactId: string | null = null
+    if (b?.contactId) { const [c] = await tx.select({ id: schema.contacts.id, accountId: schema.contacts.accountId }).from(schema.contacts).where(eq(schema.contacts.id, b.contactId)); if (!c || (b?.accountId && c.accountId !== b.accountId)) throw createError({ statusCode: 422, statusMessage: 'Contact hoort niet bij dit account' }); contactId = c.id }
     const [t] = await tx.insert(schema.tasks).values({
-      organisationId: ctx.organisatie.id, ownerId, accountId: b?.accountId || null, contactId: gevorderd ? b?.contactId || null : null, title: title.slice(0, 200),
+      organisationId: ctx.organisatie.id, ownerId, accountId: b?.accountId || null, contactId, title: title.slice(0, 200),
       actionType, priority: gevorderd && ['hoog', 'middel', 'laag'].includes(b?.priority) ? b.priority : 'middel', dueDate: due, executor: 'mens', data,
     }).returning()
     return t

@@ -184,6 +184,38 @@ export const zoekNormaal = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g,
 // ── Beheer van artikelen (F21) ─────────────────────────────────────────────
 export interface ArtikelInvoer { titel: string; collectie: 'product' | 'newbusiness'; categorie: string; niveau?: string | null; samenvatting: string; inhoud: string; routes?: string[]; vragen?: Controlevraag[]; status: 'concept' | 'gepubliceerd' }
 export const slugVan = (t: string) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80)
+
+// \u2500\u2500 Helpcenter-adressen (/helpcenter) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+/** Paden onder /helpcenter die geen artikel zijn; een eigen artikel krijgt zo'n slug nooit. */
+export const HELPCENTER_GERESERVEERD = ['instructies', 'academie', 'categorie'] as const
+/** Het adres van een artikel en van een categorie in het helpcenter. */
+export const helpLink = (slug: string) => `/helpcenter/${slug}`
+export const categorieLink = (categorie: string) => `/helpcenter/categorie/${slugVan(categorie)}`
+/** Categorie bij een slug uit de URL, of null. */
+export function categorieUitSlug(slug: string): { naam: string; collectie: 'product' | 'newbusiness' } | null {
+  const p = CATEGORIEEN_PRODUCT.find((c) => slugVan(c) === slug)
+  if (p) return { naam: p, collectie: 'product' }
+  const n = CATEGORIEEN_NEWBUSINESS.find((c) => slugVan(c) === slug)
+  return n ? { naam: n, collectie: 'newbusiness' } : null
+}
+/** E\u00e9n zin per categorie, onder de kop in het helpcenter. */
+export const CATEGORIE_UITLEG: Record<string, string> = {
+  'Aan de slag': 'Je eerste dag, je instellingen, meldingen, de AI-assistent en Dealtrace op je telefoon.',
+  'Dagelijks werk': 'Vandaag, acties, agenda, belblokken, bezoeken, inzichten en concepten.',
+  'Prospects': 'Prospects toevoegen en importeren, de accountkaart, contacten en de prospectreis.',
+  'Plannen en sturen': 'Prospectplanning, campagnes, Richting, de funnel en je dashboard.',
+  'Inrichten': 'Regels, reizen, agents, koppelingen en instellingen voor de beheerder.',
+  'Voor de salesmanager': 'Je team, coaching, analyse, audit en verbetervoorstellen.',
+  'Fundament': 'Waarom new business anders is, je ideale klant, de prospectmix en je funnel.',
+  'Voorbereiden': 'Je verhaal, een goede aanleiding, het buying committee en een winpunt per gesprek.',
+  'Bellen': 'De eerste 20 seconden, de receptie, voicemail, BAND en om de afspraak vragen.',
+  'Bezwaren': 'De bezwaren die je elke week hoort, en wat je dan zegt.',
+  'Schrijven': 'De eerste mail, een opvolgmail, LinkedIn en een kaartje dat opvalt.',
+  'Op pad': 'Je regiodag, het eerste bezoek, binnenlopen en opvolgen binnen 24 uur.',
+  'Volhouden': 'De vierde en vijfde poging, nee als datapunt, referrals en netwerken.',
+  'Van afspraak naar overdracht': 'De eerste afspraak, doorvragen, een vervolg, no-shows en een goede overdracht.',
+  'Jezelf verbeteren': 'Je cijfers lezen, feedback vragen en een goede week.',
+}
 /** Controle vóór opslaan: titel, categorie bij de collectie, inhoud; een gepubliceerd new business-artikel heeft de vijf vaste onderdelen. */
 export function controleerArtikel(a: Partial<ArtikelInvoer>): string[] {
   const f: string[] = []

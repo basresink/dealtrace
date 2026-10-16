@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // "Document uploaden" op de accountkaart: PDF, Office, tekst of afbeelding tot 8 MB.
-const props = defineProps<{ open: boolean; account: { id: string; naam: string } }>()
+const props = defineProps<{ open: boolean; account: { id: string; naam: string }; contactId?: string | null }>()
 const emit = defineEmits<{ sluit: []; bewaard: [] }>()
 const toast = useToast()
 const bestand = ref<File | null>(null)
@@ -15,7 +15,7 @@ async function bewaar() {
   if (bestand.value.size > 8_000_000) { toast.toon('Het document is groter dan 8 MB.', 'fout'); return }
   bezig.value = true
   try {
-    await $fetch(`/api/accounts/${props.account.id}/documenten`, { method: 'POST', body: { naam: naam.value.trim() || bestand.value.name, mime: bestand.value.type || 'application/octet-stream', data: await base64(bestand.value) } })
+    await $fetch(`/api/accounts/${props.account.id}/documenten`, { method: 'POST', body: { naam: naam.value.trim() || bestand.value.name, mime: bestand.value.type || 'application/octet-stream', data: await base64(bestand.value), contactId: props.contactId ?? undefined } })
     toast.toon('Document bewaard.'); emit('bewaard')
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }

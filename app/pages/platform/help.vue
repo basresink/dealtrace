@@ -29,7 +29,7 @@ useHead({ title: 'Help-artikelen · Platformbeheer · Dealtrace' })
         <template v-if="tab === 'artikelen'">
           <input v-model="zoek" class="invoer" type="search" placeholder="Zoek op titel" aria-label="Zoek artikel">
           <table class="tabel tabel--kaarten"><thead><tr><th>Titel</th><th>Categorie</th><th>Status</th><th>Versie</th><th>Gelezen</th><th>Nuttig</th><th /></tr></thead>
-            <tbody><tr v-for="a in lijst" :key="a.slug"><td data-label="Titel"><NuxtLink :to="`/help/${a.slug}`">{{ a.titel }}</NuxtLink></td><td data-label="Categorie">{{ a.categorie }}</td><td data-label="Status">{{ a.status }}</td><td data-label="Versie" class="tnum">{{ a.versie }}</td>
+            <tbody><tr v-for="a in lijst" :key="a.slug"><td data-label="Titel"><NuxtLink :to="`/helpcenter/${a.slug}`">{{ a.titel }}</NuxtLink></td><td data-label="Categorie">{{ a.categorie }}</td><td data-label="Status">{{ a.status }}</td><td data-label="Versie" class="tnum">{{ a.versie }}</td>
               <td data-label="Gelezen" class="tnum">{{ a.gelezen }}</td><td data-label="Nuttig" class="tnum">{{ a.nuttig }} ja · {{ a.nietNuttig }} nee</td><td><button type="button" class="dd-act" @click="open(a)">Bewerk</button></td></tr></tbody></table>
         </template>
         <article v-else class="kaart" data-test="vragen-zonder-antwoord"><p class="kaart-meta">Signaal voor een nieuw artikel. Zonder namen van personen of prospects.</p>

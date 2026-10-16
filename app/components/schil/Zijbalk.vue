@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Zijbalk per niveau (6.1, 14). Zwart, 240 px, inklapbaar naar 64 px. Volgorde: Start, Activiteiten,
-// Prospects, Rapportages en Plannen (uitklapmenu). Onderaan een rij iconen van 22 px op knoppen van 44 px
-// (mijn instellingen, instellingen, helpcenter, meldingen, uitloggen) en de gebruikerskaart, zonder menu.
+// Prospects, Rapportages en Planning (uitklapmenu), daarna Manager en Beheer (met Instellingen van de
+// organisatie). Onderaan een rij iconen van 22 px op knoppen van 44 px (account, mijn instellingen,
+// helpcenter, notificaties, uitloggen) en de gebruikerskaart, zonder menu.
 // Wat voor het niveau uit staat, staat in de ingeklapte groep "Nog niet aangezet".
 import { NIVEAU_LABEL, ROL_LABEL, type Niveau, type Rol } from '~~/shared/types'
 
@@ -15,13 +16,12 @@ const { online } = useSyncQueue()
 const route = useRoute()
 
 const slotOpen = useCookie<boolean>('dt_slotgroep', { default: () => false, maxAge: 60 * 60 * 24 * 365 })
-// Plannen is een uitklapmenu; het gaat vanzelf open als je op een van zijn pagina's staat.
+// Planning is een uitklapmenu; het gaat vanzelf open als je op een van zijn pagina's staat.
+// De cookie heet nog dt_plannen, zodat wie hem open had, hem open houdt.
+const UITKLAP = 'Planning'
 const plannenOpen = useCookie<boolean>('dt_plannen', { default: () => false, maxAge: 60 * 60 * 24 * 365 })
-// Instellingen staat in de icoonrij onderaan, niet in de lijst.
-const ICOONRIJ = new Set(['nav.instellingen'])
-const groepen = computed(() => (zijbalk.value?.groepen ?? []).map((g) => ({ ...g, items: g.items.filter((i) => !ICOONRIJ.has(i.sleutel)) })).filter((g) => g.items.length))
-const instellingenAan = computed(() => !!zijbalk.value?.groepen.some((g) => g.items.some((i) => i.sleutel === 'nav.instellingen')))
-const plannenActief = computed(() => !!zijbalk.value?.groepen.find((g) => g.naam === 'Plannen')?.items.some((i) => isActief(i.route)))
+const groepen = computed(() => zijbalk.value?.groepen ?? [])
+const plannenActief = computed(() => !!zijbalk.value?.groepen.find((g) => g.naam === UITKLAP)?.items.some((i) => isActief(i.route)))
 const plannenZichtbaar = computed(() => plannenOpen.value || plannenActief.value)
 const ongelezen = useState<number>('ongelezen', () => 0)
 const concepten = useState<number>('conceptenTeller', () => 0)
@@ -33,6 +33,7 @@ const gebruikerRol = computed(() => {
   const rol = ROL_LABEL[g.rol as Rol]?.toUpperCase() ?? ''
   return g.rol === 'founder' ? rol : `${rol} · ${NIVEAU_LABEL[g.niveau as Niveau].toUpperCase()}`
 })
+const foto = computed(() => me.value?.gebruiker.foto ?? null)
 const initialen = computed(() => (me.value?.gebruiker.naam ?? '').replace(/^Test(gebruiker|founder)\s+/, '').split(/\s+/).map((d) => d[0]).slice(0, 2).join('').toUpperCase())
 const vandaag = new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short' }).format(new Date()).replace('.', '')
 
@@ -70,13 +71,13 @@ async function uitloggen() {
     </div>
 
     <nav v-if="zijbalk" class="sb-nav" aria-label="Hoofdnavigatie">
-      <div v-for="g in groepen" :key="g.naam" class="sb-groep" :class="{ 'sb-groep--uitklap': g.naam === 'Plannen' }" :data-groep="g.naam">
-        <button v-if="g.naam === 'Plannen'" type="button" class="sb-groep-kop sb-groep-knop" :aria-expanded="plannenZichtbaar" data-test="sb-plannen" @click="plannenOpen = !plannenZichtbaar">
+      <div v-for="g in groepen" :key="g.naam" class="sb-groep" :class="{ 'sb-groep--uitklap': g.naam === UITKLAP }" :data-groep="g.naam">
+        <button v-if="g.naam === UITKLAP" type="button" class="sb-groep-kop sb-groep-knop" :aria-expanded="plannenZichtbaar" data-test="sb-planning" @click="plannenOpen = !plannenZichtbaar">
           <span>{{ g.naam }}</span><Icoon naam="ChevronDown" :grootte="14" class="sb-groep-pijl" :class="{ 'sb-groep-pijl--open': plannenZichtbaar }" />
         </button>
         <div v-else class="sb-groep-kop">{{ g.naam }}</div>
         <div class="sb-scheiding" />
-        <template v-if="g.naam !== 'Plannen' || plannenZichtbaar || props.ingeklapt">
+        <template v-if="g.naam !== UITKLAP || plannenZichtbaar || props.ingeklapt">
           <NuxtLink
             v-for="item in g.items" :key="item.sleutel" class="sb-link" :class="{ 'sb-link--actief': isActief(item.route) }"
             :to="item.route" :title="item.naam" :aria-current="isActief(item.route) ? 'page' : undefined" :data-sleutel="item.sleutel"
@@ -111,15 +112,15 @@ async function uitloggen() {
 
     <div class="sb-voet">
       <div class="sb-iconen" data-test="sb-iconen">
-        <NuxtLink to="/mij" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/mij') }" title="Mijn instellingen" aria-label="Mijn instellingen"><Icoon naam="CircleUser" :grootte="22" /></NuxtLink>
-        <NuxtLink v-if="instellingenAan" to="/instellingen" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/instellingen') }" title="Instellingen" aria-label="Instellingen" data-sleutel="nav.instellingen"><Icoon naam="Settings" :grootte="22" /></NuxtLink>
-        <NuxtLink to="/help" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/help') }" title="Helpcenter" aria-label="Helpcenter"><Icoon naam="CircleHelp" :grootte="22" /></NuxtLink>
-        <NuxtLink to="/meldingen" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/meldingen') }" title="Meldingen" aria-label="Meldingen"><Icoon naam="Bell" :grootte="22" /><span v-if="ongelezen" class="sb-icoon-teller tnum">{{ ongelezen > 9 ? '9+' : ongelezen }}</span></NuxtLink>
-        <button type="button" class="sb-icoonknop" title="Uitloggen" aria-label="Uitloggen" @click="uitloggen"><Icoon naam="LogOut" :grootte="22" /></button>
+        <NuxtLink to="/mij" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/mij') }" title="Account" aria-label="Account" data-test="sb-account"><Icoon naam="CircleUser" :grootte="22" /></NuxtLink>
+        <NuxtLink to="/mijn-instellingen" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/mijn-instellingen') }" title="Mijn instellingen" aria-label="Mijn instellingen" data-test="sb-mijn-instellingen"><Icoon naam="Settings" :grootte="22" /></NuxtLink>
+        <NuxtLink to="/helpcenter" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/helpcenter') || isActief('/help') }" title="Helpcenter" aria-label="Helpcenter" data-test="sb-helpcenter"><Icoon naam="CircleHelp" :grootte="22" /></NuxtLink>
+        <NuxtLink to="/notificaties" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/notificaties') || isActief('/meldingen') }" title="Meldingen" aria-label="Meldingen" data-test="sb-notificaties"><Icoon naam="Bell" :grootte="22" /><span v-if="ongelezen" class="sb-icoon-teller tnum">{{ ongelezen > 9 ? '9+' : ongelezen }}</span></NuxtLink>
+        <button type="button" class="sb-icoonknop" title="Uitloggen" aria-label="Uitloggen" data-test="sb-uitloggen" @click="uitloggen"><Icoon naam="LogOut" :grootte="22" /></button>
       </div>
       <div class="sb-gebruiker" data-test="sb-gebruikerskaart">
         <div class="sb-gebruiker-knop sb-gebruiker-kaart">
-          <span class="sb-avatar">{{ initialen }}<span v-if="ongelezen" class="sb-avatar-stip" /></span>
+          <span class="sb-avatar"><img v-if="foto" :src="foto" alt="" class="sb-avatar-foto"><template v-else>{{ initialen }}</template><span v-if="ongelezen" class="sb-avatar-stip" /></span>
           <span class="sb-gebruiker-info">
             <span class="sb-gebruiker-naam">{{ me?.gebruiker.naam }}</span>
             <span class="sb-gebruiker-rol" data-test="gebruikersblok">{{ gebruikerRol }}</span>
@@ -131,6 +132,9 @@ async function uitloggen() {
 </template>
 
 <style scoped>
+/* Meer lucht boven elke groepstitel, zodat de secties niet op elkaar staan. */
+.sb-groep + .sb-groep > .sb-groep-kop { padding-top: 22px; }
+.sb-avatar-foto { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
 /* Icoonrij onderaan: iconen van 22 px op knoppen van minstens 44 bij 44 px. */
 .sb-iconen { gap: 0; padding: 4px 0 8px; }
 .sb-icoonknop { width: 44px; min-width: 44px; height: 44px; min-height: 44px; flex: 0 0 44px; }

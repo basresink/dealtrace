@@ -51,12 +51,12 @@ async function stuur(vraag = tekst.value, akkoordKosten = false) {
   }
 }
 function actie(a: any) {
-  if (a.soort === 'artikel') navigateTo(`/help/${a.slug}`)
+  if (a.soort === 'artikel') navigateTo(`/helpcenter/${a.slug}`)
   else if (a.soort === 'account') { navigateTo(`/accounts/${a.accountId}`); open.value = false }
   else if (a.soort === 'taak') nieuweTaak.value = { accountId: a.accountId, titel: a.titel, actiesoort: a.actiesoort, aanleiding: a.aanleiding }
   else if (a.soort === 'mailconcept') { navigator.clipboard?.writeText(`${a.onderwerp}\n\n${a.tekst}`); toast.toon('Mailconcept gekopieerd. Er is niets verstuurd.') }
 }
-function bronLink(b: any) { return b.soort === 'help' && b.ref ? `/help/${b.ref}` : b.soort === 'verhaal' ? '/richting' : null }
+function bronLink(b: any) { return b.soort === 'help' && b.ref ? `/helpcenter/${b.ref}` : b.soort === 'verhaal' ? '/richting' : null }
 const blok = computed(() => credits.value?.geblokt as string | null)
 function sluit() { open.value = false }
 </script>

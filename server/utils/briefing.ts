@@ -193,7 +193,7 @@ export async function verstuurConcept(tx: Tx, org: string, door: { id: string; r
   if (r!.gebruiker_id !== door.id) fout(403, 'Alleen de eigenaar verstuurt dit concept')
   if (r!.status === 'verstuurd') return { status: 'verstuurd', tekst: 'Al verstuurd.' }
   if (r!.status !== 'goedgekeurd') fout(409, 'Keur het concept eerst goed')
-  const [c] = await rijen(tx, sql`select id, email, rol from contacts where account_id = ${r!.account_id} and status <> 'vertrokken' and coalesce(email, '') <> '' order by (rol = 'beslisser') desc limit 1`)
+  const [c] = await rijen(tx, sql`select id, email, rol from contacts where account_id = ${r!.account_id} and status <> 'vertrokken' and coalesce(email, '') <> '' order by (id = ${r!.concept?.contactId ?? ''}) desc, (rol = 'beslisser') desc limit 1`)
   if (!c) fout(422, 'Er is geen e-mailadres bij dit account')
   const eerder = (await rijen(tx, sql`select 1 from activiteiten where account_id = ${r!.account_id} and soort = 'mail' limit 1`)).length > 0
   const t = await toets(tx, org, { agent: 'verzender', handeling: 'mail.versturen', gebruiker: { id: door.id, niveau: door.niveau, data: door.data ?? {} }, accountId: r!.account_id, contactId: c!.id, kanaal: 'mail', naarBuiten: true, eersteBericht: !eerder } as any, nu)
