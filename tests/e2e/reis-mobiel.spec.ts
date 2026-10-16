@@ -5,7 +5,11 @@ import { apiLogin, ga, login } from './hulp'
 
 test('Zet nee als schuifvenster, in hooguit 3 tikken, en offline precies één keer', async ({ page, context }) => {
   await apiLogin(page.request, 'u-02')
-  const id = (await (await page.request.post('/api/accounts', { data: { naam: `Testmobiel ${Date.now()}` } })).json()).id
+  // Een willekeurige naam: met een tijdstempel lijken de accounts van 375, 390 en 412 px meer dan 80 procent op
+  // elkaar, en dan geeft het ontdubbelen terecht 409 "Al in je bestand".
+  const r = await page.request.post('/api/accounts', { data: { naam: `${crypto.randomUUID().slice(0, 12)} Mobiel` } })
+  expect(r.status()).toBe(200)
+  const id = (await r.json()).id
   await login(page, 'u-02')
   await ga(page, `/accounts/${id}`)
   await expect(page.getByTestId('fasepil')).toBeVisible()

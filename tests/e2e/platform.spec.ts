@@ -118,6 +118,8 @@ test.describe('platform schermen', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
     const h = await page.getByTestId('terug-naar-platform').evaluate((e) => e.getBoundingClientRect().height)
     expect(h).toBeGreaterThanOrEqual(44)
+    // Pas klikken na de hydratatie; anders valt de klik op de server-HTML en gaat er geen verzoek weg.
+    await page.waitForLoadState('networkidle')
     await page.getByTestId('terug-naar-platform').click()
     await expect(page).toHaveURL(/\/platform\/klanten$/)
     await expect(page.getByTestId('werk-in-balk')).toHaveCount(0)
