@@ -242,6 +242,7 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
     <KaartTabbladen :account="{ id: a.id, naam: a.naam, soort: a.soort }" :tabbladen="t" :mail-aan="primair?.email ? primair.naam : null" :kan-overdragen="a.kanOverdragen" @ververs="ververs" @overdragen="overdragenOpen = true">
       <template #kwalificatie>
         <div class="ak-blokken">
+          <AccountplanBlok :account="{ id: a.id, naam: a.naam }" />
           <AgentBlokken :account="a" @gewijzigd="refresh" />
           <article class="kaart" data-test="band"><header class="kaart-kop"><h2 class="kaart-titel">Kwalificatie BAND {{ Object.values(a.band).filter((b: any) => b?.ja).length }}/4</h2></header>
             <ul class="kaart-meta band-lijst">

@@ -47,7 +47,7 @@ export function kiesFocus(dag: Pick<Dag, 'stapels' | 'isVandaag'>, nu: Date, kan
   })
   const poging = bellen.find((r) => r.poging && !r.achterstallig)
   if (poging) return bel(poging, '2c-poging', 'Deze poging uit het hercontactritme moet vandaag.')
-  const zwaarste = [...bellen, ...acties].filter((r) => r.achterstallig).sort((a, b) => (a.priority === 'hoog' ? 0 : 1) - (b.priority === 'hoog' ? 0 : 1) || (a.start ?? '').localeCompare(b.start ?? ''))[0]
+  const zwaarste = [...bellen, ...acties].filter((r) => r.achterstallig).sort((a, b) => (a.priority === 'urgent' ? 0 : a.priority === 'hoog' ? 1 : 2) - (b.priority === 'urgent' ? 0 : b.priority === 'hoog' ? 1 : 2) || (a.start ?? '').localeCompare(b.start ?? ''))[0]
   if (zwaarste) return bel(zwaarste, '3-achterstallig', 'Je zwaarste achterstallige actie. Daarna wordt de rest kleiner.')
   const overdragen = eersteAfspraken.find((r) => r.knop === 'overdragen')
   if (overdragen) return { regel: '4-overdragen', wat: overdragen.titel, waarom: 'De eerste afspraak is gehouden; draag hem over zodat het vervolg niet blijft liggen.', wanneer: null, accountId: overdragen.accountId, taakId: null, verslagVan: null, knop: { soort: 'overdragen', tekst: `Open ${overdragen.accountNaam}`, href: `/accounts/${overdragen.accountId}` } }

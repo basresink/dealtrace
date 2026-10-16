@@ -3,7 +3,7 @@
 // komen uit /api/vandaag/dashboard.
 import { and, eq, gte, inArray, sql } from 'drizzle-orm'
 import { nlMoment, plusDagen } from '../../../shared/datum'
-import { ordenTaken, isAchterstallig } from '../../../shared/taken'
+import { ordenTaken, isAchterstallig, isDringend } from '../../../shared/taken'
 import { groetVoor, kiesAanleidingVanDeDag, samenvattingsregel, vandaagKicker } from '../../../shared/vandaag'
 import { kan } from '../../utils/accounts'
 import { metOrganisatie, schema } from '../../utils/db'
@@ -54,7 +54,7 @@ export default defineEventHandler(async (event) => {
     for (const s of signals.filter((x) => x.status === 'nieuw' && x.relevanceScore >= 75 && x.id !== aanleiding?.id).slice(0, 2)) prio.push({ soort: 'aanleiding', tekst: s.title, link: `/acties?tab=inzichten&inzicht=${s.id}`, naam: (s.accountId && per.get(s.accountId)?.naam) || s.title, reden: s.accountId ? s.title : (s.data?.waarom ?? ''), label: s.relevanceScore >= 85 ? 'Hot' : 'Aanleiding', labelSoort: 'hot' })
     for (const a of eigen.filter((x) => x.terugOp && x.terugOp <= v && ['wachtend', 'nee'].includes(x.nbStatus))) prio.push({ soort: 'terug', tekst: `${a.naam} komt vandaag terug`, link: `/accounts/${a.id}`, naam: a.naam, reden: 'Komt vandaag terug uit de wachtstand', label: 'Terug', labelSoort: 'info' })
     for (const t of taken.filter((x) => x.actionType !== 'taak' && /bevestig|overdr/i.test(x.title))) prio.push({ soort: 'afspraak', tekst: t.title, link: `/acties?taak=${t.id}`, naam: (t.accountId && per.get(t.accountId)?.naam) || t.title, reden: t.title, label: 'Afspraak', labelSoort: 'risico' })
-    for (const t of taken.filter((x) => isAchterstallig(x, nu) && x.priority === 'hoog' && !prio.some((p) => p.link === `/acties?taak=${x.id}`)).slice(0, 2)) prio.push({ soort: 'achter', tekst: t.title, link: `/acties?taak=${t.id}`, naam: (t.accountId && per.get(t.accountId)?.naam) || t.title, reden: t.title, label: 'Risico', labelSoort: 'risico' })
+    for (const t of taken.filter((x) => isAchterstallig(x, nu) && isDringend(x.priority) && !prio.some((p) => p.link === `/acties?taak=${x.id}`)).slice(0, 2)) prio.push({ soort: 'achter', tekst: t.title, link: `/acties?taak=${t.id}`, naam: (t.accountId && per.get(t.accountId)?.naam) || t.title, reden: t.title, label: 'Risico', labelSoort: 'risico' })
 
     // Inzichten bij prospects in de laatste 48 uur (eigen accounts), hoogste relevantie eerst, één per account.
     const grens48 = new Date(nu.getTime() - 48 * 3600_000).toISOString()

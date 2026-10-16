@@ -1,59 +1,29 @@
 <script setup lang="ts">
-// Een concept (8.5.7, F06): maker, aanleiding, tekst met stijlscore, winpunt en bronnen; "Goedkeuren",
-// "Aanpassen", "Verwerpen". Daarna bij mail "Verstuur" (via de mailkoppeling) of "Verstuur via je mail"
-// (mailto), bij een tekst met nummer WhatsApp. Goedkeuren kan offline; versturen wacht op verbinding.
+// Een concept voluit (8.5.7, F06): maker, aanleiding, tekst met stijlscore, winpunt en bronnen; "Goedkeuren",
+// "Aanpassen", "Afwijzen". Daarna bij mail "Verstuur" (via de mailkoppeling) of "Verstuur via je mail"
+// (mailto), bij een tekst met nummer WhatsApp. Staat in het Pitstop-paneel (compact); op /concepten staat
+// hetzelfde concept in de ConceptFlyout. De acties komen uit useConceptActies.
+import { soortLabel, agentLabel } from '~~/shared/concepten'
 const props = defineProps<{ concept: any; compact?: boolean }>()
 const emit = defineEmits<{ gewijzigd: [] }>()
-const toast = useToast()
-const { voegToe } = useSyncQueue()
 const c = computed(() => props.concept)
 const aanpassen = ref(false)
 const tekst = ref('')
 const onderwerp = ref('')
 watch(() => props.concept, (x) => { tekst.value = x?.concept?.tekst ?? ''; onderwerp.value = x?.concept?.onderwerp ?? '' }, { immediate: true })
-const TYPE: Record<string, string> = { mail: 'Mail', linkedin: 'LinkedIn-bericht', whatsapp: 'WhatsApp-bericht', belscript: 'Belscript', briefing: 'Bezoekbriefing' }
+const { bezig, besluit: doeBesluit, verstuur, wa, waKan, waGeenToestemming, verstuurWa, kopieer } = useConceptActies(c, () => emit('gewijzigd'))
 async function besluit(b: 'goedkeuren' | 'verwerpen', metTekst = false) {
-  const body = { besluit: b, ...(metTekst ? { tekst: tekst.value, onderwerp: onderwerp.value } : {}) }
-  try {
-    if (import.meta.client && !navigator.onLine) {
-      await voegToe({ tabel: 'concepten', op: 'patch', recordId: c.value.id, patch: { soort: 'concept.besluit', ...body } })
-      toast.toon('Bewaard. Wordt verstuurd zodra je weer verbinding hebt.')
-    } else {
-      await $fetch(`/api/concepten/${c.value.id}/besluit`, { method: 'POST', body })
-      toast.toon(b === 'verwerpen' ? 'Concept verworpen.' : 'Goedgekeurd.')
-    }
-    aanpassen.value = false
-    emit('gewijzigd')
-  } catch (e) { toast.toon(foutTekst(e), 'fout') }
+  if (await doeBesluit(b, metTekst ? { tekst: tekst.value, onderwerp: onderwerp.value } : undefined)) aanpassen.value = false
 }
-const bezig = ref(false)
-async function verstuur() {
-  bezig.value = true
-  try { const r = await $fetch<any>('/api/mail/verstuur', { method: 'POST', body: { conceptId: c.value.id } }); toast.toon(r.tekst); emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
-}
-// WhatsApp (P26): met koppeling, goedgekeurd sjabloon en opt-in "Verstuur via WhatsApp"; anders openen in WhatsApp.
-const { functie } = useMe()
-const wa = ref<{ gekoppeld: boolean; sjabloon: any; consent: string; mobiel: boolean } | null>(null)
-watch(() => [c.value?.status, c.value?.concept?.type], async () => {
-  if (import.meta.client && c.value?.concept?.type === 'whatsapp' && c.value.status === 'goedgekeurd' && c.value.accountId && functie('whatsapp.versturen')?.beschikbaar) {
-    try { wa.value = await $fetch('/api/whatsapp/stand', { query: { accountId: c.value.accountId } }) } catch { wa.value = null }
-  }
-}, { immediate: true })
-const waKan = computed(() => !!wa.value?.gekoppeld && !!wa.value.sjabloon && wa.value.consent === 'ja')
-async function verstuurWa() {
-  bezig.value = true
-  try { const r = await $fetch<any>('/api/whatsapp/verstuur', { method: 'POST', body: { conceptId: c.value.id } }); toast.toon(r.tekst); emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
-}
-async function kopieer() { try { await navigator.clipboard.writeText([c.value.concept.onderwerp, c.value.concept.tekst].filter(Boolean).join('\n\n')); toast.toon('Gekopieerd.') } catch { toast.toon('Kopiëren lukt hier niet.', 'let-op') } }
 </script>
 
 <template>
   <article class="kaart cn-kaart" :data-test="`concept-${c.id}`">
     <header class="cn-kop">
-      <span class="pil pil--leeg">{{ TYPE[c.concept?.type] ?? c.concept?.type }}</span>
-      <span class="meta">{{ c.agent === 'schrijver' ? 'Schrijver' : c.agent }}<template v-if="c.accountNaam"> · <NuxtLink :to="`/accounts/${c.accountId}`">{{ c.accountNaam }}</NuxtLink></template></span>
+      <span class="pil pil--leeg">{{ soortLabel(c.concept?.type) }}</span>
+      <span class="meta">{{ agentLabel(c.agent) }}<template v-if="c.accountNaam"> · <NuxtLink :to="`/accounts/${c.accountId}`">{{ c.accountNaam }}</NuxtLink></template></span>
       <span v-if="c.concept?.stijlscore" class="pil pil--leeg" :title="`${c.concept.woorden} van ${c.concept.grens} woorden`">stijl {{ c.concept.stijlscore }}</span>
-      <span v-if="c.status !== 'klaar'" class="pil">{{ c.status }}</span>
+      <span v-if="c.status !== 'klaar'" class="pil">{{ c.status === 'verworpen' ? 'afgewezen' : c.status }}</span>
     </header>
     <p v-if="c.concept?.aanleiding && !compact" class="meta">{{ c.concept.aanleiding }}</p>
     <template v-if="!aanpassen">
@@ -71,7 +41,7 @@ async function kopieer() { try { await navigator.clipboard.writeText([c.value.co
         <template v-if="!aanpassen">
           <button type="button" class="dd-act dd-act--primair" data-test="concept-goedkeuren" @click="besluit('goedkeuren')">Goedkeuren</button>
           <button v-if="c.concept?.tekst" type="button" class="dd-act" data-test="concept-aanpassen" @click="aanpassen = true">Aanpassen</button>
-          <button type="button" class="dd-act" data-test="concept-verwerpen" @click="besluit('verwerpen')">Verwerpen</button>
+          <button type="button" class="dd-act" data-test="concept-verwerpen" @click="besluit('verwerpen')">Afwijzen</button>
         </template>
         <template v-else>
           <button type="button" class="dd-act dd-act--primair" data-test="concept-bewaar-goedkeur" @click="besluit('goedkeuren', true)">Goedkeuren</button>
@@ -82,8 +52,8 @@ async function kopieer() { try { await navigator.clipboard.writeText([c.value.co
         <button v-if="c.concept?.type === 'mail'" type="button" class="dd-act dd-act--primair" :disabled="bezig" data-test="concept-verstuur" @click="verstuur">Verstuur</button>
         <a v-if="c.links?.mailto" :href="c.links.mailto" class="dd-act" data-test="concept-mailto">Verstuur via je mail</a>
         <button v-if="c.concept?.type === 'whatsapp' && waKan" type="button" class="dd-act dd-act--primair" :disabled="bezig" data-test="concept-verstuur-wa" @click="verstuurWa">Verstuur via WhatsApp</button>
-        <a v-if="c.links?.whatsapp && !(c.concept?.type === 'whatsapp' && wa?.gekoppeld && wa.consent !== 'ja')" :href="c.links.whatsapp" target="_blank" rel="noopener" class="dd-act" data-test="concept-wa-link">{{ c.concept?.type === 'whatsapp' ? 'Open in WhatsApp' : 'WhatsApp' }}</a>
-        <span v-if="c.concept?.type === 'whatsapp' && wa?.gekoppeld && wa.consent !== 'ja'" class="meta">Geen toestemming voor WhatsApp</span>
+        <a v-if="c.links?.whatsapp && !waGeenToestemming" :href="c.links.whatsapp" target="_blank" rel="noopener" class="dd-act" data-test="concept-wa-link">{{ c.concept?.type === 'whatsapp' ? 'Open in WhatsApp' : 'WhatsApp' }}</a>
+        <span v-if="waGeenToestemming && wa" class="meta">Geen toestemming voor WhatsApp</span>
         <button v-if="c.concept?.tekst" type="button" class="dd-act" @click="kopieer">Kopieer</button>
       </template>
     </div>

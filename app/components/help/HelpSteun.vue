@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // "Verder zoeken" onderaan het helpcenter: de andere ingangen en contact met support (opzet van DealDrive).
-const props = defineProps<{ zonder?: 'instructies' | 'academie' | 'ingangen' }>()
+const props = defineProps<{ zonder?: 'instructies' | 'academie' | 'werven' | 'ingangen' }>()
 const { functie } = useMe()
 const aiAan = computed(() => !!functie('assistent.chat')?.beschikbaar)
 const { openen: openAi } = useAssistent()
@@ -20,6 +20,11 @@ const { openen: openAi } = useAssistent()
           <h3 class="hs-kaart-titel">New business-academie</h3>
           <p class="hs-kaart-tekst">Bellen, schrijven, bezwaren en op pad: zo doe je het, met voorbeelden en controlevragen.</p>
           <span class="hs-cta">Open de academie</span>
+        </NuxtLink>
+        <NuxtLink v-if="props.zonder !== 'werven' && props.zonder !== 'ingangen'" to="/helpcenter/werven" class="hs-kaart">
+          <h3 class="hs-kaart-titel">Nieuwe klanten werven</h3>
+          <p class="hs-kaart-tekst">Je pitch onderzoeken, schrijven en presenteren: waarom klanten kopen en hoe je een gesprek opent.</p>
+          <span class="hs-cta">Open de artikelen</span>
         </NuxtLink>
         <button v-if="aiAan" type="button" class="hs-kaart" data-test="help-steun-ai" @click="openAi({ label: 'Helpcenter', route: '/helpcenter', accountId: null })">
           <h3 class="hs-kaart-titel">Vraag de AI-assistent</h3>

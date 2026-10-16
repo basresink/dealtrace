@@ -1,9 +1,9 @@
 <script setup lang="ts">
 // Helpcenter (F21, P25) in de opzet van DealDrive: kop, één zoekveld, "Voor jou" en "Nieuw en
-// bijgewerkt", de ingangen (Hoe werkt Dealtrace, de academie) als kaarten met een gele rand, en de
+// bijgewerkt", de ingangen (Hoe werkt Dealtrace, de academie, Nieuwe klanten werven) als kaarten met een gele rand, en de
 // categorieën. Een categorie opent /helpcenter/categorie/<naam>, een artikel /helpcenter/<slug>.
 // Geen voortgang, geen teller, geen leerpaden (B19).
-import { CATEGORIE_UITLEG, CATEGORIEEN_NEWBUSINESS, CATEGORIEEN_PRODUCT, categorieLink, helpLink } from '~~/shared/help'
+import { CATEGORIE_UITLEG, CATEGORIEEN_NEWBUSINESS, CATEGORIEEN_PRODUCT, CATEGORIEEN_WERVEN, COLLECTIES, type HelpCollectie, categorieLink, helpLink } from '~~/shared/help'
 const route = useRoute()
 const router = useRouter()
 const zoek = ref(typeof route.query.zoek === 'string' ? route.query.zoek : '')
@@ -20,8 +20,10 @@ const perCategorie = (collectie: string, namen: readonly string[]) => namen.map(
 // Inrichten en Voor de salesmanager laat de server alleen zien aan wie ze mag lezen; een lege productcategorie valt weg.
 const product = computed(() => perCategorie('product', CATEGORIEEN_PRODUCT).filter((c) => c.artikelen.length))
 const newbusiness = computed(() => perCategorie('newbusiness', CATEGORIEEN_NEWBUSINESS))
+// Nieuwe klanten werven is voor iedereen; een categorie zonder artikelen staat er rustig bij.
+const werven = computed(() => perCategorie('werven', CATEGORIEEN_WERVEN))
 const aantal = (collectie: string) => data.value.artikelen.filter((a: any) => a.collectie === collectie).length
-const resultatenPerCollectie = computed(() => data.value.resultaten ? [['Hoe werkt Dealtrace', 'product'], ['New business', 'newbusiness']].map(([naam, c]) => ({ naam: naam!, artikelen: data.value.resultaten.filter((a: any) => a.collectie === c) })).filter((g) => g.artikelen.length) : [])
+const resultatenPerCollectie = computed(() => data.value.resultaten ? (Object.keys(COLLECTIES) as HelpCollectie[]).map((c) => ({ naam: COLLECTIES[c].naam, artikelen: data.value.resultaten.filter((a: any) => a.collectie === c) })).filter((g) => g.artikelen.length) : [])
 useHead({ title: 'Helpcenter · Dealtrace' })
 </script>
 
@@ -83,6 +85,12 @@ useHead({ title: 'Helpcenter · Dealtrace' })
               <p class="hc-ingang-tekst">Het vak zelf: waarom het werkt, zo doe je het, een voorbeeld, de valkuilen en drie controlevragen voor jezelf.</p>
               <span class="hc-cta">Open de academie</span>
             </NuxtLink>
+            <NuxtLink to="/helpcenter/werven" class="hc-ingang" data-test="ingang-werven">
+              <span class="hc-ingang-label">{{ aantal('werven') }} artikelen</span>
+              <h2 class="hc-ingang-titel">Nieuwe klanten werven</h2>
+              <p class="hc-ingang-tekst">Je pitch van onderzoek tot presentatie: waarom klanten kopen, je waarde, je verhaal en hoe je een gesprek opent.</p>
+              <span class="hc-cta">Open de artikelen</span>
+            </NuxtLink>
           </div>
 
           <HelpGroep titel="Hoe werkt Dealtrace" uitleg="Per onderwerp de uitleg over de schermen." link="/helpcenter/instructies" link-tekst="Alle instructies" class="mt-32">
@@ -103,6 +111,20 @@ useHead({ title: 'Helpcenter · Dealtrace' })
               <div v-else class="hc-categorie hc-categorie--leeg" :data-test="`categorie-${c.naam}`">
                 <h3 class="hc-categorie-titel">{{ c.naam }}</h3>
                 <p class="hc-categorie-tekst">De artikelen volgen met de academie.</p>
+              </div>
+            </template>
+          </HelpGroep>
+
+          <HelpGroep titel="Nieuwe klanten werven" uitleg="Uit eigen vakliteratuur: je pitch onderzoeken, schrijven en presenteren." link="/helpcenter/werven" link-tekst="Alle artikelen" class="mt-32" data-test="groep-werven">
+            <template v-for="c in werven" :key="c.naam">
+              <NuxtLink v-if="c.artikelen.length" :to="categorieLink(c.naam)" class="hc-categorie" :data-test="`categorie-${c.naam}`">
+                <h3 class="hc-categorie-titel">{{ c.naam }}</h3>
+                <p class="hc-categorie-tekst">{{ CATEGORIE_UITLEG[c.naam] }}</p>
+                <span class="hc-categorie-voet"><span class="hc-cta">Bekijk de artikelen</span><span class="hc-aantal tnum">{{ c.artikelen.length }}</span></span>
+              </NuxtLink>
+              <div v-else class="hc-categorie hc-categorie--leeg" :data-test="`categorie-${c.naam}`">
+                <h3 class="hc-categorie-titel">{{ c.naam }}</h3>
+                <p class="hc-categorie-tekst">De artikelen in deze categorie volgen.</p>
               </div>
             </template>
           </HelpGroep>
@@ -141,6 +163,7 @@ useHead({ title: 'Helpcenter · Dealtrace' })
 
 .hc-ingangen { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-top: 24px; }
 @media (min-width: 700px) { .hc-ingangen { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .hc-ingangen { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .hc-ingang { display: flex; flex-direction: column; align-items: flex-start; padding: 22px 24px; background: var(--ink); color: var(--wit); text-decoration: none; border-left: 3px solid var(--yellow); transition: background var(--transition-fast); }
 .hc-ingang:hover { background: var(--ink-soft); }
 .hc-ingang-label { font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--yellow); }

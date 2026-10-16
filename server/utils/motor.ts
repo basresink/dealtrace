@@ -75,7 +75,7 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
   const ids = accountRijen.map((a) => a.id)
   const gebeurtenissen = ids.length ? await tx.select().from(schema.reisgeschiedenis).where(and(gte(schema.reisgeschiedenis.op, sinds), accountIds?.length ? inArray(schema.reisgeschiedenis.accountId, ids) : sql`true`)) : []
   const ritmeDefs = await tx.select().from(schema.hercontactritmes)
-  const contacten = ids.length ? await tx.select({ accountId: schema.contacts.accountId, first: schema.contacts.firstName, last: schema.contacts.lastName, rol: schema.contacts.rol, status: schema.contacts.status, data: schema.contacts.data }).from(schema.contacts).where(accountIds?.length ? inArray(schema.contacts.accountId, ids) : sql`true`) : []
+  const contacten = ids.length ? await tx.select({ id: schema.contacts.id, accountId: schema.contacts.accountId, first: schema.contacts.firstName, last: schema.contacts.lastName, rol: schema.contacts.rol, status: schema.contacts.status, data: schema.contacts.data }).from(schema.contacts).where(accountIds?.length ? inArray(schema.contacts.accountId, ids) : sql`true`) : []
 
   // Campagnes (P16): achterstand per account uit de ene tempofunctie, voor SR11.
   const campagnes = await achterstandPerAccount(tx, nu)
@@ -97,7 +97,7 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
       klasseCode: k ? klasseCode(k) : null, ownerId: a.ownerId, ownerTeamId: owner?.teamId ?? null, ownerWerkplek: owner?.werkplek ?? null, gebiedId: a.gebiedId,
       aangemaaktOp: a.createdAt, laatsteContactOp: a.laatsteContactOp, terugOp: a.terugOp, dossierOp: (a.data?.dossier as any)?.op ?? null,
       bandScore: bandScore(a.data?.band as any), belMeNiet: !!primair?.data?.belMeNiet, nee: a.data?.nee ?? null, wachtendTot: a.data?.wachtendTot ?? null,
-      contactNaam: primair ? `${primair.first ?? ''} ${primair.last}`.trim() : null,
+      contactNaam: primair ? `${primair.first ?? ''} ${primair.last}`.trim() : null, contactId: primair?.id ?? null,
       gebeurtenissen: gebeurtenissen.filter((g) => g.accountId === a.id && g.naarFaseId !== g.vanFaseId).map((g) => ({ id: g.id, gebeurtenis: g.gebeurtenis, naarFaseId: g.naarFaseId, op: g.op })),
       ritme: (() => {
         const st = (a.data as any)?.reis?.ritme
@@ -179,7 +179,7 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
 export async function schrijfMotorUitvoer(tx: Tx, org: string, u: MotorUitvoer, nu: Date) {
   const tijd = nu.toISOString()
   const taken = u.taken.map((t) => ({
-    organisationId: org, ownerId: t.ownerId, accountId: t.accountId, ruleId: t.regelId, onderwerp: t.onderwerp, actionType: t.actionType, title: t.title,
+    organisationId: org, ownerId: t.ownerId, accountId: t.accountId, contactId: t.contactId ?? null, ruleId: t.regelId, onderwerp: t.onderwerp, actionType: t.actionType, title: t.title,
     priority: t.priority, dueDate: t.due, executor: 'mens', data: { waarom: t.waarom, bewijs: t.bewijs, herkomst: { bron: t.herkomst, regelId: t.regelId, actiesoort: t.actionType, uitvoerder: t.ownerId }, geschoven: t.geschoven || undefined, ...(t.poging ? { poging: { n: t.poging.n, van: t.poging.van, kanaal: t.poging.kanaal ?? undefined } } : {}) }, createdAt: tijd, updatedAt: tijd,
   }))
   for (let i = 0; i < taken.length; i += 500) await tx.insert(schema.tasks).values(taken.slice(i, i + 500))

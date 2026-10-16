@@ -4,7 +4,7 @@
 // van een afspraak lopen hier; de fase verandert alleen via het meldpunt (meldGebeurtenis).
 import { sql } from 'drizzle-orm'
 import { analyseerVerslag } from './agents/notulist'
-import { conflicten, isEersteAfspraak, meetingUitkomst, MEETINGSOORTEN_START, type Meetingsoort, type Vorm } from '../../shared/agenda'
+import { afspraakTitel, conflicten, herhalingsDatums, isEersteAfspraak, meetingUitkomst, MEETINGSOORTEN_START, type Herhaling, type Meetingsoort, type Vorm } from '../../shared/agenda'
 import { nlMoment, nlTijdstip, plusDagen } from '../../shared/datum'
 import { schrijfAudit } from './audit'
 import { gebruikDb } from './db'
@@ -120,10 +120,27 @@ export async function meetingsoorten(tx: Tx): Promise<(Meetingsoort & { id: stri
 
 // ── Plannen ──────────────────────────────────────────────────────────────────
 
-export interface PlanInvoer { id?: string; accountId?: string | null; contactId?: string | null; meetingsoortId: string; vorm?: Vorm; start: string; duurMin?: number; voorWie?: string | null; locatie?: string | null; herinneringMin?: number | null; aanleiding?: string | null; beschrijving?: string | null; taskId?: string | null; collegaUitnodigen?: string[] }
+export interface PlanInvoer { id?: string; accountId?: string | null; contactId?: string | null; meetingsoortId: string; vorm?: Vorm; start: string; duurMin?: number; voorWie?: string | null; locatie?: string | null; herinneringMin?: number | null; aanleiding?: string | null; beschrijving?: string | null; taskId?: string | null; collegaUitnodigen?: string[]; titel?: string | null; herhaling?: Herhaling | null; herhalingTot?: string | null; reeksId?: string | null }
 export interface Planner { id: string; naam: string; rol: string; mag: { voorCollega: boolean } }
 
+/**
+ * Plannen met herhaling: elke datum van de reeks wordt een losse afspraak met hetzelfde reeks-id (de
+ * eerste houdt de taak en meldt zo nodig eerste-afspraak-gepland). Zonder herhaling: één afspraak.
+ */
 export async function planAfspraak(tx: Tx, org: string, door: Planner, p: PlanInvoer, nu = new Date()) {
+  const start = new Date(p.start)
+  const herhaling = (['wekelijks', 'tweewekelijks', 'maandelijks'] as const).includes(p.herhaling as any) ? p.herhaling as Herhaling : 'geen'
+  if (herhaling === 'geen' || Number.isNaN(start.getTime())) return planEen(tx, org, door, p, nu)
+  const m = nlMoment(start)
+  const datums = herhalingsDatums(m.datum, herhaling, p.herhalingTot ?? plusDagen(m.datum, 91))
+  if (datums.length < 2) return planEen(tx, org, door, { ...p, herhaling: 'geen' }, nu)
+  const reeksId = crypto.randomUUID()
+  const eerste = await planEen(tx, org, door, { ...p, reeksId }, nu)
+  for (const d of datums.slice(1)) await planEen(tx, org, door, { ...p, id: undefined, taskId: null, reeksId, start: nlTijdstip(d, m.uur, m.minuut).toISOString() }, nu)
+  return { ...eerste, aantal: datums.length, reeksId, tekst: `${datums.length} afspraken gepland, ${herhaling === 'wekelijks' ? 'elke week' : herhaling === 'tweewekelijks' ? 'om de week' : 'elke maand'} tot en met ${new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'long', timeZone: 'Europe/Amsterdam' }).format(nlTijdstip(datums[datums.length - 1]!, 12))}.` }
+}
+
+async function planEen(tx: Tx, org: string, door: Planner, p: PlanInvoer, nu = new Date()) {
   const [soort] = await rijen(tx, sql`select * from meetingsoorten where id = ${p.meetingsoortId} and actief`)
   if (!soort) fout(422, 'Kies een meetingsoort')
   // Intern overleg kan zonder klant; een klantafspraak niet.
@@ -146,15 +163,20 @@ export async function planAfspraak(tx: Tx, org: string, door: Planner, p: PlanIn
     const [al] = await rijen(tx, sql`select id from appointments where id = ${id}`)
     if (al) return { id, eerste: false, tekst: 'Deze afspraak stond al in de agenda.' }
   }
-  const data: Record<string, unknown> = { agenda: soort!.data.agenda ?? [], herinnering: p.herinneringMin ?? soort!.data.herinneringMin ?? 15, locatie, aanleiding: p.aanleiding ?? null, beschrijving: p.beschrijving ?? null, uitgenodigd: p.collegaUitnodigen ?? [], briefing: owner !== door.id ? `Gepland door ${door.naam}${p.aanleiding ? `: ${p.aanleiding}` : ''}` : null }
+  // Contact hoort bij de klant (anders niet koppelen); collega's uitnodigen: actieve gebruikers, niet de eigenaar.
+  const [ct] = p.contactId && a ? await rijen(tx, sql`select id from contacts where id = ${p.contactId} and account_id = ${a.id}`) : []
+  const uitgenodigd = [...new Set((p.collegaUitnodigen ?? []).filter((u) => typeof u === 'string' && u !== owner))].slice(0, 10)
+  const collegas = uitgenodigd.length ? (await rijen(tx, sql`select id from users where id = any(string_to_array(${uitgenodigd.join(',')}, ',')) and status = 'actief'`)).map((u) => u.id as string) : []
+  const titel = String(p.titel ?? '').trim().slice(0, 140) || null
+  const data: Record<string, unknown> = { titel, agenda: soort!.data.agenda ?? [], herinnering: p.herinneringMin ?? soort!.data.herinneringMin ?? 15, locatie, aanleiding: p.aanleiding ?? null, beschrijving: p.beschrijving ?? null, uitgenodigd: collegas, briefing: owner !== door.id ? `Gepland door ${door.naam}${p.aanleiding ? `: ${p.aanleiding}` : ''}` : null, ...(p.reeksId ? { reeksId: p.reeksId, herhaling: p.herhaling } : {}) }
   // Schrijven naar de gekoppelde agenda van de eigenaar, met meetinglink bij online.
   for (const k of await koppelingenVan(tx, owner)) {
-    const r = await provider(k.provider).schrijfAfspraak(k, { id, start: start.toISOString(), eind: eind.toISOString(), titel: a ? `${soort!.naam} · ${a.name}` : soort!.naam, meetinglink: vorm === 'online' })
+    const r = await provider(k.provider).schrijfAfspraak(k, { id, start: start.toISOString(), eind: eind.toISOString(), titel: afspraakTitel(titel, soort!.naam, a?.name), meetinglink: vorm === 'online' })
     data.externalIds = { ...(data.externalIds as object ?? {}), [k.provider]: r.externId }
     if (r.meetinglink && !data.meetinglink) data.meetinglink = r.meetinglink
   }
   await tx.execute(sql`insert into appointments (id, organisation_id, owner_id, gepland_door, account_id, contact_id, meetingsoort_id, vorm, status, start_at, end_at, task_id, data)
-    values (${id}, ${org}, ${owner}, ${door.id}, ${a?.id ?? null}, ${p.contactId ?? null}, ${soort!.id}, ${vorm}, 'gepland', ${start.toISOString()}, ${eind.toISOString()}, ${p.taskId ?? null}, ${JSON.stringify(data)}::jsonb)`)
+    values (${id}, ${org}, ${owner}, ${door.id}, ${a?.id ?? null}, ${ct?.id ?? null}, ${soort!.id}, ${vorm}, 'gepland', ${start.toISOString()}, ${eind.toISOString()}, ${p.taskId ?? null}, ${JSON.stringify(data)}::jsonb)`)
   // Gat 32: de taak waaruit je plande, is gekoppeld en sluit bij afronden.
   if (p.taskId) await tx.execute(sql`update tasks set data = data || ${JSON.stringify({ afspraakId: id })}::jsonb, updated_at = now() where id = ${p.taskId}`)
   // Gat 3: alleen de eerste niet-geannuleerde klantafspraak meldt eerste-afspraak-gepland.
@@ -171,7 +193,13 @@ export async function planAfspraak(tx: Tx, org: string, door: Planner, p: PlanIn
     await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${crypto.randomUUID()}, ${org}, ${owner}, 'systeem', 'Afspraak gemaakt door een collega voor jou',
       ${`${door.naam.replace(/^Testgebruiker /, '')} plande ${soort!.naam.toLowerCase()}${a ? ` met ${a.name}` : ''} op ${new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(start)}.`}, ${`/agenda?afspraak=${id}`}, now(), '{}'::jsonb)`)
   }
-  await schrijfAudit(tx, { organisationId: org, actorId: door.id, action: 'afspraak.plannen', resourceType: 'appointments', resourceId: id, changes: { owner, soort: soort!.slug, eerste } })
+  // Uitgenodigde collega's zien de afspraak in hun agenda (agendaVoor) en krijgen alleen bij de eerste van een reeks een melding.
+  const eersteVanReeks = !p.reeksId || !(await rijen(tx, sql`select 1 from appointments where data->>'reeksId' = ${p.reeksId} and id <> ${id} limit 1`)).length
+  for (const c of eersteVanReeks ? collegas : []) {
+    await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${crypto.randomUUID()}, ${org}, ${c}, 'systeem', 'Je bent uitgenodigd voor een afspraak',
+      ${`${door.naam.replace(/^Testgebruiker /, '')} nodigt je uit: ${afspraakTitel(titel, soort!.naam, a?.name)} op ${new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(start)}.`}, ${`/agenda?afspraak=${id}`}, now(), '{}'::jsonb)`)
+  }
+  await schrijfAudit(tx, { organisationId: org, actorId: door.id, action: 'afspraak.plannen', resourceType: 'appointments', resourceId: id, changes: { owner, soort: soort!.slug, eerste, contact: ct?.id ?? null, uitgenodigd: collegas.length, reeks: p.reeksId ?? null } })
   return { id, eerste, tekst: `Afspraak gepland${a ? ` met ${a.name}` : ''}, ${new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(start)}.` }
 }
 
@@ -191,7 +219,11 @@ export async function rondAfAfspraak(tx: Tx, org: string, afspraakId: string, do
   const eerste = !!ap!.account_id && ap!.type === 'klant' && !!ap!.soort_data?.eersteAfspraak && isEersteAfspraak(alle.map((x) => ({ id: x.id, accountId: x.account_id, status: x.status, start: new Date(x.start_at).toISOString(), meetingsoortType: x.type })), ap!.account_id, ap!.id)
   const m = meetingUitkomst({ accountNaam: ap!.account_naam, start: new Date(ap!.start_at).toISOString(), eerste }, { type: ap!.type, data: ap!.soort_data, naam: ap!.soort_naam }, inv.uitkomst, { ...inv, nu })
   if (m.fout) fout(400, m.fout)
-  const data = { ...(ap!.data ?? {}), verslag: { tekst: inv.verslag ?? '', bron: 'getypt', perAgendapunt: inv.agendapunten ?? [] }, overdragen: m.overdragen, vervolgstap: inv.vervolgstap?.trim() || null, afronding: { sleutel: inv.sleutel ?? null, door, op: nu.toISOString() } }
+  // Een verslag dat in het afspraakvenster al bewaard is, blijft staan als "Rond af" geen nieuw verslag meegeeft.
+  const eerder = String(ap!.data?.verslag?.tekst ?? '')
+  const verslagTekst = (inv.verslag ?? '').trim() ? String(inv.verslag) : eerder
+  inv = { ...inv, verslag: verslagTekst || null }
+  const data = { ...(ap!.data ?? {}), verslag: { tekst: verslagTekst, bron: ap!.data?.verslag?.bron ?? 'getypt', perAgendapunt: inv.agendapunten ?? [] }, overdragen: m.overdragen, vervolgstap: inv.vervolgstap?.trim() || null, afronding: { sleutel: inv.sleutel ?? null, door, op: nu.toISOString() } }
   await tx.execute(sql`update appointments set status = 'afgerond', uitkomst_code = ${inv.uitkomst}, uitkomst_op = ${nu.toISOString()}, data = ${JSON.stringify(data)}::jsonb, updated_at = now(), versie = versie + 1 where id = ${ap!.id}`)
   // Gat 32: de gekoppelde taak sluit.
   if (ap!.task_id) {
@@ -216,7 +248,10 @@ export async function rondAfAfspraak(tx: Tx, org: string, afspraakId: string, do
   }
   await schrijfAudit(tx, { organisationId: org, actorId: door, action: 'afspraak.afronden', resourceType: 'appointments', resourceId: ap!.id, changes: { uitkomst: inv.uitkomst, eerste } })
   // P19: de Notulist leest het verslag. In een savepoint: een fout in de analyse breekt het afronden nooit.
-  if (ap!.account_id && (inv.verslag ?? '').trim().length >= 20) {
+  // Al geanalyseerd in het venster met hetzelfde verslag: niet nog eens (scheelt credits).
+  const [heeftTranscript] = ap!.account_id ? await rijen(tx, sql`select 1 from transcripten where record_soort = 'appointments' and record_id = ${ap!.id} and bijlage_id is null limit 1`) : []
+  const alGeanalyseerd = !!ap!.data?.notulist?.op && verslagTekst === eerder
+  if (ap!.account_id && !alGeanalyseerd && (verslagTekst.trim().length >= 20 || heeftTranscript)) {
     await tx.transaction((sp) => analyseerVerslag(sp as unknown as Tx, org, ap!.id, nu)).catch((e) => console.error('notulist', (e as Error).message))
   }
   const label = (ap!.soort_data?.uitkomsten ?? []).find((u: any) => u.code === inv.uitkomst)?.label ?? inv.uitkomst
@@ -240,6 +275,28 @@ export async function zetAfspraakStatus(tx: Tx, org: string, afspraakId: string,
   return { status, eerste }
 }
 
+/** Verplaatsen (afspraakvenster): nieuw moment en duur, optioneel een nieuwe titel. Alleen een geplande afspraak. */
+export async function verplaatsAfspraak(tx: Tx, org: string, afspraakId: string, door: string, v: { start: string; duurMin?: number; titel?: string | null }, nu = new Date()) {
+  const [ap] = await rijen(tx, sql`select ap.*, m.naam as soort_naam, a.name as account_naam from appointments ap join meetingsoorten m on m.id = ap.meetingsoort_id left join accounts a on a.id = ap.account_id where ap.id = ${afspraakId}`)
+  if (!ap) fout(404, 'Afspraak niet gevonden')
+  if (ap!.status !== 'gepland') fout(409, 'Alleen een geplande afspraak kun je verplaatsen')
+  const start = new Date(v.start)
+  if (Number.isNaN(start.getTime())) fout(422, 'Kies een datum en starttijd')
+  const oudeDuur = Math.round((new Date(ap!.end_at).getTime() - new Date(ap!.start_at).getTime()) / 60_000)
+  const duur = Math.max(5, Math.min(480, Number(v.duurMin) || oudeDuur))
+  const eind = new Date(start.getTime() + duur * 60_000)
+  const titel = v.titel === undefined ? ap!.data?.titel ?? null : (String(v.titel ?? '').trim().slice(0, 140) || null)
+  const data = { ...(ap!.data ?? {}), titel, verplaatst: { van: new Date(ap!.start_at).toISOString(), door, op: nu.toISOString() } }
+  // De gekoppelde agenda krijgt het nieuwe moment (de mock overschrijft op hetzelfde id).
+  for (const k of await koppelingenVan(tx, ap!.owner_id)) {
+    const r = await provider(k.provider).schrijfAfspraak(k, { id: ap!.id, start: start.toISOString(), eind: eind.toISOString(), titel: afspraakTitel(titel, ap!.soort_naam, ap!.account_naam) })
+    data.externalIds = { ...(data.externalIds ?? {}), [k.provider]: r.externId }
+  }
+  await tx.execute(sql`update appointments set start_at = ${start.toISOString()}, end_at = ${eind.toISOString()}, data = ${JSON.stringify(data)}::jsonb, updated_at = now(), versie = versie + 1 where id = ${ap!.id}`)
+  await schrijfAudit(tx, { organisationId: org, actorId: door, action: 'afspraak.verplaatsen', resourceType: 'appointments', resourceId: ap!.id, changes: { van: new Date(ap!.start_at).toISOString(), naar: start.toISOString(), duur } })
+  return { id: ap!.id, start: start.toISOString(), eind: eind.toISOString(), tekst: `Verplaatst naar ${new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(start)}.` }
+}
+
 // ── Lezen ────────────────────────────────────────────────────────────────────
 
 export async function agendaVoor(tx: Tx, gebruikers: string[], van: Date, tot: Date) {
@@ -248,13 +305,14 @@ export async function agendaVoor(tx: Tx, gebruikers: string[], van: Date, tot: D
   const afs = await rijen(tx, sql`select ap.*, m.naam as soort_naam, m.slug, m.type, m.data->>'kleur' as kleur, a.name as account_naam, u.name as owner_naam, g.name as gepland_door_naam,
     trim(coalesce(c.first_name, '') || ' ' || coalesce(c.last_name, '')) as contact_naam
     from appointments ap join meetingsoorten m on m.id = ap.meetingsoort_id left join accounts a on a.id = ap.account_id join users u on u.id = ap.owner_id left join users g on g.id = ap.gepland_door left join contacts c on c.id = ap.contact_id
-    where ap.owner_id = any(string_to_array(${lijst}, ',')) and ap.end_at > ${van.toISOString()} and ap.start_at < ${tot.toISOString()} and ap.status <> 'geannuleerd' order by ap.start_at`)
+    where (ap.owner_id = any(string_to_array(${lijst}, ',')) or coalesce(ap.data->'uitgenodigd', '[]'::jsonb) ?| string_to_array(${lijst}, ',')) and ap.end_at > ${van.toISOString()} and ap.start_at < ${tot.toISOString()} and ap.status <> 'geannuleerd' order by ap.start_at`)
   // Afgeronde blokken komen mee (de agenda toont ze als hele-dag-item met het aantal gesprekken).
   const blokken = await rijen(tx, sql`select s.id, s.gebruiker_id, s.start_op, s.eind_op, s.status, greatest(coalesce((s.data->'resultaat'->>'gevoerd')::int, 0), jsonb_array_length(coalesce(s.data->'gesprekken', '[]'::jsonb)), (select count(*)::int from tasks t where t.belblok_id = s.id)) as gesprekken
     from belblok_sessies s where s.gebruiker_id = any(string_to_array(${lijst}, ',')) and s.eind_op > ${van.toISOString()} and s.start_op < ${tot.toISOString()} and s.status in ('gepland', 'bezig', 'klaar')`)
   const uitAfs = afs.map((x) => ({
     id: x.id, ownerId: x.owner_id, ownerNaam: x.owner_naam, geplandDoor: x.gepland_door !== x.owner_id ? x.gepland_door_naam : null, accountId: x.account_id, accountNaam: x.account_naam,
     soort: { naam: x.soort_naam, slug: x.slug, type: x.type, kleur: x.kleur }, vorm: x.vorm, status: x.status, start: new Date(x.start_at).toISOString(), eind: new Date(x.end_at).toISOString(), uitkomst: x.uitkomst_code, locatie: x.data?.locatie ?? null, meetinglink: x.data?.meetinglink ?? null, contactNaam: x.contact_naam || null,
+    contactId: x.contact_id ?? null, titel: x.data?.titel ?? null, uitgenodigd: x.data?.uitgenodigd ?? [],
   }))
   const bezet = gebruikers.length === 1 ? await bezetExtern(tx, gebruikers[0]!, van, tot) : []
   return {

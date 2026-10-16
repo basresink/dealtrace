@@ -7,7 +7,7 @@ export interface HelpArtikel {
   slug: string
   titel: string
   categorie: string
-  collectie: 'product' | 'newbusiness'
+  collectie: HelpCollectie
   samenvatting: string
   inhoud: string
   routes: string[]
@@ -17,11 +17,28 @@ export interface HelpArtikel {
   bijgewerktOp?: string
   /** Controlevragen (drie meerkeuzevragen), uit de sectie "## Controlevragen" van het Markdown-bestand. */
   vragen?: Controlevraag[]
+  /** Herkomst van de inhoud, bijvoorbeeld "Uit de whitepaper The Perfect Pitch" (frontmatter "bron"). */
+  bron?: string | null
 }
 export interface Controlevraag { vraag: string; opties: string[]; goed: number }
 
 export const CATEGORIEEN_PRODUCT = ['Aan de slag', 'Dagelijks werk', 'Prospects', 'Plannen en sturen', 'Inrichten', 'Voor de salesmanager'] as const
 export const CATEGORIEEN_NEWBUSINESS = ['Fundament', 'Voorbereiden', 'Bellen', 'Bezwaren', 'Schrijven', 'Op pad', 'Volhouden', 'Van afspraak naar overdracht', 'Jezelf verbeteren'] as const
+/**
+ * Nieuwe klanten werven: artikelen uit eigen vakliteratuur (eerst de whitepaper The Perfect Pitch, later
+ * het boek Sales Hunter). Een nieuwe bron krijgt een regel in WERVEN_BRONNEN en zo nodig een categorie hier.
+ */
+export const CATEGORIEEN_WERVEN = ['Waarom klanten kopen', 'Je pitch onderzoeken', 'Je verhaal schrijven', 'Openen en presenteren'] as const
+export const WERVEN_BRONNEN = { perfectPitch: 'Uit de whitepaper The Perfect Pitch' } as const
+
+export type HelpCollectie = 'product' | 'newbusiness' | 'werven'
+/** De drie collecties van het helpcenter: naam, overzichtspagina en categorieën. */
+export const COLLECTIES: Record<HelpCollectie, { naam: string; overzicht: string; categorieen: readonly string[] }> = {
+  product: { naam: 'Hoe werkt Dealtrace', overzicht: '/helpcenter/instructies', categorieen: CATEGORIEEN_PRODUCT },
+  newbusiness: { naam: 'New business', overzicht: '/helpcenter/academie', categorieen: CATEGORIEEN_NEWBUSINESS },
+  werven: { naam: 'Nieuwe klanten werven', overzicht: '/helpcenter/werven', categorieen: CATEGORIEEN_WERVEN },
+}
+export const isCollectie = (c: unknown): c is HelpCollectie => typeof c === 'string' && c in COLLECTIES
 /** "Aan de slag" op de startpagina: vijf vaste artikelen (F21). */
 export const AAN_DE_SLAG = ['je-eerste-dag-in-dealtrace', 'vandaag-lezen-en-afronden', 'een-belblok-uitvoeren-met-een-script', 'een-afspraak-plannen-afronden-en-overdragen', 'waarom-vijf-pogingen-werken'] as const
 export const FEEDBACK_REDENEN = ['Klopt niet', 'Onduidelijk', 'Mist iets', 'Anders'] as const
@@ -38,10 +55,10 @@ export function leesArtikel(slug: string, bron: string): HelpArtikel {
   }
   const { inhoud, vragen } = haalControlevragen((m ? bron.slice(m[0].length) : bron).trim())
   return {
-    slug, titel: ontquote(velden.titel ?? slug), categorie: velden.categorie ?? 'Aan de slag', collectie: velden.collectie === 'newbusiness' ? 'newbusiness' : 'product',
+    slug, titel: ontquote(velden.titel ?? slug), categorie: velden.categorie ?? 'Aan de slag', collectie: isCollectie(velden.collectie) ? velden.collectie : 'product',
     samenvatting: ontquote(velden.samenvatting ?? ''), inhoud, routes: (velden.routes ?? '').split(',').map((r) => r.trim()).filter(Boolean),
     features: FUNCTIES.filter((f) => f.helpartikel === slug).map((f) => f.sleutel),
-    niveau: laagsteStartNiveau(slug), vragen,
+    niveau: laagsteStartNiveau(slug), vragen, bron: velden.bron ? ontquote(velden.bron) : null,
   }
 }
 
@@ -134,8 +151,12 @@ function laagsteStartNiveau(slug: string): string | null {
   return null
 }
 
-/** Het helpartikel van een route: eerst een artikel dat de route noemt, anders het artikel van de zijbalkfunctie. */
-export function artikelVoorRoute(route: string, artikelen: Pick<HelpArtikel, 'slug' | 'routes'>[]): string | null {
+/**
+ * Het helpartikel van een route: eerst een artikel dat de route noemt, anders het artikel van de zijbalkfunctie.
+ * Artikelen uit Nieuwe klanten werven noemen een scherm alleen voor "Probeer het"; ze zijn nooit het artikel van een scherm.
+ */
+export function artikelVoorRoute(route: string, alleArtikelen: (Pick<HelpArtikel, 'slug' | 'routes'> & { collectie?: string })[]): string | null {
+  const artikelen = alleArtikelen.filter((a) => a.collectie !== 'werven')
   const [pad, query = ''] = route.split('?')
   const kandidaten = [route, pad!]
   for (const k of kandidaten) {
@@ -182,21 +203,22 @@ export function artikelenVoorDagpakket(functiesAan: string[], artikelen: Pick<He
 export const zoekNormaal = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
 
 // ── Beheer van artikelen (F21) ─────────────────────────────────────────────
-export interface ArtikelInvoer { titel: string; collectie: 'product' | 'newbusiness'; categorie: string; niveau?: string | null; samenvatting: string; inhoud: string; routes?: string[]; vragen?: Controlevraag[]; status: 'concept' | 'gepubliceerd' }
+export interface ArtikelInvoer { titel: string; collectie: HelpCollectie; categorie: string; niveau?: string | null; samenvatting: string; inhoud: string; routes?: string[]; vragen?: Controlevraag[]; status: 'concept' | 'gepubliceerd' }
 export const slugVan = (t: string) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80)
 
 // \u2500\u2500 Helpcenter-adressen (/helpcenter) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 /** Paden onder /helpcenter die geen artikel zijn; een eigen artikel krijgt zo'n slug nooit. */
-export const HELPCENTER_GERESERVEERD = ['instructies', 'academie', 'categorie'] as const
+export const HELPCENTER_GERESERVEERD = ['instructies', 'academie', 'werven', 'categorie'] as const
 /** Het adres van een artikel en van een categorie in het helpcenter. */
 export const helpLink = (slug: string) => `/helpcenter/${slug}`
 export const categorieLink = (categorie: string) => `/helpcenter/categorie/${slugVan(categorie)}`
 /** Categorie bij een slug uit de URL, of null. */
-export function categorieUitSlug(slug: string): { naam: string; collectie: 'product' | 'newbusiness' } | null {
-  const p = CATEGORIEEN_PRODUCT.find((c) => slugVan(c) === slug)
-  if (p) return { naam: p, collectie: 'product' }
-  const n = CATEGORIEEN_NEWBUSINESS.find((c) => slugVan(c) === slug)
-  return n ? { naam: n, collectie: 'newbusiness' } : null
+export function categorieUitSlug(slug: string): { naam: string; collectie: HelpCollectie } | null {
+  for (const [collectie, c] of Object.entries(COLLECTIES) as [HelpCollectie, (typeof COLLECTIES)[HelpCollectie]][]) {
+    const naam = c.categorieen.find((n) => slugVan(n) === slug)
+    if (naam) return { naam, collectie }
+  }
+  return null
 }
 /** E\u00e9n zin per categorie, onder de kop in het helpcenter. */
 export const CATEGORIE_UITLEG: Record<string, string> = {
@@ -215,19 +237,23 @@ export const CATEGORIE_UITLEG: Record<string, string> = {
   'Volhouden': 'De vierde en vijfde poging, nee als datapunt, referrals en netwerken.',
   'Van afspraak naar overdracht': 'De eerste afspraak, doorvragen, een vervolg, no-shows en een goede overdracht.',
   'Jezelf verbeteren': 'Je cijfers lezen, feedback vragen en een goede week.',
+  'Waarom klanten kopen': 'Waarom mensen willen veranderen, controle als koopmotief en wie je wel en niet pitcht.',
+  'Je pitch onderzoeken': 'Van eigenschap naar voordeel, klantsituaties, waardestatements en je klanten zelf vragen.',
+  'Je verhaal schrijven': 'Factoids en humanizers, je eigen testimonial, een userstory en je pitch in één zin.',
+  'Openen en presenteren': 'Aandacht vragen, de entree, de foray met je vragen en je product als oplossing.',
 }
-/** Controle vóór opslaan: titel, categorie bij de collectie, inhoud; een gepubliceerd new business-artikel heeft de vijf vaste onderdelen. */
+/** Controle vóór opslaan: titel, categorie bij de collectie, inhoud; een gepubliceerd new business- of wervingsartikel heeft de vijf vaste onderdelen. */
 export function controleerArtikel(a: Partial<ArtikelInvoer>): string[] {
   const f: string[] = []
   if (!a.titel || a.titel.trim().length < 4) f.push('Geef het artikel een titel')
-  if (a.collectie !== 'product' && a.collectie !== 'newbusiness') f.push('Kies een collectie')
-  const cats: readonly string[] = a.collectie === 'newbusiness' ? CATEGORIEEN_NEWBUSINESS : CATEGORIEEN_PRODUCT
+  if (!isCollectie(a.collectie)) f.push('Kies een collectie')
+  const cats: readonly string[] = COLLECTIES[isCollectie(a.collectie) ? a.collectie : 'product'].categorieen
   if (!a.categorie || !cats.includes(a.categorie)) f.push('Kies een categorie uit de collectie')
   if (a.niveau && !['beginner', 'gevorderd', 'expert'].includes(a.niveau)) f.push('Onbekend niveau')
   if (!a.inhoud?.trim()) f.push('Schrijf de inhoud')
-  if (a.status === 'gepubliceerd' && a.collectie === 'newbusiness' && a.inhoud) {
+  if (a.status === 'gepubliceerd' && (a.collectie === 'newbusiness' || a.collectie === 'werven') && a.inhoud) {
     const mist = ontbrekendeOnderdelen(a.inhoud)
-    if (mist.length) f.push(`Een new business-artikel heeft deze onderdelen nog nodig: ${mist.join(', ')}`)
+    if (mist.length) f.push(`Dit artikel heeft deze onderdelen nog nodig: ${mist.join(', ')}`)
   }
   for (const v of a.vragen ?? []) if (!v.vraag?.trim() || (v.opties ?? []).length < 2 || v.goed < 0 || v.goed >= v.opties.length) f.push('Elke controlevraag heeft minstens twee antwoorden en één goed antwoord')
   if (/[\u2013\u2014]/.test(`${a.titel ?? ''} ${a.samenvatting ?? ''} ${a.inhoud ?? ''}`)) f.push('Gebruik geen gedachtestreepjes')

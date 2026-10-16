@@ -2,8 +2,8 @@
 // Overzicht van één collectie (opzet van /helpcenter/instructies in DealDrive): kruimel terug naar het
 // helpcenter, een zoekveld dat binnen de artikelen van deze collectie filtert (met "x van y") en per
 // categorie een kop met de artikelen als kaarten. Je ziet alleen wat de server voor jouw rol teruggeeft.
-import { CATEGORIE_UITLEG, CATEGORIEEN_NEWBUSINESS, CATEGORIEEN_PRODUCT, categorieLink, zoekNormaal } from '~~/shared/help'
-const props = defineProps<{ collectie: 'product' | 'newbusiness' }>()
+import { CATEGORIE_UITLEG, COLLECTIES, type HelpCollectie, categorieLink, zoekNormaal } from '~~/shared/help'
+const props = defineProps<{ collectie: HelpCollectie }>()
 const { data } = await useFetch<any>('/api/help', { key: `help-overzicht-${props.collectie}`, query: { collectie: props.collectie }, default: () => ({ artikelen: [] }) })
 const zoekterm = ref('')
 const alle = computed<any[]>(() => data.value.artikelen)
@@ -12,7 +12,8 @@ const treffers = computed(() => {
   if (!t) return alle.value
   return alle.value.filter((a) => zoekNormaal(`${a.titel} ${a.samenvatting} ${a.categorie}`).includes(t))
 })
-const namen = computed<readonly string[]>(() => (props.collectie === 'product' ? CATEGORIEEN_PRODUCT : CATEGORIEEN_NEWBUSINESS))
+const namen = computed<readonly string[]>(() => COLLECTIES[props.collectie].categorieen)
+const voorbeeld: Record<HelpCollectie, string> = { product: 'bellijst, briefing of regel', newbusiness: 'voicemail, budget of overdracht', werven: 'pitch, waardestatement of foray' }
 const groepen = computed(() => namen.value.map((naam) => ({ naam, artikelen: treffers.value.filter((a) => a.categorie === naam) })).filter((g) => g.artikelen.length))
 </script>
 
@@ -21,10 +22,11 @@ const groepen = computed(() => namen.value.map((naam) => ({ naam, artikelen: tre
     <div class="container">
       <div class="ho-zoekrij">
         <label class="ho-zoekveld"><span class="sr-only">Zoek in deze artikelen</span><Icoon naam="Search" :grootte="18" class="ho-zoekicoon" />
-          <input v-model="zoekterm" type="search" class="ho-zoek" :placeholder="collectie === 'product' ? 'Zoek op onderwerp, bijvoorbeeld bellijst, briefing of regel' : 'Zoek op onderwerp, bijvoorbeeld voicemail, budget of overdracht'" data-test="overzicht-zoek"></label>
+          <input v-model="zoekterm" type="search" class="ho-zoek" :placeholder="`Zoek op onderwerp, bijvoorbeeld ${voorbeeld[collectie]}`" data-test="overzicht-zoek"></label>
         <span v-if="zoekterm.trim()" class="ho-telling tnum" data-test="overzicht-telling">{{ treffers.length }} van {{ alle.length }}</span>
       </div>
-      <p v-if="!groepen.length" class="ho-leeg" data-test="overzicht-leeg">Geen artikel gevonden voor "{{ zoekterm.trim() }}". Probeer een ander woord, of zoek in het <NuxtLink :to="{ path: '/helpcenter', query: { zoek: zoekterm.trim() } }" class="ho-inline">hele helpcenter</NuxtLink>.</p>
+      <p v-if="!alle.length" class="ho-leeg" data-test="overzicht-leeg">Hier staan nog geen artikelen. Ze volgen; tot die tijd vind je veel in het <NuxtLink to="/helpcenter" class="ho-inline">helpcenter</NuxtLink>.</p>
+      <p v-else-if="!groepen.length" class="ho-leeg" data-test="overzicht-leeg">Geen artikel gevonden voor "{{ zoekterm.trim() }}". Probeer een ander woord, of zoek in het <NuxtLink :to="{ path: '/helpcenter', query: { zoek: zoekterm.trim() } }" class="ho-inline">hele helpcenter</NuxtLink>.</p>
       <HelpGroep v-for="g in groepen" :key="g.naam" :titel="g.naam" :uitleg="CATEGORIE_UITLEG[g.naam]" :link="categorieLink(g.naam)" link-tekst="Alleen deze categorie" :data-test="`groep-${g.naam}`">
         <HelpKaart v-for="a in g.artikelen" :key="a.id" :artikel="a" />
       </HelpGroep>

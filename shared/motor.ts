@@ -15,6 +15,8 @@ export interface MotorGebruiker { id: string; naam: string; rol: string; werkple
 
 export interface NieuweTaak {
   regelId: string; onderwerp: string; accountId: string; ownerId: string; title: string; actionType: string; priority: string
+  /** Het primaire contact van het account (beslisser), zodat de taak ook op de contactkaart staat. */
+  contactId?: string | null
   due: string; waarom: string; bewijs: string[]; herkomst: 'regel' | 'ritme' | 'startactiviteit'; geschoven?: boolean
   poging?: { n: number; van: number; kanaal?: string | null }
 }
@@ -207,7 +209,7 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
         const landing = landingsmoment({ termijnWerkdagen: regel.data.gevolg.termijnWerkdagen, gebiedId: a.gebiedId }, { werkplek: g?.werkplek ?? 'binnendienst' }, blokken, regiodagenVan(a.ownerId), nu, inv.werkdagen)
         const vervolg = regel.data.trigger.patroon === 'hercontact-vervolg' && a.ritme
         taken.push({
-          regelId: regel.id, onderwerp: sleutel, accountId: a.id, ownerId: owner,
+          regelId: regel.id, onderwerp: sleutel, accountId: a.id, contactId: a.contactId ?? null, ownerId: owner,
           title: vervolg ? `Poging ${a.ritme!.poging}: ${a.naam}` : titel,
           actionType: vervolg ? ACTIE_VAN_KANAAL[a.ritme!.kanaal ?? 'bellen'] ?? 'bellen' : regel.data.gevolg.actiesoort, priority: regel.prioriteit,
           due: landing.toISOString(), waarom, bewijs: u.bewijs,
@@ -235,7 +237,7 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
           const landing = landingsmoment({ termijnWerkdagen: s.termijnWerkdagen, gebiedId: a.gebiedId }, { werkplek: g?.werkplek ?? 'binnendienst' }, blokken, regiodagenVan(a.ownerId), nu, inv.werkdagen)
           const actionType = s.actiesoort === 'bellen' || s.actiesoort === 'bezoek' ? s.actiesoort : s.actiesoort === 'mail' ? 'mailen' : 'taak'
           taken.push({
-            regelId: 'start', onderwerp: sleutel, accountId: a.id, ownerId: owner, title: `${s.naam}: ${a.naam}`, actionType, priority: 'middel',
+            regelId: 'start', onderwerp: sleutel, accountId: a.id, contactId: a.contactId ?? null, ownerId: owner, title: `${s.naam}: ${a.naam}`, actionType, priority: 'middel',
             due: landing.toISOString(), waarom: `Startactiviteit bij het betreden van de fase.`, bewijs: [`${ev.gebeurtenis} ${ev.op.slice(0, 10)}`], herkomst: 'startactiviteit',
           })
         }

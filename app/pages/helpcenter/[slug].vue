@@ -4,7 +4,7 @@
 // blok per kop), controlevragen, "Markeer als gelezen", "Was dit nuttig?", "Ook in deze categorie" en een
 // voet. Gelezen na scrollen tot het einde of met de knop, via de wachtrij (ook offline). Lezen is nergens
 // een voorwaarde.
-import { categorieLink, FEEDBACK_REDENEN, helpLink, isGelezen } from '~~/shared/help'
+import { categorieLink, COLLECTIES, FEEDBACK_REDENEN, helpLink, isCollectie, isGelezen } from '~~/shared/help'
 import { markdownNaarHtml } from '~~/shared/markdown'
 import { NIVEAU_LABEL, type Niveau } from '~~/shared/types'
 const route = useRoute()
@@ -21,7 +21,7 @@ const blokken = computed(() => {
   return { inleiding, blokken: delen.map((d) => { const m = /^<h3>([\s\S]*?)<\/h3>/.exec(d); return { kop: m?.[1] ?? '', inhoud: m ? d.slice(m[0].length) : d } }) }
 })
 const leestijd = computed(() => a.value?.leestijd ?? 1)
-const collectieNaam = computed(() => (a.value?.collectie === 'newbusiness' ? 'New business' : 'Hoe werkt Dealtrace'))
+const collectieNaam = computed(() => { const c: unknown = a.value?.collectie; return COLLECTIES[isCollectie(c) ? c : 'product'].naam })
 const datum = (iso: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso))
 // useFetch geeft een ondiepe ref: "gelezen" houden we apart bij.
 const gelezenNu = ref(false)
@@ -85,6 +85,7 @@ useHead({ title: () => `${a.value?.titel ?? 'Artikel'} · Helpcenter · Dealtrac
           <span v-if="gelezenNu" class="ha-gelezen"><Icoon naam="CircleCheck" :grootte="14" />Gelezen</span>
           <span v-if="a.status === 'concept'" class="pil pil--geel">Concept</span>
         </p>
+        <p v-if="a.bron" class="ha-bron" data-test="artikel-bron"><Icoon naam="BookOpen" :grootte="14" />{{ a.bron }}</p>
         <p v-if="a.nietAan" class="ha-voorwie" data-test="niet-aan"><span class="ha-voorwie-label">Let op</span>{{ a.nietAan }}</p>
         <div v-if="beheerder" class="ha-bekijkals" data-test="bekijk-als"><span class="ha-bekijkals-label">Bekijk als</span>
           <NuxtLink v-for="n in ['beginner', 'gevorderd', 'expert']" :key="n" :to="{ query: { alsNiveau: alsNiveau === n ? undefined : n } }" class="filter-pil" :class="{ 'filter-pil--aan': alsNiveau === n }">{{ NIVEAU_LABEL[n as Niveau] }}</NuxtLink></div>
@@ -153,6 +154,7 @@ useHead({ title: () => `${a.value?.titel ?? 'Artikel'} · Helpcenter · Dealtrac
 .ha-titel { font-family: var(--font-serif); font-size: clamp(26px, 4vw, 38px); line-height: 1.15; font-weight: 700; margin: 12px 0 8px; color: var(--ink); overflow-wrap: anywhere; }
 .ha-samenvatting { margin: 0 0 10px; font-size: 15px; line-height: 1.6; color: var(--ink-soft); max-width: 64ch; }
 .ha-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 18px; font-size: 12px; color: var(--muted); }
+.ha-bron { display: flex; align-items: center; gap: 6px; margin: -8px 0 18px; font-size: 12px; font-style: italic; color: var(--muted); }
 .ha-gelezen { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 11px; color: var(--green); }
 .ha-voorwie { margin: 0 0 18px; padding: 12px 16px; background: var(--surface); border-left: 3px solid var(--yellow); font-size: 13px; line-height: 1.55; color: var(--ink-soft); max-width: 66ch; }
 .ha-voorwie-label { display: block; font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }

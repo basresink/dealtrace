@@ -173,3 +173,38 @@ export function conflicten(afspraken: { id: string; ownerId: string; start: stri
   }
   return uit
 }
+
+// ── Herhaling en titel (plannen in de opzet van DealDrive) ──────────────────
+
+export type Herhaling = 'geen' | 'wekelijks' | 'tweewekelijks' | 'maandelijks'
+export const HERHALINGEN: { code: Herhaling; label: string }[] = [
+  { code: 'geen', label: 'Geen' }, { code: 'wekelijks', label: 'Wekelijks' }, { code: 'tweewekelijks', label: 'Om de week' }, { code: 'maandelijks', label: 'Maandelijks' },
+]
+/**
+ * Alle datums van een reeks, de eerste voorop. Maandelijks valt op dezelfde dag van de maand; bestaat
+ * die dag niet (31 in februari), dan de laatste dag van die maand. Hooguit 52 afspraken.
+ */
+export function herhalingsDatums(eerste: string, herhaling: Herhaling, tot?: string | null): string[] {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(eerste)) return []
+  if (herhaling === 'geen' || !tot || tot < eerste) return [eerste]
+  const uit = [eerste]
+  const [j, m, d] = eerste.split('-').map(Number) as [number, number, number]
+  for (let n = 1; uit.length < 52; n++) {
+    let datum: string
+    if (herhaling === 'maandelijks') {
+      const mi = m - 1 + n
+      const jaar = j + Math.floor(mi / 12)
+      const maand = (mi % 12) + 1
+      const laatste = new Date(Date.UTC(jaar, maand, 0)).getUTCDate()
+      datum = `${jaar}-${String(maand).padStart(2, '0')}-${String(Math.min(d, laatste)).padStart(2, '0')}`
+    } else datum = plusDagen(eerste, (herhaling === 'wekelijks' ? 7 : 14) * n)
+    if (datum > tot) break
+    uit.push(datum)
+  }
+  return uit
+}
+/** De titel van een afspraak: wat de gebruiker koos, anders soort en klant. */
+export function afspraakTitel(titel: string | null | undefined, soortNaam: string, accountNaam?: string | null): string {
+  const t = String(titel ?? '').trim()
+  return t || (accountNaam ? `${soortNaam} · ${accountNaam}` : soortNaam)
+}

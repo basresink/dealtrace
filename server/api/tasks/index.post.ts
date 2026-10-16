@@ -1,9 +1,10 @@
-// POST /api/tasks: nieuwe taak ("Wat moet er gebeuren?"). Beginner: klant, titel, actiesoort,
-// vervaldatum (en de contactpersoon vanaf de contactkaart). Gevorderd ook prioriteit, toegewezen aan, herhaling,
-// herinnering en beschrijving. Standaard het volgende hele werkuur.
+// POST /api/tasks: nieuwe taak ("Wat moet er gebeuren?"). Beginner: klant, contactpersoon, titel,
+// actiesoort en vervaldatum. Gevorderd ook prioriteit (laag, middel, hoog, urgent), toegewezen aan,
+// aanleiding, herhaling, herinnering en beschrijving. Standaard het volgende hele werkuur. Een
+// contactpersoon zonder klant neemt de klant van het contact mee.
 import { eq } from 'drizzle-orm'
 import { volgendWerkmoment } from '../../../shared/datum'
-import { ACTIETYPES } from '../../../shared/taken'
+import { ACTIETYPES, isPrioriteit } from '../../../shared/taken'
 import { kan } from '../../utils/accounts'
 import { metOrganisatie, schema } from '../../utils/db'
 import { vereisFunctie } from '../../utils/sessie'
@@ -22,7 +23,8 @@ export default defineEventHandler(async (event) => {
     const werkdagen = ((await tx.select().from(schema.orgSettings).where(eq(schema.orgSettings.key, 'werkdagen')))[0]?.value as any) ?? {}
     const ownerId = gevorderd && b?.ownerId ? String(b.ownerId) : ctx.gebruiker.id
     if (ownerId !== ctx.gebruiker.id && !(await magTaak(tx, ctx, ownerId))) throw createError({ statusCode: 403, statusMessage: 'Je wijst alleen taken toe binnen je team' })
-    if (b?.accountId) { const [a] = await tx.select({ id: schema.accounts.id }).from(schema.accounts).where(eq(schema.accounts.id, b.accountId)); if (!a) throw createError({ statusCode: 422, statusMessage: 'Account onbekend' }) }
+    let accountId: string | null = b?.accountId ? String(b.accountId) : null
+    if (accountId) { const [a] = await tx.select({ id: schema.accounts.id }).from(schema.accounts).where(eq(schema.accounts.id, accountId)); if (!a) throw createError({ statusCode: 422, statusMessage: 'Account onbekend' }) }
     const due = b?.dueDate && !Number.isNaN(Date.parse(b.dueDate)) ? new Date(b.dueDate).toISOString() : volgendWerkmoment(new Date(), werkdagen).toISOString()
     const data: Record<string, unknown> = { herkomst: { bron: b?.signalId ? 'inzicht' : b?.herkomst === 'assistent' ? 'AI-assistent' : 'handmatig', actiesoort: actionType, uitvoerder: ownerId } }
     if (gevorderd && HERHALING.includes(b?.herhaling)) data.herhaling = { soort: b.herhaling, teller: 1, max: Math.min(52, Math.max(1, Number(b.herhalingMax) || 52)) }
@@ -31,10 +33,15 @@ export default defineEventHandler(async (event) => {
     if (b?.aanleiding) data.aanleiding = String(b.aanleiding).slice(0, 500)
     // De contactpersoon (vanaf de contactkaart voor iedereen) moet bij het account horen.
     let contactId: string | null = null
-    if (b?.contactId) { const [c] = await tx.select({ id: schema.contacts.id, accountId: schema.contacts.accountId }).from(schema.contacts).where(eq(schema.contacts.id, b.contactId)); if (!c || (b?.accountId && c.accountId !== b.accountId)) throw createError({ statusCode: 422, statusMessage: 'Contact hoort niet bij dit account' }); contactId = c.id }
+    if (b?.contactId) {
+      const [c] = await tx.select({ id: schema.contacts.id, accountId: schema.contacts.accountId }).from(schema.contacts).where(eq(schema.contacts.id, String(b.contactId)))
+      if (!c || (accountId && c.accountId !== accountId)) throw createError({ statusCode: 422, statusMessage: 'Contact hoort niet bij dit account' })
+      contactId = c.id
+      accountId ??= c.accountId
+    }
     const [t] = await tx.insert(schema.tasks).values({
-      organisationId: ctx.organisatie.id, ownerId, accountId: b?.accountId || null, contactId, title: title.slice(0, 200),
-      actionType, priority: gevorderd && ['hoog', 'middel', 'laag'].includes(b?.priority) ? b.priority : 'middel', dueDate: due, executor: 'mens', data,
+      organisationId: ctx.organisatie.id, ownerId, accountId, contactId, title: title.slice(0, 200),
+      actionType, priority: gevorderd && isPrioriteit(b?.priority) ? b.priority : 'middel', dueDate: due, executor: 'mens', data,
     }).returning()
     return t
   })

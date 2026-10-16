@@ -1,5 +1,6 @@
 // GET /api/tasks/:id: de taakflyout: taak, aanleiding, "Waarom krijg ik dit?", poging,
-// klant in context en het ritme (zodat de telefoon de volgende poging kan voorspellen).
+// klant in context, de contactpersoon van de taak (contact_id), herinnering en herhaling, en het ritme
+// (zodat de telefoon de volgende poging kan voorspellen).
 import { desc, eq } from 'drizzle-orm'
 import { metOrganisatie, schema } from '../../../utils/db'
 import { laadRitmes } from '../../../utils/reis'
@@ -15,6 +16,7 @@ export default defineEventHandler(async (event) => {
     const [a] = t.accountId ? await tx.select().from(schema.accounts).where(eq(schema.accounts.id, t.accountId)) : []
     const contacten = a ? await tx.select().from(schema.contacts).where(eq(schema.contacts.accountId, a.id)) : []
     const primair = contacten.find((c) => c.rol === 'beslisser' && c.status !== 'vertrokken') ?? contacten.find((c) => c.status !== 'vertrokken')
+    const tc = !t.contactId ? undefined : contacten.find((c) => c.id === t.contactId) ?? (await tx.select().from(schema.contacts).where(eq(schema.contacts.id, t.contactId)))[0]
     const laatste = a ? await tx.select().from(schema.activiteiten).where(eq(schema.activiteiten.accountId, a.id)).orderBy(desc(schema.activiteiten.op)).limit(5) : []
     const reizen = a?.reisId ? await tx.select().from(schema.reistemplates).where(eq(schema.reistemplates.id, a.reisId)) : []
     const f = reizen[0]?.data.fases.find((x) => x.id === a?.faseId)
@@ -31,11 +33,15 @@ export default defineEventHandler(async (event) => {
       agent: d.agent ?? null, mandaat: d.mandaat ?? null, executorStatus: t.executorStatus ?? null,
       regel: regel ? { naam: regel.naam, code: regel.code } : null, inzicht: inzicht ? { id: inzicht.id, title: inzicht.title, bron: inzicht.bron } : null,
       account: a ? {
-        id: a.id, naam: a.name, score: a.score, klasse: a.klasse, status: a.nbStatus, fase: f ? { label: f.label, kleur: f.kleur, accent: f.accent } : null,
-        primair: primair ? { naam: `${primair.firstName ?? ''} ${primair.lastName}`.trim(), telefoon: primair.data?.mobiel ?? primair.data?.telefoon ?? null, email: primair.email, belMeNiet: !!primair.data?.belMeNiet } : null,
+        id: a.id, naam: a.name, plaats: a.city ?? null, score: a.score, klasse: a.klasse, status: a.nbStatus, fase: f ? { label: f.label, kleur: f.kleur, accent: f.accent } : null,
+        primair: primair ? { id: primair.id, naam: `${primair.firstName ?? ''} ${primair.lastName}`.trim(), telefoon: primair.data?.mobiel ?? primair.data?.telefoon ?? null, email: primair.email, belMeNiet: !!primair.data?.belMeNiet } : null,
         telefoon: a.data?.telefoon ?? null,
         laatste: laatste.map((x) => ({ soort: x.soort, uitkomst: x.uitkomst, op: x.op })),
       } : null,
+      contactId: t.contactId ?? null,
+      contact: tc ? { id: tc.id, naam: `${tc.firstName ?? ''} ${tc.lastName}`.trim(), functie: tc.data?.functie ?? null, rol: tc.rol, telefoon: tc.data?.mobiel ?? tc.data?.telefoon ?? null, email: tc.email, belMeNiet: !!tc.data?.belMeNiet } : null,
+      herinnering: d.herinnering?.minuten ? { minuten: d.herinnering.minuten, kanaal: d.herinnering.kanaal ?? 'in-app' } : null,
+      herhaling: d.herhaling ?? null,
       ritme: ritme && stand ? { naam: ritme.naam, stand, def: ritme } : null,
       kan: { afronden: await magTaak(tx, ctx, t.ownerId) || t.ownerId === null, verwijderen: ctx.gebruiker.rol === 'beheerder' },
     }

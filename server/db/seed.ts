@@ -142,6 +142,10 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
     // Testgebruiker Eva Ervaren (u-07): een gevulde werkplek voor de komende vier weken. Na de
     // campagnes en het team, zodat die sets niet veranderen.
     await seedEva(client, org.id)
+    // Taken bij een account krijgen het primaire contact (de beslisser, anders het eerste actieve contact)
+    // als contact_id, zodat de tabbladen op de contactkaart gevuld zijn. Alleen waar nog geen contact staat.
+    await client.query(`update tasks t set contact_id = (select c.id from contacts c where c.account_id = t.account_id and c.status <> 'vertrokken' order by (c.rol = 'beslisser') desc, c.created_at, c.id limit 1)
+      where t.organisation_id = $1 and t.contact_id is null and t.account_id is not null`, [org.id])
 
     // P11: Voltvast heeft een (mock-)KvK-sleutel; Tweede niet, zodat "niet gekoppeld" te zien is.
     // De buitendienst heeft een thuisbasis voor het werkgebied met een straal.

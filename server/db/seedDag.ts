@@ -58,5 +58,9 @@ export async function seedDag(client: pg.Client, orgId: string, nu = new Date())
       values ($1, $2, 'u-05', $3, $4, $5, $6, 'gepland', $7, $8, $9) on conflict (id) do nothing`,
     [id, orgId, door, account, ms, vorm, start.toISOString(), new Date(start.getTime() + duur * 60_000).toISOString(), JSON.stringify({ aanleiding, herinnering: 15, briefing: door !== 'u-05' ? `Gepland door Sanne: ${aanleiding}` : null, herkomst: 'seed' })])
   }
+  // Elke afspraak met een klant hoort bij een contact: de beslisser van het account (anders het eerste
+  // actieve contact), zodat de afspraak ook op de contactkaart staat. Ook voor rijen die er al stonden.
+  await client.query(`update appointments ap set contact_id = (select c.id from contacts c where c.account_id = ap.account_id and c.status <> 'vertrokken' order by (c.rol = 'beslisser') desc, c.last_name limit 1)
+    where ap.organisation_id = $1 and ap.account_id is not null and ap.contact_id is null and ap.data->>'herkomst' = 'seed'`, [orgId])
   await client.query(`insert into org_settings (organisation_id, key, value) values ($1, 'agendaKoppeling', '{"aan": true}') on conflict (organisation_id, key) do nothing`, [orgId])
 }

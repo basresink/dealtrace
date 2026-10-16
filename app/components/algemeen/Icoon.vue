@@ -7,7 +7,7 @@ import {
   PanelLeft, Pencil, Phone, Plus, RefreshCw, Route, ScrollText, Search, Server, Settings, Sparkles, SquareCheck,
   UserCog, UserPlus, Users, UsersRound, WifiOff, X, Bell, Smartphone, KeyRound,
   Globe, Mail, MessageCircle, Navigation, Ellipsis, ArrowLeft, ArrowRight, Trash2, GripVertical, Download, Merge, LayoutList, LayoutGrid,
-  List, ArrowUpDown, Star, Ban, Link, Linkedin, Info, Save, UserX, Bookmark, PhoneOff, Briefcase, Clock, StickyNote, Pause, CircleX, CircleDot, Mic, Volume2, VolumeX, Camera, Square, LocateFixed, Inbox, TriangleAlert, Handshake, CircleUser, ChevronUp, Upload, FileText, Image, File, SlidersHorizontal, ExternalLink, Database, ShieldCheck, Copy, ListTodo,
+  List, ArrowUpDown, Star, Ban, Link, Linkedin, Info, Save, UserX, Bookmark, PhoneOff, Briefcase, Clock, StickyNote, Pause, CircleX, CircleDot, Mic, Volume2, VolumeX, Camera, Square, LocateFixed, Inbox, TriangleAlert, Handshake, CircleUser, ChevronUp, Upload, FileText, Image, File, SlidersHorizontal, ExternalLink, Database, ShieldCheck, Copy, ListTodo, ClipboardCheck,
 } from 'lucide-vue-next'
 
 const ICONEN = {
@@ -16,7 +16,7 @@ const ICONEN = {
   PanelLeft, Pencil, Phone, Plus, RefreshCw, Route, ScrollText, Search, Server, Settings, Sparkles, SquareCheck,
   UserCog, UserPlus, Users, UsersRound, WifiOff, X, Bell, Smartphone, KeyRound,
   Globe, Mail, MessageCircle, Navigation, Ellipsis, ArrowLeft, ArrowRight, Trash2, GripVertical, Download, Merge, LayoutList, LayoutGrid,
-  List, ArrowUpDown, Star, Ban, Link, Linkedin, Info, Save, UserX, Bookmark, PhoneOff, Briefcase, Clock, StickyNote, Pause, CircleX, CircleDot, Mic, Volume2, VolumeX, Camera, Square, LocateFixed, Inbox, TriangleAlert, Handshake, CircleUser, ChevronUp, Upload, FileText, Image, File, SlidersHorizontal, ExternalLink, Database, ShieldCheck, Copy, ListTodo,
+  List, ArrowUpDown, Star, Ban, Link, Linkedin, Info, Save, UserX, Bookmark, PhoneOff, Briefcase, Clock, StickyNote, Pause, CircleX, CircleDot, Mic, Volume2, VolumeX, Camera, Square, LocateFixed, Inbox, TriangleAlert, Handshake, CircleUser, ChevronUp, Upload, FileText, Image, File, SlidersHorizontal, ExternalLink, Database, ShieldCheck, Copy, ListTodo, ClipboardCheck,
 } as const
 
 const props = defineProps<{ naam: string; grootte?: number }>()

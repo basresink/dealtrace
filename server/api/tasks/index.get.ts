@@ -22,12 +22,16 @@ export default defineEventHandler(async (event) => {
     const rijen = await tx.select().from(schema.tasks).where(and(inArray(schema.tasks.status, status), or(inArray(schema.tasks.ownerId, owners), owners.includes(ctx.gebruiker.id) ? isNull(schema.tasks.ownerId) : undefined)))
     const accountIds = [...new Set(rijen.map((t) => t.accountId).filter(Boolean))] as string[]
     const accounts = accountIds.length ? await tx.select({ id: schema.accounts.id, naam: schema.accounts.name, faseId: schema.accounts.faseId, reisId: schema.accounts.reisId, nbStatus: schema.accounts.nbStatus, klasse: schema.accounts.klasse }).from(schema.accounts).where(inArray(schema.accounts.id, accountIds)) : []
+    const contactIds = [...new Set(rijen.map((t) => t.contactId).filter(Boolean))] as string[]
+    const contacten = contactIds.length ? await tx.select({ id: schema.contacts.id, voornaam: schema.contacts.firstName, achternaam: schema.contacts.lastName }).from(schema.contacts).where(inArray(schema.contacts.id, contactIds)) : []
+    const contactPer = new Map(contacten.map((c) => [c.id, `${c.voornaam ?? ''} ${c.achternaam}`.trim()]))
     const reizen = await tx.select({ id: schema.reistemplates.id, data: schema.reistemplates.data }).from(schema.reistemplates)
     const fase = (a?: typeof accounts[number]) => { const f = reizen.find((r) => r.id === a?.reisId)?.data.fases.find((x) => x.id === a?.faseId); return f ? { id: f.id, label: f.label, kleur: f.kleur } : null }
     const per = new Map(accounts.map((a) => [a.id, a]))
     const herkomst = (t: typeof rijen[number]) => { const h = (t.data as any)?.herkomst; return typeof h === 'string' ? h : h?.bron ?? (t.signalId ? 'inzicht' : t.ruleId ? 'regel' : 'handmatig') }
     let lijst = rijen.map((t) => ({
       id: t.id, title: t.title, status: t.status, actionType: t.actionType, priority: t.priority, dueDate: t.dueDate, ownerId: t.ownerId, accountId: t.accountId,
+      contact: t.contactId && contactPer.has(t.contactId) ? { id: t.contactId, naam: contactPer.get(t.contactId)! } : null,
       account: t.accountId ? { id: t.accountId, naam: per.get(t.accountId)?.naam ?? null, fase: fase(per.get(t.accountId)), status: per.get(t.accountId)?.nbStatus ?? null } : null,
       herkomst: herkomst(t), poging: (t.data as any)?.poging ?? null, waarom: (t.data as any)?.waarom ?? null, eigenaar: users.find((u) => u.id === t.ownerId)?.naam ?? null,
       achterstallig: isAchterstallig(t, nu), groep: groepVan(t, nu), aanleiding: (t.data as any)?.aanleiding ?? null,
@@ -48,7 +52,7 @@ export default defineEventHandler(async (event) => {
     if (lijstVan('actiesoort').length) lijst = lijst.filter((t) => lijstVan('actiesoort').includes(t.actionType))
     if (lijstVan('herkomst').length) lijst = lijst.filter((t) => lijstVan('herkomst').includes(t.herkomst))
     if (lijstVan('fase').length) lijst = lijst.filter((t) => t.account?.fase && lijstVan('fase').includes(t.account.fase.id))
-    if (q.q) lijst = lijst.filter((t) => `${t.title} ${t.account?.naam ?? ''}`.toLowerCase().includes(q.q!.toLowerCase()))
+    if (q.q) lijst = lijst.filter((t) => `${t.title} ${t.account?.naam ?? ''} ${t.contact?.naam ?? ''}`.toLowerCase().includes(q.q!.toLowerCase()))
     const geordend = ordenTaken(lijst, nu)
     const h = kan(ctx, 'taken.horizon') ? horizon(geordend, nu) : null
     return {

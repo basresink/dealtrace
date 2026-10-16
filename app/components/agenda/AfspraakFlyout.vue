@@ -1,37 +1,79 @@
 <script setup lang="ts">
-// Afspraakflyout (F09): kicker met soort en status, wanneer, wie, locatie of link, klant in context,
-// wie zit erbij, doel en agenda, Pitstop (P18) en verslag. Na afloop "Rond af": uitkomst (raster van
-// 56 px), verslag, per agendapunt besproken of niet, en de volgende stap. Op de telefoon een
-// schuifvenster met de plakkende actiebalk Bellen, Mail, WhatsApp, Navigeer.
+// Afspraakvenster in de opzet van DealDrive (/bezoeken): kicker met de kleur van de meetingsoort en de
+// status, de titel, klant en contact met links naar hun kaart, een definitielijst (wanneer, toegewezen
+// aan, klant, contactpersoon, beschrijving, locatie, meeting, uitgenodigd, herhaling, herinnering),
+// klant in context, wie zit erbij, doel en voorbereiding, de Pitstop en het blok "Transcript en
+// gespreksverslag": een transcript uploaden of plakken, het verslag schrijven of inspreken en de
+// analyse van de Notulist (samenvatting, actiepunten als concepttaak, koopsignalen als inzicht). Na
+// afloop "Rond af" (uitkomst, per agendapunt besproken, vervolgstap; een eerste afspraak met vervolg
+// opent Overdragen). Verplaatsen, Niet verschenen en Annuleer in de voet. Op de telefoon een
+// schuifvenster met de actiebalk Bellen, Mail, WhatsApp, Navigeer.
 import { NEE_REDENEN } from '~~/shared/nbStatus'
 import { spreekBriefing } from '~~/shared/spreek'
+import { TRANSCRIPT_MAX_BYTES, magTranscript, telWoorden, transcriptUitBestand } from '~~/shared/transcript'
 const props = defineProps<{ open: boolean; afspraakId: string | null }>()
 const emit = defineEmits<{ sluit: []; gewijzigd: [] }>()
 const toast = useToast()
+const route = useRoute()
 const { voegToe } = useSyncQueue()
 const a = ref<any>(null)
 const ov = ref<{ accountId: string; naam: string; vervolgstap: string } | null>(null)
 const afronden = ref(false)
+const verplaatsen = ref(false)
 const bezig = ref(false)
-const f = reactive({ uitkomst: '', verslag: '', laterOp: '', reden: '', toelichting: '', vervolgstap: '', punten: [] as { punt: string; besproken: boolean }[] })
-async function laad() { a.value = props.afspraakId ? await $fetch(`/api/afspraken/${props.afspraakId}`).catch(() => null) : null }
+const f = reactive({ uitkomst: '', laterOp: '', reden: '', toelichting: '', vervolgstap: '', punten: [] as { punt: string; besproken: boolean }[] })
+const vp = reactive({ datum: '', start: '', duurMin: 30, titel: '' })
+// Transcript en gespreksverslag.
+const verslag = ref('')
+const transcriptConcept = ref('')
+const transcriptNaam = ref<string | null>(null)
+const transcriptMelding = ref('')
+const transcriptFout = ref('')
+const sleepActief = ref(false)
+const bestandInput = ref<HTMLInputElement | null>(null)
+const bewaartVerslag = ref(false)
+const bewaartTranscript = ref(false)
+const analyseert = ref(false)
+const analyseReden = ref('')
+
+async function laad() { a.value = props.afspraakId ? await $fetch<any>(`/api/afspraken/${props.afspraakId}`).catch(() => null) : null }
 watch(() => [props.open, props.afspraakId], async ([o]) => {
   if (!o) return
-  afronden.value = false; Object.assign(f, { uitkomst: '', verslag: '', laterOp: '', reden: '', toelichting: '', vervolgstap: '' })
+  afronden.value = false; verplaatsen.value = false; analyseReden.value = ''
+  Object.assign(f, { uitkomst: '', laterOp: '', reden: '', toelichting: '', vervolgstap: '' })
+  transcriptConcept.value = ''; transcriptNaam.value = null; transcriptMelding.value = ''; transcriptFout.value = ''
   await laad()
+  verslag.value = a.value?.verslag?.tekst ?? ''
   f.punten = (a.value?.soort.agenda ?? []).map((p: any) => ({ punt: p.punt, besproken: false }))
 }, { immediate: true })
+
 const STATUS: Record<string, string> = { gepland: 'GEPLAND', afgerond: 'AFGEROND', niet_verschenen: 'NIET VERSCHENEN', geannuleerd: 'GEANNULEERD' }
 const VORM: Record<string, string> = { bezoek: 'Bezoek', online: 'Online', telefoon: 'Telefoon' }
+const HERHALING: Record<string, string> = { wekelijks: 'Wekelijks', tweewekelijks: 'Om de week', maandelijks: 'Maandelijks' }
+const KLEUR: Record<string, string> = { geel: 'var(--yellow)', paars: 'var(--purple)', blauw: 'var(--blue)', groen: 'var(--green)', oranje: 'var(--orange)', grijs: 'var(--muted-light)' }
+const TZ = 'Europe/Amsterdam'
+const tijd = (iso: string) => new Date(iso).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: TZ })
 const gekozen = computed(() => a.value?.soort.uitkomsten.find((u: any) => u.code === f.uitkomst))
 const nee = computed(() => gekozen.value?.gevolg?.type === 'nee')
 const later = computed(() => gekozen.value?.gevolg?.type === 'later')
 const ongeldig = computed(() => (a.value?.soort.type === 'klant' && !f.uitkomst) || (nee.value && (!f.reden || (f.reden === 'Anders' && !f.toelichting.trim()))))
-const wanneer = computed(() => a.value ? `${new Date(a.value.start).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Amsterdam' })}, ${new Date(a.value.start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })} tot ${new Date(a.value.eind).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })}` : '')
+const duurMin = computed(() => a.value ? Math.round((Date.parse(a.value.eind) - Date.parse(a.value.start)) / 60_000) : 0)
+const duurLabel = computed(() => duurMin.value >= 60 ? `${Math.floor(duurMin.value / 60)} uur${duurMin.value % 60 ? ` ${duurMin.value % 60} min` : ''}` : `${duurMin.value} min`)
+const wanneer = computed(() => a.value ? `${new Date(a.value.start).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: TZ })}, ${tijd(a.value.start)} tot ${tijd(a.value.eind)}` : '')
+const eigenaar = computed(() => String(a.value?.eigenaar?.naam ?? '').replace(/^Testgebruiker /, ''))
+const initialen = computed(() => String(a.value?.account?.naam ?? '').split(/\s+/).filter((w) => /^[\p{L}\d]/u.test(w)).slice(0, 2).map((w) => w[0]!.toUpperCase()).join(''))
+const kicker = computed(() => a.value ? `${a.value.soort.naam.toUpperCase()} · ${STATUS[a.value.status]}` : 'Afspraak')
+const verslagGewijzigd = computed(() => verslag.value.trim() !== String(a.value?.verslag?.tekst ?? '').trim())
+const heeftTekst = computed(() => !!(String(a.value?.verslag?.tekst ?? '').trim() || a.value?.transcript))
+const opKlantkaart = computed(() => !!a.value?.account && route.path === `/accounts/${a.value.account.id}`)
+const herkomst = computed(() => { const b = a.value?.analyse?.basis; if (!b) return [] as string[]; return [b.verslag && 'Verslag', b.transcript && 'Transcript'].filter(Boolean) as string[] })
+const snippet = (t: string) => (t.length > 280 ? `${t.slice(0, 280).trim()}…` : t)
+const tekstVan = (fout: unknown) => foutTekst(fout)
+
 async function rondAf() {
   if (ongeldig.value || !a.value) return
   bezig.value = true
-  const body = { uitkomst: f.uitkomst || 'gehouden', verslag: f.verslag || null, agendapunten: f.punten, laterOp: f.laterOp || null, reden: f.reden || null, toelichting: f.toelichting || null, vervolgstap: f.vervolgstap || null }
+  const body = { uitkomst: f.uitkomst || 'gehouden', verslag: verslag.value.trim() || null, agendapunten: f.punten, laterOp: f.laterOp || null, reden: f.reden || null, toelichting: f.toelichting || null, vervolgstap: f.vervolgstap || null }
   try {
     if (import.meta.client && !navigator.onLine) {
       await voegToe({ tabel: 'appointments', op: 'patch', recordId: a.value.id, patch: { soort: 'afspraak.afronden', ...body, op: new Date().toISOString() } })
@@ -43,17 +85,90 @@ async function rondAf() {
       toast.toon(r.tekst)
     }
     emit('gewijzigd'); emit('sluit')
-  } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
+  } catch (e) { toast.toon(tekstVan(e), 'fout') } finally { bezig.value = false }
 }
 async function zetStatus(status: 'niet_verschenen' | 'geannuleerd') {
-  try { await $fetch(`/api/afspraken/${a.value.id}/status`, { method: 'POST', body: { status } }); toast.toon(status === 'geannuleerd' ? 'Afspraak geannuleerd.' : 'Vastgelegd: niet verschenen.'); emit('gewijzigd'); await laad() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+  try { await $fetch(`/api/afspraken/${a.value.id}/status`, { method: 'POST', body: { status } }); toast.toon(status === 'geannuleerd' ? 'Afspraak geannuleerd.' : 'Vastgelegd: niet verschenen.'); emit('gewijzigd'); await laad() } catch (e) { toast.toon(tekstVan(e), 'fout') }
 }
+
+// Verplaatsen: datum, start, duur en titel; de server rekent in UTC.
+function startVerplaatsen() {
+  const d = new Date(a.value.start)
+  vp.datum = d.toLocaleDateString('sv-SE', { timeZone: TZ }); vp.start = tijd(a.value.start); vp.duurMin = duurMin.value; vp.titel = a.value.eigenTitel ? a.value.titel : ''
+  afronden.value = false; verplaatsen.value = true
+}
+function startIso(datum: string, start: string) {
+  const proef = new Date(`${datum}T${start}:00Z`)
+  const verschil = Number(new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour: 'numeric', hourCycle: 'h23' }).format(proef)) - proef.getUTCHours()
+  return new Date(proef.getTime() - ((verschil + 24) % 24) * 3600_000).toISOString()
+}
+async function bewaarVerplaatsen() {
+  if (!vp.datum || !vp.start) return
+  bezig.value = true
+  try {
+    const r: any = await $fetch(`/api/afspraken/${a.value.id}/verplaats`, { method: 'POST', body: { start: startIso(vp.datum, vp.start), duurMin: vp.duurMin, titel: vp.titel } })
+    toast.toon(r.tekst); verplaatsen.value = false; emit('gewijzigd'); await laad()
+  } catch (e) { toast.toon(tekstVan(e), 'fout') } finally { bezig.value = false }
+}
+
+// Transcript: een bestand (.txt, .md, .vtt, .srt) of geplakte tekst. Ondertitels worden beurten.
+async function leesBestand(bestand: File | null | undefined) {
+  transcriptFout.value = ''; transcriptMelding.value = ''
+  if (!bestand) return
+  if (!magTranscript(bestand.name)) { transcriptFout.value = 'Kies een .txt, .md, .vtt of .srt. Een Word- of pdf-bestand: kopieer de tekst en plak hem hieronder.'; return }
+  if (bestand.size > TRANSCRIPT_MAX_BYTES) { transcriptFout.value = 'Dit bestand is groter dan 5 MB.'; return }
+  const r = transcriptUitBestand(bestand.name, await bestand.text())
+  if (!r.tekst.trim()) { transcriptFout.value = 'In dit bestand staat geen tekst.'; return }
+  transcriptConcept.value = r.tekst; transcriptNaam.value = bestand.name
+  transcriptMelding.value = `${bestand.name} · ${r.woorden} woorden${r.afgekapt ? ' (ingekort)' : ''}. Controleer de tekst en bewaar.`
+}
+function onDrop(e: DragEvent) { sleepActief.value = false; leesBestand(e.dataTransfer?.files?.[0]) }
+function onKies(e: Event) { const i = e.target as HTMLInputElement; leesBestand(i.files?.[0]); i.value = '' }
+async function bewaarTranscript() {
+  if (transcriptConcept.value.trim().length < 5) return
+  bewaartTranscript.value = true
+  try {
+    const t = await $fetch<any>(`/api/afspraken/${a.value.id}/transcript`, { method: 'POST', body: { tekst: transcriptConcept.value, bestandsnaam: transcriptNaam.value } })
+    a.value = { ...a.value, transcript: t }
+    transcriptConcept.value = ''; transcriptNaam.value = null; transcriptMelding.value = ''
+    toast.toon('Transcript bewaard. Analyseer het verslag voor actiepunten en koopsignalen.')
+    emit('gewijzigd')
+  } catch (e) { toast.toon(tekstVan(e), 'fout') } finally { bewaartTranscript.value = false }
+}
+async function verwijderTranscript() {
+  try { await $fetch(`/api/afspraken/${a.value.id}/transcript`, { method: 'DELETE' }); a.value = { ...a.value, transcript: null }; toast.toon('Transcript verwijderd.'); emit('gewijzigd') } catch (e) { toast.toon(tekstVan(e), 'fout') }
+}
+async function bewaarVerslag(stil = false) {
+  if (!verslagGewijzigd.value) return true
+  bewaartVerslag.value = true
+  try {
+    const r = await $fetch<any>(`/api/afspraken/${a.value.id}/verslag`, { method: 'PUT', body: { tekst: verslag.value } })
+    a.value = { ...a.value, verslag: r.verslag }
+    if (!stil) toast.toon(r.verslag ? 'Verslag bewaard. Het staat op het tabblad Gespreksverslagen.' : 'Verslag gewist.')
+    emit('gewijzigd'); return true
+  } catch (e) { toast.toon(tekstVan(e), 'fout'); return false } finally { bewaartVerslag.value = false }
+}
+async function analyseer() {
+  analyseReden.value = ''
+  if (!(await bewaarVerslag(true))) return
+  analyseert.value = true
+  try {
+    const r = await $fetch<any>(`/api/afspraken/${a.value.id}/analyse`, { method: 'POST' })
+    if (!r.ok) { analyseReden.value = r.reden ?? 'De analyse is tegengehouden.'; return }
+    await laad()
+    toast.toon(r.actiepunten ? `Analyse klaar: ${r.actiepunten} ${r.actiepunten === 1 ? 'actiepunt staat' : 'actiepunten staan'} als concept klaar.` : 'Analyse klaar.')
+    emit('gewijzigd')
+  } catch (e) { analyseReden.value = tekstVan(e) } finally { analyseert.value = false }
+}
+
 // Voorlezen (P31): de briefing voor het oor, hooguit een minuut.
 const { functie } = useMe()
 const vl = useVoorlezen()
+const kanVoorlezen = ref(false)
+onMounted(() => { kanVoorlezen.value = !!vl.kan() })
 function leesBriefing() {
   if (vl.spreekt.value) { vl.stop(); return }
-  vl.lees(spreekBriefing({ accountNaam: a.value.account?.naam ?? a.value.soort.naam, tijd: new Date(a.value.start).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }), contact: a.value.wieZitErbij[0]?.naam ?? null, doel: a.value.soort.doel, punten: [a.value.briefing ?? a.value.aanleiding, ...a.value.soort.agenda.map((p: any) => p.punt)] }))
+  vl.lees(spreekBriefing({ accountNaam: a.value.account?.naam ?? a.value.soort.naam, tijd: tijd(a.value.start), contact: a.value.contact?.naam ?? a.value.wieZitErbij[0]?.naam ?? null, doel: a.value.soort.doel, punten: [a.value.briefing ?? a.value.aanleiding, ...a.value.soort.agenda.map((p: any) => p.punt)] }))
 }
 const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0, 10))
 </script>
@@ -64,34 +179,143 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
       <aside class="fo-panel fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="af-titel" data-test="afspraak-flyout">
         <header class="fo-head">
           <div class="fo-head-tekst">
-            <span class="fo-kicker" data-test="af-kicker">{{ a ? `${a.soort.naam.toUpperCase()} · ${STATUS[a.status]}` : 'Afspraak' }}</span>
-            <h2 id="af-titel" class="fo-titel">{{ a ? (a.account?.naam ?? a.soort.naam) : 'Laden…' }}</h2>
-            <p v-if="a" class="taak-meta">{{ wanneer }} · {{ VORM[a.vorm] }} · {{ a.eigenaar.naam.replace(/^Testgebruiker /, '') }}</p>
+            <span class="fo-kicker af-kicker" data-test="af-kicker"><span v-if="a" class="af-stip" :style="{ background: KLEUR[a.soort.kleur] ?? 'var(--ink)' }" aria-hidden="true" />{{ kicker }}</span>
+            <h2 id="af-titel" class="fo-titel" data-test="af-titel">{{ a ? a.titel : 'Laden…' }}</h2>
+            <p v-if="a?.account" class="taak-meta">
+              <NuxtLink :to="`/accounts/${a.account.id}`" class="tekst-link" data-test="af-kop-account" @click="emit('sluit')">{{ a.account.naam }}</NuxtLink><template v-if="a.contact"> · <NuxtLink :to="`/contacten/${a.contact.id}`" class="tekst-link" data-test="af-kop-contact" @click="emit('sluit')">{{ a.contact.naam }}</NuxtLink></template>
+            </p>
+            <p v-if="a" class="taak-meta">{{ wanneer }} · {{ VORM[a.vorm] }} · {{ eigenaar }}</p>
             <p v-if="a?.geplandDoor" class="taak-meta"><span class="pil pil--leeg" data-test="af-gepland-door">Gepland door {{ a.geplandDoor.replace(/^Testgebruiker /, '') }}</span></p>
           </div>
           <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
         </header>
+
         <div v-if="a" class="fo-body fo-body--formulier">
-          <article v-if="a.locatie || a.meetinglink" class="fo-blok">
-            <p v-if="a.locatie"><Icoon naam="MapPin" /> {{ a.locatie }}</p>
-            <p v-if="a.meetinglink"><a :href="a.meetinglink" target="_blank" rel="noopener" class="tekst-link">Open de meetinglink</a></p>
+          <!-- Verplaatsen: nieuw moment, duur en titel. -->
+          <article v-if="verplaatsen" class="fo-blok fo-blok--accent" data-test="af-verplaats-blok">
+            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Verplaats de afspraak</h3></header>
+            <label class="veld"><span class="veld-label">Titel</span><input v-model="vp.titel" class="invoer" :placeholder="a.titel" data-test="af-vp-titel"></label>
+            <div class="af-rij3 mt-16">
+              <label class="veld"><span class="veld-label">Datum <span class="veld-verplicht">*</span></span><input v-model="vp.datum" type="date" class="invoer" required data-test="af-vp-datum"></label>
+              <label class="veld"><span class="veld-label">Start <span class="veld-verplicht">*</span></span><input v-model="vp.start" type="time" step="900" class="invoer" required data-test="af-vp-start"></label>
+              <label class="veld"><span class="veld-label">Duur</span><select v-model.number="vp.duurMin" class="invoer"><option v-for="d in [10, 15, 30, 45, 60, 90, 120, 180]" :key="d" :value="d">{{ d >= 60 ? `${d / 60} uur`.replace('.5', ',5') : `${d} min` }}</option><option v-if="![10, 15, 30, 45, 60, 90, 120, 180].includes(vp.duurMin)" :value="vp.duurMin">{{ vp.duurMin }} min</option></select></label>
+            </div>
           </article>
-          <article v-if="a.briefing || a.aanleiding" class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Briefing</h3></header><p>{{ a.briefing ?? a.aanleiding }}</p></article>
+
+          <dl class="af-defs" data-test="af-defs">
+            <div class="af-def"><dt>Wanneer</dt><dd class="tnum">{{ wanneer }} <span class="meta">· {{ duurLabel }}</span></dd></div>
+            <div class="af-def"><dt>Toegewezen aan</dt><dd>{{ eigenaar }}</dd></div>
+            <div v-if="a.account" class="af-def"><dt>Klant</dt><dd><NuxtLink :to="`/accounts/${a.account.id}`" class="tekst-link" data-test="af-account" @click="emit('sluit')">{{ a.account.naam }}</NuxtLink></dd></div>
+            <div v-if="a.account" class="af-def"><dt>Contactpersoon</dt><dd><NuxtLink v-if="a.contact" :to="`/contacten/${a.contact.id}`" class="tekst-link" data-test="af-contact" @click="emit('sluit')">{{ a.contact.naam }}</NuxtLink><template v-if="a.contact && (a.contact.functie || a.contact.rol)"> <span class="meta">· {{ a.contact.functie ?? a.contact.rol }}</span></template><span v-if="!a.contact" class="meta">Geen contactpersoon gekoppeld</span></dd></div>
+            <div v-if="a.beschrijving" class="af-def"><dt>Beschrijving</dt><dd class="af-pre">{{ a.beschrijving }}</dd></div>
+            <div v-if="a.locatie" class="af-def"><dt>Locatie</dt><dd>{{ a.locatie }}</dd></div>
+            <div v-if="a.meetinglink" class="af-def"><dt>Meeting</dt><dd><a :href="a.meetinglink" target="_blank" rel="noopener" class="tekst-link">Open de meetinglink</a></dd></div>
+            <div v-if="a.uitgenodigd?.length" class="af-def"><dt>Uitgenodigd</dt><dd data-test="af-uitgenodigd">{{ a.uitgenodigd.map((u: any) => u.naam).join(', ') }}</dd></div>
+            <div v-if="a.herhaling?.reeksId" class="af-def"><dt>Herhaling</dt><dd>{{ HERHALING[a.herhaling.soort] ?? 'Reeks' }} · {{ a.herhaling.aantal }} afspraken</dd></div>
+            <div v-if="a.herinneringMin" class="af-def"><dt>Herinnering</dt><dd>{{ a.herinneringMin >= 1440 ? '1 dag' : a.herinneringMin >= 60 ? `${a.herinneringMin / 60} uur` : `${a.herinneringMin} minuten` }} vooraf</dd></div>
+          </dl>
+
           <article v-if="a.account" class="fo-blok">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Klant in context</h3></header>
-            <p class="taak-meta"><NuxtLink :to="`/accounts/${a.account.id}`" class="tekst-link">{{ a.account.naam }}</NuxtLink><template v-if="a.account.plaats"> · {{ a.account.plaats }}</template><template v-if="a.account.status"> · {{ a.account.status }}</template></p>
+            <div class="af-account">
+              <span class="af-account-merk" aria-hidden="true">{{ initialen }}</span>
+              <div>
+                <NuxtLink :to="`/accounts/${a.account.id}`" class="af-account-naam tekst-link" @click="emit('sluit')">{{ a.account.naam }}</NuxtLink>
+                <p class="meta">{{ [a.account.plaats, a.account.status].filter(Boolean).join(' · ') }}</p>
+                <p v-if="a.aanleiding" class="af-aanleiding">{{ a.aanleiding }}</p>
+              </div>
+            </div>
           </article>
+
           <article v-if="a.wieZitErbij.length" class="fo-blok">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Wie zit erbij</h3></header>
-            <ul class="schakel-lijst"><li v-for="c in a.wieZitErbij" :key="c.id" class="schakel-rij"><span>{{ c.naam }}</span><span class="meta">{{ [c.rol, c.functie].filter(Boolean).join(' · ') }}</span></li></ul>
+            <ul class="schakel-lijst">
+              <li v-for="c in a.wieZitErbij" :key="c.id" class="schakel-rij">
+                <NuxtLink :to="`/contacten/${c.id}`" class="tekst-link" @click="emit('sluit')">{{ c.naam }}</NuxtLink>
+                <span class="meta">{{ [c.id === a.contact?.id ? 'gekoppeld' : null, c.rol, c.functie].filter(Boolean).join(' · ') }}</span>
+              </li>
+            </ul>
           </article>
+
           <article class="fo-blok">
-            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Doel en agenda</h3></header>
+            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Doel en voorbereiding</h3></header>
             <p v-if="a.soort.doel">{{ a.soort.doel }}</p>
-            <ol class="mt-8"><li v-for="p in a.soort.agenda" :key="p.punt">{{ p.punt }}<span v-if="p.verplicht" class="meta"> · verplicht</span></li></ol>
+            <ol v-if="a.soort.agenda.length" class="mt-8"><li v-for="p in a.soort.agenda" :key="p.punt">{{ p.punt }}<span v-if="p.verplicht" class="meta"> · verplicht</span></li></ol>
+            <ul v-if="a.soort.voorbereiding.length" class="mt-8 af-voorbereiding"><li v-for="v in a.soort.voorbereiding" :key="v">{{ v }}</li></ul>
           </article>
-          <article class="fo-blok" data-test="af-pitstop"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Pitstop</h3></header><BriefingPaneel v-if="functie('briefing.lezen')?.beschikbaar && a.account" onderwerp="afspraak" :id="a.id" /><p v-else class="meta">Een briefing hoort bij een afspraak met een klant.</p></article>
-          <article v-if="a.verslag?.tekst" class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Verslag</h3></header><p>{{ a.verslag.tekst }}</p></article>
+
+          <article v-if="a.briefing || (a.aanleiding && !a.account)" class="fo-blok">
+            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Briefing</h3><button v-if="kanVoorlezen" type="button" class="dd-act" @click="leesBriefing"><Icoon :naam="vl.spreekt.value ? 'VolumeX' : 'Volume2'" />{{ vl.spreekt.value ? 'Stop' : 'Lees voor' }}</button></header>
+            <p>{{ a.briefing ?? a.aanleiding }}</p>
+          </article>
+
+          <article class="fo-blok fo-blok--agent" data-test="af-pitstop">
+            <header class="fo-blok-kop"><div><span class="fo-blok-kicker">AI-agent</span><h3 class="fo-blok-titel">Pitstop</h3></div></header>
+            <BriefingPaneel v-if="functie('briefing.lezen')?.beschikbaar && a.account" onderwerp="afspraak" :id="a.id" />
+            <p v-else class="meta">Een briefing hoort bij een afspraak met een klant.</p>
+          </article>
+
+          <!-- Transcript en gespreksverslag: drie wegen (bestand, plakken, inspreken) naar één analyse. -->
+          <article class="fo-blok af-verslagblok" data-test="af-verslagblok">
+            <header class="af-vb-kop"><Icoon naam="FileText" /><h3 class="fo-blok-titel">Transcript en gespreksverslag</h3><span v-if="heeftTekst" class="pil pil--groen">Aanwezig</span></header>
+
+            <section class="af-vb-deel" aria-labelledby="af-tr-kop">
+              <h4 id="af-tr-kop" class="af-vb-sub">Transcript</h4>
+              <div v-if="a.transcript" class="af-tr-voorbeeld" data-test="af-transcript">
+                <p class="af-pre af-snippet">{{ snippet(a.transcript.tekst) }}</p>
+                <p class="meta"><template v-if="a.transcript.bestandsnaam"><Icoon naam="FileText" :grootte="12" /> {{ a.transcript.bestandsnaam }} · </template>{{ a.transcript.woorden }} woorden · {{ a.transcript.bron === 'upload' ? 'geüpload' : 'geplakt' }}</p>
+                <div class="dd-acties mt-8"><button type="button" class="dd-act" data-test="af-transcript-weg" @click="verwijderTranscript">Verwijder transcript</button></div>
+              </div>
+              <template v-else>
+                <button type="button" class="af-drop" :class="{ 'af-drop--over': sleepActief }" data-test="af-transcript-drop" @dragover.prevent="sleepActief = true" @dragleave="sleepActief = false" @drop.prevent="onDrop" @click="bestandInput?.click()">
+                  <Icoon naam="Upload" :grootte="22" />
+                  <span class="af-drop-titel">Sleep een transcript hierheen of klik om te kiezen</span>
+                  <span class="meta">.txt, .md of een Teams- of Zoom-transcript (.vtt, .srt), hooguit 5 MB</span>
+                </button>
+                <input ref="bestandInput" type="file" accept=".txt,.md,.vtt,.srt,text/plain,text/vtt" class="af-verborgen" data-test="af-transcript-bestand" aria-label="Kies een transcript" @change="onKies">
+                <div class="af-scheiding"><span>Of plak tekst</span></div>
+                <textarea v-model="transcriptConcept" class="invoer" rows="4" placeholder="Plak hier het transcript van het gesprek" data-test="af-transcript-tekst" aria-label="Transcript" />
+                <p v-if="transcriptMelding" class="af-gelezen"><Icoon naam="CircleCheck" :grootte="14" /> {{ transcriptMelding }}</p>
+                <p v-if="transcriptFout" class="veld-fout">{{ transcriptFout }}</p>
+                <div class="dd-acties mt-8"><span class="dd-acties-vul" /><button type="button" class="dd-act" :disabled="transcriptConcept.trim().length < 5 || bewaartTranscript" data-test="af-transcript-bewaar" @click="bewaarTranscript">{{ bewaartTranscript ? 'Bewaren…' : 'Bewaar transcript' }}</button></div>
+              </template>
+            </section>
+
+            <section class="af-vb-deel" aria-labelledby="af-vs-kop">
+              <h4 id="af-vs-kop" class="af-vb-sub">Gespreksverslag</h4>
+              <VerslagVeld v-model="verslag" :record="{ soort: 'appointments', id: a.id }" groot placeholder="Typ je verslag: wat is besproken, wat speelt er en wat is afgesproken" />
+              <p class="meta mt-8">{{ verslag.trim() ? `${telWoorden(verslag)} woorden.` : 'Typ, plak of spreek in.' }} Het verslag staat op het tabblad Gespreksverslagen van de klant{{ a.contact ? ' en het contact' : '' }}.</p>
+              <div class="dd-acties mt-8"><span class="dd-acties-vul" /><button type="button" class="dd-act" :disabled="!verslagGewijzigd || bewaartVerslag" data-test="af-verslag-bewaar" @click="bewaarVerslag()">{{ bewaartVerslag ? 'Bewaren…' : 'Bewaar verslag' }}</button></div>
+            </section>
+
+            <section class="af-vb-deel af-analyse" aria-labelledby="af-an-kop" data-test="af-analyse">
+              <div class="af-an-kop"><div><span class="fo-blok-kicker">Notulist</span><h4 id="af-an-kop" class="af-vb-sub">AI-analyse van het verslag</h4></div>
+                <button type="button" class="dd-act dd-act--primair" :disabled="analyseert || !a.account || !(verslag.trim() || a.transcript)" data-test="af-analyseer" @click="analyseer"><Icoon naam="Sparkles" />{{ analyseert ? 'Analyseren…' : a.analyse ? 'Opnieuw analyseren' : 'Analyseer verslag' }}</button>
+              </div>
+              <p v-if="!a.account" class="meta">Een analyse hoort bij een afspraak met een klant.</p>
+              <p v-else-if="!a.analyse && !analyseReden" class="meta">De Notulist maakt een samenvatting, zet actiepunten als concepttaak klaar en legt koopsignalen vast als inzicht. Jij keurt goed.</p>
+              <p v-if="analyseReden" class="veld-fout" data-test="af-analyse-reden">{{ analyseReden }}</p>
+              <template v-if="a.analyse">
+                <p v-if="herkomst.length" class="af-herkomst"><span class="meta">Gebaseerd op</span><span v-for="h in herkomst" :key="h" class="pil pil--paars">{{ h }}</span></p>
+                <div v-if="a.analyse.samenvatting" class="af-an-blok" data-test="af-samenvatting"><span class="af-an-label">Samenvatting</span><p>{{ a.analyse.samenvatting }}</p></div>
+                <div class="af-an-blok" data-test="af-actiepunten"><span class="af-an-label">Actiepunten</span>
+                  <ul v-if="a.analyse.actiepunten.length"><li v-for="p in a.analyse.actiepunten" :key="p">{{ p }}</li></ul>
+                  <p v-else class="meta">Geen actiepunten gevonden.</p>
+                  <p v-if="a.analyse.actiepunten.length" class="meta">Staan als concepttaak klaar in <NuxtLink to="/concepten" class="tekst-link" @click="emit('sluit')">Concepten</NuxtLink>.</p>
+                </div>
+                <div class="af-an-blok" data-test="af-koopsignalen"><span class="af-an-label">Koopsignalen</span>
+                  <ul v-if="a.analyse.koopsignalen.length"><li v-for="k in a.analyse.koopsignalen" :key="k">{{ k }}</li></ul>
+                  <p v-else class="meta">Geen koopsignalen gevonden.</p>
+                  <p v-if="a.analyse.koopsignalen.length && a.account" class="meta">Staan als inzicht op de <NuxtLink :to="`/accounts/${a.account.id}?tab=inzichten`" class="tekst-link" @click="emit('sluit')">klantkaart</NuxtLink>.</p>
+                </div>
+                <div v-if="a.analyse.bezwaren.length" class="af-an-blok"><span class="af-an-label">Bezwaren</span><ul><li v-for="b in a.analyse.bezwaren" :key="b">{{ b }}</li></ul></div>
+                <div v-if="a.analyse.openVragen.length" class="af-an-blok"><span class="af-an-label">Open vragen</span><ul><li v-for="q in a.analyse.openVragen" :key="q">{{ q }}</li></ul></div>
+                <div v-if="a.analyse.concurrenten.length" class="af-an-blok"><span class="af-an-label">Concurrenten genoemd</span><p>{{ a.analyse.concurrenten.join(', ') }}</p></div>
+                <p v-if="a.analyse.voorgesteldeUitkomst && a.status === 'gepland'" class="meta">Voorgestelde uitkomst: {{ a.soort.uitkomsten.find((u: any) => u.code === a.analyse.voorgesteldeUitkomst)?.label ?? a.analyse.voorgesteldeUitkomst }}. Jij kiest bij Rond af.</p>
+              </template>
+            </section>
+          </article>
+
           <article v-if="afronden" class="fo-blok" data-test="rond-af">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Rond af</h3></header>
             <div v-if="a.soort.uitkomsten.length" class="uitkomst-raster">
@@ -103,7 +327,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
               <label class="veld mt-16"><span class="veld-label">Reden <span class="veld-verplicht">*</span></span><select v-model="f.reden" class="invoer" data-test="af-reden"><option value="" disabled>Kies een reden</option><option v-for="r in NEE_REDENEN" :key="r" :value="r">{{ r }}</option></select></label>
               <label v-if="f.reden === 'Anders'" class="veld mt-8"><span class="veld-label">Toelichting <span class="veld-verplicht">*</span></span><textarea v-model="f.toelichting" class="invoer" rows="2" /></label>
             </template>
-            <div class="veld mt-16"><span class="veld-label">Verslag</span><VerslagVeld v-model="f.verslag" :record="{ soort: 'appointments', id: a.id }" placeholder="Typ of plak je aantekeningen" /></div>
+            <p class="meta mt-16">{{ verslag.trim() ? 'Het gespreksverslag hierboven gaat mee.' : 'Nog geen verslag: schrijf of spreek het in bij Transcript en gespreksverslag.' }}</p>
             <div v-if="f.punten.length" class="mt-16"><span class="veld-label">Agendapunten</span>
               <ul class="schakel-lijst"><li v-for="p in f.punten" :key="p.punt" class="schakel-rij"><span>{{ p.punt }}</span><Schakelaar :aan="p.besproken" :label="p.besproken ? 'besproken' : 'niet besproken'" @wissel="p.besproken = $event" /></li></ul>
             </div>
@@ -111,21 +335,79 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
           </article>
         </div>
         <p v-else class="fo-body meta">Laden…</p>
+
         <nav v-if="a" class="actiebalk actiebalk--flyout" data-test="af-actiebalk" aria-label="Contact">
           <a class="actiebalk-knop" :class="{ 'actiebalk-knop--uit': !a.actiebalk.bellen }" :href="a.actiebalk.bellen ?? undefined" :aria-disabled="!a.actiebalk.bellen" :title="a.actiebalk.bellen ? undefined : 'Geen telefoonnummer bekend'"><Icoon naam="Phone" />Bellen</a>
           <a class="actiebalk-knop" :class="{ 'actiebalk-knop--uit': !a.actiebalk.mail }" :href="a.actiebalk.mail ?? undefined" :aria-disabled="!a.actiebalk.mail" :title="a.actiebalk.mail ? undefined : 'Geen e-mailadres bekend'"><Icoon naam="Mail" />Mail</a>
           <a class="actiebalk-knop" :class="{ 'actiebalk-knop--uit': !a.actiebalk.whatsapp }" :href="a.actiebalk.whatsapp ?? undefined" :aria-disabled="!a.actiebalk.whatsapp" :title="a.actiebalk.whatsapp ? undefined : 'Geen mobiel nummer bekend'" target="_blank" rel="noopener"><Icoon naam="MessageCircle" />WhatsApp</a>
           <a class="actiebalk-knop" :class="{ 'actiebalk-knop--uit': !a.actiebalk.navigeer }" :href="a.actiebalk.navigeer ?? undefined" :aria-disabled="!a.actiebalk.navigeer" :title="a.actiebalk.navigeer ? undefined : 'Geen adres bekend'" target="_blank" rel="noopener" data-test="af-navigeer"><Icoon naam="Navigation" />Navigeer</a>
         </nav>
-        <footer v-if="a && a.status === 'gepland'" class="fo-foot dd-acties">
-          <button v-if="!afronden" type="button" class="dd-act" data-test="af-niet-verschenen" @click="zetStatus('niet_verschenen')">Niet verschenen</button>
-          <button v-if="!afronden" type="button" class="dd-act" data-test="af-annuleer" @click="zetStatus('geannuleerd')">Annuleer</button>
+
+        <footer v-if="a && a.status === 'gepland' && verplaatsen" class="fo-foot dd-acties">
+          <button type="button" class="dd-act" @click="verplaatsen = false">Annuleren</button>
           <span class="dd-acties-vul fo-foot-vul" />
-          <button v-if="!afronden" type="button" class="dd-act dd-act--geel" data-test="af-rond-af" @click="afronden = true">Rond af</button>
+          <button type="button" class="dd-act dd-act--geel" :disabled="bezig || !vp.datum || !vp.start" data-test="af-verplaats-bewaar" @click="bewaarVerplaatsen">Bewaar nieuw moment</button>
+        </footer>
+        <footer v-else-if="a && a.status === 'gepland'" class="fo-foot dd-acties">
+          <template v-if="!afronden">
+            <button type="button" class="dd-act" data-test="af-verplaats" @click="startVerplaatsen"><Icoon naam="CalendarRange" />Verplaats</button>
+            <button type="button" class="dd-act" data-test="af-niet-verschenen" @click="zetStatus('niet_verschenen')">Niet verschenen</button>
+            <button type="button" class="dd-act dd-act--gevaar" data-test="af-annuleer" @click="zetStatus('geannuleerd')">Annuleer</button>
+          </template>
+          <button v-else type="button" class="dd-act" @click="afronden = false">Terug</button>
+          <span class="dd-acties-vul fo-foot-vul" />
+          <NuxtLink v-if="a.account && !opKlantkaart && !afronden" :to="`/accounts/${a.account.id}`" class="dd-act dd-act--icoon" title="Open klantkaart" aria-label="Open klantkaart" @click="emit('sluit')"><Icoon naam="ArrowRight" /></NuxtLink>
+          <button v-if="!afronden" type="button" class="dd-act dd-act--geel" data-test="af-rond-af" @click="afronden = true; verplaatsen = false">Rond af</button>
           <button v-else type="button" class="dd-act dd-act--primair" :disabled="bezig || ongeldig" data-test="af-bewaar" @click="rondAf">Bewaar</button>
+        </footer>
+        <footer v-else-if="a?.account && !opKlantkaart" class="fo-foot dd-acties">
+          <span class="dd-acties-vul fo-foot-vul" />
+          <NuxtLink :to="`/accounts/${a.account.id}`" class="dd-act" @click="emit('sluit')">Open klantkaart<Icoon naam="ArrowRight" /></NuxtLink>
         </footer>
       </aside>
     </div>
     <OverdrachtVenster :open="!!ov" :account-id="ov?.accountId ?? null" :account-naam="ov?.naam ?? ''" :vervolgstap="ov?.vervolgstap" @sluit="ov = null; emit('sluit')" @overgedragen="emit('gewijzigd')" />
   </Teleport>
 </template>
+
+<style scoped>
+.af-kicker { display: inline-flex; align-items: center; gap: 8px; }
+.af-stip { width: 8px; height: 8px; border-radius: var(--radius); flex-shrink: 0; }
+.af-defs { margin: 0 0 14px; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--border); }
+.af-def { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: var(--fs-klein); }
+.af-def dt { font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding-top: 2px; }
+.af-def dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.af-pre { white-space: pre-wrap; }
+.af-account { display: flex; gap: 12px; align-items: flex-start; }
+.af-account-merk { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex-shrink: 0; background: var(--ink); color: var(--yellow); font-weight: 800; font-size: 13px; border-radius: var(--radius); }
+.af-account-naam { font-weight: 700; }
+.af-aanleiding { margin: 6px 0 0; font-size: var(--fs-klein); }
+.af-voorbereiding { padding-left: 18px; font-size: var(--fs-klein); color: var(--ink-soft); }
+.af-verslagblok { border-left-color: var(--ink); }
+.af-vb-kop { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.af-vb-kop .pil { margin-left: auto; }
+.af-vb-deel { padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--border); }
+.af-vb-deel:first-of-type { margin-top: 0; }
+.af-vb-sub { margin: 0 0 8px; font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); }
+.af-drop { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; min-height: 96px; padding: 16px; background: var(--surface); border: 1px dashed var(--border-strong); border-radius: var(--radius); font: inherit; color: var(--ink); text-align: center; cursor: pointer; }
+.af-drop:hover, .af-drop--over { border-color: var(--ink); background: var(--yellow-zacht); }
+.af-drop-titel { font-weight: 700; font-size: var(--fs-klein); }
+.af-verborgen { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.af-scheiding { display: flex; align-items: center; gap: 10px; margin: 12px 0 8px; font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.af-scheiding::before, .af-scheiding::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.af-gelezen { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; font-size: var(--fs-klein); color: var(--green); }
+.af-tr-voorbeeld { padding: 10px 12px; background: var(--surface); border-radius: var(--radius); }
+.af-snippet { margin: 0 0 6px; font-size: var(--fs-klein); }
+.af-an-kop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+.af-herkomst { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
+.af-an-blok { margin-top: 10px; font-size: var(--fs-klein); }
+.af-an-blok ul { margin: 4px 0; padding-left: 18px; }
+.af-an-blok p { margin: 4px 0; }
+.af-an-label { display: block; font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.af-rij3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 720px) {
+  .af-def { grid-template-columns: 1fr; gap: 2px; }
+  .af-rij3 { grid-template-columns: 1fr 1fr; }
+  .af-an-kop .dd-act, .af-vb-deel .dd-act { min-height: 44px; }
+}
+</style>

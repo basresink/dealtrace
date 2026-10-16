@@ -101,7 +101,7 @@ const nieuweAfspraak = ref(false)
           <select class="invoer invoer--klein" :value="route.query.eigenaar ?? 'mij'" aria-label="Eigenaar" @change="zet({ eigenaar: ($event.target as HTMLSelectElement).value === 'mij' ? undefined : ($event.target as HTMLSelectElement).value })">
             <option value="mij">Van mij</option><option v-if="data.kan.team" value="team">Mijn team</option><option v-for="u in data.teamleden" :key="u.id" :value="u.id">{{ u.naam.replace(/^Testgebruiker /, '') }}</option>
           </select>
-          <select class="invoer invoer--klein" :value="route.query.prioriteit ?? ''" aria-label="Prioriteit" @change="zet({ prioriteit: ($event.target as HTMLSelectElement).value || undefined })"><option value="">Alle prioriteiten</option><option value="hoog">Hoog</option><option value="middel">Middel</option><option value="laag">Laag</option></select>
+          <select class="invoer invoer--klein" :value="route.query.prioriteit ?? ''" aria-label="Prioriteit" @change="zet({ prioriteit: ($event.target as HTMLSelectElement).value || undefined })"><option value="">Alle prioriteiten</option><option value="urgent">Urgent</option><option value="hoog">Hoog</option><option value="middel">Middel</option><option value="laag">Laag</option></select>
           <select class="invoer invoer--klein" :value="route.query.actiesoort ?? ''" aria-label="Actiesoort" @change="zet({ actiesoort: ($event.target as HTMLSelectElement).value || undefined })"><option value="">Alle actiesoorten</option><option value="bellen">Bellen</option><option value="mailen">Mailen</option><option value="linkedin">LinkedIn</option><option value="bezoek">Bezoek</option><option value="bericht">Bericht</option><option value="taak">Te doen</option></select>
           <select class="invoer invoer--klein" :value="route.query.herkomst ?? ''" aria-label="Herkomst" @change="zet({ herkomst: ($event.target as HTMLSelectElement).value || undefined })"><option value="">Alle herkomst</option><option v-for="(l, k) in HERKOMST_LABEL" :key="k" :value="k">{{ l }}</option></select>
         </div>
@@ -140,7 +140,7 @@ const nieuweAfspraak = ref(false)
         <footer class="fo-foot dd-acties"><span class="dd-acties-vul fo-foot-vul" /><button type="submit" class="dd-act dd-act--primair" :disabled="!annuleerReden.trim()">Annuleer taak</button></footer>
       </form>
     </div>
-    <TaakFlyout :open="!!open" :taak-id="open" :basis="alle.find((t: any) => t.id === open)" :volgende="true" @sluit="open = null" @klaar="klaar" @gewijzigd="refresh" />
+    <TaakFlyout :open="!!open" :taak-id="open" :basis="alle.find((t: any) => t.id === open)" :volgende="true" :teamleden="data.teamleden" @sluit="open = null" @klaar="klaar" @gewijzigd="refresh" />
     <NieuweTaakFlyout :open="nieuw" :teamleden="data.teamleden" @sluit="nieuw = false" @gemaakt="nieuw = false; refresh()" />
     <PlanAfspraakFlyout :open="nieuweAfspraak" @sluit="nieuweAfspraak = false" @gepland="(id: string) => { nieuweAfspraak = false; navigateTo(`/agenda?weergave=dag&afspraak=${id}`) }" />
   </div>

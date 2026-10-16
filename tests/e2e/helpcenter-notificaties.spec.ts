@@ -64,6 +64,41 @@ test.describe('Helpcenter in de opzet van DealDrive', () => {
     await expect(page.getByTestId('help-kaart-geen-budget')).toBeVisible()
   })
 
+  test('Nieuwe klanten werven: voor elke rol een ingang en categorieën; categorie en artikel openen, met bron', async ({ page }) => {
+    for (const gebruiker of ['u-02', 'u-04', 'u-06']) {
+      await login(page, gebruiker)
+      await ga(page, '/helpcenter')
+      await expect(page.getByTestId('ingang-werven'), gebruiker).toBeVisible()
+      await expect(page.getByTestId('groep-werven').getByTestId('categorie-Je verhaal schrijven'), gebruiker).toBeVisible()
+    }
+    await page.getByTestId('categorie-Je verhaal schrijven').click()
+    await expect(page).toHaveURL(/\/helpcenter\/categorie\/je-verhaal-schrijven$/)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Je verhaal schrijven')
+    await expect(page.getByTestId('terug-overzicht')).toHaveAttribute('href', '/helpcenter/werven')
+    await page.getByTestId('help-kaart-vertel-een-userstory').click()
+    await expect(page).toHaveURL(/\/helpcenter\/vertel-een-userstory$/)
+    await expect(page.getByTestId('artikel-titel')).toHaveText('Vertel een userstory')
+    await expect(page.getByTestId('artikel-bron')).toHaveText('Uit de whitepaper The Perfect Pitch')
+    await expect(page.getByTestId('artikel-inhoud').locator('.ha-blok')).toHaveCount(5)
+    await expect(page.getByTestId('controlevragen')).toBeVisible()
+    await expect(page.getByTestId('artikel-inhoud').getByRole('link', { name: 'Een belscript kiezen' })).toHaveAttribute('href', '/helpcenter/een-belscript-kiezen')
+    await page.getByTestId('artikel-categorie').click()
+    await expect(page).toHaveURL(/\/helpcenter\/categorie\/je-verhaal-schrijven$/)
+    // Het overzicht: per categorie een groep, zoeken binnen de selectie.
+    await ga(page, '/helpcenter')
+    await page.getByTestId('ingang-werven').click()
+    await expect(page).toHaveURL(/\/helpcenter\/werven$/)
+    await expect(page.getByTestId('groep-Waarom klanten kopen')).toBeVisible()
+    await expect(page.getByTestId('groep-Openen en presenteren')).toBeVisible()
+    await page.getByTestId('overzicht-zoek').fill('foray')
+    await expect(page.getByTestId('help-kaart-de-foray-toestemming-voor-je-vragen')).toBeVisible()
+    await expect(page.getByTestId('help-kaart-vertel-een-userstory')).toHaveCount(0)
+    // Zoeken in het hele helpcenter geeft een eigen groep.
+    await ga(page, '/helpcenter?zoek=waardestatement')
+    await expect(page.getByTestId('help-resultaten')).toContainText('Nieuwe klanten werven')
+    await expect(page.getByTestId('help-resultaten')).toContainText('Klantsituaties en waardestatements')
+  })
+
   test('een categorie die niet voor jouw rol is, bestaat niet; de beheerder ziet Inrichten', async ({ page }) => {
     await login(page, 'u-01')
     await ga(page, '/helpcenter/categorie/inrichten')

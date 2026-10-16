@@ -157,6 +157,18 @@ describe('concepten en mail', () => {
       expect(joost.includes('cr-voicemail')).toBe(anoukInTeam)
     })
   })
+  it('de conceptenpagina: account en contact per concept, filters en tellers', async () => {
+    await inOrg(ORG, async (tx) => {
+      const r = await b.conceptenOverzicht(tx, anouk, { status: 'alle', zoek: (await rij(tx, sql`select name from accounts where id = 'pr-06'`)).name })
+      const c = r.concepten.find((x) => x.id === 'cr-voicemail')!
+      expect(c.account).toMatchObject({ id: 'pr-06' })
+      const verwacht = await rij(tx, sql`select id from contacts where account_id = 'pr-06' and status <> 'vertrokken' and rol = 'beslisser' limit 1`)
+      if (verwacht) expect(c.contact).toMatchObject({ id: verwacht.id, via: 'beslisser' })
+      expect(r.tellers.status.alle).toBe(r.totaal)
+      expect((await b.conceptenOverzicht(tx, anouk, { zoek: 'bestaat-niet-xyz' })).totaal).toBe(0)
+      expect((await b.conceptenOverzicht(tx, anouk, { status: 'alle', concept: 'cr-voicemail', soort: 'whatsapp' })).uitgelicht?.id).toBe('cr-voicemail')
+    })
+  })
   it('RLS: een andere organisatie ziet concepten, briefingteksten en sjablonen niet', async () => {
     await inOrg('org-tweede', async (tx) => {
       for (const t of ['concepten', 'briefing_teksten', 'mailsjablonen']) expect((await rij(tx, sql.raw(`select count(*)::int as n from ${t}`))).n).toBe(0)

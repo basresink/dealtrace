@@ -53,7 +53,7 @@ export async function kaartTabbladen(tx: any, b: KaartBereik) {
     where ${op('a')} order by a.start_at desc limit 200`)
   const afspraken = afsprakenRij.map((a) => ({
     id: a.id, soort: a.soort_naam ?? 'Afspraak', vorm: a.vorm, status: a.status, start: iso(a.start_at), eind: iso(a.end_at), locatie: a.data?.locatie ?? null,
-    uitkomst: a.uitkomst_code, contact: naamVan(a), eigenaar: kaal(a.eigenaar), heeftVerslag: !!a.data?.verslag?.tekst, ...metContact(a),
+    uitkomst: a.uitkomst_code, contact: naamVan(a), eigenaar: kaal(a.eigenaar), heeftVerslag: !!a.data?.verslag?.tekst, titel: a.data?.titel ?? null, ...metContact(a),
   }))
   const afspraakIds = afsprakenRij.map((a) => a.id as string)
   const afspraakLijst = afspraakIds.length ? sql.join(afspraakIds.map((x) => sql`${x}`), sql`, `) : sql`null`

@@ -10,7 +10,7 @@ type Rij = typeof schema.helpArtikelen.$inferSelect
 export function naarArtikel(r: Rij): HelpArtikel & { id: string; versie: number } {
   return {
     id: r.id, slug: r.slug, titel: r.titel, categorie: r.categorie, collectie: r.collectie as HelpArtikel['collectie'], samenvatting: r.data.samenvatting ?? '',
-    inhoud: r.data.inhoud ?? '', routes: r.data.routes ?? [], features: r.data.features ?? [], vragen: (r.data as any).vragen ?? [], niveau: r.niveau, organisationId: r.organisationId, bijgewerktOp: r.bijgewerktOp, versie: r.versie,
+    inhoud: r.data.inhoud ?? '', routes: r.data.routes ?? [], features: r.data.features ?? [], vragen: (r.data as any).vragen ?? [], bron: r.data.bron ?? null, niveau: r.niveau, organisationId: r.organisationId, bijgewerktOp: r.bijgewerktOp, versie: r.versie,
   }
 }
 

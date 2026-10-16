@@ -107,6 +107,7 @@ MOCK_GENERATOREN.notulist = (m) => {
     bezwaren: zinnen.filter((z) => /duur|goedkoper|tevreden/i.test(z)).slice(0, 3),
     concurrenten: (m?.concurrenten ?? []).filter((c: any) => t.toLowerCase().includes(String(c.naam).toLowerCase().replace(/\s*b\.?v\.?$/i, ''))).map((c: any) => c.naam),
     actiepunten: zinnen.filter((z) => /sturen|bellen|mailen|plannen|terugkomen/i.test(z)).slice(0, 3),
+    samenvatting: zinnen.slice(0, 2).join(' '),
   }
 }
 // De Coach (P21): punten uit de cijfers, elk met een bestaand artikel; onder het minimum geen vergelijking.

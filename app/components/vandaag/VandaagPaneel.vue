@@ -2,14 +2,14 @@
 // Vandaag in drie kolommen (opzet uit DealDrive, VandaagPanel): Taken, Afspraken en Prio in één kaart,
 // met de datum en een knop naar de agenda. Een taak of afspraak opent zijn venster; een prio-regel
 // gaat naar het inzicht, de taak of de accountkaart.
-import { ACTIE_LABEL } from '~~/shared/taken'
+import { ACTIE_LABEL, PRIO_LABEL, isDringend } from '~~/shared/taken'
 const props = defineProps<{ taken: { lijst: any[]; meer: number; totaal: number }; afspraken: any[]; prio: any[]; dag?: string }>()
 const emit = defineEmits<{ open: [id: string] }>()
 const datum = computed(() => new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Amsterdam' }).format(props.dag ? new Date(`${props.dag}T12:00:00Z`) : new Date()))
 const tijd = (iso: string | null) => (iso ? new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(iso)) : '')
 const dagKort = (iso: string | null) => (iso ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date(iso)).replace('.', '') : '')
 function label(t: any) {
-  if (t.priority === 'hoog') return { tekst: 'Urgent', soort: 'hot' }
+  if (isDringend(t.priority)) return { tekst: PRIO_LABEL[t.priority] ?? 'Urgent', soort: 'hot' }
   return { tekst: ACTIE_LABEL[t.actionType] ?? 'Taak', soort: t.concept ? 'ai' : 'standaard' }
 }
 </script>

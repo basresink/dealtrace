@@ -181,3 +181,6 @@ button.item-rij:hover .item-naam { color: var(--yellow-dark); }
   .keuzegroep-knop { min-height: var(--touch-target-min); }
   .dd-act--icoon { width: var(--touch-target-min); height: var(--touch-target-min); }
 }
+
+/* "Bel" onder een telefoonveld in een venster (Info, Contact-info). */
+.veld .veld-bel { align-self: flex-start; width: fit-content; margin-top: 8px; }

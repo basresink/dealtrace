@@ -6,6 +6,7 @@ import { combineer, kiesBriefingSoort, gewogenBezwaren, pitstopDrieRegels, SOORT
 import { filterNamen } from '../../shared/verkoopverhaal'
 import { bouwPrompt, lengteBinnenGrens, mailtoLink, overname, stijlScore, whatsappLink, type SchrijfKanaal } from '../../shared/schrijver'
 import { STANDAARD_FASES } from '../../shared/reis'
+import { filterConcepten, sindsVan, type ConceptFilter } from '../../shared/concepten'
 import type { JsonSchema } from '../../shared/aiStap'
 import { logAgentRun, toets } from './agents/bewaker'
 import { gebruikDb } from './db'
@@ -152,22 +153,51 @@ export async function bereidVoor(tx: Tx, org: string, gebruiker: any, o: { soort
 // ── Concepten (inbox, 8.5.7) ───────────────────────────────────────────────
 
 export const conceptUit = (r: Rij) => ({
-  id: r.id as string, agent: r.agent as string, handeling: r.handeling as string, status: r.status as string, overname: r.overname, op: iso(r.op),
+  id: r.id as string, agent: r.agent as string, handeling: r.handeling as string, status: r.status as string, overname: r.overname, op: iso(r.op), beslotenOp: iso(r.besloten_op),
   accountId: r.account_id, accountNaam: r.account_naam ?? null, taskId: r.task_id, afspraakId: r.appointment_id, gebruikerId: r.gebruiker_id, gebruiker: r.gebruiker_naam ?? null, concept: r.concept,
-  links: r.concept && r.concept.type !== 'briefing' ? { mailto: r.concept.type === 'mail' ? mailtoLink({ aan: r.email ?? null, onderwerp: r.concept.onderwerp, tekst: r.concept.tekst }) : null, whatsapp: whatsappLink(String(r.concept.tekst ?? ''), r.mobiel ?? null) } : null,
+  account: r.account_id && r.account_naam ? { id: r.account_id as string, naam: r.account_naam as string, soort: (r.account_kind ?? null) as string | null } : null,
+  // Het contact: uit het concept, anders van de taak of afspraak waar het aan hangt, anders de beslisser.
+  contact: r.ct_id ? { id: r.ct_id as string, naam: [r.ct_voornaam, r.ct_achternaam].filter(Boolean).join(' ') || 'Contact', functie: r.ct_functie ?? null, rol: r.ct_rol ?? null, email: r.ct_email || null, via: (r.ct_id === r.concept?.contactId ? 'concept' : r.ct_id === r.taak_contact ? 'taak' : r.ct_id === r.afspraak_contact ? 'afspraak' : 'beslisser') as string } : null,
+  taak: r.task_id && r.taak_titel ? { id: r.task_id as string, titel: r.taak_titel as string } : null,
+  afspraak: r.appointment_id && r.afspraak_start ? { id: r.appointment_id as string, start: iso(r.afspraak_start) } : null,
+  links: r.concept && r.concept.type !== 'briefing' && r.concept.type !== 'taak' ? { mailto: r.concept.type === 'mail' ? mailtoLink({ aan: r.email ?? null, onderwerp: r.concept.onderwerp, tekst: r.concept.tekst }) : null, whatsapp: whatsappLink(String(r.concept.tekst ?? ''), r.mobiel ?? null) } : null,
 })
+
+/** De rijen van de inbox met account, contact, taak en afspraak; eigen concepten en die van het team. */
+async function conceptRijen(tx: Tx, wie: string[], f: { status?: string | null; type?: string | null; accountId?: string | null; sinds?: Date | null; limiet: number }) {
+  return rijen(tx, sql`select r.*, a.name as account_naam, a.account_kind, u.name as gebruiker_naam, m.email, m.mobiel,
+        t.title as taak_titel, t.contact_id as taak_contact, ap.start_at as afspraak_start, ap.contact_id as afspraak_contact,
+        ct.id as ct_id, ct.first_name as ct_voornaam, ct.last_name as ct_achternaam, ct.rol as ct_rol, ct.email as ct_email, ct.data->>'functie' as ct_functie
+      from concepten r
+      left join accounts a on a.id = r.account_id left join users u on u.id = r.gebruiker_id
+      left join tasks t on t.id = r.task_id left join appointments ap on ap.id = r.appointment_id
+      left join lateral (select coalesce(r.concept->>'contactId', t.contact_id, ap.contact_id, '') as id) g on true
+      left join lateral (select id, first_name, last_name, rol, email, data from contacts where account_id = r.account_id and status <> 'vertrokken' and (id = g.id or rol = 'beslisser') order by (id = g.id) desc limit 1) ct on true
+      left join lateral (select email, data->>'mobiel' as mobiel from contacts where account_id = r.account_id and status <> 'vertrokken' and coalesce(email, '') <> '' order by (id = g.id) desc, (rol = 'beslisser') desc limit 1) m on true
+    where r.gebruiker_id = any(string_to_array(${wie.join(',')}, ','))
+      ${f.status === 'alle' ? sql`` : f.status ? sql`and r.status = ${f.status}` : sql`and r.status in ('klaar', 'goedgekeurd')`}
+      ${f.type ? sql`and r.concept->>'type' = ${f.type}` : sql``} ${f.accountId ? sql`and r.account_id = ${f.accountId}` : sql``}
+      ${f.sinds ? sql`and r.op >= ${f.sinds.toISOString()}` : sql``}
+    order by r.op desc limit ${f.limiet}`)
+}
 
 /** De inbox: eigen concepten; de salesmanager ook die van zijn teams (8.12). */
 export async function concepten(tx: Tx, g: { id: string; rol: string }, f: { status?: string | null; type?: string | null; accountId?: string | null; team?: boolean } = {}) {
   const wie = f.team && ['salesmanager', 'beheerder'].includes(g.rol) ? await teamLeden(tx, g) : [g.id]
-  const rows = await rijen(tx, sql`select r.*, a.name as account_naam, u.name as gebruiker_naam, c.email, c.data->>'mobiel' as mobiel from concepten r
-      left join accounts a on a.id = r.account_id left join users u on u.id = r.gebruiker_id
-      left join lateral (select email, data from contacts where account_id = r.account_id and status <> 'vertrokken' and coalesce(email, '') <> '' order by (rol = 'beslisser') desc limit 1) c on true
-    where r.gebruiker_id = any(string_to_array(${wie.join(',')}, ','))
-      ${f.status === 'alle' ? sql`` : f.status ? sql`and r.status = ${f.status}` : sql`and r.status in ('klaar', 'goedgekeurd')`}
-      ${f.type ? sql`and r.concept->>'type' = ${f.type}` : sql``} ${f.accountId ? sql`and r.account_id = ${f.accountId}` : sql``}
-    order by r.op desc limit 100`)
-  return rows.map(conceptUit)
+  return (await conceptRijen(tx, wie, { ...f, limiet: 100 })).map(conceptUit)
+}
+
+/** De conceptenpagina: filters op soort, status, agent, account (zoeken) en periode, met tellers per filter. */
+export async function conceptenOverzicht(tx: Tx, g: { id: string; rol: string }, f: ConceptFilter & { accountId?: string | null; sinds?: string | null; team?: boolean; concept?: string | null }, nu = new Date()) {
+  const wie = f.team && ['salesmanager', 'beheerder'].includes(g.rol) ? await teamLeden(tx, g) : [g.id]
+  const alle = (await conceptRijen(tx, wie, { status: 'alle', accountId: f.accountId, sinds: sindsVan(f.sinds, nu), limiet: 1000 })).map((r) => {
+    const c = conceptUit(r)
+    return { ...c, type: (c.concept?.type ?? null) as string | null, zoektekst: [c.accountNaam, c.contact?.naam, c.concept?.onderwerp].filter(Boolean).join(' ') }
+  })
+  const { concepten: lijst, tellers } = filterConcepten(alle, f)
+  const uit = ({ type: _t, zoektekst: _z, ...c }: (typeof alle)[number]) => c
+  const uitgelicht = f.concept ? alle.find((c) => c.id === f.concept) ?? (await conceptRijen(tx, wie, { status: 'alle', limiet: 1000 })).map(conceptUit).find((c) => c.id === f.concept) ?? null : null
+  return { concepten: lijst.slice(0, 100).map(uit), totaal: lijst.length, tellers, uitgelicht: uitgelicht ? ('zoektekst' in uitgelicht ? uit(uitgelicht as any) : uitgelicht) : null }
 }
 
 /** Goedkeuren (met of zonder aanpassing) of verwerpen; legt de overname vast (11.2). 409 als het al besloten is. */

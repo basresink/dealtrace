@@ -9,6 +9,23 @@ export const CONTACT_ACTIES = new Set(['bellen', 'mailen', 'linkedin', 'bezoek',
 export const HERKOMST_LABEL: Record<string, string> = { regel: 'Uit regel', inzicht: 'Uit inzicht', campagne: 'Campagne', ritme: 'Ritme', handmatig: 'Handmatig', startactiviteit: 'Uit regel', agent: 'Agent' }
 export const AFWIJS_REDENEN = ['Niet relevant', 'Al bekend', 'Verkeerd account', 'Te oud'] as const
 export const PRIO_VOLGORDE: Record<string, number> = { urgent: 0, hoog: 1, middel: 2, laag: 3 }
+/** Prioriteit van een taak: vier niveaus zoals DealDrive. Regels kennen er drie; urgent zet je zelf. */
+export const PRIORITEITEN = ['laag', 'middel', 'hoog', 'urgent'] as const
+export type Prioriteit = (typeof PRIORITEITEN)[number]
+export const PRIO_LABEL: Record<string, string> = { laag: 'Laag', middel: 'Middel', hoog: 'Hoog', urgent: 'Urgent' }
+/** Klasse van de gekleurde stip (laag grijs, middel geel, hoog oranje, urgent rood). */
+export const PRIO_STIP: Record<string, string> = { laag: 'prio-stip--low', middel: 'prio-stip--medium', hoog: 'prio-stip--high', urgent: 'prio-stip--urgent' }
+export const isPrioriteit = (p: unknown): p is Prioriteit => typeof p === 'string' && (PRIORITEITEN as readonly string[]).includes(p)
+/** Hoog en urgent krijgen in rijen het rode icoon en tellen als risico als ze over tijd zijn. */
+export const isDringend = (p: string | null | undefined) => p === 'hoog' || p === 'urgent'
+/** Type van een taak als knop met icoon, in de volgorde van DealDrive (Te doen, Bellen, Mailen, Bericht) plus wat Dealtrace kent. */
+export const TAAK_TYPES: { id: string; label: string; icoon: string }[] = [
+  { id: 'taak', label: 'Te doen', icoon: 'ListTodo' }, { id: 'bellen', label: 'Bellen', icoon: 'Phone' }, { id: 'mailen', label: 'Mailen', icoon: 'Mail' },
+  { id: 'bericht', label: 'Bericht', icoon: 'MessageCircle' }, { id: 'bezoek', label: 'Bezoek', icoon: 'MapPin' }, { id: 'linkedin', label: 'LinkedIn', icoon: 'Linkedin' },
+]
+export const STATUS_LABEL: Record<string, string> = { open: 'Open', bezig: 'Bezig', klaar: 'Klaar', geannuleerd: 'Geannuleerd' }
+export const HERHALING_LABEL: Record<string, string> = { werkdag: 'Elke werkdag', wekelijks: 'Wekelijks', omdeweek: 'Om de week', maandelijks: 'Maandelijks' }
+export const HERINNERING_KANAAL: Record<string, string> = { 'in-app': 'In de app', email: 'E-mail', beide: 'In de app en e-mail' }
 const KANAAL_ACTIVITEIT: Record<string, { soort: string; kanaal: string }> = {
   bellen: { soort: 'gebeld', kanaal: 'telefoon' }, mailen: { soort: 'mail', kanaal: 'email' }, linkedin: { soort: 'bericht', kanaal: 'linkedin' },
   bezoek: { soort: 'bezoek', kanaal: 'bezoek' }, bericht: { soort: 'bericht', kanaal: 'whatsapp' }, taak: { soort: 'taak', kanaal: 'intern' },
@@ -128,6 +145,35 @@ function volgendeHerhaling(vanaf: string, soort: string, inst: WerkdagInstelling
   if (soort === 'werkdag') return nlTijdstip(volgendeWerkdag(d.datum, inst), d.uur)
   const n = new Date(Date.parse(`${d.datum}T12:00:00Z`) + (dagen[soort] ?? 7) * 864e5).toISOString().slice(0, 10)
   return nlTijdstip(voegWerkdagenToe(n, 0, inst), d.uur)
+}
+
+/**
+ * Aantal taken in een herhaalde reeks: de eerste plus elke herhaling tot en met `tot` (YYYY-MM-DD),
+ * hooguit 52. Dezelfde stap als het vervolg na afronden, zodat het getal in het venster klopt.
+ */
+export function herhalingAantal(eerste: string, soort: string, tot: string, inst: WerkdagInstelling = {}): number {
+  if (!eerste || Number.isNaN(Date.parse(eerste)) || !/^\d{4}-\d{2}-\d{2}$/.test(tot)) return 1
+  let n = 1
+  let d = eerste
+  while (n < 52) {
+    const v = volgendeHerhaling(d, soort, inst)
+    if (nlMoment(v).datum > tot) break
+    n++
+    d = v.toISOString()
+  }
+  return n
+}
+
+/** "Volgende stap" in het taakvenster (DealDrive): één zin die zegt wat je nu met de taak doet. */
+export function volgendeStap(t: { priority: string; dueDate: string | null; herkomst?: string | null; status?: string; agent?: string | null; poging?: { n: number; van: number } | null }, nu: Date): string {
+  if (t.status === 'klaar') return 'Deze taak is afgerond. Kijk op de klantkaart wat er daarna gebeurde.'
+  if (t.priority === 'urgent') return 'Pak deze nu op. Urgent betekent niet doorschuiven.'
+  if (isAchterstallig(t, nu)) return 'Deze taak is over tijd. Beslis nu: doen, uitstellen of annuleren met een reden.'
+  if (t.poging && t.poging.n >= t.poging.van) return 'Laatste poging uit het ritme. Zonder reactie gaat het account daarna naar Geparkeerd.'
+  if (t.agent || t.herkomst === 'agent') return 'Voorbereid door een agent: lees het concept na en keur het goed of pas het aan.'
+  if (t.herkomst === 'inzicht') return 'Gemaakt uit een inzicht. Noem de aanleiding in je eerste zin.'
+  if (t.poging) return `Poging ${t.poging.n} van ${t.poging.van}. Leg de uitkomst vast, dan zet Dealtrace de volgende poging klaar.`
+  return 'Plan een concreet moment en leg de uitkomst vast zodra het gedaan is.'
 }
 
 /** Achterstallig, dan vandaag, dan prioriteit, dan tijd; zonder datum achteraan. */

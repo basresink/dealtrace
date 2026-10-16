@@ -6,7 +6,7 @@
 // GET /api/contacten/:id/tabbladen. Op de accountkaart staat bij elk item de naam van het contact met een
 // link naar de contactkaart; op de contactkaart hoort alles bij dat ene contact. De inhoud van Reis en
 // kwalificatie en Eigen velden levert de pagina (slots).
-import { ACTIE_LABEL, HERKOMST_LABEL } from '~~/shared/taken'
+import { ACTIE_LABEL, HERKOMST_LABEL, PRIO_LABEL, isDringend } from '~~/shared/taken'
 
 const props = defineProps<{
   account: { id: string; naam: string; soort?: string | null }
@@ -32,7 +32,7 @@ const SOORT: Record<string, string> = { gebeld: 'Gebeld', mail: 'Mail', notitie:
 const VORM: Record<string, string> = { bezoek: 'Bezoek', online: 'Online', telefoon: 'Telefoon' }
 const AFSPRAAK_STATUS: Record<string, string> = { gepland: 'Gepland', afgerond: 'Gehouden', geannuleerd: 'Geannuleerd', 'no-show': 'Niet verschenen' }
 const DEAL_FASE: Record<string, string> = { overgedragen: 'Overgedragen', lopend: 'Loopt in DealDrive', gewonnen: 'Gewonnen', verloren: 'Verloren', klaar: 'Klaar', verstuurd: 'Verstuurd', bevestigd: 'Bevestigd', mislukt: 'Mislukt' }
-const PRIO: Record<string, string> = { hoog: 'Urgent', middel: 'Normaal', laag: 'Laag' }
+const PRIO = PRIO_LABEL
 const CAMP_KOLOM: Record<string, string> = { klaar: 'Klaar', bezig: 'Bezig', afspraak: 'Afspraak', nee: 'Nee', 'geen-reactie': 'Geen reactie', later: 'Later' }
 const kaal = (n: unknown) => String(n ?? '').replace(/^Testgebruiker /, '')
 const datumLang = (d: string | null) => (d ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Amsterdam' }).format(new Date(d)).replace('.', '') : '–')
@@ -63,7 +63,7 @@ const tlAlles = computed<TlItem[]>(() => {
     const open = ['open', 'bezig'].includes(x.status)
     uit.push({ key: `t-${x.id}`, soort: 'taak', soortLabel: 'Taak', typeLabel: ACTIE_LABEL[x.actionType] ?? 'Taak', titel: x.title, tekst: x.aanleiding, status: !open ? 'Afgerond' : x.achterstallig ? 'Achterstallig' : 'Open', statusSoort: !open ? 'klaar' : x.achterstallig ? 'laat' : 'open', ms: Date.parse(x.afgerondOp ?? x.dueDate ?? '') || 0, contact: contactVan(x), open: () => { taakId.value = x.id } })
   }
-  for (const x of t.value.afspraken) uit.push({ key: `a-${x.id}`, soort: 'afspraak', soortLabel: 'Afspraak', typeLabel: VORM[x.vorm] ?? x.vorm, titel: x.soort + (x.contact ? ` met ${x.contact}` : ''), tekst: x.locatie, status: AFSPRAAK_STATUS[x.status] ?? x.status, statusSoort: x.status === 'afgerond' ? 'klaar' : x.status === 'gepland' ? 'open' : 'laat', ms: Date.parse(x.start), contact: contactVan(x), open: () => { afspraakId.value = x.id } })
+  for (const x of t.value.afspraken) uit.push({ key: `a-${x.id}`, soort: 'afspraak', soortLabel: 'Afspraak', typeLabel: VORM[x.vorm] ?? x.vorm, titel: x.titel ?? (x.soort + (x.contact ? ` met ${x.contact}` : '')), tekst: x.locatie, status: AFSPRAAK_STATUS[x.status] ?? x.status, statusSoort: x.status === 'afgerond' ? 'klaar' : x.status === 'gepland' ? 'open' : 'laat', ms: Date.parse(x.start), contact: contactVan(x), open: () => { afspraakId.value = x.id } })
   // Deals horen bij het account; op de contactkaart staan ze alleen in het tabblad Deals.
   if (!opContact.value) for (const d of t.value.deals) uit.push({ key: `d-${d.id}`, soort: 'deal', soortLabel: 'Deal', typeLabel: OV_NAAR[d.naar] ?? d.naar, titel: d.titel, tekst: d.eigenaar ? `Eigenaar in DealDrive: ${d.eigenaar}` : null, status: DEAL_FASE[d.fase] ?? d.fase, statusSoort: d.fase === 'gewonnen' ? 'klaar' : ['verloren', 'mislukt'].includes(d.fase) ? 'laat' : 'open', ms: Date.parse(d.op), contact: null })
   for (const x of momenten.value.filter((m) => m.soort !== 'notitie')) uit.push({ key: `c-${x.id}`, soort: 'contact', soortLabel: 'Contact', typeLabel: SOORT[x.soort] ?? x.soort, titel: [SOORT[x.soort] ?? x.soort, x.uitkomst ? String(x.uitkomst).replace(/_/g, ' ') : null].filter(Boolean).join(' · '), tekst: [x.tekst, x.door ? kaal(x.door) : null].filter(Boolean).join(' · ') || null, ms: Date.parse(x.op), contact: contactVan(x) })
@@ -194,7 +194,7 @@ const tabs = computed(() => [
             <header class="ak-groepkop"><h3>{{ g.label }}</h3><span class="tnum">{{ g.items.length }}</span></header>
             <ol class="tl-lijst">
               <li v-for="x in g.items" :key="x.id" class="tl-item">
-                <span class="tl-spoor" :class="x.priority === 'hoog' ? 'tl-spoor--urgent' : 'tl-spoor--taak'" aria-hidden="true" />
+                <span class="tl-spoor" :class="isDringend(x.priority) ? 'tl-spoor--urgent' : 'tl-spoor--taak'" aria-hidden="true" />
                 <div class="tl-kaart tl-kaart--klik">
                   <span class="tl-kop"><span class="tl-soort tl-soort--taak">{{ ACTIE_LABEL[x.actionType] ?? 'Taak' }}</span><span class="tl-type">{{ PRIO[x.priority] ?? x.priority }}</span><span class="tl-type">{{ HERKOMST_LABEL[x.herkomst] ?? 'Handmatig' }}</span><NuxtLink v-if="contactVan(x)" :to="`/contacten/${x.contactId}`" class="tl-contact" data-test="tl-contact"><Icoon naam="CircleUser" :grootte="12" />{{ x.contactNaam }}</NuxtLink><span class="tl-datum tnum" :class="{ 'tl-datum--rood': x.achterstallig }">{{ wanneer(x.dueDate) }}</span></span>
                   <button type="button" class="tl-titel tl-strek" :data-test="`ak-taak-${x.id}`" @click="taakId = x.id">{{ x.title }}</button>
@@ -242,7 +242,7 @@ const tabs = computed(() => [
               <span class="tl-spoor tl-spoor--afspraak" aria-hidden="true" />
               <div class="tl-kaart tl-kaart--klik">
                 <span class="tl-kop"><span class="tl-soort tl-soort--afspraak">{{ x.soort }}</span><span class="tl-type">{{ VORM[x.vorm] ?? x.vorm }}</span><NuxtLink v-if="contactVan(x)" :to="`/contacten/${x.contactId}`" class="tl-contact" data-test="tl-contact"><Icoon naam="CircleUser" :grootte="12" />{{ x.contactNaam }}</NuxtLink><span class="tl-datum tnum">{{ wanneer(x.start) }}</span></span>
-                <button type="button" class="tl-titel tl-strek" :data-test="`ak-afspraak-${x.id}`" @click="afspraakId = x.id">{{ x.soort }}<template v-if="x.contact"> met {{ x.contact }}</template></button>
+                <button type="button" class="tl-titel tl-strek" :data-test="`ak-afspraak-${x.id}`" @click="afspraakId = x.id"><template v-if="x.titel">{{ x.titel }}</template><template v-else>{{ x.soort }}<template v-if="x.contact"> met {{ x.contact }}</template></template></button>
                 <span v-if="x.locatie || x.eigenaar" class="tl-tekst">{{ [x.locatie, x.eigenaar].filter(Boolean).join(' · ') }}</span>
                 <span class="tl-status" :class="x.status === 'afgerond' ? 'tl-status--klaar' : x.status === 'gepland' ? 'tl-status--open' : 'tl-status--laat'">{{ AFSPRAAK_STATUS[x.status] ?? x.status }}<template v-if="x.heeftVerslag"> · verslag</template></span>
               </div>

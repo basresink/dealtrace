@@ -23,7 +23,7 @@ export async function zorgVoorHelp(client: Pick<pg.Client, 'query'>): Promise<{ 
   let nieuw = 0
   let bijgewerkt = 0
   for (const a of artikelen) {
-    const data = JSON.stringify({ samenvatting: a.samenvatting, inhoud: a.inhoud, routes: a.routes, features: a.features, vragen: a.vragen ?? [], hash: a.hash })
+    const data = JSON.stringify({ samenvatting: a.samenvatting, inhoud: a.inhoud, routes: a.routes, features: a.features, vragen: a.vragen ?? [], bron: a.bron ?? null, hash: a.hash })
     if (!bestaand.has(a.slug)) {
       await client.query(`insert into help_artikelen (organisation_id, collectie, categorie, slug, titel, niveau, data) values (null, $1, $2, $3, $4, $5, $6)`,
         [a.collectie, a.categorie, a.slug, a.titel, a.niveau ?? null, data])

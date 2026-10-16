@@ -4,6 +4,7 @@
 // geel, bezoek groen, mail blauw, urgent rood, overig zwart). Een taak opent het taakvenster, een
 // afspraak de agenda met het afspraakvenster.
 import { nlMoment, plusDagen } from '~~/shared/datum'
+import { isDringend } from '~~/shared/taken'
 const props = defineProps<{ horizon: { vandaag: any[]; komendeWeek: any[]; week23: any[] } }>()
 const emit = defineEmits<{ open: [id: string] }>()
 const vandaag = nlMoment(new Date()).datum
@@ -15,7 +16,7 @@ interface Item { id: string; soort: Soort; titel: string; meta: string; tijd: st
 const dagVan = (iso: string) => nlMoment(new Date(iso)).datum
 const tijd = (iso: string) => new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(iso))
 function taakItem(t: any): Item {
-  const soort: Soort = t.priority === 'hoog' ? 'urgent' : t.actionType === 'bellen' ? 'call' : t.actionType === 'bezoek' ? 'visit' : t.actionType === 'mailen' ? 'email' : 'note'
+  const soort: Soort = isDringend(t.priority) ? 'urgent' : t.actionType === 'bellen' ? 'call' : t.actionType === 'bezoek' ? 'visit' : t.actionType === 'mailen' ? 'email' : 'note'
   const d = t.dueDate ? dagVan(t.dueDate) : vandaag
   return { id: `taak-${t.id}`, soort, titel: t.title, meta: [t.account?.naam, t.poging ? `poging ${t.poging.n} van ${t.poging.van}` : null].filter(Boolean).join(' · '), tijd: t.dueDate ? tijd(t.dueDate) : '', ts: t.dueDate ? Date.parse(t.dueDate) : 0, dag: d < vandaag ? vandaag : d, afspraak: false, tag: d < vandaag ? 'Over tijd' : null, taakId: t.id }
 }

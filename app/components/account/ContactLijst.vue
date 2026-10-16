@@ -19,6 +19,7 @@ const nieuwOpen = ref(false)
 const nieuweTaak = ref(false)
 const nieuweAfspraak = ref(false)
 const taakAccount = ref<{ id: string; naam: string } | null>(null)
+const taakContact = ref<{ id: string; naam: string; functie?: string | null } | null>(null)
 const afspraakAccount = ref<{ id: string; naam: string } | null>(null)
 const keuzemenu = ref<'weergave' | 'sortering' | null>(null)
 const zoekOpen = ref(!!route.query.q)
@@ -84,7 +85,7 @@ function sluitMenus() { menu.value = null; keuzemenu.value = null }
 function opEscape(e: KeyboardEvent) { if (e.key === 'Escape' && (menu.value || keuzemenu.value)) sluitMenus() }
 onMounted(() => { window.addEventListener('click', sluitMenus); window.addEventListener('keydown', opEscape) })
 onBeforeUnmount(() => { window.removeEventListener('click', sluitMenus); window.removeEventListener('keydown', opEscape) })
-function taakVoor(c: any | null) { taakAccount.value = c ? { id: c.accountId, naam: c.bedrijf } : null; nieuweTaak.value = true }
+function taakVoor(c: any | null) { taakAccount.value = c ? { id: c.accountId, naam: c.bedrijf } : null; taakContact.value = c ? { id: c.id, naam: c.naam, functie: c.functie ?? null } : null; nieuweTaak.value = true }
 function afspraakVoor(c: any | null) { afspraakAccount.value = c ? { id: c.accountId, naam: c.bedrijf } : null; nieuweAfspraak.value = true }
 async function wijzig(c: any, patch: Record<string, unknown>, melding: string) {
   try { await $fetch(`/api/contacten/${c.id}`, { method: 'PUT', body: patch }); toast.toon(melding); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
@@ -191,7 +192,7 @@ const resultaat = computed(() => `${data.value.aantal} ${data.value.aantal === 1
       </div>
     </Teleport>
     <NieuwContactFlyout :open="nieuwOpen" @sluit="nieuwOpen = false" @aangemaakt="aangemaakt" />
-    <NieuweTaakFlyout :open="nieuweTaak" :account="taakAccount" @sluit="nieuweTaak = false" @gemaakt="nieuweTaak = false; refresh()" />
+    <NieuweTaakFlyout :open="nieuweTaak" :account="taakAccount" :contact="taakContact" @sluit="nieuweTaak = false" @gemaakt="nieuweTaak = false; refresh()" />
     <PlanAfspraakFlyout :open="nieuweAfspraak" :account="afspraakAccount" @sluit="nieuweAfspraak = false" @gepland="(id: string) => { nieuweAfspraak = false; navigateTo(`/agenda?weergave=dag&afspraak=${id}`) }" />
   </div>
 </template>

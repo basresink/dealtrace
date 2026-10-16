@@ -19,6 +19,7 @@ import { kiesRitme, startRitme, type Ritme } from '../../shared/hercontact'
 import { afkoelingVoorNee } from '../../shared/nbStatus'
 import { standaardReisId } from '../../shared/reis'
 import { berekenScore, laatsteContact } from '../../shared/score'
+import { seedAccountplannenEva } from './seedAccountplannen'
 
 const EVA = 'u-07'
 const INST: WerkdagInstelling = { werkdagen: [1, 2, 3, 4, 5], bevrijdingsdag: 'lustrum' }
@@ -488,6 +489,9 @@ export async function seedEva(client: pg.Client, orgId: string, nu = new Date())
     ],
   })])
   await client.query(`insert into coaching_notities (id, organisation_id, gebruiker_id, manager_id, soort, tekst, termijn, sessie_id) values ('cn-eva-1', $1, $2, 'u-04', 'afspraak', 'Elke vrijdag de pijplijn bijwerken voor het weekoverleg.', $3, 'cs-eva-1') on conflict do nothing`, [orgId, EVA, wd(10)])
+
+  // ── Accountplan voor de klant (Expert): één actueel plan met drie acties als taak ──
+  await seedAccountplannenEva(client, orgId, { vandaag, wd, om })
 
   return { accounts: nAccounts, contacten: nContacten, taken: nTaken, afspraken: nAfspraken }
 }

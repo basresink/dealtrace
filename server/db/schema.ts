@@ -1,7 +1,7 @@
 // Drizzle-schema van de tabellen uit 0001_fundament.sql. De SQL-migratie is de
 // bron; dit schema geeft de server getypte queries.
 
-import { boolean, doublePrecision, integer, jsonb, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core'
+import { boolean, date, doublePrecision, integer, jsonb, pgTable, primaryKey, text, timestamp } from 'drizzle-orm/pg-core'
 
 const ts = (naam: string) => timestamp(naam, { withTimezone: true, mode: 'string' })
 
@@ -506,6 +506,8 @@ export const tasks = pgTable('tasks', {
   onderwerp: text('onderwerp'),
   campaignId: text('campaign_id'),
   belblokId: text('belblok_id'),
+  /** Accountplannen (0048): de actie uit het actieplan van dit plan. */
+  accountplanId: text('accountplan_id'),
   actionType: text('action_type').notNull().default('taak'),
   title: text('title').notNull(),
   status: text('status').notNull().default('open'),
@@ -559,7 +561,7 @@ export const platformAgentmaxima = pgTable('platform_agentmaxima', {
 })
 
 // P09: helpcenter (0009_help.sql)
-export interface HelpData { samenvatting?: string; inhoud?: string; routes?: string[]; features?: string[]; vragen?: unknown[]; videoUrl?: string; hash?: string }
+export interface HelpData { samenvatting?: string; inhoud?: string; routes?: string[]; features?: string[]; vragen?: unknown[]; videoUrl?: string; hash?: string; bron?: string | null }
 export const helpArtikelen = pgTable('help_artikelen', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
   organisationId: text('organisation_id'),
@@ -813,4 +815,24 @@ export const whatsappBerichten = pgTable('whatsapp_berichten', {
   status: text('status').notNull().default('verzonden'),
   door: text('door'),
   op: ts('op').defaultNow().notNull(),
+})
+
+// Accountplannen (0048_accountplannen.sql): een plan per klant of prospect; de acties zijn taken (tasks.accountplan_id).
+export interface AccountplanData {
+  secties?: Partial<Record<'klantinformatie' | 'doelstellingen' | 'kansen' | 'bedreigingen' | 'strategieen' | 'evaluatie', string>>
+  contactIds?: string[]
+}
+export const accountplannen = pgTable('accountplannen', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  accountId: text('account_id').notNull(),
+  ownerId: text('owner_id'),
+  titel: text('titel').notNull(),
+  status: text('status').notNull().default('actueel'),
+  geldigVan: date('geldig_van', { mode: 'string' }),
+  geldigTot: date('geldig_tot', { mode: 'string' }),
+  data: jsonb('data').$type<AccountplanData>().notNull().default({}),
+  door: text('door'),
+  createdAt: ts('created_at').defaultNow().notNull(),
+  updatedAt: ts('updated_at').defaultNow().notNull(),
 })

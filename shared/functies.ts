@@ -79,6 +79,11 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Acties over een groep accounts met een soort, een boodschap en een ritme.', totDieTijd: 'Je doet mee aan campagnes van je salesmanager.' },
   },
   {
+    sleutel: 'nav.accountplannen', naam: 'Accountplannen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'accountplannen', startNiveau: 'expert',
+    zijbalk: { groep: 'Planning', route: '/accountplannen', icoon: 'ClipboardCheck' },
+    uitleg: { watHetDoet: 'Eén plan per klant of prospect: doelen, kansen, bedreigingen, strategie en een actieplan waarvan elke actie een taak op het account is.', totDieTijd: 'Leg je plannen vast in de notities en taken op de accountkaart.' },
+  },
+  {
     sleutel: 'nav.prospects', naam: 'Prospects', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospects', startNiveau: 'beginner',
     zijbalk: { groep: 'Prospects', route: '/prospects', icoon: 'Building2' },
     uitleg: { watHetDoet: 'Alle bedrijven die je bewerkt, met hun reis, status en volgende stap.', totDieTijd: 'Niets; Prospects staat altijd aan.' },

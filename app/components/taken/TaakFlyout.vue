@@ -1,16 +1,21 @@
 <script setup lang="ts">
-// Taakflyout (F06): aanleiding met "Waarom krijg ik dit?", concept, klant in context,
-// het uitkomstraster uit 7.3 en de voet. Op de telefoon een schuifvenster met de
-// knoppen onderaan en "Afronden" rechts. Offline gaat afronden via de wachtrij.
+// Taakvenster (F06) in de opzet van DealDrive (TaakFlyout op /taken): kicker met prioriteitsstip,
+// prioriteit en status, de gegevens (type, vervaldatum, toegewezen aan, klant en contactpersoon met links,
+// herinnering, herhaling, beschrijving), de aanleiding met "Waarom krijg ik dit?", Volgende stap, belscript,
+// agent, Briefing en Pitstop, concept, klant in context, het uitkomstraster uit 7.3 en de voet. Bewerken
+// vervangt de inhoud door het formulier van Nieuwe taak. Op de telefoon een schuifvenster met de knoppen
+// onderaan en "Afronden" rechts. Offline gaat afronden via de wachtrij.
 import { NEE_REDENEN } from '~~/shared/nbStatus'
 import { UITKOMST_CODES, UITKOMST_LABEL } from '~~/shared/hercontact'
-import { ACTIE_LABEL, CONTACT_ACTIES, HERKOMST_LABEL, vervalLabel } from '~~/shared/taken'
+import { nlMoment, nlTijdstip } from '~~/shared/datum'
+import { CONTACT_ACTIES, HERHALING_LABEL, HERINNERING_KANAAL, HERKOMST_LABEL, PRIORITEITEN, PRIO_LABEL, PRIO_STIP, STATUS_LABEL, TAAK_TYPES, isAchterstallig, vervalLabel, volgendeStap } from '~~/shared/taken'
 import { fasePil, telLink } from '~/utils/accountWeergave'
 import { agentDef } from '~~/shared/mandaat'
-const props = defineProps<{ open: boolean; taakId: string | null; basis?: any; volgende?: boolean }>()
+import type { Contact, Klant } from './KlantContactKiezer.vue'
+const props = defineProps<{ open: boolean; taakId: string | null; basis?: any; volgende?: boolean; teamleden?: { id: string; naam: string }[] }>()
 const emit = defineEmits<{ sluit: []; klaar: [volgende: boolean, id: string]; gewijzigd: [] }>()
 const { functie, me } = useMe()
-const STATUS_LABEL: Record<string, string> = { 'concept-klaar': 'concept wacht op je goedkeuring', goedgekeurd: 'goedgekeurd, wordt verstuurd', uitgevoerd: 'uitgevoerd', tegengehouden: 'tegengehouden door de Bewaker' }
+const EXECUTOR_LABEL: Record<string, string> = { 'concept-klaar': 'concept wacht op je goedkeuring', goedgekeurd: 'goedgekeurd, wordt verstuurd', uitgevoerd: 'uitgevoerd', tegengehouden: 'tegengehouden door de Bewaker' }
 async function keurGoed() {
   try { const r: any = await $fetch(`/api/tasks/${t.value.id}/goedkeuren`, { method: 'POST', body: {} }); toast.toon(r.executorStatus === 'uitgevoerd' ? 'Goedgekeurd en verstuurd.' : `Goedgekeurd. ${r.reden ?? 'Hij gaat later de deur uit.'}`); emit('gewijzigd'); t.value = await $fetch(`/api/tasks/${t.value.id}`) } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
@@ -28,7 +33,7 @@ async function laadBelpaneel() { if (!belpaneel.value && t.value) belpaneel.valu
 const annuleren = ref(false)
 const annuleerReden = ref('')
 const bezig = ref(false)
-const bewerk = reactive({ title: '', priority: 'middel', dueDate: '', actionType: 'taak', beschrijving: '' })
+const gevorderd = computed(() => !!functie('taken.herhaling')?.beschikbaar)
 watch(() => [props.open, props.taakId], async ([o]) => {
   if (!o || !props.taakId) return
   uitkomst.value = ''; laterOp.value = ''; reden.value = ''; toelichting.value = ''; bewerken.value = false; annuleren.value = false; belpaneel.value = null
@@ -51,9 +56,53 @@ async function doeAfronden(volgende: boolean) {
 async function stelUit(periode: 'werkdag' | 'week') {
   try { await $fetch(`/api/tasks/${t.value.id}/uitstellen`, { method: 'POST', body: { periode } }); toast.toon(periode === 'week' ? 'Uitgesteld met een week.' : 'Uitgesteld met een werkdag.'); emit('gewijzigd'); emit('sluit') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
-function startBewerken() { Object.assign(bewerk, { title: t.value.title, priority: t.value.priority, dueDate: t.value.dueDate?.slice(0, 16) ?? '', actionType: t.value.actionType, beschrijving: t.value.beschrijving ?? '' }); bewerken.value = true }
+
+// Gegevens in de leesstand.
+const nu = new Date()
+const typeVan = (id: string) => TAAK_TYPES.find((x) => x.id === id) ?? TAAK_TYPES[0]!
+const overTijd = computed(() => !!t.value?.dueDate && t.value.status !== 'klaar' && isAchterstallig(t.value, nu))
+const vervalDatum = computed(() => (t.value?.dueDate ? new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(t.value.dueDate)) : null))
+const herinneringTekst = computed(() => {
+  const h = t.value?.herinnering
+  if (!h) return null
+  const m = h.minuten
+  const duur = m >= 1440 ? `${m / 1440} ${m === 1440 ? 'dag' : 'dagen'}` : m >= 60 ? `${m / 60} uur` : `${m} minuten`
+  return `${duur} vooraf · ${(HERINNERING_KANAAL[h.kanaal] ?? 'In de app').toLowerCase()}`
+})
+const stap = computed(() => (t.value ? volgendeStap(t.value, nu) : ''))
+const initialen = computed(() => (t.value?.account?.naam ?? '').split(/\s+/).filter((w: string) => /^[A-Za-z]/.test(w)).slice(0, 2).map((w: string) => w[0]!.toUpperCase()).join(''))
+
+// Bewerken: dezelfde velden als Nieuwe taak.
+const bewerk = reactive({ title: '', priority: 'middel', datum: '', tijd: '', actionType: 'taak', ownerId: '', aanleiding: '', beschrijving: '', herinneren: false, herinneringMin: 30, herinneringKanaal: 'in-app' })
+const bKlant = ref<Klant | null>(null)
+const bContact = ref<Contact | null>(null)
+function startBewerken() {
+  const m = t.value.dueDate ? nlMoment(new Date(t.value.dueDate)) : null
+  Object.assign(bewerk, {
+    title: t.value.title, priority: t.value.priority, datum: m?.datum ?? '', tijd: m ? `${String(m.uur).padStart(2, '0')}:${String(m.minuut).padStart(2, '0')}` : '',
+    actionType: t.value.actionType, ownerId: t.value.ownerId ?? '', aanleiding: t.value.aanleiding ?? '', beschrijving: t.value.beschrijving ?? '',
+    herinneren: !!t.value.herinnering, herinneringMin: t.value.herinnering?.minuten ?? 30, herinneringKanaal: t.value.herinnering?.kanaal ?? 'in-app',
+  })
+  bKlant.value = t.value.account ? { id: t.value.account.id, naam: t.value.account.naam, plaats: t.value.account.plaats } : null
+  bContact.value = t.value.contact ? { id: t.value.contact.id, naam: t.value.contact.naam, functie: t.value.contact.functie, accountId: t.value.account?.id ?? null } : null
+  bewerken.value = true
+}
+const kanBewaren = computed(() => bewerk.title.trim().length >= 3 && !bezig.value)
 async function bewaar() {
-  try { await $fetch(`/api/tasks/${t.value.id}`, { method: 'PUT', body: { ...bewerk, dueDate: bewerk.dueDate ? new Date(bewerk.dueDate).toISOString() : undefined } }); toast.toon('Taak bijgewerkt.'); emit('gewijzigd'); t.value = await $fetch(`/api/tasks/${t.value.id}`); bewerken.value = false } catch (e) { toast.toon(foutTekst(e), 'fout') }
+  if (!kanBewaren.value) return
+  bezig.value = true
+  try {
+    await $fetch(`/api/tasks/${t.value.id}`, {
+      method: 'PUT',
+      body: {
+        title: bewerk.title, actionType: bewerk.actionType, accountId: bKlant.value?.id ?? null, contactId: bContact.value?.id ?? null,
+        dueDate: bewerk.datum ? nlTijdstip(bewerk.datum, bewerk.tijd ? Number(bewerk.tijd.slice(0, 2)) : 9, bewerk.tijd ? Number(bewerk.tijd.slice(3, 5)) : 0).toISOString() : undefined,
+        aanleiding: bewerk.aanleiding, beschrijving: bewerk.beschrijving,
+        ...(gevorderd.value ? { priority: bewerk.priority, ownerId: bewerk.ownerId || undefined, herinnering: bewerk.herinneren ? { minuten: bewerk.herinneringMin, kanaal: bewerk.herinneringKanaal } : null } : {}),
+      },
+    })
+    toast.toon('Taak bijgewerkt.'); emit('gewijzigd'); t.value = await $fetch(`/api/tasks/${t.value.id}`); bewerken.value = false
+  } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }
 async function doeAnnuleren() {
   try { await $fetch(`/api/tasks/${t.value.id}/annuleren`, { method: 'POST', body: { reden: annuleerReden.value } }); toast.toon('Taak geannuleerd.'); emit('gewijzigd'); emit('sluit') } catch (e) { toast.toon(foutTekst(e), 'fout') }
@@ -61,12 +110,14 @@ async function doeAnnuleren() {
 async function verwijder() {
   try { await $fetch(`/api/tasks/${t.value.id}`, { method: 'DELETE' }); toast.toon('Taak verwijderd.'); emit('gewijzigd'); emit('sluit') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
-const PRIO_STIP: Record<string, string> = { hoog: 'prio-stip--high', middel: 'prio-stip--medium', laag: 'prio-stip--low' }
 // P13: plannen vanuit de taak; de taak wordt aan de afspraak gekoppeld en sluit bij afronden (gat 32).
 const planOpen = ref(false)
 const kanPlannen = computed(() => !!functie('agenda.basis')?.beschikbaar && !!t.value?.account)
 function gepland(id: string) { planOpen.value = false; emit('gewijzigd'); emit('sluit'); navigateTo(`/agenda?afspraak=${id}`) }
 const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0, 10))
+function toets(e: KeyboardEvent) { if (e.key === 'Escape' && props.open && !planOpen.value) emit('sluit') }
+onMounted(() => document.addEventListener('keydown', toets))
+onBeforeUnmount(() => document.removeEventListener('keydown', toets))
 </script>
 
 <template>
@@ -75,40 +126,95 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
       <aside class="fo-panel fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="tf-titel" data-test="taak-flyout">
         <header class="fo-head">
           <div class="fo-head-tekst">
-            <span class="fo-kicker"><span v-if="t" class="prio-stip" :class="PRIO_STIP[t.priority]" /> {{ t ? `${ACTIE_LABEL[t.actionType] ?? 'TAAK'} · ${t.status}` : 'Taak' }}</span>
+            <span class="fo-kicker" data-test="tf-kicker"><span v-if="t" class="prio-stip" :class="PRIO_STIP[t.priority]" aria-hidden="true" /> {{ t ? `${PRIO_LABEL[t.priority] ?? t.priority} · ${STATUS_LABEL[t.status] ?? t.status}` : 'Taak' }}</span>
             <h2 id="tf-titel" class="fo-titel">{{ t?.title ?? 'Laden…' }}</h2>
-            <p v-if="t?.account" class="taak-meta"><NuxtLink :to="`/accounts/${t.account.id}`">{{ t.account.naam }}</NuxtLink> <span v-if="t.account.fase" class="pil" :class="fasePil(t.account.fase.kleur)">{{ t.account.fase.label }}</span></p>
+            <p v-if="t?.account" class="taak-meta"><NuxtLink :to="`/accounts/${t.account.id}`" @click="emit('sluit')">{{ t.account.naam }}</NuxtLink><template v-if="t.account.plaats"> · {{ t.account.plaats }}</template> <span v-if="t.account.fase" class="pil" :class="fasePil(t.account.fase.kleur)">{{ t.account.fase.label }}</span></p>
             <p v-if="t?.poging" class="taak-meta" data-test="pogingregel">poging {{ t.poging.n }} van {{ t.poging.van }}<template v-if="t.poging.kanaal"> · {{ t.poging.kanaal }}</template><template v-if="t.poging.vorige"> · vorige: {{ t.poging.vorige }}</template></p>
           </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
+          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')">×</button>
         </header>
-        <div v-if="t" class="fo-body fo-body--formulier">
+
+        <!-- Bewerken: de velden van Nieuwe taak. -->
+        <form v-if="t && bewerken" id="tf-bewerk" class="fo-body fo-body--formulier" data-test="tf-bewerken" @submit.prevent="bewaar">
+          <KlantContactKiezer v-model:klant="bKlant" v-model:contact="bContact" prefix="tf" />
+          <label class="veld"><span class="veld-label">Titel <span class="veld-verplicht">*</span></span><input v-model="bewerk.title" class="invoer" minlength="3" required data-test="tf-titel"></label>
+          <fieldset v-if="gevorderd" class="veld">
+            <legend class="veld-label tf-legend">Prioriteit</legend>
+            <div class="keuzeraster keuzeraster--prio" role="group" aria-label="Prioriteit">
+              <button v-for="p in PRIORITEITEN" :key="p" type="button" class="prio-knop" :class="{ 'prio-knop--aan': bewerk.priority === p }" :aria-pressed="bewerk.priority === p" :data-test="`tf-prio-${p}`" @click="bewerk.priority = p"><span class="prio-stip" :class="PRIO_STIP[p]" />{{ PRIO_LABEL[p] }}</button>
+            </div>
+          </fieldset>
+          <div class="veld--rij veld">
+            <label class="veld"><span class="veld-label">Vervaldatum</span><input v-model="bewerk.datum" type="date" class="invoer"></label>
+            <label class="veld"><span class="veld-label">Tijd</span><input v-model="bewerk.tijd" type="time" class="invoer"></label>
+          </div>
+          <fieldset class="veld">
+            <legend class="veld-label tf-legend">Type</legend>
+            <div class="keuzeraster tf-typen" role="group" aria-label="Type">
+              <button v-for="x in TAAK_TYPES" :key="x.id" type="button" class="keuzeraster-knop" :class="{ 'keuzeraster-knop--aan': bewerk.actionType === x.id }" :aria-pressed="bewerk.actionType === x.id" :data-test="`tf-type-${x.id}`" @click="bewerk.actionType = x.id"><Icoon :naam="x.icoon" :grootte="16" /><span>{{ x.label }}</span></button>
+            </div>
+          </fieldset>
+          <label v-if="gevorderd && teamleden?.length" class="veld"><span class="veld-label">Toegewezen aan</span><select v-model="bewerk.ownerId" class="invoer"><option :value="me?.gebruiker.id ?? ''">Mij</option><option v-for="u in teamleden" :key="u.id" :value="u.id">{{ u.naam }}</option></select></label>
+          <label class="veld"><span class="veld-label">Aanleiding</span><input v-model="bewerk.aanleiding" class="invoer" maxlength="500"></label>
+          <fieldset v-if="gevorderd" class="veld veld-klap" :class="{ 'veld-klap--open': bewerk.herinneren }">
+            <legend class="tf-legend"><label class="vink vink--kapitaal tf-toggle"><input v-model="bewerk.herinneren" type="checkbox"> Herinnering instellen</label></legend>
+            <div v-if="bewerk.herinneren" class="veld--rij veld">
+              <label class="veld"><span class="veld-uitleg">Voor de vervaldatum</span><select v-model.number="bewerk.herinneringMin" class="invoer"><option :value="5">5 minuten</option><option :value="15">15 minuten</option><option :value="30">30 minuten</option><option :value="60">1 uur</option><option :value="240">4 uur</option><option :value="1440">1 dag</option><option :value="2880">2 dagen</option></select></label>
+              <label class="veld"><span class="veld-uitleg">Versturen via</span><select v-model="bewerk.herinneringKanaal" class="invoer"><option value="in-app">Melding in de app</option><option value="email">E-mail</option><option value="beide">Beide</option></select></label>
+            </div>
+          </fieldset>
+          <label class="veld"><span class="veld-label">Beschrijving</span><textarea v-model="bewerk.beschrijving" class="invoer" rows="3" /></label>
+        </form>
+
+        <div v-else-if="t" class="fo-body fo-body--formulier">
+          <dl class="defs tf-defs" data-test="tf-gegevens">
+            <div class="def-rij"><dt>Type</dt><dd><span class="tf-type-pil"><Icoon :naam="typeVan(t.actionType).icoon" :grootte="14" />{{ typeVan(t.actionType).label }}</span></dd></div>
+            <div class="def-rij"><dt>Vervaldatum</dt><dd :class="{ 'fo-over-tijd': overTijd }"><span class="tnum">{{ vervalDatum ?? 'geen' }}</span><span v-if="t.dueDate" class="tf-delta"> ({{ vervalLabel(t.dueDate, nu) }})</span></dd></div>
+            <div v-if="t.eigenaar" class="def-rij"><dt>Toegewezen aan</dt><dd>{{ t.eigenaar.replace(/^Testgebruiker /, '') }}</dd></div>
+            <div v-if="t.account" class="def-rij"><dt>Klant</dt><dd><NuxtLink :to="`/accounts/${t.account.id}`" class="fo-link" data-test="tf-account" @click="emit('sluit')">{{ t.account.naam }}</NuxtLink></dd></div>
+            <div v-if="t.contact" class="def-rij"><dt>Contactpersoon</dt><dd><NuxtLink :to="`/contacten/${t.contact.id}`" class="fo-link" data-test="tf-contact" @click="emit('sluit')">{{ t.contact.naam }}<template v-if="t.contact.functie"> · {{ t.contact.functie }}</template></NuxtLink></dd></div>
+            <div v-if="herinneringTekst" class="def-rij"><dt>Herinnering</dt><dd>{{ herinneringTekst }}</dd></div>
+            <div v-if="t.herhaling" class="def-rij"><dt>Herhaling</dt><dd>{{ HERHALING_LABEL[t.herhaling.soort] ?? t.herhaling.soort }} · {{ t.herhaling.teller }} van {{ t.herhaling.max }}</dd></div>
+            <div v-if="t.beschrijving" class="def-rij"><dt>Beschrijving</dt><dd>{{ t.beschrijving }}</dd></div>
+          </dl>
           <article v-if="t.aanleiding || t.waarom" class="fo-blok aanleiding-blok" data-test="aanleiding">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Aanleiding</h3><span class="pil pil--leeg">{{ HERKOMST_LABEL[t.herkomst] ?? 'Handmatig' }}</span></header>
             <p v-if="t.aanleiding">{{ t.aanleiding }}</p>
             <p v-if="t.waarom" class="mt-8" data-test="waarom"><strong>Waarom krijg ik dit?</strong> {{ t.waarom }}<template v-if="t.regel"> <NuxtLink v-if="functie('regels.lezen')?.beschikbaar" :to="`/instellingen/regels`" class="tekst-link">Bekijk de regel</NuxtLink></template></p>
+          </article>
+          <article v-if="t.status !== 'klaar'" class="fo-blok fo-blok--accent" data-test="tf-volgende-stap">
+            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Volgende stap</h3></header>
+            <p class="fo-tekst">{{ stap }}</p>
           </article>
           <details v-if="t.actionType === 'bellen' && functie('belscript.kiezen')?.beschikbaar" class="fo-blok" data-test="belpaneel" @toggle="laadBelpaneel">
             <summary class="fo-blok-titel">Belscript</summary>
             <BelScript v-if="belpaneel?.item" :scripts="belpaneel.scripts" :voorstel="belpaneel.item.voorstel" :waarden="belpaneel.item.waarden" :extra-bezwaren="belpaneel.item.extraBezwaren" :meldingen="belpaneel.item.meldingen" :account-id="belpaneel.item.accountId" :contact-id="belpaneel.item.contactId" :ai-aan="belpaneel.kan.ai" compact />
             <p v-else-if="belpaneel" class="meta">Geen script voor deze taak.</p>
           </details>
-          <article v-if="t.agent" class="fo-blok" data-test="agent-blok">
-            <p class="taak-meta">Door {{ agentDef(t.agent)?.naam ?? t.agent }}<template v-if="me?.gebruiker.niveau === 'expert' && t.mandaat"> · mandaat <span class="pil" :class="`pil--mandaat-${t.mandaat}`">{{ t.mandaat }}</span></template><template v-if="t.executorStatus"> · {{ STATUS_LABEL[t.executorStatus] }}</template></p>
+          <article v-if="t.agent" class="fo-blok fo-blok--agent" data-test="agent-blok">
+            <p class="taak-meta">Door {{ agentDef(t.agent)?.naam ?? t.agent }}<template v-if="me?.gebruiker.niveau === 'expert' && t.mandaat"> · mandaat <span class="pil" :class="`pil--mandaat-${t.mandaat}`">{{ t.mandaat }}</span></template><template v-if="t.executorStatus"> · {{ EXECUTOR_LABEL[t.executorStatus] }}</template></p>
           </article>
-          <article v-if="t.account && functie('briefing.lezen')?.beschikbaar && t.status !== 'klaar'" class="fo-blok" data-test="taak-pitstop"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Briefing en Pitstop</h3></header><BriefingPaneel onderwerp="taak" :id="t.id" ingeklapt /></article>
+          <article v-if="t.account && functie('briefing.lezen')?.beschikbaar && t.status !== 'klaar'" class="fo-blok fo-blok--agent" data-test="taak-pitstop"><header class="fo-blok-kop"><div><span class="fo-blok-kicker">Pitstop · AI-agent</span><h3 class="fo-blok-titel">Briefing en Pitstop</h3></div></header><BriefingPaneel onderwerp="taak" :id="t.id" ingeklapt /></article>
           <article v-if="t.concept" class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Concept</h3></header><p v-if="t.concept.onderwerp"><strong>{{ t.concept.onderwerp }}</strong></p><p>{{ t.concept.tekst }}</p>
             <button v-if="t.executorStatus === 'concept-klaar'" type="button" class="dd-act dd-act--primair mt-8" data-test="concept-goedkeuren" @click="keurGoed">Goedkeuren en versturen</button>
           </article>
-          <article v-if="t.account" class="fo-blok">
+          <article v-if="t.account" class="fo-blok" data-test="tf-klant">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Klant in context</h3></header>
-            <p class="taak-meta">Score {{ t.account.score }}<template v-if="t.account.fase?.accent"> · {{ t.account.fase.accent }}</template></p>
-            <ul v-if="t.account.laatste?.length" class="schakel-lijst"><li v-for="(x, i) in t.account.laatste.slice(0, 3)" :key="i" class="schakel-rij"><span>{{ x.soort }}<template v-if="x.uitkomst"> · {{ x.uitkomst }}</template></span><span class="meta">{{ new Date(x.op).toLocaleDateString('nl-NL') }}</span></li></ul>
-            <p v-if="t.account.primair" class="mt-8"><strong>{{ t.account.primair.naam }}</strong>
-              <a v-if="t.account.primair.telefoon && !t.account.primair.belMeNiet" class="dd-act" :href="telLink(t.account.primair.telefoon)">Bel</a>
-              <a v-if="t.account.primair.email" class="dd-act" :href="`mailto:${t.account.primair.email}`">Mail</a></p>
+            <div class="tf-klant">
+              <span class="tf-merk" aria-hidden="true">{{ initialen }}</span>
+              <div class="tf-klant-tekst">
+                <NuxtLink :to="`/accounts/${t.account.id}`" class="tf-klant-naam" @click="emit('sluit')">{{ t.account.naam }}</NuxtLink>
+                <p class="taak-meta">Score <strong class="tnum">{{ t.account.score }}</strong><template v-if="t.account.fase?.accent"> · {{ t.account.fase.accent }}</template></p>
+              </div>
+            </div>
+            <ul v-if="t.account.laatste?.length" class="schakel-lijst mt-8"><li v-for="(x, i) in t.account.laatste.slice(0, 3)" :key="i" class="schakel-rij"><span>{{ x.soort }}<template v-if="x.uitkomst"> · {{ x.uitkomst }}</template></span><span class="meta">{{ new Date(x.op).toLocaleDateString('nl-NL') }}</span></li></ul>
+            <template v-for="p in [t.contact ?? t.account.primair].filter(Boolean)" :key="p.id ?? p.naam">
+              <p class="mt-8 tf-persoon"><strong>{{ p.naam }}</strong>
+                <a v-if="p.telefoon && !p.belMeNiet" class="dd-act" :href="telLink(p.telefoon)">Bel</a>
+                <a v-if="p.email" class="dd-act" :href="`mailto:${p.email}`">Mail</a></p>
+            </template>
           </article>
-          <article v-if="!bewerken && t.status !== 'klaar' && t.kan?.afronden" class="fo-blok" data-test="uitkomst">
+          <article v-if="t.status !== 'klaar' && t.kan?.afronden" class="fo-blok" data-test="uitkomst">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">{{ contact ? 'Uitkomst' : 'Afronden' }}</h3></header>
             <div v-if="contact" class="uitkomst-raster">
               <button v-for="u in UITKOMST_CODES" :key="u" type="button" class="uitkomst-knop" :class="{ 'uitkomst-knop--actief': uitkomst === u }" :data-test="`uitkomst-${u}`" @click="uitkomst = u">{{ UITKOMST_LABEL[u] }}</button>
@@ -121,36 +227,55 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
               <label v-if="reden === 'Anders'" class="veld mt-8"><span class="veld-label">Toelichting <span class="veld-verplicht">*</span></span><textarea v-model="toelichting" class="invoer" rows="2" /></label>
             </template>
           </article>
-          <article v-if="bewerken" class="fo-blok">
-            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Bewerken</h3></header>
-            <div class="formulier-raster">
-              <label class="veld"><span class="veld-label">Titel</span><input v-model="bewerk.title" class="invoer"></label>
-              <label class="veld"><span class="veld-label">Prioriteit</span><select v-model="bewerk.priority" class="invoer"><option value="hoog">Hoog</option><option value="middel">Middel</option><option value="laag">Laag</option></select></label>
-              <label class="veld"><span class="veld-label">Vervaldatum en tijd</span><input v-model="bewerk.dueDate" type="datetime-local" class="invoer"></label>
-              <label class="veld"><span class="veld-label">Actiesoort</span><select v-model="bewerk.actionType" class="invoer"><option v-for="(l, k) in ACTIE_LABEL" :key="k" :value="k">{{ l }}</option></select></label>
-            </div>
-            <label class="veld mt-16"><span class="veld-label">Beschrijving</span><textarea v-model="bewerk.beschrijving" class="invoer" rows="2" /></label>
-            <button type="button" class="dd-act dd-act--primair mt-16" @click="bewaar">Bewaren</button>
-          </article>
-          <article v-if="annuleren" class="fo-blok">
+          <article v-if="annuleren" class="fo-blok fo-blok--gevaar">
             <label class="veld"><span class="veld-label">Waarom annuleer je deze taak?</span><input v-model="annuleerReden" class="invoer" data-test="annuleer-reden"></label>
             <button type="button" class="dd-act mt-8" :disabled="!annuleerReden.trim()" @click="doeAnnuleren">Annuleer taak</button>
           </article>
-          <p class="taak-meta">Vervalt {{ vervalLabel(t.dueDate, new Date()) }}<template v-if="t.eigenaar"> · {{ t.eigenaar.replace(/^Testgebruiker /, '') }}</template></p>
         </div>
         <p v-else-if="laden" class="fo-body meta">Laden…</p>
-        <footer v-if="t && t.status !== 'klaar' && t.kan?.afronden" class="fo-foot dd-acties">
+
+        <footer v-if="t && bewerken" class="fo-foot dd-acties">
+          <button type="button" class="dd-act" @click="bewerken = false">Annuleren</button>
+          <span class="dd-acties-vul fo-foot-vul" />
+          <button type="submit" form="tf-bewerk" class="dd-act dd-act--primair" :disabled="!kanBewaren" data-test="tf-opslaan">{{ bezig ? 'Opslaan…' : '✓ Opslaan' }}</button>
+        </footer>
+        <footer v-else-if="t && t.status !== 'klaar' && t.kan?.afronden" class="fo-foot dd-acties">
           <button type="button" class="dd-act dd-act--icoon" title="Uitstellen 1 werkdag" aria-label="Uitstellen 1 werkdag" data-test="uitstellen" @click="stelUit('werkdag')"><Icoon naam="Clock" /></button>
-          <button type="button" class="dd-act dd-act--icoon" title="Bewerken" aria-label="Bewerken" @click="startBewerken"><Icoon naam="Pencil" /></button>
+          <button type="button" class="dd-act dd-act--icoon" title="Bewerken" aria-label="Bewerken" data-test="tf-bewerk" @click="startBewerken"><Icoon naam="Pencil" /></button>
           <button type="button" class="dd-act dd-act--icoon" title="Annuleren" aria-label="Annuleren" @click="annuleren = !annuleren"><Icoon naam="Ban" /></button>
-          <button v-if="t.kan?.verwijderen" type="button" class="dd-act dd-act--icoon" title="Verwijderen" aria-label="Verwijderen" @click="verwijder"><Icoon naam="Trash2" /></button>
+          <button v-if="t.kan?.verwijderen" type="button" class="dd-act dd-act--icoon dd-act--gevaar" title="Verwijderen" aria-label="Verwijderen" @click="verwijder"><Icoon naam="Trash2" /></button>
           <button v-if="kanPlannen" type="button" class="dd-act" data-test="taak-afspraak" @click="planOpen = true"><Icoon naam="Plus" />Afspraak</button>
+          <NuxtLink v-if="t.account" :to="`/accounts/${t.account.id}`" class="dd-act dd-act--icoon" title="Open klantkaart" aria-label="Open klantkaart" @click="emit('sluit')"><Icoon naam="ArrowRight" /></NuxtLink>
           <span class="dd-acties-vul fo-foot-vul" />
           <button v-if="volgende && functie('taken.horizon')?.beschikbaar" type="button" class="dd-act" :disabled="bezig || ongeldig" data-test="afronden-volgende" @click="doeAfronden(true)">Afronden en volgende</button>
           <button type="button" class="dd-act dd-act--primair" :disabled="bezig || ongeldig" data-test="afronden" @click="doeAfronden(false)">Afronden</button>
+        </footer>
+        <footer v-else-if="t?.account" class="fo-foot dd-acties">
+          <span class="dd-acties-vul fo-foot-vul" />
+          <NuxtLink :to="`/accounts/${t.account.id}`" class="dd-act" @click="emit('sluit')">Open klantkaart <Icoon naam="ArrowRight" /></NuxtLink>
         </footer>
       </aside>
     </div>
   </Teleport>
   <PlanAfspraakFlyout v-if="t?.account" :open="planOpen" :account="{ id: t.account.id, naam: t.account.naam }" :task-id="t.id" :aanleiding="t.title" @sluit="planOpen = false" @gepland="gepland" />
 </template>
+
+<style scoped>
+.tf-defs { margin: 0; }
+.tf-delta { font-size: var(--fs-label); color: var(--muted); }
+.tf-type-pil { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--ink); color: var(--yellow); border-radius: var(--radius); font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.tf-klant { display: flex; gap: 12px; align-items: flex-start; }
+.tf-merk { flex: 0 0 44px; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: var(--ink); color: var(--yellow); font-family: var(--font-serif); font-weight: 700; font-size: 16px; }
+.tf-klant-tekst { min-width: 0; }
+.tf-klant-naam { font-family: var(--font-serif); font-size: 16px; font-weight: 700; color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
+.tf-klant-naam:hover { text-decoration: underline; text-underline-offset: 4px; }
+.tf-persoon { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tf-legend { padding: 0; margin-bottom: 6px; }
+.tf-typen { grid-template-columns: repeat(3, 1fr); }
+.tf-toggle { min-height: var(--touch-target-min); }
+.veld-klap:not(.veld-klap--open) { padding: 0; }
+@media (max-width: 420px) {
+  .veld--rij { flex-direction: column; }
+  .def-rij { grid-template-columns: 96px 1fr; }
+}
+</style>

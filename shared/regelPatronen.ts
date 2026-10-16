@@ -125,6 +125,8 @@ export interface MotorAccount {
   nee?: any
   wachtendTot?: string | null
   contactNaam?: string | null
+  /** Het primaire contact (de beslisser, anders het eerste actieve contact): de motor geeft het mee als contact_id. */
+  contactId?: string | null
   gebeurtenissen?: { id: string; gebeurtenis: string; naarFaseId: string | null; op: string }[]
   afspraken?: { id: string; eerste: boolean; status: 'gepland' | 'gehouden' | 'geannuleerd' | 'niet-verschenen'; op: string; overgedragen?: boolean; uitkomst?: string | null }[]
   campagnes?: { id: string; achterstand: number; naam?: string }[]

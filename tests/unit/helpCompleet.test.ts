@@ -5,14 +5,14 @@
 import { describe, expect, it } from 'vitest'
 import { helpBestanden } from '../../server/db/helpStart'
 import { FUNCTIES, featureGroep } from '../../shared/functies'
-import { AAN_DE_SLAG, CATEGORIEEN_NEWBUSINESS, CATEGORIEEN_PRODUCT, VERHAAL_LEEG, artikelVoorRoute, citatenGeldig, controleerArtikel, haalControlevragen, leestijd, ontbrekendeOnderdelen, vulVerhaal, zichtbareArtikelen } from '../../shared/help'
+import { AAN_DE_SLAG, CATEGORIEEN_NEWBUSINESS, CATEGORIEEN_WERVEN, COLLECTIES, HELPCENTER_GERESERVEERD, VERHAAL_LEEG, WERVEN_BRONNEN, categorieUitSlug, slugVan, artikelVoorRoute, citatenGeldig, controleerArtikel, haalControlevragen, leestijd, ontbrekendeOnderdelen, vulVerhaal, zichtbareArtikelen } from '../../shared/help'
 
 const alle = helpBestanden()
 const perSlug = new Map(alle.map((a) => [a.slug, a]))
 
 describe('de inhoud in content/help', () => {
   it('elke categorie hoort bij de collectie', () => {
-    for (const a of alle) expect([...(a.collectie === 'newbusiness' ? CATEGORIEEN_NEWBUSINESS : CATEGORIEEN_PRODUCT)], a.slug).toContain(a.categorie)
+    for (const a of alle) expect([...COLLECTIES[a.collectie].categorieen], a.slug).toContain(a.categorie)
   })
   it('geen gedachtestreepjes', () => {
     for (const a of alle) expect(/[–—]/.test(`${a.titel} ${a.samenvatting} ${a.inhoud}`), a.slug).toBe(false)
@@ -38,6 +38,33 @@ describe('de inhoud in content/help', () => {
   })
   it('de verkoopverhaal-artikelen gebruiken het leesmodel', () => {
     for (const s of ['ons-verhaal', 'onze-belofte', 'tegen-wie-we-verkopen', 'een-winpunt-per-gesprek', 'wanneer-we-iemand-terugbellen']) expect(perSlug.get(s)!.inhoud, s).toMatch(/\{\{verhaal:[a-z]+\}\}/)
+  })
+})
+
+describe('Nieuwe klanten werven', () => {
+  const werven = alle.filter((a) => a.collectie === 'werven')
+  it('minstens tien artikelen, elk met de vijf onderdelen, drie controlevragen en een bekende bron', () => {
+    expect(werven.length).toBeGreaterThanOrEqual(10)
+    const bronnen: string[] = Object.values(WERVEN_BRONNEN)
+    for (const a of werven) {
+      expect(ontbrekendeOnderdelen(a.inhoud), a.slug).toEqual([])
+      expect(a.vragen?.length, a.slug).toBe(3)
+      expect(bronnen, a.slug).toContain(a.bron)
+    }
+  })
+  it('elke categorie heeft artikelen en opent via zijn eigen adres', () => {
+    for (const c of CATEGORIEEN_WERVEN) {
+      expect(werven.some((a) => a.categorie === c), c).toBe(true)
+      expect(categorieUitSlug(slugVan(c)), c).toEqual({ naam: c, collectie: 'werven' })
+    }
+    expect(HELPCENTER_GERESERVEERD).toContain('werven')
+  })
+  it('elke link naar het helpcenter wijst naar een bestaand artikel', () => {
+    for (const a of werven) for (const [, s] of a.inhoud.matchAll(/\]\(\/helpcenter\/([a-z0-9-]+)\)/g)) expect(perSlug.has(s!), `${a.slug} -> ${s}`).toBe(true)
+  })
+  it('een wervingsartikel is nooit het artikel van een scherm', () => {
+    expect(artikelVoorRoute('/belblokken', alle)).not.toBe('aandacht-vragen-met-hulpvraag-en-entree')
+    expect(perSlug.get(artikelVoorRoute('/belblokken', alle)!)?.collectie).not.toBe('werven')
   })
 })
 
@@ -89,6 +116,9 @@ describe('controleerArtikel en artikelVoorRoute', () => {
     expect(controleerArtikel({ titel: 'Ons bezwarenboek', collectie: 'newbusiness', categorie: 'Bezwaren', inhoud: 'Tekst', status: 'concept' })).toEqual([])
     expect(controleerArtikel({ titel: 'Ons bezwarenboek', collectie: 'newbusiness', categorie: 'Bezwaren', inhoud: 'Tekst', status: 'gepubliceerd' })[0]).toMatch(/onderdelen/)
     expect(controleerArtikel({ titel: 'X', collectie: 'product', categorie: 'Bezwaren', inhoud: '', status: 'concept' })).toHaveLength(3)
+    expect(controleerArtikel({ titel: 'Onze pitch', collectie: 'werven', categorie: 'Je verhaal schrijven', inhoud: 'Tekst', status: 'concept' })).toEqual([])
+    expect(controleerArtikel({ titel: 'Onze pitch', collectie: 'werven', categorie: 'Bellen', inhoud: 'Tekst', status: 'concept' })).toEqual(['Kies een categorie uit de collectie'])
+    expect(controleerArtikel({ titel: 'Onze pitch', collectie: 'werven', categorie: 'Je verhaal schrijven', inhoud: 'Tekst', status: 'gepubliceerd' })[0]).toMatch(/onderdelen/)
     expect(controleerArtikel({ titel: 'Een titel', collectie: 'product', categorie: 'Prospects', inhoud: 'a — b', status: 'concept' })).toEqual(['Gebruik geen gedachtestreepjes'])
   })
   it('route met parameter valt terug op het artikel van het scherm', () => {
