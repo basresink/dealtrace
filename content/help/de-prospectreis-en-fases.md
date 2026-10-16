@@ -33,3 +33,7 @@ Staat een account in de verkeerde fase, bijvoorbeeld omdat een gesprek op een be
 1. Open de accountkaart.
 2. Kijk naar de fasepil en het Pitstop-accent in het blok Ritme.
 3. Leg je uitkomst vast; de fase schuift mee.
+
+## Fase corrigeren
+
+Staat een account in de verkeerde fase? Vanaf Gevorderd klik je op de accountkaart **Fase corrigeren**, kies je de juiste fase en geef je een reden. Op de telefoon opent dit als schuifvenster. De correctie staat in de reisgeschiedenis.

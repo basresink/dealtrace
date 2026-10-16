@@ -1,12 +1,26 @@
 <script setup lang="ts">
-// Prospectreizen (F05): doelgroepen en reizen. Maatwerkreizen maken is P22; hier
-// de standaardreis met aantallen per fase en de doelgroepen.
-import { fasePil } from '~/utils/accountWeergave'
+// Prospectreizen (F05, P22): doelgroepen in prioriteitsvolgorde en per reis een kaart met de mini-funnel per
+// hoofdfase. "+ Nieuwe reis" maakt een concept (leeg, vanuit de standaard of een bestaande reis); concepten
+// waarvoor publicatie is aangevraagd staan bij "Wacht op publicatie". Gevorderd leest mee.
+import { HOOFDFASEN, HOOFDFASE_LABEL } from '~~/shared/reis'
 const { functie } = useMe()
-if (!functie('nav.reizen')?.beschikbaar) throw createError({ statusCode: 403, statusMessage: 'Prospectreizen staat aan vanaf Expert en voor de salesmanager' })
+const aan = computed(() => !!functie('nav.reizen')?.beschikbaar || !!functie('reis.overzicht')?.beschikbaar)
+const toast = useToast()
 const magDoelgroepen = computed(() => !!functie('doelgroepen.beheren')?.beschikbaar)
-const { data: dg, refresh: refreshDg } = await useFetch<any>('/api/doelgroepen', { default: () => ({ doelgroepen: [], branches: [], klassen: [], ambitie: null }) })
-const { data: rz } = await useFetch<any>('/api/reizen', { default: () => ({ reizen: [] }) })
+const { data: dg, refresh: refreshDg } = await useFetch<any>('/api/doelgroepen', { immediate: aan.value, default: () => ({ doelgroepen: [], branches: [], klassen: [], ambitie: null }) })
+const { data: rz } = await useFetch<any>('/api/reizen', { immediate: aan.value, default: () => ({ reizen: [], kan: {} }) })
+const statusFilter = ref('')
+const reizen = computed(() => rz.value.reizen.filter((r: any) => !statusFilter.value || r.status === statusFilter.value))
+const wacht = computed(() => rz.value.reizen.filter((r: any) => r.status === 'concept' && r.publicatieAangevraagd))
+const actief = computed(() => rz.value.reizen.filter((r: any) => r.status === 'actief').length)
+const concepten = computed(() => rz.value.reizen.filter((r: any) => r.status === 'concept').length)
+const nieuweReis = ref(false)
+const vanuit = ref('standaard')
+const nieuweNaam = ref('')
+async function maakReis() {
+  try { const r = await $fetch<any>('/api/reizen', { method: 'POST', body: { vanuit: vanuit.value, naam: nieuweNaam.value || undefined } }); navigateTo(`/reizen/${r.id}`) } catch (e) { toast.toon(foutTekst(e), 'fout') }
+}
+const maxHoofd = (r: any) => Math.max(1, ...Object.values(r.hoofdfasen ?? {}).map(Number))
 const open = ref(false)
 const bewerk = ref<any>(null)
 function nieuw() { bewerk.value = null; open.value = true }
@@ -19,9 +33,12 @@ useHead({ title: 'Prospectreizen · Dealtrace' })
 
 <template>
   <div>
-    <PaginaKop kicker="Prospectreizen" titel="Doelgroepen en reizen" uitleg="Welke bedrijven je zoekt, en de route die ze afleggen tot de eerste afspraak." helpartikel="doelgroepen-en-reizen">
+    <NietAangezetKop v-if="!aan" sleutel="nav.reizen" />
+    <template v-else>
+    <PaginaKop kicker="Prospectreizen" :titel="`${actief} ${actief === 1 ? 'reis' : 'reizen'} actief${concepten ? `, ${concepten} ${concepten === 1 ? 'concept' : 'concepten'}` : ''}.`" uitleg="Per doelgroep de route van gevonden tot de overdracht na de eerste afspraak." helpartikel="doelgroepen-en-reizen">
       <template #acties>
-        <button v-if="magDoelgroepen" type="button" class="dd-actie dd-actie--primair" data-test="doelgroep-nieuw" @click="nieuw"><Icoon naam="Plus" class="dd-actie-icoon" />Doelgroep</button>
+        <button v-if="rz.kan?.maatwerk" type="button" class="dd-actie dd-actie--primair alleen-groot" data-test="reis-nieuw" @click="nieuweReis = true"><Icoon naam="Plus" class="dd-actie-icoon" />Nieuwe reis</button>
+        <button v-if="magDoelgroepen" type="button" class="dd-actie dd-actie--secundair alleen-groot" data-test="doelgroep-nieuw" @click="nieuw"><Icoon naam="Plus" class="dd-actie-icoon" />Doelgroep</button>
       </template>
     </PaginaKop>
     <section class="section section--laatste">
@@ -45,18 +62,47 @@ useHead({ title: 'Prospectreizen · Dealtrace' })
             </tbody>
           </table>
         </div>
-        <span class="kicker kicker--streep mt-16">Reizen</span>
+        <article v-if="rz.kan?.publiceren && wacht.length" class="kaart kaart--geel mt-16" data-test="wacht-op-publicatie">
+          <h2 class="kaart-titel">Wacht op publicatie</h2>
+          <ul class="schakel-lijst"><li v-for="r in wacht" :key="r.id" class="schakel-rij"><NuxtLink :to="`/reizen/${r.id}`">{{ r.naam }}</NuxtLink><span class="meta">aangevraagd {{ new Date(r.publicatieAangevraagd.op).toLocaleDateString('nl-NL') }}</span></li></ul>
+        </article>
+        <div class="sec-head mt-16"><span class="kicker kicker--streep">Reizen</span>
+          <select v-model="statusFilter" class="invoer invoer--klein rz-filter" aria-label="Status"><option value="">Alle statussen</option><option v-for="(l, k) in STATUS" :key="k" :value="k">{{ l }}</option></select></div>
+        <LegeStaat v-if="rz.reizen.length === 1" class="mt-16" titel="Je werkt nu met de standaardreis." tekst="Maak een eigen reis als een doelgroep anders koopt." />
         <div class="mt-16 ak-blokken">
-          <NuxtLink v-for="r in rz.reizen" :key="r.id" :to="`/reizen/${r.id}`" class="kaart top-kaart" :data-test="`reis-${r.isStandaard ? 'standaard' : r.id}`">
-            <header class="kaart-kop"><h2 class="kaart-titel">{{ r.naam }}</h2><span class="pil pil--leeg">v{{ r.versie }}</span></header>
-            <p class="kaart-meta">{{ r.totaal }} accounts · {{ STATUS[r.status] }}</p>
-            <ul class="schakel-lijst">
-              <li v-for="f in r.fases" :key="f.id" class="schakel-rij"><span class="pil" :class="fasePil(f.kleur)">{{ f.label }}</span><span class="tnum">{{ f.aantal }}</span></li>
-            </ul>
+          <NuxtLink v-for="r in reizen" :key="r.id" :to="`/reizen/${r.id}`" class="kaart top-kaart" :data-test="`reis-${r.isStandaard ? 'standaard' : r.id}`">
+            <header class="kaart-kop"><h2 class="kaart-titel">{{ r.naam }}</h2><span class="pil" :class="r.isStandaard ? 'pil--zwart' : 'pil--leeg'">{{ r.isStandaard ? 'Standaard' : `v${r.versie}` }}</span></header>
+            <p class="kaart-meta">{{ r.totaal }} accounts · {{ STATUS[r.status] }}<template v-if="r.doelgroepId"> · {{ dg.doelgroepen.find((d: any) => d.id === r.doelgroepId)?.naam ?? '' }}</template></p>
+            <div class="rz-funnel" aria-label="Accounts per hoofdfase">
+              <div v-for="h in HOOFDFASEN" :key="h" class="rz-kolom"><div class="rz-balk" :style="{ height: `${((r.hoofdfasen?.[h] ?? 0) / maxHoofd(r)) * 100}%` }" /><span class="meta tnum">{{ r.hoofdfasen?.[h] ?? 0 }}</span><span class="meta">{{ HOOFDFASE_LABEL[h] }}</span></div>
+            </div>
+            <span class="dd-act mt-8">Open</span>
           </NuxtLink>
         </div>
       </div>
     </section>
-    <DoelgroepFlyout :open="open" :doelgroep="bewerk" :branches="dg.branches" :klassen="dg.klassen" :ambitie="dg.ambitie" @sluit="open = false" @bewaard="bewaard" />
+    <Teleport to="body">
+      <div v-if="nieuweReis" class="fo-overlay" @click.self="nieuweReis = false">
+        <form class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" data-test="nieuwe-reis" @submit.prevent="maakReis">
+          <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Nieuwe reis</span><h2 class="fo-titel">Waar begin je?</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="nieuweReis = false"><Icoon naam="X" /></button></header>
+          <div class="fo-body fo-body--formulier">
+            <label class="schakel-inline"><input v-model="vanuit" type="radio" value="standaard"> Vanuit de standaardreis</label>
+            <label v-for="r in rz.reizen.filter((x: any) => !x.isStandaard && x.status !== 'concept')" :key="r.id" class="schakel-inline"><input v-model="vanuit" type="radio" :value="r.id"> Vanuit {{ r.naam }}</label>
+            <label class="schakel-inline"><input v-model="vanuit" type="radio" value="leeg"> Leeg</label>
+            <label class="veld"><span class="veld-label">Naam</span><input v-model="nieuweNaam" class="invoer" placeholder="Bijvoorbeeld: Installateurs woningbouw" data-test="nieuwe-reis-naam"></label>
+          </div>
+          <footer class="fo-foot dd-acties"><span class="dd-acties-vul fo-foot-vul" /><button type="submit" class="dd-act dd-act--primair" data-test="nieuwe-reis-maak">Maak concept</button></footer>
+        </form>
+      </div>
+    </Teleport>
+    </template>
+    <DoelgroepFlyout v-if="aan" :open="open" :doelgroep="bewerk" :branches="dg.branches" :klassen="dg.klassen" :ambitie="dg.ambitie" @sluit="open = false" @bewaard="bewaard" />
   </div>
 </template>
+
+<style scoped>
+.rz-funnel { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; height: 90px; align-items: end; margin-top: 8px; }
+.rz-kolom { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 2px; }
+.rz-balk { width: 18px; min-height: 2px; background: var(--ink); }
+.rz-filter { width: auto; }
+</style>

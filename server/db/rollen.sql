@@ -19,6 +19,8 @@ revoke update, delete on activiteiten from dealtrace_app;
 revoke insert, update, delete on functies_per_niveau from dealtrace_app;
 -- Organisaties aanmaken of verwijderen is platformwerk (P02).
 revoke insert, delete on organisations from dealtrace_app;
+-- P22: gepubliceerde reisversies alleen toevoegen.
+revoke update, delete on reisversies from dealtrace_app;
 
 grant execute on function current_org_id() to dealtrace_app;
 grant execute on function dealtrace_sessie_gebruiker(text) to dealtrace_app;

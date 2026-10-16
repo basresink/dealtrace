@@ -287,6 +287,19 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'reis.accentBijstellen', naam: 'Accenten bijstellen', pakket: 'starter', rollen: MANAGERS, helpartikel: 'doelgroepen-en-reizen', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'Het Pitstop-accent per fase van de standaardreis bijstellen.', totDieTijd: 'Geen.' },
   },
+  // P22: maatwerk prospectreizen (F05).
+  {
+    sleutel: 'reizen.maatwerk', naam: 'Eigen prospectreis bouwen', pakket: 'plus', rollen: 'iedereen', helpartikel: 'een-eigen-prospectreis-bouwen', startNiveau: 'expert', altijdVoor: MANAGERS,
+    uitleg: { watHetDoet: 'Een maatwerkreis als concept: fases, overgangen en startactiviteiten, met Controleer en Droogloop.', totDieTijd: 'Je werkt met de reis die je salesmanager publiceerde.' },
+  },
+  {
+    sleutel: 'reizen.publiceren', naam: 'Reizen publiceren', pakket: 'plus', rollen: MANAGERS, helpartikel: 'doelgroepen-en-reizen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Een concept publiceren als nieuwe versie met fasemapping, terugdraaien, pauzeren en archiveren.', totDieTijd: 'Vraag je beheerder.' },
+  },
+  {
+    sleutel: 'reizen.voorstelAI', naam: 'Stel fases voor', pakket: 'plus', rollen: 'iedereen', helpartikel: 'een-eigen-prospectreis-bouwen', startNiveau: 'expert', altijdVoor: MANAGERS,
+    uitleg: { watHetDoet: 'De Coach stelt fases en overgangen voor als concept (20 credits).', totDieTijd: 'Bouw de fases zelf.' },
+  },
   {
     sleutel: 'reis.standaardTerug', naam: 'Standaard terugzetten', pakket: 'starter', rollen: MANAGERS, helpartikel: 'doelgroepen-en-reizen', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Fases, accenten, overgangen en startactiviteiten van een reis terugzetten naar de standaard.', totDieTijd: 'Geen.' },
@@ -1059,7 +1072,7 @@ export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | u
 const FEATURE_GROEPEN: [RegExp, string][] = [
   [/^(resultaten|coaching|analyse)\./, 'F20 Salesmanager en resultaten'], [/^waarnemer\.|^account\.(opnieuwOnderzoeken|bronnenVolgen)$/, 'F14 Agents en mandaten'], [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^campagnes\.|^instellingen\.campagnesoorten/, 'F12 Campagnes'], [/^(funnel|overdracht)\.|^instellingen\.funnelNormen/, 'F17 Funnel en overdracht'], [/^(briefing|pitstop|concepten|mail)\.|^koppeling\.mail|^instellingen\.mailsjablonen/, 'F11 Briefings, Pitstop en mail'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
-  [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
+  [/^(reis|reizen|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],
   [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^auth\.|^schil\./, 'F24 Inloggen en telefoon'], [/^richting\.|^verkoopverhaal\.|^account\.huidigeLeverancier|^koppeling\.salesdna/, 'F25 Verkoopverhaal en Richting'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^leads\.|^koppeling\.kvk|^koppeling\.crm|^leadgenerator\.crm|^onderweg\.kvk|datacollectief/, 'F02 Leadgenerator'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
 ]

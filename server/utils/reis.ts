@@ -433,3 +433,15 @@ export async function parkeerTot(tx: Tx, accountId: string, tot: string, door: s
     data: { ...(a.data ?? {}), wachtendTot: tot, terugkom: { datum: tot, reden: 'Geen reactie na laatste poging', aanpak: 'Alleen bij een nieuwe aanleiding', kanaal: 'bellen' } },
   }).where(eq(schema.accounts.id, accountId))
 }
+
+/**
+ * P22: een account omzetten naar een nieuwe reisversie (publiceren met fasemapping of terugdraaien). Via het
+ * meldpunt, met gebeurtenis handmatig en een regel in de reisgeschiedenis; de status blijft gelijk.
+ */
+export async function zetOmNaarVersie(tx: Tx, accountId: string, reisId: string, naarFaseId: string, door: string, reden: string, nu = new Date()) {
+  const a = await laadAccount(tx, accountId)
+  const reis = await laadReis(tx, reisId)
+  if (!reis || !zoekFase(reis.data, naarFaseId)) throw new ReisFout(422, 'Deze fase bestaat niet in de reis')
+  await voerWisselUit(tx, a, reis, { naarFaseId, naarStatus: a.nbStatus, gebeurtenis: 'handmatig', reden, door, nu })
+  await tx.execute(sql`update prospectreizen set template_versie = ${reis.versie} where account_id = ${accountId} and reistemplate_id = ${reisId} and afgerond_op is null`)
+}

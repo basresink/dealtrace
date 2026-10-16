@@ -26,7 +26,7 @@ useHead({ title: 'Analyse · Dealtrace' })
       <PaginaKop kicker="Analyse" titel="Wat werkt, wat niet en waarom?" helpartikel="analyse-lezen" />
       <section class="section">
         <div class="container">
-          <nav class="tabs" aria-label="Tabbladen"><button v-for="[k, l] in TABS" :key="k" type="button" class="tab" :class="{ 'tab--actief': tab === k }" :data-test="`tab-${k}`" @click="zet('tab', k === 'funnel' ? '' : k)">{{ l }}</button></nav>
+          <nav class="tabbalk" aria-label="Tabbladen"><button v-for="[k, l] in TABS" :key="k" type="button" class="tab" :class="{ 'tab--actief': tab === k }" :data-test="`tab-${k}`" @click="zet('tab', k === 'funnel' ? '' : k)">{{ l }}</button></nav>
           <div class="cp-filters mt-16 alleen-groot">
             <label class="veld"><span class="veld-label">Periode</span><select class="invoer" :value="route.query.periode ?? 'maand'" @change="zet('periode', ($event.target as HTMLSelectElement).value === 'maand' ? '' : ($event.target as HTMLSelectElement).value)"><option value="week">Deze week</option><option value="maand">Deze maand</option><option value="kwartaal">Kwartaal</option></select></label>
             <label class="veld"><span class="veld-label">Team</span><select class="invoer" :value="route.query.team ?? ''" @change="zet('team', ($event.target as HTMLSelectElement).value)"><option value="">Al mijn teams</option><option v-for="t in team.teams" :key="t.id" :value="t.id">{{ t.naam }}</option></select></label>

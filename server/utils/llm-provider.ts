@@ -110,6 +110,24 @@ MOCK_GENERATOREN.notulist = (m) => {
 // De Coach (P21): punten uit de cijfers, elk met een bestaand artikel; onder het minimum geen vergelijking.
 MOCK_GENERATOREN.coach = (m) => {
   if (!m?.coach) return { tekst: 'Mock-antwoord voor coach' }
+  // P22: een vaste conceptreis voor de woningbouw (br-01).
+  if (m.reisVoorstel) return {
+    fases: [
+      { id: 'gevonden', label: 'Gevonden', hoofdfase: 'vinden', omschrijving: 'Past in de doelgroep.', accent: 'Kijk naar lopende nieuwbouwprojecten.', verwachtVerblijfDagen: 14, instap: true, eind: 'geen' },
+      { id: 'benaderd', label: 'Benaderd', hoofdfase: 'bewerken', omschrijving: 'Eerste poging gedaan.', accent: 'Vraag naar de planning per bouwfase.', verwachtVerblijfDagen: 21, instap: false, eind: 'geen' },
+      { id: 'werkbezoek', label: 'Werkbezoek op project', hoofdfase: 'verbinden', omschrijving: 'Samen op de bouwplaats.', accent: 'Laat het leverplan per bouwfase zien.', verwachtVerblijfDagen: 14, instap: false, eind: 'geen' },
+      { id: 'overgedragen', label: 'Overgedragen', hoofdfase: 'overgedragen', omschrijving: 'Na de eerste afspraak overgedragen.', accent: '', verwachtVerblijfDagen: 0, instap: false, eind: 'overgedragen' },
+      { id: 'verloren', label: 'Verloren', hoofdfase: 'verloren', omschrijving: 'Geen vervolg.', accent: '', verwachtVerblijfDagen: 0, instap: false, eind: 'verloren' },
+    ],
+    overgangen: [
+      { vanFaseId: 'instap', gebeurtenis: 'lead-overgenomen', naarFaseId: 'gevonden' },
+      { vanFaseId: 'gevonden', gebeurtenis: 'eerste-contact', naarFaseId: 'benaderd' },
+      { vanFaseId: 'benaderd', gebeurtenis: 'eerste-afspraak-gehouden', naarFaseId: 'werkbezoek' },
+      { vanFaseId: 'benaderd', gebeurtenis: 'geen-vervolg', naarFaseId: 'verloren' },
+      { vanFaseId: 'werkbezoek', gebeurtenis: 'overgedragen', naarFaseId: 'overgedragen' },
+      { vanFaseId: 'werkbezoek', gebeurtenis: 'geen-vervolg', naarFaseId: 'verloren' },
+    ],
+  }
   const art = (s: string) => ((m.artikelen ?? []) as string[]).includes(s) ? s : ((m.artikelen ?? [])[0] ?? s)
   if (m.verbetervoorstel) {
     const [f] = (m.fases ?? []) as { fase: string; n: number }[]
