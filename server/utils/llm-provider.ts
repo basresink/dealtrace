@@ -107,6 +107,22 @@ MOCK_GENERATOREN.notulist = (m) => {
     actiepunten: zinnen.filter((z) => /sturen|bellen|mailen|plannen|terugkomen/i.test(z)).slice(0, 3),
   }
 }
+// De Coach (P21): punten uit de cijfers, elk met een bestaand artikel; onder het minimum geen vergelijking.
+MOCK_GENERATOREN.coach = (m) => {
+  if (!m?.coach) return { tekst: 'Mock-antwoord voor coach' }
+  const art = (s: string) => ((m.artikelen ?? []) as string[]).includes(s) ? s : ((m.artikelen ?? [])[0] ?? s)
+  if (m.verbetervoorstel) {
+    const [f] = (m.fases ?? []) as { fase: string; n: number }[]
+    return { punten: f ? [{ tekst: `In fase ${f.fase} staan ${f.n} accounts stil. Voeg een tweede belpoging toe binnen vijf werkdagen.`, onderbouwing: { cijfers: [`${f.n} accounts in ${f.fase}`], bron: 'Reisgeschiedenis' }, artikelSleutel: art('doelgroepen-en-reizen') }] : [] }
+  }
+  const c = m.cijfers ?? {}
+  const t = m.team ?? {}
+  const punten: any[] = []
+  if (m.genoeg && Number(c.gesprekken) > 0) punten.push({ tekst: 'Sluit elk gesprek af met een concreet voorstel voor een afspraak.', onderbouwing: { cijfers: [`${c.afspraken ?? 0} afspraken uit ${c.gesprekken} gesprekken`, `team ${Math.round(Number(t.gesprekNaarAfspraak ?? 0) * 100)} procent`], bron: 'Activiteitenlog' }, artikelSleutel: art('een-belscript-kiezen') })
+  if (Number(c.pogingen) >= 0) punten.push({ tekst: 'Houd vol tot de vijfde poging; de meeste afspraken ontstaan na de derde.', onderbouwing: { cijfers: [`${c.pogingen ?? 0} pogingen deze periode`], bron: 'Activiteitenlog' }, artikelSleutel: art('waarom-vijf-pogingen-werken') })
+  punten.push({ tekst: 'Kies per gesprek één winpunt en noem het in de eerste minuut.', onderbouwing: { cijfers: [`${c.beslisser ?? 0} gesprekken met een beslisser`], bron: 'Activiteitenlog' }, artikelSleutel: art('een-winpunt-per-gesprek') })
+  return { punten: punten.slice(0, 3) }
+}
 // P31: spraakopdracht uit de zin en de lijst accounts; visitekaartje met een vast fictief kaartje.
 MOCK_GENERATOREN.spraakopdracht = (m) => mockOpdracht(String(m?.zin ?? ''), m?.accounts ?? [], new Date(m?.vandaag ?? Date.now()))
 export const MOCK_VISITEKAARTJES: Record<string, unknown> = {}

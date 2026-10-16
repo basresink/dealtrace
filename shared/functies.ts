@@ -869,6 +869,23 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'verbruik.lezen', naam: 'AI-verbruik lezen', pakket: 'starter', rollen: ['salesmanager'], helpartikel: 'abonnement-verbruik-ai-credits', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'De AI-credits die de agents deze maand verbruikten.', totDieTijd: 'Vraag je beheerder.' },
   },
+  // P21: team, coaching, analyse en Mijn resultaten (F20).
+  {
+    sleutel: 'resultaten.trend', naam: 'Trend en teamgemiddelde', pakket: 'starter', rollen: 'iedereen', helpartikel: 'je-cijfers-lezen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Je cijfers over vier weken en het teamgemiddelde, zonder namen van collega\'s.', totDieTijd: 'Je ziet je eigen cijfers van deze periode.' },
+  },
+  {
+    sleutel: 'resultaten.zelfanalyse', naam: 'Wat kan ik beter doen?', pakket: 'plus', rollen: 'iedereen', helpartikel: 'je-cijfers-lezen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'De Coach geeft hoogstens drie punten voor deze week, met cijfers en een artikel (20 credits).', totDieTijd: 'Bespreek je cijfers met je salesmanager.' },
+  },
+  {
+    sleutel: 'coaching.coachVoorstel', naam: 'Coachingpunten van de Coach', pakket: 'plus', rollen: MANAGERS, helpartikel: 'coachingsgesprek', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De Coach stelt hoogstens drie coachingpunten voor met onderbouwing; jij beslist en deelt.', totDieTijd: 'Schrijf de coachingpunten zelf.' },
+  },
+  {
+    sleutel: 'analyse.verbetervoorstel', naam: 'Verbetervoorstellen', pakket: 'plus', rollen: MANAGERS, helpartikel: 'verbetervoorstellen-beoordelen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Elke maand een voorstel van de Coach per reisversie, met Accepteer, Wijs af en Later.', totDieTijd: 'Pas de reis zelf aan.' },
+  },
   // P02: platform (alleen founder, geen regels in functies_per_niveau) en de spiegel voor de beheerder.
   {
     sleutel: 'platform.klanten', naam: 'Klanten', pakket: 'starter', rollen: ['founder'], helpartikel: '', startNiveau: 'beginner',
@@ -1040,7 +1057,7 @@ export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | u
 
 /** De feature (hoofdstuk 7, F01 tot en met F26) waar een functie bij hoort, voor het raster van de founder. */
 const FEATURE_GROEPEN: [RegExp, string][] = [
-  [/^waarnemer\.|^account\.(opnieuwOnderzoeken|bronnenVolgen)$/, 'F14 Agents en mandaten'], [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^campagnes\.|^instellingen\.campagnesoorten/, 'F12 Campagnes'], [/^(funnel|overdracht)\.|^instellingen\.funnelNormen/, 'F17 Funnel en overdracht'], [/^(briefing|pitstop|concepten|mail)\.|^koppeling\.mail|^instellingen\.mailsjablonen/, 'F11 Briefings, Pitstop en mail'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
+  [/^(resultaten|coaching|analyse)\./, 'F20 Salesmanager en resultaten'], [/^waarnemer\.|^account\.(opnieuwOnderzoeken|bronnenVolgen)$/, 'F14 Agents en mandaten'], [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^campagnes\.|^instellingen\.campagnesoorten/, 'F12 Campagnes'], [/^(funnel|overdracht)\.|^instellingen\.funnelNormen/, 'F17 Funnel en overdracht'], [/^(briefing|pitstop|concepten|mail)\.|^koppeling\.mail|^instellingen\.mailsjablonen/, 'F11 Briefings, Pitstop en mail'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],

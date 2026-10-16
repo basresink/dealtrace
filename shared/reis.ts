@@ -164,7 +164,7 @@ export interface DoelgroepAccount {
   cf?: Record<string, unknown>
 }
 
-const BRON_SOORT: Record<string, string> = { import: 'koud', leadgenerator: 'koud', handmatig: 'koud', kvk: 'koud', referral: 'referral', signaal: 'warm', beurs: 'warm', crm: 'winback', dealdrive: 'winback' }
+export const BRON_SOORT: Record<string, string> = { import: 'koud', leadgenerator: 'koud', handmatig: 'koud', kvk: 'koud', referral: 'referral', signaal: 'warm', beurs: 'warm', crm: 'winback', dealdrive: 'winback' }
 
 /** Past het account in de doelgroep? Lege filters tellen niet; alle gevulde filters moeten kloppen. */
 export function pastInDoelgroep(a: DoelgroepAccount, d: Pick<Doelgroep, 'data'>): boolean {

@@ -9,6 +9,9 @@ import { MotorBezig, draaiMotor } from '../../utils/motor'
 import { ruimOp } from '../../utils/credits'
 import { draaiWaarnemer } from '../../utils/agents/waarnemer'
 import { actieveCrm, syncCrm } from '../../utils/crm'
+import { herberekenKpi } from '../../utils/team'
+import { maandVerbetervoorstel } from '../../utils/agents/coach'
+import { nlMoment, plusDagen } from '../../../shared/datum'
 
 export default defineEventHandler(async (event) => {
   const geheim = process.env.MOTOR_SECRET ?? ''
@@ -26,6 +29,14 @@ export default defineEventHandler(async (event) => {
     try { await metOrganisatie(o.id, (tx) => draaiWaarnemer(tx, o.id)) } catch (e) { console.error('waarnemer', o.id, (e as Error).message) }
     // P20: de CRM-synchronisatie elk uur per organisatie (dezelfde code als Synchroniseer nu).
     try { await metOrganisatie(o.id, async (tx) => { if (await actieveCrm(tx)) await syncCrm(tx, o.id, { handeling: 'uur' }) }) } catch (e) { console.error('crm', o.id, (e as Error).message) }
+    // P21: nb_kpi_dag voor gisteren en vandaag (herberekenbaar) en op de eerste van de maand het verbetervoorstel.
+    try {
+      await metOrganisatie(o.id, async (tx) => {
+        const vandaag = nlMoment(new Date()).datum
+        await herberekenKpi(tx, o.id, { van: plusDagen(vandaag, -1), tot: vandaag })
+        if (vandaag.endsWith('-01')) await maandVerbetervoorstel(tx, o.id)
+      })
+    } catch (e) { console.error('kpi', o.id, (e as Error).message) }
     // P33: vervallen reserveringen vrijgeven en gesprekken ouder dan 30 dagen verwijderen.
     try { await metOrganisatie(o.id, (tx) => ruimOp(tx)) } catch { /* volgende ronde opnieuw */ }
   }
