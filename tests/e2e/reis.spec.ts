@@ -59,6 +59,8 @@ test.describe('prospectreis', () => {
 
   test('Expert-accountmanager ziet Prospectreizen; salesmanager maakt een doelgroep met teller en stelt een accent bij', async ({ page }) => {
     await login(page, 'u-07')
+    // Prospectreizen staat onder het uitklapmenu Plannen.
+    await page.getByTestId('sb-plannen').click()
     await expect(page.locator('.sb-groep:not(.sb-slotgroep) [href="/reizen"]')).toHaveCount(1)
     await ga(page, '/reizen')
     await expect(page.getByTestId('doelgroep-nieuw')).toHaveCount(0)

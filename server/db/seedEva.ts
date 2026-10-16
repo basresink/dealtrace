@@ -67,7 +67,7 @@ const ACCOUNTS: EvaAccount[] = [
     contacten: [['Tamara', 'Testzon', 'Directeur', 'beslisser'], ['Quinten', 'Testzon', 'Inkoper', 'beinvloeder']] },
   { id: 'eva-a11', naam: 'Testwater Baarn', kind: 'prospect', fase: 'geparkeerd', tot: 'benaderd', sinds: -9, klasse: 'kl-c-prospects', branche: 'br-02', plaats: 'Baarn', postcode: '3742 WX', adres: 'Waterweg 5', lat: 52.211, lng: 5.288, monteurs: 12, segment: 'installateur',
     aanleiding: { tekst: 'Neemt een sectorgenoot in Hilversum over', dagen: 6, bron: 'web' }, contacten: [['Bas', 'Testwater', 'Eigenaar', 'beslisser']] },
-  { id: 'eva-a12', naam: 'Testtechniek Bunnik', kind: 'prospect', fase: 'verloren', tot: 'afspraak-gepland', sinds: -11, klasse: 'kl-c-prospects', branche: 'br-01', plaats: 'Bunnik', postcode: '3981 YZ', adres: 'Testdreef 19', lat: 52.067, lng: 5.198, monteurs: 22, segment: 'installateur',
+  { id: 'eva-a12', naam: 'Testkoeling Bunnik', kind: 'prospect', fase: 'verloren', tot: 'afspraak-gepland', sinds: -11, klasse: 'kl-c-prospects', branche: 'br-01', plaats: 'Bunnik', postcode: '3981 YZ', adres: 'Testdreef 19', lat: 52.067, lng: 5.198, monteurs: 22, segment: 'installateur',
     contacten: [['Joost', 'Testbunnik', 'Directeur', 'beslisser'], ['Anke', 'Testbunnik', 'Inkoper', 'poortwachter']] },
   { id: 'eva-k01', naam: 'Testwarmte Harderwijk', kind: 'klant', fase: null, sinds: -60, klasse: null, branche: 'br-01', plaats: 'Harderwijk', postcode: '3841 AA', adres: 'Klantweg 1', lat: 52.342, lng: 5.620, monteurs: 28, segment: 'installateur',
     contacten: [['Lotte', 'Testharder', 'Inkoper', 'beslisser'], ['Daan', 'Testharder', 'Magazijnchef', 'gebruiker']] },
