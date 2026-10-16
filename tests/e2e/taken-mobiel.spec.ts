@@ -22,6 +22,10 @@ test('offline afronden met "Ongedaan maken"-strook, en na herstel precies één 
   await page.getByTestId('uitkomst-geen_reactie').click()
   await page.getByTestId('afronden').click()
   await expect(page.getByTestId('afrond-strook')).toContainText('Ongedaan maken')
+  // De strook staat boven de onderste navigatie, niet eroverheen.
+  const strook = (await page.getByTestId('afrond-strook').boundingBox())!
+  const nav = await page.locator('.onderbalk').boundingBox()
+  if (nav) expect(strook.y + strook.height).toBeLessThanOrEqual(nav.y)
   await expect(page.locator('.toast').last()).toContainText('Bewaard op je telefoon', { timeout: 10_000 })
   await context.setOffline(false)
   await page.evaluate(() => window.dispatchEvent(new Event('online')))
