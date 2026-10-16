@@ -118,7 +118,7 @@ test.describe('inzichten', () => {
     await page.request.post('/api/motor/run', { data: {} })
     await login(page, 'u-03')
     await ga(page, '/acties?tab=inzichten&gelezen=alle')
-    const kaart = page.locator('[data-test^=inzicht-]').first()
+    const kaart = page.locator('.inzicht-kaart[data-test^=inzicht-]').first()
     await expect(kaart).toBeVisible()
     const id = (await kaart.getAttribute('data-test'))!.replace('inzicht-', '')
     expect((await page.request.post(`/api/signals/${id}/afwijzen`, { data: {} })).status()).toBe(422)

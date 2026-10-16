@@ -51,7 +51,8 @@ test('een accountkaart hoort bij Prospects met een terugknop; Escape sluit een s
   await expect(page.locator('.ob-tab--aan')).toHaveAttribute('data-tab', 'prospects')
   await expect(page.getByTestId('mk-terug')).toBeVisible()
   await page.getByTestId('mk-inspreken').click()
-  await expect(page.getByText('Inspreken komt in een volgende versie.')).toBeVisible()
+  // Inspreken (P31) opent het spraakvenster; Escape sluit het.
+  await expect(page.getByTestId('spraak-venster')).toBeVisible()
   await page.keyboard.press('Escape')
-  await expect(page.getByText('Inspreken komt in een volgende versie.')).toHaveCount(0)
+  await expect(page.getByTestId('spraak-venster')).toHaveCount(0)
 })
