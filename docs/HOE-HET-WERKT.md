@@ -543,6 +543,13 @@ De standaard uit de mockup staat in `app/assets/css/ui-standaard.css`, als laats
 - **Flyout** (`ConceptFlyout`): het volledige concept met aanleiding, stijlscore en bronnen, gekoppeld aan account en contact (links naar `/accounts/:id` en `/contacten/:id`), aanpassen zolang het klaar staat, goedkeuren, afwijzen en versturen. De acties staan in `useConceptActies`, ook gebruikt door `ConceptKaart` in het Pitstop-paneel.
 - **API**: `GET /api/concepten` geeft `concepten` (hooguit 100), `totaal`, `tellers` (per soort, status en agent, met de andere filters erop) en `uitgelicht`. Elke rij heeft `account` {id, naam, soort} en `contact` {id, naam, functie, rol, email, via}: het contact uit het concept, anders van de taak of de afspraak, anders de beslisser. De filterregels staan in `shared/concepten.ts`.
 
+## Accountplannen in de opzet van DealDrive
+
+- **Functie** `nav.accountplannen` (Expert, zijbalk Planning na Campagnes, helpartikel `accountplannen`). Migratie `0048_accountplannen.sql`: tabel `accountplannen` (account, eigenaar, titel, status actueel of afgerond, geldig van en tot, `data.secties` met de zes blokken en `data.contactIds` voor de beslissers) met RLS, en `tasks.accountplan_id`. Verlopen wordt afgeleid uit de einddatum (`shared/accountplannen.ts`: `weergaveStatus`, `voortgang`, `geldigheidLabel`, `controleerPlan`).
+- **Schermen**: `/accountplannen` (kop met het aantal actuele plannen, Zoeken, + Accountplan; groepen Actueel en Verlopen en afgerond met kaarten; `?plan=` opent `AccountplanFlyout` met Verwijderen, Wijzigen, Open accountplan en Sluiten), `/accountplannen/[id]` (kop met voortgang, de zes blokken met potlood, Actieplan, Kerngegevens en Beslissers) en `AccountplanBlok` in het tabblad Reis en kwalificatie van de accountkaart (met `AccountplanNieuwFlyout`, account ingevuld).
+- **Acties zijn taken**: `POST /api/accountplannen/:id/acties` maakt een taak (soort taak, account, contact, datum om 09:00) met `accountplan_id`; afvinken loopt via `rondAf`, uitvinken zet de taak open, uit het plan halen annuleert de taak. Verwijderen van een plan laat de taken staan. Wijzigen mag de eigenaar, zijn salesmanager en de beheerder (`magTaak`); lezen iedereen met de functie.
+- **API**: `GET/POST /api/accountplannen` (`?accountId=`), `GET/PUT/DELETE /api/accountplannen/:id`, `POST /api/accountplannen/:id/acties`, `PUT/DELETE /api/accountplannen/:id/acties/:taakId`. Seed: `server/db/seedAccountplannen.ts` (vanuit `seedEva`, één actueel plan voor Testwarmte Harderwijk met drie acties). Tests: `tests/unit/accountplannen.test.ts`, `tests/db/accountplannen.test.ts`, `tests/e2e/accountplannen.spec.ts`.
+
 ## Waar staat wat
 
 | Map | Inhoud |

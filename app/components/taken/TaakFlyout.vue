@@ -128,7 +128,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
           <div class="fo-head-tekst">
             <span class="fo-kicker" data-test="tf-kicker"><span v-if="t" class="prio-stip" :class="PRIO_STIP[t.priority]" aria-hidden="true" /> {{ t ? `${PRIO_LABEL[t.priority] ?? t.priority} · ${STATUS_LABEL[t.status] ?? t.status}` : 'Taak' }}</span>
             <h2 id="tf-titel" class="fo-titel">{{ t?.title ?? 'Laden…' }}</h2>
-            <p v-if="t?.account" class="taak-meta"><NuxtLink :to="`/accounts/${t.account.id}`" @click="emit('sluit')">{{ t.account.naam }}</NuxtLink><template v-if="t.account.plaats"> · {{ t.account.plaats }}</template> <span v-if="t.account.fase" class="pil" :class="fasePil(t.account.fase.kleur)">{{ t.account.fase.label }}</span></p>
+            <p v-if="t?.account" class="taak-meta"><NuxtLink :to="`/accounts/${t.account.id}`" class="tf-tik" @click="emit('sluit')">{{ t.account.naam }}</NuxtLink><template v-if="t.account.plaats"> · {{ t.account.plaats }}</template> <span v-if="t.account.fase" class="pil" :class="fasePil(t.account.fase.kleur)">{{ t.account.fase.label }}</span></p>
             <p v-if="t?.poging" class="taak-meta" data-test="pogingregel">poging {{ t.poging.n }} van {{ t.poging.van }}<template v-if="t.poging.kanaal"> · {{ t.poging.kanaal }}</template><template v-if="t.poging.vorige"> · vorige: {{ t.poging.vorige }}</template></p>
           </div>
           <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')">×</button>
@@ -144,7 +144,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
               <button v-for="p in PRIORITEITEN" :key="p" type="button" class="prio-knop" :class="{ 'prio-knop--aan': bewerk.priority === p }" :aria-pressed="bewerk.priority === p" :data-test="`tf-prio-${p}`" @click="bewerk.priority = p"><span class="prio-stip" :class="PRIO_STIP[p]" />{{ PRIO_LABEL[p] }}</button>
             </div>
           </fieldset>
-          <div class="veld--rij veld">
+          <div class="tf-rij">
             <label class="veld"><span class="veld-label">Vervaldatum</span><input v-model="bewerk.datum" type="date" class="invoer"></label>
             <label class="veld"><span class="veld-label">Tijd</span><input v-model="bewerk.tijd" type="time" class="invoer"></label>
           </div>
@@ -158,7 +158,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
           <label class="veld"><span class="veld-label">Aanleiding</span><input v-model="bewerk.aanleiding" class="invoer" maxlength="500"></label>
           <fieldset v-if="gevorderd" class="veld veld-klap" :class="{ 'veld-klap--open': bewerk.herinneren }">
             <legend class="tf-legend"><label class="vink vink--kapitaal tf-toggle"><input v-model="bewerk.herinneren" type="checkbox"> Herinnering instellen</label></legend>
-            <div v-if="bewerk.herinneren" class="veld--rij veld">
+            <div v-if="bewerk.herinneren" class="tf-rij">
               <label class="veld"><span class="veld-uitleg">Voor de vervaldatum</span><select v-model.number="bewerk.herinneringMin" class="invoer"><option :value="5">5 minuten</option><option :value="15">15 minuten</option><option :value="30">30 minuten</option><option :value="60">1 uur</option><option :value="240">4 uur</option><option :value="1440">1 dag</option><option :value="2880">2 dagen</option></select></label>
               <label class="veld"><span class="veld-uitleg">Versturen via</span><select v-model="bewerk.herinneringKanaal" class="invoer"><option value="in-app">Melding in de app</option><option value="email">E-mail</option><option value="beide">Beide</option></select></label>
             </div>
@@ -171,8 +171,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
             <div class="def-rij"><dt>Type</dt><dd><span class="tf-type-pil"><Icoon :naam="typeVan(t.actionType).icoon" :grootte="14" />{{ typeVan(t.actionType).label }}</span></dd></div>
             <div class="def-rij"><dt>Vervaldatum</dt><dd :class="{ 'fo-over-tijd': overTijd }"><span class="tnum">{{ vervalDatum ?? 'geen' }}</span><span v-if="t.dueDate" class="tf-delta"> ({{ vervalLabel(t.dueDate, nu) }})</span></dd></div>
             <div v-if="t.eigenaar" class="def-rij"><dt>Toegewezen aan</dt><dd>{{ t.eigenaar.replace(/^Testgebruiker /, '') }}</dd></div>
-            <div v-if="t.account" class="def-rij"><dt>Klant</dt><dd><NuxtLink :to="`/accounts/${t.account.id}`" class="fo-link" data-test="tf-account" @click="emit('sluit')">{{ t.account.naam }}</NuxtLink></dd></div>
-            <div v-if="t.contact" class="def-rij"><dt>Contactpersoon</dt><dd><NuxtLink :to="`/contacten/${t.contact.id}`" class="fo-link" data-test="tf-contact" @click="emit('sluit')">{{ t.contact.naam }}<template v-if="t.contact.functie"> · {{ t.contact.functie }}</template></NuxtLink></dd></div>
+            <div v-if="t.account" class="def-rij"><dt>Klant</dt><dd><NuxtLink :to="`/accounts/${t.account.id}`" class="fo-link tf-tik" data-test="tf-account" @click="emit('sluit')">{{ t.account.naam }}</NuxtLink></dd></div>
+            <div v-if="t.contact" class="def-rij"><dt>Contactpersoon</dt><dd><NuxtLink :to="`/contacten/${t.contact.id}`" class="fo-link tf-tik" data-test="tf-contact" @click="emit('sluit')">{{ t.contact.naam }}<template v-if="t.contact.functie"> · {{ t.contact.functie }}</template></NuxtLink></dd></div>
             <div v-if="herinneringTekst" class="def-rij"><dt>Herinnering</dt><dd>{{ herinneringTekst }}</dd></div>
             <div v-if="t.herhaling" class="def-rij"><dt>Herhaling</dt><dd>{{ HERHALING_LABEL[t.herhaling.soort] ?? t.herhaling.soort }} · {{ t.herhaling.teller }} van {{ t.herhaling.max }}</dd></div>
             <div v-if="t.beschrijving" class="def-rij"><dt>Beschrijving</dt><dd>{{ t.beschrijving }}</dd></div>
@@ -239,13 +239,12 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
           <span class="dd-acties-vul fo-foot-vul" />
           <button type="submit" form="tf-bewerk" class="dd-act dd-act--primair" :disabled="!kanBewaren" data-test="tf-opslaan">{{ bezig ? 'Opslaan…' : '✓ Opslaan' }}</button>
         </footer>
-        <footer v-else-if="t && t.status !== 'klaar' && t.kan?.afronden" class="fo-foot dd-acties">
+        <footer v-else-if="t && t.status !== 'klaar' && t.kan?.afronden" class="fo-foot dd-acties tf-voet">
           <button type="button" class="dd-act dd-act--icoon" title="Uitstellen 1 werkdag" aria-label="Uitstellen 1 werkdag" data-test="uitstellen" @click="stelUit('werkdag')"><Icoon naam="Clock" /></button>
           <button type="button" class="dd-act dd-act--icoon" title="Bewerken" aria-label="Bewerken" data-test="tf-bewerk" @click="startBewerken"><Icoon naam="Pencil" /></button>
           <button type="button" class="dd-act dd-act--icoon" title="Annuleren" aria-label="Annuleren" @click="annuleren = !annuleren"><Icoon naam="Ban" /></button>
           <button v-if="t.kan?.verwijderen" type="button" class="dd-act dd-act--icoon dd-act--gevaar" title="Verwijderen" aria-label="Verwijderen" @click="verwijder"><Icoon naam="Trash2" /></button>
           <button v-if="kanPlannen" type="button" class="dd-act" data-test="taak-afspraak" @click="planOpen = true"><Icoon naam="Plus" />Afspraak</button>
-          <NuxtLink v-if="t.account" :to="`/accounts/${t.account.id}`" class="dd-act dd-act--icoon" title="Open klantkaart" aria-label="Open klantkaart" @click="emit('sluit')"><Icoon naam="ArrowRight" /></NuxtLink>
           <span class="dd-acties-vul fo-foot-vul" />
           <button v-if="volgende && functie('taken.horizon')?.beschikbaar" type="button" class="dd-act" :disabled="bezig || ongeldig" data-test="afronden-volgende" @click="doeAfronden(true)">Afronden en volgende</button>
           <button type="button" class="dd-act dd-act--primair" :disabled="bezig || ongeldig" data-test="afronden" @click="doeAfronden(false)">Afronden</button>
@@ -262,6 +261,12 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
 
 <style scoped>
 .tf-defs { margin: 0; }
+.tf-defs .def-rij { grid-template-columns: 124px 1fr; }
+/* Tekstlinks houden hun opmaak; het tikvlak loopt boven en onder door tot 44 px. */
+.tf-tik { position: relative; }
+.tf-tik::after { content: ''; position: absolute; inset: -14px 0; }
+/* De voet loopt door naar een tweede regel als hij te vol wordt; Afronden blijft rechts. */
+.tf-voet { flex-wrap: wrap; row-gap: 8px; }
 .tf-delta { font-size: var(--fs-label); color: var(--muted); }
 .tf-type-pil { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--ink); color: var(--yellow); border-radius: var(--radius); font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
 .tf-klant { display: flex; gap: 12px; align-items: flex-start; }
@@ -274,8 +279,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
 .tf-typen { grid-template-columns: repeat(3, 1fr); }
 .tf-toggle { min-height: var(--touch-target-min); }
 .veld-klap:not(.veld-klap--open) { padding: 0; }
-@media (max-width: 420px) {
-  .veld--rij { flex-direction: column; }
-  .def-rij { grid-template-columns: 96px 1fr; }
-}
+/* Datum en tijd naast elkaar, ook op de telefoon; de prioriteit blijft vier kolommen. */
+.tf-rij { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.keuzeraster--prio { grid-template-columns: repeat(4, 1fr); }
+.fo-body > :deep(*) { flex-shrink: 0; }
 </style>

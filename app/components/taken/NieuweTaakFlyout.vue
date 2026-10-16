@@ -102,7 +102,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
             </div>
           </fieldset>
 
-          <div class="veld--rij veld">
+          <div class="nt-rij">
             <label class="veld"><span class="veld-label">Vervaldatum</span><input v-model="f.datum" type="date" class="invoer" data-test="nt-datum"></label>
             <label class="veld"><span class="veld-label">Tijd</span><input v-model="f.tijd" type="time" class="invoer" data-test="nt-tijd"></label>
           </div>
@@ -128,7 +128,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
             <fieldset class="veld veld-klap" :class="{ 'veld-klap--open': f.herhalen }">
               <legend class="nt-legend"><label class="vink vink--kapitaal nt-toggle"><input v-model="f.herhalen" type="checkbox" data-test="nt-herhalen"> Taak herhalen</label></legend>
               <template v-if="f.herhalen">
-                <div class="veld--rij veld">
+                <div class="nt-rij">
                   <label class="veld"><span class="veld-uitleg">Frequentie</span><select v-model="f.herhaling" class="invoer" data-test="nt-herhaling"><option v-for="(l, k) in HERHALING_LABEL" :key="k" :value="k">{{ l }}</option></select></label>
                   <label class="veld"><span class="veld-uitleg">Herhalen tot</span><input v-model="f.herhalingTot" type="date" class="invoer" :min="f.datum"></label>
                 </div>
@@ -138,7 +138,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
 
             <fieldset class="veld veld-klap" :class="{ 'veld-klap--open': f.herinneren }">
               <legend class="nt-legend"><label class="vink vink--kapitaal nt-toggle"><input v-model="f.herinneren" type="checkbox" data-test="nt-herinneren"> Herinnering instellen</label></legend>
-              <div v-if="f.herinneren" class="veld--rij veld">
+              <div v-if="f.herinneren" class="nt-rij">
                 <label class="veld"><span class="veld-uitleg">Voor de vervaldatum</span><select v-model.number="f.herinneringMin" class="invoer" data-test="nt-herinnering"><option :value="5">5 minuten</option><option :value="15">15 minuten</option><option :value="30">30 minuten</option><option :value="60">1 uur</option><option :value="240">4 uur</option><option :value="1440">1 dag</option><option :value="2880">2 dagen</option></select></label>
                 <label class="veld"><span class="veld-uitleg">Versturen via</span><select v-model="f.herinneringKanaal" class="invoer"><option value="in-app">Melding in de app</option><option value="email">E-mail</option><option value="beide">Beide</option></select></label>
               </div>
@@ -154,7 +154,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
         <footer class="fo-foot dd-acties">
           <button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button>
           <span class="dd-acties-vul fo-foot-vul" />
-          <button type="submit" class="dd-act dd-act--primair" :disabled="!kanMaken" data-test="nt-maak">{{ bezig ? 'Opslaan…' : '✓ Maak taak' }}</button>
+          <button type="submit" class="dd-act dd-act--geel" :disabled="!kanMaken" data-test="nt-maak">{{ bezig ? 'Opslaan…' : '✓ Maak taak' }}</button>
         </footer>
       </form>
     </div>
@@ -167,7 +167,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
 .nt-toggle { min-height: var(--touch-target-min); }
 .nt-telling { margin: 8px 0 0; }
 .veld-klap:not(.veld-klap--open) { padding: 0; }
-@media (max-width: 420px) {
-  .veld--rij { flex-direction: column; }
-}
+/* Datum en tijd naast elkaar, ook op de telefoon; de prioriteit blijft vier kolommen. */
+.nt-rij { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.keuzeraster--prio { grid-template-columns: repeat(4, 1fr); }
+.fo-body > :deep(*) { flex-shrink: 0; }
 </style>

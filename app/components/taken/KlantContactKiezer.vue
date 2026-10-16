@@ -15,6 +15,7 @@ const klanten = ref<Klant[]>([])
 const contactZoek = ref('')
 const contactActief = ref(false)
 const contacten = ref<Contact[]>([])
+const laadt = ref(false)
 let klantTimer: ReturnType<typeof setTimeout> | undefined
 let contactTimer: ReturnType<typeof setTimeout> | undefined
 watch(klantZoek, (q) => {
@@ -24,7 +25,9 @@ watch(klantZoek, (q) => {
 async function laadContacten() {
   const q = contactZoek.value.trim()
   if (!klant.value && q.length < 2) { contacten.value = []; return }
+  laadt.value = true
   contacten.value = await $fetch<Contact[]>('/api/contacten/kies', { query: { q: q || undefined, accountId: klant.value?.id } }).catch(() => [])
+  laadt.value = false
 }
 watch(contactZoek, () => { clearTimeout(contactTimer); contactTimer = setTimeout(laadContacten, 250) })
 watch(contactActief, (a) => { if (a) laadContacten() })
@@ -66,7 +69,7 @@ const t = (s: string) => `${props.prefix}-${s}`
       <ul v-if="contactActief && contacten.length" class="zoeklijst">
         <li v-for="c in contacten" :key="c.id"><button type="button" class="zoeklijst-item" :data-test="t('contact-optie')" @mousedown.prevent="kiesContact(c)">{{ c.naam }}<span class="zoeklijst-sub">{{ [c.functie, klant ? null : c.accountNaam].filter(Boolean).map((x) => ` · ${x}`).join('') }}</span></button></li>
       </ul>
-      <p v-else-if="contactActief && (klant || contactZoek.trim().length >= 2)" class="zoeklijst-leeg kck-leeg">{{ klant ? 'Geen contactpersoon bij deze klant gevonden.' : 'Geen contactpersoon gevonden.' }}</p>
+      <p v-else-if="contactActief && (klant || contactZoek.trim().length >= 2)" class="zoeklijst-leeg kck-leeg">{{ laadt ? 'Contactpersonen laden…' : klant ? 'Geen contactpersoon bij deze klant gevonden.' : 'Geen contactpersoon gevonden.' }}</p>
     </div>
   </div>
 </template>
