@@ -58,7 +58,7 @@ const kwartalen = computed(() => [1, 2, 3, 4].map((q) => {
   const ms = maanden.value.slice((q - 1) * 3, q * 3)
   const ps = new Set(ms.flatMap((m) => m.actief.map((g) => g.potentie)))
   const gs = groepen.value.filter((g) => ps.has(g.potentie))
-  return { q, label: `Q${q}`, maanden: `${ms[0]!.naam.slice(0, 3)} tot ${ms[2]!.naam.slice(0, 3)}`, totaal: gs.reduce((s, g) => s + g.totaal, 0), benaderd: gs.reduce((s, g) => s + g.benaderd, 0), achterstand: Math.max(...ms.map((m) => m.achterstand)) }
+  return { q, label: `Q${q}`, maanden: `${ms[0]!.naam} tot ${ms[2]!.naam}`, totaal: gs.reduce((s, g) => s + g.totaal, 0), benaderd: gs.reduce((s, g) => s + g.benaderd, 0), achterstand: Math.max(...ms.map((m) => m.achterstand)) }
 }))
 const zichtbareMaanden = computed(() => (weergave.value === 'jaar' ? maanden.value : maanden.value.slice((kwartaal.value - 1) * 3, kwartaal.value * 3)))
 function kiesKwartaal(q: number) { maand.value = Math.ceil(huidig.value / 3) === q ? huidig.value : q * 3 - 2 }

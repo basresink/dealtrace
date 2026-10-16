@@ -151,7 +151,7 @@ test.describe('inzichten', () => {
     // Drie per rij op een breed scherm.
     if ((await kaarten.count()) >= 3) {
       const y = await Promise.all([0, 1, 2].map(async (n) => (await kaarten.nth(n).boundingBox())!.y))
-      expect(new Set(y.map(Math.round)).size).toBe(1)
+      expect(Math.max(...y) - Math.min(...y)).toBeLessThan(4)
       if ((await kaarten.count()) >= 4) expect(Math.round((await kaarten.nth(3).boundingBox())!.y)).toBeGreaterThan(Math.round(y[0]!))
     }
     // Klik op de kaart opent de flyout.

@@ -7,7 +7,7 @@ test.describe('Campagnes', () => {
   test('overzicht: kop, tellers per status, filterpaneel en kaarten met soort, status, doel en voortgang', async ({ page }) => {
     await login(page, 'u-07')
     await ga(page, '/campagnes?eigenaar=alle')
-    await expect(page.locator('h1')).toHaveText('Eén lijst, één doel, elke dag een stap.')
+    await expect(page.locator('h1.title')).toHaveText('Eén lijst, één doel, elke dag een stap.')
     await expect(page.getByTestId('campagne-nieuw')).toBeVisible()
     const actief = Number(await page.getByTestId('campagne-stat-actief').locator('.stat-num').textContent())
     expect(actief).toBeGreaterThan(0)
