@@ -10,6 +10,7 @@ import { boek, geefVrij, metCredits, reserveer, type ReserveerOpties, type Reser
 import { mockGids } from './assistent'
 import { mockOpdracht } from '../../shared/spraakOpdracht'
 import { mockDocumentAntwoord } from '../../shared/kennisbank'
+import { mockHouding } from '../../shared/invloed'
 import { promptVoor, providerVoor } from './aiKoppeling'
 import { metOrganisatie } from './db'
 
@@ -37,6 +38,19 @@ export const MOCK_GENERATOREN: Record<string, (materiaal: any) => unknown> = {
     blokken: (m.opzet.voorbeeld ?? []).map((b: any) => ({ soort: b.soort, tekst: b.soort === 'opening' && m.kernzin ? `Goedemorgen {contact.voornaam}, met {gebruiker.voornaam} van {organisatie.naam}. ${m.kernzin}` : b.tekst })),
   } : { tekst: 'Mock-antwoord voor concept' },
   belscript: (m) => {
+    // Belscript Studio, script per prospect: elk AI-blok uit de meegegeven gegevens, variabelen blijven staan.
+    if (m?.perProspect) {
+      const g = m.gegevens ?? {}
+      const zin = (t: string) => String(t).replace(/[.!?]\s*$/, '').replace(/^./, (c: string) => c.toLowerCase())
+      const tekst: Record<string, (b: any) => [string, string[]] | null> = {
+        opening: () => [`Goedemorgen {contact.voornaam}, met {gebruiker.voornaam} van {organisatie.naam}. ${g.kernzin ?? 'Ik bel u kort over uw projecten.'}`, ['branche', 'rol']],
+        aanleiding: () => (g.aanleiding ? [`Ik las dat ${zin(g.aanleiding)}. Daarom bel ik u nu.`, ['aanleiding']] : null),
+        winpunt: () => (g.winpunt ? [`${g.winpunt.titel}: ${zin(g.winpunt.argument ?? g.winpunt.titel)}.`, ['winpunt']] : null),
+        vragen: () => [`Hoe regelen jullie dat nu${g.leverancier ? ` met ${g.leverancier}` : ''}? Wie beslist daarover${g.rol ? ' naast u' : ''}? Wanneer speelt het weer?`, ['leverancier', 'rol']],
+        voicemail: () => (g.aanleiding ? [`Ik bel over ${zin(g.aanleiding)}. Ik mail u zo een korte toelichting. Bel gerust terug op {gebruiker.telefoon}.`, ['aanleiding']] : null),
+      }
+      return { blokken: (m.blokken ?? []).flatMap((b: any) => { const r = tekst[b.soort]?.(b) ?? (b.tekst ? [b.tekst, []] as [string, string[]] : null); return r ? [{ blokId: b.id, tekst: r[0], bronnen: r[1].map((soort) => ({ soort })) }] : [] }) }
+    }
     const blokken: { blokId: string; tekst: string; bronnen: { soort: string; datum?: string; citaat?: string }[] }[] = []
     for (const b of m?.blokken ?? []) {
       if (b.soort === 'aanleiding' && m.inzichten?.[0]) blokken.push({ blokId: b.id, tekst: `Ik bel u naar aanleiding van dit: ${m.inzichten[0].titel}.`, bronnen: [{ soort: 'inzicht', datum: m.inzichten[0].op, citaat: m.inzichten[0].titel }] })
@@ -99,6 +113,8 @@ MOCK_GENERATOREN.dossier = (m) => !m?.verrijker ? leadDossier(m) : ({
 MOCK_GENERATOREN.brief = (m) => m?.committee ? { voorstellen: (m.functies ?? []).map((f: string) => ({ functie: f, rol: /directeur|eigenaar|inkoop/i.test(f) ? 'beslisser' : /werkvoorbereider|projectleider/i.test(f) ? 'beinvloeder' : 'gebruiker', bron: m.bron ?? 'Website', zekerheid: /directeur|eigenaar/i.test(f) ? 80 : 55 })) } : { tekst: 'Mock-antwoord voor brief' }
 // De Notulist (P19): per agendapunt, open vragen, voorgestelde uitkomst, signalen en concurrenten.
 MOCK_GENERATOREN.notulist = (m) => {
+  // F8: houding per persoon met een letterlijk citaat (invloedskaart).
+  if (m?.houding) return mockHouding(m)
   const t = String(m?.aantekeningen ?? '')
   const zinnen = t.split(/(?<=[.!?])\s+/).filter(Boolean)
   return {

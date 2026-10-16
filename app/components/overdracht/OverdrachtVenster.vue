@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Overdragen na "Rond af" en vanaf de accountkaart (F17): keuzes, vervolgstap, wat er meegaat met
 // "Bekijk briefing", en "Draag over" (geel) met bevestiging; "Later" laat de overdrachtstaak staan.
-// Meldt DealDrive "al klant", dan volgt de vraag uit het contract.
+// Meldt DealDrive "al klant", dan volgt de vraag uit het contract. Is de dekking van de invloedskaart (F8) niet
+// gehaald (beslisser en minstens één beïnvloeder gesproken), dan staat bovenaan een waarschuwing.
 const props = defineProps<{ open: boolean; accountId: string | null; accountNaam: string; vervolgstap?: string }>()
 const emit = defineEmits<{ sluit: []; overgedragen: [] }>()
 const toast = useToast()
@@ -43,6 +44,7 @@ async function draagOver(alsKans = false) {
         <div class="fo-body fo-body--formulier">
           <p v-if="data && !data.mag.ja && !data.alKlant" class="kaart kaart--geel" data-test="ov-niet">{{ data.mag.reden }}</p>
           <template v-else>
+            <p v-if="data?.dekking?.waarschuwing" class="kaart kaart--geel" data-test="ov-dekking"><strong>{{ data.dekking.titel }}</strong> {{ data.dekking.waarschuwing }} Bekijk de invloedskaart op de accountkaart.</p>
             <article class="fo-blok"><OverdrachtKeuze v-model="keuze" :account-id="accountId" :vervolgstap="vervolgstap" /></article>
             <article v-if="data?.voorbeeld" class="fo-blok" data-test="ov-voorbeeld">
               <h3 class="fo-blok-titel">Wat gaat er mee</h3>

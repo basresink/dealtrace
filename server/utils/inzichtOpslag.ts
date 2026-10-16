@@ -2,6 +2,7 @@
 // hetzelfde onderwerp wordt bijgewerkt zonder terug te gaan naar ongelezen (regel 12).
 import { sql } from 'drizzle-orm'
 import type { gebruikDb } from './db'
+import { signaalsoortVan } from '../../shared/signaalradar'
 
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
 
@@ -19,8 +20,10 @@ export async function bewaarInzicht(tx: Tx, org: string, i: InzichtInvoer) {
     return { id: open.id as string, nieuw: false }
   }
   const id = crypto.randomUUID()
-  await tx.execute(sql`insert into signals (id, organisation_id, account_id, contact_id, owner_id, onderwerp, agent, type, title, relevance_score, confidence, status, bron, data)
-    values (${id}, ${org}, ${i.accountId}, ${i.contactId ?? null}, ${i.ownerId}, ${i.onderwerp}, ${i.agent}, ${i.type}, ${i.title}, ${i.relevantie}, ${i.zekerheid / 100}, ${i.tegengehouden ? 'tegengehouden' : 'nieuw'}, ${i.bron.soort === 'intern' ? 'intern' : 'extern'}, ${JSON.stringify(data)}::jsonb)`)
+  // F5: de signaalsoort voor de Signaalradar, afgeleid uit type en tekst.
+  const soort = signaalsoortVan({ type: i.type, title: i.title, waarom: i.beschrijving })
+  await tx.execute(sql`insert into signals (id, organisation_id, account_id, contact_id, owner_id, onderwerp, agent, type, title, relevance_score, confidence, status, bron, signaalsoort, data)
+    values (${id}, ${org}, ${i.accountId}, ${i.contactId ?? null}, ${i.ownerId}, ${i.onderwerp}, ${i.agent}, ${i.type}, ${i.title}, ${i.relevantie}, ${i.zekerheid / 100}, ${i.tegengehouden ? 'tegengehouden' : 'nieuw'}, ${i.bron.soort === 'intern' ? 'intern' : 'extern'}, ${soort}, ${JSON.stringify(data)}::jsonb)`)
   return { id, nieuw: true }
 }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // De lijst voor prospects en klanten (F03), in de opzet van DealDrive: kop met kruimel,
-// werkbalk (zoeken, AI en hulp, nieuw, sortering, filters), een uitklapbare filterstrook
-// met het zoekveld, de weergave en meerekenende tellers (in de URL) en één witte kaart met AccountRij-rijen.
+// werkbalk (zoeken, AI en hulp, nieuw, filters en Meer met taak, afspraak en export), een uitklapbare filterstrook
+// met het zoekveld, de weergave, de sortering en meerekenende tellers (in de URL) en één witte kaart met AccountRij-rijen.
 // Contextmenu en "Toon meer" blijven.
 import { BEREIK_LABEL, CONTACT_LABEL, STATUS_LABEL, telLink } from '~/utils/accountWeergave'
 
@@ -46,7 +46,6 @@ const EIGENAAR = [['mij', 'Van mij'], ['team', 'Team'], ['iedereen', 'Iedereen']
 const eigenaarLabel = computed(() => EIGENAAR.find((x) => x[0] === eigenaar.value)?.[1] ?? 'Van mij')
 function kiesSortering(w: string) { keuzemenu.value = null; zetQuery({ sort: w === 'score' ? undefined : w }) }
 function wisselFilters() { filtersOpen.value = !filtersOpen.value }
-function wisselMenu(m: 'sortering') { menu.value = null; keuzemenu.value = keuzemenu.value === m ? null : m }
 const actieveFilters = computed(() => ['status', 'fase', 'klasse', 'aanleiding', 'laatsteContact', 'bereikbaarheid', ...Object.keys(route.query).filter((k) => k.startsWith('cf.'))].reduce((s, k) => s + lijst(k).length, 0))
 const teller = (groep: string, w: string) => data.value.tellers?.[groep]?.[w] ?? 0
 const groepen = computed(() => {
@@ -73,6 +72,12 @@ onBeforeUnmount(() => { window.removeEventListener('click', sluitMenus); window.
 const primair = (r: any) => r.contacten.find((c: any) => c.id === r.primairContact) ?? r.contacten.find((c: any) => c.rol === 'beslisser') ?? r.contacten[0]
 function taakVoor(r: any | null) { taakAccount.value = r ? { id: r.id, naam: r.name } : null; nieuweTaak.value = true }
 function afspraakVoor(r: any | null) { afspraakAccount.value = r ? { id: r.id, naam: r.name } : null; nieuweAfspraak.value = true }
+// Minder gebruikte acties staan onder Meer, zodat de kop op een laptop op één regel blijft.
+const meerItems = computed(() => [
+  { label: 'Nieuwe taak', icoon: 'ListTodo', actie: () => taakVoor(null), test: 'lijst-taak' },
+  { label: 'Nieuwe afspraak', icoon: 'CalendarCheck', actie: () => afspraakVoor(null), test: 'lijst-afspraak' },
+  ...(data.value?.kan?.export ? [{ label: 'Exporteren', icoon: 'Download', href: exportUrl.value, test: 'exporteren' }] : []),
+])
 
 async function aangemaakt(id: string) { nieuwOpen.value = false; await navigateTo(`/accounts/${id}`) }
 const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ ...(route.query as any), soort: props.soort }).toString()}`)
@@ -92,20 +97,10 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
       </template>
       <template #acties>
         <button v-if="soort === 'prospect'" type="button" class="dd-actie dd-actie--zwart" data-test="nieuwe-prospect" @click="nieuwOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Prospect</button>
-        <button type="button" class="dd-actie dd-actie--secundair" data-test="lijst-taak" @click="taakVoor(null)"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
-        <button type="button" class="dd-actie dd-actie--secundair" data-test="lijst-afspraak" @click="afspraakVoor(null)"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
-        <div class="keuzemenu-houder">
-          <button type="button" class="dd-actie dd-actie--secundair" aria-haspopup="menu" :aria-expanded="keuzemenu === 'sortering'" :aria-label="`Sortering: ${sortLabel}`" data-test="sortering" @click.stop="wisselMenu('sortering')">
-            <Icoon naam="ArrowUpDown" class="dd-actie-icoon" />{{ sortLabel }}<Icoon naam="ChevronDown" :grootte="14" class="keuzemenu-pijl" :class="{ 'keuzemenu-pijl--open': keuzemenu === 'sortering' }" />
-          </button>
-          <ul v-if="keuzemenu === 'sortering'" class="keuzemenu" role="menu" @click.stop>
-            <li v-for="o in SORTERINGEN" :key="o[0]"><button type="button" role="menuitemradio" :aria-checked="sort === o[0]" class="keuzemenu-item" :class="{ 'keuzemenu-item--aan': sort === o[0] }" :data-test="`sorteer-${o[0]}`" @click="kiesSortering(o[0])">{{ o[1] }}</button></li>
-          </ul>
-        </div>
         <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'dd-actie--filters-aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="filters-knop" @click="wisselFilters">
           <Icoon naam="Filter" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="pil-teller pil-teller--zwart">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="keuzemenu-pijl" :class="{ 'keuzemenu-pijl--open': filtersOpen }" />
         </button>
-        <a v-if="data.kan?.export" :href="exportUrl" class="dd-actie dd-actie--icoon" aria-label="Exporteren" title="Exporteren" data-test="exporteren"><Icoon naam="Download" /></a>
+        <KopMeer :items="meerItems" />
       </template>
       <template #na>
         <div v-show="filtersOpen" class="filterpaneel mt-16" data-test="filterpaneel">
@@ -127,6 +122,10 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
               v-for="w in g.waarden" :key="w.w" type="button" class="filter-pil" :class="{ 'filter-pil--aan': lijst(g.sleutel).includes(w.w) }"
               :aria-pressed="lijst(g.sleutel).includes(w.w)" :disabled="!lijst(g.sleutel).includes(w.w) && teller(g.sleutel, w.w) === 0" :data-test="`filter-${g.sleutel}-${w.w}`" @click="wissel(g.sleutel, w.w)"
             >{{ w.label }} <span class="pil-teller">{{ teller(g.sleutel, w.w) }}</span></button>
+          </div>
+          <div class="filter-groep" role="radiogroup" aria-label="Sorteer op" data-test="filter-sortering">
+            <span class="filter-label">Sorteer op</span>
+            <button v-for="o in SORTERINGEN" :key="o[0]" type="button" role="radio" class="filter-pil" :class="{ 'filter-pil--aan': sort === o[0] }" :aria-checked="sort === o[0]" :data-test="`sorteer-${o[0]}`" @click="kiesSortering(o[0])">{{ o[1] }}</button>
           </div>
           <div class="filter-groep filter-groep--eind"><button type="button" class="dd-tekstknop" @click="router.replace({ query: {} })">Reset filters</button></div>
         </div>

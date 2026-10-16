@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Alle contacten (F04), in de opzet van DealDrive en gelijk aan AccountLijst: kop met kruimel
-// en totaal, uitleg, werkbalk (zoeken, + Contact, + Taak, + Afspraak, Filters, export), een
+// en totaal, uitleg, werkbalk (zoeken, + Contact, Filters en Meer met taak, afspraak en export), een
 // uitklapbaar filterpaneel met meerekenende tellers (alles in de URL) en daarin ook de sortering
 // (standaard Rol) en de weergave (lijst, compact, kaarten),
 // één witte kaart met ContactRij-rijen, "Toon meer" en de stand per rol onderaan.
@@ -93,6 +93,12 @@ const nummer = (c: any) => c.mobiel ?? c.telefoon
 
 async function aangemaakt(id: string) { nieuwOpen.value = false; await navigateTo(`/contacten/${id}`) }
 const exportUrl = computed(() => `/api/contacten/export?${new URLSearchParams(Object.entries(route.query).filter(([, v]) => typeof v === 'string') as [string, string][]).toString()}`)
+// Minder gebruikte acties staan onder Meer, zodat de kop op een laptop op één regel blijft.
+const meerItems = computed(() => [
+  { label: 'Nieuwe taak', icoon: 'ListTodo', actie: () => taakVoor(null), test: 'lijst-taak' },
+  { label: 'Nieuwe afspraak', icoon: 'CalendarCheck', actie: () => afspraakVoor(null), test: 'lijst-afspraak' },
+  ...(data.value?.kan?.export ? [{ label: 'Exporteren', icoon: 'Download', href: exportUrl.value, test: 'exporteren' }] : []),
+])
 const resultaat = computed(() => `${data.value.aantal} ${data.value.aantal === 1 ? 'contact' : 'contacten'}`)
 </script>
 
@@ -109,12 +115,10 @@ const resultaat = computed(() => `${data.value.aantal} ${data.value.aantal === 1
           <div class="toolbar-buttons lijst-werkbalk" data-test="werkbalk">
             <KopIconen artikel="contacten" :zoeken="{ actie: wisselZoek, aan: zoekOpen, label: 'Zoeken in contacten', test: 'zoek-knop' }" />
             <button type="button" class="dd-actie dd-actie--zwart" data-test="nieuw-contact-knop" @click="nieuwOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Contact</button>
-            <button type="button" class="dd-actie dd-actie--secundair" data-test="lijst-taak" @click="taakVoor(null)"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
-            <button type="button" class="dd-actie dd-actie--secundair" data-test="lijst-afspraak" @click="afspraakVoor(null)"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
             <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'dd-actie--filters-aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="filters-knop" @click="filtersOpen = !filtersOpen">
               <Icoon naam="Filter" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="pil-teller pil-teller--zwart">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="keuzemenu-pijl" :class="{ 'keuzemenu-pijl--open': filtersOpen }" />
             </button>
-            <a v-if="data.kan?.export" :href="exportUrl" class="dd-actie dd-actie--icoon" aria-label="Exporteren" title="Exporteren" data-test="exporteren"><Icoon naam="Download" /></a>
+            <KopMeer :items="meerItems" />
           </div>
         </div>
         <div v-if="zoekOpen" class="werkbalk">

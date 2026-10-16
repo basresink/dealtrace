@@ -29,6 +29,7 @@ useHead({ title: 'Belblokken · Dealtrace' })
       <PaginaKop kicker="Plannen · Belblokken" titel="Een blok is een blok. Wie het vult, kies jij." uitleg="Vaste belblokken die zichzelf vullen, én de mogelijkheid om er nu een Top 5 in te schuiven. Wat niet past schuift door naar het eerstvolgende blok." helpartikel="belblokken">
         <template #acties>
           <NuxtLink v-if="volgende" :to="`/belblokken/${volgende.id}`" class="dd-actie dd-actie--secundair" data-test="start-belblok" :title="`Volgende blok ${tijd(volgende.start)} · ${volgende.open} gesprekken`"><Icoon naam="Phone" class="dd-actie-icoon" />Start belblok</NuxtLink>
+          <NuxtLink to="/belscripts" class="dd-actie dd-actie--secundair" data-test="naar-belscripts"><Icoon naam="ScrollText" class="dd-actie-icoon" />Belscripts</NuxtLink>
           <button type="button" class="dd-actie dd-actie--taak" data-test="belblokken-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
           <button type="button" class="dd-actie dd-actie--zwart" data-test="belblokken-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
         </template>

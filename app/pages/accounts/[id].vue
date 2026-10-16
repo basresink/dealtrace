@@ -33,6 +33,10 @@ onBeforeUnmount(() => { accountNaam.value = null })
 if (!a.value) throw createError({ statusCode: 404, statusMessage: 'Account onbekend' })
 const infoOpen = ref(false)
 const briefingOpen = ref(false)
+// F2 en F7: Volgen (volgende beste stap en opvolgreeks); ?volgen=1 opent het venster (link uit een melding).
+const volgenOpen = ref(route.query.volgen === '1')
+// F8: de invloedskaart van het account (knop Invloed).
+const invloedOpen = ref(false)
 // P17: overdracht na de eerste afspraak.
 const overdragenOpen = ref(route.query.overdragen === '1')
 const OV_NAAR: Record<string, string> = { dealdrive: 'DealDrive', crm: 'het CRM', collega: 'een collega' }
@@ -177,6 +181,8 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
             <button type="button" class="dd-actie dd-actie--secundair" data-test="info-knop" @click="infoOpen = true">Info</button>
             <button type="button" class="dd-actie dd-actie--secundair" data-test="contacten-knop" @click="contactenOpen = true">Contacten <span class="ak-teller tnum">{{ a.contacten.filter((c: any) => c.status !== 'vertrokken').length }}</span></button>
             <button type="button" class="dd-actie dd-actie--zwart" data-test="briefing-knop" @click="briefingOpen = true">Briefing</button>
+            <button v-if="functie('prospects.volgen')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair" data-test="knop-volgen" @click="volgenOpen = true"><Icoon naam="Route" class="dd-actie-icoon" />Volgen</button>
+            <button type="button" class="dd-actie dd-actie--secundair" data-test="knop-invloed" @click="invloedOpen = true"><Icoon naam="Network" class="dd-actie-icoon" />Invloed</button>
           </div>
         </div>
 
@@ -306,6 +312,8 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
     <InfoFlyout :open="infoOpen" :account="a" @sluit="infoOpen = false" @gewijzigd="refresh" @verwijder="verwijderOpen = true" />
     <ContactenFlyout :open="contactenOpen" :account="{ id: a.id, naam: a.naam }" :contacten="a.contacten" @sluit="contactenOpen = false" @gewijzigd="refresh" />
     <BriefingFlyout :open="briefingOpen" :account="{ id: a.id, naam: a.naam }" @sluit="briefingOpen = false" />
+    <VolgenFlyout v-if="functie('prospects.volgen')?.beschikbaar" :open="volgenOpen" :account-id="a.id" :naam="a.naam" @sluit="volgenOpen = false" @gewijzigd="ververs" />
+    <InvloedFlyout :open="invloedOpen" :account-id="a.id" @sluit="invloedOpen = false" @gewijzigd="refresh" />
     <BevestigVenster :open="verwijderOpen" :titel="`${a.naam} verwijderen?`" tekst="Het account en zijn contacten worden verwijderd. De activiteitenlog blijft bewaard." bevestig="Verwijderen" @geannuleerd="verwijderOpen = false" @bevestigd="verwijder" />
     <VisitekaartjeVenster :open="kaartjeOpen" :account="a ? { id: a.id, naam: a.naam } : null" @sluit="kaartjeOpen = false" @bewaard="refresh()" />
     <KlaarzetFlyout :open="klaarOpen" :account="a ? { id: a.id, naam: a.naam } : null" @sluit="klaarOpen = false" />

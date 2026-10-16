@@ -10,7 +10,7 @@ import {
 import { nlMoment, nlTijdstip } from '../../shared/datum'
 import { schema } from './db'
 import { verzendMeldingen } from './meldingVerzender'
-import { kiesScript, scriptWaarden, bezwarenMetConcurrent, type Belscript } from '../../shared/belscripts'
+import { kiesScript, scriptWaarden, bezwarenMetConcurrent, type Belscript, type ProspectScriptData } from '../../shared/belscripts'
 import { meldGebeurtenis, verkoopverhaal } from './reis'
 import { rondAf } from './taken'
 import { BAND_LETTERS, bandGekwalificeerd, type Band } from '../../shared/bandKwalificatie'
@@ -213,6 +213,7 @@ export async function belmodusItems(tx: Tx, ctx: { gebruiker: { id: string; naam
   const vv = await verkoopverhaal(tx)
   const branches = new Map((vv.branches ?? []).map((b) => [b.id, b.naam]))
   const [u] = await tx.select({ data: schema.users.data }).from(schema.users).where(eq(schema.users.id, ctx.gebruiker.id))
+  const prospectVersies = await laatsteProspectVersies(tx, ids, ctx.gebruiker.id)
   return kandidaten.map((k) => {
     const a = accounts.find((x) => x.id === k.accountId)!
     const c = contacten.find((x) => x.id === k.contactId)
@@ -235,8 +236,26 @@ export async function belmodusItems(tx: Tx, ctx: { gebruiker: { id: string; naam
       },
       voorstel, waarden: w.waarden, meldingen: w.meldingen, winpuntId: w.winpuntId, concurrentId: w.concurrentId,
       extraBezwaren: script ? bezwarenMetConcurrent(script, vv, w.concurrentId).filter((z) => z.argumentRef === w.concurrentId && w.concurrentId) : [],
+      prospectVersie: prospectVersies.get(a.id) ?? null,
     }
   })
+}
+
+export interface ProspectVersieRij { id: string; versie: number; belscriptId: string; scriptVersie: number; data: ProspectScriptData; gebruikerId: string; op: string | null }
+/**
+ * De nieuwste bewaarde versie per prospect (Belscript Studio); je eigen versie gaat voor die van een
+ * collega. Alleen versies waarvan het standaardscript nog bestaat.
+ */
+export async function laatsteProspectVersies(tx: Tx, accountIds: string[], gebruikerId: string): Promise<Map<string, ProspectVersieRij>> {
+  if (!accountIds.length) return new Map()
+  const rijen = await tx.select().from(schema.belscriptProspectversies).where(and(inArray(schema.belscriptProspectversies.accountId, accountIds), eq(schema.belscriptProspectversies.status, 'bewaard')))
+  const uit = new Map<string, ProspectVersieRij>()
+  const score = (r: (typeof rijen)[number]) => (r.gebruikerId === gebruikerId ? 1e6 : 0) + (r.versie ?? 0)
+  for (const r of [...rijen].sort((a, b) => score(b) - score(a))) {
+    if (uit.has(r.accountId)) continue
+    uit.set(r.accountId, { id: r.id, versie: r.versie!, belscriptId: r.belscriptId, scriptVersie: r.scriptVersie, data: r.data, gebruikerId: r.gebruikerId, op: r.bewaardOp })
+  }
+  return uit
 }
 
 // ── Eén gesprek ────────────────────────────────────────────────────────────

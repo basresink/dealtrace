@@ -110,6 +110,54 @@ describe('Waarnemer', () => {
   })
 })
 
+describe('Waarnemer: extra bronnen', () => {
+  const geen = async () => []
+  it('volgt de extra bronnen van account en contact; herkomst "Extra bron: <label>"; een ongewijzigde pagina kost geen AI', async () => {
+    await inOrg(ORG, async (tx) => {
+      await tx.execute(sql`update accounts set data = jsonb_set(data - 'waarnemer', '{volgBronnen}', ${JSON.stringify([{ soort: 'trefwoord', waarde: 'nieuwbouw' }, { soort: 'url', waarde: 'https://blog.testplanning47.test/nieuws', label: 'Blog van de directeur' }])}::jsonb) where id = 'pl-47'`)
+      await tx.execute(sql`insert into contacts (id, organisation_id, account_id, first_name, last_name, data) values ('c-eb-1', ${ORG}, 'pl-47', 'Testa', 'Bronstra', ${JSON.stringify({ extraBronnen: [{ label: 'Profiel op de vakbeurs', url: 'https://beurs.voorbeeld.test/sprekers/bronstra' }] })}::jsonb)`)
+      const paginas: Record<string, string> = {
+        'https://blog.testplanning47.test/nieuws': 'Testplanning Installatie 47 opent in maart een tweede vestiging. De directeur zoekt een partner voor onderhoud.',
+        'https://beurs.voorbeeld.test/sprekers/bronstra': 'Testa Bronstra spreekt op de vakbeurs over verduurzaming van bedrijfspanden.',
+      }
+      const gelezen: string[] = []
+      const lezer = async (url: string, n: Date) => { gelezen.push(url); return paginas[url] ? { url, titel: 'Pagina', tekst: paginas[url]!, datum: n.toISOString().slice(0, 10) } : null }
+      const voor = mockLog.length
+      const r = await draaiWaarnemer(tx, ORG, nu, { accountIds: ['pl-47'], zoeker: geen as any, bronLezer: lezer })
+      expect(r).toMatchObject({ extraBronnen: 2, inzichten: 2, tegengehouden: 0, gestopt: null })
+      expect(gelezen.sort()).toEqual(Object.keys(paginas).sort())
+      const s = await rijen(tx, sql`select contact_id, type, status, data->'bron'->>'naam' as naam, data->'bron'->>'url' as url, data->'evidence'->0->>'bron' as bewijsbron from signals where account_id = 'pl-47' and onderwerp like 'extrabron:%' order by naam`)
+      expect(s).toEqual([
+        { contact_id: null, type: 'website', status: 'nieuw', naam: 'Extra bron: Blog van de directeur', url: 'https://blog.testplanning47.test/nieuws', bewijsbron: 'Extra bron: Blog van de directeur' },
+        { contact_id: 'c-eb-1', type: 'website', status: 'nieuw', naam: 'Extra bron: Profiel op de vakbeurs', url: 'https://beurs.voorbeeld.test/sprekers/bronstra', bewijsbron: 'Extra bron: Profiel op de vakbeurs' },
+      ])
+      expect(mockLog.slice(voor).filter((l) => l.soort === 'webonderzoek')).toHaveLength(2)
+      expect((await rij(tx, sql`select count(*)::int n from agent_runs where agent = 'waarnemer' and account_id = 'pl-47' and handeling = 'inzicht' and bronnen ? 'https://blog.testplanning47.test/nieuws'`)).n).toBe(1)
+
+      // Binnen de cadans niets; daarna leest hij opnieuw, maar een ongewijzigde pagina kost geen AI-aanroep.
+      expect((await draaiWaarnemer(tx, ORG, nu, { accountIds: ['pl-47'], zoeker: geen as any, bronLezer: lezer })).extraBronnen).toBe(0)
+      const later = new Date(nu.getTime() + 8 * 864e5)
+      const n2 = mockLog.length
+      expect((await draaiWaarnemer(tx, ORG, later, { accountIds: ['pl-47'], zoeker: geen as any, bronLezer: lezer })).extraBronnen).toBe(0)
+      expect(mockLog.slice(n2).filter((l) => l.soort === 'webonderzoek')).toHaveLength(0)
+      // Een gewijzigde pagina werkt het open inzicht bij.
+      paginas['https://blog.testplanning47.test/nieuws'] = 'Testplanning Installatie 47 neemt een collega-installateur over. De directeur zoekt een partner voor onderhoud.'
+      const r3 = await draaiWaarnemer(tx, ORG, new Date(later.getTime() + 8 * 864e5), { accountIds: ['pl-47'], zoeker: geen as any, bronLezer: lezer })
+      expect(r3.extraBronnen).toBe(1)
+      expect((await rij(tx, sql`select count(*)::int n, max(data->'evidence'->0->>'citaat') c from signals where account_id = 'pl-47' and onderwerp = 'extrabron:account:https://blog.testplanning47.test/nieuws'`))).toEqual({ n: 1, c: 'Testplanning Installatie 47 neemt een collega-installateur over.' })
+    })
+  })
+  it('de standaardlezer gebruikt de mock van webBron', async () => {
+    await inOrg(ORG, async (tx) => {
+      await tx.execute(sql`update accounts set data = jsonb_set(data - 'waarnemer', '{volgBronnen}', ${JSON.stringify([{ soort: 'url', waarde: 'https://vacatures.testplanning48.test', label: 'Vacaturesite' }])}::jsonb) where id = 'pl-48'`)
+      const r = await draaiWaarnemer(tx, ORG, nu, { accountIds: ['pl-48'], zoeker: (async () => []) as any })
+      expect(r.extraBronnen).toBe(1)
+      const s = await rij(tx, sql`select title, data->'bron'->>'naam' as naam from signals where account_id = 'pl-48' and onderwerp like 'extrabron:%'`)
+      expect(s.naam).toBe('Extra bron: Vacaturesite')
+    })
+  })
+})
+
 describe('Notulist', () => {
   it('herkent cc-02 in het verslag; de contactnaam gaat niet mee naar de AI; actiepunten worden concepten', async () => {
     await inOrg(ORG, async (tx) => {

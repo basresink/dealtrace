@@ -48,7 +48,7 @@ async function bewaar() {
       contactIds: props.contact ? [props.contact.id] : vast.value ? [] : contacten.value.map((c) => c.id),
     }
     const r = await $fetch<{ id: string; tekstStatus: string }>('/api/documenten', { method: 'POST', body })
-    toast.toon(r.tekstStatus === 'niet-gelezen' ? 'Document bewaard. De inhoud kon niet worden gelezen; de AI kent alleen titel, type en koppelingen.' : 'Document bewaard in de kennisbank.')
+    toast.toon(r.tekstStatus === 'niet-gelezen' ? 'Document bewaard. Het lezen van de inhoud is mislukt (een scan of een beveiligd bestand?); de AI kent alleen titel, type en koppelingen.' : r.tekstStatus === 'gelezen' ? 'Document bewaard in de kennisbank. De AI kan vragen over de inhoud beantwoorden.' : 'Document bewaard in de kennisbank.')
     emit('bewaard', r.id)
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }

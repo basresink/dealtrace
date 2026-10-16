@@ -13,6 +13,7 @@ import { meldGebeurtenis, ReisFout } from './reis'
 import { leesStand } from './vvProjectie'
 import { teamLeden } from './planning'
 import { crmOverdrachtStand, verstuurCrmOverdracht } from './crm'
+import { dekkingVoor } from './invloed'
 
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
 type Rij = Record<string, any>
@@ -58,6 +59,8 @@ export async function voorbereiding(tx: Tx, accountId: string, door: { id: strin
     },
     collegas, ontvanger: (inst?.value as any)?.vasteOntvanger ?? null,
     vervolgstap: ap?.data?.vervolgstap ?? '',
+    // F8: de dekking van de invloedskaart; zonder beslisser en beïnvloeder gesproken een waarschuwing.
+    dekking: await dekkingVoor(tx, accountId),
     voorbeeld: ctx ? { briefing: ctx.briefing, contacten: ctx.contacten.length, geschiedenis: ctx.reis?.geschiedenis ?? [], verslag: ctx.afspraak.verslag ?? null } : null,
   }
 }

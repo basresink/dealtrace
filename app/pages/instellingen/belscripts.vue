@@ -33,10 +33,13 @@ useHead({ title: 'Belscripts · Instellingen · Dealtrace' })
     <NietAangezetKop v-if="!aan" sleutel="belscript.kiezen" />
     <template v-else>
       <PaginaKop kicker="Instellingen · Verkoop" titel="Belscripts" uitleg="Standaardscripts die je team kiest in het belpaneel. AI vult per account de aanleiding en het winpunt in." helpartikel="belscripts-maken">
-        <template v-if="data.kan.beheer" #acties>
+        <template #acties>
+          <NuxtLink to="/belscripts" class="dd-actie dd-actie--secundair" data-test="naar-studio"><Icoon naam="ScrollText" class="dd-actie-icoon" />Belscript Studio</NuxtLink>
+          <template v-if="data.kan.beheer">
           <button type="button" class="dd-actie dd-actie--primair" data-test="nieuw-script" @click="nieuw"><Icoon naam="Plus" class="dd-actie-icoon" />Nieuw script</button>
           <button type="button" class="dd-actie dd-actie--secundair" data-test="ai-opzet" @click="opzet"><Icoon naam="Sparkles" class="dd-actie-icoon" />Laat AI een opzet maken</button>
           <button type="button" class="dd-actie dd-actie--secundair" data-test="kopieer-startset" @click="startset">Kopieer uit startset</button>
+          </template>
         </template>
       </PaginaKop>
       <section class="section section--laatste">

@@ -29,6 +29,7 @@ useHead({ title: 'Vandaag · Dealtrace' })
     <AankomstKaart deel="kaart" class="vt-alleen-telefoon" style="padding: 0 16px" />
     <VandaagTelefoon class="vt-alleen-telefoon" :t="v.telefoon" :kan="v.kan" @open="openTaak" @ververs="refresh()" />
     <AankomstKaart deel="inloop" class="vt-alleen-telefoon" style="padding: 0 16px 16px" />
+    <DagritmeStrook :vorm="v.telefoon?.vorm" class="vt-alleen-telefoon dr-telefoon" />
     <div class="vt-alleen-groot">
     <PaginaKop helpartikel="vandaag">
       <template #kicker><span class="kicker kicker--streep" data-test="vandaag-kicker">{{ v.kop.kicker }}</span></template>
@@ -40,6 +41,7 @@ useHead({ title: 'Vandaag · Dealtrace' })
         <button v-if="v.kan.nieuwProspect" type="button" class="dd-actie dd-actie--secundair" data-test="vandaag-prospect" @click="nieuweProspect = true"><Icoon naam="UserPlus" class="dd-actie-icoon" />Prospect</button>
       </template>
     </PaginaKop>
+    <DagritmeStrook :vorm="v.telefoon?.vorm" />
     <section v-if="v.aanleiding" class="section vd-hero">
       <div class="container">
         <AanleidingHero :a="v.aanleiding" @maak-taak="maakTaak" />

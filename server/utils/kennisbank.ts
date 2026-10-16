@@ -81,7 +81,7 @@ export async function documentDetail(tx: Tx, id: string, g: KennisbankGebruiker)
   if (!d) throw createError({ statusCode: 404, statusMessage: 'Document niet gevonden' })
   if (d.tekst_status === 'onbekend') {
     const [b] = await rijen(tx, sql`select inhoud from documenten where id = ${id}`)
-    const t = leesDocumentTekst(d.mime, b?.inhoud ?? null)
+    const t = await leesDocumentTekst(d.mime, b?.inhoud ?? null)
     await tx.execute(sql`update documenten set tekst = ${t.tekst}, tekst_status = ${t.status} where id = ${id}`)
     d.tekst = t.tekst
     d.tekst_status = t.status
@@ -133,7 +133,7 @@ export async function maakDocument(tx: Tx, org: string, g: KennisbankGebruiker, 
     for (const c of cs) koppelingen.push({ accountId: c.account_id, contactId: c.id })
   }
 
-  const t = leesDocumentTekst(mime, inhoud)
+  const t = await leesDocumentTekst(mime, inhoud)
   const id = crypto.randomUUID()
   await tx.execute(sql`insert into documenten (id, organisation_id, naam, type, versie, beschrijving, mime, grootte, inhoud, tekst, tekst_status, eigenaar_id)
     values (${id}, ${org}, ${naam}, ${type}, ${versie}, ${beschrijving}, ${mime}, ${inhoud.length}, ${inhoud}, ${t.tekst}, ${t.status}, ${g.id})`)

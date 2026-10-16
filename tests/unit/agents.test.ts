@@ -112,3 +112,15 @@ describe('profiel, dossier en verrijken', () => {
     ])).toBe('2 dossiers ververst · 1 nieuwe aanleiding')
   })
 })
+
+describe('extra bronnen voor de Waarnemer (webBron)', () => {
+  it('de mock geeft per URL en per week een vaste pagina; de vingerafdruk negeert de datum', async () => {
+    const { haalVolgbron, vingerafdruk } = await import('../../server/utils/webBron')
+    const a = await haalVolgbron('https://blog.voorbeeld.test/nieuws', nu)
+    const b = await haalVolgbron('https://blog.voorbeeld.test/nieuws', new Date(nu.getTime() + 864e5))
+    expect(a).toMatchObject({ url: 'https://blog.voorbeeld.test/nieuws', titel: 'Nieuw op blog.voorbeeld.test', datum: '2026-10-15' })
+    expect(a!.tekst).toMatch(/^Op blog\.voorbeeld\.test staat een nieuw bericht over /)
+    expect(vingerafdruk(a!.tekst)).toBe(vingerafdruk(b!.tekst))
+    expect(vingerafdruk('Een. Bijgewerkt op 2026-10-01.')).not.toBe(vingerafdruk('Twee. Bijgewerkt op 2026-10-01.'))
+  })
+})

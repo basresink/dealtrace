@@ -99,6 +99,12 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Nieuwe prospects vinden via de AI-zoeker, KvK, Datacollectief, import of je CRM. Elke lead komt met bewijs en een reden waarom hij past.', totDieTijd: 'Je salesmanager zet leads voor je klaar; die verschijnen als taak op Vandaag.' },
   },
   {
+    // F5: de signalen van de laatste 30 dagen per branche en signaalsoort, met golven en een belronde in één klik.
+    sleutel: 'nav.signaalradar', naam: 'Signaalradar', pakket: 'starter', rollen: 'iedereen', helpartikel: 'signaalradar', startNiveau: 'gevorderd',
+    zijbalk: { groep: 'Planning', route: '/signaalradar', icoon: 'Radar' },
+    uitleg: { watHetDoet: 'Ziet welke signalen nu opvallend vaak in een branche voorkomen en maakt er met één klik een gerichte belronde van.', totDieTijd: 'De signalen staan per account bij Inzichten.' },
+  },
+  {
     sleutel: 'nav.inzichten', naam: 'Inzichten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'inzichten', startNiveau: 'gevorderd',
     zijbalk: { groep: 'Activiteiten', route: '/inzichten', icoon: 'Lightbulb' },
     uitleg: { watHetDoet: 'Aanleidingen met bewijs die agents vinden, om te beoordelen en om te zetten in een taak.', totDieTijd: 'De belangrijkste aanleiding van de dag staat op Vandaag.' },
@@ -180,6 +186,11 @@ export const FUNCTIES: readonly Functie[] = [
   {
     sleutel: 'prospects.kaart', naam: 'Accountkaart', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-accountkaart-lezen', startNiveau: 'beginner',
     uitleg: { watHetDoet: 'Het dossier van een bedrijf voor en na elk gesprek.', totDieTijd: 'Vraag een collega of je manager.' },
+  },
+  {
+    // F2 en F7: Volgen op de account- en contactkaart (volgende beste stap en opvolgreeksen).
+    sleutel: 'prospects.volgen', naam: 'Volgen: volgende stap en opvolgreeksen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'volgen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Per account één volgende stap met de reden erbij, en een opvolgreeks die vanzelf stopt bij een reactie.', totDieTijd: 'Kijk bij Taken en Inzichten wat er voor dit account klaarstaat.' },
   },
   {
     sleutel: 'prospects.nieuw', naam: 'Nieuwe prospect', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-prospect-toevoegen', startNiveau: 'beginner',
@@ -782,6 +793,23 @@ export const FUNCTIES: readonly Functie[] = [
   {
     sleutel: 'vandaag.recapWeek', naam: 'Recap met weekterugblik', pakket: 'starter', rollen: 'iedereen', helpartikel: 'vandaag', startNiveau: 'expert',
     uitleg: { watHetDoet: 'De recap met gesprekken, afspraken en overdrachten van deze week.', totDieTijd: 'De recap toont de dag.' },
+  },
+  // Dagritme: dagstart (F3 Dagplanner), weekstart en weekreview (F10), ook per e-mail. Bereikbaar vanaf Vandaag en Mijn dashboard.
+  {
+    sleutel: 'dagritme.dagstart', naam: 'Dagstart', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dagstart', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Je dag ingedeeld: afspraken vast, bezoeken op route, belblokken in het uur waarop je doelgroep opneemt en een voorbereidingsblok.', totDieTijd: 'Je dag staat op Vandaag en in je agenda.' },
+  },
+  {
+    sleutel: 'dagritme.weekstart', naam: 'Weekstart', pakket: 'starter', rollen: 'iedereen', helpartikel: 'weekstart', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Op maandag je weekplan: afspraken, bezoeken, belblokken, je voornemens met hun stand, wat openstaat en je tempo.', totDieTijd: 'Je week staat in je agenda.' },
+  },
+  {
+    sleutel: 'dagritme.weekreview', naam: 'Weekreview', pakket: 'starter', rollen: 'iedereen', helpartikel: 'weekreview', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Vrijdag in vijf minuten: wat bewoog, wat werkte, wat bleef liggen en drie voornemens die meteen ingepland staan.', totDieTijd: 'Je cijfers staan op Mijn dashboard.' },
+  },
+  {
+    sleutel: 'dagritme.mail', naam: 'Dagritme per mail', pakket: 'starter', rollen: 'iedereen', helpartikel: 'meldingen-instellen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Weekreview, weekstart en dagstart per e-mail, elk met een eigen schakelaar en tijdstip.', totDieTijd: 'Je opent ze in de app.' },
   },
   // P29: SalesDNA-koppeling (F25).
   {

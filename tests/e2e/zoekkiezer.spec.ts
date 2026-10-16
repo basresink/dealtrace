@@ -64,6 +64,7 @@ test.describe('zoekkiezer', () => {
   test('Nieuwe taak: typen toont hooguit zes treffers; pijltjes en Enter kiezen', async ({ page }) => {
     await login(page, 'u-07')
     await ga(page, '/contacten/alle')
+    await page.getByTestId('kop-meer').click()
     await page.getByTestId('lijst-taak').click()
     const veld = page.getByTestId('nt-klant')
     await veld.pressSequentially('Test')

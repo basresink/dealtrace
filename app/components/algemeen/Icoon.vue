@@ -8,7 +8,8 @@ import {
   UserCog, UserPlus, Users, UsersRound, WifiOff, X, Bell, Smartphone, KeyRound,
   Globe, Mail, MessageCircle, Navigation, Ellipsis, ArrowLeft, ArrowRight, Trash2, GripVertical, Download, Merge, LayoutList, LayoutGrid,
   List, ArrowUpDown, Star, Ban, Link, Linkedin, Info, Save, UserX, Bookmark, PhoneOff, Briefcase, Clock, StickyNote, Pause, CircleX, CircleDot, Mic, Volume2, VolumeX, Camera, Square, LocateFixed, Inbox, TriangleAlert, Handshake, CircleUser, ChevronUp, Upload, FileText, Image, File, SlidersHorizontal, ExternalLink, Database, ShieldCheck, Copy, ListTodo, ClipboardCheck,
-  Check, Instagram, Facebook, Package, Euro, MessageSquare,
+  Check, Instagram, Facebook, Package, Euro, MessageSquare, Network, Radar, Play,
+  Sunrise, NotebookPen, Utensils, Car, ChevronLeft, ChevronRight, Target, CalendarCheck,
 } from 'lucide-vue-next'
 
 const ICONEN = {
@@ -18,7 +19,8 @@ const ICONEN = {
   UserCog, UserPlus, Users, UsersRound, WifiOff, X, Bell, Smartphone, KeyRound,
   Globe, Mail, MessageCircle, Navigation, Ellipsis, ArrowLeft, ArrowRight, Trash2, GripVertical, Download, Merge, LayoutList, LayoutGrid,
   List, ArrowUpDown, Star, Ban, Link, Linkedin, Info, Save, UserX, Bookmark, PhoneOff, Briefcase, Clock, StickyNote, Pause, CircleX, CircleDot, Mic, Volume2, VolumeX, Camera, Square, LocateFixed, Inbox, TriangleAlert, Handshake, CircleUser, ChevronUp, Upload, FileText, Image, File, SlidersHorizontal, ExternalLink, Database, ShieldCheck, Copy, ListTodo, ClipboardCheck,
-  Check, Instagram, Facebook, Package, Euro, MessageSquare,
+  Check, Instagram, Facebook, Package, Euro, MessageSquare, Network, Radar, Play,
+  Sunrise, NotebookPen, Utensils, Car, ChevronLeft, ChevronRight, Target, CalendarCheck,
 } as const
 
 const props = defineProps<{ naam: string; grootte?: number }>()

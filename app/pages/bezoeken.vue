@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Bezoeken (F10) in de opzet van DealDrive: kop met werkbalk (Zoeken, + Afspraak, Filters, Agenda),
+// Bezoeken (F10) in de opzet van DealDrive: kop met werkbalk (Zoeken, + Afspraak, Filters, Meer met Agenda en Bezoekanalyse),
 // een uitklapbaar filterpaneel (periode en de kansfilters), je week met regiodagen, de kaart met
 // legenda naast de routelijst per dag en de zwarte statistiekstrook, dan de kansen langs de route,
 // de bellijst (Top 5 of Top 10) en de te plannen bezoeken. Op de telefoon door naar Onderweg (P30).
@@ -105,8 +105,7 @@ useHead({ title: 'Bezoeken · Dealtrace' })
         <button v-if="heeftFilters" type="button" class="dd-actie dd-actie--secundair" :class="{ 'bz-toggle--aan': filtersOpen || filterTeller }" :aria-expanded="filtersOpen" data-test="bz-filters" @click="filtersOpen = !filtersOpen">
           <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="filterTeller" class="pil-teller pil-teller--geel">{{ filterTeller }}</span><Icoon naam="ChevronDown" :grootte="14" class="bz-caret" :class="{ 'bz-caret--open': filtersOpen }" />
         </button>
-        <NuxtLink to="/agenda?weergave=dag" class="dd-actie dd-actie--secundair"><Icoon naam="Calendar" class="dd-actie-icoon" />Agenda</NuxtLink>
-        <NuxtLink v-if="data?.kan.analyse" to="/bezoek-analyse" class="dd-actie dd-actie--secundair" data-test="bezoekanalyse-knop"><Icoon naam="ChartLine" class="dd-actie-icoon" />Bezoekanalyse</NuxtLink>
+        <KopMeer :items="[{ label: 'Agenda', icoon: 'Calendar', to: '/agenda?weergave=dag', test: 'bz-agenda' }, ...(data?.kan.analyse ? [{ label: 'Bezoekanalyse', icoon: 'ChartLine', to: '/bezoek-analyse', test: 'bezoekanalyse-knop' }] : [])]" />
       </template>
     </PaginaKop>
 

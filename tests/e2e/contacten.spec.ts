@@ -19,7 +19,12 @@ test.describe('contacten', () => {
     await login(page, 'u-01')
     await ga(page, '/contacten/alle')
     const werkbalk = page.getByTestId('werkbalk')
-    for (const id of ['zoek-knop', 'nieuw-contact-knop', 'lijst-taak', 'lijst-afspraak', 'filters-knop']) await expect(werkbalk.getByTestId(id)).toBeVisible()
+    for (const id of ['zoek-knop', 'nieuw-contact-knop', 'filters-knop', 'kop-meer']) await expect(werkbalk.getByTestId(id)).toBeVisible()
+    // + Taak en + Afspraak staan onder Meer, zodat de kop op 1280 px op één regel blijft.
+    await werkbalk.getByTestId('kop-meer').click()
+    for (const id of ['lijst-taak', 'lijst-afspraak']) await expect(werkbalk.getByTestId(id)).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(werkbalk.getByTestId('lijst-taak')).toHaveCount(0)
     // Sortering (Rol) en Weergave staan in het filterpaneel, niet meer in de werkbalk.
     await expect(werkbalk.getByTestId('weergave-knop')).toHaveCount(0)
     await expect(werkbalk.getByTestId('sortering')).toHaveCount(0)

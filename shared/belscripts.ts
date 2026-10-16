@@ -10,7 +10,7 @@ export const DOEL_LABEL: Record<ScriptDoel, string> = { koud: 'Koude acquisitie'
 export const BLOK_VOLGORDE = ['poortwachter', 'opening', 'aanleiding', 'toestemming', 'vragen', 'winpunt', 'bezwaren', 'afsluiting', 'voicemail', 'opvolgmail', 'vrij'] as const
 export type BlokSoortScript = typeof BLOK_VOLGORDE[number]
 export const BLOK_LABEL: Record<BlokSoortScript, string> = {
-  poortwachter: 'Poortwachter', opening: 'Opening', aanleiding: 'Aanleiding', toestemming: 'Toestemmingsvraag', vragen: 'Vragen', winpunt: 'Winpunt',
+  poortwachter: 'Poortwachter', opening: 'Opening', aanleiding: 'Reden van bellen', toestemming: 'Toestemmingsvraag', vragen: 'Vragen', winpunt: 'Waarde en winpunt',
   bezwaren: 'Bezwaren', afsluiting: 'Afsluiting', voicemail: 'Voicemail', opvolgmail: 'Opvolgmail', vrij: 'Vrij blok',
 }
 export type Invulwijze = 'vast' | 'ai_aanvullen' | 'ai_schrijven'
@@ -39,6 +39,8 @@ export interface ScriptData {
   bezwaren: ScriptBezwaar[]
   variabelen?: string[]
   opmerking?: string
+  /** Het template waarmee het script begon (Belscript Studio), voor de resultaten per template. */
+  template?: string | null
 }
 export interface Belscript {
   id: string
@@ -191,7 +193,8 @@ function vul(tekst: string, waarden: ScriptContext['waarden']): { segmenten: Seg
 
 /** Vervangt variabelen, markeert onbekende (met terugvalzin), en zet AI-tekst waar die er is. Geen AI-aanroep. */
 export function vulScript(s: Pick<Belscript, 'data'>, ctx: ScriptContext): { blokken: IngevuldBlok[]; bezwaren: (ScriptBezwaar & { antwoordIngevuld: string })[]; onbekend: string[] } {
-  const blokken = [...s.data.blokken].sort((a, b) => BLOK_VOLGORDE.indexOf(a.soort) - BLOK_VOLGORDE.indexOf(b.soort)).map((b) => {
+  // De volgorde van het script zelf (de salesmanager zet de blokken in Belscript Studio op volgorde).
+  const blokken = s.data.blokken.map((b) => {
     const ai = b.invulwijze !== 'vast' ? ctx.ai?.[b.id] : undefined
     if (ai?.tekst) return { ...b, segmenten: [{ tekst: ai.tekst }], onbekend: [], bronnen: ai.bronnen ?? [], vanAi: true }
     const basis = b.invulwijze === 'ai_schrijven' && b.terugval ? b.terugval : b.tekst
@@ -326,4 +329,320 @@ export interface ScriptStaat {
   scriptId: string; versie: number; gekozenDoor: 'voorstel' | 'gebruiker'; gewisseld: boolean
   bezwaren: { id: string; bezwaar: string; argumentRef?: string | null }[]
   vragen: { blokId: string; vraag: string; antwoord: string; veld?: { bron: string; sleutel: string } | null }[]
+  /** De blokken die in de belmodus open zijn geweest (stap voor stap). */
+  blokkenGebruikt?: string[]
+  /** Gebeld met een bewaarde versie per prospect (Belscript Studio). */
+  prospectVersieId?: string | null
+  prospectVersie?: number | null
+}
+
+// ── Belscript Studio ───────────────────────────────────────────────────────
+// Vier onderdelen op /belscripts: het standaardscript van het team (blokken, variabelen,
+// voorbeeld, bezwaren, versies), zes templates als startpunt, een script per prospect dat de AI
+// vult en de accountmanager beoordeelt, en het script compact in de belmodus.
+
+export const WOORDEN_RICHTLIJN = 150
+export const WOORDEN_MAX = 200
+/** Gesproken tempo: ongeveer tweeënhalf woord per seconde. */
+export const secondenVoor = (woorden: number) => Math.round(woorden / 2.5)
+export const INVULWIJZE_LABEL: Record<Invulwijze, string> = { vast: 'Vaste tekst', ai_aanvullen: 'AI vult aan', ai_schrijven: 'AI schrijft' }
+/** De blokken die je in de studio toevoegt (bezwaren staan apart, de opvolgmail hoort bij een template). */
+export const STUDIO_BLOKKEN: BlokSoortScript[] = ['opening', 'aanleiding', 'toestemming', 'vragen', 'winpunt', 'afsluiting', 'voicemail', 'poortwachter', 'vrij']
+
+/** De variabelen in de invoegbalk, per groep. Alle variabelen staan in VARIABELEN. */
+export const VARIABELE_CHIPS: { groep: string; variabelen: string[] }[] = [
+  { groep: 'Contact', variabelen: ['contact.voornaam', 'contact.functie'] },
+  { groep: 'Account', variabelen: ['account.naam', 'account.plaats', 'concurrent.naam'] },
+  { groep: 'Verhaal', variabelen: ['verhaal.kernzin', 'winpunt.naam', 'argument'] },
+  { groep: 'Aanleiding', variabelen: ['aanleiding.kort', 'voorstel.tijd1', 'voorstel.tijd2'] },
+]
+
+const STUDIO_VOICEMAIL = 'Goedemorgen {contact.voornaam}, met {gebruiker.voornaam} van {organisatie.naam}. Ik bel over {aanleiding.kort}. Ik mail u zo een korte toelichting. Bel gerust terug op {gebruiker.telefoon}.'
+/** De begintekst van een nieuw blok per soort. */
+export const NIEUW_BLOK_TEKST: Record<BlokSoortScript, string> = {
+  poortwachter: 'Goedemorgen, met {gebruiker.voornaam} van {organisatie.naam}. Wie gaat er bij jullie over {onderwerp}?',
+  opening: 'Goedemorgen {contact.voornaam}, met {gebruiker.voornaam} van {organisatie.naam}. {verhaal.kernzin}',
+  aanleiding: 'Ik bel u omdat {aanleiding.kort}.',
+  toestemming: 'Heeft u twee minuten, of bel ik beter op een ander moment?',
+  vragen: 'Hoe regelen jullie dat nu? Wie beslist daarover? Wanneer speelt het weer?',
+  winpunt: 'Klanten in {account.plaats} kiezen voor ons omdat {argument}',
+  bezwaren: '',
+  afsluiting: AFSLUITING,
+  voicemail: STUDIO_VOICEMAIL,
+  opvolgmail: OPVOLGMAIL,
+  vrij: '',
+}
+/** Een nieuw blok; reden van bellen en waarde laten de AI aanvullen, met de terugvalzin uit de begintekst. */
+export function nieuwBlok(soort: BlokSoortScript, id: string): ScriptBlok {
+  const ai = soort === 'aanleiding' || soort === 'winpunt'
+  return { id, soort, tekst: NIEUW_BLOK_TEKST[soort] ?? '', invulwijze: ai ? 'ai_aanvullen' : 'vast', veldKoppeling: null, terugval: soort === 'aanleiding' ? 'Ik bel u omdat we veel bedrijven zoals {account.naam} helpen.' : soort === 'winpunt' ? '{winpunt.naam}: {argument}' : null }
+}
+/** Een nieuw blok komt vóór de afsluiting (of achteraan als die er niet is). */
+export function voegBlokToe(blokken: ScriptBlok[], blok: ScriptBlok): ScriptBlok[] {
+  const i = blokken.findIndex((b) => b.soort === 'afsluiting')
+  const uit = [...blokken]
+  uit.splice(i >= 0 ? i : uit.length, 0, blok)
+  return uit
+}
+export function verplaatsBlok<T>(lijst: T[], i: number, richting: -1 | 1): T[] {
+  const j = i + richting
+  if (i < 0 || j < 0 || i >= lijst.length || j >= lijst.length) return lijst
+  const uit = [...lijst]
+  ;[uit[i], uit[j]] = [uit[j]!, uit[i]!]
+  return uit
+}
+/** Een variabele invoegen op de cursor (of over de selectie heen). */
+export function voegVariabeleIn(tekst: string, variabele: string, start = tekst.length, eind = start): { tekst: string; cursor: number } {
+  const v = `{${variabele}}`
+  const s = Math.max(0, Math.min(start, tekst.length))
+  const e = Math.max(s, Math.min(eind, tekst.length))
+  return { tekst: tekst.slice(0, s) + v + tekst.slice(e), cursor: s + v.length }
+}
+/** Woorden met de richtlijn: "142 woorden, ongeveer 57 seconden (richtlijn 150)". */
+export function lengteMelding(woorden: number): { tekst: string; stand: 'goed' | 'lang' | 'te_lang'; procent: number } {
+  const stand = woorden > WOORDEN_MAX ? 'te_lang' : woorden > WOORDEN_RICHTLIJN ? 'lang' : 'goed'
+  return { tekst: `${woorden} ${woorden === 1 ? 'woord' : 'woorden'}, ongeveer ${secondenVoor(woorden)} seconden (richtlijn ${WOORDEN_RICHTLIJN}, maximaal ${WOORDEN_MAX})`, stand, procent: Math.min(100, Math.round((woorden / WOORDEN_MAX) * 100)) }
+}
+
+// ── Templates ──────────────────────────────────────────────────────────────
+
+export type TemplateSoort = 'nieuw' | 'bestaand'
+export interface ScriptTemplate {
+  id: string
+  naam: string
+  /** Wat het gesprek moet opleveren. */
+  doel: string
+  scriptDoel: ScriptDoel
+  soort: TemplateSoort
+  wanneer: string
+  rol: string
+  contactRollen: string[]
+  blokken: ScriptBlok[]
+  bezwaren: ScriptBezwaar[]
+}
+const tb = (id: string, soort: BlokSoortScript, tekst: string, invulwijze: Invulwijze = 'vast', terugval: string | null = null): ScriptBlok => ({ id, soort, tekst, invulwijze, terugval, veldKoppeling: soort === 'vragen' ? { bron: 'band', sleutel: 'behoefte' } : null })
+
+/** De zes templates (fictieve teksten). Resultaten komen uit de eigen gesprekken van de organisatie. */
+export const SCRIPT_TEMPLATES: ScriptTemplate[] = [
+  { id: 'koud', naam: 'Koude acquisitie', doel: 'Een afspraak met de beslisser', scriptDoel: 'koud', soort: 'nieuw', rol: 'Beslisser', contactRollen: ['beslisser'],
+    wanneer: 'Eerste contact zonder eerdere aanraking. Het contact is beslisser of je weet het nog niet.',
+    blokken: [
+      tb('opening', 'opening', 'Goedemorgen {contact.voornaam}, met {gebruiker.voornaam} van {organisatie.naam}. {verhaal.kernzin}', 'ai_aanvullen', 'Goedemorgen {contact.voornaam}, met {gebruiker.voornaam} van {organisatie.naam}.'),
+      tb('aanleiding', 'aanleiding', 'Ik bel u omdat {aanleiding.kort}.', 'ai_aanvullen', 'Ik bel u omdat we veel bedrijven zoals {account.naam} helpen.'),
+      tb('toestemming', 'toestemming', 'Heeft u twee minuten, of bel ik beter op een ander moment?'),
+      tb('vragen', 'vragen', 'Hoe regelen jullie dat nu met {concurrent.naam}? Wie beslist daarover? Wanneer speelt het weer?'),
+      tb('winpunt', 'winpunt', '{winpunt.naam}: {argument}', 'ai_aanvullen', 'We denken mee voordat er een probleem is.'),
+      tb('afsluiting', 'afsluiting', AFSLUITING), tb('voicemail', 'voicemail', STUDIO_VOICEMAIL),
+    ],
+    bezwaren: [
+      { id: 'bz-leverancier', bezwaar: 'We zitten goed bij onze huidige leverancier.', antwoord: 'Dat hoor ik vaker, en dat is fijn. Waar het bij projecten vaak wringt is de levering op de bouw. Hoe gaat dat bij jullie?', wedervraag: 'Wat zou er beter kunnen?' },
+      { id: 'bz-geen-tijd', bezwaar: 'Ik heb geen tijd.', antwoord: 'Begrijpelijk. Het kost u een half uur en het levert u op elk project tijd op.', wedervraag: 'Wanneer komt het beter uit?' },
+      { id: 'bz-informatie', bezwaar: 'Stuur maar wat informatie.', antwoord: 'Doe ik graag. Zodat ik het juiste stuur: speelt het vooral bij projecten of bij service?' },
+    ] },
+  { id: 'mail', naam: 'Opvolging na mail', doel: 'Je mail of LinkedIn-bericht omzetten in een gesprek', scriptDoel: 'opvolging', soort: 'bestaand', rol: 'Alle rollen', contactRollen: [],
+    wanneer: 'Twee tot vijf werkdagen na een mail of bericht zonder reactie.',
+    blokken: [
+      tb('opening', 'opening', 'Goedemorgen {contact.voornaam}, met {gebruiker.voornaam} van {organisatie.naam}. Ik stuurde u laatst een bericht over {aanleiding.kort}.'),
+      tb('vragen', 'vragen', 'Heeft u het kunnen lezen? Hoe kijkt u daarnaar?'),
+      tb('winpunt', 'winpunt', 'Kort gezegd: {winpunt.naam}.', 'ai_aanvullen', 'Kort gezegd: we maken het u makkelijker.'),
+      tb('afsluiting', 'afsluiting', AFSLUITING), tb('voicemail', 'voicemail', STUDIO_VOICEMAIL),
+    ],
+    bezwaren: [{ id: 'bz-niet-gezien', bezwaar: 'Ik heb uw mail niet gezien.', antwoord: 'Geen probleem, in het kort: {winpunt.naam}. Mag ik u twee vragen stellen?' }] },
+  { id: 'beurs', naam: 'Opvolging na beurs', doel: 'Een standbezoek omzetten in een afspraak', scriptDoel: 'opvolging', soort: 'bestaand', rol: 'Alle rollen', contactRollen: [],
+    wanneer: 'Binnen tien werkdagen na de beurs, met een gescande badge of visitekaartje.',
+    blokken: [
+      tb('opening', 'opening', 'Goedemorgen {contact.voornaam}, met {gebruiker.voornaam} van {organisatie.naam}. We spraken elkaar op de beurs.'),
+      tb('aanleiding', 'aanleiding', 'U vroeg toen naar {aanleiding.kort}.', 'ai_schrijven', 'Ik beloofde u terug te bellen.'),
+      tb('vragen', 'vragen', 'Wat sprak u op de stand het meest aan? Speelt het nu of later?'),
+      tb('afsluiting', 'afsluiting', AFSLUITING), tb('voicemail', 'voicemail', STUDIO_VOICEMAIL),
+    ],
+    bezwaren: [{ id: 'bz-rondkijken', bezwaar: 'We keken alleen even rond.', antwoord: 'Dat snap ik. Wat zou er moeten gebeuren om er wel serieus naar te kijken?' }] },
+  { id: 'nee', naam: 'Herintroductie na nee', doel: 'Opnieuw in gesprek na een eerdere nee, volgens de terugkomregel', scriptDoel: 'winback', soort: 'bestaand', rol: 'Beslisser', contactRollen: ['beslisser'],
+    wanneer: 'Als de termijn van de terugkomregel verloopt, bijvoorbeeld zes maanden na "tevreden met leverancier".',
+    blokken: [
+      tb('opening', 'opening', 'Goedemorgen {contact.voornaam}, met {gebruiker.voornaam} van {organisatie.naam}. We spraken elkaar eerder en ik beloofde terug te bellen.'),
+      tb('aanleiding', 'aanleiding', 'U gaf toen aan: {vorige.uitkomst}.', 'ai_schrijven', 'U had toen geen behoefte.'),
+      tb('vragen', 'vragen', 'Wat is er sindsdien veranderd? Wat mist u nu nog?'),
+      tb('winpunt', 'winpunt', 'Sindsdien bieden we {winpunt.naam}.', 'ai_aanvullen', 'Sindsdien is er bij ons veel veranderd.'),
+      tb('afsluiting', 'afsluiting', AFSLUITING), tb('voicemail', 'voicemail', STUDIO_VOICEMAIL),
+    ],
+    bezwaren: [{ id: 'bz-niets-veranderd', bezwaar: 'Er is niets veranderd.', antwoord: 'Fijn om te horen dat het loopt. Mag ik over een half jaar weer even bellen?' }] },
+  { id: 'bevestig', naam: 'Afspraak bevestigen', doel: 'No-show voorkomen en de agenda scherp krijgen', scriptDoel: 'bevestigen', soort: 'bestaand', rol: 'Alle rollen', contactRollen: [],
+    wanneer: 'Eén werkdag voor de afspraak, of als er meer dan twee weken tussen planning en afspraak zit.',
+    blokken: [
+      tb('opening', 'opening', 'Goedemorgen {contact.voornaam}, met {gebruiker.voornaam} van {organisatie.naam}. Ik bel even over onze afspraak.'),
+      tb('vragen', 'vragen', 'Staat de afspraak nog? Wie schuiven er aan? Wat wilt u in elk geval bespreken?'),
+      tb('afsluiting', 'afsluiting', 'Fijn, dan zie ik u dan. Ik stuur de bevestiging nog even per mail.'), tb('voicemail', 'voicemail', STUDIO_VOICEMAIL),
+    ],
+    bezwaren: [] },
+  { id: 'voicemail', naam: 'Voicemail', doel: 'Een terugbelverzoek dat aansluit op je mail', scriptDoel: 'anders', soort: 'nieuw', rol: 'Alle rollen', contactRollen: [],
+    wanneer: 'Bij geen gehoor op poging twee of drie. Altijd met een mail erachteraan.',
+    blokken: [
+      tb('opening', 'opening', 'Goedemorgen {contact.voornaam}, met {gebruiker.voornaam} van {organisatie.naam}.'),
+      tb('voicemail', 'voicemail', 'Ik bel over {aanleiding.kort}. Ik mail u zo een korte toelichting. Bel gerust terug op {gebruiker.telefoon}.', 'ai_aanvullen', 'Ik mail u zo een korte toelichting. Bel gerust terug op {gebruiker.telefoon}.'),
+      tb('afsluiting', 'afsluiting', 'Tot horens.'),
+    ],
+    bezwaren: [] },
+]
+
+/** Lengte van een template: het gesproken deel, of bij een voicemailscript de voicemail. */
+export function templateLengte(t: Pick<ScriptTemplate, 'blokken'>): { woorden: number; seconden: number } {
+  const gesproken = woordenVan(t)
+  const vm = t.blokken.filter((b) => b.soort === 'voicemail' || b.soort === 'opening').reduce((s, b) => s + b.tekst.replace(VAR_RE, 'x').split(/\s+/).filter(Boolean).length, 0)
+  const woorden = t.blokken.every((b) => ['opening', 'voicemail', 'afsluiting'].includes(b.soort)) ? vm : gesproken
+  return { woorden, seconden: secondenVoor(woorden) }
+}
+export const TEMPLATE_FILTERS = [
+  { sleutel: 'alle', label: 'Alle' },
+  { sleutel: 'nieuw', label: 'Nieuw contact' },
+  { sleutel: 'bestaand', label: 'Eerder contact' },
+  { sleutel: 'kort', label: 'Korter dan 50 woorden' },
+] as const
+export type TemplateFilter = typeof TEMPLATE_FILTERS[number]['sleutel']
+export function filterTemplates<T extends ScriptTemplate>(lijst: T[], filter: TemplateFilter): T[] {
+  return lijst.filter((t) => filter === 'alle' || (filter === 'kort' ? templateLengte(t).woorden < 50 : t.soort === filter))
+}
+/** Bij welk template hoort een script (eigen template, anders de startset)? */
+const STARTSET_TEMPLATE: Record<string, string> = { 'start-1': 'koud', 'start-3': 'mail', 'start-6': 'bevestig' }
+export function templateVanScript(s: { startset?: string | null; data: Pick<ScriptData, 'template'> }): string | null {
+  return s.data.template ?? (s.startset ? STARTSET_TEMPLATE[s.startset] ?? null : null)
+}
+/** Resultaat uit de eigen gesprekken; onder het minimum geen percentage. */
+export function templateResultaat(r: { gesprekken: number; afspraken: number } | null | undefined, minimum = 30): { genoeg: boolean; label: string; gesprekken: number } {
+  const n = r?.gesprekken ?? 0
+  if (n < minimum) return { genoeg: false, gesprekken: n, label: `Nog te weinig gesprekken (${n} van ${minimum})` }
+  return { genoeg: true, gesprekken: n, label: `${Math.round(((r!.afspraken) / n) * 100)}% naar afspraak · ${n} gesprekken` }
+}
+/** Een nieuw concept uit een template. */
+export function scriptUitTemplate(t: ScriptTemplate): { naam: string; doel: ScriptDoel; data: ScriptData } {
+  return { naam: t.naam, doel: t.scriptDoel, data: basisData({ contactRollen: [...t.contactRollen], blokken: t.blokken.map((b) => ({ ...b })), bezwaren: t.bezwaren.map((z) => ({ ...z })), template: t.id }) }
+}
+
+// ── Per prospect ───────────────────────────────────────────────────────────
+
+export type ProspectBlokStatus = 'vast' | 'voorgesteld' | 'bevestigd' | 'bewerkt' | 'verworpen' | 'geen_voorstel'
+export type GegevenSleutel = 'aanleiding' | 'branche' | 'leverancier' | 'winpunt' | 'rol' | 'tijden'
+export interface Herkomst { sleutel: GegevenSleutel | 'script'; label: string }
+export interface ProspectGegeven { sleutel: GegevenSleutel; label: string; waarde: string | null; toelichting?: string | null; bron: string; gebruikt: boolean }
+export interface ProspectBlok extends ScriptBlok { voorstel?: string | null; status: ProspectBlokStatus; herkomst: Herkomst[]; vanAi: boolean }
+export interface ProspectScriptData {
+  scriptNaam: string
+  scriptDoel: ScriptDoel
+  blokken: ProspectBlok[]
+  bezwaren: ScriptBezwaar[]
+  gegevens: ProspectGegeven[]
+  nietMeegestuurd: string[]
+}
+export const NIET_MEEGESTUURD = ['namen van andere contacten', 'notities', 'mails en gespreksverslagen']
+const GEGEVEN_LABEL: Record<GegevenSleutel, string> = { aanleiding: 'Aanleiding', branche: 'Branche', leverancier: 'Huidige leverancier', winpunt: 'Winpunt', rol: 'Rol van het contact', tijden: 'Voorstel voor tijden' }
+
+/** Welke gegevens gaan naar de AI, met hun bron; wat ontbreekt staat erbij met de reden. */
+export function prospectGegevens(i: {
+  aanleiding?: { tekst?: string | null; bron?: string | null; op?: string | null } | null
+  branche?: { naam?: string | null; kernzin?: string | null; algemeen?: boolean } | null
+  leverancier?: { naam?: string | null } | null
+  winpunt?: { titel?: string | null; argument?: string | null } | null
+  contact?: { naam?: string | null; functie?: string | null; rol?: string | null } | null
+  agendaGekoppeld?: boolean
+}): ProspectGegeven[] {
+  const datum = i.aanleiding?.op ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short' }).format(new Date(i.aanleiding.op)) : null
+  const g = (sleutel: GegevenSleutel, waarde: string | null | undefined, bron: string, toelichting?: string | null): ProspectGegeven => ({ sleutel, label: GEGEVEN_LABEL[sleutel], waarde: waarde?.trim() ? waarde.trim() : null, toelichting: toelichting ?? null, bron, gebruikt: !!waarde?.trim() })
+  const rol = [i.contact?.functie, i.contact?.rol && i.contact.rol !== 'onbekend' ? i.contact.rol : null].filter(Boolean).join(', ')
+  return [
+    g('aanleiding', i.aanleiding?.tekst, i.aanleiding?.tekst ? `Accountkaart, aanleiding${i.aanleiding.bron ? ` (${i.aanleiding.bron})` : ''}${datum ? `, ${datum}` : ''}` : 'Accountkaart: geen aanleiding'),
+    g('branche', i.branche?.naam, i.branche?.naam ? 'Verkoopverhaal, branches' : 'Accountkaart: geen branche', i.branche?.kernzin ? `"${i.branche.kernzin}"${i.branche.algemeen ? ' (algemene kernzin)' : ''}` : null),
+    g('leverancier', i.leverancier?.naam, i.leverancier?.naam ? 'Accountkaart, huidige leverancier en Verkoopverhaal, concurrenten' : 'Accountkaart: leverancier onbekend'),
+    g('winpunt', i.winpunt?.titel, i.winpunt?.titel ? 'Verkoopverhaal, winpunten' : 'Verkoopverhaal: geen actief winpunt', i.winpunt?.argument ?? null),
+    g('rol', rol || null, i.contact?.naam ? `Contactkaart ${i.contact.naam}` : 'Geen contact bij dit prospect'),
+    { sleutel: 'tijden', label: GEGEVEN_LABEL.tijden, waarde: null, toelichting: null, bron: i.agendaGekoppeld ? 'Agenda: tijden bij het bellen' : 'Agenda niet gekoppeld: terugvalzin', gebruikt: false },
+  ]
+}
+
+/** Per blok de gegevens waarop de AI zich baseert ("Gebaseerd op"). */
+export const AI_HERKOMST: Partial<Record<BlokSoortScript, GegevenSleutel[]>> = {
+  opening: ['branche', 'rol'], aanleiding: ['aanleiding'], toestemming: ['rol'], vragen: ['leverancier', 'rol'], winpunt: ['winpunt'],
+  poortwachter: ['rol'], vrij: ['aanleiding', 'branche'], voicemail: ['aanleiding'], afsluiting: ['tijden'],
+}
+export function herkomstVoor(soort: BlokSoortScript, gegevens: ProspectGegeven[], aiBronnen: string[] = []): Herkomst[] {
+  const sleutels = new Set<GegevenSleutel>([...(AI_HERKOMST[soort] ?? []), ...aiBronnen.filter((x): x is GegevenSleutel => x in GEGEVEN_LABEL)])
+  const uit: Herkomst[] = gegevens.filter((x) => x.gebruikt && sleutels.has(x.sleutel)).map((x) => ({ sleutel: x.sleutel, label: x.sleutel === 'rol' ? `Rol: ${x.waarde}` : `${x.label}: ${x.waarde}` }))
+  return uit.length ? uit : [{ sleutel: 'script', label: 'Standaardscript' }]
+}
+/** De blokken die de AI per prospect vult: alles wat niet vast is, behalve bezwaren en de opvolgmail. */
+export const aiBlokkenVan = (s: Pick<Belscript, 'data'>) => s.data.blokken.filter((b) => b.invulwijze !== 'vast' && b.soort !== 'bezwaren' && b.soort !== 'opvolgmail')
+const terugvalVan = (b: ScriptBlok) => (b.terugval?.trim() ? b.terugval : b.tekst)
+
+/** Het concept na de AI-vulling: AI-blokken als voorstel met herkomst, de rest vast uit het standaardscript. */
+export function prospectConcept(s: Pick<Belscript, 'naam' | 'doel' | 'data'>, gegevens: ProspectGegeven[], ai: Record<string, { tekst: string; bronnen?: string[] }>): ProspectScriptData {
+  const aiIds = new Set(aiBlokkenVan(s).map((b) => b.id))
+  const blokken: ProspectBlok[] = s.data.blokken.filter((b) => b.soort !== 'opvolgmail' && b.soort !== 'bezwaren').map((b) => {
+    if (!aiIds.has(b.id)) return { ...b, status: 'vast', herkomst: [], vanAi: false }
+    const v = ai[b.id]?.tekst?.trim()
+    if (!v) return { ...b, tekst: terugvalVan(b), voorstel: null, status: 'geen_voorstel', herkomst: [], vanAi: false }
+    return { ...b, terugval: terugvalVan(b), tekst: v, voorstel: v, status: 'voorgesteld', herkomst: herkomstVoor(b.soort, gegevens, ai[b.id]?.bronnen), vanAi: true }
+  })
+  return { scriptNaam: s.naam, scriptDoel: s.doel, blokken, bezwaren: s.data.bezwaren.map((z) => ({ ...z })), gegevens, nietMeegestuurd: NIET_MEEGESTUURD }
+}
+export const teBeoordelen = (blokken: Pick<ProspectBlok, 'status'>[]) => blokken.filter((b) => b.status === 'voorgesteld').length
+
+export interface ProspectBesluit { id: string; status?: 'bevestigd' | 'verworpen' | null; tekst?: string | null }
+/**
+ * De beoordeling: elk AI-voorstel bevestigd (aangepaste tekst wordt "bewerkt") of verworpen
+ * (dan de terugvalzin). Zonder besluit over een voorstel geen versie; nooit stil toegepast.
+ */
+export function beslisProspect(blokken: ProspectBlok[], besluiten: ProspectBesluit[]): { blokken: ProspectBlok[]; fouten: string[]; aangepast: number } {
+  const per = new Map(besluiten.map((b) => [b.id, b]))
+  let aangepast = 0
+  const uit = blokken.map((b): ProspectBlok => {
+    const x = per.get(b.id)
+    const tekst = typeof x?.tekst === 'string' ? x.tekst.trim().slice(0, 2000) : null
+    if (b.status === 'voorgesteld' || b.status === 'bevestigd' || b.status === 'bewerkt' || b.status === 'verworpen') {
+      const besluit = x?.status ?? (b.status === 'voorgesteld' ? null : b.status === 'verworpen' ? 'verworpen' : 'bevestigd')
+      if (!besluit) return b
+      if (besluit === 'verworpen') return { ...b, status: 'verworpen', tekst: terugvalVan(b), vanAi: false }
+      const nieuw = tekst || b.tekst
+      const bewerkt = nieuw !== (b.voorstel ?? '').trim()
+      if (bewerkt) aangepast++
+      return { ...b, status: bewerkt ? 'bewerkt' : 'bevestigd', tekst: nieuw, vanAi: true }
+    }
+    if (tekst && tekst !== b.tekst.trim()) { aangepast++; return { ...b, tekst } }
+    return b
+  })
+  const open = teBeoordelen(uit)
+  return { blokken: uit, aangepast, fouten: open ? [`Nog ${open} AI-${open === 1 ? 'blok' : 'blokken'} te beoordelen`] : [] }
+}
+export function prospectSamenvatting(blokken: ProspectBlok[], aangepast: number): string {
+  const ai = blokken.filter((b) => b.voorstel).length
+  const weg = blokken.filter((b) => b.status === 'verworpen').length
+  return [`AI-concept beoordeeld (${ai} ${ai === 1 ? 'blok' : 'blokken'})`, aangepast ? `${aangepast} aangepast` : null, weg ? `${weg} verworpen` : null].filter(Boolean).join(', ')
+}
+
+/** Een bewaarde versie als script voor de belmodus: de beoordeelde teksten, variabelen blijven variabelen. */
+export function prospectVersieAlsScript(v: { id: string; versie: number; belscriptId: string; scriptVersie: number; data: ProspectScriptData }): { script: Belscript; aiBlokIds: string[]; herkomst: Record<string, Herkomst[]> } {
+  const blokken: ScriptBlok[] = v.data.blokken.map((b) => ({ id: b.id, soort: b.soort, titel: b.titel, tekst: b.tekst, invulwijze: 'vast', veldKoppeling: b.veldKoppeling ?? null, terugval: null }))
+  return {
+    script: { id: v.belscriptId, naam: `${v.data.scriptNaam}, persoonlijk versie ${v.versie}`, doel: v.data.scriptDoel, status: 'actief', versie: v.scriptVersie, data: basisData({ blokken, bezwaren: v.data.bezwaren }) },
+    aiBlokIds: v.data.blokken.filter((b) => b.status === 'bevestigd' || b.status === 'bewerkt').map((b) => b.id),
+    herkomst: Object.fromEntries(v.data.blokken.filter((b) => b.vanAi).map((b) => [b.id, b.herkomst])),
+  }
+}
+/** Een vragenblok als losse vragen (vinkjes in de belmodus). */
+export const vragenUit = (tekst: string) => tekst.split(/(?<=\?)\s+/).map((x) => x.trim()).filter(Boolean)
+/** Voor het voorbeeld: tekst in stukken, met per variabele of hij ingevuld of onbekend (terugvalzin) is. */
+export function voorbeeldSegmenten(tekst: string, waarden: Record<string, string | null | undefined>): { tekst: string; variabele?: string; onbekend?: boolean }[] {
+  const uit: { tekst: string; variabele?: string; onbekend?: boolean }[] = []
+  let i = 0
+  for (const m of tekst.matchAll(VAR_RE)) {
+    if (m.index! > i) uit.push({ tekst: tekst.slice(i, m.index) })
+    const v = m[1]!
+    const w = waarden[v]
+    uit.push(w != null && String(w).trim() ? { tekst: String(w), variabele: v } : { tekst: VARIABELEN[v]?.terugval ?? '', variabele: v, onbekend: true })
+    i = m.index! + m[0].length
+  }
+  if (i < tekst.length) uit.push({ tekst: tekst.slice(i) })
+  return uit
+}
+/** De onbekende variabelen van een script voor een prospect (de accountmanager hoort de terugvalzin). */
+export function onbekendVoor(data: Pick<ScriptData, 'blokken'>, waarden: Record<string, string | null | undefined>): string[] {
+  return [...new Set(data.blokken.filter((b) => b.soort !== 'opvolgmail').flatMap((b) => variabelenIn(b.tekst)).filter((v) => !(waarden[v] != null && String(waarden[v]).trim())))]
 }

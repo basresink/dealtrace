@@ -103,7 +103,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
             <article class="fo-blok ddf-grijs" data-test="ddf-ai">
               <div class="ddf-blokkop"><h3 class="ddf-bloktitel">Vraag de AI over dit document</h3>
                 <span v-if="heeftTekst" class="ddf-bloksub" data-test="ddf-ai-inhoud">De tekst van dit document gaat mee naar de AI. Stel vragen over de inhoud en je krijgt antwoord uit het document zelf.</span>
-                <span v-else class="ddf-bloksub" data-test="ddf-ai-zonder">De inhoud van dit bestand kon niet worden gelezen ({{ doc.mime.startsWith('image/') ? 'een afbeelding' : 'een scan of een formaat dat we niet uitlezen' }}). De AI kent alleen titel, type en koppelingen, niet de inhoud.</span>
+                <span v-else-if="doc.mime.startsWith('image/')" class="ddf-bloksub" data-test="ddf-ai-zonder">Een afbeelding heeft geen tekst die de AI kan lezen. Stel vragen over de datavelden; de AI kent hier titel, type en koppelingen.</span>
+                <span v-else class="ddf-bloksub" data-test="ddf-ai-zonder">Het lezen van dit bestand is mislukt, bijvoorbeeld omdat het een scan zonder tekstlaag is of omdat het beveiligd of beschadigd is. De AI kent daarom alleen titel, type en koppelingen, niet de inhoud.</span>
               </div>
               <p v-if="!kanAi" class="meta">De AI-assistent staat voor jou nog niet aan.</p>
               <template v-else>

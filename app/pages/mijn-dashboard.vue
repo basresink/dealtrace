@@ -10,6 +10,7 @@ const toast = useToast()
 const route = useRoute()
 const router = useRouter()
 const { toon: toonUitleg } = useNietAangezet()
+const { functie } = useMe()
 const query = computed(() => ({ periode: route.query.periode || undefined, van: route.query.van || undefined, tot: route.query.tot || undefined }))
 const { data, refresh } = await useFetch<any>('/api/resultaten/dashboard', { query, default: () => null })
 const filtersOpen = ref(false)
@@ -57,6 +58,8 @@ useHead({ title: 'Mijn dashboard · Dealtrace' })
     <RapportKop v-model:open="filtersOpen" :kicker="`Mijn dashboard · ${data?.periode.label ?? 'Deze maand'}`" titel="Waar sta jij?" subtitel="Jouw pogingen, gesprekken, afspraken en reis over de gekozen periode. Activiteit telt op wat jij deed; prospects en dekking op wat jij in beheer hebt." :filter-aantal="filterAantal" helpartikel="je-cijfers-lezen">
       <template #acties>
         <NuxtLink to="/data-kwaliteit" class="dd-actie dd-actie--secundair" data-test="knop-data" title="Datakwaliteit"><Icoon naam="Database" class="dd-actie-icoon" />Data</NuxtLink>
+        <NuxtLink v-if="functie('dagritme.weekreview')?.beschikbaar" to="/weekreview" class="dd-actie dd-actie--secundair" data-test="knop-weekreview"><Icoon naam="NotebookPen" class="dd-actie-icoon" />Weekreview</NuxtLink>
+        <NuxtLink v-if="functie('dagritme.weekstart')?.beschikbaar" to="/weekstart" class="dd-actie dd-actie--secundair" data-test="knop-weekstart"><Icoon naam="CalendarRange" class="dd-actie-icoon" />Weekstart</NuxtLink>
       </template>
     </RapportKop>
     <RapportPeriode v-if="filtersOpen && data" :opties="DASHBOARD_PERIODE_OPTIES" :waarde="data.periode.sleutel" :van="data.periode.van" :tot="data.periode.tot" :vandaag="vandaag" :eigen-label="EIGEN_PERIODE_LABEL" :reset="data.periode.sleutel !== 'maand'" @kies="kiesPeriode" @datum="(van, tot) => zet({ periode: 'eigen', van, tot })" @reset="kiesPeriode('maand')" />

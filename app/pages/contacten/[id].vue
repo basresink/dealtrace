@@ -30,6 +30,10 @@ const fotoOpen = ref(false)
 const fotoMislukt = ref(false)
 async function fotoGewijzigd() { fotoOpen.value = false; fotoMislukt.value = false; await refresh() }
 const briefingOpen = ref(false)
+// F2 en F7: Volgen; de volgende stap gaat over dit contact binnen zijn account.
+const volgenOpen = ref(false)
+// F8: de invloedskaart van het account, met dit contact geselecteerd.
+const invloedOpen = ref(false)
 
 // Kop: avatar met initialen in een vaste kleur per naam, de rol als gekleurde pil.
 const KLEUR = ['#194c8f', '#1e7c4a', '#c0392b', '#4c1d95', '#b45309', '#0a0a0a', '#0f766e']
@@ -102,6 +106,8 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
             <button type="button" class="dd-actie dd-actie--secundair" data-test="contact-info-knop" @click="infoOpen = true"><Icoon naam="Info" class="dd-actie-icoon" />Info</button>
             <button v-if="c.account" type="button" class="dd-actie dd-actie--zwart" data-test="briefing-knop" @click="briefingOpen = true">Briefing</button>
             <a v-if="belNummer" class="dd-actie dd-actie--primair alleen-groot" :href="telLink(belNummer)" data-test="bel-knop"><Icoon naam="Phone" class="dd-actie-icoon" />Bel</a>
+            <button v-if="c.account && functie('prospects.volgen')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair" data-test="knop-volgen" @click="volgenOpen = true"><Icoon naam="Route" class="dd-actie-icoon" />Volgen</button>
+            <button v-if="c.account" type="button" class="dd-actie dd-actie--secundair" data-test="knop-invloed" @click="invloedOpen = true"><Icoon naam="Network" class="dd-actie-icoon" />Invloed</button>
           </div>
         </div>
       </div>
@@ -155,6 +161,8 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
 
     <ContactInfoFlyout :open="infoOpen" :contact="c" @sluit="infoOpen = false" @gewijzigd="ververs" />
     <BriefingFlyout v-if="c.account" :open="briefingOpen" :account="{ id: c.accountId, naam: c.account.naam }" @sluit="briefingOpen = false" />
+    <VolgenFlyout v-if="c.account && functie('prospects.volgen')?.beschikbaar" :open="volgenOpen" :account-id="c.accountId" :naam="c.account.naam" :contact-id="c.id" :contact-naam="c.naam" @sluit="volgenOpen = false" @gewijzigd="ververs" />
+    <InvloedFlyout v-if="c.account" :open="invloedOpen" :account-id="c.accountId" :contact-id="c.id" @sluit="invloedOpen = false" @gewijzigd="ververs" />
   </div>
 </template>
 

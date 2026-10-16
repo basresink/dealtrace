@@ -34,6 +34,9 @@ export function schoonData(d: any, basis?: ScriptData): ScriptData {
     bezwaren: (Array.isArray(d?.bezwaren) ? d.bezwaren : basis?.bezwaren ?? []).slice(0, 30).map((z: any, i: number) => ({ id: String(z.id || `bz${i + 1}`), bezwaar: String(z.bezwaar ?? '').slice(0, 300), antwoord: String(z.antwoord ?? '').slice(0, 1000), wedervraag: z.wedervraag ? String(z.wedervraag).slice(0, 300) : undefined, argumentRef: z.argumentRef ?? null })),
     opmerking: d?.opmerking ? String(d.opmerking).slice(0, 1000) : basis?.opmerking,
   }
+  // Het template waarmee het script begon (Belscript Studio), voor de resultaten per template.
+  const template = d?.template !== undefined ? d.template : basis?.template
+  if (typeof template === 'string' && template) data.template = template.slice(0, 40)
   data.variabelen = variabelenVan(data)
   if (d?.basisVersie != null || (basis as any)?.basisVersie != null) (data as any).basisVersie = d?.basisVersie ?? (basis as any)?.basisVersie
   return data

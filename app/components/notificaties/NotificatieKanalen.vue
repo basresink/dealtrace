@@ -2,7 +2,7 @@
 // Voorkeuren op /notificaties: per soort In de app, E-mail en Push (P26). Dezelfde opslag als de kaart
 // Meldingen in je instellingen (persoonlijke_instellingen.data.kanalen via de sync-wachtrij, dus ook
 // offline). Het oude veld meldingen[soort] = false zet een soort helemaal uit; een keuze per kanaal
-// vervangt dat.
+// vervangt dat. Daaronder het dagritme per mail (DagritmeMailVoorkeuren).
 import { kanalenVoor, MELDING_KANAAL_LABEL, MELDING_KANALEN, MELDING_SOORT_LABEL, MELDING_SOORT_UITLEG, MELDING_SOORTEN, type MeldingKanaal, type MeldingSoort } from '~~/shared/kanalen'
 const emit = defineEmits<{ gewijzigd: [] }>()
 const { voegToe } = useSyncQueue()
@@ -37,6 +37,7 @@ async function wissel(s: MeldingSoort, k: MeldingKanaal, aan: boolean) {
         <span v-for="k in MELDING_KANALEN" :key="k" class="nk-cel"><Schakelaar :aan="keuze(s)[k]" :label="`${MELDING_SOORT_LABEL[s]}: ${MELDING_KANAAL_LABEL[k]}`" :data-test="`kanaal-${s}-${k}`" @wissel="wissel(s, k, $event)" /></span>
       </template>
     </div>
+    <DagritmeMailVoorkeuren class="nk-dagritme" />
   </section>
 </template>
 
@@ -60,6 +61,7 @@ async function wissel(s: MeldingSoort, k: MeldingKanaal, aan: boolean) {
 .nk-vierkant--herinnering { background: var(--yellow); }
 .nk-vierkant--inzicht { background: var(--green); }
 .nk-vierkant--systeem { background: var(--ink); }
+.nk .nk-dagritme { margin-top: 18px; padding: 16px 0 0; border: 0; border-top: 1px solid var(--border); }
 @media (max-width: 719px) {
   .nk { padding: 16px; }
   .nk-raster { grid-template-columns: minmax(0, 1fr) repeat(3, 52px); gap: 6px; }

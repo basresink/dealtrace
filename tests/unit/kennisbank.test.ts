@@ -1,9 +1,11 @@
 // Kennisbank: type raden, mimetype, labels, preview, voorgestelde vragen, het materiaal voor de AI (met en zonder
-// inhoud), de mock en de bewijsplicht, en de tekst uit tekst, Markdown, docx en pptx (zip met XML).
+// inhoud), de mock en de bewijsplicht, en de tekst uit tekst, Markdown, docx en pptx (zip met XML), PDF en de
+// oude Office-formaten ppt en xls (OLE).
 import { crc32, deflateRawSync } from 'node:zlib'
 import { describe, expect, it } from 'vitest'
 import { bestandSoort, controleerDocumentAntwoord, documentMateriaal, grootteLabel, mimeVoor, mockDocumentAntwoord, previewSoort, raadType, TOEGESTANE_MIME, voorgesteldeVragen, zoekTermGeldig, MAX_TEKST_AI } from '../../shared/kennisbank'
-import { leesDocumentTekst, leesZip } from '../../server/utils/documentTekst'
+import { leesDocumentTekst, leesZip, xlsTekstUitStroom } from '../../server/utils/documentTekst'
+import { biffRecord, maakOle, maakPdf, pptRecord } from '../fixtures/documenten'
 import { FUNCTIES, startindeling } from '../../shared/functies'
 
 /** Een kleine zip met gedeflate bestanden, zoals Word en PowerPoint ze maken. */
@@ -88,6 +90,9 @@ describe('kennisbank: AI over een document', () => {
     const a = mockDocumentAntwoord(m)
     expect(a.tekst).toContain('alleen de gegevens, niet de inhoud')
     expect(a.tekst).toContain('Testbouw Zwolle')
+    expect(a.tekst).toContain('Het lezen van het bestand is mislukt.')
+    const foto = mockDocumentAntwoord(documentMateriaal({ ...basis, mime: 'image/png', tekst: null }, 'x'))
+    expect(foto.tekst).toContain('afbeelding zonder leesbare tekst')
   })
 
   it('met inhoud: zinnen die bij de vraag passen, met een letterlijk citaat', () => {
@@ -109,28 +114,66 @@ describe('kennisbank: AI over een document', () => {
 })
 
 describe('kennisbank: tekst uitlezen', () => {
-  it('tekst en Markdown direct, zonder BOM', () => {
-    expect(leesDocumentTekst('text/markdown', Buffer.from('﻿# Kop\n\nInhoud.'))).toEqual({ tekst: '# Kop\n\nInhoud.', status: 'gelezen' })
-    expect(leesDocumentTekst('text/plain', Buffer.from('   '))).toEqual({ tekst: null, status: 'niet-gelezen' })
+  it('tekst en Markdown direct, zonder BOM', async () => {
+    expect(await leesDocumentTekst('text/markdown', Buffer.from('﻿# Kop\n\nInhoud.'))).toEqual({ tekst: '# Kop\n\nInhoud.', status: 'gelezen' })
+    expect(await leesDocumentTekst('text/plain', Buffer.from('   '))).toEqual({ tekst: null, status: 'niet-gelezen' })
   })
 
-  it('docx: de alinea\'s uit word/document.xml, met entiteiten', () => {
+  it('docx: de alinea\'s uit word/document.xml, met entiteiten', async () => {
     const xml = '<w:document><w:body><w:p><w:r><w:t>Offerte voor</w:t></w:r><w:r><w:t xml:space="preserve"> Testbouw &amp; Zonen</w:t></w:r></w:p><w:p><w:r><w:t>Looptijd 36 maanden.</w:t></w:r></w:p></w:body></w:document>'
     const zip = maakZip({ '[Content_Types].xml': '<Types/>', 'word/document.xml': xml })
     expect(leesZip(zip).size).toBe(2)
-    expect(leesDocumentTekst(DOCX, zip)).toEqual({ tekst: 'Offerte voor Testbouw & Zonen\nLooptijd 36 maanden.', status: 'gelezen' })
+    expect(await leesDocumentTekst(DOCX, zip)).toEqual({ tekst: 'Offerte voor Testbouw & Zonen\nLooptijd 36 maanden.', status: 'gelezen' })
   })
 
-  it('pptx: dia\'s op volgorde', () => {
+  it('pptx: dia\'s op volgorde', async () => {
     const dia = (t: string) => `<p:sld><a:p><a:r><a:t>${t}</a:t></a:r></a:p></p:sld>`
     const zip = maakZip({ 'ppt/slides/slide10.xml': dia('Tien'), 'ppt/slides/slide2.xml': dia('Twee'), 'ppt/slides/slide1.xml': dia('Een') })
-    expect(leesDocumentTekst(PPTX, zip).tekst).toBe('Een\n\nTwee\n\nTien')
+    expect((await leesDocumentTekst(PPTX, zip)).tekst).toBe('Een\n\nTwee\n\nTien')
   })
 
-  it('pdf, oude Office-formaten en kapotte bestanden: niet gelezen; afbeeldingen hebben geen tekst', () => {
-    expect(leesDocumentTekst('application/pdf', Buffer.from('%PDF-1.4 test')).status).toBe('niet-gelezen')
-    expect(leesDocumentTekst('application/msword', Buffer.from('xx')).status).toBe('niet-gelezen')
-    expect(leesDocumentTekst(DOCX, Buffer.from('geen zip')).status).toBe('niet-gelezen')
-    expect(leesDocumentTekst('image/png', Buffer.from('x'))).toEqual({ tekst: null, status: 'geen' })
+  it('pdf: de tekstlaag per pagina, een witregel ertussen', async () => {
+    const pdf = maakPdf([['Offerte onderhoud Testbouw (fictief)', 'Looptijd 36 maanden.'], ['Prijs per jaar 4.800 euro.']])
+    const t = await leesDocumentTekst('application/pdf', pdf)
+    expect(t.status).toBe('gelezen')
+    expect(t.tekst).toContain('Offerte onderhoud Testbouw (fictief)')
+    expect(t.tekst).toContain('Looptijd 36 maanden.')
+    expect(t.tekst!.indexOf('Prijs per jaar')).toBeGreaterThan(t.tekst!.indexOf('Looptijd'))
+    expect(t.tekst).toMatch(/maanden\.\n\nPrijs/)
+  })
+
+  it('pdf zonder tekstlaag (een scan) of kapot: niet gelezen', async () => {
+    expect((await leesDocumentTekst('application/pdf', maakPdf([[]]))).status).toBe('niet-gelezen')
+    expect((await leesDocumentTekst('application/pdf', Buffer.from('%PDF-1.4 test'))).status).toBe('niet-gelezen')
+  })
+
+  it('ppt (oud formaat): de tekstatomen uit PowerPoint Document', async () => {
+    const dia = pptRecord(0x03ee, Buffer.concat([
+      pptRecord(0x0fa0, Buffer.from('Waarom onderhoud loont', 'utf16le')),
+      pptRecord(0x0fa8, Buffer.from('Minder storingen\rLagere kosten', 'latin1')),
+    ]), true)
+    const ppt = maakOle('PowerPoint Document', pptRecord(0x03e8, dia, true))
+    expect(await leesDocumentTekst('application/vnd.ms-powerpoint', ppt)).toEqual({ tekst: 'Waarom onderhoud loont\nMinder storingen\nLagere kosten', status: 'gelezen' })
+  })
+
+  it('xls (oud formaat): de gedeelde teksten, ook over een vervolgrecord heen', async () => {
+    const tekst = (t: string, breed = false) => Buffer.concat([Buffer.from([t.length & 0xff, t.length >> 8, breed ? 1 : 0]), Buffer.from(t, breed ? 'utf16le' : 'latin1')])
+    const sstKop = Buffer.alloc(8); sstKop.writeUInt32LE(3, 0); sstKop.writeUInt32LE(3, 4)
+    const derde = tekst('Prijslijst 2026')
+    const stroom = Buffer.concat([
+      biffRecord(0x0809, Buffer.alloc(16)),
+      biffRecord(0x00fc, Buffer.concat([sstKop, tekst('Product'), tekst('Prijs', true), derde.subarray(0, 8)])),
+      biffRecord(0x003c, Buffer.concat([Buffer.from([0]), derde.subarray(8)])),
+      biffRecord(0x000a, Buffer.alloc(0)),
+    ])
+    expect(xlsTekstUitStroom(stroom)).toBe('Product\nPrijs\nPrijslijst 2026')
+    expect((await leesDocumentTekst('application/vnd.ms-excel', maakOle('Workbook', stroom))).tekst).toBe('Product\nPrijs\nPrijslijst 2026')
+  })
+
+  it('kapotte bestanden: niet gelezen; afbeeldingen hebben geen tekst', async () => {
+    expect((await leesDocumentTekst('application/msword', Buffer.from('xx'))).status).toBe('niet-gelezen')
+    expect((await leesDocumentTekst('application/vnd.ms-excel', maakOle('Iets anders', Buffer.from('x')))).status).toBe('niet-gelezen')
+    expect((await leesDocumentTekst(DOCX, Buffer.from('geen zip'))).status).toBe('niet-gelezen')
+    expect(await leesDocumentTekst('image/png', Buffer.from('x'))).toEqual({ tekst: null, status: 'geen' })
   })
 })

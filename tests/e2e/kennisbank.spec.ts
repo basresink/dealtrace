@@ -3,6 +3,7 @@
 // en het tabblad Documenten op de accountkaart en de contactkaart (upload koppelt, klik opent hetzelfde venster).
 import { expect, test } from '@playwright/test'
 import { apiLogin, ga, login } from './hulp'
+import { maakPdf } from '../fixtures/documenten'
 
 const uniek = () => Date.now().toString(36)
 
@@ -61,6 +62,30 @@ test.describe('kennisbank', () => {
     await expect(page.getByTestId('kb-leeg-filter')).toBeVisible()
   })
 
+  test('een PDF met tekst wordt gelezen: de AI antwoordt uit de inhoud', async ({ page }) => {
+    const z = uniek()
+    await login(page, 'u-01')
+    await ga(page, '/kennisbank')
+    await page.getByTestId('kb-nieuw').click()
+    const pdf = maakPdf([['Prijslijst onderhoud (fictief)', 'Het basispakket kost 4.800 euro per jaar.'], ['De looptijd is 36 maanden.']])
+    await page.getByTestId('document-bestand').setInputFiles({ name: `Prijslijst ${z}.pdf`, mimeType: 'application/pdf', buffer: pdf })
+    await page.getByTestId('document-bewaar').click()
+    await expect(page.getByTestId('document-flyout')).toBeVisible()
+    await expect(page.getByTestId('ddf-ai-inhoud')).toBeVisible()
+    await expect(page.getByTestId('ddf-ai-zonder')).toHaveCount(0)
+    await page.getByTestId('ddf-eigen').click()
+    await page.getByTestId('ddf-eigen-invoer').fill('Wat is de looptijd in maanden?')
+    await page.getByTestId('ddf-eigen-stuur').click()
+    await expect(page.getByTestId('ddf-antwoord')).toContainText('36 maanden')
+    await expect(page.getByTestId('document-flyout')).toContainText('inhoud en datavelden')
+    // Zoeken vindt de PDF op zijn inhoud; daarna opruimen.
+    await expect(page).toHaveURL(/document=/)
+    const id = new URL(page.url()).searchParams.get('document')
+    const lijst = await (await page.request.get(`/api/documenten?zoek=${encodeURIComponent('basispakket kost')}`)).json()
+    expect(JSON.stringify(lijst)).toContain(`Prijslijst ${z}.pdf`)
+    if (id) expect((await page.request.delete(`/api/documenten/${id}`)).ok()).toBe(true)
+  })
+
   test('zonder gelezen inhoud zegt het venster dat de AI alleen de velden kent', async ({ page }) => {
     const z = uniek()
     await login(page, 'u-01')
@@ -70,6 +95,7 @@ test.describe('kennisbank', () => {
     expect([type, tekstStatus]).toEqual(['contract', 'niet-gelezen'])
     await ga(page, `/kennisbank?document=${id}`)
     await expect(page.getByTestId('ddf-preview-pdf')).toBeVisible()
+    await expect(page.getByTestId('ddf-ai-zonder')).toContainText('Het lezen van dit bestand is mislukt')
     await expect(page.getByTestId('ddf-ai-zonder')).toContainText('alleen titel, type en koppelingen')
     await page.getByTestId('ddf-vraag').first().click()
     await expect(page.getByTestId('ddf-antwoord')).toContainText('niet de inhoud')

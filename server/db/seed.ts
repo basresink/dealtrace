@@ -21,6 +21,7 @@ import { seedConcepten } from './seedConcepten'
 import { seedTeam } from './seedTeam'
 import { seedEva } from './seedEva'
 import { seedKennisbank } from './seedKennisbank'
+import { seedSignaalradar } from './seedSignaalradar'
 import { versleutel } from '../utils/geheimen'
 
 interface SeedGebruiker {
@@ -145,6 +146,8 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
     await seedEva(client, org.id)
     // Kennisbank: vijf fictieve documenten, een paar gekoppeld aan prospects en een contact.
     await seedKennisbank(client, org.id)
+    // Signaalradar (F5): fictieve inzichten over zeven perioden, zodat er golven te zien zijn.
+    await seedSignaalradar(client, org.id)
     // Taken bij een account krijgen het primaire contact (de beslisser, anders het eerste actieve contact)
     // als contact_id, zodat de tabbladen op de contactkaart gevuld zijn. Alleen waar nog geen contact staat.
     await client.query(`update tasks t set contact_id = (select c.id from contacts c where c.account_id = t.account_id and c.status <> 'vertrokken' order by (c.rol = 'beslisser') desc, c.created_at, c.id limit 1)

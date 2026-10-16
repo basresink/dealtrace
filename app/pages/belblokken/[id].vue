@@ -1,5 +1,6 @@
 <script setup lang="ts">
-// De belmodus (F07): schermvullend. Links het script, midden de gesprekskaart, rechts de
+// De belmodus (F07): schermvullend. Links het script stap voor stap (huidig blok groot, de rest
+// ingeklapt, een bewaarde versie per prospect voorop), midden de gesprekskaart, rechts de
 // wachtrij. Elke uitkomst rondt af via rondTaakAf en opent direct het volgende gesprek (de
 // hele wachtrij is vooraf geladen). Na het laatste gesprek of "Stop blok" het blokresultaat.
 import { telLink } from '~/utils/accountWeergave'
@@ -118,7 +119,7 @@ useHead({ title: 'Belmodus · Dealtrace' })
     <template v-else-if="huidig">
       <div class="belmodus-raster">
         <div id="bm-script">
-          <BelScript v-model:staat="staat" :scripts="data.scripts" :voorstel="huidig.voorstel" :waarden="huidig.waarden" :extra-bezwaren="huidig.extraBezwaren" :meldingen="huidig.meldingen" :account-id="huidig.accountId" :contact-id="huidig.contactId" :ai-aan="data.kan.ai" />
+          <BelScript v-model:staat="staat" :scripts="data.scripts" :voorstel="huidig.voorstel" :waarden="huidig.waarden" :extra-bezwaren="huidig.extraBezwaren" :meldingen="huidig.meldingen" :account-id="huidig.accountId" :contact-id="huidig.contactId" :ai-aan="data.kan.ai" :prospect-versie="huidig.prospectVersie" stappen />
         </div>
         <div data-test="gesprekskaart">
           <span class="bloklabel">Gesprekskaart</span>
@@ -131,6 +132,8 @@ useHead({ title: 'Belmodus · Dealtrace' })
           <dl class="defs mt-12">
             <div class="def-rij"><dt>Laatste uitkomsten</dt><dd>{{ huidig.kaart.laatste.length ? huidig.kaart.laatste.map((l: any) => `${datum(l.op)} ${l.uitkomst}`).join(' · ') : 'nog geen' }}</dd></div>
             <div v-if="huidig.waarden['concurrent.naam']" class="def-rij"><dt>Huidige leverancier</dt><dd>{{ huidig.waarden['concurrent.naam'] }}</dd></div>
+            <div v-if="huidig.waarden['winpunt.naam']" class="def-rij"><dt>Winpunt</dt><dd>{{ huidig.waarden['winpunt.naam'] }}</dd></div>
+            <div v-if="huidig.waarden['account.branche']" class="def-rij"><dt>Branche</dt><dd>{{ huidig.waarden['account.branche'] }}</dd></div>
             <div class="def-rij"><dt>BAND</dt><dd>{{ bandTelling(huidig.kaart.account.band) }} van 4</dd></div>
             <div v-for="(w, k) in huidig.kaart.account.eigenVelden" :key="k" class="def-rij"><dt>{{ k }}</dt><dd>{{ w }} <span class="meta">eigen veld</span></dd></div>
           </dl>

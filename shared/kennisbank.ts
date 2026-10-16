@@ -125,7 +125,7 @@ export function documentMateriaal(d: {
 
 export const DOCUMENT_PROMPT = `Je beantwoordt een vraag over één document uit de kennisbank van de organisatie.
 Gebruik alleen het meegegeven materiaal: de datavelden en, als die er is, de inhoud van het document.
-Staat de inhoud er niet bij, zeg dan dat je alleen titel, type en koppelingen kent en verzin niets over de inhoud.
+Staat de inhoud er niet bij (een afbeelding, of een bestand dat niet gelezen kon worden), zeg dan dat je alleen titel, type en koppelingen kent en verzin niets over de inhoud.
 Citaten staan letterlijk in het materiaal. Schrijf kort, in de je-vorm, zonder gedachtestreepjes.`
 
 /** De zinnen van een tekst, zonder lege regels. */
@@ -142,7 +142,8 @@ export function mockDocumentAntwoord(m: DocumentMateriaal): { tekst: string; bro
   const label = `Document: ${d.naam}`
   if (!d.inhoud) {
     const koppeling = d.klanten.length ? ` Het hoort bij ${d.klanten.join(', ')}.` : ''
-    return { tekst: `Ik ken van dit document alleen de gegevens, niet de inhoud: ${d.naam} is een ${d.type.toLowerCase()} (versie ${d.versie}).${koppeling} Open het bestand om de inhoud zelf te lezen.`, bronnen: [{ soort: 'document', label }], acties: [] }
+    const waarom = /^Afbeelding/.test(d.bestand.split(' · ')[1] ?? '') ? 'Het is een afbeelding zonder leesbare tekst.' : 'Het lezen van het bestand is mislukt.'
+    return { tekst: `Ik ken van dit document alleen de gegevens, niet de inhoud. ${waarom} ${d.naam} is een ${d.type.toLowerCase()} (versie ${d.versie}).${koppeling} Open het bestand om de inhoud zelf te lezen.`, bronnen: [{ soort: 'document', label }], acties: [] }
   }
   const alle = zinnen(d.inhoud)
   const woorden = m.vraag.toLowerCase().split(/[^a-z0-9à-ÿ]+/).filter((w) => w.length > 3)

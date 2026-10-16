@@ -489,6 +489,8 @@ export const signals = pgTable('signals', {
   confidence: doublePrecision('confidence'),
   status: text('status').notNull().default('nieuw'),
   bron: text('bron').notNull().default('intern'),
+  /** F5: soort uit shared/signaalradar.ts; leeg betekent afgeleid (0061). */
+  signaalsoort: text('signaalsoort'),
   data: jsonb('data').$type<SignalData>().notNull().default({}),
   createdAt: ts('created_at').defaultNow().notNull(),
   updatedAt: ts('updated_at').defaultNow().notNull(),
@@ -660,6 +662,22 @@ export const belscriptInvullingen = pgTable('belscript_invullingen', {
   data: jsonb('data').notNull(),
   op: ts('op').defaultNow().notNull(),
 }, (t) => [primaryKey({ columns: [t.belscriptId, t.versie, t.accountId, t.contactId] })])
+// Belscript Studio: script per prospect (0062_belscript_studio.sql).
+export const belscriptProspectversies = pgTable('belscript_prospectversies', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  organisationId: text('organisation_id').notNull(),
+  accountId: text('account_id').notNull(),
+  contactId: text('contact_id'),
+  gebruikerId: text('gebruiker_id').notNull(),
+  belscriptId: text('belscript_id').notNull(),
+  scriptVersie: integer('script_versie').notNull(),
+  status: text('status').notNull().default('concept'),
+  versie: integer('versie'),
+  data: jsonb('data').$type<import('../../shared/belscripts').ProspectScriptData>().notNull(),
+  samenvatting: text('samenvatting'),
+  createdAt: ts('created_at').defaultNow().notNull(),
+  bewaardOp: ts('bewaard_op'),
+})
 
 // P11: leadgenerator, koppelingen en verbruik (F02).
 export interface LeadData extends Partial<import('../../shared/leadGenerator').LeadFeiten> {
