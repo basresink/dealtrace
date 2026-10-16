@@ -2,15 +2,31 @@
 titel: Belscripts maken
 categorie: Inrichten
 collectie: product
-samenvatting: Scripts maken, testen en activeren voor teams, en resultaten vergelijken.
-routes: /instellingen/belscripts,/instellingen/mijn-scripts
+samenvatting: Belscript Studio: het standaardscript in blokken, templates, een script per prospect met AI en het script in de belmodus.
+routes: /belscripts,/instellingen/belscripts,/instellingen/mijn-scripts
 ---
 
 # Belscripts maken
 
-Bij **Instellingen**, **Belscripts** beheert de salesmanager of beheerder de scripts van het team. Elke organisatie start met zes scripts.
+Belscripts staan in **Belscript Studio** (`/belscripts`), bereikbaar via **Belblokken** en via **Instellingen**, **Belscripts**. De studio heeft vier tabbladen. Het overzicht van alle scripts met de vergelijking staat bij **Instellingen**, **Alle belscripts**. Elke organisatie start met zes scripts.
 
-## Een script maken
+## Standaardscript
+
+De salesmanager of beheerder bouwt het script van het team in blokken: opening, reden van bellen, toestemmingsvraag, vragen, waarde en winpunt, afsluiting, voicemail, poortwachter en vrij blok. Per blok kies je **Vaste tekst**, **AI vult aan** of **AI schrijft**; bij AI hoort een terugvalzin. Met de pijltjes zet je de blokken op volgorde, met **+ Blok** voeg je er een toe voor de afsluiting. Klik op een variabele in de balk om hem op de cursor in te voegen; **Alle variabelen** toont ze met hun terugvalzin. Rechts zie je het script voor een gekozen prospect: geel is ingevuld, "onbekend" krijgt de terugvalzin. De teller toont de woorden en de spreektijd. **Opslaan als concept** houdt de actieve versie in gebruik; **Activeer** maakt een nieuwe versie. De accountmanager kijkt mee.
+
+## Templates
+
+Zes startpunten: koude acquisitie, opvolging na mail, opvolging na beurs, herintroductie na nee, afspraak bevestigen en voicemail. Per template zie je doel, lengte, wanneer en rol, en het resultaat uit jullie eigen gesprekken zodra er minstens 30 zijn. **Bekijk** toont het voorbeeld, **Gebruik als basis** maakt er een concept van in Standaardscript.
+
+## Per prospect
+
+Kies een prospect uit je belblok of zoek er een. Je ziet welke gegevens de AI krijgt (aanleiding, branche, leverancier, winpunt, rol) met hun bron, en wat ontbreekt. **Vul met AI** kost credits en vult de AI-blokken. Elk blok bevestig je, pas je aan of verwerp je (dan geldt de terugvalzin); de chips **Gebaseerd op** tonen waar een zin vandaan komt. Pas als alles beoordeeld is, bewaar je een versie bij het prospect. De versies staan eronder.
+
+## In de belmodus
+
+Het huidige blok staat groot, de rest ingeklapt op één regel. **Volgende blok** gaat door, vragen vink je af, bezwaren klap je open. Een bewaarde versie per prospect staat voorop in de keuzelijst. Script, versie, de persoonlijke versie en de opengeklapte bezwaren gaan mee naar de activiteit.
+
+## Een script maken in Instellingen
 
 1. Klik **Nieuw script**, of laat AI een opzet maken. Een opzet is altijd een concept.
 2. Kies het doel, de teams en de rol van het contact.

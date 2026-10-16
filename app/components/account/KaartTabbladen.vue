@@ -67,7 +67,11 @@ const tlAlles = computed<TlItem[]>(() => {
   for (const x of t.value.afspraken) uit.push({ key: `a-${x.id}`, soort: 'afspraak', soortLabel: 'Afspraak', typeLabel: VORM[x.vorm] ?? x.vorm, titel: x.titel ?? (x.soort + (x.contact ? ` met ${x.contact}` : '')), tekst: x.locatie, status: AFSPRAAK_STATUS[x.status] ?? x.status, statusSoort: x.status === 'afgerond' ? 'klaar' : x.status === 'gepland' ? 'open' : 'laat', ms: Date.parse(x.start), contact: contactVan(x), open: () => { afspraakId.value = x.id } })
   // Deals horen bij het account; op de contactkaart staan ze alleen in het tabblad Deals.
   if (!opContact.value) for (const d of t.value.deals) uit.push({ key: `d-${d.id}`, soort: 'deal', soortLabel: 'Deal', typeLabel: OV_NAAR[d.naar] ?? d.naar, titel: d.titel, tekst: d.eigenaar ? `Eigenaar in DealDrive: ${d.eigenaar}` : null, status: DEAL_FASE[d.fase] ?? d.fase, statusSoort: d.fase === 'gewonnen' ? 'klaar' : ['verloren', 'mislukt'].includes(d.fase) ? 'laat' : 'open', ms: Date.parse(d.op), contact: null })
-  for (const x of momenten.value.filter((m) => m.soort !== 'notitie')) uit.push({ key: `c-${x.id}`, soort: 'contact', soortLabel: 'Contact', typeLabel: SOORT[x.soort] ?? x.soort, titel: [SOORT[x.soort] ?? x.soort, x.uitkomst ? String(x.uitkomst).replace(/_/g, ' ') : null].filter(Boolean).join(' · '), tekst: [x.tekst, x.door ? kaal(x.door) : null].filter(Boolean).join(' · ') || null, ms: Date.parse(x.op), contact: contactVan(x) })
+  // Een belactiviteit van een afgeronde beltaak toont ook het gespreksverslag en opent het (met transcript).
+  for (const x of momenten.value.filter((m) => m.soort !== 'notitie')) {
+    const v = x.verslag || x.transcript ? t.value.verslagen.find((r: any) => r.id === `bel-${x.id}`) : null
+    uit.push({ key: `c-${x.id}`, soort: 'contact', soortLabel: 'Contact', typeLabel: SOORT[x.soort] ?? x.soort, titel: [SOORT[x.soort] ?? x.soort, x.uitkomst ? String(x.uitkomst).replace(/_/g, ' ') : null].filter(Boolean).join(' · '), tekst: [x.tekst, x.verslag ? `Verslag: ${x.verslag}` : null, x.transcript ? 'Met transcript' : null, x.door ? kaal(x.door) : null].filter(Boolean).join(' · ') || null, ms: Date.parse(x.op), contact: contactVan(x), open: v ? () => { verslag.value = v } : undefined })
+  }
   return uit.sort((p, q) => q.ms - p.ms)
 })
 const tlFilter = ref<'alles' | TlSoort>('alles')

@@ -15,6 +15,10 @@ grant usage, select on all sequences in schema public to dealtrace_app;
 
 -- Activiteitenlog: alleen toevoegen.
 revoke update, delete on activiteiten from dealtrace_app;
+-- Verslagen na het afronden bij een belactiviteit (0063): ook alleen toevoegen.
+do $$ begin
+  if to_regclass('public.activiteit_verslagen') is not null then revoke update, delete on activiteit_verslagen from dealtrace_app; end if;
+end $$;
 -- Features per niveau: alleen de founder schrijft, via de platformlaag (P09).
 revoke insert, update, delete on functies_per_niveau from dealtrace_app;
 -- Organisaties aanmaken of verwijderen is platformwerk (P02).

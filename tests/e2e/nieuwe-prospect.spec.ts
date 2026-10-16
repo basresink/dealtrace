@@ -1,5 +1,6 @@
-// Venster "+ Prospect": geen Aantal monteurs meer, wel de velden van de accountmatrix (branche,
-// aantal medewerkers, postcode, klasse, huidige leverancier) met een voorbeeld van de plek.
+// Venster "+ Prospect": geen Aantal monteurs meer, wel de datavelden (naam, plaats, postcode, telefoon,
+// website, e-mail, KvK-nummer) en de velden van de accountmatrix (branche, aantal medewerkers, klasse,
+// huidige leverancier) voor iedereen; Gevorderd ziet daarbij live de plek, een Beginner de eenvoudige versie.
 import { expect, test } from '@playwright/test'
 import { apiLogin, ga, login } from './hulp'
 
@@ -56,17 +57,47 @@ test.describe('nieuwe prospect', () => {
       expect(a2.klasse).toBe('kl-c-prospects')
       expect((await request.post('/api/accounts', { data: { naam: uniekeNaam(), vvBrancheId: 'br-bestaat-niet' } })).status()).toBe(400)
       expect((await request.post('/api/accounts', { data: { naam: uniekeNaam(), medewerkers: -3 } })).status()).toBe(400)
+      expect((await request.post('/api/accounts', { data: { naam: uniekeNaam(), email: 'geen-adres' } })).status()).toBe(400)
+      expect((await request.post('/api/accounts', { data: { naam: uniekeNaam(), kvk: '1234567' } })).status()).toBe(400)
     } finally {
       await apiLogin(request, 'u-06')
       for (const id of ids) await request.delete(`/api/accounts/${id}`)
     }
   })
 
-  test('Beginner ziet alleen de basisvelden', async ({ page }) => {
+  test('Beginner ziet alle datavelden in de eenvoudige versie en kan ze invullen', async ({ page, request }) => {
     await login(page, 'u-02')
     await ga(page, '/prospects/alle')
     await page.getByTestId('nieuwe-prospect').click()
-    await expect(page.getByTestId('nieuwe-prospect-flyout')).toBeVisible()
-    await expect(page.getByTestId('np-matrix')).toHaveCount(0)
+    const venster = page.getByTestId('nieuwe-prospect-flyout')
+    await expect(venster).toBeVisible()
+    for (const id of ['np-plaats', 'np-postcode', 'np-telefoon', 'np-website', 'np-email', 'np-kvk', 'np-matrix', 'np-medewerkers', 'np-klasse', 'np-leverancier']) await expect(venster.getByTestId(id)).toBeVisible()
+    // Geen live matrixuitleg voor een Beginner.
+    await expect(venster.getByTestId('np-plek')).toHaveCount(0)
+    await expect(venster.getByTestId('np-matrix-kort')).toBeVisible()
+    const naam = uniekeNaam()
+    const kvk = String(10_000_000 + Math.floor(Math.random() * 89_999_999))
+    await page.getByTestId('np-naam').fill(naam)
+    await page.getByTestId('np-plaats').fill('Zeist')
+    await page.getByTestId('np-postcode').fill('3701 AB')
+    await page.getByTestId('np-telefoon').fill('030 000 0000')
+    await page.getByTestId('np-email').fill('info@testvoorbeeld.test')
+    await page.getByTestId('np-kvk').fill(kvk)
+    await page.getByTestId('np-medewerkers').fill('30')
+    await page.getByTestId('np-leverancier').selectOption('cc-01')
+    await page.getByTestId('np-maak').click()
+    await expect(page).toHaveURL(/\/accounts\/[0-9a-f-]{36}$/, { timeout: 30_000 })
+    const id = page.url().split('/').pop()!
+    try {
+      await apiLogin(request, 'u-02')
+      const a = await (await request.get(`/api/accounts/${id}`)).json()
+      expect(a).toMatchObject({ naam, plaats: 'Zeist', postcode: '3701 AB', kvk, email: 'info@testvoorbeeld.test', telefoon: '+31300000000' })
+      expect(a.huidigeLeverancier?.id).toBe('cc-01')
+      // Leeg gelaten klasse volgt uit het aantal medewerkers.
+      expect(a.klasse).toBe('kl-c-prospects')
+    } finally {
+      await apiLogin(request, 'u-06')
+      await request.delete(`/api/accounts/${id}`)
+    }
   })
 })

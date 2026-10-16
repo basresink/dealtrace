@@ -53,7 +53,7 @@ const bezig = ref(false)
 async function zetInAgenda() {
   bezig.value = true
   try {
-    const uit = await $fetch<any>('/api/dagstart/belblokken', { method: 'POST', body: { modus: d.value.modus } })
+    const uit = await $fetch<any>('/api/dagstart/belblokken', { method: 'POST', body: { modus: d.value.modus, dag: d.value.dag } })
     toast.toon(`${uit.aantal === 1 ? 'Het belblok staat' : `${uit.aantal} belblokken staan`} in je agenda.`)
     await refresh()
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
@@ -100,8 +100,7 @@ useHead({ title: 'Dagstart · Dealtrace' })
                   <component :is="b.href ? Link : 'div'" :to="b.href ?? undefined" class="item-rij">
                     <span class="item-tijd">{{ tijd(b.start) }}<small>{{ tijd(b.eind) }}</small></span>
                     <span class="item-icoon" :class="ICOON_KLASSE[b.soort]"><Icoon :naam="ICOON[b.soort] ?? 'Clock'" /></span>
-                    <span class="item-body"><span class="item-naam">{{ b.titel }}</span><span v-if="b.sub" class="item-meta">{{ b.sub }}</span></span>
-                    <span v-if="b.voorstel" class="pil pil--geel">Voorstel</span>
+                    <span class="item-body"><span class="item-naam">{{ b.titel }}</span><span v-if="b.sub" class="item-meta">{{ b.sub }}</span><span v-if="b.voorstel" class="pil pil--geel">Voorstel</span></span>
                   </component>
                 </li>
               </ul>

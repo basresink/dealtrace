@@ -378,9 +378,10 @@ export async function bewaarDagindeling(tx: Tx, org: string, gebruikerId: string
   return { ok: true }
 }
 
-/** Zet de voorgestelde belblokken van vandaag in je agenda en hang de belacties van vandaag eraan. */
-export async function zetBelblokken(tx: Tx, org: string, gebruikerId: string, starts: string[], nu = new Date(), modus?: string | null) {
-  const d = await laadDagstart(tx, gebruikerId, nu, { org, modus })
+/** Zet de voorgestelde belblokken van de dag in je agenda en hang de belacties tot die dag eraan. */
+export async function zetBelblokken(tx: Tx, org: string, gebruikerId: string, starts: string[], nu = new Date(), modus?: string | null, dag?: string | null) {
+  if (dag && dag < nlMoment(nu).datum) fout(422, 'Een dag in het verleden plan je niet meer in')
+  const d = await laadDagstart(tx, gebruikerId, nu, { org, modus, dag })
   const kies = d.plan.voorstellen.filter((v) => !starts.length || starts.includes(v.start))
   if (!kies.length) fout(422, 'Er is geen belblok voorgesteld om in te plannen')
   const tot = nlTijdstip(plusDagen(d.dag, 1), 0).toISOString()
@@ -395,7 +396,7 @@ export async function zetBelblokken(tx: Tx, org: string, gebruikerId: string, st
     if (deel.length) await hangAanBlok(tx, org, gebruikerId, s.id, v.start, deel as any)
   }
   await schrijfAudit(tx, { organisationId: org, actorId: gebruikerId, action: 'dagstart.belblokken', resourceType: 'belblok_sessies', resourceId: ids.join(','), changes: { starts: kies.map((k) => k.start) } })
-  await bewaarDagindeling(tx, org, gebruikerId, nu)
+  if (d.vandaag) await bewaarDagindeling(tx, org, gebruikerId, nu)
   return { sessieIds: ids, aantal: ids.length }
 }
 

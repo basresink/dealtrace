@@ -1,11 +1,12 @@
 <script setup lang="ts">
-// "Wie ga je erbij zetten?" (F03): bedrijfsnaam met directe dubbelcheck. Een
-// Beginner ziet alleen naam, plaats, telefoon en website. "Zoek in KvK" (P11) vult officiële
-// naam, KvK, SBI, adres en medewerkers; de prospect komt dan uit het basisprofiel.
-// Blok "Plek in de matrix": de velden die klasse, potentie, doelgroep, reis en ritme bepalen (branche
-// uit het verkoopverhaal, aantal medewerkers, postcode voor de regio, klasse en huidige leverancier).
-// Daaronder staat live waar de prospect valt. Het oude omvangveld (Aantal monteurs) staat er niet meer
-// in: de matrix rekent met het aantal medewerkers.
+// "Wie ga je erbij zetten?" (F03): bedrijfsnaam met directe dubbelcheck. Iedereen ziet de datavelden:
+// naam, plaats, postcode, telefoon, website, e-mail en KvK-nummer, het blok "Plek in de matrix" (branche
+// uit het verkoopverhaal, aantal medewerkers, klasse waarbij leeg betekent afgeleid, huidige leverancier)
+// en de eigen velden die bij aanmaken verplicht zijn. Gevorderd en Expert zien daarbij de uitleg en live
+// waar de prospect valt (klasse, potentie, regio, doelgroep) en het blok Meer gegevens; een Beginner ziet
+// de eenvoudige versie. "Zoek in KvK" (P11) vult officiële naam, KvK, SBI, adres en medewerkers; de
+// prospect komt dan uit het basisprofiel. Het oude omvangveld (Aantal monteurs) staat er niet meer in:
+// de matrix rekent met het aantal medewerkers.
 import { kiesDoelgroep, type DoelgroepAccount } from '~~/shared/reis'
 import { regioVan } from '~~/shared/gebieden'
 import { POTENTIE_LABEL, potentieVan } from '~~/shared/planning'
@@ -14,17 +15,21 @@ const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ sluit: []; aangemaakt: [id: string]; bestaand: [id: string] }>()
 const { me } = useMe()
 const toast = useToast()
-const leeg = () => ({ naam: '', plaats: '', postcode: '', adres: '', telefoon: '', website: '', linkedin: '', klasse: '', medewerkers: '' as string | number, vvBrancheId: '', huidigeLeverancierId: '', customFields: {} as Record<string, unknown> })
+const leeg = () => ({ naam: '', plaats: '', postcode: '', adres: '', telefoon: '', website: '', email: '', kvk: '', linkedin: '', klasse: '', medewerkers: '' as string | number, vvBrancheId: '', huidigeLeverancierId: '', customFields: {} as Record<string, unknown> })
 const f = reactive(leeg())
 const dubbel = ref<any>(null)
 const bezig = ref(false)
 const uitgebreid = computed(() => me.value?.gebruiker.niveau !== 'beginner' || me.value?.organisatie?.iedereenAlles)
 const { data: velden } = await useFetch<any>('/api/eigen-velden', { query: { object: 'account' }, default: () => ({ velden: [] }), immediate: true })
-const eigenVelden = computed(() => ((velden.value?.velden ?? []) as any[]).filter((v) => !OMVANG_EIGEN_VELDEN.includes(v.sleutel)))
-const { data: context } = await useFetch<any>('/api/accounts/nieuw-context', { default: () => ({ branches: [], concurrenten: [], klassen: [], regios: [], synoniemen: {}, doelgroepen: [], planning: null, kan: {} }) })
+const alleEigen = computed(() => ((velden.value?.velden ?? []) as any[]).filter((v) => !v.gearchiveerd && !OMVANG_EIGEN_VELDEN.includes(v.sleutel)))
+// Eigen velden die bij aanmaken verplicht zijn staan voor iedereen in het venster; de rest onder Meer gegevens.
+const verplichteVelden = computed(() => alleEigen.value.filter((v) => v.data?.verplicht === 'bijAanmaken'))
+const eigenVelden = computed(() => alleEigen.value.filter((v) => v.data?.verplicht !== 'bijAanmaken'))
+const { data: context } = await useFetch<any>('/api/accounts/nieuw-context', { default: () => ({ branches: [], concurrenten: [], klassen: [], regios: [], synoniemen: {}, doelgroepen: [], planning: null }) })
 const klassen = computed(() => (context.value?.klassen ?? []) as any[])
-const kanKlasse = computed(() => !!context.value?.kan?.klasse)
-const kanLeverancier = computed(() => !!context.value?.kan?.leverancier && context.value.concurrenten.length > 0)
+const kanKlasse = computed(() => klassen.value.length > 0)
+const kanLeverancier = computed(() => (context.value?.concurrenten ?? []).length > 0)
+const mistVerplicht = computed(() => verplichteVelden.value.some((v) => { const w = f.customFields[v.sleutel]; return w === undefined || w === null || w === '' || (Array.isArray(w) && !w.length) }))
 const { data: kvkStand } = await useFetch<any>('/api/kvk/status', { default: () => ({ gekoppeld: false }) })
 const kvk = reactive({ open: false, bezig: false, resultaten: [] as any[], fout: '', gekozen: null as any })
 watch(() => props.open, (o) => { if (o) { Object.assign(f, leeg()); dubbel.value = null; Object.assign(kvk, { open: false, resultaten: [], fout: '', gekozen: null }) } })
@@ -38,7 +43,7 @@ async function kiesKvk(r: any) {
   try {
     const p = await $fetch<any>(`/api/kvk/${r.kvk}`)
     kvk.gekozen = p
-    Object.assign(f, { naam: p.naam, plaats: p.plaats ?? '', postcode: p.postcode ?? '', adres: p.adres ?? '', website: f.website || p.website || '', medewerkers: f.medewerkers === '' && p.medewerkers != null ? p.medewerkers : f.medewerkers })
+    Object.assign(f, { naam: p.naam, kvk: p.kvk ?? '', plaats: p.plaats ?? '', postcode: p.postcode ?? '', adres: p.adres ?? '', website: f.website || p.website || '', medewerkers: f.medewerkers === '' && p.medewerkers != null ? p.medewerkers : f.medewerkers })
     kvk.open = false
   } catch (e) { kvk.fout = foutTekst(e) }
 }
@@ -80,7 +85,7 @@ async function maak() {
   }
   try {
     const res = kvk.gekozen
-      ? await $fetch<any>(`/api/kvk/${kvk.gekozen.kvk}/toevoegen`, { method: 'POST', body: { naam: f.naam, website: f.website || undefined, ...matrix } })
+      ? await $fetch<any>(`/api/kvk/${kvk.gekozen.kvk}/toevoegen`, { method: 'POST', body: { naam: f.naam, website: f.website || undefined, telefoon: f.telefoon || undefined, email: f.email || undefined, customFields: f.customFields, ...matrix } })
       : await $fetch<any>('/api/accounts', { method: 'POST', body: { ...f, ...matrix } })
     toast.toon(`${res.naam} staat erbij.`)
     emit('aangemaakt', res.id)
@@ -117,32 +122,36 @@ async function maak() {
               <p>Bedoel je <strong>{{ dubbel.match.name }}</strong><template v-if="dubbel.match.city"> in {{ dubbel.match.city }}</template>? {{ dubbel.soort === 'zeker' ? 'Al in je bestand.' : 'Lijkt erop.' }}</p>
               <button type="button" class="dd-act mt-16" data-test="np-bestaand" @click="emit('bestaand', dubbel.match.id)">Open {{ dubbel.match.name }}</button>
             </div>
-            <div class="formulier-raster mt-16">
-              <label class="veld"><span class="veld-label">Plaats</span><input v-model="f.plaats" class="invoer" data-test="np-plaats"></label>
-              <label class="veld"><span class="veld-label">Telefoon</span><input v-model="f.telefoon" class="invoer" type="tel"></label>
-              <label class="veld"><span class="veld-label">Website</span><input v-model="f.website" class="invoer" placeholder="https://"></label>
+            <div class="formulier-raster mt-16" data-test="np-basis">
+              <label class="veld"><span class="veld-label">Plaats</span><input v-model="f.plaats" class="invoer" autocomplete="address-level2" data-test="np-plaats"></label>
+              <label class="veld"><span class="veld-label">Postcode</span><input v-model="f.postcode" class="invoer" placeholder="1234 AB" autocomplete="postal-code" data-test="np-postcode"></label>
+              <label class="veld"><span class="veld-label">Telefoon</span><input v-model="f.telefoon" class="invoer" type="tel" autocomplete="tel" data-test="np-telefoon"></label>
+              <label class="veld"><span class="veld-label">Website</span><input v-model="f.website" class="invoer" placeholder="https://" inputmode="url" data-test="np-website"></label>
+              <label class="veld"><span class="veld-label">E-mail</span><input v-model="f.email" class="invoer" type="email" autocomplete="email" placeholder="info@bedrijf.nl" data-test="np-email"></label>
+              <label class="veld"><span class="veld-label">KvK-nummer</span><input v-model="f.kvk" class="invoer" inputmode="numeric" maxlength="12" placeholder="8 cijfers" :readonly="!!kvk.gekozen" data-test="np-kvk"></label>
             </div>
           </article>
-          <article v-if="uitgebreid" class="fo-blok" data-test="np-matrix">
+          <article class="fo-blok" data-test="np-matrix">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Plek in de matrix</h3></header>
-            <p class="meta np-uitleg">Deze gegevens bepalen klasse, potentie, regio en doelgroep, en daarmee het ritme en de eerste stap van de motor.</p>
+            <p v-if="uitgebreid" class="meta np-uitleg">Deze gegevens bepalen klasse, potentie, regio en doelgroep, en daarmee het ritme en de eerste stap van de motor.</p>
+            <p v-else class="meta np-uitleg" data-test="np-matrix-kort">Weet je het niet, laat het dan leeg. Je vult het later aan op de klantkaart.</p>
             <div class="formulier-raster">
               <label v-if="context.branches.length" class="veld"><span class="veld-label">Branche</span>
                 <select v-model="f.vvBrancheId" class="invoer" data-test="np-branche"><option value="">Nog niet bekend</option><option v-for="b in context.branches" :key="b.id" :value="b.id">{{ b.naam }}{{ b.focus === 'primair' ? ' (focus)' : '' }}</option></select>
               </label>
               <label class="veld"><span class="veld-label">Aantal medewerkers</span><input v-model="f.medewerkers" class="invoer" type="number" min="0" step="1" inputmode="numeric" data-test="np-medewerkers"></label>
-              <label class="veld"><span class="veld-label">Postcode</span><input v-model="f.postcode" class="invoer" placeholder="1234 AB" data-test="np-postcode"></label>
               <label v-if="kanKlasse" class="veld"><span class="veld-label">Klasse</span>
                 <select v-model="f.klasse" class="invoer" data-test="np-klasse">
-                  <option value="">{{ klasseVoorstel ? `Uit medewerkers: ${klasseNaam(klasseVoorstel)}` : 'Uit het aantal medewerkers' }}</option>
+                  <option value="">{{ klasseVoorstel ? `Uit medewerkers: ${klasseNaam(klasseVoorstel)}` : 'Leeg: volgt uit het aantal medewerkers' }}</option>
                   <option v-for="k in klassen" :key="k.id" :value="k.id">{{ k.naam }}</option>
                 </select>
               </label>
               <label v-if="kanLeverancier" class="veld"><span class="veld-label">Huidige leverancier</span>
                 <select v-model="f.huidigeLeverancierId" class="invoer" data-test="np-leverancier"><option value="">Onbekend</option><option v-for="c in context.concurrenten" :key="c.id" :value="c.id">{{ c.naam }}</option></select>
               </label>
+              <EigenVeldInvoer v-for="v in verplichteVelden" :key="v.sleutel" v-model="f.customFields[v.sleutel]" :veld="{ ...v, naam: `${v.naam} *` }" :data-test="`np-veld-${v.sleutel}`" />
             </div>
-            <dl class="np-plek" data-test="np-plek">
+            <dl v-if="uitgebreid" class="np-plek" data-test="np-plek">
               <div class="np-plek-item"><dt>Klasse</dt><dd data-test="np-plek-klasse">{{ klasseNaam(klasseId) ?? 'Nog geen' }}<span v-if="klasseId && !f.klasse" class="meta"> uit medewerkers</span></dd></div>
               <div class="np-plek-item"><dt>Potentie</dt><dd>{{ potentie ? POTENTIE_LABEL[potentie] : 'Buiten de planning' }}</dd></div>
               <div class="np-plek-item"><dt>Regio</dt><dd data-test="np-plek-regio">{{ regio?.naam ?? 'Geen regio' }}</dd></div>
@@ -161,7 +170,7 @@ async function maak() {
           </article>
         </div>
         <footer class="fo-foot dd-acties">
-          <button type="submit" class="dd-act dd-act--primair" :disabled="bezig || !f.naam.trim() || dubbel?.soort === 'zeker'" data-test="np-maak">Prospect aanmaken</button>
+          <button type="submit" class="dd-act dd-act--primair" :disabled="bezig || !f.naam.trim() || dubbel?.soort === 'zeker' || mistVerplicht" data-test="np-maak">Prospect aanmaken</button>
           <span class="dd-acties-vul fo-foot-vul" />
           <button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button>
         </footer>

@@ -2,8 +2,8 @@
 // zeker duplicaat) en een berekende score (geen vaste 50, gat 25). De matrixvelden (branche uit het
 // verkoopverhaal, aantal medewerkers, klasse, huidige leverancier) en de regio uit postcode of plaats
 // gaan mee in de instap, zodat doelgroep, reis, ritme en planning meteen kloppen. Zonder gekozen
-// klasse volgt de klasse uit het aantal medewerkers.
-import { normaliseerTelefoon } from '../../../shared/contactgegevens'
+// klasse volgt de klasse uit het aantal medewerkers. Ook e-mail en KvK-nummer gaan mee, en eigen velden die
+// bij aanmaken verplicht zijn moeten gevuld zijn (400).
 import { normaliseerDomein, zoekDuplicaat } from '../../../shared/ontdubbelen'
 import { websiteUitEmail } from '../../../shared/logo'
 import { schrijfAudit } from '../../utils/audit'
@@ -12,7 +12,7 @@ import { metOrganisatie, schema } from '../../utils/db'
 import { alsDoelgroepAccount, alsHttpFout, instapVelden, laadInstapContext, schrijfInstap } from '../../utils/reis'
 import { vereisFunctie } from '../../utils/sessie'
 import { pasEigenVeldenToe } from '../../utils/velden'
-import { leesMatrixVelden, regioEnPunt, zetPunt } from '../../utils/nieuweProspect'
+import { controleerVerplichteVelden, leesBasisVelden, leesMatrixVelden, regioEnPunt, zetPunt } from '../../utils/nieuweProspect'
 
 export default defineEventHandler(async (event) => {
   const ctx = await vereisFunctie(event, 'prospects.nieuw')
@@ -21,22 +21,19 @@ export default defineEventHandler(async (event) => {
   if (!b.website?.trim()) b.website = websiteUitEmail(b.email, b.contactEmail) ?? undefined
   const naam = b.naam?.trim()
   if (!naam) throw createError({ statusCode: 400, statusMessage: 'Bedrijfsnaam is verplicht' })
-  let telefoon: string | undefined
-  if (b.telefoon?.trim()) {
-    const t = normaliseerTelefoon(b.telefoon)
-    if (!t.ok) throw createError({ statusCode: 400, statusMessage: t.fout })
-    telefoon = t.e164
-  }
+  const basis = leesBasisVelden(b)
+  const telefoon = basis.telefoon ?? undefined
   if (b.postcode && !/^\d{4}\s?[A-Za-z]{2}$/.test(b.postcode.trim())) throw createError({ statusCode: 400, statusMessage: 'Postcode is vier cijfers en twee letters' })
   const domein = normaliseerDomein(b.website)
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
     const bestand = await tx.select({ id: schema.accounts.id, name: schema.accounts.name, kvk: schema.accounts.kvk, domein: schema.accounts.domein, city: schema.accounts.city }).from(schema.accounts)
-    const d = zoekDuplicaat({ name: naam, kvk: b.kvk ?? null, domein }, bestand)
+    const d = zoekDuplicaat({ name: naam, kvk: basis.kvk, domein }, bestand)
     if (d.soort === 'zeker') throw createError({ statusCode: 409, statusMessage: `Bedoel je ${d.match!.name}${d.match!.city ? ` in ${d.match!.city}` : ''}? Al in je bestand.`, data: d })
     const velden = await eigenVeldenVoor(tx, 'account', effectiefNiveau(ctx))
     const herkomst: Record<string, any> = {}
     const op = new Date().toISOString()
-    for (const k of ['naam', 'plaats', 'telefoon', 'website']) if ((b as any)[k]) herkomst[k] = { bron: 'hand', op, door: ctx.gebruiker.id }
+    for (const k of ['naam', 'plaats', 'telefoon', 'website', 'email', 'kvk', 'postcode']) if ((b as any)[k]) herkomst[k] = { bron: 'hand', op, door: ctx.gebruiker.id }
+    controleerVerplichteVelden(velden, b.customFields)
     const customFields = pasEigenVeldenToe({}, b.customFields, velden, { rol: ctx.gebruiker.rol, eigenaar: true }, herkomst, ctx.gebruiker.id)
     const m = await leesMatrixVelden(tx, ctx, b)
     if (m.medewerkers !== null) herkomst.medewerkers = { bron: 'hand', op, door: ctx.gebruiker.id }
@@ -50,8 +47,8 @@ export default defineEventHandler(async (event) => {
     const rij = {
       id, organisationId: ctx.organisatie.id, name: naam, accountKind: 'prospect', nbStatus: 'nieuw', ownerId: ctx.gebruiker.id,
       klasse: m.klasse, city, postcode, gebiedId, vvBrancheId: m.vvBrancheId, huidigeLeverancierId: m.huidigeLeverancierId,
-      kvk: b.kvk?.replace(/\D/g, '') || null, domein, nbBron: 'hand',
-      data: { telefoon, website: b.website?.trim() || undefined, linkedin: b.linkedin?.trim() || undefined, adres: b.adres?.trim() || undefined, medewerkers: m.medewerkers ?? undefined, customFields, herkomst },
+      kvk: basis.kvk, domein, nbBron: 'hand',
+      data: { telefoon, email: basis.email ?? undefined, website: b.website?.trim() || undefined, linkedin: b.linkedin?.trim() || undefined, adres: b.adres?.trim() || undefined, medewerkers: m.medewerkers ?? undefined, customFields, herkomst },
     }
     // Instap in de reis (F05): kiesReis op doelgroep (met branche, klasse, omvang en regio), anders de standaardreis; fase Gevonden.
     let iv: ReturnType<typeof instapVelden>

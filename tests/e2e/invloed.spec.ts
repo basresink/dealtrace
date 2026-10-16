@@ -71,7 +71,7 @@ test('details: houding, rol bevestigen, rapporteert-aan en het voorstel van de N
   await d.getByTestId('ivp-bevestig-rol').click()
   await expect(d.getByTestId('ivp-kicker')).toContainText('Bevestigd door jou')
   await expect(d.getByTestId('ivp-bevestig-rol')).toHaveCount(0)
-  await d.getByRole('button', { name: 'Sluiten' }).click()
+  await d.getByTestId('ivp-sluit').click()
   // Karin rapporteert aan Hans: er komt een lijn in het organigram.
   await f.getByTestId(`inv-knoop-${a.karin}`).click()
   await expect(d.getByTestId('ivp-bewijs')).toContainText('nachtelijke storingen')
@@ -80,7 +80,7 @@ test('details: houding, rol bevestigen, rapporteert-aan en het voorstel van de N
   // Een kring kan niet: Hans kan niet aan Karin rapporteren.
   const kring = await page.request.put(`/api/contacten/${a.hans}/invloed`, { data: { rapporteertAan: a.karin } })
   expect(kring.status()).toBe(422)
-  await d.getByRole('button', { name: 'Sluiten' }).click()
+  await d.getByTestId('ivp-sluit').click()
   // De Notulist stelt een houding voor met een citaat; pas na bevestigen telt die.
   await f.getByTestId('inv-houding-ai').click()
   await expect(page.getByText(/De Notulist stelt \d+ houding/)).toBeVisible()

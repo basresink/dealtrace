@@ -64,3 +64,7 @@ Je beheerder stelt het dagplafond en de stille uren voor de organisatie in onder
 Zet **Push op dit toestel** aan en sta meldingen toe. Op een iPhone werkt push alleen als je Dealtrace op je beginscherm hebt gezet (iOS 16.4 of nieuwer): open Dealtrace in Safari, tik op Deel en kies **Zet op beginscherm**.
 
 Wat je op het ene toestel leest, staat op al je toestellen als gelezen.
+
+## Je ritme per mail
+
+Onder de kanalen staat **Je ritme per mail** met drie schakelaars, elk met een tijdstip: **Weekreview per mail** (vrijdag, standaard 15:30), **Weekstart per mail** (maandag, standaard 07:30) en **Dagstart per mail** (elke werkdag, standaard 07:00). Ze staan standaard uit. Valt je tijdstip in je stille uren, dan komt de mail direct daarna; tijdens de rijmodus of een belblok wacht hij even. Met **Stuur een voorbeeld** krijg je hem meteen in je mailbox. Dezelfde schakelaars staan in **Mijn instellingen**.

@@ -6,6 +6,7 @@
 import { sql } from 'drizzle-orm'
 import { isAchterstallig } from '../../shared/taken'
 import { documentenVoorKaart } from './kennisbank'
+import { geldendVerslag } from './belverslag'
 
 const iso = (d: unknown) => (d ? new Date(d as string).toISOString() : null)
 const kaal = (n: unknown) => String(n ?? '').replace(/^Testgebruiker /, '')
@@ -62,7 +63,27 @@ export async function kaartTabbladen(tx: any, b: KaartBereik) {
   // De activiteitenlog: contactmomenten, notities, mails en belpogingen.
   const acts = await rijen(sql`select a.*, c.first_name as c_voornaam, c.last_name as c_achternaam, u.name as door_naam from activiteiten a left join contacts c on c.id = a.contact_id left join users u on u.id = a.door
     where ${op('a')} order by a.op desc limit 400`)
-  const momenten = acts.map((x) => ({ id: x.id, soort: x.soort, kanaal: x.kanaal, uitkomst: x.uitkomst, op: iso(x.op), door: x.door_naam ?? null, tekst: x.data?.tekst ?? x.data?.notitie ?? null, ...metContact(x) }))
+  // Afgeronde beltaken: de nieuwste activiteit met die task_id is de vastgelegde belactiviteit. Die draagt het
+  // gespreksverslag (data.verslag bij afronden, daarna de nieuwste regel uit activiteit_verslagen) en het
+  // transcript van de taak, zodat tijdlijn en Gespreksverslagen ze samen bij die belactiviteit tonen.
+  const taakIds = [...new Set(acts.map((x) => x.task_id).filter(Boolean))] as string[]
+  const beltaken = taakIds.length ? await rijen(sql`select id, title from tasks where action_type = 'bellen' and id in (${sql.join(taakIds.map((x) => sql`${x}`), sql`, `)})`) : []
+  const beltaakTitel = new Map(beltaken.map((t) => [t.id as string, t.title as string]))
+  const belPerTaak = new Map<string, any>()
+  for (const x of acts) if (x.task_id && beltaakTitel.has(x.task_id) && !belPerTaak.has(x.task_id)) belPerTaak.set(x.task_id, x)
+  const belActs = [...belPerTaak.values()]
+  const naVerslagen = belActs.length ? await rijen(sql`select distinct on (activiteit_id) activiteit_id, tekst, op from activiteit_verslagen
+    where activiteit_id in (${sql.join(belActs.map((x) => sql`${x.id}`), sql`, `)}) order by activiteit_id, op desc`) : []
+  const naVerslag = new Map(naVerslagen.map((v) => [v.activiteit_id as string, v]))
+  const belTranscripten = belPerTaak.size ? await rijen(sql`select distinct on (record_id) record_id, id, tekst, op from transcripten
+    where record_soort = 'tasks' and bijlage_id is null and record_id in (${sql.join([...belPerTaak.keys()].map((x) => sql`${x}`), sql`, `)}) order by record_id, op desc`) : []
+  const transcriptVan = new Map(belTranscripten.map((t) => [t.record_id as string, t]))
+  const belInfo = new Map(belActs.map((x) => [x.id as string, { verslag: geldendVerslag(x, naVerslag.get(x.id)), transcript: transcriptVan.get(x.task_id) ?? null, titel: beltaakTitel.get(x.task_id)! }]))
+
+  const momenten = acts.map((x) => {
+    const bel = belInfo.get(x.id)
+    return { id: x.id, soort: x.soort, kanaal: x.kanaal, uitkomst: x.uitkomst, op: iso(x.op), door: x.door_naam ?? null, tekst: x.data?.tekst ?? x.data?.notitie ?? null, verslag: bel?.verslag ?? null, transcript: !!bel?.transcript, taskId: x.task_id ?? null, ...metContact(x) }
+  })
 
   const conceptMails = await rijen(cid
     ? sql`select k.id, k.concept, k.status, k.op from concepten k where k.concept->>'type' = 'mail' and k.status in ('klaar', 'goedgekeurd')
@@ -78,15 +99,26 @@ export async function kaartTabbladen(tx: any, b: KaartBereik) {
   const transcripten = await rijen(sql`select t.id, t.record_id, t.tekst, t.op from transcripten t where t.record_soort = 'appointments' and t.record_id in (${afspraakLijst})`)
   const perAfspraak = new Map(afsprakenRij.map((a) => [a.id, a]))
   // Beltaken: het gespreksverslag en het transcript uit het taakvenster (blok Transcript en gespreksverslag).
-  const beltaakVerslagen = await rijen(sql`select t.id, t.title, t.data, t.updated_at, t.contact_id, c.first_name as c_voornaam, c.last_name as c_achternaam from tasks t left join contacts c on c.id = t.contact_id
-    where ${op('t')} and t.action_type = 'bellen' and coalesce(t.data->'verslag'->>'tekst', '') <> '' order by t.updated_at desc limit 100`)
-  const beltaakTranscripten = await rijen(sql`select tr.id, tr.record_id, tr.tekst, tr.op, t.title, t.contact_id, c.first_name as c_voornaam, c.last_name as c_achternaam from transcripten tr
+  // Zolang de beltaak open is, staan verslag en transcript bij de taak; na afronden bij de belactiviteit.
+  const beltaakVerslagen = (await rijen(sql`select t.id, t.title, t.data, t.updated_at, t.contact_id, c.first_name as c_voornaam, c.last_name as c_achternaam from tasks t left join contacts c on c.id = t.contact_id
+    where ${op('t')} and t.action_type = 'bellen' and coalesce(t.data->'verslag'->>'tekst', '') <> '' order by t.updated_at desc limit 100`)).filter((t) => !belPerTaak.has(t.id))
+  const beltaakTranscripten = (await rijen(sql`select tr.id, tr.record_id, tr.tekst, tr.op, t.title, t.contact_id, c.first_name as c_voornaam, c.last_name as c_achternaam from transcripten tr
     join tasks t on t.id = tr.record_id left join contacts c on c.id = t.contact_id
-    where tr.record_soort = 'tasks' and tr.bijlage_id is null and ${op('t')} order by tr.op desc limit 100`)
+    where tr.record_soort = 'tasks' and tr.bijlage_id is null and ${op('t')} order by tr.op desc limit 100`)).filter((t) => !belPerTaak.has(t.record_id))
   const verslagen = [
     ...afsprakenRij.filter((a) => a.data?.verslag?.tekst).map((a) => ({ id: `afspraak-${a.id}`, bron: 'afspraak', bronLabel: 'Afspraak', typeLabel: a.soort_naam ?? 'Afspraak', titel: a.data?.titel ?? `${a.soort_naam ?? 'Afspraak'} met ${naamVan(a) ?? accNaam}`, tekst: a.data.verslag.tekst, datum: iso(a.start_at), contact: naamVan(a), woorden: woorden(a.data.verslag.tekst), afspraakId: a.id, ...metContact(a) })),
     ...transcripten.map((t) => { const a = perAfspraak.get(t.record_id) ?? {}; return { id: `transcript-${t.id}`, bron: 'afspraak', bronLabel: 'Transcript', typeLabel: 'Opname', titel: `Transcript van ${naamVan(a) ?? accNaam}`, tekst: t.tekst, datum: iso(t.op), contact: naamVan(a), woorden: woorden(t.tekst), afspraakId: t.record_id, ...metContact(a) } }),
-    ...acts.filter((x) => x.soort === 'gebeld' && (x.data?.tekst || x.data?.notitie)).map((g) => ({ id: `bel-${g.id}`, bron: 'taak', bronLabel: 'Beltaak', typeLabel: 'Gesprek', titel: `Gesprek met ${naamVan(g) ?? accNaam}`, tekst: g.data?.tekst ?? g.data?.notitie, datum: iso(g.op), contact: naamVan(g), woorden: woorden(g.data?.tekst ?? g.data?.notitie), afspraakId: null, ...metContact(g) })),
+    // De belactiviteit van een afgeronde beltaak: verslag (of notitie) en transcript samen.
+    ...belActs.filter((x) => { const i = belInfo.get(x.id)!; return i.verslag || i.transcript || x.data?.tekst || x.data?.notitie }).map((x) => {
+      const i = belInfo.get(x.id)!
+      const tekst = i.verslag ?? x.data?.tekst ?? x.data?.notitie ?? ''
+      return {
+        id: `bel-${x.id}`, bron: 'taak', bronLabel: 'Belactiviteit', typeLabel: i.transcript ? 'Gesprek met transcript' : 'Gesprek', titel: i.titel, tekst, datum: iso(x.op), contact: naamVan(x),
+        woorden: woorden(tekst), afspraakId: null, taskId: x.task_id, activiteitId: x.id, uitkomst: x.uitkomst ?? null,
+        transcript: i.transcript ? { tekst: i.transcript.tekst as string, woorden: woorden(i.transcript.tekst), op: iso(i.transcript.op) } : null, ...metContact(x),
+      }
+    }),
+    ...acts.filter((x) => x.soort === 'gebeld' && !belInfo.has(x.id) && (x.data?.tekst || x.data?.notitie)).map((g) => ({ id: `bel-${g.id}`, bron: 'taak', bronLabel: 'Beltaak', typeLabel: 'Gesprek', titel: `Gesprek met ${naamVan(g) ?? accNaam}`, tekst: g.data?.tekst ?? g.data?.notitie, datum: iso(g.op), contact: naamVan(g), woorden: woorden(g.data?.tekst ?? g.data?.notitie), afspraakId: null, ...metContact(g) })),
     ...beltaakVerslagen.map((t) => ({ id: `beltaak-${t.id}`, bron: 'taak', bronLabel: 'Beltaak', typeLabel: 'Gesprek', titel: t.title, tekst: t.data.verslag.tekst, datum: iso(t.data.verslag.op ?? t.updated_at), contact: naamVan(t), woorden: woorden(t.data.verslag.tekst), afspraakId: null, taskId: t.id, ...metContact(t) })),
     ...beltaakTranscripten.map((t) => ({ id: `transcript-${t.id}`, bron: 'taak', bronLabel: 'Transcript', typeLabel: 'Belgesprek', titel: `Transcript: ${t.title}`, tekst: t.tekst, datum: iso(t.op), contact: naamVan(t), woorden: woorden(t.tekst), afspraakId: null, taskId: t.record_id, ...metContact(t) })),
   ].sort((a, b) => String(b.datum).localeCompare(String(a.datum)))

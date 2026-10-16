@@ -101,7 +101,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
         </article>
       </div>
       <footer class="fo-foot dd-acties">
-        <button type="button" class="dd-act" @click="emit('sluit')">Sluiten</button>
+        <button type="button" class="dd-act" data-test="ivp-sluit" @click="emit('sluit')">Sluiten</button>
         <span class="dd-acties-vul fo-foot-vul" />
         <button v-if="kanBewerken && !p.rolBevestigd" type="button" class="dd-act dd-act--primair" :disabled="bezig" data-test="ivp-bevestig-rol" @click="zet({ bevestigRol: true }, 'Rol bevestigd.')"><Icoon naam="Check" class="dd-act-icoon" />Bevestig rol</button>
       </footer>
