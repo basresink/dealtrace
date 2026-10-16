@@ -1167,3 +1167,27 @@ html.zonlicht body { color: #000; }
   .kanaal-raster { grid-template-columns: minmax(0, 1fr) repeat(3, 52px); }
   .kanaal-raster .veld-uitleg { display: none; }
 }
+
+/* Zijbalk: Plannen als uitklapmenu, teller bij Concepten, icoonrij en drop-up van de gebruiker. */
+.sb-groep-knop { display: flex; align-items: center; justify-content: space-between; width: 100%; background: transparent; border: 0; cursor: pointer; text-align: left; font-family: inherit; }
+.sb-groep-knop:hover { color: var(--wit); }
+.sb-groep-pijl { transition: transform var(--transition-fast); }
+.sb-groep-pijl--open { transform: rotate(180deg); }
+.sb-link-teller { margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; display: inline-flex; align-items: center; justify-content: center; background: var(--red); border-radius: var(--radius); color: var(--wit); font-size: 11px; font-weight: 700; }
+.sb-iconen { display: flex; justify-content: space-between; gap: 2px; padding: 4px 2px 8px; border-bottom: 1px solid var(--wit-10); margin-bottom: 4px; }
+.sb-icoonknop { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: transparent; border: 0; border-radius: var(--radius); color: var(--wit-55); cursor: pointer; transition: color var(--transition-fast), background var(--transition-fast); }
+.sb-icoonknop:hover, .sb-icoonknop--actief { color: var(--wit); background: var(--wit-06); }
+.sb-icoon-teller { position: absolute; top: 2px; right: 0; height: 16px; min-width: 16px; padding: 0 4px; background: var(--red); border-radius: var(--radius); color: var(--wit); font-size: 10px; font-weight: 700; line-height: 16px; }
+.sb-avatar { position: relative; }
+.sb-avatar-stip { position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; background: var(--red); border: 2px solid var(--ink); border-radius: 50%; }
+.sb-menu-teller { margin-left: auto; padding: 0 6px; background: var(--red); border-radius: var(--radius); color: var(--wit); font-size: 11px; font-weight: 700; }
+.app-shell--ingeklapt .sb-iconen { flex-direction: column; align-items: center; }
+.app-shell--ingeklapt .sb-groep-knop { display: none; }
+
+/* Marges: een lijst die zelf een kaart is, houdt de binnenmarge van de kaart (.schakel-lijst zette die op 0),
+   en een kop direct boven een kaart, lijst of lege staat krijgt lucht. */
+.kaart.schakel-lijst { padding: 4px var(--kaart-padding); }
+:is(.title, .kop-blok) + :is(.kaart, .schakel-lijst, .lijst, .lege-staat, ul, .stapel) { margin-top: 16px; }
+/* Vandaag: kop en pijlknoppen van de blokken naast elkaar, ook in een smalle kaart. */
+.vandaag-blokken .kaart-kop { flex-wrap: nowrap; align-items: flex-start; gap: 8px; }
+.vandaag-blokken .kaart-kop .reis-knoppen { flex-wrap: nowrap; flex-shrink: 0; }

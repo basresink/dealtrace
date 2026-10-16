@@ -5,8 +5,10 @@ import type { Niveau } from '../../../../shared/types'
 import { schema } from '../../../utils/db'
 import { celObject, isNiveaucel, leesCel, zetCel } from '../../../utils/features'
 import { alsPlatform, platformAudit, requireFounder } from '../../../utils/platform'
+import { vergeetOrganisaties } from '../../../utils/kortGeheugen'
 
 export default defineEventHandler(async (event) => {
+  event.node.res.once('finish', vergeetOrganisaties)
   const ctx = await requireFounder(event)
   const b = await readBody<{ functie?: string; niveau?: string; aan?: boolean; organisatieId?: string | null }>(event)
   if (!b?.functie || !b.niveau || !isNiveaucel(b.functie, b.niveau) || typeof b.aan !== 'boolean') throw createError({ statusCode: 422, statusMessage: 'Onbekende functie of niveau' })

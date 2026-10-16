@@ -11,8 +11,11 @@ import { schrijfAudit } from '../../utils/audit'
 import { wijsRegiosToe } from '../../utils/bezoeken'
 import { metOrganisatie, schema } from '../../utils/db'
 import { vereisOrganisatie } from '../../utils/sessie'
+import { vergeetOrganisaties } from '../../utils/kortGeheugen'
 
 export default defineEventHandler(async (event) => {
+  // De organisatiecontext staat in het korte geheugen; na deze wijziging opnieuw lezen.
+  event.node.res.once('finish', vergeetOrganisaties)
   const { gebruiker, organisatie } = await vereisOrganisatie(event)
   const key = getRouterParam(event, 'key') ?? ''
   if (isVerborgen(key)) throw createError({ statusCode: 403, statusMessage: 'Deze instelling beheert de leverancier' })

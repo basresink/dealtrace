@@ -150,7 +150,7 @@ test.describe('niveaus', () => {
     await page.request.post('/api/tasks', { data: { title: `Oud ${uniek()}`, actionType: 'taak', dueDate: new Date(Date.now() - 3 * 864e5).toISOString() } })
     await login(page, 'u-03')
     await ga(page, '/acties?weergave=horizon')
-    await expect(page.getByTestId('horizon-vandaag').locator('.taak-kaart').first()).toHaveClass(/taak-kaart--achter/)
+    await expect(page.getByTestId('horizon-vandaag').locator('.hz-item').first()).toContainText('Over tijd')
     await ga(page, '/acties')
     await page.locator('.taak-kaart input[type=checkbox]').first().check()
     await page.getByTestId('bulk-week').click()

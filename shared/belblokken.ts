@@ -57,6 +57,12 @@ export const blokMoment = (b: VastBlok) => `${dagenLabel(b.dagen)} ${b.start} to
 /** "Gemengd 70/30" */
 export const soortLabel = (b: Pick<VastBlok, 'soort' | 'verhouding'>) => b.soort === 'gemengd' ? `Gemengd ${b.verhouding ?? STANDAARD_VERHOUDING}/${100 - (b.verhouding ?? STANDAARD_VERHOUDING)}` : SOORT_LABEL[b.soort]
 
+/** Alleen de velden van een vast blok, zonder wat de API erbij zet (moment, soortLabel), om terug te sturen. */
+export function kaalBlok(b: VastBlok): VastBlok {
+  const { id, dagen, start, minuten, plek, soort, verhouding, scriptId, automatisch } = b
+  return { id, dagen: [...dagen], start, minuten, plek, soort, automatisch, ...(verhouding !== undefined ? { verhouding } : {}), ...(scriptId !== undefined ? { scriptId } : {}) }
+}
+
 export function blokFouten(b: unknown): string[] {
   const x = (b ?? {}) as Partial<VastBlok>
   const f: string[] = []

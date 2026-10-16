@@ -2,8 +2,11 @@
 import { eq, sql } from 'drizzle-orm'
 import { schema } from '../../../../utils/db'
 import { alsPlatform, platformAudit, requireFounder } from '../../../../utils/platform'
+import { vergeetOrganisaties } from '../../../../utils/kortGeheugen'
 
 export default defineEventHandler(async (event) => {
+  // De organisatiecontext staat in het korte geheugen; na deze wijziging opnieuw lezen.
+  event.node.res.once('finish', vergeetOrganisaties)
   const ctx = await requireFounder(event)
   const id = getRouterParam(event, 'id')!
   const { stand } = await readBody<{ stand?: string }>(event)

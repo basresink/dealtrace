@@ -15,7 +15,7 @@ import type {
 } from './types'
 import { NIVEAUS, PAKKETTEN } from './types'
 
-export type ZijbalkGroep = 'Start' | 'Werk' | 'Prospects' | 'Plannen' | 'Resultaat' | 'Manager' | 'Beheer'
+export type ZijbalkGroep = 'Start' | 'Activiteiten' | 'Prospects' | 'Resultaten' | 'Plannen' | 'Manager' | 'Beheer'
 
 export interface Functie {
   sleutel: string
@@ -55,28 +55,28 @@ export const FUNCTIES: readonly Functie[] = [
   },
   {
     sleutel: 'nav.acties', naam: 'Acties', pakket: 'starter', rollen: 'iedereen', helpartikel: 'acties', startNiveau: 'beginner',
-    zijbalk: { groep: 'Werk', route: '/acties', icoon: 'SquareCheck' },
+    zijbalk: { groep: 'Activiteiten', route: '/acties', icoon: 'SquareCheck' },
     uitleg: { watHetDoet: 'Al je taken en inzichten op één plek, met uitkomst en volgende poging.', totDieTijd: 'Je taken van vandaag staan op Vandaag.' },
   },
   {
     sleutel: 'nav.belblokken', naam: 'Belblokken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'belblokken', startNiveau: 'beginner',
-    zijbalk: { groep: 'Werk', route: '/belblokken', icoon: 'Phone' },
+    zijbalk: { groep: 'Plannen', route: '/belblokken', icoon: 'Phone' },
     uitleg: { watHetDoet: 'Vaste tijdvakken om te bellen, met een gevulde bellijst en een gekozen script.', totDieTijd: 'Je salesmanager zet belblokken voor je klaar.' },
   },
   {
     sleutel: 'nav.bezoeken', naam: 'Bezoeken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'bezoeken', startNiveau: 'beginner',
-    zijbalk: { groep: 'Werk', route: '/bezoeken', icoon: 'MapPin' },
+    zijbalk: { groep: 'Plannen', route: '/bezoeken', icoon: 'MapPin' },
     uitleg: { watHetDoet: 'Je route van de dag met kansen langs de route en bezoeken afronden.', totDieTijd: 'Je bezoeken staan in je agenda.' },
   },
   {
-    sleutel: 'nav.campagnes', naam: 'Campagnes', pakket: 'starter', rollen: 'iedereen', helpartikel: 'campagnes', startNiveau: 'beginner',
-    zijbalk: { groep: 'Werk', route: '/campagnes', icoon: 'Megaphone', beginnerLabel: 'meedoen' },
-    uitleg: { watHetDoet: 'Acties over een groep accounts met een soort, een boodschap en een ritme.', totDieTijd: 'Je doet mee aan campagnes van je salesmanager.' },
+    sleutel: 'nav.meetings', naam: 'Meetings', pakket: 'starter', rollen: 'iedereen', helpartikel: 'agenda', startNiveau: 'beginner',
+    zijbalk: { groep: 'Plannen', route: '/meetings', icoon: 'Handshake' },
+    uitleg: { watHetDoet: 'Je meetings van de komende weken per soort, met doel, briefing en verslag.', totDieTijd: 'Je meetings staan in je agenda.' },
   },
   {
-    sleutel: 'nav.funnel', naam: 'Funnel', pakket: 'starter', rollen: 'iedereen', helpartikel: 'funnel', startNiveau: 'beginner',
-    zijbalk: { groep: 'Werk', route: '/funnel', icoon: 'Filter' },
-    uitleg: { watHetDoet: 'Hoeveel accounts per fase van de prospectreis staan, doorstromen en uitvallen, tot en met de eerste afspraak.', totDieTijd: 'Je salesmanager bespreekt de funnel met je.' },
+    sleutel: 'nav.campagnes', naam: 'Campagnes', pakket: 'starter', rollen: 'iedereen', helpartikel: 'campagnes', startNiveau: 'beginner',
+    zijbalk: { groep: 'Plannen', route: '/campagnes', icoon: 'Megaphone', beginnerLabel: 'meedoen' },
+    uitleg: { watHetDoet: 'Acties over een groep accounts met een soort, een boodschap en een ritme.', totDieTijd: 'Je doet mee aan campagnes van je salesmanager.' },
   },
   {
     sleutel: 'nav.prospects', naam: 'Prospects', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospects', startNiveau: 'beginner',
@@ -95,8 +95,13 @@ export const FUNCTIES: readonly Functie[] = [
   },
   {
     sleutel: 'nav.inzichten', naam: 'Inzichten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'inzichten', startNiveau: 'gevorderd',
-    zijbalk: { groep: 'Prospects', route: '/inzichten', icoon: 'Lightbulb' },
+    zijbalk: { groep: 'Activiteiten', route: '/inzichten', icoon: 'Lightbulb' },
     uitleg: { watHetDoet: 'Aanleidingen met bewijs die agents vinden, om te beoordelen en om te zetten in een taak.', totDieTijd: 'De belangrijkste aanleiding van de dag staat op Vandaag.' },
+  },
+  {
+    sleutel: 'nav.concepten', naam: 'Concepten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'concepten-goedkeuren-en-versturen', startNiveau: 'beginner',
+    zijbalk: { groep: 'Activiteiten', route: '/concepten', icoon: 'Inbox' },
+    uitleg: { watHetDoet: 'Wat agents klaarzetten ter goedkeuring: mails, berichten en briefings.', totDieTijd: 'Geen.' },
   },
   {
     sleutel: 'nav.planning', naam: 'Prospectplanning', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospectplanning', startNiveau: 'gevorderd',
@@ -115,8 +120,13 @@ export const FUNCTIES: readonly Functie[] = [
   },
   {
     sleutel: 'nav.resultaten', naam: 'Mijn resultaten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'resultaten', startNiveau: 'beginner',
-    zijbalk: { groep: 'Resultaat', route: '/resultaten', icoon: 'ChartColumn' },
+    zijbalk: { groep: 'Resultaten', route: '/resultaten', icoon: 'ChartColumn' },
     uitleg: { watHetDoet: 'Je eigen cijfers: pogingen, gesprekken, afspraken en overdrachten.', totDieTijd: 'Niets; Mijn resultaten staat altijd aan.' },
+  },
+  {
+    sleutel: 'nav.funnel', naam: 'Funnel', pakket: 'starter', rollen: 'iedereen', helpartikel: 'funnel', startNiveau: 'beginner',
+    zijbalk: { groep: 'Resultaten', route: '/funnel', icoon: 'Filter' },
+    uitleg: { watHetDoet: 'Hoeveel accounts per fase van de prospectreis staan, doorstromen en uitvallen, tot en met de eerste afspraak.', totDieTijd: 'Je salesmanager bespreekt de funnel met je.' },
   },
   {
     sleutel: 'nav.team', naam: 'Team', pakket: 'starter', rollen: MANAGERS, helpartikel: 'team-controleren', startNiveau: 'gevorderd',

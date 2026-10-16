@@ -5,8 +5,11 @@ import { isVerlaging, pakketVerschil } from '../../../../../shared/pakket'
 import { PAKKETTEN, type Pakket } from '../../../../../shared/types'
 import { schema } from '../../../../utils/db'
 import { alsPlatform, meldBeheerders, platformAudit, requireFounder, vereisHerbevestiging } from '../../../../utils/platform'
+import { vergeetOrganisaties } from '../../../../utils/kortGeheugen'
 
 export default defineEventHandler(async (event) => {
+  // De organisatiecontext staat in het korte geheugen; na deze wijziging opnieuw lezen.
+  event.node.res.once('finish', vergeetOrganisaties)
   const ctx = await requireFounder(event)
   const id = getRouterParam(event, 'id')!
   const b = await readBody<{ pakket?: string; bevestigd?: boolean }>(event)

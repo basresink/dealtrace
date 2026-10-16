@@ -1,5 +1,7 @@
 <script setup lang="ts">
-// Zijbalk per niveau (6.1, 14). Zwart, 240 px, inklapbaar naar 64 px.
+// Zijbalk per niveau (6.1, 14). Zwart, 240 px, inklapbaar naar 64 px. Volgorde: Start, Activiteiten,
+// Prospects, Resultaten en Plannen (uitklapmenu). Onderaan een rij iconen (mijn instellingen, instellingen,
+// helpcenter, meldingen, uitloggen) en het gebruikersblok met een drop-up-menu.
 // Wat voor het niveau uit staat, staat in de ingeklapte groep "Nog niet aangezet".
 import { NIVEAU_LABEL, ROL_LABEL, type Niveau, type Rol } from '~~/shared/types'
 
@@ -13,10 +15,17 @@ const { online } = useSyncQueue()
 const route = useRoute()
 
 const slotOpen = useCookie<boolean>('dt_slotgroep', { default: () => false, maxAge: 60 * 60 * 24 * 365 })
+// Plannen is een uitklapmenu; het gaat vanzelf open als je op een van zijn pagina's staat.
+const plannenOpen = useCookie<boolean>('dt_plannen', { default: () => false, maxAge: 60 * 60 * 24 * 365 })
 const menuOpen = ref(false)
+// Instellingen staat in de icoonrij onderaan, niet in de lijst.
+const ICOONRIJ = new Set(['nav.instellingen'])
+const groepen = computed(() => (zijbalk.value?.groepen ?? []).map((g) => ({ ...g, items: g.items.filter((i) => !ICOONRIJ.has(i.sleutel)) })).filter((g) => g.items.length))
+const instellingenAan = computed(() => !!zijbalk.value?.groepen.some((g) => g.items.some((i) => i.sleutel === 'nav.instellingen')))
+const plannenActief = computed(() => !!zijbalk.value?.groepen.find((g) => g.naam === 'Plannen')?.items.some((i) => isActief(i.route)))
+const plannenZichtbaar = computed(() => plannenOpen.value || plannenActief.value)
 const ongelezen = useState<number>('ongelezen', () => 0)
 const concepten = useState<number>('conceptenTeller', () => 0)
-const conceptenAan = computed(() => !!me.value?.functies?.find((f: any) => f.sleutel === 'concepten.inbox')?.beschikbaar)
 
 const zijbalk = computed(() => me.value?.zijbalk)
 const gebruikerRol = computed(() => {
@@ -62,18 +71,24 @@ async function uitloggen() {
     </div>
 
     <nav v-if="zijbalk" class="sb-nav" aria-label="Hoofdnavigatie">
-      <div v-for="g in zijbalk.groepen" :key="g.naam" class="sb-groep">
-        <div class="sb-groep-kop">{{ g.naam }}</div>
+      <div v-for="g in groepen" :key="g.naam" class="sb-groep" :class="{ 'sb-groep--uitklap': g.naam === 'Plannen' }" :data-groep="g.naam">
+        <button v-if="g.naam === 'Plannen'" type="button" class="sb-groep-kop sb-groep-knop" :aria-expanded="plannenZichtbaar" data-test="sb-plannen" @click="plannenOpen = !plannenZichtbaar">
+          <span>{{ g.naam }}</span><Icoon naam="ChevronDown" :grootte="14" class="sb-groep-pijl" :class="{ 'sb-groep-pijl--open': plannenZichtbaar }" />
+        </button>
+        <div v-else class="sb-groep-kop">{{ g.naam }}</div>
         <div class="sb-scheiding" />
-        <NuxtLink
-          v-for="item in g.items" :key="item.sleutel" class="sb-link" :class="{ 'sb-link--actief': isActief(item.route) }"
-          :to="item.route" :title="item.naam" :aria-current="isActief(item.route) ? 'page' : undefined" :data-sleutel="item.sleutel"
-        >
-          <Icoon :naam="item.icoon" class="sb-link-icoon" />
-          <span class="sb-link-tekst">{{ item.naam }}</span>
-          <span v-if="item.label" class="sb-link-pil">{{ item.label }}</span>
-          <span v-else-if="me?.nieuw.includes(item.sleutel)" class="sb-link-pil">nieuw</span>
-        </NuxtLink>
+        <template v-if="g.naam !== 'Plannen' || plannenZichtbaar || props.ingeklapt">
+          <NuxtLink
+            v-for="item in g.items" :key="item.sleutel" class="sb-link" :class="{ 'sb-link--actief': isActief(item.route) }"
+            :to="item.route" :title="item.naam" :aria-current="isActief(item.route) ? 'page' : undefined" :data-sleutel="item.sleutel"
+          >
+            <Icoon :naam="item.icoon" class="sb-link-icoon" />
+            <span class="sb-link-tekst">{{ item.naam }}</span>
+            <span v-if="item.sleutel === 'nav.concepten' && concepten" class="sb-link-teller tnum" data-test="sb-concepten">{{ concepten > 9 ? '9+' : concepten }}</span>
+            <span v-else-if="item.label" class="sb-link-pil">{{ item.label }}</span>
+            <span v-else-if="me?.nieuw.includes(item.sleutel)" class="sb-link-pil">nieuw</span>
+          </NuxtLink>
+        </template>
       </div>
 
       <div v-if="zijbalk.nietAangezet.length" class="sb-groep sb-slotgroep" :class="{ 'sb-slotgroep--open': slotOpen }" data-groep="niet-aangezet">
@@ -96,31 +111,28 @@ async function uitloggen() {
     </nav>
 
     <div class="sb-voet">
-      <NuxtLink class="sb-bel" :class="{ 'sb-bel--actief': isActief('/meldingen') }" to="/meldingen">
-        <span class="sb-bel-icoon"><Icoon naam="Bell" /><span v-if="ongelezen" class="sb-bel-teller tnum">{{ ongelezen > 9 ? '9+' : ongelezen }}</span></span>
-        <span class="sb-bel-tekst">Meldingen</span>
-      </NuxtLink>
-      <NuxtLink v-if="conceptenAan" class="sb-bel" :class="{ 'sb-bel--actief': isActief('/concepten') }" to="/concepten" data-test="sb-concepten">
-        <span class="sb-bel-icoon"><Icoon naam="Inbox" /><span v-if="concepten" class="sb-bel-teller tnum">{{ concepten > 9 ? '9+' : concepten }}</span></span>
-        <span class="sb-bel-tekst">Concepten</span>
-      </NuxtLink>
-      <NuxtLink class="sb-bel" :class="{ 'sb-bel--actief': isActief('/help') }" to="/help">
-        <span class="sb-bel-icoon"><Icoon naam="CircleHelp" /></span><span class="sb-bel-tekst">Helpcenter</span>
-      </NuxtLink>
+      <div class="sb-iconen" data-test="sb-iconen">
+        <NuxtLink to="/mij" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/mij') }" title="Mijn instellingen" aria-label="Mijn instellingen"><Icoon naam="CircleUser" /></NuxtLink>
+        <NuxtLink v-if="instellingenAan" to="/instellingen" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/instellingen') }" title="Instellingen" aria-label="Instellingen" data-sleutel="nav.instellingen"><Icoon naam="Settings" /></NuxtLink>
+        <NuxtLink to="/help" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/help') }" title="Helpcenter" aria-label="Helpcenter"><Icoon naam="CircleHelp" /></NuxtLink>
+        <NuxtLink to="/meldingen" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/meldingen') }" title="Meldingen" aria-label="Meldingen"><Icoon naam="Bell" /><span v-if="ongelezen" class="sb-icoon-teller tnum">{{ ongelezen > 9 ? '9+' : ongelezen }}</span></NuxtLink>
+        <button type="button" class="sb-icoonknop" title="Uitloggen" aria-label="Uitloggen" @click="uitloggen"><Icoon naam="LogOut" /></button>
+      </div>
       <div class="sb-gebruiker" :class="{ 'sb-gebruiker--open': menuOpen }">
+        <div v-show="menuOpen" class="sb-gebruiker-menu sb-gebruiker-menu--op" role="menu" data-test="sb-gebruikersmenu">
+          <NuxtLink role="menuitem" to="/mij" @click="menuOpen = false"><Icoon naam="UserCog" />Mijn instellingen</NuxtLink>
+          <NuxtLink role="menuitem" to="/meldingen" @click="menuOpen = false"><Icoon naam="Bell" />Meldingen<span v-if="ongelezen" class="sb-menu-teller tnum">{{ ongelezen > 9 ? '9+' : ongelezen }}</span></NuxtLink>
+          <NuxtLink role="menuitem" to="/help" @click="menuOpen = false"><Icoon naam="CircleHelp" />Helpcenter</NuxtLink>
+          <button role="menuitem" type="button" @click="uitloggen"><Icoon naam="LogOut" />Uitloggen</button>
+        </div>
         <button class="sb-gebruiker-knop" type="button" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">
-          <span class="sb-avatar">{{ initialen }}</span>
+          <span class="sb-avatar">{{ initialen }}<span v-if="ongelezen" class="sb-avatar-stip" /></span>
           <span class="sb-gebruiker-info">
             <span class="sb-gebruiker-naam">{{ me?.gebruiker.naam }}</span>
             <span class="sb-gebruiker-rol" data-test="gebruikersblok">{{ gebruikerRol }}</span>
           </span>
-          <Icoon naam="ChevronDown" class="sb-gebruiker-pijl" />
+          <Icoon naam="ChevronUp" class="sb-gebruiker-pijl" />
         </button>
-        <div v-show="menuOpen" class="sb-gebruiker-menu" role="menu">
-          <NuxtLink role="menuitem" to="/mij" @click="menuOpen = false"><Icoon naam="UserCog" />Mijn instellingen</NuxtLink>
-          <NuxtLink role="menuitem" to="/roadmap" @click="menuOpen = false"><Icoon naam="Route" />Roadmap</NuxtLink>
-          <button role="menuitem" type="button" @click="uitloggen"><Icoon naam="LogOut" />Uitloggen</button>
-        </div>
       </div>
     </div>
   </aside>

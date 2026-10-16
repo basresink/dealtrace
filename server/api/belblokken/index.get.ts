@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
     const duur = blokduur(top5.reduce((s, k) => s + k.duur, 0))
     return {
       kop: bellijstKop(vandaag),
-      bellijst: lijst.map((k) => ({ accountId: k.accountId, accountNaam: k.accountNaam, contactNaam: k.contactNaam, telefoon: k.telefoon, taskId: k.taskId, reden: k.reden, duur: k.duur, rang: k.rang, herkomst: k.herkomst, prioriteit: k.prioriteit, belblokId: k.belblokId, pil: k.prioriteit === 'urgent' || (k.due && Date.parse(k.due) < nu.getTime()) ? 'Urgent' : k.herkomst === 'opvolging' ? 'Opvolging' : 'Kans' })),
+      bellijst: lijst.map((k) => ({ accountId: k.accountId, accountNaam: k.accountNaam, contactNaam: k.contactNaam, telefoon: k.telefoon, taskId: k.taskId, due: k.due ?? null, reden: k.reden, duur: k.duur, rang: k.rang, herkomst: k.herkomst, prioriteit: k.prioriteit, belblokId: k.belblokId, pil: k.prioriteit === 'urgent' || (k.due && Date.parse(k.due) < nu.getTime()) ? 'Urgent' : k.herkomst === 'opvolging' ? 'Opvolging' : 'Kans' })),
       blokken: blokken.map((b) => ({ ...b, moment: blokMoment(b), soortLabel: soortLabel(b) })), eigenBlokken: eigen, voorkeuren,
       gepland: sessies.map((s) => ({ id: s.id, start: s.startOp, eind: s.eindOp, status: s.status, plek: s.data.plek, soort: s.data.soort, vastBlokId: s.vastBlokId, gesprekken: tellers.filter((t) => t.id === s.id).length, open: tellers.filter((t) => t.id === s.id && t.status === 'open').length })),
       advies: adviesMomenten([...bezetExtern, ...sessies.map((s) => ({ start: s.startOp, eind: s.eindOp }))], blokken, nu, { duur, lunch: voorkeuren.lunch }),

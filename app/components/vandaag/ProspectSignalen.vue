@@ -32,6 +32,7 @@ const initialen = (n: string) => n.replace(/^Test(bedrijf|installatie)?\s*/i, ''
 </template>
 
 <style scoped>
+.sec-head { margin-bottom: 24px; }
 .ps-link { align-self: flex-end; font-size: 13px; font-weight: 700; color: var(--ink); border-bottom: 2px solid var(--yellow); text-decoration: none; white-space: nowrap; }
 .ps-leeg { padding: 24px; border: 1px dashed var(--border-strong); background: #fff; text-align: center; font-size: 14px; color: var(--muted); }
 .ps-raster { display: grid; gap: 28px; grid-template-columns: 1fr; }

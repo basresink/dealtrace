@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Agenda (F09): dag, week of maand met afspraken (kleur per meetingsoort), belblokken, bezet uit de
 // gekoppelde agenda en conflicten met een rode rand. "Gepland door" bij afspraken die een collega
-// voor je plande. ?weergave=meetings toont "Wie is er aan de beurt?" (Gevorderd).
+// voor je plande.
 import { plusDagen } from '~~/shared/datum'
 const route = useRoute()
 const router = useRouter()
@@ -9,8 +9,10 @@ const { functie } = useMe()
 const toast = useToast()
 const klasse = useSchermklasse()
 const vandaag = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Amsterdam' })
-type Weergave = 'dag' | 'week' | 'maand' | 'meetings'
-const weergave = computed<Weergave>(() => (['dag', 'week', 'maand', 'meetings'].includes(String(route.query.weergave)) ? route.query.weergave as Weergave : 'week'))
+type Weergave = 'dag' | 'week' | 'maand'
+// "Wie is er aan de beurt?" staat sinds de nieuwe zijbalk op /meetings; oude links gaan daarheen.
+if (route.query.weergave === 'meetings') await navigateTo('/meetings', { replace: true })
+const weergave = computed<Weergave>(() => (['dag', 'week', 'maand'].includes(String(route.query.weergave)) ? route.query.weergave as Weergave : 'week'))
 // Op de telefoon is de dag de standaard; pas na het laden, zodat server en browser hetzelfde tonen.
 onMounted(() => { if (!route.query.weergave && klasse.value === 'telefoon') zet({ weergave: 'dag' }) })
 const datum = computed(() => (typeof route.query.datum === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(route.query.datum) ? route.query.datum : vandaag))
@@ -32,9 +34,6 @@ const periode = computed(() => {
   return { van: ma, tot: plusDagen(ma, 7), dagen: Array.from({ length: 5 }, (_, i) => plusDagen(ma, i)) }
 })
 const { data, refresh } = await useFetch<any>('/api/agenda', { query: computed(() => ({ van: periode.value.van, tot: periode.value.tot, gebruiker: gebruiker.value || undefined })), default: () => ({ afspraken: [], belblokken: [], bezet: [], conflicten: [], gebruikers: [], meetingsoorten: [], titel: '', kan: {} }) })
-const aanDeBeurtAan = computed(() => !!functie('agenda.aanDeBeurt')?.beschikbaar)
-const beurt = ref<any>(null)
-watch(weergave, async (w) => { if (w === 'meetings' && aanDeBeurtAan.value) beurt.value = await $fetch('/api/meetings/aan-de-beurt').catch(() => null) }, { immediate: true })
 const afspraken = computed(() => data.value.afspraken.filter((a: any) => (!filterSoort.value || a.soort.slug === filterSoort.value) && (!filterVorm.value || a.vorm === filterVorm.value)))
 const conflict = computed(() => new Set<string>(data.value.conflicten))
 const dagVan = (iso: string) => new Date(iso).toLocaleDateString('sv-SE', { timeZone: 'Europe/Amsterdam' })
@@ -63,7 +62,6 @@ function banen(lijst: any[]) {
 const kort = (a: any) => (minuut(a.eind) - minuut(a.start)) < 40
 const dagKop = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString('nl-NL', { weekday: weergave.value === 'dag' ? 'long' : 'short', day: 'numeric', month: weergave.value === 'dag' ? 'long' : undefined, timeZone: 'UTC' })
 const kop = computed(() => {
-  if (weergave.value === 'meetings') return 'Wie is er aan de beurt?'
   const n = afspraken.value.filter((a: any) => a.status === 'gepland').length
   const eerste = afspraken.value.filter((a: any) => a.status === 'gepland' && a.soort.type === 'klant').length
   const ander = weergave.value === 'dag' && datum.value !== vandaag
@@ -100,38 +98,22 @@ if (import.meta.client && route.query.melding === 'gekoppeld') toast.toon('Agend
         <div class="kop-rij ag-werkbalk">
           <div class="keuzegroep keuzegroep--klein" role="group" aria-label="Weergave">
             <button v-for="w in (['dag', 'week', 'maand'] as const)" :key="w" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': weergave === w }" :aria-pressed="weergave === w" :data-test="`weergave-${w}`" @click="zet({ weergave: w })">{{ w[0]!.toUpperCase() + w.slice(1) }}</button>
-            <button v-if="aanDeBeurtAan" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': weergave === 'meetings' }" :aria-pressed="weergave === 'meetings'" data-test="weergave-meetings" @click="zet({ weergave: 'meetings' })">Wie moet ik spreken</button>
           </div>
-          <div v-if="weergave !== 'meetings'" class="ag-nav">
+          <div class="ag-nav">
             <button type="button" class="dd-act dd-act--icoon" aria-label="Vorige" @click="verschuif(-1)"><Icoon naam="ArrowLeft" /></button>
             <button type="button" class="dd-act" @click="zet({ datum: undefined })">Vandaag</button>
             <button type="button" class="dd-act dd-act--icoon" aria-label="Volgende" @click="verschuif(1)"><Icoon naam="ArrowRight" /></button>
             <button type="button" class="dd-act" :aria-expanded="filtersOpen" data-test="agenda-filters" @click="filtersOpen = !filtersOpen"><Icoon naam="Filter" />Filters</button>
           </div>
         </div>
-        <div v-if="filtersOpen && weergave !== 'meetings'" class="formulier-raster ag-filters">
+        <div v-if="filtersOpen" class="formulier-raster ag-filters">
           <label v-if="data.gebruikers.length > 1" class="veld"><span class="veld-label">Gebruiker</span><select class="invoer" :value="gebruiker" data-test="filter-gebruiker" @change="zet({ gebruiker: ($event.target as HTMLSelectElement).value || undefined })"><option value="">Mijn agenda</option><option v-for="u in data.gebruikers" :key="u.id" :value="u.id">{{ u.naam.replace(/^Testgebruiker /, '') }}</option></select></label>
           <label class="veld"><span class="veld-label">Meetingsoort</span><select v-model="filterSoort" class="invoer"><option value="">Alle</option><option v-for="m in data.meetingsoorten" :key="m.id" :value="m.slug">{{ m.naam }}</option></select></label>
           <label class="veld"><span class="veld-label">Vorm</span><select v-model="filterVorm" class="invoer"><option value="">Alle</option><option v-for="(l, k) in vormLabel" :key="k" :value="k">{{ l }}</option></select></label>
         </div>
 
-        <!-- Wie is er aan de beurt? -->
-        <template v-if="weergave === 'meetings'">
-          <NietAangezetKop v-if="!aanDeBeurtAan" sleutel="agenda.aanDeBeurt" />
-          <LegeStaat v-else-if="beurt && !beurt.voorstellen.length" titel="Niemand is nu aan de beurt." tekst="De motor zet nieuwe voorstellen klaar zodra een ritme verloopt." />
-          <div v-else-if="beurt" class="lijst" data-test="aan-de-beurt">
-            <div v-for="v in beurt.voorstellen" :key="v.accountId" class="rij rij--compact" :data-test="`beurt-${v.accountId}`">
-              <div class="rij-info">
-                <h3 class="rij-titel"><NuxtLink :to="`/accounts/${v.accountId}`">{{ v.naam }}</NuxtLink></h3>
-                <div class="rij-sub">{{ v.reden }}<template v-if="v.dagenAchter"> · {{ v.dagenAchter }} dagen</template> · <strong>{{ v.vormAdvies }}</strong></div>
-              </div>
-              <button type="button" class="dd-act dd-act--primair" @click="plan({ id: v.accountId, naam: v.naam })">Plan</button>
-            </div>
-          </div>
-        </template>
-
         <!-- Maand -->
-        <div v-else-if="weergave === 'maand'" class="ag-maand" data-test="agenda-maand">
+        <div v-if="weergave === 'maand'" class="ag-maand" data-test="agenda-maand">
           <span v-for="d in ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo']" :key="d" class="ag-maand-kop">{{ d }}</span>
           <div v-for="d in periode.dagen" :key="d" class="ag-maand-dag" :class="{ 'ag-maand-dag--anders': d.slice(5, 7) !== datum.slice(5, 7), 'ag-maand-dag--vandaag': d === vandaag }">
             <button type="button" class="ag-maand-nr" @click="zet({ weergave: 'dag', datum: d })">{{ Number(d.slice(8)) }}</button>

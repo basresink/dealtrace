@@ -3,8 +3,11 @@ import { and, eq, isNull } from 'drizzle-orm'
 import { gebruikDb, schema } from '../../utils/db'
 import { leesSessieInhoud, wisSessie } from '../../utils/sessie'
 import { wisWerkIn } from '../../utils/werkIn'
+import { vergeet } from '../../utils/kortGeheugen'
 
 export default defineEventHandler(async (event) => {
+  // Ingetrokken toestellen meteen ongeldig op deze instantie (het korte geheugen bewaart ze 15 seconden).
+  event.node.res.once('finish', () => vergeet('toestel:'))
   const s = await leesSessieInhoud(event)
   const b = await readBody<{ alleToestellen?: boolean }>(event).catch(() => ({} as { alleToestellen?: boolean }))
   if (s) {

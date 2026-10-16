@@ -13,6 +13,7 @@ import { beschikbaar, type Weigerreden } from '../../shared/functies'
 import { toestelLabel } from '../../shared/inloggen'
 import type { FunctieRegel, GebruikerContext, Niveau, OrganisatieContext, Pakket, Rol, Werkplek } from '../../shared/types'
 import type { WerkIn } from '../../shared/werkIn'
+import { onthoud } from './kortGeheugen'
 import { gebruikDb, metOrganisatie, schema } from './db'
 import { leesWerkIn } from './werkIn'
 
@@ -57,9 +58,13 @@ export async function leesSessieInhoud(event: H3Event): Promise<SessieInhoud | n
     const inhoud: SessieInhoud = { sub: String(payload.sub), aal: payload.aal === 'aal2' ? 'aal2' : 'aal1', hb: payload.hb as string | undefined, act: payload.act as number | undefined, tid: payload.tid as string | undefined, half: payload.half === true }
     if (!inhoud.tid) return null
     // Een ingetrokken toestel ("Uitloggen op alle toestellen") maakt de sessie ongeldig.
-    const [t] = await gebruikDb().select().from(schema.gebruikerToestellen).where(eq(schema.gebruikerToestellen.id, inhoud.tid))
+    // Het toestel staat 15 seconden in het korte geheugen; intrekken wist het meteen (vergeet('toestel:')).
+    const t = await onthoud(`toestel:${inhoud.tid}`, 15_000, async () => {
+      const [x] = await gebruikDb().select().from(schema.gebruikerToestellen).where(eq(schema.gebruikerToestellen.id, inhoud.tid!))
+      if (x && Date.now() - Date.parse(x.laatstGezien) > 10 * 60_000) await gebruikDb().update(schema.gebruikerToestellen).set({ laatstGezien: new Date().toISOString() }).where(eq(schema.gebruikerToestellen.id, x.id))
+      return x ?? null
+    })
     if (!t || t.ingetrokkenOp || t.gebruikerId !== inhoud.sub) return null
-    if (Date.now() - Date.parse(t.laatstGezien) > 10 * 60_000) await gebruikDb().update(schema.gebruikerToestellen).set({ laatstGezien: new Date().toISOString() }).where(eq(schema.gebruikerToestellen.id, t.id))
     return inhoud
   } catch {
     return null
@@ -114,8 +119,11 @@ async function leesGebruiker(event: H3Event, sessie: SessieInhoud): Promise<Sess
   }
 }
 
-/** Organisatie, instelling "Iedereen ziet alles" en de stand uit functies_per_niveau. */
-export async function leesOrganisatie(organisationId: string) {
+/** Organisatie, instelling "Iedereen ziet alles" en de stand uit functies_per_niveau; 30 seconden in het korte geheugen. */
+export function leesOrganisatie(organisationId: string) {
+  return onthoud(`org:${organisationId}`, 30_000, () => leesOrganisatieUitDb(organisationId))
+}
+async function leesOrganisatieUitDb(organisationId: string) {
   return metOrganisatie(organisationId, async (tx) => {
     const [org] = await tx.select().from(schema.organisations).where(eq(schema.organisations.id, organisationId))
     if (!org) throw createError({ statusCode: 401, statusMessage: 'Organisatie onbekend' })

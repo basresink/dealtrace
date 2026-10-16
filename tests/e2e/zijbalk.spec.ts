@@ -2,10 +2,13 @@ import { expect, test } from '@playwright/test'
 import { login } from './hulp'
 
 test.describe('zijbalk per niveau', () => {
-  test('Beginner buitendienst: 11 items en Bezoeken voor Belblokken', async ({ page }) => {
+  test('Beginner buitendienst: 13 items met Plannen open, en Bezoeken voor Belblokken', async ({ page }) => {
     await login(page, 'u-02')
     const items = page.locator('.sb-nav .sb-groep:not(.sb-slotgroep) .sb-link')
-    await expect(items).toHaveCount(11)
+    // Plannen is een uitklapmenu: dicht 8 items, open 13.
+    await expect(items).toHaveCount(8)
+    await page.getByTestId('sb-plannen').click()
+    await expect(items).toHaveCount(13)
     const sleutels = await items.evaluateAll((els) => els.map((e) => e.getAttribute('data-sleutel')))
     expect(sleutels.indexOf('nav.bezoeken')).toBeLessThan(sleutels.indexOf('nav.belblokken'))
     await expect(page.locator('.sb-slotgroep-teller')).toHaveText('4')
@@ -34,7 +37,8 @@ test.describe('zijbalk per niveau', () => {
 
   test('beheerder ziet de managergroep en de instellingen', async ({ page }) => {
     await login(page, 'u-06')
-    await expect(page.locator('.sb-link[data-sleutel="nav.instellingen"]')).toBeVisible()
+    // Instellingen staat in de icoonrij onderaan de zijbalk.
+    await expect(page.locator('.sb-icoonknop[data-sleutel="nav.instellingen"]')).toBeVisible()
     await page.goto('/instellingen/gebruikers')
     await expect(page.getByTestId('gebruikers-tabel')).toBeVisible()
   })

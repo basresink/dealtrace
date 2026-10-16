@@ -20,7 +20,7 @@ const wanneer = computed(() => {
     <div class="ah-vlak" aria-hidden="true"><span class="ah-mark">{{ initialen }}</span><span class="ah-hoek">Aanleiding</span></div>
     <div class="ah-tekst">
       <span class="kicker kicker--streep">Aanleiding van de dag</span>
-      <h2 class="ah-titel">{{ a.account ? `${a.account.naam}: ` : '' }}{{ a.titel }}</h2>
+      <h2 class="ah-titel">{{ a.account && !a.titel.includes(a.account.naam) ? `${a.account.naam}: ` : '' }}{{ a.titel }}</h2>
       <p v-if="a.waarom" class="ah-waarom">{{ a.waarom }}</p>
       <div class="ah-regel"><span class="ah-bron"><span class="ah-blokje" :class="a.bron === 'extern' ? 'ah-blokje--extern' : ''" />{{ a.bronNaam }}</span><span class="tnum">{{ wanneer }} · relevantie {{ a.relevantie }}</span></div>
       <div class="ah-knoppen">

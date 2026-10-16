@@ -4,6 +4,7 @@ import { and, eq, isNull, sql } from 'drizzle-orm'
 import { FUNCTIES, functie, featureGroep } from '../../shared/functies'
 import { NIVEAUS, type Niveau } from '../../shared/types'
 import { schema } from './db'
+import { vergeetOrganisaties } from './kortGeheugen'
 
 type Tx = Parameters<Parameters<ReturnType<typeof import('./db').gebruikDb>['transaction']>[0]>[0]
 
@@ -21,6 +22,7 @@ export async function leesCel(tx: Tx, f: string, n: Niveau, org: string | null) 
 
 /** Zet of verwijdert een cel (aan: null = afwijking weg). */
 export async function zetCel(tx: Tx, f: string, n: Niveau, org: string | null, aan: boolean | null, door: string) {
+  vergeetOrganisaties()
   const voorwaarde = sql`functie = ${f} and niveau = ${n} and ${org ? sql`organisation_id = ${org}` : sql`organisation_id is null`}`
   if (aan === null) {
     await tx.execute(sql`delete from functies_per_niveau where ${voorwaarde}`)

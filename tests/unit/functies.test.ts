@@ -11,22 +11,22 @@ function gebruiker(overig: Partial<GebruikerContext> = {}): GebruikerContext {
 }
 
 describe('zijbalk per niveau (6.1)', () => {
-  it('Beginner 11, Gevorderd 14, Expert 15 items', () => {
-    expect(telItems(zijbalkVoor(gebruiker(), org, stand))).toBe(11)
-    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'gevorderd' }), org, stand))).toBe(14)
-    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'expert' }), org, stand))).toBe(15)
+  it('Beginner 13, Gevorderd 16, Expert 17 items (met Concepten en Meetings)', () => {
+    expect(telItems(zijbalkVoor(gebruiker(), org, stand))).toBe(13)
+    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'gevorderd' }), org, stand))).toBe(16)
+    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'expert' }), org, stand))).toBe(17)
   })
 
   it('wat uit staat komt in "Nog niet aangezet" met het niveau waarvoor het aanstaat', () => {
     const z = zijbalkVoor(gebruiker(), org, stand)
-    expect(z.nietAangezet.map((i) => i.sleutel)).toEqual(['nav.leadgenerator', 'nav.inzichten', 'nav.planning', 'nav.reizen'])
+    expect(z.nietAangezet.map((i) => i.sleutel)).toEqual(['nav.inzichten', 'nav.leadgenerator', 'nav.planning', 'nav.reizen'])
     expect(z.nietAangezet.find((i) => i.sleutel === 'nav.leadgenerator')?.aanVanaf).toBe('gevorderd')
     expect(z.nietAangezet.find((i) => i.sleutel === 'nav.reizen')?.aanVanaf).toBe('expert')
   })
 
   it('volgorde in Werk volgt het werkplekprofiel', () => {
     const werk = (w: GebruikerContext['werkplek']) =>
-      zijbalkVoor(gebruiker({ werkplek: w }), org, stand).groepen.find((g) => g.naam === 'Werk')!.items.map((i) => i.naam)
+      zijbalkVoor(gebruiker({ werkplek: w }), org, stand).groepen.find((g) => g.naam === 'Plannen')!.items.map((i) => i.naam)
     expect(werk('binnendienst').indexOf('Belblokken')).toBeLessThan(werk('binnendienst').indexOf('Bezoeken'))
     expect(werk('buitendienst').indexOf('Bezoeken')).toBeLessThan(werk('buitendienst').indexOf('Belblokken'))
   })
@@ -39,7 +39,7 @@ describe('zijbalk per niveau (6.1)', () => {
 
   it('Toon minder haalt weg, nooit erbij', () => {
     const z = zijbalkVoor(gebruiker({ verborgen: ['nav.campagnes', 'nav.leadgenerator'] }), org, stand)
-    expect(telItems(z)).toBe(10)
+    expect(telItems(z)).toBe(12)
     expect(z.groepen.flatMap((g) => g.items).some((i) => i.sleutel === 'nav.leadgenerator')).toBe(false)
   })
 
@@ -53,7 +53,7 @@ describe('zijbalk per niveau (6.1)', () => {
   it('Iedereen ziet alles: geen groep Nog niet aangezet', () => {
     const z = zijbalkVoor(gebruiker(), { ...org, iedereenAlles: true }, stand)
     expect(z.nietAangezet).toHaveLength(0)
-    expect(telItems(z)).toBe(15)
+    expect(telItems(z)).toBe(17)
   })
 })
 

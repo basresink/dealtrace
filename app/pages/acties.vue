@@ -67,6 +67,9 @@ async function bulk(actie: string) {
 }
 const STATKAARTEN = [['vandaag', 'Vandaag', 'vandaag'], ['week', 'Komende 7 dagen', 'komende7'], ['achterstallig', 'Achterstallig', 'achterstallig'], ['', 'Alles open', 'open']] as const
 useHead({ title: 'Acties · Dealtrace' })
+// Horizon (DealDrive-opzet): een taak opent het taakvenster, een afspraak de agenda met het afspraakvenster.
+function openUitHorizon(id: string) { if (id.startsWith('afspraak:')) navigateTo(`/agenda?weergave=dag&afspraak=${id.slice(9)}`); else open.value = id }
+const nieuweAfspraak = ref(false)
 </script>
 
 <template>
@@ -81,6 +84,7 @@ useHead({ title: 'Acties · Dealtrace' })
           </div>
           <div class="toolbar-buttons">
             <button type="button" class="dd-actie dd-actie--primair" data-test="taak-nieuw" @click="nieuw = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
+            <button type="button" class="dd-actie dd-actie--secundair" data-test="afspraak-nieuw" @click="nieuweAfspraak = true"><Icoon naam="Calendar" class="dd-actie-icoon" />Afspraak</button>
             <button v-if="tab === 'taken' && data.kan.horizon" type="button" class="dd-actie dd-actie--secundair" data-test="weergave" @click="zet({ weergave: weergave === 'horizon' ? undefined : 'horizon' })"><Icoon :naam="weergave === 'horizon' ? 'List' : 'LayoutGrid'" class="dd-actie-icoon" />{{ weergave === 'horizon' ? 'Lijst' : 'Horizon' }}</button>
             <HulpKnop :artikel="tab === 'inzichten' ? 'inzichten' : 'een-taak-afronden-met-een-uitkomst'" />
             <button v-if="tab === 'taken'" type="button" class="dd-actie dd-actie--secundair" data-test="filters-knop" @click="filtersOpen = !filtersOpen"><Icoon naam="Filter" class="dd-actie-icoon" />Filters</button>
@@ -116,12 +120,7 @@ useHead({ title: 'Acties · Dealtrace' })
         </div>
         <LegeStaat v-if="!alle.length" class="mt-16" :titel="Object.keys(route.query).some((k) => !['tab', 'weergave'].includes(k)) ? 'Geen taken die aan deze filters voldoen.' : 'Niets te doen.'" tekst="De motor zet nieuwe pogingen klaar zodra ze aan de beurt zijn." />
         <button v-if="!alle.length && Object.keys(route.query).length" type="button" class="dd-act mt-8" @click="router.replace({ query: {} })">Toon alles</button>
-        <div v-if="weergave === 'horizon' && data.horizon" class="horizon mt-16" data-test="horizon">
-          <div v-for="k in ([['vandaag', 'Vandaag'], ['komendeWeek', 'Komende week'], ['week23', 'Week 2 en 3']] as const)" :key="k[0]" class="kaart" :data-test="`horizon-${k[0]}`">
-            <h2 class="kaart-titel">{{ k[1] }} <span class="pil pil--leeg">{{ data.horizon[k[0]].length }}</span></h2>
-            <TaakKaart v-for="t in data.horizon[k[0]]" :key="t.id" :taak="t" @open="open = t.id" @vink="vink(t)" @uitstel="stelUit(t)" @menu="openMenu($event, t)" />
-          </div>
-        </div>
+        <HorizonPaneel v-if="weergave === 'horizon' && data.horizon" class="mt-16" :horizon="data.horizon" @open="openUitHorizon" />
         <template v-else>
           <div v-for="g in data.groepen" :key="g.naam" class="taak-groep mt-16" :data-test="`groep-${g.naam}`">
             <h2 class="kicker kicker--streep">{{ g.naam }} <span class="pil pil--leeg">{{ g.taken.length }}</span></h2>
@@ -195,6 +194,7 @@ useHead({ title: 'Acties · Dealtrace' })
     </div>
     <TaakFlyout :open="!!open" :taak-id="open" :basis="alle.find((t: any) => t.id === open)" :volgende="true" @sluit="open = null" @klaar="klaar" @gewijzigd="refresh" />
     <NieuweTaakFlyout :open="nieuw" :teamleden="data.teamleden" @sluit="nieuw = false" @gemaakt="nieuw = false; refresh()" />
+    <PlanAfspraakFlyout :open="nieuweAfspraak" @sluit="nieuweAfspraak = false" @gepland="(id: string) => { nieuweAfspraak = false; navigateTo(`/agenda?weergave=dag&afspraak=${id}`) }" />
     <InzichtMetBron :open="metBron" @sluit="metBron = false" @opgeslagen="refreshInz()" />
     <InzichtFlyout :open="!!inzicht" :inzicht="inzicht" @sluit="inzicht = null" @gewijzigd="refreshInz(); refresh()" />
   </div>

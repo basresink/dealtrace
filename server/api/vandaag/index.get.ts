@@ -1,7 +1,6 @@
 // GET /api/vandaag: alle blokken van Vandaag in één antwoord (F01). De laptop (P07) en de
 // telefoon (P32) gebruiken hetzelfde. Blokken zonder bron laten we weg.
 import { doorAgentsSamenvatting } from '../../../shared/agents'
-import { verkoopverhaal } from '../../utils/reis'
 import { and, eq, gte, inArray, sql } from 'drizzle-orm'
 import { nlMoment, plusDagen, volgendeWerkdag } from '../../../shared/datum'
 import { ordenTaken, isAchterstallig } from '../../../shared/taken'
@@ -28,8 +27,8 @@ export default defineEventHandler(async (event) => {
     const accounts = await tx.select({ id: schema.accounts.id, naam: schema.accounts.name, ownerId: schema.accounts.ownerId, nbStatus: schema.accounts.nbStatus, terugOp: schema.accounts.terugOp, vvBrancheId: schema.accounts.vvBrancheId, faseId: schema.accounts.faseId, reisId: schema.accounts.reisId, kind: schema.accounts.accountKind, data: schema.accounts.data }).from(schema.accounts)
     const per = new Map(accounts.map((a) => [a.id, a]))
     const eigen = accounts.filter((a) => a.ownerId === mijn)
-    const vv = await verkoopverhaal(tx)
-    const voorrang = new Set(((vv?.branches ?? []) as any[]).filter((b) => b.focus === 'primair').map((b) => b.id))
+    // Alleen de primaire branches (voorrang); niet het hele verkoopverhaal, dat zijn tien leesvragen.
+    const voorrang = new Set(((await tx.execute(sql`select extern_id as id from vv_branches where actief and focus = 'primair'`)).rows as { id: string }[]).map((b) => b.id))
     const reizen = await tx.select({ id: schema.reistemplates.id, data: schema.reistemplates.data }).from(schema.reistemplates)
     const fase = (a?: typeof accounts[number]) => { const f = reizen.find((r) => r.id === a?.reisId)?.data.fases.find((x) => x.id === a?.faseId); return f ? { label: f.label, kleur: f.kleur } : null }
 

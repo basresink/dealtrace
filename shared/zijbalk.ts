@@ -24,14 +24,14 @@ export interface Zijbalk {
   nietAangezet: ZijbalkItem[]
 }
 
-const GROEPEN: ZijbalkGroep[] = ['Start', 'Werk', 'Prospects', 'Plannen', 'Resultaat', 'Manager', 'Beheer']
+const GROEPEN: ZijbalkGroep[] = ['Start', 'Activiteiten', 'Prospects', 'Resultaten', 'Plannen', 'Manager', 'Beheer']
 
 function naarItem(f: Functie, label?: string): ZijbalkItem {
   const z = f.zijbalk!
   return { sleutel: f.sleutel, naam: f.naam, route: z.route, icoon: z.icoon, groep: z.groep, ...(label ? { label } : {}) }
 }
 
-/** Volgorde binnen "Werk": binnendienst Belblokken boven Bezoeken, buitendienst andersom. */
+/** Volgorde binnen "Plannen": binnendienst Belblokken boven Bezoeken, buitendienst andersom. */
 function werkVolgorde(items: Functie[], werkplek: GebruikerContext['werkplek']): Functie[] {
   if (werkplek !== 'buitendienst') return items
   const i = items.findIndex((f) => f.sleutel === 'nav.belblokken')
