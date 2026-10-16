@@ -855,6 +855,14 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Uitleg over elk scherm en over new business, met hulp per scherm.', totDieTijd: 'Geen; het helpcenter staat altijd aan.' },
   },
   {
+    sleutel: 'help.eigenArtikelen', naam: 'Eigen helpartikelen', pakket: 'plus', rollen: ['beheerder'], helpartikel: 'gebruikers-rollen-niveaus', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Eigen artikelen voor de organisatie schrijven en publiceren, met statistiek.', totDieTijd: 'Iedereen leest de artikelen van Dealtrace.' },
+  },
+  {
+    sleutel: 'help.kennisbankBron', naam: 'Eigen kennisbank voor de AI-assistent', pakket: 'plus', rollen: ['beheerder'], helpartikel: 'koppelingen', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'De eigen artikelen als bron voor de AI-assistent aanzetten.', totDieTijd: 'De AI-assistent antwoordt uit de artikelen van Dealtrace.' },
+  },
+  {
     sleutel: 'help.verbergen', naam: 'Artikelen verbergen', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'gebruikers-rollen-niveaus', startNiveau: 'beginner',
     uitleg: { watHetDoet: 'Een artikel van Dealtrace verbergen voor je organisatie.', totDieTijd: 'Vraag je beheerder.' },
   },

@@ -15,13 +15,18 @@ export interface HelpArtikel {
   niveau?: string | null
   organisationId?: string | null
   bijgewerktOp?: string
+  /** Controlevragen (drie meerkeuzevragen), uit de sectie "## Controlevragen" van het Markdown-bestand. */
+  vragen?: Controlevraag[]
 }
+export interface Controlevraag { vraag: string; opties: string[]; goed: number }
 
 export const CATEGORIEEN_PRODUCT = ['Aan de slag', 'Dagelijks werk', 'Prospects', 'Plannen en sturen', 'Inrichten', 'Voor de salesmanager'] as const
 export const CATEGORIEEN_NEWBUSINESS = ['Fundament', 'Voorbereiden', 'Bellen', 'Bezwaren', 'Schrijven', 'Op pad', 'Volhouden', 'Van afspraak naar overdracht', 'Jezelf verbeteren'] as const
 /** "Aan de slag" op de startpagina: vijf vaste artikelen (F21). */
 export const AAN_DE_SLAG = ['je-eerste-dag-in-dealtrace', 'vandaag-lezen-en-afronden', 'een-belblok-uitvoeren-met-een-script', 'een-afspraak-plannen-afronden-en-overdragen', 'waarom-vijf-pogingen-werken'] as const
 export const FEEDBACK_REDENEN = ['Klopt niet', 'Onduidelijk', 'Mist iets', 'Anders'] as const
+
+const ontquote = (t: string) => t.replace(/^"(.*)"$/, '$1')
 
 /** Leest een Markdown-artikel met frontmatter (titel, categorie, collectie, samenvatting, routes). */
 export function leesArtikel(slug: string, bron: string): HelpArtikel {
@@ -31,13 +36,95 @@ export function leesArtikel(slug: string, bron: string): HelpArtikel {
     const i = regel.indexOf(': ')
     if (i > 0) velden[regel.slice(0, i).trim()] = regel.slice(i + 2).trim()
   }
-  const inhoud = (m ? bron.slice(m[0].length) : bron).trim()
+  const { inhoud, vragen } = haalControlevragen((m ? bron.slice(m[0].length) : bron).trim())
   return {
-    slug, titel: velden.titel ?? slug, categorie: velden.categorie ?? 'Aan de slag', collectie: velden.collectie === 'newbusiness' ? 'newbusiness' : 'product',
-    samenvatting: velden.samenvatting ?? '', inhoud, routes: (velden.routes ?? '').split(',').map((r) => r.trim()).filter(Boolean),
+    slug, titel: ontquote(velden.titel ?? slug), categorie: velden.categorie ?? 'Aan de slag', collectie: velden.collectie === 'newbusiness' ? 'newbusiness' : 'product',
+    samenvatting: ontquote(velden.samenvatting ?? ''), inhoud, routes: (velden.routes ?? '').split(',').map((r) => r.trim()).filter(Boolean),
     features: FUNCTIES.filter((f) => f.helpartikel === slug).map((f) => f.sleutel),
-    niveau: laagsteStartNiveau(slug),
+    niveau: laagsteStartNiveau(slug), vragen,
   }
+}
+
+/**
+ * De sectie "## Controlevragen" uit de inhoud halen: genummerde vragen met opties "- [x]" (goed) en "- [ ]".
+ * Een vraag zonder precies één goed antwoord of met minder dan twee opties telt niet.
+ */
+export function haalControlevragen(md: string): { inhoud: string; vragen: Controlevraag[] } {
+  const i = md.search(/^## Controlevragen\s*$/m)
+  if (i < 0) return { inhoud: md, vragen: [] }
+  const rest = md.slice(i).split('\n').slice(1)
+  const einde = rest.findIndex((r) => /^## /.test(r))
+  const sectie = einde < 0 ? rest : rest.slice(0, einde)
+  const na = einde < 0 ? '' : rest.slice(einde).join('\n')
+  const vragen: Controlevraag[] = []
+  let huidig: Controlevraag | null = null
+  for (const regel of sectie) {
+    const v = /^\s*\d+[.)]\s+(.+)$/.exec(regel)
+    const o = /^\s*[-*]\s+\[( |x|X)\]\s+(.+)$/.exec(regel)
+    if (v) { huidig = { vraag: v[1]!.trim(), opties: [], goed: -1 }; vragen.push(huidig) }
+    else if (o && huidig) { if (o[1]!.toLowerCase() === 'x') huidig.goed = huidig.opties.length; huidig.opties.push(o[2]!.trim()) }
+  }
+  return { inhoud: `${md.slice(0, i).trimEnd()}${na ? `\n\n${na}` : ''}`.trim(), vragen: vragen.filter((q) => q.opties.length >= 2 && q.goed >= 0 && q.opties.filter((_, j) => j === q.goed).length === 1) }
+}
+
+/** Leestijd in minuten bij 200 woorden per minuut; minstens 1. */
+export function leestijd(md: string): number {
+  const woorden = md.replace(/[#*_`>\[\]()!-]/g, ' ').split(/\s+/).filter(Boolean).length
+  return Math.max(1, Math.round(woorden / 200))
+}
+
+/** De vaste opbouw van een new business-artikel (F21). Geeft de koppen die ontbreken. */
+export const NB_ONDERDELEN = ['Waarom dit werkt', 'Zo doe je het', 'Voorbeeld', 'Valkuilen', 'Zo doe je het in Dealtrace'] as const
+export function ontbrekendeOnderdelen(md: string): string[] {
+  return NB_ONDERDELEN.filter((k) => !new RegExp(`^## ${k}\\s*$`, 'm').test(md))
+}
+
+/**
+ * Wat een gebruiker ziet: platformartikelen en eigen artikelen van de eigen organisatie, zonder verborgen
+ * artikelen. Het niveau bepaalt alleen de volgorde (eerst tot en met je niveau), nooit wat je mag lezen.
+ */
+export function zichtbareArtikelen<T extends Pick<HelpArtikel, 'slug' | 'niveau' | 'organisationId'> & { id?: string }>(artikelen: T[], org: string, verborgen: string[], niveau: string): T[] {
+  const weg = new Set(verborgen)
+  const rang = (n: string | null | undefined) => (n ? ['beginner', 'gevorderd', 'expert'].indexOf(n) : 0)
+  const mijn = rang(niveau)
+  return artikelen.filter((a) => (!a.organisationId || a.organisationId === org) && !weg.has(a.id ?? a.slug))
+    .map((a, i) => ({ a, i })).sort((x, y) => Number(rang(x.a.niveau) > mijn) - Number(rang(y.a.niveau) > mijn) || x.i - y.i).map((x) => x.a)
+}
+
+/** Alias met de naam uit P25; dezelfde functie als voorJou (één definitie, regel 16). */
+export const artikelenVoorJou = (...args: Parameters<typeof voorJou>) => voorJou(...args)
+
+/**
+ * Bewijsplicht voor de AI-assistent (P33): elke helpbron verwijst naar een gevonden artikel en het citaat
+ * staat letterlijk in dat artikel. Een antwoord met helpbronnen zonder één geldig citaat is ongeldig.
+ */
+export function citatenGeldig(antwoord: { bronnen?: { soort: string; ref?: string | null; citaat?: string | null }[] }, gevonden: Pick<HelpArtikel, 'slug' | 'titel' | 'samenvatting' | 'inhoud'>[]): boolean {
+  const help = (antwoord.bronnen ?? []).filter((b) => b.soort === 'help')
+  if (!help.length) return false
+  const norm = (t: string) => t.replace(/\s+/g, ' ').trim().toLowerCase()
+  return help.every((b) => {
+    const a = gevonden.find((x) => x.slug === b.ref)
+    return !!a && !!b.citaat?.trim() && norm(`${a.titel} ${a.samenvatting} ${a.inhoud}`).includes(norm(b.citaat))
+  })
+}
+
+// ── Verkoopverhaal in artikelen (F25) ──────────────────────────────────────
+export const VERHAAL_LEEG = 'Jullie verkoopverhaal is nog niet vastgelegd.'
+export interface VerhaalVoorHelp { kernzin?: string | null; kernbelofte?: string | null; winpunten?: { titel: string; omschrijving?: string }[]; concurrenten?: { naam: string; alsDeKlantZegt?: string | null }[]; terugkomregels?: { reden: string; termijn: string; kanaal: string }[]; branches?: { naam: string }[] }
+/** Vult {{verhaal:kernzin}}, {{verhaal:kernbelofte}}, {{verhaal:winpunten}}, {{verhaal:concurrenten}}, {{verhaal:terugkomregels}} en {{verhaal:branches}} met het leesmodel van de eigen organisatie. */
+export function vulVerhaal(md: string, v: VerhaalVoorHelp | null): string {
+  return md.replace(/\{\{verhaal:([a-z]+)\}\}/g, (_, k: string) => {
+    const lijst = (x: string[]) => (x.length ? x.map((r) => `- ${r}`).join('\n') : VERHAAL_LEEG)
+    switch (k) {
+      case 'kernzin': return v?.kernzin ? `**"${v.kernzin}"**` : VERHAAL_LEEG
+      case 'kernbelofte': return v?.kernbelofte ? `**"${v.kernbelofte}"**` : VERHAAL_LEEG
+      case 'winpunten': return lijst((v?.winpunten ?? []).map((w) => `**${w.titel}**${w.omschrijving ? `: ${w.omschrijving}` : ''}`))
+      case 'concurrenten': return lijst((v?.concurrenten ?? []).map((c) => `**${c.naam}**${c.alsDeKlantZegt ? `: ${c.alsDeKlantZegt}` : ''}`))
+      case 'terugkomregels': return lijst((v?.terugkomregels ?? []).map((r) => `**${r.reden}**: ${r.termijn}, ${r.kanaal.toLowerCase()}`))
+      case 'branches': return lijst((v?.branches ?? []).map((b) => b.naam))
+      default: return ''
+    }
+  })
 }
 
 /** Het niveau waarop de eerste functie van dit artikel in de startindeling aangaat (alleen oriëntatie). */
@@ -93,3 +180,24 @@ export function artikelenVoorDagpakket(functiesAan: string[], artikelen: Pick<He
 
 /** Zoekterm zoals de database hem vergelijkt: kleine letters, zonder accenten. */
 export const zoekNormaal = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+
+// ── Beheer van artikelen (F21) ─────────────────────────────────────────────
+export interface ArtikelInvoer { titel: string; collectie: 'product' | 'newbusiness'; categorie: string; niveau?: string | null; samenvatting: string; inhoud: string; routes?: string[]; vragen?: Controlevraag[]; status: 'concept' | 'gepubliceerd' }
+export const slugVan = (t: string) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80)
+/** Controle vóór opslaan: titel, categorie bij de collectie, inhoud; een gepubliceerd new business-artikel heeft de vijf vaste onderdelen. */
+export function controleerArtikel(a: Partial<ArtikelInvoer>): string[] {
+  const f: string[] = []
+  if (!a.titel || a.titel.trim().length < 4) f.push('Geef het artikel een titel')
+  if (a.collectie !== 'product' && a.collectie !== 'newbusiness') f.push('Kies een collectie')
+  const cats: readonly string[] = a.collectie === 'newbusiness' ? CATEGORIEEN_NEWBUSINESS : CATEGORIEEN_PRODUCT
+  if (!a.categorie || !cats.includes(a.categorie)) f.push('Kies een categorie uit de collectie')
+  if (a.niveau && !['beginner', 'gevorderd', 'expert'].includes(a.niveau)) f.push('Onbekend niveau')
+  if (!a.inhoud?.trim()) f.push('Schrijf de inhoud')
+  if (a.status === 'gepubliceerd' && a.collectie === 'newbusiness' && a.inhoud) {
+    const mist = ontbrekendeOnderdelen(a.inhoud)
+    if (mist.length) f.push(`Een new business-artikel heeft deze onderdelen nog nodig: ${mist.join(', ')}`)
+  }
+  for (const v of a.vragen ?? []) if (!v.vraag?.trim() || (v.opties ?? []).length < 2 || v.goed < 0 || v.goed >= v.opties.length) f.push('Elke controlevraag heeft minstens twee antwoorden en één goed antwoord')
+  if (/[\u2013\u2014]/.test(`${a.titel ?? ''} ${a.samenvatting ?? ''} ${a.inhoud ?? ''}`)) f.push('Gebruik geen gedachtestreepjes')
+  return [...new Set(f)]
+}

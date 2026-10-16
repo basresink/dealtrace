@@ -10,6 +10,10 @@ routes: /instellingen/verkoopverhaal,/richting
 
 Alles wat Dealtrace zegt namens jullie, komt uit het verkoopverhaal: de openingszin in een belscript, de boodschap in een campagne, de briefing voor een bezoek. De salesmanager en de beheerder leggen het vast onder **Instellingen, Verkoop, Verkoopverhaal**.
 
+## Jullie kernzin
+
+{{verhaal:kernzin}}
+
 ## Acht onderdelen
 
 Golden circle, bedrijfsverhaal, ambitie en visie, waarde en belofte, branches, concurrenten, winpunten en terugkomregels. Per onderdeel zie je de status en het versienummer.

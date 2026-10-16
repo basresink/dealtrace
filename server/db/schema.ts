@@ -577,6 +577,7 @@ export const helpGelezen = pgTable('help_gelezen', {
   gebruikerId: text('gebruiker_id').notNull(),
   artikelId: text('artikel_id').notNull(),
   op: ts('op').defaultNow().notNull(),
+  vragenGoed: integer('vragen_goed'),
 }, (t) => [primaryKey({ columns: [t.gebruikerId, t.artikelId] })])
 export const helpFeedback = pgTable('help_feedback', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
@@ -593,6 +594,8 @@ export const helpZoekopdrachten = pgTable('help_zoekopdrachten', {
   term: text('term').notNull(),
   resultaten: integer('resultaten').notNull(),
   op: ts('op').defaultNow().notNull(),
+  soort: text('soort').notNull().default('zoek'),
+  beantwoord: boolean('beantwoord').notNull().default(false),
 })
 
 // P10: belscripts en belblokken (0010_bellen.sql)

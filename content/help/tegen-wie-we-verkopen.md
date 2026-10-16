@@ -1,19 +1,53 @@
 ---
 titel: Tegen wie we verkopen
-categorie: Verkopen
-collectie: product
-samenvatting: Concurrenten, wat je zegt en wanneer we verliezen.
-routes: /richting,/accounts
+categorie: Voorbereiden
+collectie: newbusiness
+samenvatting: Concurrenten, wat de klant zegt, wat je antwoordt en wanneer jullie verliezen.
+routes: /richting
 ---
 
 # Tegen wie we verkopen
 
-Onder **Concurrenten** op Richting staat per concurrent een kaart: de soort (direct, indirect, de klant doet het zelf, of niets doen), wat ze sterk en zwak doen, het onderscheid, **Zo zeg je het**, **Als de klant zegt** met het antwoord, het bewijs en **Wanneer we verliezen**.
+Bijna elke prospect koopt al ergens. Weet tegen wie je het opneemt, dan weet je ook wat je zegt.
 
-## Op de accountkaart
+## Waarom dit werkt
 
-Vanaf niveau Gevorderd kies je bij een account de **huidige leverancier**. Kies je een concurrent, dan zie je meteen wat je zegt en welk bewijs je hebt. Staat het account in de fase gekwalificeerd, dan waarschuwt Dealtrace: "Let op: hier verliezen we vaak van ..." met wat je daar aan doet.
+Een prospect vergelijkt jou altijd met wat hij nu heeft. Ken je die concurrent, dan herken je het bezwaar voor het komt en heb je een antwoord dat de klant aan het denken zet. Ook "niets doen" is een concurrent: de meeste prospects blijven gewoon bij hun vaste leverancier.
 
-## Concurrentiekaart
+## Zo doe je het
 
-Op Gevorderd download je de concurrentiekaart als printbare pagina. Kies in je browser **Afdrukken** en dan **Opslaan als PDF**.
+1. Vraag vroeg in het gesprek bij wie ze nu kopen.
+2. Zoek de concurrent op en lees wat de klant meestal zegt.
+3. Gebruik het antwoord als vraag, niet als verdediging.
+4. Leg vast bij wie ze kopen, zodat je collega's het ook weten.
+
+## Voorbeeld
+
+Pieter van Testtechniek Kabelgoot zegt: "Bij de keten heb ik alles onder één dak." Jij vraagt: "Klopt. Wat kost het je als een monteur een ochtend op materiaal wacht?" Dit hoor je bij jullie vaak, per concurrent:
+
+{{verhaal:concurrenten}}
+
+## Valkuilen
+
+- Slecht praten over de concurrent.
+- Antwoorden voordat je weet bij wie ze kopen.
+- Vergeten de huidige leverancier vast te leggen.
+
+## Zo doe je het in Dealtrace
+
+Onder **Concurrenten** op **Richting** staat per concurrent een kaart: de soort, wat ze sterk en zwak doen, het onderscheid, **Zo zeg je het**, **Als de klant zegt** met het antwoord, het bewijs en **Wanneer we verliezen**. Vanaf Gevorderd kies je op de accountkaart de **huidige leverancier**; je ziet dan meteen wat je zegt. Staat het account op gekwalificeerd, dan waarschuwt Dealtrace: "Let op: hier verliezen we vaak van ...". Op Gevorderd download je de concurrentiekaart als printbare pagina via **Afdrukken** en **Opslaan als PDF**.
+
+## Controlevragen
+
+1. Wat is vaak de grootste concurrent?
+   - [x] Niets doen: blijven bij de vaste leverancier
+   - [ ] Een nieuwe webwinkel
+   - [ ] Een andere afdeling bij de klant
+2. Hoe gebruik je het antwoord bij een bezwaar?
+   - [ ] Als verdediging, zo snel mogelijk
+   - [ ] Je slaat het over
+   - [x] Als vraag die de klant aan het denken zet
+3. Waar leg je vast bij wie de prospect nu koopt?
+   - [ ] In een notitie op je telefoon
+   - [x] Bij huidige leverancier op de accountkaart
+   - [ ] In de bevestigingsmail

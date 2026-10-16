@@ -9,6 +9,8 @@ import { platformCredits, stand, verbruikGebruiker } from '../../utils/credits'
 import { voerAiStapMetCredits } from '../../utils/llm-provider'
 import { vereisFunctie } from '../../utils/sessie'
 
+import { schoonVanNamen, verbodenNamen } from '../../utils/suggesties'
+
 export default defineEventHandler(async (event) => {
   const ctx = await vereisFunctie(event, 'assistent.chat')
   const b = await readBody<{ chatId?: string; tekst?: string; context?: AssistentContext; akkoordKosten?: boolean }>(event)
@@ -40,8 +42,12 @@ export default defineEventHandler(async (event) => {
     const [r] = (await tx.execute(sql`insert into ai_chat_berichten (organisation_id, chat_id, rol, tekst, bronnen, acties, credits) values (${org}, ${voor.chatId}, 'assistent', ${a.tekst}, ${JSON.stringify(a.bronnen)}::jsonb, ${JSON.stringify(a.acties)}::jsonb, ${credits}) returning id, op`)).rows as any[]
     // Geen antwoord in het helpcenter: de vraag gaat als melding naar de beheerder voor een nieuw artikel (F21).
     if (a.doorgestuurd) {
+      // P25: de vraag zonder namen (11.2) als signaal in de statistiek, bij de beheerder en bij de founders.
+      const zonderNamen = schoonVanNamen(tekst, await verbodenNamen(tx)).slice(0, 200)
+      await tx.execute(sql`insert into help_zoekopdrachten (organisation_id, term, resultaten, soort, beantwoord) values (${org}, ${zonderNamen}, 0, 'vraag', false)`)
       const [beh] = (await tx.execute(sql`select id from users where role = 'beheerder' and status = 'actief' limit 1`)).rows as { id: string }[]
-      if (beh) await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${crypto.randomUUID()}, ${org}, ${beh.id}, 'systeem', 'Vraag zonder helpartikel', ${tekst.slice(0, 200)}, '/help', now(), '{}'::jsonb)`)
+      if (beh) await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${crypto.randomUUID()}, ${org}, ${beh.id}, 'systeem', 'Vraag zonder helpartikel', ${zonderNamen}, '/instellingen/help?tab=statistiek', now(), '{}'::jsonb)`)
+      await tx.execute(sql`select dealtrace_meld_founders('Vraag zonder helpartikel', ${zonderNamen}, '/platform/help?tab=vragen')`)
     }
     const st = await stand(tx, org)
     const eigen = await verbruikGebruiker(tx, org, g)

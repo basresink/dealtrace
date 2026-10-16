@@ -1154,3 +1154,4 @@ html.zonlicht body { color: #000; }
 .cn-noot { margin: 0; }
 .bf-rij { text-align: left; font: inherit; color: var(--ink); cursor: pointer; } .bf-rij:hover { border-color: var(--ink); }
 .dd-runs { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.kaart--rustig { background: var(--bg); color: var(--muted); border-style: dashed; }

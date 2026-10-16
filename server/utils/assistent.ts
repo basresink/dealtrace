@@ -38,7 +38,10 @@ Acties zijn altijd een concept of een link. Schrijf kort, in de je-vorm, zonder 
 /** Het materiaal voor één vraag: helpcenter, bevestigd verhaal en (binnen de rechten) het account. */
 export async function materiaalVoor(tx: Tx, gebruikerId: string, vraag: string, context: AssistentContext) {
   const ids = (await zoek(tx, vraag).catch(() => [] as string[])).slice(0, 3)
-  const artikelen = ids.length ? (await leesArtikelen(tx)).filter((a) => ids.includes(a.id)).sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id)) : []
+  // P25: eigen artikelen van de organisatie alleen als bron als de beheerder de eigen kennisbank aanzet.
+  const [kb] = await rijen(tx, sql`select value from org_settings where key = 'helpKennisbank'`)
+  const metEigen = kb?.value === true
+  const artikelen = ids.length ? (await leesArtikelen(tx)).filter((a) => ids.includes(a.id) && (metEigen || !a.organisationId)).sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id)) : []
   const vv = await leesStand(tx)
   let account: Rij | null = null
   if (context.accountId) {

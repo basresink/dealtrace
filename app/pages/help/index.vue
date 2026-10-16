@@ -8,6 +8,7 @@ const zoek = ref(typeof route.query.zoek === 'string' ? route.query.zoek : '')
 const { data } = await useFetch<any>('/api/help', { query: computed(() => ({ zoek: route.query.zoek, collectie: route.query.collectie, niveau: route.query.niveau })), default: () => ({ artikelen: [], resultaten: null, voorJou: { nieuw: [], aanDeSlag: [], bijgewerkt: [] }, kan: {} }) })
 const { functie } = useMe()
 const aiAan = computed(() => !!functie('assistent.chat')?.beschikbaar)
+const beheerAan = computed(() => !!functie('help.eigenArtikelen')?.beschikbaar)
 const { openen: openAi } = useAssistent()
 let timer: any
 watch(zoek, (z) => { clearTimeout(timer); timer = setTimeout(() => router.replace({ query: { ...route.query, zoek: z.trim() || undefined } }), 300) })
@@ -19,7 +20,9 @@ useHead({ title: 'Helpcenter · Dealtrace' })
 
 <template>
   <div>
-    <PaginaKop kicker="Helpcenter" titel="Waar kunnen we je mee helpen?" uitleg="Uitleg over elk scherm en over new business." helpartikel="helpcenter" />
+    <PaginaKop kicker="Helpcenter" titel="Waar kunnen we je mee helpen?" uitleg="Uitleg over elk scherm en over new business." helpartikel="helpcenter">
+      <template v-if="beheerAan" #acties><NuxtLink to="/instellingen/help" class="dd-actie" data-test="help-beheer"><Icoon naam="Pencil" class="dd-actie-icoon" />Artikelen beheren</NuxtLink></template>
+    </PaginaKop>
     <section class="section section--laatste">
       <div class="container">
         <label class="veld"><span class="sr-only">Zoeken in het helpcenter</span><input v-model="zoek" type="search" class="invoer help-zoek" placeholder="Waar kunnen we je mee helpen?" data-test="help-zoek"></label>

@@ -9,6 +9,12 @@ samenvatting: Terugkomregels na een nee, een verlies of een slapende periode, en
 
 Een **terugkomregel** zegt wanneer en hoe je terugkomt na een nee, een verloren deal of een slapende klant. Bijvoorbeeld: "Prijs te hoog: over een halfjaar, bezoek." Op de terugkomdatum staat er een taak met de aanpak, zoals "Terug op 14 januari 2027 · Beslissing uitgesteld · e-mail met nieuwe aanleiding".
 
+## Jullie terugkomregels
+
+Dit zijn de regels van jouw organisatie:
+
+{{verhaal:terugkomregels}}
+
 ## Verschil met het hercontactritme
 
 Het **hercontactritme** is de reeks pogingen tot een afspraak. De terugkomregel bepaalt wanneer die reeks opnieuw begint. Een account zit nooit in twee ritmes tegelijk.

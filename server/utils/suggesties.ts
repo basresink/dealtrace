@@ -37,6 +37,7 @@ export function bevatVerbodenNaam(tekst: string, n: Awaited<ReturnType<typeof ve
   const laag = tekst.toLowerCase()
   return bevatNaam(tekst, n.personen) || n.bedrijven.some((b) => b.length >= 4 && laag.includes(b.toLowerCase()))
 }
+export const schoonVanNamen = (tekst: string, n: Awaited<ReturnType<typeof verbodenNamen>>) => schoon(tekst, n)
 const schoon = (tekst: string, n: Awaited<ReturnType<typeof verbodenNamen>>) => {
   let t = filterNamen(tekst, n.personen.map((p) => ({ naam: p.naam, rol: 'de contactpersoon' })))
   for (const b of n.bedrijven) if (b.length >= 4) t = t.split(new RegExp(b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')).join('een prospect')

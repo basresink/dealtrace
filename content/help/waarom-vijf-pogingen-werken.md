@@ -27,3 +27,5 @@ Het ritme **Koud** heeft vijf stappen: bellen op dag 0, bellen op dag 3, LinkedI
 ## Zo doe je het in Dealtrace
 
 Je ziet bij elke taak "poging 3 van 5". Rond af met de uitkomst; de volgende poging komt vanzelf.
+
+Wil je weten waarom juist de laatste pogingen het verschil maken? Lees [Waarom de vierde en vijfde poging het verschil maken](/help/waarom-de-vierde-en-vijfde-poging-het-verschil-maken).
