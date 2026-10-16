@@ -119,7 +119,7 @@ async function meld(tx: Tx, org: string, soort: '80' | '10', s: CreditsStand) {
   const titel = soort === '80' ? 'AI-credits op 80 procent' : 'Nog 10 procent AI-credits over'
   const tekst = soort === '80' ? `${s.verbruikt} van ${s.pot} AI-credits zijn deze maand gebruikt.` : 'Agents en automatische voorbereiding staan stil tot de nieuwe maand of extra credits. Wat gebruikers zelf vragen, gaat door.'
   for (const u of voor) {
-    await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${crypto.randomUUID()}, ${org}, ${u.id}, 'systeem', ${titel}, ${tekst}, ${u.role === 'beheerder' ? '/instellingen/verbruik' : '/mij'}, now(), '{}'::jsonb)`)
+    await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${crypto.randomUUID()}, ${org}, ${u.id}, 'systeem', ${titel}, ${tekst}, ${u.role === 'beheerder' ? '/instellingen/verbruik' : '/mijn-instellingen#ai-verbruik'}, now(), '{}'::jsonb)`)
   }
 }
 

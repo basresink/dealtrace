@@ -509,6 +509,13 @@ De standaard uit de mockup staat in `app/assets/css/ui-standaard.css`, als laats
 - **Campagnes** (`/campagnes`): kop met het aantal actieve, "+ Campagne" en Filters; tellers per status die filteren; een filterpaneel met status als vinkjes (meer tegelijk, `status=actief,concept`), soort en eigenaar; kaarten met soort (kleur naar kanaal), status, eigenaar, winpunt, doel, cijfers, voortgang met de verwachte stand, tempopil en dagen over. `GET /api/campagnes` geeft `perStatus` en accepteert een lijst statussen.
 - **Campagnebord** (`/campagnes/:id`): terug naar Alle campagnes, kop met soort en status, ritme en looptijd, winpunt en doel met stand, rechts accounts, voortgang en verwacht; een rij met tempo, dagen en alle knoppen (Activeer, Zet om naar taken, verdelen, Pauzeer, Voortgang, + Accounts); Begin hier als drie blokken; kaarten op het bord met "Bekijk taak" naar de open taak.
 
+## Contacten in de opzet van DealDrive
+
+- **Top deze week** (`/contacten`): kop met paarse kicker en de week, zes portretkaarten (rol, initialen, functie en account, inzichten, laatste activiteit, de reden van deze week, klasse). `GET /api/contacten/top`: eerst wie deze week een afspraak of een open taak heeft, aangevuld met beslissers, champions en beïnvloeders van je eigen accounts op score.
+- **Alle contacten** (`/contacten/alle`, `ContactLijst` en `ContactRij`): kruimel met totaal, werkbalk zoals Alle prospects (zoeken, + Contact met `NieuwContactFlyout`, + Taak, + Afspraak, Weergave, sortering, Filters, export voor Expert), filterstrook met meerekenende tellers in de URL (eigenaar, rol, accounts, en vanaf Gevorderd bereikbaarheid, laatste contact en toestemming), contextmenu (bellen, mailen, taak, afspraak, bel me niet, vertrokken), "Toon meer" en de stand per rol. Oude links (`zonderEmail=1`, `geenContact=30`) werken nog.
+- **API**: `GET /api/contacten` geeft nu ook `tellers`, `totaal`, `stand`, `meer` en per rij `inzichten` en `laatsteActiviteitOp` (vijf queries, geen N+1); `GET /api/contacten/export` (CSV, `prospects.export`). De regels staan in `shared/contactFilters.ts`.
+- **Paginakop**: vanaf 720 px staan de knoppen op de hoogte van de titel (`.sec-head--naast`), in PaginaKop, AccountLijst en ContactLijst; op de telefoon eronder.
+
 ## Waar staat wat
 
 | Map | Inhoud |
