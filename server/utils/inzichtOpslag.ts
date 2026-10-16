@@ -6,7 +6,7 @@ import type { gebruikDb } from './db'
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
 
 export interface InzichtInvoer {
-  accountId: string; ownerId: string; agent: string; type: string; onderwerp: string; title: string; beschrijving: string; relevantie: number; zekerheid: number
+  accountId: string; contactId?: string | null; ownerId: string; agent: string; type: string; onderwerp: string; title: string; beschrijving: string; relevantie: number; zekerheid: number
   bron: { soort: string; naam: string; url?: string | null; datum?: string | null }; evidence: { citaat: string; bron: string; datum?: string | null; url?: string | null }[]
   winpuntVoorstel?: string | null; taakVoorstel?: string | null; tegengehouden?: string | null
 }
@@ -19,8 +19,8 @@ export async function bewaarInzicht(tx: Tx, org: string, i: InzichtInvoer) {
     return { id: open.id as string, nieuw: false }
   }
   const id = crypto.randomUUID()
-  await tx.execute(sql`insert into signals (id, organisation_id, account_id, owner_id, onderwerp, agent, type, title, relevance_score, confidence, status, bron, data)
-    values (${id}, ${org}, ${i.accountId}, ${i.ownerId}, ${i.onderwerp}, ${i.agent}, ${i.type}, ${i.title}, ${i.relevantie}, ${i.zekerheid / 100}, ${i.tegengehouden ? 'tegengehouden' : 'nieuw'}, ${i.bron.soort === 'intern' ? 'intern' : 'extern'}, ${JSON.stringify(data)}::jsonb)`)
+  await tx.execute(sql`insert into signals (id, organisation_id, account_id, contact_id, owner_id, onderwerp, agent, type, title, relevance_score, confidence, status, bron, data)
+    values (${id}, ${org}, ${i.accountId}, ${i.contactId ?? null}, ${i.ownerId}, ${i.onderwerp}, ${i.agent}, ${i.type}, ${i.title}, ${i.relevantie}, ${i.zekerheid / 100}, ${i.tegengehouden ? 'tegengehouden' : 'nieuw'}, ${i.bron.soort === 'intern' ? 'intern' : 'extern'}, ${JSON.stringify(data)}::jsonb)`)
   return { id, nieuw: true }
 }
 

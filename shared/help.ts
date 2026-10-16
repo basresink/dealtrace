@@ -23,20 +23,38 @@ export interface HelpArtikel {
 export interface Controlevraag { vraag: string; opties: string[]; goed: number }
 
 export const CATEGORIEEN_PRODUCT = ['Aan de slag', 'Dagelijks werk', 'Prospects', 'Plannen en sturen', 'Inrichten', 'Voor de salesmanager'] as const
-export const CATEGORIEEN_NEWBUSINESS = ['Fundament', 'Voorbereiden', 'Bellen', 'Bezwaren', 'Schrijven', 'Op pad', 'Volhouden', 'Van afspraak naar overdracht', 'Jezelf verbeteren'] as const
+/** Het vak zelf: het eerste hoofdstuk van de new business-academie. */
+export const CATEGORIEEN_VAK = ['Fundament', 'Voorbereiden', 'Bellen', 'Bezwaren', 'Schrijven', 'Op pad', 'Volhouden', 'Van afspraak naar overdracht', 'Jezelf verbeteren'] as const
 /**
- * Nieuwe klanten werven: artikelen uit eigen vakliteratuur (eerst de whitepaper The Perfect Pitch, later
- * het boek Sales Hunter). Een nieuwe bron krijgt een regel in WERVEN_BRONNEN en zo nodig een categorie hier.
+ * Nieuwe klanten werven: een hoofdstuk van de academie met artikelen uit eigen vakliteratuur (eerst de
+ * whitepaper The Perfect Pitch, later het boek Sales Hunter). Elk artikel noemt zijn bron (frontmatter
+ * "bron"). Een nieuwe bron krijgt een regel in WERVEN_BRONNEN en zo nodig een categorie hier.
  */
 export const CATEGORIEEN_WERVEN = ['Waarom klanten kopen', 'Je pitch onderzoeken', 'Je verhaal schrijven', 'Openen en presenteren'] as const
 export const WERVEN_BRONNEN = { perfectPitch: 'Uit de whitepaper The Perfect Pitch' } as const
+/** Alle categorieën van de academie (collectie newbusiness): eerst het vak, dan Nieuwe klanten werven. */
+export const CATEGORIEEN_NEWBUSINESS = [...CATEGORIEEN_VAK, ...CATEGORIEEN_WERVEN] as const
+/** De hoofdstukken van de academie, in deze volgorde op /helpcenter/academie (anker #<sleutel>). */
+export const ACADEMIE_HOOFDSTUKKEN = [
+  { sleutel: 'vak', naam: 'Het vak', uitleg: 'Bellen, schrijven, bezwaren en op pad: zo doe je het, met voorbeelden en controlevragen.', categorieen: CATEGORIEEN_VAK as readonly string[] },
+  { sleutel: 'werven', naam: 'Nieuwe klanten werven', uitleg: 'Uit eigen vakliteratuur: je pitch onderzoeken, schrijven en presenteren. Elk artikel noemt zijn bron.', categorieen: CATEGORIEEN_WERVEN as readonly string[] },
+] as const
+/** Het hoofdstuk van de academie waar een categorie in staat, of null. */
+export const hoofdstukVan = (categorie: string) => ACADEMIE_HOOFDSTUKKEN.find((h) => h.categorieen.includes(categorie)) ?? null
+/**
+ * Tips & Tricks: korte artikelen van het DealDrive-team over slim werken in Dealtrace. Elk artikel noemt
+ * een concreet voordeel, de stappen, een voorbeeld, de valkuilen en linkt naar het artikel van de functie.
+ */
+export const CATEGORIEEN_TIPS = ['Je dag en je week', 'Rond het gesprek', 'Onderweg en sneller', 'Slimmer met je accounts'] as const
+/** De vaste opbouw van een tip. */
+export const TIPS_ONDERDELEN = ['Wat het je oplevert', 'Zo doe je het', 'Voorbeeld', 'Valkuilen'] as const
 
-export type HelpCollectie = 'product' | 'newbusiness' | 'werven'
+export type HelpCollectie = 'product' | 'newbusiness' | 'tips'
 /** De drie collecties van het helpcenter: naam, overzichtspagina en categorieën. */
 export const COLLECTIES: Record<HelpCollectie, { naam: string; overzicht: string; categorieen: readonly string[] }> = {
   product: { naam: 'Hoe werkt Dealtrace', overzicht: '/helpcenter/instructies', categorieen: CATEGORIEEN_PRODUCT },
   newbusiness: { naam: 'New business', overzicht: '/helpcenter/academie', categorieen: CATEGORIEEN_NEWBUSINESS },
-  werven: { naam: 'Nieuwe klanten werven', overzicht: '/helpcenter/werven', categorieen: CATEGORIEEN_WERVEN },
+  tips: { naam: 'Tips & Tricks', overzicht: '/helpcenter/tips', categorieen: CATEGORIEEN_TIPS },
 }
 export const isCollectie = (c: unknown): c is HelpCollectie => typeof c === 'string' && c in COLLECTIES
 /** "Aan de slag" op de startpagina: vijf vaste artikelen (F21). */
@@ -44,6 +62,8 @@ export const AAN_DE_SLAG = ['je-eerste-dag-in-dealtrace', 'vandaag-lezen-en-afro
 export const FEEDBACK_REDENEN = ['Klopt niet', 'Onduidelijk', 'Mist iets', 'Anders'] as const
 
 const ontquote = (t: string) => t.replace(/^"(.*)"$/, '$1')
+/** De collectie uit de frontmatter; de oude collectie werven hoort sinds 0056 bij de academie. */
+export const collectieUit = (c: unknown): HelpCollectie => (c === 'werven' ? 'newbusiness' : isCollectie(c) ? c : 'product')
 
 /** Leest een Markdown-artikel met frontmatter (titel, categorie, collectie, samenvatting, routes). */
 export function leesArtikel(slug: string, bron: string): HelpArtikel {
@@ -55,7 +75,7 @@ export function leesArtikel(slug: string, bron: string): HelpArtikel {
   }
   const { inhoud, vragen } = haalControlevragen((m ? bron.slice(m[0].length) : bron).trim())
   return {
-    slug, titel: ontquote(velden.titel ?? slug), categorie: velden.categorie ?? 'Aan de slag', collectie: isCollectie(velden.collectie) ? velden.collectie : 'product',
+    slug, titel: ontquote(velden.titel ?? slug), categorie: velden.categorie ?? 'Aan de slag', collectie: collectieUit(velden.collectie),
     samenvatting: ontquote(velden.samenvatting ?? ''), inhoud, routes: (velden.routes ?? '').split(',').map((r) => r.trim()).filter(Boolean),
     features: FUNCTIES.filter((f) => f.helpartikel === slug).map((f) => f.sleutel),
     niveau: laagsteStartNiveau(slug), vragen, bron: velden.bron ? ontquote(velden.bron) : null,
@@ -92,8 +112,8 @@ export function leestijd(md: string): number {
 
 /** De vaste opbouw van een new business-artikel (F21). Geeft de koppen die ontbreken. */
 export const NB_ONDERDELEN = ['Waarom dit werkt', 'Zo doe je het', 'Voorbeeld', 'Valkuilen', 'Zo doe je het in Dealtrace'] as const
-export function ontbrekendeOnderdelen(md: string): string[] {
-  return NB_ONDERDELEN.filter((k) => !new RegExp(`^## ${k}\\s*$`, 'm').test(md))
+export function ontbrekendeOnderdelen(md: string, onderdelen: readonly string[] = NB_ONDERDELEN): string[] {
+  return onderdelen.filter((k) => !new RegExp(`^## ${k}\\s*$`, 'm').test(md))
 }
 
 /**
@@ -153,10 +173,12 @@ function laagsteStartNiveau(slug: string): string | null {
 
 /**
  * Het helpartikel van een route: eerst een artikel dat de route noemt, anders het artikel van de zijbalkfunctie.
- * Artikelen uit Nieuwe klanten werven noemen een scherm alleen voor "Probeer het"; ze zijn nooit het artikel van een scherm.
+ * Artikelen uit Nieuwe klanten werven en Tips & Tricks noemen een scherm alleen voor "Probeer het"; ze zijn
+ * nooit het artikel van een scherm.
  */
-export function artikelVoorRoute(route: string, alleArtikelen: (Pick<HelpArtikel, 'slug' | 'routes'> & { collectie?: string })[]): string | null {
-  const artikelen = alleArtikelen.filter((a) => a.collectie !== 'werven')
+export function artikelVoorRoute(route: string, alleArtikelen: (Pick<HelpArtikel, 'slug' | 'routes'> & { collectie?: string; categorie?: string })[]): string | null {
+  const werven: readonly string[] = CATEGORIEEN_WERVEN
+  const artikelen = alleArtikelen.filter((a) => a.collectie !== 'tips' && a.collectie !== 'werven' && !(a.categorie && werven.includes(a.categorie)))
   const [pad, query = ''] = route.split('?')
   const kandidaten = [route, pad!]
   for (const k of kandidaten) {
@@ -208,7 +230,7 @@ export const slugVan = (t: string) => t.toLowerCase().normalize('NFD').replace(/
 
 // \u2500\u2500 Helpcenter-adressen (/helpcenter) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 /** Paden onder /helpcenter die geen artikel zijn; een eigen artikel krijgt zo'n slug nooit. */
-export const HELPCENTER_GERESERVEERD = ['instructies', 'academie', 'werven', 'categorie'] as const
+export const HELPCENTER_GERESERVEERD = ['instructies', 'academie', 'werven', 'tips', 'categorie'] as const
 /** Het adres van een artikel en van een categorie in het helpcenter. */
 export const helpLink = (slug: string) => `/helpcenter/${slug}`
 export const categorieLink = (categorie: string) => `/helpcenter/categorie/${slugVan(categorie)}`
@@ -241,8 +263,12 @@ export const CATEGORIE_UITLEG: Record<string, string> = {
   'Je pitch onderzoeken': 'Van eigenschap naar voordeel, klantsituaties, waardestatements en je klanten zelf vragen.',
   'Je verhaal schrijven': 'Factoids en humanizers, je eigen testimonial, een userstory en je pitch in één zin.',
   'Openen en presenteren': 'Aandacht vragen, de entree, de foray met je vragen en je product als oplossing.',
+  'Je dag en je week': 'Vandaag, belblokken die zichzelf vullen, de terugkomdatum, de horizon en je dashboard.',
+  'Rond het gesprek': 'De Pitstop, je verslag inspreken, transcripten, inzichten als taak en contacten aan taken.',
+  'Onderweg en sneller': 'Kansen langs de route, offline werken, de rijmodus, zoeken met Ctrl K en concepten in één tik.',
+  'Slimmer met je accounts': 'De AI-chat met context, campagnes met winpunten, accountplannen, datakwaliteit en eigen velden.',
 }
-/** Controle vóór opslaan: titel, categorie bij de collectie, inhoud; een gepubliceerd new business- of wervingsartikel heeft de vijf vaste onderdelen. */
+/** Controle vóór opslaan: titel, categorie bij de collectie, inhoud; een gepubliceerd academieartikel heeft de vijf vaste onderdelen, een tip de vier van een tip. */
 export function controleerArtikel(a: Partial<ArtikelInvoer>): string[] {
   const f: string[] = []
   if (!a.titel || a.titel.trim().length < 4) f.push('Geef het artikel een titel')
@@ -251,8 +277,8 @@ export function controleerArtikel(a: Partial<ArtikelInvoer>): string[] {
   if (!a.categorie || !cats.includes(a.categorie)) f.push('Kies een categorie uit de collectie')
   if (a.niveau && !['beginner', 'gevorderd', 'expert'].includes(a.niveau)) f.push('Onbekend niveau')
   if (!a.inhoud?.trim()) f.push('Schrijf de inhoud')
-  if (a.status === 'gepubliceerd' && (a.collectie === 'newbusiness' || a.collectie === 'werven') && a.inhoud) {
-    const mist = ontbrekendeOnderdelen(a.inhoud)
+  if (a.status === 'gepubliceerd' && (a.collectie === 'newbusiness' || a.collectie === 'tips') && a.inhoud) {
+    const mist = ontbrekendeOnderdelen(a.inhoud, a.collectie === 'tips' ? TIPS_ONDERDELEN : NB_ONDERDELEN)
     if (mist.length) f.push(`Dit artikel heeft deze onderdelen nog nodig: ${mist.join(', ')}`)
   }
   for (const v of a.vragen ?? []) if (!v.vraag?.trim() || (v.opties ?? []).length < 2 || v.goed < 0 || v.goed >= v.opties.length) f.push('Elke controlevraag heeft minstens twee antwoorden en één goed antwoord')

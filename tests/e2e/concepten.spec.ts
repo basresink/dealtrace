@@ -22,9 +22,19 @@ test.describe('Concepten', () => {
     await expect(kaarten.first()).toContainText(/Prospect|Klant/)
   })
 
-  test('filters op status, soort, agent, account en periode staan in de URL en tellen mee', async ({ page }) => {
+  test('Filters rechtsboven in de kop; status, soort, agent en periode in het paneel, in de URL en met tellers', async ({ page }) => {
     await login(page, 'u-07')
     await ga(page, '/concepten')
+    // Geen los zoekveld meer en geen losse pillen: alles achter Filters, rechts naast de titel.
+    await expect(page.getByTestId('concepten-zoek')).toHaveCount(0)
+    await expect(page.getByTestId('filter-status')).toHaveCount(0)
+    const titel = (await page.locator('h1.title').boundingBox())!
+    const filters = (await page.getByTestId('concepten-filters').boundingBox())!
+    expect(filters.y).toBeLessThan(titel.y + titel.height)
+    expect(filters.x).toBeGreaterThan(titel.x + titel.width)
+    await page.getByTestId('concepten-filters').click()
+    const paneel = page.getByTestId('concepten-filterpaneel')
+    for (const id of ['filter-status', 'filter-soort', 'filter-agent', 'filter-periode']) await expect(paneel.getByTestId(id)).toBeVisible()
     const open = Number(await page.getByTestId('status-open').locator('.pil-teller').textContent())
     await expect(page.getByTestId('concepten-aantal')).toContainText(`${open} `)
     await page.getByTestId('status-alle').click()
@@ -38,14 +48,14 @@ test.describe('Concepten', () => {
     await page.getByTestId('status-verstuurd').click()
     await expect(page).toHaveURL(/status=verstuurd/)
     await expect.poll(async () => [...new Set((await page.getByTestId('concept-status').allTextContents()).map((s) => s.trim()))]).toEqual(['Verstuurd'])
-    await page.getByTestId('concepten-filters').click()
     await page.getByTestId('agent-schrijver').click()
     await expect(page).toHaveURL(/agent=schrijver/)
     await page.getByTestId('sinds-kwartaal').click()
     await expect(page).toHaveURL(/sinds=kwartaal/)
-    await page.getByTestId('concepten-zoek').fill('bestaat-niet-xyz')
-    await expect(page).toHaveURL(/zoek=bestaat-niet-xyz/)
+    // Zoeken op account loopt via de URL (het zoekicoon in de kop); de zoekterm staat in het paneel.
+    await ga(page, `${new URL(page.url()).pathname}${new URL(page.url()).search}&zoek=bestaat-niet-xyz`)
     await expect(page.getByTestId('concepten-aantal')).toContainText('0 concepten')
+    await expect(page.getByTestId('concepten-zoekterm')).toHaveText('bestaat-niet-xyz')
     await page.getByTestId('concepten-reset').click()
     await expect(page).not.toHaveURL(/zoek=|type=|agent=|sinds=|status=/)
   })

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 // De tabbladen van de accountkaart en de contactkaart (opzet uit DealDrive), één component voor beide:
 // Tijdlijn (met filter en + Taak, + Afspraak, + Mail), Inzichten, Taken, Notities, E-mails, Afspraken,
-// Gespreksverslagen, Deals, Campagnes, Documenten, Reis en kwalificatie en Eigen velden, met de vensters.
+// Gespreksverslagen, Campagnes, Documenten en Reis en kwalificatie, met de vensters. Deals en eigen velden
+// hebben geen eigen tabblad meer: deals staan in de tijdlijn, eigen velden in het Info-venster.
 // Het tabblad staat in de URL (?tab=). De data komt van GET /api/accounts/:id/tabbladen of
 // GET /api/contacten/:id/tabbladen. Op de accountkaart staat bij elk item de naam van het contact met een
 // link naar de contactkaart; op de contactkaart hoort alles bij dat ene contact. De inhoud van Reis en
-// kwalificatie en Eigen velden levert de pagina (slots).
+// kwalificatie levert de pagina (slot).
 import { ACTIE_LABEL, HERKOMST_LABEL, PRIO_LABEL, isDringend } from '~~/shared/taken'
 
 const props = defineProps<{
@@ -47,8 +48,8 @@ const notities = computed(() => momenten.value.filter((x) => x.soort === 'notiti
 const openTaken = computed(() => t.value.taken.filter((x: any) => ['open', 'bezig'].includes(x.status)))
 
 // Tabbladen, met het actieve tabblad in de URL.
-type Tab = 'tijdlijn' | 'inzichten' | 'taken' | 'notities' | 'mails' | 'afspraken' | 'verslagen' | 'deals' | 'campagnes' | 'documenten' | 'kwalificatie' | 'eigenvelden'
-const TABS: Tab[] = ['tijdlijn', 'inzichten', 'taken', 'notities', 'mails', 'afspraken', 'verslagen', 'deals', 'campagnes', 'documenten', 'kwalificatie', 'eigenvelden']
+type Tab = 'tijdlijn' | 'inzichten' | 'taken' | 'notities' | 'mails' | 'afspraken' | 'verslagen' | 'campagnes' | 'documenten' | 'kwalificatie'
+const TABS: Tab[] = ['tijdlijn', 'inzichten', 'taken', 'notities', 'mails', 'afspraken', 'verslagen', 'campagnes', 'documenten', 'kwalificatie']
 const tab = computed<Tab>(() => (TABS.includes(route.query.tab as Tab) ? route.query.tab as Tab : 'tijdlijn'))
 function kiesTab(x: Tab) { router.replace({ query: { ...route.query, tab: x === 'tijdlijn' ? undefined : x } }) }
 const kwalificatieLabel = computed(() => (props.account.soort === 'prospect' ? 'Reis en kwalificatie' : 'Kwalificatie'))
@@ -100,7 +101,6 @@ const verslag = ref<any | null>(null)
 const nieuweTaak = ref(false)
 const nieuweAfspraak = ref(false)
 const mailOpen = ref(false)
-const documentOpen = ref(false)
 const kanMail = computed(() => !!functie('mail.versturen')?.beschikbaar && (!props.contact || !!props.contact.email))
 const accountRef = computed(() => ({ id: props.account.id, naam: props.account.naam }))
 const ververs = () => emit('ververs')
@@ -108,10 +108,6 @@ const notitie = ref('')
 async function bewaarNotitie() {
   if (!notitie.value.trim()) return
   try { await $fetch(`/api/accounts/${props.account.id}/notities`, { method: 'POST', body: { tekst: notitie.value, contactId: props.contact?.id } }); notitie.value = ''; ververs() } catch (e) { toast.toon(foutTekst(e), 'fout') }
-}
-async function verwijderDocument(d: any) {
-  if (!confirm(`${d.naam} verwijderen?`)) return
-  try { await $fetch(`/api/accounts/${props.account.id}/documenten/${d.id}`, { method: 'DELETE' }); toast.toon('Document verwijderd.'); ververs() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 const tabs = computed(() => [
   { id: 'tijdlijn' as const, label: 'Tijdlijn', n: tlAlles.value.length },
@@ -121,11 +117,9 @@ const tabs = computed(() => [
   { id: 'mails' as const, label: 'E-mails', n: t.value.mails.length },
   { id: 'afspraken' as const, label: 'Afspraken', n: t.value.afspraken.length },
   { id: 'verslagen' as const, label: 'Gespreksverslagen', n: t.value.verslagen.length },
-  { id: 'deals' as const, label: 'Deals', n: t.value.deals.length },
   { id: 'campagnes' as const, label: 'Campagnes', n: t.value.campagnes.length },
   { id: 'documenten' as const, label: 'Documenten', n: t.value.documenten.length },
   { id: 'kwalificatie' as const, label: kwalificatieLabel.value, n: 0 },
-  { id: 'eigenvelden' as const, label: 'Eigen velden', n: 0 },
 ])
 </script>
 
@@ -267,27 +261,6 @@ const tabs = computed(() => [
           </ul>
         </template>
 
-        <!-- Deals -->
-        <template v-else-if="tab === 'deals'">
-          <div class="ak-tabkop"><h2 class="ak-tabtitel">Deals ({{ t.deals.length }})</h2>
-            <div class="toolbar-buttons"><button v-if="kanOverdragen && functie('overdracht.basis')?.beschikbaar" type="button" class="dd-actie dd-actie--primair" @click="emit('overdragen')"><Icoon naam="ArrowRight" class="dd-actie-icoon" />Overdragen</button><NuxtLink to="/funnel" class="dd-actie dd-actie--secundair">Open funnel →</NuxtLink></div>
-          </div>
-          <p v-if="opContact" class="meta ak-hint" data-test="deals-account">Deals horen bij het account. Dit is de stand van {{ account.naam }}; overdragen doe je op de <NuxtLink :to="`/accounts/${account.id}?tab=deals`" class="tekst-link">accountkaart</NuxtLink>.</p>
-          <p v-else class="meta ak-hint">Een prospect wordt een deal zodra je hem overdraagt na de eerste afspraak. De deal loopt daarna in DealDrive of je CRM; wat die terugmelden staat hier.</p>
-          <p v-if="!t.deals.length" class="ak-leeg">Nog geen deals voor dit account. Plan een eerste afspraak en draag daarna over.</p>
-          <ol v-else class="tl-lijst">
-            <li v-for="d in t.deals" :key="d.id" class="tl-item">
-              <span class="tl-spoor tl-spoor--deal" aria-hidden="true" />
-              <component :is="d.externUrl ? 'a' : 'div'" :href="d.externUrl ?? undefined" target="_blank" rel="noopener" class="tl-kaart" :class="{ 'tl-kaart--klik': d.externUrl }" :data-test="`ak-deal-${d.id}`">
-                <span class="tl-kop"><span class="tl-soort tl-soort--deal">{{ DEAL_FASE[d.fase] ?? d.fase }}</span><span class="tl-type">{{ OV_NAAR[d.naar] ?? d.naar }}</span><span v-if="d.waarde" class="tl-bron tnum">€ {{ Number(d.waarde).toLocaleString('nl-NL') }}</span><span class="tl-datum tnum">{{ datumLang(d.op) }}</span></span>
-                <span class="tl-titel">{{ d.titel }}</span>
-                <span class="tl-tekst">Overgedragen door {{ d.door }}<template v-if="d.eigenaar"> · eigenaar in DealDrive: {{ d.eigenaar }}</template><template v-if="d.gewonnenOp"> · gewonnen op {{ datumLang(d.gewonnenOp) }}</template></span>
-                <span v-if="d.externUrl" class="ak-rij-cta mt-8">Open deal →</span>
-              </component>
-            </li>
-          </ol>
-        </template>
-
         <!-- Campagnes -->
         <template v-else-if="tab === 'campagnes'">
           <div class="ak-tabkop"><h2 class="ak-tabtitel">Campagnes ({{ t.campagnes.length }})</h2><NuxtLink to="/campagnes" class="dd-actie dd-actie--secundair">Alle campagnes →</NuxtLink></div>
@@ -305,21 +278,9 @@ const tabs = computed(() => [
           </ul>
         </template>
 
-        <!-- Documenten -->
+        <!-- Documenten: gedeeld met de kennisbank (DocumentenTab). -->
         <template v-else-if="tab === 'documenten'">
-          <div class="ak-tabkop"><h2 class="ak-tabtitel">Documenten ({{ t.documenten.length }})</h2><button type="button" class="dd-actie dd-actie--primair" data-test="document-uploaden" @click="documentOpen = true"><Icoon naam="Upload" class="dd-actie-icoon" />Document uploaden</button></div>
-          <p class="meta ak-hint">{{ opContact ? `Documenten bij ${onderwerp}, en foto's en opnames uit afspraken met dit contact.` : 'Offertes, presentaties en foto\'s bij dit account en zijn contacten. Foto\'s en opnames uit afspraken staan hier ook.' }}</p>
-          <p v-if="!t.documenten.length" class="ak-leeg">Nog geen documenten voor {{ dit }}. Klik <strong>Document uploaden</strong>.</p>
-          <ul v-else class="ak-rijen">
-            <li v-for="d in t.documenten" :key="d.id" class="ak-doc">
-              <a :href="`/api/bijlagen/${d.id}`" target="_blank" rel="noopener" class="ak-rij" :data-test="`ak-document-${d.id}`">
-                <span class="ak-doc-icoon"><Icoon :naam="d.mime.startsWith('image/') ? 'Image' : d.mime === 'application/pdf' ? 'FileText' : 'File'" :grootte="18" /></span>
-                <span class="ak-rij-info"><span class="ak-rij-titel">{{ d.naam }}</span><span class="meta tnum">{{ grootte(d.grootte) }} · {{ datumLang(d.op) }}<template v-if="d.door"> · {{ d.door }}</template></span></span>
-                <span class="ak-rij-cta">Open →</span>
-              </a>
-              <button v-if="d.magVerwijderen" type="button" class="dd-act dd-act--icoon dd-act--gevaar" :aria-label="`${d.naam} verwijderen`" @click="verwijderDocument(d)"><Icoon naam="Trash2" :grootte="14" /></button>
-            </li>
-          </ul>
+          <DocumentenTab :account="accountRef" :contact="contact ? { id: contact.id, naam: contact.naam } : null" :documenten="t.documenten" :afspraak-bijlagen="t.afspraakBijlagen ?? []" @ververs="ververs" />
         </template>
 
         <!-- Reis en kwalificatie: de inhoud levert de pagina. -->
@@ -328,11 +289,6 @@ const tabs = computed(() => [
           <slot name="kwalificatie" />
         </template>
 
-        <!-- Eigen velden: de inhoud levert de pagina. -->
-        <template v-else-if="tab === 'eigenvelden'">
-          <div class="ak-tabkop"><h2 class="ak-tabtitel">Eigen velden</h2></div>
-          <slot name="eigenvelden" />
-        </template>
       </div>
     </section>
 
@@ -343,7 +299,6 @@ const tabs = computed(() => [
     <NieuweTaakFlyout :open="nieuweTaak" :account="accountRef" :contact="contact ? { id: contact.id, naam: contact.naam } : null" @sluit="nieuweTaak = false" @gemaakt="nieuweTaak = false; ververs()" />
     <PlanAfspraakFlyout :open="nieuweAfspraak" :account="accountRef" :contact-id="contact?.id ?? null" @sluit="nieuweAfspraak = false" @gepland="nieuweAfspraak = false; ververs()" />
     <MailFlyout v-if="kanMail" :open="mailOpen" :account="contact ? { id: account.id, naam: contact.naam } : accountRef" :aan="contact ? contact.naam : mailAan ?? null" :contact-id="contact?.id ?? null" @sluit="mailOpen = false" @verstuurd="mailOpen = false; ververs()" />
-    <DocumentFlyout :open="documentOpen" :account="contact ? { id: account.id, naam: contact.naam } : accountRef" :contact-id="contact?.id ?? null" @sluit="documentOpen = false" @bewaard="documentOpen = false; ververs()" />
   </div>
 </template>
 

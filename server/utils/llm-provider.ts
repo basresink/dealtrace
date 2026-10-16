@@ -9,6 +9,7 @@ import { logAgentRun, toets, type Voorstel } from './agents/bewaker'
 import { boek, geefVrij, metCredits, reserveer, type ReserveerOpties, type Reservering } from './credits'
 import { mockGids } from './assistent'
 import { mockOpdracht } from '../../shared/spraakOpdracht'
+import { mockDocumentAntwoord } from '../../shared/kennisbank'
 import { promptVoor, providerVoor } from './aiKoppeling'
 import { metOrganisatie } from './db'
 
@@ -71,7 +72,8 @@ export const MOCK_GENERATOREN: Record<string, (materiaal: any) => unknown> = {
   },
 }
 // De Gids (P33): hetzelfde antwoord voor een gewone vraag, een vraag met account en webonderzoek.
-for (const soort of ['assistent', 'assistentUitgebreid', 'webonderzoek']) MOCK_GENERATOREN[soort] = (m) => mockGids(m)
+// Kennisbank: een vraag over één document (materiaal met document) krijgt een antwoord uit dat document.
+for (const soort of ['assistent', 'assistentUitgebreid', 'webonderzoek']) MOCK_GENERATOREN[soort] = (m) => (m?.document ? mockDocumentAntwoord(m) : mockGids(m))
 // De Waarnemer (P19): een oordeel met letterlijk citaat en de URL uit de vondst.
 MOCK_GENERATOREN.webonderzoek = (m) => {
   if (!m?.waarnemer) return mockGids(m)

@@ -45,13 +45,13 @@ export async function zorgVoorBelscripts(client: Pick<pg.Client, 'query'>, start
 }
 
 /** P13: de zes meetingsoorten uit de startset voor elke organisatie (idempotent op slug). */
-export async function zorgVoorMeetingsoorten(client: Pick<pg.Client, 'query'>, startset: { slug: string; naam: string; type: string; duurMin: number; vorm: string; data: unknown }[]): Promise<number> {
+export async function zorgVoorMeetingsoorten(client: Pick<pg.Client, 'query'>, startset: { slug: string; naam: string; type: string; categorie?: string; duurMin: number; vorm: string; data: unknown }[]): Promise<number> {
   // Elke organisatie krijgt de soorten uit de startset die ze nog niet heeft (P30: Ongepland bezoek);
   // bestaande soorten, ook uitgezette, blijven zoals de beheerder ze maakte.
   const orgs = (await client.query(`select o.id from organisations o where o.status <> 'systeem'`)).rows as { id: string }[]
   let n = 0
   for (const o of orgs) {
-    for (const m of startset) n += (await client.query(`insert into meetingsoorten (organisation_id, slug, naam, type, duur_min, vorm, data) values ($1, $2, $3, $4, $5, $6, $7) on conflict (organisation_id, slug) do nothing`, [o.id, m.slug, m.naam, m.type, m.duurMin, m.vorm, m.data])).rowCount ?? 0
+    for (const m of startset) n += (await client.query(`insert into meetingsoorten (organisation_id, slug, naam, type, duur_min, vorm, data, categorie) values ($1, $2, $3, $4, $5, $6, $7, $8) on conflict (organisation_id, slug) do nothing`, [o.id, m.slug, m.naam, m.type, m.duurMin, m.vorm, m.data, m.categorie ?? (m.vorm === 'bezoek' ? 'bezoek' : 'meeting')])).rowCount ?? 0
   }
   return n
 }

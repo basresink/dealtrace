@@ -4,7 +4,7 @@
 // van een afspraak lopen hier; de fase verandert alleen via het meldpunt (meldGebeurtenis).
 import { sql } from 'drizzle-orm'
 import { analyseerVerslag } from './agents/notulist'
-import { afspraakTitel, conflicten, herhalingsDatums, isEersteAfspraak, meetingUitkomst, MEETINGSOORTEN_START, type Herhaling, type Meetingsoort, type Vorm } from '../../shared/agenda'
+import { afspraakTitel, categorieVan, conflicten, vormVoorSoort, herhalingsDatums, isEersteAfspraak, meetingUitkomst, MEETINGSOORTEN_START, type Herhaling, type Meetingsoort, type Vorm } from '../../shared/agenda'
 import { nlMoment, nlTijdstip, plusDagen } from '../../shared/datum'
 import { schrijfAudit } from './audit'
 import { gebruikDb } from './db'
@@ -110,12 +110,12 @@ export function agenda(tx?: Tx) {
 /** De startset in een organisatie (idempotent op slug); seed en "Startset aanvullen" gebruiken hetzelfde. */
 export async function zaaiMeetingsoorten(tx: Tx, org: string) {
   for (const m of MEETINGSOORTEN_START) {
-    await tx.execute(sql`insert into meetingsoorten (organisation_id, slug, naam, type, duur_min, vorm, data) values (${org}, ${m.slug}, ${m.naam}, ${m.type}, ${m.duurMin}, ${m.vorm}, ${JSON.stringify(m.data)}::jsonb)
+    await tx.execute(sql`insert into meetingsoorten (organisation_id, slug, naam, type, categorie, duur_min, vorm, data) values (${org}, ${m.slug}, ${m.naam}, ${m.type}, ${m.categorie}, ${m.duurMin}, ${m.vorm}, ${JSON.stringify(m.data)}::jsonb)
       on conflict (organisation_id, slug) do nothing`)
   }
 }
 export async function meetingsoorten(tx: Tx): Promise<(Meetingsoort & { id: string; actief: boolean })[]> {
-  return (await rijen(tx, sql`select * from meetingsoorten order by type, duur_min desc, naam`)).map((m) => ({ id: m.id, slug: m.slug, naam: m.naam, type: m.type, duurMin: m.duur_min, vorm: m.vorm, data: m.data, actief: m.actief }))
+  return (await rijen(tx, sql`select * from meetingsoorten order by type, duur_min desc, naam`)).map((m) => ({ id: m.id, slug: m.slug, naam: m.naam, type: m.type, categorie: categorieVan(m), duurMin: m.duur_min, vorm: m.vorm, data: m.data, actief: m.actief }))
 }
 
 // ── Plannen ──────────────────────────────────────────────────────────────────
@@ -156,7 +156,8 @@ async function planEen(tx: Tx, org: string, door: Planner, p: PlanInvoer, nu = n
   if (Number.isNaN(start.getTime())) fout(422, 'Kies een datum en starttijd')
   const duur = Math.max(5, Math.min(480, Number(p.duurMin) || soort!.duur_min))
   const eind = new Date(start.getTime() + duur * 60_000)
-  const vorm: Vorm = (['bezoek', 'online', 'telefoon'] as const).includes(p.vorm as Vorm) ? p.vorm as Vorm : soort!.vorm
+  // De vorm volgt uit het type: een soort uit de categorie bezoek is een bezoek, een meeting online of telefonisch.
+  const vorm: Vorm = vormVoorSoort(soort!, p.vorm)
   const locatie = p.locatie ?? (vorm === 'bezoek' && a ? [a.data?.adres, a.city].filter(Boolean).join(', ') || null : null)
   const id = p.id && /^[0-9a-f-]{36}$/i.test(p.id) ? p.id : crypto.randomUUID()
   if (p.id) {

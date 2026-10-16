@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Alle contacten (F04), in de opzet van DealDrive en gelijk aan AccountLijst: kop met kruimel
-// en totaal, uitleg, werkbalk (zoeken, + Contact, + Taak, + Afspraak, Weergave, sortering,
-// Filters, export), een uitklapbare filterstrook met meerekenende tellers (alles in de URL),
+// en totaal, uitleg, werkbalk (zoeken, + Contact, + Taak, + Afspraak, Filters, export), een
+// uitklapbaar filterpaneel met meerekenende tellers (alles in de URL) en daarin ook de sortering
+// (standaard Rol) en de weergave (lijst, compact, kaarten),
 // één witte kaart met ContactRij-rijen, "Toon meer" en de stand per rol onderaan.
 // Filters: eigenaar ("Van mijn accounts" staat standaard aan), rol, prospects of klanten, en
 // vanaf Gevorderd bereikbaarheid, laatste contact en toestemming (bel me niet, geen mail).
@@ -21,7 +22,6 @@ const nieuweAfspraak = ref(false)
 const taakAccount = ref<{ id: string; naam: string } | null>(null)
 const taakContact = ref<{ id: string; naam: string; functie?: string | null } | null>(null)
 const afspraakAccount = ref<{ id: string; naam: string } | null>(null)
-const keuzemenu = ref<'weergave' | 'sortering' | null>(null)
 const zoekOpen = ref(!!route.query.q)
 const zoekVeld = ref<HTMLInputElement | null>(null)
 async function wisselZoek() {
@@ -51,9 +51,8 @@ const sort = computed(() => String(data.value.sort ?? route.query.sort ?? 'rol')
 const SORTERINGEN = [['rol', 'Rol'], ['naam', 'Naam'], ['bedrijf', 'Bedrijf'], ['laatsteContact', 'Laatste activiteit']] as const
 const WEERGAVEN = [['lijst', 'Lijst', 'List'], ['compact', 'Compact', 'LayoutList'], ['kaarten', 'Kaarten', 'LayoutGrid']] as const
 const sortLabel = computed(() => SORTERINGEN.find((x) => x[0] === sort.value)?.[1] ?? 'Rol')
-function kiesSortering(w: string) { keuzemenu.value = null; zetQuery({ sort: w === 'rol' ? undefined : w }) }
-function kiesWeergave(w: 'lijst' | 'compact' | 'kaarten') { keuzemenu.value = null; weergave.value = w }
-function wisselMenu(m: 'weergave' | 'sortering') { menu.value = null; keuzemenu.value = keuzemenu.value === m ? null : m }
+function kiesSortering(w: string) { zetQuery({ sort: w === 'rol' ? undefined : w }) }
+function kiesWeergave(w: 'lijst' | 'compact' | 'kaarten') { weergave.value = w }
 const teller = (groep: string, w: string) => data.value.tellers?.[groep]?.[w] ?? 0
 const groepen = computed(() => {
   const g: { sleutel: string; label: string; waarden: { w: string; label: string }[] }[] = [
@@ -80,9 +79,9 @@ function wisselFilter(groep: string, w: string) {
 
 // Contextmenu (rechtsklik of lang drukken).
 const menu = ref<{ x: number; y: number; c: any } | null>(null)
-function openMenu(e: MouseEvent, c: any) { e.preventDefault(); keuzemenu.value = null; menu.value = { x: Math.min(e.clientX, window.innerWidth - 230), y: Math.min(e.clientY, window.innerHeight - 380), c } }
-function sluitMenus() { menu.value = null; keuzemenu.value = null }
-function opEscape(e: KeyboardEvent) { if (e.key === 'Escape' && (menu.value || keuzemenu.value)) sluitMenus() }
+function openMenu(e: MouseEvent, c: any) { e.preventDefault(); menu.value = { x: Math.min(e.clientX, window.innerWidth - 230), y: Math.min(e.clientY, window.innerHeight - 380), c } }
+function sluitMenus() { menu.value = null }
+function opEscape(e: KeyboardEvent) { if (e.key === 'Escape' && menu.value) sluitMenus() }
 onMounted(() => { window.addEventListener('click', sluitMenus); window.addEventListener('keydown', opEscape) })
 onBeforeUnmount(() => { window.removeEventListener('click', sluitMenus); window.removeEventListener('keydown', opEscape) })
 function taakVoor(c: any | null) { taakAccount.value = c ? { id: c.accountId, naam: c.bedrijf } : null; taakContact.value = c ? { id: c.id, naam: c.naam, functie: c.functie ?? null } : null; nieuweTaak.value = true }
@@ -112,22 +111,6 @@ const resultaat = computed(() => `${data.value.aantal} ${data.value.aantal === 1
             <button type="button" class="dd-actie dd-actie--zwart" data-test="nieuw-contact-knop" @click="nieuwOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Contact</button>
             <button type="button" class="dd-actie dd-actie--secundair" data-test="lijst-taak" @click="taakVoor(null)"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
             <button type="button" class="dd-actie dd-actie--secundair" data-test="lijst-afspraak" @click="afspraakVoor(null)"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
-            <div v-if="data.kan?.weergaven" class="keuzemenu-houder">
-              <button type="button" class="dd-actie dd-actie--secundair" aria-haspopup="menu" :aria-expanded="keuzemenu === 'weergave'" data-test="weergave-knop" @click.stop="wisselMenu('weergave')">
-                <Icoon :naam="WEERGAVEN.find((w) => w[0] === weergave)?.[2] ?? 'List'" class="dd-actie-icoon" />Weergave<Icoon naam="ChevronDown" :grootte="14" class="keuzemenu-pijl" :class="{ 'keuzemenu-pijl--open': keuzemenu === 'weergave' }" />
-              </button>
-              <ul v-if="keuzemenu === 'weergave'" class="keuzemenu" role="menu" @click.stop>
-                <li v-for="w in WEERGAVEN" :key="w[0]"><button type="button" role="menuitemradio" :aria-checked="weergave === w[0]" class="keuzemenu-item" :class="{ 'keuzemenu-item--aan': weergave === w[0] }" :data-test="`weergave-${w[0]}`" @click="kiesWeergave(w[0])"><Icoon :naam="w[2]" :grootte="16" />{{ w[1] }}</button></li>
-              </ul>
-            </div>
-            <div class="keuzemenu-houder">
-              <button type="button" class="dd-actie dd-actie--secundair" aria-haspopup="menu" :aria-expanded="keuzemenu === 'sortering'" :aria-label="`Sortering: ${sortLabel}`" data-test="sortering" @click.stop="wisselMenu('sortering')">
-                <Icoon naam="ArrowUpDown" class="dd-actie-icoon" />{{ sortLabel }}<Icoon naam="ChevronDown" :grootte="14" class="keuzemenu-pijl" :class="{ 'keuzemenu-pijl--open': keuzemenu === 'sortering' }" />
-              </button>
-              <ul v-if="keuzemenu === 'sortering'" class="keuzemenu" role="menu" @click.stop>
-                <li v-for="o in SORTERINGEN" :key="o[0]"><button type="button" role="menuitemradio" :aria-checked="sort === o[0]" class="keuzemenu-item" :class="{ 'keuzemenu-item--aan': sort === o[0] }" :data-test="`sorteer-${o[0]}`" @click="kiesSortering(o[0])">{{ o[1] }}</button></li>
-              </ul>
-            </div>
             <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'dd-actie--filters-aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="filters-knop" @click="filtersOpen = !filtersOpen">
               <Icoon naam="Filter" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="pil-teller pil-teller--zwart">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="keuzemenu-pijl" :class="{ 'keuzemenu-pijl--open': filtersOpen }" />
             </button>
@@ -149,6 +132,14 @@ const resultaat = computed(() => `${data.value.aantal} ${data.value.aantal === 1
               v-for="w in g.waarden" :key="w.w" type="button" class="filter-pil" :class="{ 'filter-pil--aan': actief(g.sleutel, w.w) }"
               :aria-pressed="actief(g.sleutel, w.w)" :disabled="!actief(g.sleutel, w.w) && teller(g.sleutel, w.w) === 0" :data-test="`filter-${g.sleutel}-${w.w}`" @click="wisselFilter(g.sleutel, w.w)"
             >{{ w.label }} <span class="pil-teller">{{ teller(g.sleutel, w.w) }}</span></button>
+          </div>
+          <div class="filter-groep" role="radiogroup" aria-label="Sorteer op" data-test="filter-sortering">
+            <span class="filter-label">Sorteer op</span>
+            <button v-for="o in SORTERINGEN" :key="o[0]" type="button" role="radio" class="filter-pil" :class="{ 'filter-pil--aan': sort === o[0] }" :aria-checked="sort === o[0]" :data-test="`sorteer-${o[0]}`" @click="kiesSortering(o[0])">{{ o[1] }}</button>
+          </div>
+          <div v-if="data.kan?.weergaven" class="filter-groep" role="radiogroup" aria-label="Weergave" data-test="filter-weergave">
+            <span class="filter-label">Weergave</span>
+            <button v-for="w in WEERGAVEN" :key="w[0]" type="button" role="radio" class="filter-pil" :class="{ 'filter-pil--aan': weergave === w[0] }" :aria-checked="weergave === w[0]" :data-test="`weergave-${w[0]}`" @click="kiesWeergave(w[0])"><Icoon :naam="w[2]" :grootte="14" class="ct-pil-icoon" />{{ w[1] }}</button>
           </div>
           <div class="filter-groep filter-groep--eind"><button type="button" class="dd-tekstknop" data-test="reset-filters" @click="zoek = ''; router.replace({ query: {} })">Reset filters</button></div>
         </div>
@@ -198,6 +189,7 @@ const resultaat = computed(() => `${data.value.aantal} ${data.value.aantal === 1
 </template>
 
 <style scoped>
+.ct-pil-icoon { margin-right: 6px; }
 .ct-lijst { margin: 0; padding: 0; list-style: none; background: var(--wit); border: 1px solid var(--border); }
 .ct-lijst--kaarten { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); background: transparent; border: 0; }
 .ct-stand { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 0; }

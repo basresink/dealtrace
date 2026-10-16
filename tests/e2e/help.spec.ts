@@ -5,15 +5,15 @@ import { apiLogin, ga, login } from './hulp'
 test.describe.configure({ mode: 'serial' })
 
 const ROUTES = [
-  '/', '/acties', '/acties?tab=inzichten', '/prospects', '/contacten', '/reizen', '/notificaties', '/mij', '/leadgenerator', '/helpcenter',
+  '/', '/taken', '/taken?weergave=horizon', '/inzichten', '/prospects', '/contacten', '/reizen', '/notificaties', '/mij', '/leadgenerator', '/helpcenter',
   '/instellingen', '/instellingen/regels', '/instellingen/ritme', '/instellingen/agents', '/instellingen/gebruikers', '/instellingen/niveaus',
   '/instellingen/audit', '/instellingen/eigen-velden', '/instellingen/nee-redenen', '/instellingen/organisatie', '/instellingen/abonnement', '/planning',
 ]
 
 test.describe('Hulp per scherm', () => {
-  test('Hulp op Acties opent "Een taak afronden met een uitkomst"; Escape sluit', async ({ page }) => {
+  test('Hulp op Taken opent "Een taak afronden met een uitkomst"; Escape sluit', async ({ page }) => {
     await login(page, 'u-01')
-    await ga(page, '/acties')
+    await ga(page, '/taken')
     await page.getByTestId('hulp-knop').click()
     const f = page.getByTestId('hulp-flyout')
     await expect(f.locator('#hulp-titel')).toHaveText('Een taak afronden met een uitkomst')
@@ -53,6 +53,7 @@ test.describe('Helpcenter', () => {
   test('zoeken vindt "Poging" zonder accenten; niets gevonden geeft de lege staat', async ({ page }) => {
     await login(page, 'u-01')
     await ga(page, '/helpcenter')
+    await page.getByTestId('help-zoekicoon').click()
     await page.getByTestId('help-zoek').fill('Pogíng')
     await expect(page.getByTestId('help-resultaten')).toContainText('Wat betekent poging 3 van 5')
     await page.getByTestId('help-zoek').fill('zebrastreepjeswoord')
@@ -127,7 +128,7 @@ test.describe('Helpcenter op de telefoon', () => {
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(breedte)
       await ga(page, '/helpcenter/vandaag')
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(breedte)
-      await ga(page, '/acties')
+      await ga(page, '/taken')
       await page.getByTestId('hulp-knop').click()
       const box = await page.getByTestId('hulp-flyout').boundingBox()
       expect(box!.width).toBeGreaterThanOrEqual(breedte - 1)

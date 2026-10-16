@@ -3,7 +3,7 @@
 import { expect, test } from '@playwright/test'
 import { ga, login } from './hulp'
 
-const TABS = ['tijdlijn', 'inzichten', 'taken', 'notities', 'mails', 'afspraken', 'verslagen', 'deals', 'campagnes', 'documenten', 'kwalificatie', 'eigenvelden']
+const TABS = ['tijdlijn', 'inzichten', 'taken', 'notities', 'mails', 'afspraken', 'verslagen', 'campagnes', 'documenten', 'kwalificatie']
 
 test.describe('contactkaart', () => {
   test('kop, statstrook en dezelfde tabbladen als de accountkaart', async ({ page }) => {
@@ -27,8 +27,9 @@ test.describe('contactkaart', () => {
     await page.getByTestId('tab-kwalificatie').click()
     await expect(page).toHaveURL(/tab=kwalificatie/)
     await expect(page.getByTestId('naar-accountkaart')).toHaveAttribute('href', '/accounts/pr-06?tab=kwalificatie')
-    await page.getByTestId('tab-deals').click()
-    await expect(page.getByTestId('deals-account')).toBeVisible()
+    // Deals en Eigen velden hebben geen tabblad meer; eigen velden staan in het Info-venster.
+    await expect(page.getByTestId('tab-deals')).toHaveCount(0)
+    await expect(page.getByTestId('tab-eigenvelden')).toHaveCount(0)
     await page.getByTestId('contact-info-knop').click()
     await expect(page.getByTestId('contact-info-flyout')).toBeVisible()
     await page.keyboard.press('Escape')

@@ -1,7 +1,7 @@
 ---
 titel: Controle is het koopmotief
 categorie: Waarom klanten kopen
-collectie: werven
+collectie: newbusiness
 samenvatting: Alleen wie controle mist of meer controle wil, gaat op zoek naar een oplossing. Wie dat niet voelt, is op dit moment geen prospect.
 bron: Uit de whitepaper The Perfect Pitch
 routes: /prospects

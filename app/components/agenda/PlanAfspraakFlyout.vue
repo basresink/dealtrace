@@ -1,12 +1,13 @@
 <script setup lang="ts">
 // Plan een afspraak in de opzet van DealDrive (NieuweAfspraakFlyout): klant en contactpersoon als
 // zoekveld (het contact gefilterd op de klant; een contact kiezen zonder klant zet de klant), type
-// afspraak (meetingsoort, vult duur, vorm en agenda), vorm, titel (verplicht, voorgesteld uit soort en
+// afspraak (meetingsoort in twee groepen: Afspraak op locatie en Meeting op afstand; vult duur en agenda),
+// de vorm die uit het type volgt (een bezoek, of online of telefonisch bij een meeting), titel (verplicht, voorgesteld uit soort en
 // klant), datum, start, duur met de vrije momenten, herhaling, voor wie (Gevorderd), collega's
 // uitnodigen, locatie, herinnering, aanleiding of context en beschrijving. Op de telefoon een
 // schuifvenster van onderen. De afspraak krijgt account_id en contact_id en staat daarmee op de
 // accountkaart en de contactkaart.
-import { HERHALINGEN, herhalingsDatums, type Herhaling } from '~~/shared/agenda'
+import { CATEGORIE_LABEL, HERHALINGEN, VORMEN_PER_CATEGORIE, categorieVan, herhalingsDatums, vormVoorSoort, type Categorie, type Herhaling } from '~~/shared/agenda'
 import { plusDagen } from '~~/shared/datum'
 const props = defineProps<{ open: boolean; account?: { id: string; naam: string } | null; taskId?: string | null; aanleiding?: string | null; voorWie?: string | null; voorstel?: { datum?: string; start?: string; duurMin?: number; vorm?: string; soort?: string } | null; contactId?: string | null }>()
 const emit = defineEmits<{ sluit: []; gepland: [id: string] }>()
@@ -20,12 +21,6 @@ type Contact = { id: string; naam: string; rol: string | null; functie: string |
 const klant = ref<{ id: string; naam: string; plaats?: string | null } | null>(null)
 const contact = ref<Contact | null>(null)
 const klantContacten = ref<Contact[]>([])
-const klantZoek = ref('')
-const klantTreffers = ref<any[]>([])
-const klantActief = ref(false)
-const contactZoek = ref('')
-const contactTreffers = ref<Contact[]>([])
-const contactActief = ref(false)
 const vrij = ref<{ start: string; eind: string }[]>([])
 const bezig = ref(false)
 const fout = ref('')
@@ -35,8 +30,16 @@ const vandaag = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe
 const leeg = () => ({ meetingsoortId: '', vorm: 'online', titel: '', datum: vandaag(), start: '10:00', duurMin: 30, herhaling: 'geen' as Herhaling, herhalingTot: plusDagen(vandaag(), 91), voorWie: '', deelnemers: [] as string[], locatie: '', herinneringMin: 15, aanleiding: '', beschrijving: '' })
 const f = reactive(leeg())
 const soort = computed(() => soorten.value.find((s) => s.id === f.meetingsoortId))
-const klantSoorten = computed(() => soorten.value.filter((s) => s.type === 'klant'))
-const interneSoorten = computed(() => soorten.value.filter((s) => s.type !== 'klant'))
+// Type afspraak in twee groepen zoals in DealDrive; de vaste volgorde eerst, eigen soorten daarna.
+const VOLGORDE = ['gepland-bezoek', 'ongepland-bezoek', 'demo-op-locatie', 'event', 'beurs', 'online-meeting', 'belafspraak', 'demo', 'webinar', 'accountoverleg']
+const plek = (slug: string) => { const i = VOLGORDE.indexOf(slug); return i < 0 ? VOLGORDE.length : i }
+const groepen = computed(() => (['bezoek', 'meeting'] as Categorie[]).map((c) => ({
+  categorie: c, label: CATEGORIE_LABEL[c],
+  soorten: soorten.value.filter((s) => categorieVan(s) === c).sort((a, b) => plek(a.slug) - plek(b.slug) || a.naam.localeCompare(b.naam, 'nl')),
+})).filter((g) => g.soorten.length))
+const categorie = computed<Categorie>(() => (soort.value ? categorieVan(soort.value) : 'meeting'))
+const VORM_LABEL: Record<string, string> = { bezoek: 'Bezoek op locatie', online: 'Online', telefoon: 'Telefoon' }
+const vormen = computed(() => VORMEN_PER_CATEGORIE[categorie.value])
 const intern = computed(() => soort.value?.type === 'intern')
 const voorgesteldeTitel = computed(() => soort.value ? (klant.value ? `${soort.value.naam} · ${klant.value.naam}` : soort.value.naam) : '')
 
@@ -46,7 +49,6 @@ watch(() => props.open, async (o) => {
   const nr = ++laadNr
   Object.assign(f, leeg(), { aanleiding: props.aanleiding ?? '', voorWie: props.voorWie ?? '' })
   titelHandmatig.value = false; fout.value = ''; deelnemerKeuze.value = ''
-  klantZoek.value = ''; klantTreffers.value = []; contactZoek.value = ''; contactTreffers.value = []
   contact.value = null
   const zelfde = !!props.account && klant.value?.id === props.account.id
   klant.value = props.account ?? null
@@ -60,19 +62,24 @@ watch(() => props.open, async (o) => {
   soorten.value = (m.soorten ?? []).filter((s: any) => s.actief)
   voorWieLijst.value = (a?.gebruikers ?? []).filter((u: any) => u.id !== me.value?.gebruiker.id)
   collegas.value = c ?? []
-  const eerste = soorten.value.find((s) => s.slug === (props.voorstel?.soort ?? 'kennismaking')) ?? soorten.value.find((s) => s.type === 'klant')
+  // Een voorstel met een vorm kiest een soort uit de passende groep: een bezoek is een Gepland bezoek.
+  const v = props.voorstel
+  const pastBij = (s: any) => !v?.vorm || categorieVan(s) === (v.vorm === 'bezoek' ? 'bezoek' : 'meeting')
+  const opSlug = (slug: string) => soorten.value.find((s) => s.slug === slug)
+  let eerste = opSlug(v?.soort ?? 'kennismaking')
+  if (!eerste || !pastBij(eerste)) eerste = opSlug(v?.vorm === 'bezoek' ? 'gepland-bezoek' : v?.vorm === 'telefoon' ? 'belafspraak' : 'online-meeting')
+  if (!eerste || !pastBij(eerste)) eerste = soorten.value.find((s) => s.type === 'klant' && pastBij(s)) ?? soorten.value.find((s) => s.type === 'klant')
   if (eerste) f.meetingsoortId = eerste.id
   // Een voorstel (tussenstop, P14; klik in de agenda): datum, start in het gat, duur en vorm.
-  const v = props.voorstel
-  if (v) { await nextTick(); Object.assign(f, v.datum ? { datum: v.datum } : {}, v.start ? { start: v.start } : {}, v.duurMin ? { duurMin: v.duurMin } : {}, v.vorm ? { vorm: v.vorm } : {}) }
+  if (v) { await nextTick(); Object.assign(f, v.datum ? { datum: v.datum } : {}, v.start ? { start: v.start } : {}, v.duurMin ? { duurMin: v.duurMin } : {}); if (soort.value) f.vorm = vormVoorSoort(soort.value, v.vorm) }
 }, { immediate: true })
-watch(soort, (s) => { if (s) { f.duurMin = s.duurMin; f.vorm = s.vorm; f.herinneringMin = s.data?.herinneringMin ?? 15 } })
+// De vorm volgt uit het type: een bezoek uit de groep Afspraak, online of telefonisch bij een Meeting.
+watch(soort, (s) => { if (s) { f.duurMin = s.duurMin; f.vorm = vormVoorSoort(s); f.herinneringMin = s.data?.herinneringMin ?? 15 } })
 watch(voorgesteldeTitel, (t) => { if (!titelHandmatig.value) f.titel = t }, { immediate: true })
 function typTitel(e: Event) { f.titel = (e.target as HTMLInputElement).value; titelHandmatig.value = !!f.titel.trim() }
 
 // Klant: zoeken op naam; kiezen laadt de contacten (beslisser eerst) en kiest er een voor.
-let klantTimer: any
-watch(klantZoek, (q) => { clearTimeout(klantTimer); klantTimer = setTimeout(async () => { klantTreffers.value = q.trim().length >= 2 ? await $fetch<any[]>('/api/accounts/kies', { query: { q: q.trim() } }).catch(() => []) : [] }, 200) })
+const zoekKlant = (q: string) => zoekAccounts(q)
 async function laadContacten(k: { id: string } | null) {
   klantContacten.value = []
   if (contact.value && contact.value.accountId !== k?.id) contact.value = null
@@ -84,23 +91,17 @@ async function laadContacten(k: { id: string } | null) {
   if (!contact.value) contact.value = lijst.find((c) => c.id === props.contactId) ?? lijst[0] ?? null
 }
 watch(klant, (k) => laadContacten(k))
-function kiesKlant(a: { id: string; naam: string; plaats?: string | null }) { klant.value = a; klantZoek.value = ''; klantTreffers.value = []; klantActief.value = false }
+function kiesKlant(a: { id: string; naam: string; plaats?: string | null }) { klant.value = a }
 function wisKlant() { klant.value = null; contact.value = null }
 
 // Contact: met klant filteren we de contacten van die klant, zonder klant zoeken we overal.
-let contactTimer: any
-watch(contactZoek, (q) => {
-  clearTimeout(contactTimer)
-  if (klant.value) return
-  contactTimer = setTimeout(async () => { contactTreffers.value = q.trim().length >= 2 ? await $fetch<Contact[]>('/api/contacten/kies', { query: { q: q.trim() } }).catch(() => []) : [] }, 200)
-})
-const contactSuggesties = computed(() => {
-  if (!klant.value) return contactTreffers.value
-  const q = contactZoek.value.trim().toLowerCase()
-  return klantContacten.value.filter((c) => !q || c.naam.toLowerCase().includes(q) || String(c.functie ?? '').toLowerCase().includes(q))
-})
+async function zoekContact(q: string): Promise<Contact[]> {
+  if (!klant.value) return (await zoekContacten(q)) as Contact[]
+  const z = q.trim().toLowerCase()
+  return klantContacten.value.filter((c) => !z || c.naam.toLowerCase().includes(z) || String(c.functie ?? '').toLowerCase().includes(z))
+}
 function kiesContact(c: Contact) {
-  contact.value = c; contactZoek.value = ''; contactActief.value = false
+  contact.value = c
   if (!klant.value || klant.value.id !== c.accountId) klant.value = { id: c.accountId, naam: c.accountNaam, plaats: c.plaats ?? null }
 }
 
@@ -161,13 +162,7 @@ async function plan() {
               <span class="pa-keuze-tekst"><strong>{{ klant.naam }}</strong><span v-if="klant.plaats" class="meta"> · {{ klant.plaats }}</span></span>
               <button v-if="!account" type="button" class="pa-wis" aria-label="Wis gekozen klant" data-test="pa-klant-wis" @click="wisKlant"><Icoon naam="X" :grootte="16" /></button>
             </div>
-            <div v-else class="pa-zoek">
-              <input v-model="klantZoek" class="invoer" placeholder="Zoek op klantnaam" autocomplete="off" aria-labelledby="pa-klant-label" data-test="pa-klant" @focus="klantActief = true" @blur="klantActief = false">
-              <ul v-if="klantActief && klantTreffers.length" class="pa-lijst" role="listbox">
-                <li v-for="x in klantTreffers" :key="x.id"><button type="button" class="pa-optie" :data-test="`pa-klant-${x.id}`" @mousedown.prevent="kiesKlant(x)">{{ x.naam }}<span v-if="x.plaats" class="meta"> · {{ x.plaats }}</span></button></li>
-              </ul>
-              <p v-else-if="klantActief && klantZoek.trim().length >= 2" class="pa-leeg">Geen klant gevonden.</p>
-            </div>
+            <ZoekKiezer v-else :zoek="zoekKlant" placeholder="Zoek op klantnaam" labelledby="pa-klant-label" data-test="pa-klant" :optie-test="(x) => `pa-klant-${x.id}`" :sub="(x) => x.plaats" leeg="Geen klant gevonden." @kies="kiesKlant" />
           </div>
 
           <div class="veld">
@@ -176,24 +171,26 @@ async function plan() {
               <span class="pa-keuze-tekst"><strong>{{ contact.naam }}</strong><span v-if="contact.functie || contact.rol" class="meta"> · {{ contact.functie ?? contact.rol }}</span></span>
               <button type="button" class="pa-wis" aria-label="Wis gekozen contactpersoon" data-test="pa-contact-wis" @click="contact = null"><Icoon naam="X" :grootte="16" /></button>
             </div>
-            <div v-else class="pa-zoek">
-              <input v-model="contactZoek" class="invoer" :placeholder="klant ? `Zoek een contact bij ${klant.naam}` : 'Zoek op contactnaam'" autocomplete="off" aria-labelledby="pa-contact-label" data-test="pa-contact" @focus="contactActief = true" @blur="contactActief = false">
-              <ul v-if="contactActief && contactSuggesties.length" class="pa-lijst" role="listbox">
-                <li v-for="c in contactSuggesties" :key="c.id"><button type="button" class="pa-optie" :data-test="`pa-contact-${c.id}`" @mousedown.prevent="kiesContact(c)">{{ c.naam }}<span class="meta"> · {{ [c.functie ?? c.rol, klant ? null : c.accountNaam].filter(Boolean).join(' · ') }}</span></button></li>
-              </ul>
-              <p v-else-if="contactActief && (klant ? !klantContacten.length : contactZoek.trim().length >= 2)" class="pa-leeg">{{ klant ? 'Deze klant heeft nog geen contactpersonen.' : 'Geen contactpersoon gevonden.' }}</p>
-            </div>
+            <ZoekKiezer
+              v-else :zoek="zoekContact" :min="klant ? 0 : 2" :sleutel="`${klant?.id ?? ''}:${klantContacten.length}`"
+              :placeholder="klant ? `Zoek een contact bij ${klant.naam}` : 'Zoek op contactnaam'" labelledby="pa-contact-label" data-test="pa-contact"
+              :optie-test="(c) => `pa-contact-${c.id}`" :sub="(c) => [c.functie ?? c.rol, klant ? null : c.accountNaam].filter(Boolean).join(' · ')"
+              :leeg="klant ? (klantContacten.length ? 'Geen contactpersoon gevonden.' : 'Deze klant heeft nog geen contactpersonen.') : 'Geen contactpersoon gevonden.'"
+              @kies="kiesContact"
+            />
           </div>
 
           <label class="veld"><span class="veld-label">Type afspraak <span class="veld-verplicht">*</span></span>
             <select v-model="f.meetingsoortId" class="invoer" required data-test="pa-soort">
-              <optgroup label="Met een klant"><option v-for="s in klantSoorten" :key="s.id" :value="s.id">{{ s.naam }} ({{ s.duurMin }} min)</option></optgroup>
-              <optgroup v-if="interneSoorten.length" label="Intern overleg"><option v-for="s in interneSoorten" :key="s.id" :value="s.id">{{ s.naam }} ({{ s.duurMin }} min)</option></optgroup>
+              <optgroup v-for="g in groepen" :key="g.categorie" :label="g.label" :data-test="`pa-groep-${g.categorie}`"><option v-for="s in g.soorten" :key="s.id" :value="s.id" :data-test="`pa-soort-${s.slug}`">{{ s.naam }}</option></optgroup>
             </select>
           </label>
           <p v-if="soort?.data?.doel" class="veld-uitleg pa-krap">{{ soort.data.doel }}</p>
-          <div class="ag-keuzes" role="radiogroup" aria-label="Vorm">
-            <button v-for="v in [['bezoek', 'Bezoek'], ['online', 'Online'], ['telefoon', 'Telefoon']]" :key="v[0]" type="button" class="uitkomst" :class="{ 'uitkomst--aan': f.vorm === v[0] }" role="radio" :aria-checked="f.vorm === v[0]" :data-test="`pa-vorm-${v[0]}`" @click="f.vorm = v[0]!">{{ v[1] }}</button>
+          <div class="pa-vorm" data-test="pa-vorm">
+            <div class="ag-keuzes" role="radiogroup" aria-label="Vorm">
+              <button v-for="v in vormen" :key="v" type="button" class="uitkomst" :class="{ 'uitkomst--aan': f.vorm === v }" role="radio" :aria-checked="f.vorm === v" :data-test="`pa-vorm-${v}`" @click="f.vorm = v">{{ VORM_LABEL[v] }}</button>
+            </div>
+            <p class="veld-uitleg" data-test="pa-vorm-uitleg">{{ categorie === 'bezoek' ? 'Een afspraak op locatie: komt op de route van die dag.' : 'Een meeting op afstand: kies online of telefonisch.' }}</p>
           </div>
 
           <label class="veld"><span class="veld-label">Titel <span class="veld-verplicht">*</span></span>
@@ -248,15 +245,12 @@ async function plan() {
 .pa-body { display: flex; flex-direction: column; gap: 16px; }
 .pa-body > .veld { margin: 0; }
 .pa-krap { margin-top: -8px; }
+.pa-vorm { margin-top: -8px; display: flex; flex-direction: column; gap: 6px; }
+.pa-vorm .veld-uitleg { margin: 0; }
 .pa-keuze { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 4px 4px 4px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface); }
 .pa-keuze-tekst { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pa-wis { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex-shrink: 0; border: 0; background: none; color: var(--muted); cursor: pointer; border-radius: var(--radius); }
 .pa-wis:hover { color: var(--ink); background: var(--wit); }
-.pa-zoek { position: relative; }
-.pa-lijst { position: absolute; z-index: 5; top: calc(100% + 2px); left: 0; right: 0; max-height: 240px; overflow-y: auto; margin: 0; padding: 4px 0; list-style: none; background: var(--wit); border: 1px solid var(--ink); border-radius: var(--radius); }
-.pa-optie { display: block; width: 100%; min-height: 40px; padding: 8px 12px; border: 0; background: none; font: inherit; font-size: var(--fs-klein); text-align: left; color: var(--ink); cursor: pointer; }
-.pa-optie:hover, .pa-optie:focus-visible { background: var(--yellow-zacht); }
-.pa-leeg { margin: 6px 0 0; font-size: var(--fs-klein); color: var(--muted); }
 .pa-rij3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end; }
 .pa-reeks { margin: 0 0 12px; }
 .pa-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -266,6 +260,5 @@ async function plan() {
   .pa-rij3 { grid-template-columns: 1fr 1fr; }
   .pa-chip-weg { width: 44px; height: 44px; }
   .pa-wis { width: 44px; height: 44px; }
-  .pa-optie { min-height: 44px; }
 }
 </style>

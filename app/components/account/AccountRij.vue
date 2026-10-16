@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Eén rij in de lijst van prospects en klanten, in de opzet van DealDrive: logovlak met
-// initialen, naam met klassepil, kanalen en feiten, een regel met gekleurde streep
+// Eén rij in de lijst van prospects en klanten, in de opzet van DealDrive: logovlak met het
+// logo (eigen logo-URL of favicon van de website) of anders de initialen, naam met klassepil, kanalen en feiten, een regel met gekleurde streep
 // (aanleiding, achterstallige next-action of fase) en rechts de contactpersonen.
 // De naam is de link; de streklink maakt de hele rij klikbaar zonder geneste links.
 import { CONTACTROL_LABEL } from '~~/shared/contactgegevens'
@@ -47,7 +47,7 @@ const rolLabel = (rol: string) => CONTACTROL_LABEL[rol as keyof typeof CONTACTRO
 
 <template>
   <li class="acc-rij" :class="`acc-rij--${weergave ?? 'lijst'}`" :data-account="rij.id">
-    <span class="acc-logo" :style="{ background: kleurUitNaam(rij.name) }" aria-hidden="true">{{ initialen(rij.name) }}</span>
+    <AccountLogo class="acc-logo" :naam="rij.name" :initialen="initialen(rij.name)" :kleur="kleurUitNaam(rij.name)" :logo-url="rij.logoUrl" :website="rij.website" :domein="rij.domein" :logo-uit="rij.logoUit" :grootte="weergave === 'compact' ? 40 : 56" />
     <div class="acc-info">
       <h3 class="acc-naam">
         <NuxtLink :to="`/accounts/${rij.id}`" class="acc-link">{{ rij.name }}</NuxtLink>
@@ -70,10 +70,15 @@ const rolLabel = (rol: string) => CONTACTROL_LABEL[rol as keyof typeof CONTACTRO
     </div>
     <div class="acc-contacten">
       <template v-if="contacten.length">
-        <span v-for="c in contacten" :key="c.id" class="acc-contact" :style="{ background: kleurUitNaam(c.id) }" :title="`${c.naam} · ${rolLabel(c.rol)}`">{{ initialen(c.naam) }}<span class="sr-only">{{ c.naam }}</span></span>
+        <span v-for="c in contacten" :key="c.id" class="acc-contact" :style="{ background: kleurUitNaam(c.id) }" :title="`${c.naam} · ${rolLabel(c.rol)}`"><img v-if="c.fotoUrl" :src="c.fotoUrl" alt="" class="acc-contact-foto" loading="lazy"><template v-else>{{ initialen(c.naam) }}</template><span class="sr-only">{{ c.naam }}</span></span>
         <span v-if="rest" class="acc-contact acc-contact--rest" :title="`Nog ${rest} ${rest === 1 ? 'contactpersoon' : 'contactpersonen'}`">+{{ rest }}</span>
       </template>
       <span v-else class="acc-geen-contact">Geen contactpersoon</span>
     </div>
   </li>
 </template>
+
+<style scoped>
+.acc-contact { overflow: hidden; }
+.acc-contact-foto { width: 100%; height: 100%; object-fit: cover; }
+</style>

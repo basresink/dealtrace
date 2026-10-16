@@ -1,7 +1,7 @@
 ---
 titel: Schrijf je eigen testimonial
 categorie: Je verhaal schrijven
-collectie: werven
+collectie: newbusiness
 samenvatting: Schrijf zelf op wat een tevreden klant over je product zou zeggen. Het dwingt je om je waarde kort en natuurlijk te vertellen.
 bron: Uit de whitepaper The Perfect Pitch
 routes: /richting

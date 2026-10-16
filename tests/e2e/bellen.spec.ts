@@ -74,10 +74,10 @@ test.describe('Belblokken en belmodus', () => {
     expect((await page.request.put('/api/mij/belblokken', { data: { blokken: [] } })).status()).toBe(403)
   })
 
-  test('Vandaag wijst naar het belblok', async ({ page }) => {
+  test('Vandaag heeft geen belblokvak meer; Belblokken staat in het menu', async ({ page }) => {
     await login(page, 'u-03')
     await ga(page, '/')
-    await expect(page.getByTestId('werkblok')).toContainText('BELBLOK')
+    await expect(page.getByTestId('werkblok')).toHaveCount(0)
   })
 })
 

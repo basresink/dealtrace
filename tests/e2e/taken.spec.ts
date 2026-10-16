@@ -1,4 +1,4 @@
-// P07: Vandaag, Acties (taken en inzichten), één afrondpad en het hercontactritme.
+// P07: Vandaag, Taken (voorheen Acties), inzichten, één afrondpad en het hercontactritme.
 import { expect, test, type APIRequestContext } from '@playwright/test'
 import { apiLogin, ga, login } from './hulp'
 
@@ -32,13 +32,14 @@ test.describe('Vandaag', () => {
     const totaal = Number(await page.getByTestId('kolom-taken').locator('.vp-num').first().textContent())
     await expect(page.getByTestId('nog-meer')).toHaveText(`nog ${totaal - 8} meer →`)
     await expect(rijen.first()).toHaveClass(/taak-kaart--achter/)
-    await expect(page.getByTestId('werkblok')).toContainText('BEZOEKDAG')
+    // Het belblokvak (werkblok) onderaan is weg.
+    await expect(page.getByTestId('werkblok')).toHaveCount(0)
   })
 
-  test('binnendienst ziet het belblokvak; salesmanager ziet Team vandaag; Beginner geen agents-blok', async ({ page }) => {
+  test('binnendienst ziet geen belblokvak meer; salesmanager ziet Team vandaag; Beginner geen agents-blok', async ({ page }) => {
     await login(page, 'u-03')
     await ga(page, '/')
-    await expect(page.getByTestId('werkblok')).toContainText('BELBLOK')
+    await expect(page.getByTestId('werkblok')).toHaveCount(0)
     await expect(page.getByTestId('agents')).toBeVisible()
     await expect(page.getByTestId('week')).toHaveCount(0)
     await expect(page.getByTestId('datakwaliteit')).toHaveCount(0)
@@ -90,7 +91,7 @@ test.describe('afronden (gat 11)', () => {
   test('in de flyout: "Geen reactie" geeft de toast met de volgende poging', async ({ page }) => {
     const a = await inRitme(page.request, 'u-03')
     await login(page, 'u-03')
-    await ga(page, `/acties?taak=${a.taakId}`)
+    await ga(page, `/taken?taak=${a.taakId}`)
     await expect(page.getByTestId('pogingregel')).toContainText('poging 1 van 5')
     await expect(page.getByTestId('afronden')).toBeDisabled()
     await page.getByTestId('uitkomst-geen_reactie').click()
@@ -119,7 +120,7 @@ test.describe('inzichten', () => {
     await apiLogin(page.request, 'u-06')
     await page.request.post('/api/motor/run', { data: {} })
     await login(page, 'u-03')
-    await ga(page, '/acties?tab=inzichten&gelezen=alle')
+    await ga(page, '/inzichten?gelezen=alle')
     const kaart = page.locator('.inzicht-kaart[data-test^=inzicht-]').first()
     await expect(kaart).toBeVisible()
     const id = (await kaart.getAttribute('data-test'))!.replace('inzicht-', '')
@@ -128,7 +129,7 @@ test.describe('inzichten', () => {
     await expect(page.locator('.toast').last()).toContainText('Taak gemaakt uit het inzicht')
     const taken = (await (await page.request.get('/api/tasks?eigenaar=mij')).json()).groepen.flatMap((g: any) => g.taken)
     expect(taken.some((t: any) => t.herkomst === 'inzicht')).toBe(true)
-    await ga(page, '/acties?herkomst=inzicht')
+    await ga(page, '/taken?herkomst=inzicht')
     await expect(page.locator('.taak-kaart').first()).toContainText('Uit inzicht')
   })
 
@@ -172,8 +173,9 @@ test.describe('inzichten', () => {
     const id = (await kaart.getAttribute('data-test'))!
     await kaart.getByTestId('kaart-gelezen').click()
     await expect(page.locator(`[data-test="${id}"]`)).toHaveCount(0)
-    // Een link met ?inzicht= opent dat inzicht, ook als het gelezen is; dezelfde feed staat bij Acties.
+    // Een link met ?inzicht= opent dat inzicht, ook als het gelezen is; een oude link naar Acties komt hier ook uit.
     await ga(page, `/acties?tab=inzichten&inzicht=${id.replace('inzicht-', '')}`)
+    await expect(page).toHaveURL(/\/inzichten\?inzicht=/)
     await expect(page.getByTestId('inzicht-flyout')).toBeVisible()
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1440)
   })
@@ -182,8 +184,11 @@ test.describe('inzichten', () => {
 test.describe('niveaus', () => {
   test('Beginner: lijst zonder horizon of bulk, minimale velden, /inzichten en /planning nog niet aangezet', async ({ page }) => {
     await login(page, 'u-02')
-    await ga(page, '/acties')
+    await ga(page, '/taken')
+    await page.getByTestId('filters-knop').click()
+    await expect(page.getByTestId('taak-filters')).toBeVisible()
     await expect(page.getByTestId('weergave')).toHaveCount(0)
+    await page.getByTestId('filters-knop').click()
     await expect(page.locator('.taak-kaart input[type=checkbox]')).toHaveCount(0)
     await page.getByTestId('taak-nieuw').click()
     await expect(page.getByTestId('nieuwe-taak')).not.toContainText('Herhaling')
@@ -202,9 +207,9 @@ test.describe('niveaus', () => {
     await apiLogin(page.request, 'u-03')
     await page.request.post('/api/tasks', { data: { title: `Oud ${uniek()}`, actionType: 'taak', dueDate: new Date(Date.now() - 3 * 864e5).toISOString() } })
     await login(page, 'u-03')
-    await ga(page, '/acties?weergave=horizon')
+    await ga(page, '/taken?weergave=horizon')
     await expect(page.getByTestId('horizon-vandaag').locator('.hz-item').first()).toContainText('Over tijd')
-    await ga(page, '/acties')
+    await ga(page, '/taken')
     await page.locator('.taak-kaart input[type=checkbox]').first().check()
     await page.getByTestId('bulk-week').click()
     await expect(page.locator('.toast').last()).toContainText('1 taak bijgewerkt')
@@ -229,7 +234,7 @@ test.describe('nieuwe taak en taakvenster in de opzet van DealDrive', () => {
     test.setTimeout(90_000)
     const x = await metContacten(page.request, 'u-03')
     await login(page, 'u-03')
-    await ga(page, '/acties')
+    await ga(page, '/taken')
     await page.getByTestId('taak-nieuw').click()
     const venster = page.getByTestId('nieuwe-taak')
     await expect(venster.getByRole('heading', { name: 'Wat moet er gebeuren?' })).toBeVisible()
@@ -262,11 +267,11 @@ test.describe('nieuwe taak en taakvenster in de opzet van DealDrive', () => {
     const taak = (await (await page.request.get('/api/tasks?eigenaar=mij')).json()).groepen.flatMap((g: any) => g.taken).find((t: any) => t.title === titel)
     expect(taak).toMatchObject({ priority: 'urgent', actionType: 'bellen', account: { id: x.accountId }, contact: { id: x.beslisser.id } })
     // Filter op Urgent en de rij met de contactpersoon.
-    await ga(page, '/acties?prioriteit=urgent')
+    await ga(page, '/taken?prioriteit=urgent')
     await expect(page.getByTestId(`taak-${taak.id}`)).toContainText('Urgent')
     await expect(page.getByTestId(`taak-${taak.id}`).getByTestId('taak-contact')).toHaveAttribute('href', `/contacten/${x.beslisser.id}`)
     // Het taakvenster toont klant en contact met links.
-    await ga(page, `/acties?taak=${taak.id}`)
+    await ga(page, `/taken?taak=${taak.id}`)
     await expect(page.getByTestId('tf-kicker')).toHaveText(/Urgent · Open/i)
     await expect(page.getByTestId('tf-account')).toHaveAttribute('href', `/accounts/${x.accountId}`)
     await expect(page.getByTestId('tf-contact')).toHaveAttribute('href', `/contacten/${x.beslisser.id}`)
@@ -285,7 +290,7 @@ test.describe('nieuwe taak en taakvenster in de opzet van DealDrive', () => {
     const x = await metContacten(page.request, 'u-03')
     const t = await (await page.request.post('/api/tasks', { data: { title: `Bel ${uniek()}`, actionType: 'bellen', accountId: x.accountId, contactId: x.beslisser.id, priority: 'middel' } })).json()
     await login(page, 'u-03')
-    await ga(page, `/acties?taak=${t.id}`)
+    await ga(page, `/taken?taak=${t.id}`)
     await expect(page.getByTestId('tf-gegevens')).toContainText('Bellen')
     await expect(page.getByTestId('uitkomst')).toBeVisible()
     await expect(page.getByTestId('uitstellen')).toBeVisible()
@@ -321,5 +326,89 @@ test.describe('nieuwe taak en taakvenster in de opzet van DealDrive', () => {
     await request.post('/api/reis/gebeurtenis', { data: { accountId: x.accountId, gebeurtenis: 'gekwalificeerd' } })
     const taak = (await (await request.get('/api/tasks?eigenaar=mij')).json()).groepen.flatMap((g: any) => g.taken).find((t: any) => t.account?.id === x.accountId && t.poging?.n === 1)
     expect(taak?.contact?.id).toBe(x.beslisser.id)
+  })
+})
+
+test.describe('Taken: nieuwe URL, horizon in het filter en Briefings', () => {
+  test('/acties stuurt door naar /taken met de query; ?tab=inzichten gaat naar /inzichten; geen tabblad Inzichten', async ({ page }) => {
+    await login(page, 'u-03')
+    await ga(page, '/acties?prioriteit=urgent')
+    await expect(page).toHaveURL(/\/taken\?prioriteit=urgent$/)
+    await expect(page.locator('.kicker').first()).toHaveText('Taken')
+    await expect(page.getByTestId('tab-inzichten')).toHaveCount(0)
+    await ga(page, '/acties?tab=inzichten&gelezen=alle')
+    await expect(page).toHaveURL(/\/inzichten\?gelezen=alle$/)
+    // Het menu en de links wijzen naar /taken.
+    await ga(page, '/')
+    await expect(page.locator('a[href="/acties"]')).toHaveCount(0)
+    await expect(page.locator('a[href="/taken"]').first()).toBeVisible()
+  })
+
+  test('horizon is een keuze onder Filters, Weergave; geen losse knop meer', async ({ page }) => {
+    await login(page, 'u-03')
+    await ga(page, '/taken')
+    await expect(page.getByTestId('weergave')).toHaveCount(0)
+    await page.getByTestId('filters-knop').click()
+    await expect(page.getByTestId('weergave-lijst')).toHaveAttribute('aria-checked', 'true')
+    await page.getByTestId('weergave-horizon').click()
+    await expect(page).toHaveURL(/weergave=horizon/)
+    await expect(page.getByTestId('horizon-vandaag')).toBeVisible()
+    await expect(page.getByTestId('filters-teller')).toHaveText('1')
+    // Met een filter in de URL staat het paneel open.
+    await ga(page, '/taken?weergave=horizon')
+    await expect(page.getByTestId('weergave-horizon')).toHaveAttribute('aria-checked', 'true')
+    await page.getByTestId('weergave-lijst').click()
+    await expect(page).not.toHaveURL(/weergave=/)
+    await expect(page.getByTestId('horizon-vandaag')).toHaveCount(0)
+  })
+
+  test('de knop Briefings opent /briefings; daar kies je een prospect en een contactpersoon', async ({ page }) => {
+    test.setTimeout(60_000)
+    const x = await metContacten(page.request, 'u-03')
+    await login(page, 'u-03')
+    await ga(page, '/taken')
+    await page.getByTestId('briefings-knop').click()
+    await expect(page).toHaveURL(/\/briefings$/)
+    await expect(page.getByTestId('briefing-zoeken')).toBeVisible()
+    // Het overzicht van komende gesprekken blijft.
+    await expect(page.getByTestId('briefings').or(page.getByText('Geen briefings in deze periode.'))).toBeVisible()
+    // Hooguit zes treffers in de lijst.
+    await page.getByTestId('bf-klant').fill('te')
+    await expect(page.getByTestId('bf-klant-optie').first()).toBeVisible()
+    expect(await page.getByTestId('bf-klant-optie').count()).toBeLessThanOrEqual(6)
+    await page.getByTestId('bf-klant').fill(x.accountNaam.slice(0, 12))
+    await page.getByTestId('bf-klant-optie').filter({ hasText: x.accountNaam }).click()
+    await expect(page).toHaveURL(new RegExp(`account=${x.accountId}`))
+    const gekozen = page.getByTestId('briefing-gekozen')
+    await expect(gekozen.getByTestId('briefing')).toBeVisible()
+    await expect(gekozen.getByTestId('briefing-contact')).toHaveCount(0)
+    await expect(gekozen.getByTestId('briefing-open-account')).toHaveAttribute('href', `/accounts/${x.accountId}`)
+    // Contact van dit prospect: beslisser eerst, dan zijn gegevens bij de briefing.
+    await page.getByTestId('bf-contact').click()
+    await expect(page.getByTestId('bf-contact-optie')).toHaveCount(2)
+    await page.getByTestId('bf-contact-optie').filter({ hasText: 'Petra' }).click()
+    await expect(page).toHaveURL(new RegExp(`contact=${x.beslisser.id}`))
+    await expect(gekozen.getByTestId('briefing-contact')).toContainText('Petra')
+    await expect(gekozen.getByTestId('briefing-contact')).toContainText('Directeur')
+    await expect(gekozen.getByTestId('briefing-contact-naam')).toHaveAttribute('href', `/contacten/${x.beslisser.id}`)
+    // Herladen houdt de keuze, met namen.
+    await page.reload()
+    await expect(page.getByTestId('bf-klant-keuze')).toContainText(x.accountNaam)
+    await expect(page.getByTestId('bf-contact-keuze')).toContainText('Petra')
+    await expect(page.getByTestId('briefing-contact')).toContainText('Petra')
+    // Contact wissen: weer de briefing van het account.
+    await page.getByRole('button', { name: 'Wis gekozen contactpersoon' }).click()
+    await expect(page).not.toHaveURL(/contact=/)
+    await expect(page.getByTestId('briefing-contact')).toHaveCount(0)
+  })
+
+  test('API: een contact van een ander account geeft 404; zonder contact de account-briefing', async ({ request }) => {
+    const a = await metContacten(request, 'u-03')
+    const b = await metContacten(request, 'u-03')
+    const goed = await request.get('/api/briefing', { params: { account: a.accountId, contact: a.tweede.id } })
+    expect(goed.status()).toBe(200)
+    expect((await goed.json()).contact).toMatchObject({ id: a.tweede.id, functie: 'Inkoper', rol: 'beinvloeder' })
+    expect((await request.get('/api/briefing', { params: { account: a.accountId, contact: b.beslisser.id } })).status()).toBe(404)
+    expect((await (await request.get('/api/briefing', { params: { account: a.accountId } })).json()).contact).toBeNull()
   })
 })

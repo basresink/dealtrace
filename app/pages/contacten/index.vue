@@ -37,7 +37,8 @@ useHead({ title: 'Contacten · Dealtrace' })
           <li v-for="c in top" :key="c.id" class="portret" :data-contact="c.id">
             <div class="portret-foto" :style="{ background: kleurUitNaam(c.naam) }">
               <span class="portret-rol" :class="`portret-rol--${c.rol}`">{{ rolLabel(c.rol) }}</span>
-              <span class="portret-initialen" aria-hidden="true">{{ initialen(c.naam) }}</span>
+              <img v-if="c.fotoUrl" :src="c.fotoUrl" alt="" class="portret-img" loading="lazy">
+              <span v-else class="portret-initialen" aria-hidden="true">{{ initialen(c.naam) }}</span>
             </div>
             <div class="portret-body">
               <h2 class="portret-naam"><NuxtLink :to="`/contacten/${c.id}`" class="portret-link">{{ c.naam }}</NuxtLink></h2>
@@ -65,6 +66,7 @@ useHead({ title: 'Contacten · Dealtrace' })
 @media (min-width: 1000px) { .portretten { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .portret { position: relative; display: flex; flex-direction: column; background: var(--wit); border: 1px solid var(--border); transition: border-color var(--transition-fast), transform var(--transition-fast); }
 .portret:hover { border-color: var(--yellow); transform: translateY(-2px); }
+.portret-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .portret-foto { position: relative; display: flex; align-items: center; justify-content: center; height: 150px; }
 .portret-foto::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.15)); pointer-events: none; }
 .portret-initialen { position: relative; z-index: 1; font-family: var(--font-serif); font-size: 52px; font-weight: 700; letter-spacing: -0.02em; color: var(--wit); }

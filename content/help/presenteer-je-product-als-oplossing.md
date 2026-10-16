@@ -1,7 +1,7 @@
 ---
 titel: Presenteer je product als oplossing
 categorie: Openen en presenteren
-collectie: werven
+collectie: newbusiness
 samenvatting: Vertel alleen wat de klant meer controle geeft in zijn situatie. Kies het product, de eigenschappen, de voordelen en de waarde, en laat de rest weg.
 bron: Uit de whitepaper The Perfect Pitch
 routes: /bezoeken

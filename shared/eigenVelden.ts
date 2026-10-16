@@ -32,6 +32,8 @@ export interface VeldDefinitie {
     filterbaar?: boolean
     bron?: 'handmatig' | 'import' | 'kvk' | 'datacollectief' | 'crm'
     toonInKop?: boolean
+    /** Meenemen in Datakwaliteit: een lege waarde telt als gat ("Zonder <naam>"); alleen account en contact. */
+    datakwaliteit?: boolean
   }
 }
 

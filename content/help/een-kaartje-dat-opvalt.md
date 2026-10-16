@@ -52,7 +52,7 @@ En op dinsdag:
 
 Een kaartje maak je in Dealtrace vaak als onderdeel van een campagne. Bij **Campagnes** schrijf je voor een kaart de boodschap zelf of tik je **Schrijf een voorstel**, met toon Zakelijk, Persoonlijk of Kort. Je ziet een stijlscore; onder de 7 schrijft Dealtrace het één keer opnieuw. Schrijf het kaartje daarna met de hand over.
 
-De taak staat op **Vandaag** en bij **Acties**. Heb je het kaartje gepost, klik dan op de taak, kies de uitkomst en klik **Afronden**. Je ziet direct wanneer de volgende poging is. Zet het belletje erachteraan op het moment dat je in het kaartje noemde.
+De taak staat op **Vandaag** en bij **Taken**. Heb je het kaartje gepost, klik dan op de taak, kies de uitkomst en klik **Afronden**. Je ziet direct wanneer de volgende poging is. Zet het belletje erachteraan op het moment dat je in het kaartje noemde.
 
 ## Controlevragen
 

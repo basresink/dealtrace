@@ -1,7 +1,7 @@
 ---
 titel: Van eigenschap naar voordeel
 categorie: Je pitch onderzoeken
-collectie: werven
+collectie: newbusiness
 samenvatting: Kies één product, zet de eigenschappen op een rij die voor je klant tellen en vraag bij elke eigenschap "Dus?" tot je het voordeel hebt.
 bron: Uit de whitepaper The Perfect Pitch
 routes: /richting

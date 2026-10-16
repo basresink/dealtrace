@@ -19,10 +19,10 @@ Dealtrace is één app voor laptop en telefoon. Op de telefoon zie je bovenin ee
 
 De onderbalk heeft vijf tabs en verandert nooit van plek, ook niet als je een hoger niveau krijgt.
 
-- **Binnendienst**: Vandaag, Belblok, Acties, Prospects, Meer.
+- **Binnendienst**: Vandaag, Belblok, Taken, Prospects, Meer.
 - **Buitendienst**: Vandaag, Route, Bellen, Prospects, Meer.
 - **Hybride**: Vandaag, Route, Belblok, Prospects, Meer.
-- **Salesmanager zonder eigen portefeuille**: Team, Coaching, Acties, Prospects, Meer.
+- **Salesmanager zonder eigen portefeuille**: Team, Coaching, Taken, Prospects, Meer.
 
 Onder **Meer** staat de rest van je menu in dezelfde volgorde als op de laptop, met onderaan **Nog niet aangezet**. Instellingen en Platformbeheer werken ook op de telefoon, maar zijn beter op een groot scherm.
 

@@ -19,7 +19,10 @@ test.describe('contacten', () => {
     await login(page, 'u-01')
     await ga(page, '/contacten/alle')
     const werkbalk = page.getByTestId('werkbalk')
-    for (const id of ['zoek-knop', 'nieuw-contact-knop', 'lijst-taak', 'lijst-afspraak', 'weergave-knop', 'sortering', 'filters-knop']) await expect(werkbalk.getByTestId(id)).toBeVisible()
+    for (const id of ['zoek-knop', 'nieuw-contact-knop', 'lijst-taak', 'lijst-afspraak', 'filters-knop']) await expect(werkbalk.getByTestId(id)).toBeVisible()
+    // Sortering (Rol) en Weergave staan in het filterpaneel, niet meer in de werkbalk.
+    await expect(werkbalk.getByTestId('weergave-knop')).toHaveCount(0)
+    await expect(werkbalk.getByTestId('sortering')).toHaveCount(0)
     const rij = page.getByTestId('contact-rij').first()
     await expect(rij.getByTestId('rol-pil')).toBeVisible()
     await expect(rij.getByTestId('contact-account')).toHaveAttribute('href', /^\/accounts\//)
@@ -32,6 +35,22 @@ test.describe('contacten', () => {
     await page.reload()
     await expect(page.getByTestId('aantal')).toHaveText(`${teller} ${teller === 1 ? 'contact' : 'contacten'}`)
     await expect(page.getByTestId('contact-rij')).toHaveCount(teller)
+  })
+
+  test('filterpaneel: sorteer op rol of naam en kies de weergave', async ({ page }) => {
+    await login(page, 'u-07')
+    await ga(page, '/contacten/alle')
+    await page.getByTestId('filters-knop').click()
+    const paneel = page.getByTestId('filterpaneel')
+    await expect(paneel.getByTestId('sorteer-rol')).toHaveAttribute('aria-checked', 'true')
+    await paneel.getByTestId('sorteer-naam').click()
+    await expect(page).toHaveURL(/sort=naam/)
+    await expect(page.locator('.lijst-aantal')).toContainText('gesorteerd op naam')
+    await paneel.getByTestId('weergave-kaarten').click()
+    await expect(paneel.getByTestId('weergave-kaarten')).toHaveAttribute('aria-checked', 'true')
+    await expect(page.getByTestId('contacten-tabel')).toHaveClass(/ct-lijst--kaarten/)
+    await paneel.getByTestId('weergave-lijst').click()
+    await expect(page.getByTestId('contacten-tabel')).toHaveClass(/ct-lijst--lijst/)
   })
 
   test('knoppen staan op de hoogte van de titel (laptop) en wrappen eronder op de telefoon', async ({ page }) => {

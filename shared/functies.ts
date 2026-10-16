@@ -54,9 +54,9 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Je afspraken, belblokken en regiodagen in een dag-, week- of maandweergave.', totDieTijd: 'Je afspraken van vandaag staan op Vandaag.' },
   },
   {
-    sleutel: 'nav.acties', naam: 'Acties', pakket: 'starter', rollen: 'iedereen', helpartikel: 'acties', startNiveau: 'beginner',
-    zijbalk: { groep: 'Activiteiten', route: '/acties', icoon: 'SquareCheck' },
-    uitleg: { watHetDoet: 'Al je taken en inzichten op één plek, met uitkomst en volgende poging.', totDieTijd: 'Je taken van vandaag staan op Vandaag.' },
+    sleutel: 'nav.acties', naam: 'Taken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'acties', startNiveau: 'beginner',
+    zijbalk: { groep: 'Activiteiten', route: '/taken', icoon: 'SquareCheck' },
+    uitleg: { watHetDoet: 'Al je taken op één plek, met uitkomst en volgende poging.', totDieTijd: 'Je taken van vandaag staan op Vandaag.' },
   },
   {
     sleutel: 'nav.belblokken', naam: 'Belblokken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'belblokken', startNiveau: 'beginner',
@@ -107,6 +107,11 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'nav.concepten', naam: 'Concepten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'concepten-goedkeuren-en-versturen', startNiveau: 'beginner',
     zijbalk: { groep: 'Activiteiten', route: '/concepten', icoon: 'Inbox' },
     uitleg: { watHetDoet: 'Wat agents klaarzetten ter goedkeuring: mails, berichten en briefings.', totDieTijd: 'Geen.' },
+  },
+  {
+    sleutel: 'nav.kennisbank', naam: 'Kennisbank', pakket: 'starter', rollen: 'iedereen', helpartikel: 'kennisbank', startNiveau: 'gevorderd',
+    zijbalk: { groep: 'Activiteiten', route: '/kennisbank', icoon: 'BookOpen' },
+    uitleg: { watHetDoet: 'De documenten van je organisatie op één plek: cases, offertes, presentaties, productinfo en contracten, te doorzoeken, gekoppeld aan accounts en contacten en te bevragen met de AI.', totDieTijd: 'Documenten bij een account of contact staan op het tabblad Documenten van de accountkaart.' },
   },
   {
     sleutel: 'nav.planning', naam: 'Prospectplanning', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospectplanning', startNiveau: 'gevorderd',
@@ -416,7 +421,7 @@ export const FUNCTIES: readonly Functie[] = [
   // P10: belblokken, belmodus en belscripts (F07, F08).
   {
     sleutel: 'belblok.uitvoeren', naam: 'Belmodus', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-belmodus', startNiveau: 'beginner',
-    uitleg: { watHetDoet: 'Gesprek na gesprek bellen met een script en de uitkomst per gesprek.', totDieTijd: 'Je beltaken staan op Vandaag en bij Acties.' },
+    uitleg: { watHetDoet: 'Gesprek na gesprek bellen met een script en de uitkomst per gesprek.', totDieTijd: 'Je beltaken staan op Vandaag en bij Taken.' },
   },
   {
     sleutel: 'belblok.plannen', naam: 'Eigen belblokken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'belblokken', startNiveau: 'gevorderd',
@@ -481,6 +486,10 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Hooguit acht voorstellen wie je nu moet spreken, met vormadvies.', totDieTijd: 'Je ziet je taken op Vandaag.' },
   },
   {
+    sleutel: 'agenda.meetingAnalyse', naam: 'Meetinganalyse', pakket: 'starter', rollen: 'iedereen', helpartikel: 'agenda', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Haal je je meetingritme? Dekking per accountklasse, uitkomsten, verslagen en doorlooptijd naar vervolg. De salesmanager ziet ook zijn team.', totDieTijd: 'Je ziet je meetings op Meetings.' },
+  },
+  {
     sleutel: 'agenda.voorCollega', naam: 'Afspraak plannen voor een collega', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-afspraak-plannen-afronden-en-overdragen', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'Als binnendienst een afspraak in de agenda van de buitendienst zetten, met diens vrije momenten.', totDieTijd: 'Je plant afspraken voor jezelf.' },
   },
@@ -511,7 +520,7 @@ export const FUNCTIES: readonly Functie[] = [
   },
   {
     sleutel: 'bezoeken.teplannen', naam: 'Te plannen bezoeken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'bezoeken-en-kansen-langs-de-route', startNiveau: 'gevorderd',
-    uitleg: { watHetDoet: 'Open bezoektaken, oudste eerst, om in te plannen.', totDieTijd: 'Je bezoektaken staan bij Acties.' },
+    uitleg: { watHetDoet: 'Open bezoektaken, oudste eerst, om in te plannen.', totDieTijd: 'Je bezoektaken staan bij Taken.' },
   },
   {
     sleutel: 'bezoeken.periode', naam: 'Periodefilter op bezoeken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'bezoeken-en-kansen-langs-de-route', startNiveau: 'gevorderd',
@@ -526,8 +535,8 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Ongeplande prospects in het gebied tonen, start- en eindadres per dag kiezen.', totDieTijd: 'De standaardregels gelden.' },
   },
   {
-    sleutel: 'regio.analyse', naam: 'Regio-analyse', pakket: 'starter', rollen: 'iedereen', helpartikel: 'gebieden-en-regiodagen', startNiveau: 'gevorderd',
-    uitleg: { watHetDoet: 'Waar je potentie laat liggen: dekking, stil en nooit bezocht per regio.', totDieTijd: 'Je ziet je accounts bij Prospects.' },
+    sleutel: 'regio.analyse', naam: 'Bezoekanalyse', pakket: 'starter', rollen: 'iedereen', helpartikel: 'gebieden-en-regiodagen', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Waar je omzet laat liggen: bezoekdekking per regio, uitkomsten, regiodagen en routes. De salesmanager ziet ook zijn team.', totDieTijd: 'Je ziet je bezoeken op Bezoeken.' },
   },
   {
     sleutel: 'instellingen.gebieden', naam: 'Gebieden en regiodagen', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'gebieden-en-regiodagen', startNiveau: 'expert',
@@ -756,7 +765,7 @@ export const FUNCTIES: readonly Functie[] = [
   },
   {
     sleutel: 'vandaag.signaal', naam: 'Signaal van de dag', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'gevorderd',
-    uitleg: { watHetDoet: 'Eén signaal per keer met bewijs, af te handelen met Gedaan, Later of Weg.', totDieTijd: 'Je ziet inzichten bij Acties.' },
+    uitleg: { watHetDoet: 'Eén signaal per keer met bewijs, af te handelen met Gedaan, Later of Weg.', totDieTijd: 'De belangrijkste aanleiding van de dag staat op Vandaag.' },
   },
   {
     sleutel: 'vandaag.tip', naam: 'Tip van de dag', pakket: 'starter', rollen: 'iedereen', helpartikel: 'dealtrace-op-je-telefoon-en-offline', startNiveau: 'gevorderd',

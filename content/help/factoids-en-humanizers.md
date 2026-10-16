@@ -1,7 +1,7 @@
 ---
 titel: Factoids en humanizers
 categorie: Je verhaal schrijven
-collectie: werven
+collectie: newbusiness
 samenvatting: Een klant koopt bij een organisatie en een persoon die hij vertrouwt. Met factoids laat je deskundigheid zien, met humanizers persoonlijkheid.
 bron: Uit de whitepaper The Perfect Pitch
 routes: /richting

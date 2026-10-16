@@ -87,6 +87,26 @@ export async function briefing(tx: Tx, o: Onderwerp) {
   }
 }
 
+/**
+ * De contactpersoon bij de briefing van een account (/briefings): gegevens, de laatste drie contactmomenten met
+ * dit contact en zijn eerstvolgende open taken en geplande afspraken (hooguit drie), elk met een eigen briefing.
+ * Null als het contact niet bij het account hoort.
+ */
+export async function contactBijBriefing(tx: Tx, accountId: string, contactId: string) {
+  const [c] = await rijen(tx, sql`select id, first_name, last_name, email, rol, status, data from contacts where id = ${contactId} and account_id = ${accountId}`)
+  if (!c) return null
+  const momenten = await rijen(tx, sql`select soort, uitkomst, op, data->>'tekst' as tekst from activiteiten where contact_id = ${contactId} and soort <> 'import' order by op desc limit 3`)
+  const gesprekken = await rijen(tx, sql`(select 'afspraak' as onderwerp, ap.id, m.naam as titel, ap.start_at as wanneer from appointments ap join meetingsoorten m on m.id = ap.meetingsoort_id where ap.contact_id = ${contactId} and ap.status = 'gepland' and ap.start_at >= now() - interval '1 day')
+    union all (select 'taak' as onderwerp, t.id, t.title as titel, t.due_date as wanneer from tasks t where t.contact_id = ${contactId} and t.status in ('open', 'bezig'))
+    order by wanneer nulls last limit 3`)
+  return {
+    id: c.id as string, naam: `${c.first_name ?? ''} ${c.last_name}`.trim(), functie: c.data?.functie ?? null, rol: c.rol as string, email: c.email ?? null,
+    telefoon: c.data?.telefoon ?? null, mobiel: c.data?.mobiel ?? null, linkedin: c.data?.linkedin ?? null, belMeNiet: !!c.data?.belMeNiet, vertrokken: c.status === 'vertrokken',
+    momenten: momenten.map((m) => ({ soort: m.soort as string, uitkomst: (m.uitkomst ?? null) as string | null, op: iso(m.op)!, tekst: (m.tekst ?? null) as string | null })),
+    gesprekken: gesprekken.map((g) => ({ onderwerp: g.onderwerp as 'afspraak' | 'taak', id: g.id as string, titel: g.titel as string, wanneer: iso(g.wanneer) })),
+  }
+}
+
 export async function bewaarTekst(tx: Tx, org: string, door: string, o: { soort: 'afspraak' | 'taak'; id: string }, blok: string, tekst: string) {
   if (!tekst.trim()) { await tx.execute(sql`delete from briefing_teksten where onderwerp = ${o.soort} and onderwerp_id = ${o.id} and blok = ${blok}`); return { blok, tekst: null } }
   await tx.execute(sql`insert into briefing_teksten (organisation_id, onderwerp, onderwerp_id, blok, tekst, door) values (${org}, ${o.soort}, ${o.id}, ${blok}, ${tekst.trim()}, ${door})

@@ -20,15 +20,15 @@ test('compacte kop en onderbalk, geen zijbalk; knoppen minstens 44 px; geen hori
 
 test('onderbalk per profiel, gelijk op elk niveau', async ({ page }) => {
   await login(page, 'u-03')
-  expect(await labels(page)).toEqual(['Vandaag', 'Belblok', 'Acties', 'Prospects', 'Meer'])
+  expect(await labels(page)).toEqual(['Vandaag', 'Belblok', 'Taken', 'Prospects', 'Meer'])
   await login(page, 'u-07')
-  expect(await labels(page)).toEqual(['Vandaag', 'Belblok', 'Acties', 'Prospects', 'Meer'])
+  expect(await labels(page)).toEqual(['Vandaag', 'Belblok', 'Taken', 'Prospects', 'Meer'])
   await login(page, 'u-01')
   expect(await labels(page)).toEqual(['Vandaag', 'Route', 'Bellen', 'Prospects', 'Meer'])
   await login(page, 'u-02')
   expect(await labels(page)).toEqual(['Vandaag', 'Route', 'Bellen', 'Prospects', 'Meer'])
   await login(page, 'u-04')
-  expect(await labels(page)).toEqual(['Team', 'Coaching', 'Acties', 'Prospects', 'Meer'])
+  expect(await labels(page)).toEqual(['Team', 'Coaching', 'Taken', 'Prospects', 'Meer'])
 })
 
 test('Meer: Agenda, Inzichten en "Nog niet aangezet" voor een Beginner; Agenda laat Meer oplichten', async ({ page }) => {

@@ -35,7 +35,7 @@ Bovenaan het bord staan drie accounts om mee te beginnen: eerst wie nog nooit co
 
 ## Je taken uit een campagne
 
-Taken uit een campagne heten "{werkwoord} {account} ({campagne})", bijvoorbeeld "Bel Testinstallatie Noord (Koude belronde)". Je vindt ze in je koude belblokken, op Vandaag en bij Acties. Werk je buiten de deur, dan staan ze op de regiodag van het account. Rond je een taak af, dan schuift het kaartje vanzelf door: afspraak naar Afspraak, geen interesse naar Afgewezen, de laatste poging zonder reactie naar Geparkeerd.
+Taken uit een campagne heten "{werkwoord} {account} ({campagne})", bijvoorbeeld "Bel Testinstallatie Noord (Koude belronde)". Je vindt ze in je koude belblokken, op Vandaag en bij Taken. Werk je buiten de deur, dan staan ze op de regiodag van het account. Rond je een taak af, dan schuift het kaartje vanzelf door: afspraak naar Afspraak, geen interesse naar Afgewezen, de laatste poging zonder reactie naar Geparkeerd.
 
 Ook zonder verbinding kun je een kaartje verplaatsen; de wijziging komt één keer aan zodra je weer verbinding hebt.
 

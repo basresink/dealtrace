@@ -97,6 +97,13 @@ export function valideerMatrix(waarde: unknown): string[] {
   return leesMatrix(waarde, {}).waarschuwingen
 }
 
+/**
+ * Eigen velden die vroeger de omvang droegen (zoals "Aantal monteurs"). De accountmatrix rekent met het
+ * generieke veld `data.medewerkers`; deze velden zijn alleen nog een terugval voor oude accounts en staan
+ * niet meer in het venster Nieuwe prospect.
+ */
+export const OMVANG_EIGEN_VELDEN: readonly string[] = ['aantal_monteurs']
+
 /** Klasse uit het aantal medewerkers, met de grenzen van de organisatie (anders 10, 50, 250). */
 export function klasseVoorOmvang(medewerkers: number | null | undefined, klassen: Klasse[] = KLASSEN_STANDAARD): string | null {
   if (medewerkers === null || medewerkers === undefined || !Number.isFinite(medewerkers)) return null

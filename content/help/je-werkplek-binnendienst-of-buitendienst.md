@@ -12,7 +12,7 @@ Iedereen in Dealtrace heeft een **werkplek**: binnendienst of buitendienst. Je w
 
 ## Binnendienst
 
-Je werkt vooral aan de telefoon en per mail. In de zijbalk staat **Belblokken** boven **Bezoeken**. Op je telefoon heeft de onderbalk Vandaag, Belblok, Acties en Prospects. Het hercontactritme voor de binnendienst plant bel- en mailpogingen.
+Je werkt vooral aan de telefoon en per mail. In de zijbalk staat **Belblokken** boven **Bezoeken**. Op je telefoon heeft de onderbalk Vandaag, Belblok, Taken en Prospects. Het hercontactritme voor de binnendienst plant bel- en mailpogingen.
 
 ## Buitendienst
 

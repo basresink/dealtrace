@@ -5,6 +5,7 @@
 // dat contact hoort; deals blijven de stand van het account.
 import { sql } from 'drizzle-orm'
 import { isAchterstallig } from '../../shared/taken'
+import { documentenVoorKaart } from './kennisbank'
 
 const iso = (d: unknown) => (d ? new Date(d as string).toISOString() : null)
 const kaal = (n: unknown) => String(n ?? '').replace(/^Testgebruiker /, '')
@@ -72,13 +73,22 @@ export async function kaartTabbladen(tx: any, b: KaartBereik) {
     ...conceptMails.map((c) => ({ id: c.id, onderwerp: c.concept?.onderwerp ?? 'Mailconcept', tekst: c.concept?.tekst ?? null, status: c.status === 'goedgekeurd' ? 'goedgekeurd' : 'concept', op: iso(c.op), aan: null, door: null, concept: true, contactId: null, contactNaam: null })),
   ].sort((a, b) => String(b.op).localeCompare(String(a.op)))
 
-  // Gespreksverslagen: het verslag op een afspraak, een transcript en de notitie bij een belpoging.
+  // Gespreksverslagen: het verslag op een afspraak, een transcript, de notitie bij een belpoging en het verslag
+  // en transcript van een beltaak (taakvenster).
   const transcripten = await rijen(sql`select t.id, t.record_id, t.tekst, t.op from transcripten t where t.record_soort = 'appointments' and t.record_id in (${afspraakLijst})`)
   const perAfspraak = new Map(afsprakenRij.map((a) => [a.id, a]))
+  // Beltaken: het gespreksverslag en het transcript uit het taakvenster (blok Transcript en gespreksverslag).
+  const beltaakVerslagen = await rijen(sql`select t.id, t.title, t.data, t.updated_at, t.contact_id, c.first_name as c_voornaam, c.last_name as c_achternaam from tasks t left join contacts c on c.id = t.contact_id
+    where ${op('t')} and t.action_type = 'bellen' and coalesce(t.data->'verslag'->>'tekst', '') <> '' order by t.updated_at desc limit 100`)
+  const beltaakTranscripten = await rijen(sql`select tr.id, tr.record_id, tr.tekst, tr.op, t.title, t.contact_id, c.first_name as c_voornaam, c.last_name as c_achternaam from transcripten tr
+    join tasks t on t.id = tr.record_id left join contacts c on c.id = t.contact_id
+    where tr.record_soort = 'tasks' and tr.bijlage_id is null and ${op('t')} order by tr.op desc limit 100`)
   const verslagen = [
     ...afsprakenRij.filter((a) => a.data?.verslag?.tekst).map((a) => ({ id: `afspraak-${a.id}`, bron: 'afspraak', bronLabel: 'Afspraak', typeLabel: a.soort_naam ?? 'Afspraak', titel: a.data?.titel ?? `${a.soort_naam ?? 'Afspraak'} met ${naamVan(a) ?? accNaam}`, tekst: a.data.verslag.tekst, datum: iso(a.start_at), contact: naamVan(a), woorden: woorden(a.data.verslag.tekst), afspraakId: a.id, ...metContact(a) })),
     ...transcripten.map((t) => { const a = perAfspraak.get(t.record_id) ?? {}; return { id: `transcript-${t.id}`, bron: 'afspraak', bronLabel: 'Transcript', typeLabel: 'Opname', titel: `Transcript van ${naamVan(a) ?? accNaam}`, tekst: t.tekst, datum: iso(t.op), contact: naamVan(a), woorden: woorden(t.tekst), afspraakId: t.record_id, ...metContact(a) } }),
     ...acts.filter((x) => x.soort === 'gebeld' && (x.data?.tekst || x.data?.notitie)).map((g) => ({ id: `bel-${g.id}`, bron: 'taak', bronLabel: 'Beltaak', typeLabel: 'Gesprek', titel: `Gesprek met ${naamVan(g) ?? accNaam}`, tekst: g.data?.tekst ?? g.data?.notitie, datum: iso(g.op), contact: naamVan(g), woorden: woorden(g.data?.tekst ?? g.data?.notitie), afspraakId: null, ...metContact(g) })),
+    ...beltaakVerslagen.map((t) => ({ id: `beltaak-${t.id}`, bron: 'taak', bronLabel: 'Beltaak', typeLabel: 'Gesprek', titel: t.title, tekst: t.data.verslag.tekst, datum: iso(t.data.verslag.op ?? t.updated_at), contact: naamVan(t), woorden: woorden(t.data.verslag.tekst), afspraakId: null, taskId: t.id, ...metContact(t) })),
+    ...beltaakTranscripten.map((t) => ({ id: `transcript-${t.id}`, bron: 'taak', bronLabel: 'Transcript', typeLabel: 'Belgesprek', titel: `Transcript: ${t.title}`, tekst: t.tekst, datum: iso(t.op), contact: naamVan(t), woorden: woorden(t.tekst), afspraakId: null, taskId: t.record_id, ...metContact(t) })),
   ].sort((a, b) => String(b.datum).localeCompare(String(a.datum)))
 
   // Deals: Dealtrace draagt over; de deal zelf loopt in DealDrive (of het CRM). Altijd de stand van het account.
@@ -100,13 +110,12 @@ export async function kaartTabbladen(tx: any, b: KaartBereik) {
     id: c.id, naam: c.naam, soort: c.soort, status: c.status, doel: doelTekst(c.doel), kolom: c.kolom, poging: c.poging, volgendeStap: c.volgende_stap, volgendeOp: iso(c.volgende_op), gehaald: !!c.einddoel_gehaald,
   }))
 
-  // Documenten: bij het account, bij een contact (van het account) en uit de afspraken.
-  const documenten = (await rijen(sql`select b.id, b.naam, b.soort, b.mime, b.grootte, b.op, b.eigenaar_id, b.record_soort, b.record_id, u.name as door_naam from bijlagen b left join users u on u.id = b.eigenaar_id
-    where ${cid
-      ? sql`(b.record_soort = 'contact' and b.record_id = ${cid})`
-      : sql`(b.record_soort = 'account' and b.record_id in (${idLijst})) or (b.record_soort = 'contact' and b.record_id in (select id from contacts where account_id in (${idLijst})))`}
-      or (b.record_soort = 'appointments' and b.record_id in (${afspraakLijst}))
-    order by b.op desc`)).map((d) => ({ id: d.id, naam: d.naam ?? (d.soort === 'foto' ? 'Foto' : d.soort === 'opname' ? 'Opname' : d.soort === 'visitekaartje' ? 'Visitekaartje' : 'Document'), soort: d.soort, mime: d.mime, grootte: d.grootte, op: iso(d.op), door: kaal(d.door_naam), magVerwijderen: d.eigenaar_id === b.gebruikerId && d.soort === 'document' && ['account', 'contact'].includes(d.record_soort) }))
+  // Documenten: uit de kennisbank, gekoppeld aan het account (en zijn contacten) of aan het contact. Foto's,
+  // opnames en visitekaartjes uit de afspraken staan er apart onder (afspraakBijlagen).
+  const documenten = await documentenVoorKaart(tx, { accountIds: b.account.ids, contactId: cid }, { id: b.gebruikerId, rol: 'accountmanager' })
+  const afspraakBijlagen = (await rijen(sql`select b.id, b.soort, b.mime, b.grootte, b.op, u.name as door_naam from bijlagen b left join users u on u.id = b.eigenaar_id
+    where b.record_soort = 'appointments' and b.record_id in (${afspraakLijst}) and b.soort <> 'document'
+    order by b.op desc`)).map((d) => ({ id: d.id, naam: d.soort === 'foto' ? 'Foto' : d.soort === 'opname' ? 'Opname' : d.soort === 'visitekaartje' ? 'Visitekaartje' : 'Bijlage', soort: d.soort, mime: d.mime, grootte: d.grootte, op: iso(d.op), door: kaal(d.door_naam) }))
 
-  return { taken, inzichten, afspraken, mails, verslagen, deals, gebeurtenissen: gebeurtenissen.map((g) => ({ soort: g.soort, op: iso(g.ontvangen_op), resultaat: g.resultaat })), campagnes, documenten, momenten }
+  return { taken, inzichten, afspraken, mails, verslagen, deals, gebeurtenissen: gebeurtenissen.map((g) => ({ soort: g.soort, op: iso(g.ontvangen_op), resultaat: g.resultaat })), campagnes, documenten, afspraakBijlagen, momenten }
 }

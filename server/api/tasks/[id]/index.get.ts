@@ -1,11 +1,12 @@
 // GET /api/tasks/:id: de taakflyout: taak, aanleiding, "Waarom krijg ik dit?", poging,
 // klant in context, de contactpersoon van de taak (contact_id), herinnering en herhaling, en het ritme
-// (zodat de telefoon de volgende poging kan voorspellen).
+// (zodat de telefoon de volgende poging kan voorspellen). Bij een beltaak ook verslag, transcript en analyse.
 import { desc, eq } from 'drizzle-orm'
 import { metOrganisatie, schema } from '../../../utils/db'
 import { laadRitmes } from '../../../utils/reis'
 import { vereisFunctie } from '../../../utils/sessie'
 import { magTaak } from '../../../utils/taken'
+import { analyseVan, transcriptVanTaak } from '../../../utils/belverslag'
 
 export default defineEventHandler(async (event) => {
   const ctx = await vereisFunctie(event, 'taken.basis')
@@ -26,6 +27,9 @@ export default defineEventHandler(async (event) => {
     const [inzicht] = t.signalId ? await tx.select().from(schema.signals).where(eq(schema.signals.id, t.signalId)) : []
     const [eigenaar] = t.ownerId ? await tx.select({ naam: schema.users.name }).from(schema.users).where(eq(schema.users.id, t.ownerId)) : []
     const d = (t.data ?? {}) as any
+    // Beltaak: het gespreksverslag, het transcript en de analyse van de Notulist (blok Transcript en gespreksverslag).
+    const bel = t.actionType === 'bellen'
+    const transcript = bel ? await transcriptVanTaak(tx, t.id, d.transcriptBestand ?? null) : null
     return {
       id: t.id, title: t.title, status: t.status, actionType: t.actionType, priority: t.priority, dueDate: t.dueDate, uitkomst: t.uitkomst, ownerId: t.ownerId, eigenaar: eigenaar?.naam ?? null,
       herkomst: typeof d.herkomst === 'string' ? d.herkomst : d.herkomst?.bron ?? (t.signalId ? 'inzicht' : t.ruleId ? 'regel' : 'handmatig'),
@@ -42,6 +46,7 @@ export default defineEventHandler(async (event) => {
       contact: tc ? { id: tc.id, naam: `${tc.firstName ?? ''} ${tc.lastName}`.trim(), functie: tc.data?.functie ?? null, rol: tc.rol, telefoon: tc.data?.mobiel ?? tc.data?.telefoon ?? null, email: tc.email, belMeNiet: !!tc.data?.belMeNiet } : null,
       herinnering: d.herinnering?.minuten ? { minuten: d.herinnering.minuten, kanaal: d.herinnering.kanaal ?? 'in-app' } : null,
       herhaling: d.herhaling ?? null,
+      verslag: bel ? d.verslag ?? null : null, transcript, analyse: bel ? analyseVan(d.notulist) : null,
       ritme: ritme && stand ? { naam: ritme.naam, stand, def: ritme } : null,
       kan: { afronden: await magTaak(tx, ctx, t.ownerId) || t.ownerId === null, verwijderen: ctx.gebruiker.rol === 'beheerder' },
     }

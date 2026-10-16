@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
         and data ? 'herinnering' and coalesce((data->'herinnering'->>'verstuurd')::boolean, false) = false
         and due_date - make_interval(mins => (data->'herinnering'->>'minuten')::int) <= now()`)).rows as { id: string; owner_id: string; title: string; data: any }[]
       for (const r of rijen) {
-        await tx.insert(schema.notificaties).values({ id: crypto.randomUUID(), organisationId: o.id, gebruikerId: r.owner_id, soort: 'herinnering', titel: `Herinnering: ${r.title}`, tekst: null, link: `/acties?taak=${r.id}`, op: new Date().toISOString(), data: {} })
+        await tx.insert(schema.notificaties).values({ id: crypto.randomUUID(), organisationId: o.id, gebruikerId: r.owner_id, soort: 'herinnering', titel: `Herinnering: ${r.title}`, tekst: null, link: `/taken?taak=${r.id}`, op: new Date().toISOString(), data: {} })
         await tx.execute(sql`update tasks set data = jsonb_set(data, '{herinnering,verstuurd}', 'true'::jsonb) where id = ${r.id}`)
       }
       return rijen.length

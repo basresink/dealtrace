@@ -2,7 +2,8 @@
 // Taakvenster (F06) in de opzet van DealDrive (TaakFlyout op /taken): kicker met prioriteitsstip,
 // prioriteit en status, de gegevens (type, vervaldatum, toegewezen aan, klant en contactpersoon met links,
 // herinnering, herhaling, beschrijving), de aanleiding met "Waarom krijg ik dit?", Volgende stap, belscript,
-// agent, Briefing en Pitstop, concept, klant in context, het uitkomstraster uit 7.3 en de voet. Bewerken
+// agent, Briefing en Pitstop, concept, bij een beltaak het blok Transcript en gespreksverslag (gedeeld met het
+// afspraakvenster), klant in context, het uitkomstraster uit 7.3 en de voet. Bewerken
 // vervangt de inhoud door het formulier van Nieuwe taak. Op de telefoon een schuifvenster met de knoppen
 // onderaan en "Afronden" rechts. Offline gaat afronden via de wachtrij.
 import { NEE_REDENEN } from '~~/shared/nbStatus'
@@ -34,11 +35,16 @@ const annuleren = ref(false)
 const annuleerReden = ref('')
 const bezig = ref(false)
 const gevorderd = computed(() => !!functie('taken.herhaling')?.beschikbaar)
+// Beltaak: het gespreksverslag (blok Transcript en gespreksverslag, alleen bij het type Bellen).
+const belVerslag = ref('')
+const isBeltaak = computed(() => t.value?.actionType === 'bellen')
+async function herlaadTaak() { if (t.value) t.value = await $fetch(`/api/tasks/${t.value.id}`) }
 watch(() => [props.open, props.taakId], async ([o]) => {
   if (!o || !props.taakId) return
   uitkomst.value = ''; laterOp.value = ''; reden.value = ''; toelichting.value = ''; bewerken.value = false; annuleren.value = false; belpaneel.value = null
   laden.value = true
   try { t.value = await $fetch(`/api/tasks/${props.taakId}`) } catch { t.value = props.basis ? { ...props.basis, kan: { afronden: true }, account: props.basis.account ?? null } : null } finally { laden.value = false }
+  belVerslag.value = t.value?.verslag?.tekst ?? ''
 }, { immediate: true })
 const contact = computed(() => t.value && CONTACT_ACTIES.has(t.value.actionType))
 const ongeldig = computed(() => (contact.value && !uitkomst.value) || (uitkomst.value === 'later' && !laterOp.value) || (uitkomst.value === 'geen_interesse' && (!reden.value || (reden.value === 'Anders' && !toelichting.value.trim()))))
@@ -48,6 +54,8 @@ async function doeAfronden(volgende: boolean) {
   bezig.value = true
   const body = { uitkomst: uitkomst.value || (contact.value ? null : 'gedaan'), laterOp: laterOp.value || null, reden: reden.value || null, toelichting: toelichting.value || null }
   const id = t.value.id
+  // Een nog niet bewaard belverslag gaat eerst mee, zodat het bij de belactiviteit staat.
+  if (isBeltaak.value && belVerslag.value.trim() !== String(t.value.verslag?.tekst ?? '').trim() && (!import.meta.client || navigator.onLine)) await $fetch(`/api/tasks/${id}/verslag`, { method: 'PUT', body: { tekst: belVerslag.value } }).catch(() => null)
   emit('sluit')
   const ok = await rondAf(id, body, { mobiel: mobiel() })
   bezig.value = false
@@ -191,6 +199,11 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
             <BelScript v-if="belpaneel?.item" :scripts="belpaneel.scripts" :voorstel="belpaneel.item.voorstel" :waarden="belpaneel.item.waarden" :extra-bezwaren="belpaneel.item.extraBezwaren" :meldingen="belpaneel.item.meldingen" :account-id="belpaneel.item.accountId" :contact-id="belpaneel.item.contactId" :ai-aan="belpaneel.kan.ai" compact />
             <p v-else-if="belpaneel" class="meta">Geen script voor deze taak.</p>
           </details>
+          <GespreksverslagBlok
+            v-if="isBeltaak" v-model="belVerslag" :api="`/api/tasks/${t.id}`" :record="{ soort: 'tasks', id: t.id }" prefix="tf" onderwerp="beltaak"
+            :verslag="t.verslag" :transcript="t.transcript" :analyse="t.analyse" :account="t.account" :heeft-contact="!!t.contact" :herlaad="herlaadTaak"
+            @patch="(p) => (t = { ...t, ...p })" @gewijzigd="emit('gewijzigd')" @sluit="emit('sluit')"
+          />
           <article v-if="t.agent" class="fo-blok fo-blok--agent" data-test="agent-blok">
             <p class="taak-meta">Door {{ agentDef(t.agent)?.naam ?? t.agent }}<template v-if="me?.gebruiker.niveau === 'expert' && t.mandaat"> · mandaat <span class="pil" :class="`pil--mandaat-${t.mandaat}`">{{ t.mandaat }}</span></template><template v-if="t.executorStatus"> · {{ EXECUTOR_LABEL[t.executorStatus] }}</template></p>
           </article>

@@ -439,7 +439,7 @@ export async function seedEva(client: pg.Client, orgId: string, nu = new Date())
   const afspraakTijd = async (id: string) => { const r = (await client.query(`select start_at from appointments where id = $1`, [id])).rows[0]; return r ? tijd(new Date(r.start_at).toISOString()) : '' }
   const MELDINGEN: [string, string, string, string, string, number, boolean][] = [
     ['m-eva-1', 'dagstart', 'Je dag staat klaar', `3 afspraken, 6 belacties. Eerst: je belblok om 09:00.`, '/', 1, false],
-    ['m-eva-2', 'hot', 'Nieuwe aanleiding bij Testtechniek Vathorst', 'Vacature werkvoorbereider (relevantie 92).', '/acties?tab=inzichten&inzicht=eva-s01', 5, false],
+    ['m-eva-2', 'hot', 'Nieuwe aanleiding bij Testtechniek Vathorst', 'Vacature werkvoorbereider (relevantie 92).', '/inzichten?inzicht=eva-s01', 5, false],
     ['m-eva-3', 'kritiek', 'Afspraak vandaag nog niet bevestigd', `Kennismaking met Testtechniek Leusden om ${await afspraakTijd('eva-ap02')}.`, '/agenda', 3, false],
     ['m-eva-4', 'herinnering', 'Terugbellen: Testzon Veenendaal', `Vandaag ${await afspraakTijd('eva-ap03')}.`, '/agenda', 0.5, false],
     ['m-eva-5', 'inzicht', 'Concept klaar ter goedkeuring', 'Opvolgmail aan Testtechniek Vathorst.', '/concepten', 2, false],

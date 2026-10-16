@@ -3,7 +3,7 @@ titel: Inzichten
 categorie: Dagelijks werk
 collectie: product
 samenvatting: Aanleidingen met bewijs die de motor en de agents vinden.
-routes: /inzichten,/acties?tab=inzichten
+routes: /inzichten
 ---
 
 # Inzichten

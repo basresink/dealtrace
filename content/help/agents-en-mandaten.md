@@ -33,7 +33,7 @@ Agents doen werk voor je: plannen, zoeken, verrijken, concepten schrijven. Wat z
 
 ## De Bewaker
 
-De Bewaker toetst elke handeling vooraf: mandaat, toestemming, afkoeling, ritme, capaciteit, AI-credits en werkuren. Hij kan alleen tegenhouden en melden. Bij **Instellingen, Agents en mandaten** zie je wat hij vandaag tegenhield en waarom, bijvoorbeeld "Afkoelperiode mail tot 3 december". Ben je Expert, dan zie je dat ook bij **Acties**, tabblad Inzichten, onder "Waarom niet?".
+De Bewaker toetst elke handeling vooraf: mandaat, toestemming, afkoeling, ritme, capaciteit, AI-credits en werkuren. Hij kan alleen tegenhouden en melden. Bij **Instellingen, Agents en mandaten** zie je wat hij vandaag tegenhield en waarom, bijvoorbeeld "Afkoelperiode mail tot 3 december". Ben je Expert, dan zie je dat ook bij **Inzichten** onder "Waarom niet?".
 
 ## Agents pauzeren
 

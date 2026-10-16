@@ -1,7 +1,7 @@
 ---
 titel: Je pitch in één zin
 categorie: Je verhaal schrijven
-collectie: werven
+collectie: newbusiness
 samenvatting: Heb altijd een pitch klaar die in één korte zin past, voor je product, je bedrijf en jezelf. Hoe beter afgestemd op de situatie, hoe natuurlijker hij klinkt.
 bron: Uit de whitepaper The Perfect Pitch
 routes: /belblokken

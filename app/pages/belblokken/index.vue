@@ -4,7 +4,6 @@
 // agenda, daaronder de vaste blokken en de geplande blokken.
 const { functie } = useMe()
 const aan = !!functie('belblok.uitvoeren')?.beschikbaar
-const { open: zoekenOpen } = useZoeken()
 const { data, refresh } = await useFetch<any>('/api/belblokken', { immediate: aan, default: () => ({ kop: 'Bellijst', bellijst: [], blokken: [], gepland: [], advies: [], kan: { top: [5] }, voorkeuren: { lunch: { start: '12:00', minuten: 45 } }, agenda: {} }) })
 
 // Bellijst: de top staat meteen geselecteerd; bij "Zelf kiezen" vink je aan en uit.
@@ -29,7 +28,6 @@ useHead({ title: 'Belblokken · Dealtrace' })
     <template v-else>
       <PaginaKop kicker="Plannen · Belblokken" titel="Een blok is een blok. Wie het vult, kies jij." uitleg="Vaste belblokken die zichzelf vullen, én de mogelijkheid om er nu een Top 5 in te schuiven. Wat niet past schuift door naar het eerstvolgende blok." helpartikel="belblokken">
         <template #acties>
-          <button type="button" class="dd-actie dd-actie--secundair bb-zoek" aria-label="Zoeken" data-test="belblokken-zoek" @click="zoekenOpen = true"><Icoon naam="Search" class="dd-actie-icoon" /></button>
           <NuxtLink v-if="volgende" :to="`/belblokken/${volgende.id}`" class="dd-actie dd-actie--secundair" data-test="start-belblok" :title="`Volgende blok ${tijd(volgende.start)} · ${volgende.open} gesprekken`"><Icoon naam="Phone" class="dd-actie-icoon" />Start belblok</NuxtLink>
           <button type="button" class="dd-actie dd-actie--taak" data-test="belblokken-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
           <button type="button" class="dd-actie dd-actie--zwart" data-test="belblokken-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
@@ -75,7 +73,6 @@ useHead({ title: 'Belblokken · Dealtrace' })
 <style scoped>
 .bb-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: 20px; align-items: start; }
 @media (max-width: 900px) { .bb-split { grid-template-columns: minmax(0, 1fr); } }
-.bb-zoek { padding-left: 10px; padding-right: 10px; min-width: var(--touch-target-min); }
 .bb-titel { font-family: var(--font-serif); font-size: clamp(22px, 3vw, 28px); font-weight: 700; margin: 6px 0 4px; }
 .bb-gepland { list-style: none; margin: 14px 0 0; padding: 0; background: var(--wit); border: 1px solid var(--border); }
 .bb-gepland-rij { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); }

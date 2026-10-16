@@ -99,10 +99,13 @@ async function verwijder() {
                 <div class="apd-balk" role="progressbar" :aria-valuenow="p.voortgang.percentage" aria-valuemin="0" aria-valuemax="100" aria-label="Voortgang van het actieplan"><div class="apd-vul" :style="{ width: `${p.voortgang.percentage}%` }" /></div>
               </div>
             </div>
-            <div v-if="kan" class="toolbar-buttons apd-knoppen">
+            <div class="toolbar-buttons apd-knoppen" data-test="kop-knoppen">
+              <KopIconen artikel="accountplannen" :ai="p.account ? { accountId: p.account.id, label: p.account.naam } : undefined" />
+              <template v-if="kan">
               <a href="#actieplan" class="dd-actie dd-actie--primair" data-test="apd-naar-actie"><Icoon naam="Plus" class="dd-actie-icoon" />Actie</a>
               <button type="button" class="dd-actie dd-actie--secundair" data-test="apd-afronden" @click="zet({ status: p.status === 'afgerond' ? 'actueel' : 'afgerond' }, p.status === 'afgerond' ? 'Plan heropend.' : 'Plan afgerond.')">{{ p.status === 'afgerond' ? 'Heropenen' : 'Markeer als afgerond' }}</button>
               <button type="button" class="dd-actie dd-actie--gevaar" data-test="apd-verwijder" @click="verwijderOpen = true">Verwijderen</button>
+              </template>
             </div>
           </div>
         </div>
@@ -208,6 +211,12 @@ async function verwijder() {
 .apd-balk { margin-top: 6px; height: 6px; background: var(--surface); }
 .apd-vul { height: 100%; background: var(--green); transition: width var(--transition-base); }
 .apd-knoppen { justify-content: flex-end; }
+/* Vanaf 720 px twee kolommen: de knoppen rechts op de hoogte van de titel (onder kruimel en
+   eyebrow); de info loopt nooit onder de knoppen door. */
+@media (min-width: 720px) {
+  .apd-kop-binnen { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; column-gap: var(--pagina-marge); }
+  .apd-knoppen { max-width: min(620px, 52vw); margin-top: 68px; }
+}
 .apd-raster { display: grid; grid-template-columns: 1fr; gap: var(--kaart-gap); align-items: start; }
 @media (min-width: 1024px) { .apd-raster { grid-template-columns: minmax(0, 1fr) 340px; } }
 .apd-hoofd, .apd-zij { display: flex; flex-direction: column; gap: var(--kaart-gap); min-width: 0; }

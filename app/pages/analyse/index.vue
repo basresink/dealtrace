@@ -13,7 +13,7 @@ const filters = computed(() => ({ periode: route.query.periode || undefined, tea
 const { data, refresh } = await useFetch<any>(() => `/api/analyse/${tab.value === 'regio' ? 'funnel' : tab.value}`, { query: filters, immediate: aan.value, default: () => ({ tabellen: [] }) })
 const { data: team } = await useFetch<any>('/api/coaching', { immediate: aan.value, default: () => ({ teams: [], leden: [] }) })
 function zet(k: string, v: string) { router.replace({ query: { ...route.query, [k]: v || undefined } }) }
-watch(tab, (t) => { if (t === 'regio') navigateTo('/analyse/regio') })
+watch(tab, (t) => { if (t === 'regio') navigateTo('/bezoek-analyse?scope=team') })
 const csv = (i: number) => `/api/analyse/${tab.value}?${new URLSearchParams({ ...(Object.fromEntries(Object.entries(filters.value).filter(([, v]) => v)) as Record<string, string>), formaat: 'csv', tabel: String(i) }).toString()}`
 async function besluit(id: string, b: string) { try { const r = await $fetch<any>(`/api/analyse/voorstellen/${id}`, { method: 'POST', body: { besluit: b } }); toast.toon(b === 'accepteer' ? 'Geaccepteerd. Er staat een conceptversie van de reis klaar.' : b === 'later' ? 'Het voorstel komt over 30 dagen terug.' : 'Voorstel afgewezen.'); if (r.conceptId) navigateTo(`/reizen/${r.conceptId}`); else refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') } }
 useHead({ title: 'Analyse · Dealtrace' })

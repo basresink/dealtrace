@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     return {
       ...contactUit(c, velden),
       account: a ? { id: a.id, naam: a.name, soort: a.accountKind, laatsteContactOp: a.laatsteContactOp, laatsteCall: accActs.find((x) => x.soort === 'gebeld')?.op ?? null } : null,
-      eigenVelden: velden.map((v) => ({ sleutel: v.sleutel, naam: v.naam, type: v.type, sectie: v.sectie, opties: v.data.opties ?? [] })),
+      eigenVelden: velden.map((v) => ({ sleutel: v.sleutel, naam: v.naam, type: v.type, sectie: v.sectie, opties: v.data.opties ?? [], hulp: v.data.hulp ?? null, bewerkbaarDoor: v.data.bewerkbaarDoor ?? 'iedereen' })),
       tijdlijn: acts.map((x) => ({ id: x.id, soort: x.soort, op: x.op, door: x.door ? namen.get(x.door) ?? x.door : null, tekst: (x.data as any)?.tekst ?? null, uitkomst: x.uitkomst })),
       openTakenAccount: 0,
       kan: { verhuizen: kan(ctx, 'contacten.verhuizen'), samenvoegen: kan(ctx, 'contacten.samenvoegen') },

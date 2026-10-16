@@ -196,7 +196,7 @@ export async function schrijfMotorUitvoer(tx: Tx, org: string, u: MotorUitvoer, 
   for (const g of u.geschoven) {
     await tx.insert(schema.notificaties).values({
       id: crypto.randomUUID(), data: {}, op: tijd, organisationId: org, gebruikerId: g.ownerId, soort: 'systeem', titel: `${g.aantal} ${g.aantal === 1 ? 'taak' : 'taken'} doorgeschoven`,
-      tekst: `Je dagplafond was vol; ${g.aantal === 1 ? 'hij staat' : 'ze staan'} op de volgende werkdag.`, link: '/acties',
+      tekst: `Je dagplafond was vol; ${g.aantal === 1 ? 'hij staat' : 'ze staan'} op de volgende werkdag.`, link: '/taken',
     })
   }
 }

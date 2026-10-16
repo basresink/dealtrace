@@ -24,7 +24,7 @@ test.describe('Doorsturen van de oude adressen', () => {
 
   test('links in de app gaan naar de nieuwe adressen', async ({ page }) => {
     await login(page, 'u-01')
-    await ga(page, '/acties')
+    await ga(page, '/taken')
     await page.getByTestId('hulp-knop').click()
     await expect(page.getByTestId('hulp-flyout').getByRole('link', { name: 'Open in het helpcenter' })).toHaveAttribute('href', /^\/helpcenter\//)
   })
@@ -64,17 +64,20 @@ test.describe('Helpcenter in de opzet van DealDrive', () => {
     await expect(page.getByTestId('help-kaart-geen-budget')).toBeVisible()
   })
 
-  test('Nieuwe klanten werven: voor elke rol een ingang en categorieën; categorie en artikel openen, met bron', async ({ page }) => {
+  test('Nieuwe klanten werven hoort bij de academie: hoofdstuk, categorie en artikel met bron', async ({ page }) => {
+    // Drie rollen en zes pagina's: ruimer dan de standaard van 90 seconden.
+    test.setTimeout(180_000)
     for (const gebruiker of ['u-02', 'u-04', 'u-06']) {
       await login(page, gebruiker)
       await ga(page, '/helpcenter')
-      await expect(page.getByTestId('ingang-werven'), gebruiker).toBeVisible()
-      await expect(page.getByTestId('groep-werven').getByTestId('categorie-Je verhaal schrijven'), gebruiker).toBeVisible()
+      await expect(page.getByTestId('ingang-werven'), gebruiker).toHaveCount(0)
+      await expect(page.getByTestId('ingang-academie'), gebruiker).toContainText('55 artikelen')
+      await expect(page.getByTestId('groep-academie').getByTestId('categorie-Je verhaal schrijven'), gebruiker).toBeVisible()
     }
     await page.getByTestId('categorie-Je verhaal schrijven').click()
     await expect(page).toHaveURL(/\/helpcenter\/categorie\/je-verhaal-schrijven$/)
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Je verhaal schrijven')
-    await expect(page.getByTestId('terug-overzicht')).toHaveAttribute('href', '/helpcenter/werven')
+    await expect(page.getByTestId('terug-overzicht')).toHaveAttribute('href', '/helpcenter/academie#werven')
     await page.getByTestId('help-kaart-vertel-een-userstory').click()
     await expect(page).toHaveURL(/\/helpcenter\/vertel-een-userstory$/)
     await expect(page.getByTestId('artikel-titel')).toHaveText('Vertel een userstory')
@@ -82,21 +85,67 @@ test.describe('Helpcenter in de opzet van DealDrive', () => {
     await expect(page.getByTestId('artikel-inhoud').locator('.ha-blok')).toHaveCount(5)
     await expect(page.getByTestId('controlevragen')).toBeVisible()
     await expect(page.getByTestId('artikel-inhoud').getByRole('link', { name: 'Een belscript kiezen' })).toHaveAttribute('href', '/helpcenter/een-belscript-kiezen')
-    await page.getByTestId('artikel-categorie').click()
-    await expect(page).toHaveURL(/\/helpcenter\/categorie\/je-verhaal-schrijven$/)
-    // Het overzicht: per categorie een groep, zoeken binnen de selectie.
-    await ga(page, '/helpcenter')
-    await page.getByTestId('ingang-werven').click()
-    await expect(page).toHaveURL(/\/helpcenter\/werven$/)
-    await expect(page.getByTestId('groep-Waarom klanten kopen')).toBeVisible()
-    await expect(page.getByTestId('groep-Openen en presenteren')).toBeVisible()
+    // De academie: het hoofdstuk Nieuwe klanten werven met de twaalf artikelen, zoeken binnen de academie.
+    await ga(page, '/helpcenter/academie')
+    const werven = page.getByTestId('hoofdstuk-werven')
+    await expect(page.getByTestId('hoofdstuk-vak')).toBeVisible()
+    await expect(werven.getByRole('heading', { name: 'Nieuwe klanten werven' })).toBeVisible()
+    await expect(werven.getByTestId('groep-Waarom klanten kopen')).toBeVisible()
+    await expect(werven.getByTestId('groep-Openen en presenteren')).toBeVisible()
+    await expect(werven.locator('[data-test^="help-kaart-"]')).toHaveCount(12)
     await page.getByTestId('overzicht-zoek').fill('foray')
     await expect(page.getByTestId('help-kaart-de-foray-toestemming-voor-je-vragen')).toBeVisible()
     await expect(page.getByTestId('help-kaart-vertel-een-userstory')).toHaveCount(0)
-    // Zoeken in het hele helpcenter geeft een eigen groep.
+    // Het oude adres stuurt door naar het hoofdstuk.
+    await ga(page, '/helpcenter/werven')
+    await expect(page).toHaveURL(/\/helpcenter\/academie#werven$/)
+    // Zoeken in het hele helpcenter: de wervingsartikelen staan bij New business.
     await ga(page, '/helpcenter?zoek=waardestatement')
-    await expect(page.getByTestId('help-resultaten')).toContainText('Nieuwe klanten werven')
+    await expect(page.getByTestId('help-resultaten')).toContainText('New business')
     await expect(page.getByTestId('help-resultaten')).toContainText('Klantsituaties en waardestatements')
+  })
+
+  test('Tips & Tricks: twintig tips in vier categorieën, een tip linkt naar zijn functie', async ({ page }) => {
+    await login(page, 'u-01')
+    await ga(page, '/helpcenter')
+    await expect(page.getByTestId('ingang-tips')).toContainText('20 tips')
+    await expect(page.getByTestId('groep-tips').locator('.hc-categorie')).toHaveCount(4)
+    await page.getByTestId('ingang-tips').click()
+    await expect(page).toHaveURL(/\/helpcenter\/tips$/)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tips & Tricks')
+    await expect(page.locator('[data-test^="help-kaart-tip-"]')).toHaveCount(20)
+    await page.getByTestId('overzicht-zoek').fill('rijmodus')
+    await expect(page.getByTestId('help-kaart-tip-rijmodus-handen-aan-het-stuur')).toBeVisible()
+    await page.getByTestId('help-kaart-tip-rijmodus-handen-aan-het-stuur').click()
+    await expect(page.getByTestId('artikel-bron')).toHaveText('Van het DealDrive-team')
+    await expect(page.getByTestId('artikel-inhoud').locator('.ha-blok').first()).toContainText('Wat het je oplevert')
+    await expect(page.getByTestId('controlevragen')).toBeVisible()
+    await expect(page.getByTestId('artikel-inhoud').getByRole('link', { name: 'Meldingen instellen' })).toHaveAttribute('href', '/helpcenter/meldingen-instellen')
+    await expect(page.getByTestId('probeer-het')).toHaveAttribute('href', '/mijn-instellingen')
+  })
+
+  test('zoeken via het icoon in de kop: klapt open, zoekt, ?zoek= blijft werken', async ({ page }) => {
+    await login(page, 'u-01')
+    await ga(page, '/helpcenter')
+    await expect(page.getByTestId('help-zoek')).toHaveCount(0)
+    const icoon = page.getByTestId('kop-knoppen').getByTestId('help-zoekicoon')
+    await expect(icoon).toHaveAttribute('aria-expanded', 'false')
+    const b = (await icoon.boundingBox())!
+    expect(Math.round(b.width)).toBe(44)
+    await icoon.click()
+    await expect(icoon).toHaveAttribute('aria-expanded', 'true')
+    await expect(page.getByTestId('help-zoek')).toBeFocused()
+    await page.getByTestId('help-zoek').fill('Ctrl K')
+    await expect(page).toHaveURL(/zoek=Ctrl/)
+    await expect(page.getByTestId('help-resultaten')).toContainText('Spring overal heen met Ctrl K')
+    await expect(page.getByTestId('help-resultaten')).toContainText('Tips & Tricks')
+    await page.getByTestId('help-zoek-sluit').click()
+    await expect(page.getByTestId('help-zoek')).toHaveCount(0)
+    await expect(page).not.toHaveURL(/zoek=/)
+    await expect(page.getByTestId('voor-jou')).toBeVisible()
+    await ga(page, '/helpcenter?zoek=poging')
+    await expect(page.getByTestId('help-zoek')).toHaveValue('poging')
+    await expect(page.getByTestId('help-resultaten')).toContainText('Wat betekent poging 3 van 5')
   })
 
   test('een categorie die niet voor jouw rol is, bestaat niet; de beheerder ziet Inrichten', async ({ page }) => {
@@ -119,6 +168,12 @@ test.describe('Notificaties in de opzet van DealDrive', () => {
     await page.setViewportSize({ width: 1280, height: 900 })
     await login(page, 'u-07')
     await ga(page, '/notificaties?alle=1')
+    // De tellers per soort staan los van de lijn onder de kop, op de laptop en op de telefoon.
+    const ruimte = async () => {
+      const lijn = await page.getByTestId('paginakop').evaluate((el) => el.closest('section')!.getBoundingClientRect().bottom)
+      return (await page.getByTestId('melding-stats').boundingBox())!.y - lijn
+    }
+    expect(await ruimte()).toBeGreaterThanOrEqual(12)
     const kaarten = page.getByTestId('melding')
     expect(await kaarten.count()).toBeGreaterThanOrEqual(3)
     const [a, b, c] = await Promise.all([0, 1, 2].map((i) => kaarten.nth(i).boundingBox()))
@@ -129,6 +184,7 @@ test.describe('Notificaties in de opzet van DealDrive', () => {
     expect(Math.abs(d!.y - e!.y)).toBeLessThan(2)
     expect(f!.y).toBeGreaterThan(d!.y + 10)
     await page.setViewportSize({ width: 390, height: 844 })
+    expect(await ruimte()).toBeGreaterThanOrEqual(12)
     const [g, h] = await Promise.all([0, 1].map((i) => kaarten.nth(i).boundingBox()))
     expect(h!.y).toBeGreaterThan(g!.y + 10)
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)

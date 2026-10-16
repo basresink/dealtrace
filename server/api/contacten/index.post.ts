@@ -2,7 +2,8 @@
 // dubbelcheck op e-mail en op naam binnen het bedrijf.
 import { eq } from 'drizzle-orm'
 import { ROLLEN_CONTACT, geldigEmail, normaliseerTelefoon } from '../../../shared/contactgegevens'
-import { contactDuplicaat } from '../../../shared/ontdubbelen'
+import { contactDuplicaat, normaliseerDomein } from '../../../shared/ontdubbelen'
+import { websiteUitEmail } from '../../../shared/logo'
 import { contactUit, effectiefNiveau, eigenVeldenVoor, herbereken } from '../../utils/accounts'
 import { metOrganisatie, schema } from '../../utils/db'
 import { vereisFunctie } from '../../utils/sessie'
@@ -19,7 +20,7 @@ export default defineEventHandler(async (event) => {
   const telefoon = tel(b.telefoon)
   const mobiel = tel(b.mobiel)
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
-    const [a] = await tx.select({ id: schema.accounts.id }).from(schema.accounts).where(eq(schema.accounts.id, b.accountId!))
+    const [a] = await tx.select({ id: schema.accounts.id, domein: schema.accounts.domein, data: schema.accounts.data }).from(schema.accounts).where(eq(schema.accounts.id, b.accountId!))
     if (!a) throw createError({ statusCode: 404, statusMessage: 'Account onbekend' })
     const bestaand = (await tx.select({ id: schema.contacts.id, accountId: schema.contacts.accountId, firstName: schema.contacts.firstName, lastName: schema.contacts.lastName, email: schema.contacts.email }).from(schema.contacts))
     const dubbel = contactDuplicaat({ accountId: a.id, firstName: b.voornaam, lastName: b.achternaam!, email: b.email }, bestaand)
@@ -31,6 +32,10 @@ export default defineEventHandler(async (event) => {
       organisationId: ctx.organisatie.id, accountId: a.id, firstName: b.voornaam?.trim() || null, lastName: b.achternaam!.trim(), email: b.email?.trim().toLowerCase() || null, rol,
       data: { functie: b.functie?.trim() || undefined, telefoon, mobiel, linkedin: b.linkedin || undefined, bron: `ingevoerd door ${ctx.gebruiker.naam}`, consent: { email: { status: 'onbekend' }, whatsapp: { status: 'onbekend' } }, customFields, herkomst },
     }).returning()
+    // Logo en website (opzet uit DealDrive): heeft het account nog geen website, dan komt die uit het
+    // e-maildomein van het contact (niet bij gmail, hotmail en dergelijke). Het logo volgt uit het domein.
+    const web = !a.data?.website && !a.domein ? websiteUitEmail(c!.email) : null
+    if (web) await tx.update(schema.accounts).set({ domein: normaliseerDomein(web), data: { ...a.data, website: web, herkomst: { ...(a.data?.herkomst ?? {}), website: { bron: 'web', op: new Date().toISOString(), door: ctx.gebruiker.id } } } }).where(eq(schema.accounts.id, a.id))
     await herbereken(tx, a.id)
     return contactUit(c!, velden)
   })

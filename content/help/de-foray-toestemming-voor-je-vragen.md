@@ -1,7 +1,7 @@
 ---
 titel: "De foray: toestemming voor je vragen"
 categorie: Openen en presenteren
-collectie: werven
+collectie: newbusiness
 samenvatting: Na de entree stap je terug en vraag je of je een paar vragen mag stellen. Bereid die behoeftegerichte vragen per product voor.
 bron: Uit de whitepaper The Perfect Pitch
 routes: /belblokken

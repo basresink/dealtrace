@@ -2,7 +2,7 @@
 // Vandaag op de laptop (F01), in de opzet van DealDrive: kop, de aanleiding van de dag groot, één
 // kaart met drie kolommen (taken, afspraken, prio), het dashboard "Jouw resultaten · deze maand",
 // Klaargezet door AI naast Door AI agents gedaan (vanaf Gevorderd), de inzichten bij je prospects van
-// de laatste 48 uur, dan het werkblok en voor de salesmanager "Team vandaag". Dashboard en AI-blokken
+// de laatste 48 uur en voor de salesmanager "Team vandaag". Het belblokvak onderaan is weg. Dashboard en AI-blokken
 // staan ook op de telefoon, onder de dagweergave.
 const toast = useToast()
 const { versie } = useAfronden()
@@ -30,23 +30,16 @@ useHead({ title: 'Vandaag · Dealtrace' })
     <VandaagTelefoon class="vt-alleen-telefoon" :t="v.telefoon" :kan="v.kan" @open="openTaak" @ververs="refresh()" />
     <AankomstKaart deel="inloop" class="vt-alleen-telefoon" style="padding: 0 16px 16px" />
     <div class="vt-alleen-groot">
-    <section class="section">
-      <div class="container">
-        <div class="sec-head">
-          <div>
-            <span class="kicker kicker--streep" data-test="vandaag-kicker">{{ v.kop.kicker }}</span>
-            <h1 class="title title--groot">{{ v.kop.groet }}</h1>
-            <p class="subtitle subtitle--groot" data-test="samenvatting">{{ v.kop.samenvatting }}</p>
-          </div>
-          <div class="toolbar-buttons">
-            <button type="button" class="dd-actie dd-actie--primair" data-test="vandaag-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
-            <button type="button" class="dd-actie dd-actie--zwart" data-test="vandaag-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
-            <button v-if="v.kan.nieuwProspect" type="button" class="dd-actie dd-actie--secundair" data-test="vandaag-prospect" @click="nieuweProspect = true"><Icoon naam="UserPlus" class="dd-actie-icoon" />Prospect</button>
-            <HulpKnop artikel="vandaag" />
-          </div>
-        </div>
-      </div>
-    </section>
+    <PaginaKop helpartikel="vandaag">
+      <template #kicker><span class="kicker kicker--streep" data-test="vandaag-kicker">{{ v.kop.kicker }}</span></template>
+      <template #titel><h1 class="title title--groot">{{ v.kop.groet }}</h1></template>
+      <template #uitleg><p class="subtitle subtitle--groot" data-test="samenvatting">{{ v.kop.samenvatting }}</p></template>
+      <template #acties>
+        <button type="button" class="dd-actie dd-actie--primair" data-test="vandaag-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
+        <button type="button" class="dd-actie dd-actie--zwart" data-test="vandaag-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+        <button v-if="v.kan.nieuwProspect" type="button" class="dd-actie dd-actie--secundair" data-test="vandaag-prospect" @click="nieuweProspect = true"><Icoon naam="UserPlus" class="dd-actie-icoon" />Prospect</button>
+      </template>
+    </PaginaKop>
     <section v-if="v.aanleiding" class="section vd-hero">
       <div class="container">
         <AanleidingHero :a="v.aanleiding" @maak-taak="maakTaak" />
@@ -66,20 +59,15 @@ useHead({ title: 'Vandaag · Dealtrace' })
       </div>
     </section>
     <div class="vt-alleen-groot">
-    <section class="section section--alt">
+    <section class="section section--alt" :class="{ 'section--laatste': !v.team }">
       <div class="container">
         <ProspectSignalen :lijst="v.prospectSignalen ?? []" />
       </div>
     </section>
-    <section class="section section--laatste">
+    <section v-if="v.team" class="section section--laatste">
       <div class="container">
         <div class="vandaag-blokken">
-          <article class="kaart kaart--geel" data-test="werkblok">
-            <span class="kicker">{{ v.werkblok.titel }}</span>
-            <p class="mt-8">{{ v.werkblok.tekst }}</p>
-            <NuxtLink :to="v.werkblok.knop.naar" class="dd-act dd-act--primair mt-16">{{ v.werkblok.knop.tekst }}</NuxtLink>
-          </article>
-          <article v-if="v.team" class="kaart" data-test="team-vandaag">
+          <article class="kaart" data-test="team-vandaag">
             <span class="kicker">Team vandaag</span>
             <ul class="schakel-lijst mt-8"><li v-for="l in v.team" :key="l.naam" class="schakel-rij"><span>{{ l.naam.replace(/^Testgebruiker /, '') }}</span><span class="taak-meta"><span :class="{ 'tekst-rood': l.achterstallig }">{{ l.achterstallig }} over tijd</span> · {{ l.open }} open · {{ l.inzichten }} wachten</span></li></ul>
           </article>

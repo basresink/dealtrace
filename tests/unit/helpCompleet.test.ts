@@ -1,11 +1,13 @@
 // P25: helpcenter compleet. De inhoud zelf (elke categorie geldig, geen gedachtestreepjes, elk new
 // business-artikel met de vijf onderdelen en drie controlevragen, geen offertes of pipeline), elke feature
 // een artikel in "Hoe werkt Dealtrace", en de pure functies: controlevragen, leestijd, zichtbaarheid,
-// citatenGeldig, vulVerhaal, controleerArtikel en artikelVoorRoute.
+// citatenGeldig, vulVerhaal, controleerArtikel en artikelVoorRoute. Nieuwe klanten werven is een hoofdstuk
+// van de academie; Tips & Tricks is een eigen collectie met twintig tips.
 import { describe, expect, it } from 'vitest'
 import { helpBestanden } from '../../server/db/helpStart'
 import { FUNCTIES, featureGroep } from '../../shared/functies'
-import { AAN_DE_SLAG, CATEGORIEEN_NEWBUSINESS, CATEGORIEEN_WERVEN, COLLECTIES, HELPCENTER_GERESERVEERD, VERHAAL_LEEG, WERVEN_BRONNEN, categorieUitSlug, slugVan, artikelVoorRoute, citatenGeldig, controleerArtikel, haalControlevragen, leestijd, ontbrekendeOnderdelen, vulVerhaal, zichtbareArtikelen } from '../../shared/help'
+
+import { AAN_DE_SLAG, ACADEMIE_HOOFDSTUKKEN, CATEGORIEEN_NEWBUSINESS, CATEGORIEEN_TIPS, CATEGORIEEN_VAK, CATEGORIEEN_WERVEN, COLLECTIES, HELPCENTER_GERESERVEERD, TIPS_ONDERDELEN, VERHAAL_LEEG, WERVEN_BRONNEN, collectieUit, hoofdstukVan, categorieUitSlug, slugVan, artikelVoorRoute, citatenGeldig, helpLink, controleerArtikel, haalControlevragen, leestijd, ontbrekendeOnderdelen, vulVerhaal, zichtbareArtikelen } from '../../shared/help'
 
 const alle = helpBestanden()
 const perSlug = new Map(alle.map((a) => [a.slug, a]))
@@ -41,30 +43,90 @@ describe('de inhoud in content/help', () => {
   })
 })
 
-describe('Nieuwe klanten werven', () => {
-  const werven = alle.filter((a) => a.collectie === 'werven')
-  it('minstens tien artikelen, elk met de vijf onderdelen, drie controlevragen en een bekende bron', () => {
-    expect(werven.length).toBeGreaterThanOrEqual(10)
+describe('Nieuwe klanten werven in de academie', () => {
+  const werven = alle.filter((a) => (CATEGORIEEN_WERVEN as readonly string[]).includes(a.categorie))
+  it('twaalf artikelen uit The Perfect Pitch, allemaal in de academie, elk met de vijf onderdelen, drie controlevragen en een bekende bron', () => {
+    expect(werven.length).toBe(12)
     const bronnen: string[] = Object.values(WERVEN_BRONNEN)
     for (const a of werven) {
+      expect(a.collectie, a.slug).toBe('newbusiness')
       expect(ontbrekendeOnderdelen(a.inhoud), a.slug).toEqual([])
       expect(a.vragen?.length, a.slug).toBe(3)
       expect(bronnen, a.slug).toContain(a.bron)
     }
+    expect(werven.filter((a) => a.bron === WERVEN_BRONNEN.perfectPitch)).toHaveLength(12)
   })
-  it('elke categorie heeft artikelen en opent via zijn eigen adres', () => {
+  it('de academie heeft twee hoofdstukken: het vak en Nieuwe klanten werven, samen alle categorieën', () => {
+    expect(ACADEMIE_HOOFDSTUKKEN.map((h) => h.sleutel)).toEqual(['vak', 'werven'])
+    expect(ACADEMIE_HOOFDSTUKKEN.flatMap((h) => [...h.categorieen])).toEqual([...CATEGORIEEN_NEWBUSINESS])
+    expect(CATEGORIEEN_NEWBUSINESS).toEqual([...CATEGORIEEN_VAK, ...CATEGORIEEN_WERVEN])
+    expect(hoofdstukVan('Je verhaal schrijven')?.sleutel).toBe('werven')
+    expect(hoofdstukVan('Bellen')?.sleutel).toBe('vak')
+    expect(hoofdstukVan('Dagelijks werk')).toBeNull()
+  })
+  it('elke categorie heeft artikelen en opent via zijn eigen adres in de academie', () => {
     for (const c of CATEGORIEEN_WERVEN) {
       expect(werven.some((a) => a.categorie === c), c).toBe(true)
-      expect(categorieUitSlug(slugVan(c)), c).toEqual({ naam: c, collectie: 'werven' })
+      expect(categorieUitSlug(slugVan(c)), c).toEqual({ naam: c, collectie: 'newbusiness' })
     }
     expect(HELPCENTER_GERESERVEERD).toContain('werven')
+  })
+  it('de oude collectie werven leest als de academie; er is geen losse collectie meer', () => {
+    expect(collectieUit('werven')).toBe('newbusiness')
+    expect(Object.keys(COLLECTIES)).toEqual(['product', 'newbusiness', 'tips'])
+    expect(alle.some((a) => (a.collectie as string) === 'werven')).toBe(false)
   })
   it('elke link naar het helpcenter wijst naar een bestaand artikel', () => {
     for (const a of werven) for (const [, s] of a.inhoud.matchAll(/\]\(\/helpcenter\/([a-z0-9-]+)\)/g)) expect(perSlug.has(s!), `${a.slug} -> ${s}`).toBe(true)
   })
   it('een wervingsartikel is nooit het artikel van een scherm', () => {
     expect(artikelVoorRoute('/belblokken', alle)).not.toBe('aandacht-vragen-met-hulpvraag-en-entree')
-    expect(perSlug.get(artikelVoorRoute('/belblokken', alle)!)?.collectie).not.toBe('werven')
+    expect((CATEGORIEEN_WERVEN as readonly string[]).includes(perSlug.get(artikelVoorRoute('/belblokken', alle)!)!.categorie)).toBe(false)
+  })
+})
+
+describe('Tips & Tricks', () => {
+  const tips = alle.filter((a) => a.collectie === 'tips')
+  const product = new Set(alle.filter((a) => a.collectie === 'product').map((a) => a.slug))
+  it('twintig tips, vijf per categorie, van het DealDrive-team', () => {
+    expect(tips).toHaveLength(20)
+    for (const c of CATEGORIEEN_TIPS) expect(tips.filter((a) => a.categorie === c), c).toHaveLength(5)
+    for (const a of tips) {
+      expect(a.bron, a.slug).toBe('Van het DealDrive-team')
+      expect(a.slug, a.slug).toMatch(/^tip-/)
+      expect(a.samenvatting.length, a.slug).toBeGreaterThan(40)
+    }
+  })
+  it('elke tip heeft de vaste onderdelen en drie controlevragen', () => {
+    for (const a of tips) {
+      expect(ontbrekendeOnderdelen(a.inhoud, TIPS_ONDERDELEN), a.slug).toEqual([])
+      expect(a.vragen?.length, a.slug).toBe(3)
+      expect(/\d/.test(a.inhoud.slice(a.inhoud.indexOf('## Voorbeeld'))), `${a.slug}: voorbeeld met data`).toBe(true)
+    }
+  })
+  it('elke tip linkt naar het artikel van een functie in Hoe werkt Dealtrace, en elke link bestaat', () => {
+    for (const a of tips) {
+      const links = [...a.inhoud.matchAll(/\]\((\/helpcenter\/([a-z0-9-]+))\)/g)]
+      expect(links.length, a.slug).toBeGreaterThan(0)
+      for (const [, href, s] of links) {
+        expect(href, a.slug).toBe(helpLink(s!))
+        expect(perSlug.has(s!), `${a.slug} -> ${s}`).toBe(true)
+      }
+      expect(links.some(([, , s]) => product.has(s!)), `${a.slug} linkt naar een functieartikel`).toBe(true)
+      expect(links.some(([, , s]) => FUNCTIES.some((f) => f.helpartikel === s)), `${a.slug} linkt naar het artikel van een functie`).toBe(true)
+    }
+  })
+  it('Probeer het wijst naar een scherm van de app; een tip is nooit het artikel van een scherm', () => {
+    for (const a of tips) for (const r of a.routes) expect(r, a.slug).toMatch(/^\/[a-z-]*(\/[a-z-]+)?(\?[a-z]+=[a-z]+)?$/)
+    for (const r of ['/', '/belblokken', '/bezoeken', '/concepten', '/data-kwaliteit', '/accountplannen', '/mijn-dashboard', '/inzichten', '/taken']) {
+      const s = artikelVoorRoute(r, alle)
+      if (s) expect(perSlug.get(s)!.collectie, r).not.toBe('tips')
+    }
+  })
+  it('categorieën openen via hun eigen adres en tips is een gereserveerd pad', () => {
+    for (const c of CATEGORIEEN_TIPS) expect(categorieUitSlug(slugVan(c)), c).toEqual({ naam: c, collectie: 'tips' })
+    expect(HELPCENTER_GERESERVEERD).toContain('tips')
+    expect(COLLECTIES.tips.overzicht).toBe('/helpcenter/tips')
   })
 })
 
@@ -116,9 +178,12 @@ describe('controleerArtikel en artikelVoorRoute', () => {
     expect(controleerArtikel({ titel: 'Ons bezwarenboek', collectie: 'newbusiness', categorie: 'Bezwaren', inhoud: 'Tekst', status: 'concept' })).toEqual([])
     expect(controleerArtikel({ titel: 'Ons bezwarenboek', collectie: 'newbusiness', categorie: 'Bezwaren', inhoud: 'Tekst', status: 'gepubliceerd' })[0]).toMatch(/onderdelen/)
     expect(controleerArtikel({ titel: 'X', collectie: 'product', categorie: 'Bezwaren', inhoud: '', status: 'concept' })).toHaveLength(3)
-    expect(controleerArtikel({ titel: 'Onze pitch', collectie: 'werven', categorie: 'Je verhaal schrijven', inhoud: 'Tekst', status: 'concept' })).toEqual([])
-    expect(controleerArtikel({ titel: 'Onze pitch', collectie: 'werven', categorie: 'Bellen', inhoud: 'Tekst', status: 'concept' })).toEqual(['Kies een categorie uit de collectie'])
-    expect(controleerArtikel({ titel: 'Onze pitch', collectie: 'werven', categorie: 'Je verhaal schrijven', inhoud: 'Tekst', status: 'gepubliceerd' })[0]).toMatch(/onderdelen/)
+    expect(controleerArtikel({ titel: 'Onze pitch', collectie: 'newbusiness', categorie: 'Je verhaal schrijven', inhoud: 'Tekst', status: 'concept' })).toEqual([])
+    expect(controleerArtikel({ titel: 'Onze pitch', collectie: 'werven' as any, categorie: 'Je verhaal schrijven', inhoud: 'Tekst', status: 'concept' })).toContain('Kies een collectie')
+    expect(controleerArtikel({ titel: 'Onze pitch', collectie: 'newbusiness', categorie: 'Je verhaal schrijven', inhoud: 'Tekst', status: 'gepubliceerd' })[0]).toMatch(/onderdelen/)
+    expect(controleerArtikel({ titel: 'Onze tip', collectie: 'tips', categorie: 'Bellen', inhoud: 'Tekst', status: 'concept' })).toEqual(['Kies een categorie uit de collectie'])
+    expect(controleerArtikel({ titel: 'Onze tip', collectie: 'tips', categorie: 'Je dag en je week', inhoud: 'Tekst', status: 'gepubliceerd' })[0]).toMatch(/Wat het je oplevert/)
+    expect(controleerArtikel({ titel: 'Onze tip', collectie: 'tips', categorie: 'Je dag en je week', inhoud: TIPS_ONDERDELEN.map((k) => `## ${k}\n\nTekst.`).join('\n\n'), status: 'gepubliceerd' })).toEqual([])
     expect(controleerArtikel({ titel: 'Een titel', collectie: 'product', categorie: 'Prospects', inhoud: 'a — b', status: 'concept' })).toEqual(['Gebruik geen gedachtestreepjes'])
   })
   it('route met parameter valt terug op het artikel van het scherm', () => {

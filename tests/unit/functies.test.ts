@@ -12,15 +12,15 @@ function gebruiker(overig: Partial<GebruikerContext> = {}): GebruikerContext {
 }
 
 describe('zijbalk per niveau (6.1)', () => {
-  it('Beginner 13, Gevorderd 16, Expert 18 items (met Concepten, Meetings en Accountplannen)', () => {
+  it('Beginner 13, Gevorderd 17, Expert 19 items (met Concepten, Meetings, Kennisbank en Accountplannen)', () => {
     expect(telItems(zijbalkVoor(gebruiker(), org, stand))).toBe(13)
-    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'gevorderd' }), org, stand))).toBe(16)
-    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'expert' }), org, stand))).toBe(18)
+    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'gevorderd' }), org, stand))).toBe(17)
+    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'expert' }), org, stand))).toBe(19)
   })
 
   it('wat uit staat komt in "Nog niet aangezet" met het niveau waarvoor het aanstaat', () => {
     const z = zijbalkVoor(gebruiker(), org, stand)
-    expect(z.nietAangezet.map((i) => i.sleutel)).toEqual(['nav.inzichten', 'nav.accountplannen', 'nav.leadgenerator', 'nav.planning', 'nav.reizen'])
+    expect(z.nietAangezet.map((i) => i.sleutel)).toEqual(['nav.inzichten', 'nav.kennisbank', 'nav.accountplannen', 'nav.leadgenerator', 'nav.planning', 'nav.reizen'])
     expect(z.nietAangezet.find((i) => i.sleutel === 'nav.leadgenerator')?.aanVanaf).toBe('gevorderd')
     expect(z.nietAangezet.find((i) => i.sleutel === 'nav.reizen')?.aanVanaf).toBe('expert')
   })
@@ -81,7 +81,7 @@ describe('zijbalk per niveau (6.1)', () => {
   it('Iedereen ziet alles: geen groep Nog niet aangezet', () => {
     const z = zijbalkVoor(gebruiker(), { ...org, iedereenAlles: true }, stand)
     expect(z.nietAangezet).toHaveLength(0)
-    expect(telItems(z)).toBe(18)
+    expect(telItems(z)).toBe(19)
   })
 })
 

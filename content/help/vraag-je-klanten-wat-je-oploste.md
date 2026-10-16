@@ -1,7 +1,7 @@
 ---
 titel: Vraag je klanten wat je oploste
 categorie: Je pitch onderzoeken
-collectie: werven
+collectie: newbusiness
 samenvatting: Bestaande klanten vertellen je in welke situaties ze controle wilden. Dat levert meer en betere verkoopargumenten op dan zelf bedenken.
 bron: Uit de whitepaper The Perfect Pitch
 routes: /klanten

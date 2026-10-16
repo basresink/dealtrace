@@ -1,13 +1,26 @@
 <script setup lang="ts">
 // Datakwaliteit: welke gegevens ontbreken bij de accounts, contacten, taken en afspraken die je mag zien.
-// Bovenaan de score, daaronder per gat een kaart met aantal, uitleg en een knop naar de gefilterde
-// prospectlijst, of een uitklapbare lijst met links naar de accountkaart, het contact of de taak.
+// Bovenaan de score, daaronder per gat een kaart met aantal en uitleg. "Bekijk" opent de flyout met
+// de regels (naam, account, wat er ontbreekt) die doorklikken naar de accountkaart of het contact;
+// de gefilterde prospectlijst staat als extra knop in de flyout. ?categorie= opent de flyout direct.
+// Eigen velden met "Meenemen in Datakwaliteit" komen als "Zonder <veldnaam>" in hun groep.
 import { KWALITEIT_GROEPEN } from '~~/shared/datakwaliteit'
 
 const { functie } = useMe()
 const aan = !!functie('data.kwaliteit')?.beschikbaar
 const { data, pending } = await useFetch<any>('/api/data-kwaliteit', { immediate: aan, default: () => null })
-const open = ref<Record<string, boolean>>({})
+const route = useRoute()
+const router = useRouter()
+const gekozen = computed(() => {
+  const k = route.query.categorie
+  return typeof k === 'string' ? (data.value?.categorieen ?? []).find((c: any) => c.sleutel === k) ?? null : null
+})
+function openCategorie(sleutel: string | null) {
+  const query = { ...route.query }
+  if (sleutel) query.categorie = sleutel
+  else delete query.categorie
+  router.replace({ query })
+}
 const groepen = computed(() => KWALITEIT_GROEPEN.map((g) => ({ naam: g, items: (data.value?.categorieen ?? []).filter((c: any) => c.groep === g) })).filter((g) => g.items.length))
 const BEREIK: Record<string, string> = { eigen: 'Je eigen accounts', team: 'De accounts van je teams', alles: 'Alle accounts van je organisatie' }
 const scoreKleur = computed(() => (!data.value ? '' : data.value.score >= 85 ? 'dk-score--goed' : data.value.score >= 60 ? 'dk-score--matig' : 'dk-score--laag'))
@@ -56,21 +69,18 @@ useHead({ title: 'Datakwaliteit · Dealtrace' })
                   <p v-if="c.noemer" class="meta">{{ getal(c.aantal) }} van {{ getal(c.noemer) }}</p>
                   <div class="dk-voet">
                     <span v-if="!c.aantal" class="pil pil--groen">In orde</span>
-                    <NuxtLink v-else-if="c.link" :to="c.link" class="dd-act" data-test="dk-filter"><Icoon naam="Filter" :grootte="14" />Toon in lijst</NuxtLink>
-                    <button v-else type="button" class="dd-act" :aria-expanded="!!open[c.sleutel]" data-test="dk-uitklap" @click="open[c.sleutel] = !open[c.sleutel]">
-                      <Icoon naam="ChevronDown" :grootte="14" class="dk-pijl" :class="{ 'dk-pijl--open': open[c.sleutel] }" />{{ open[c.sleutel] ? 'Verberg de lijst' : c.aantal === 1 ? 'Toon het item' : c.meer ? `Toon de eerste ${c.voorbeelden.length}` : `Toon de ${c.aantal}` }}
+                    <button v-else type="button" class="dd-act" aria-haspopup="dialog" data-test="dk-open" @click="openCategorie(c.sleutel)">
+                      <Icoon naam="List" :grootte="14" />{{ c.aantal === 1 ? 'Bekijk het item' : `Bekijk de ${getal(c.aantal)}` }}
                     </button>
+                    <span v-if="c.eigenVeld" class="pil pil--grijs" title="Eigen veld">Eigen veld</span>
                   </div>
-                  <ul v-if="open[c.sleutel] && !c.link" class="dk-lijst" data-test="dk-lijst">
-                    <li v-for="v in c.voorbeelden" :key="v.id"><NuxtLink :to="v.link" class="dk-rij"><span class="dk-rij-naam">{{ v.naam }}</span><span v-if="v.sub" class="meta">{{ v.sub }}</span><Icoon naam="ArrowRight" :grootte="14" class="dk-rij-pijl" /></NuxtLink></li>
-                    <li v-if="c.meer" class="meta dk-meer">En nog {{ getal(c.meer) }}. Los eerst deze op.</li>
-                  </ul>
                 </article>
               </div>
             </section>
           </template>
         </div>
       </section>
+      <KwaliteitFlyout :categorie="gekozen" @sluit="openCategorie(null)" />
     </template>
   </div>
 </template>
@@ -100,20 +110,9 @@ useHead({ title: 'Datakwaliteit · Dealtrace' })
 .dk-aantal { font-size: 24px; font-weight: 800; }
 .dk-uitleg { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 .dk-voet { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
-.dk-pijl { transition: transform var(--transition-fast); }
-.dk-pijl--open { transform: rotate(180deg); }
-.dk-lijst { margin: 4px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--border); max-height: 360px; overflow-y: auto; }
-.dk-rij { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 0; border-bottom: 1px solid var(--border); color: inherit; text-decoration: none; }
-.dk-rij:hover .dk-rij-naam { text-decoration: underline; }
-.dk-rij-naam { flex: 1; min-width: 0; overflow: hidden; font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.dk-rij .meta { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dk-rij-pijl { flex: 0 0 auto; color: var(--muted); }
-.dk-meer { padding: 8px 0; }
 @media (max-width: 720px) {
   .dk-score-kaart { flex-direction: column; align-items: stretch; gap: 12px; }
   .dk-raster { grid-template-columns: 1fr; }
   .dk-voet .dd-act { min-height: 44px; }
-  .dk-rij { flex-wrap: wrap; }
-  .dk-rij .meta { flex-basis: 100%; order: 3; }
 }
 </style>

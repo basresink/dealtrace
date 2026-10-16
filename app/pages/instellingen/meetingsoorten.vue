@@ -1,6 +1,9 @@
 <script setup lang="ts">
-// Meetingsoorten en uitkomsten (F22, beheerder): naam, type, duur, vorm, doel, agendapunten met
-// verplicht, voorbereiding en uitkomsten met gevolg. Seed en editor gebruiken dezelfde bron (gat 16).
+// Meetingsoorten en uitkomsten (F22, beheerder): naam, type, categorie, duur, vorm, doel, agendapunten met
+// verplicht, voorbereiding en uitkomsten met gevolg. Seed en editor gebruiken dezelfde bron (gat 16). De
+// categorie is de groep in Type afspraak: Afspraak (bezoek op locatie, vorm bezoek) of Meeting (op
+// afstand, online of telefonisch). De lijst staat in die twee groepen.
+import { CATEGORIE_LABEL, CATEGORIE_UITLEG, VORMEN_PER_CATEGORIE, categorieVan, type Categorie } from '~~/shared/agenda'
 const { functie } = useMe()
 const aan = computed(() => !!functie('instellingen.meetingsoorten')?.beschikbaar)
 const toast = useToast()
@@ -8,8 +11,11 @@ const { data, refresh } = await useFetch<any>('/api/meetingsoorten', { default: 
 const GEVOLG: Record<string, string> = { gehouden: 'Eerste afspraak gehouden, vraag "Overdragen?"', later: 'Wachtend tot datum, met terugkomtaak', contactpersoon: 'Nieuw contact en een nieuwe poging', nee: 'Nee met reden en terugkomregel', afspraak: 'Eerste afspraak plannen', geen: 'Geen gevolg' }
 const VORM: Record<string, string> = { bezoek: 'Bezoek', online: 'Online', telefoon: 'Telefoon' }
 const bewerk = ref<any>(null)
-function open(s: any) { bewerk.value = JSON.parse(JSON.stringify(s)) }
-function nieuw() { bewerk.value = { naam: '', type: 'klant', duurMin: 30, vorm: 'online', actief: true, data: { doel: '', agenda: [{ punt: 'Aanleiding', verplicht: true }], voorbereiding: [], uitkomsten: [{ code: 'vervolg', label: 'Vervolg afgesproken', gevolg: { type: 'gehouden', overdragen: true } }], eersteAfspraak: false, herinneringMin: 15, kleur: 'grijs' } } }
+const groepen = computed(() => (['bezoek', 'meeting'] as Categorie[]).map((c) => ({ categorie: c, label: CATEGORIE_LABEL[c], uitleg: CATEGORIE_UITLEG[c], soorten: data.value.soorten.filter((s: any) => categorieVan(s) === c) })))
+function open(s: any) { bewerk.value = { ...JSON.parse(JSON.stringify(s)), categorie: categorieVan(s) } }
+// Een andere categorie zet de vorm die erbij past: een bezoek op locatie, een meeting online of telefonisch.
+function zetCategorie(c: Categorie) { bewerk.value.categorie = c; if (!VORMEN_PER_CATEGORIE[c].includes(bewerk.value.vorm)) bewerk.value.vorm = VORMEN_PER_CATEGORIE[c][0] }
+function nieuw() { bewerk.value = { naam: '', type: 'klant', categorie: 'meeting', duurMin: 30, vorm: 'online', actief: true, data: { doel: '', agenda: [{ punt: 'Aanleiding', verplicht: true }], voorbereiding: [], uitkomsten: [{ code: 'vervolg', label: 'Vervolg afgesproken', gevolg: { type: 'gehouden', overdragen: true } }], eersteAfspraak: false, herinneringMin: 15, kleur: 'grijs' } } }
 const slugVan = (t: string) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 async function bewaar() {
   try {
@@ -32,14 +38,20 @@ useHead({ title: 'Meetingsoorten · Dealtrace' })
       </PaginaKop>
       <section class="section">
         <div class="container">
-          <div class="lijst" data-test="ms-lijst">
-            <div v-for="s in data.soorten" :key="s.id" class="rij rij--compact" :class="{ 'rij--uit': !s.actief }">
-              <div class="rij-info">
-                <h3 class="rij-titel">{{ s.naam }} <span class="pil pil--leeg">{{ s.type === 'intern' ? 'intern' : 'klant' }}</span><span v-if="s.data.eersteAfspraak" class="pil pil--leeg">eerste afspraak</span><span v-if="!s.actief" class="pil">uit</span></h3>
-                <div class="rij-sub">{{ s.duurMin }} min · {{ VORM[s.vorm] }} · {{ s.data.agenda.length }} agendapunten · {{ s.data.uitkomsten.length ? s.data.uitkomsten.map((u: any) => u.label).join(', ') : 'geen klantuitkomst' }}</div>
+          <div data-test="ms-lijst">
+            <section v-for="g in groepen" :key="g.categorie" class="ms-groep" :data-test="`ms-groep-${g.categorie}`">
+              <h2 class="ms-groep-kop">{{ g.label }} <span class="meta">{{ g.uitleg }}</span></h2>
+              <div class="lijst">
+                <div v-for="s in g.soorten" :key="s.id" class="rij rij--compact" :class="{ 'rij--uit': !s.actief }">
+                  <div class="rij-info">
+                    <h3 class="rij-titel">{{ s.naam }} <span class="pil pil--leeg">{{ s.type === 'intern' ? 'intern' : 'klant' }}</span><span v-if="s.data.eersteAfspraak" class="pil pil--leeg">eerste afspraak</span><span v-if="!s.actief" class="pil">uit</span></h3>
+                    <div class="rij-sub">{{ s.duurMin }} min · {{ VORM[s.vorm] }} · {{ s.data.agenda.length }} agendapunten · {{ s.data.uitkomsten.length ? s.data.uitkomsten.map((u: any) => u.label).join(', ') : 'geen klantuitkomst' }}</div>
+                  </div>
+                  <button type="button" class="dd-act" :data-test="`ms-bewerk-${s.slug}`" @click="open(s)">Bewerk</button>
+                </div>
+                <p v-if="!g.soorten.length" class="meta">Nog geen soorten in deze groep.</p>
               </div>
-              <button type="button" class="dd-act" :data-test="`ms-bewerk-${s.slug}`" @click="open(s)">Bewerk</button>
-            </div>
+            </section>
           </div>
         </div>
       </section>
@@ -57,7 +69,8 @@ useHead({ title: 'Meetingsoorten · Dealtrace' })
                 <label class="veld"><span class="veld-label">Naam <span class="veld-verplicht">*</span></span><input v-model="bewerk.naam" class="invoer" required minlength="2" data-test="ms-naam"></label>
                 <label class="veld"><span class="veld-label">Type</span><select v-model="bewerk.type" class="invoer"><option value="klant">Klant</option><option value="intern">Intern (telt nooit als klantcontact)</option></select></label>
                 <label class="veld"><span class="veld-label">Duur (minuten)</span><input v-model.number="bewerk.duurMin" type="number" min="5" max="480" step="5" class="invoer"></label>
-                <label class="veld"><span class="veld-label">Vorm</span><select v-model="bewerk.vorm" class="invoer"><option v-for="(l, k) in VORM" :key="k" :value="k">{{ l }}</option></select></label>
+                <label class="veld"><span class="veld-label">Categorie</span><select :value="bewerk.categorie" class="invoer" data-test="ms-categorie" @change="zetCategorie(($event.target as HTMLSelectElement).value as Categorie)"><option value="bezoek">Afspraak (bezoek op locatie)</option><option value="meeting">Meeting (online of telefonisch)</option></select></label>
+                <label class="veld"><span class="veld-label">Vorm</span><select v-model="bewerk.vorm" class="invoer" data-test="ms-vorm" :disabled="bewerk.categorie === 'bezoek'"><option v-for="k in VORMEN_PER_CATEGORIE[bewerk.categorie as Categorie]" :key="k" :value="k">{{ VORM[k] }}</option></select></label>
                 <label class="veld"><span class="veld-label">Standaardherinnering (minuten)</span><input v-model.number="bewerk.data.herinneringMin" type="number" min="0" class="invoer"></label>
                 <label class="veld"><span class="veld-label">Standaardlocatie</span><select v-model="bewerk.data.standaardLocatie" class="invoer"><option :value="null">Geen</option><option value="account">Adres van het account</option><option value="online">Meetinglink</option></select></label>
               </div>
@@ -94,3 +107,9 @@ useHead({ title: 'Meetingsoorten · Dealtrace' })
     </Teleport>
   </div>
 </template>
+
+<style scoped>
+.ms-groep + .ms-groep { margin-top: 28px; }
+.ms-groep-kop { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 10px; font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); }
+.ms-groep-kop .meta { font-weight: 400; letter-spacing: 0; text-transform: none; }
+</style>

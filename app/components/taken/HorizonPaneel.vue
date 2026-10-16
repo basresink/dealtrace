@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Drie horizonnen op /acties (opzet uit DealDrive): Vandaag, Komende week en Week 2 en 3 in één kaart.
+// Drie horizonnen op /taken (opzet uit DealDrive): Vandaag, Komende week en Week 2 en 3 in één kaart.
 // Taken en afspraken samen, per dag gegroepeerd en op tijd gesorteerd, met een icoon per soort (bellen
 // geel, bezoek groen, mail blauw, urgent rood, overig zwart). Een taak opent het taakvenster, een
 // afspraak de agenda met het afspraakvenster.

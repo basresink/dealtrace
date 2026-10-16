@@ -13,7 +13,7 @@ samenvatting: Hoe je Vandaag van boven naar beneden leest en elke taak afrondt m
 
 1. **De kop**: hoeveel taken en afspraken je vandaag hebt.
 2. **Aanleiding van de dag**: het belangrijkste inzicht bij een van je accounts.
-3. **Taken**: achterstallige taken staan altijd bovenaan. Je ziet er acht; de rest staat bij Acties.
+3. **Taken**: achterstallige taken staan altijd bovenaan. Je ziet er acht; de rest staat bij Taken.
 4. **Afspraken** en **prio**: wat vast staat en wat niet mag blijven liggen.
 5. **Werkblok**: je belblok (binnendienst) of je bezoekdag (buitendienst).
 

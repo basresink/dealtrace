@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Concepten (8.5.7): alles wat agents voor je klaarzetten, als kaarten in een raster (3 per rij, 2 op een
-// tablet, 1 op de telefoon) in de opzet van de inzichtkaarten. Filters in de URL met tellers: status
-// (standaard open: klaar en goedgekeurd), soort (`type`), agent, account (`zoek`) en periode (`sinds`).
+// tablet, 1 op de telefoon) in de opzet van de inzichtkaarten. Filters rechtsboven in de kop; het paneel
+// heeft status (standaard open: klaar en goedgekeurd), soort (`type`), agent en periode (`sinds`), met
+// tellers en alles in de URL. Zoeken op account (`zoek`) kan via een link of het zoekicoon in de kop.
 // De salesmanager ziet met `team=1` ook de concepten van zijn teams (8.12). Een klik op een kaart opent de
 // ConceptFlyout; `?concept=<id>` opent er meteen een.
 import { agentLabel, CONCEPT_PERIODE, CONCEPT_SOORT, CONCEPT_STATUS } from '~~/shared/concepten'
@@ -21,12 +22,6 @@ function zet(p: Record<string, string | undefined>) {
   router.replace({ query: n })
 }
 
-// Zoeken op account (en contact of onderwerp), even wachten na het typen.
-const zoekTekst = ref(q('zoek'))
-let wacht: ReturnType<typeof setTimeout> | undefined
-watch(zoekTekst, (z) => { clearTimeout(wacht); wacht = setTimeout(() => zet({ zoek: z.trim() || undefined }), 250) })
-watch(() => route.query.zoek, (z) => { if ((z ?? '') !== zoekTekst.value.trim()) zoekTekst.value = typeof z === 'string' ? z : '' })
-
 const STATUSSEN: [string, string][] = [['', 'Open'], ...Object.entries(CONCEPT_STATUS), ['alle', 'Alle']]
 const tel = (groep: 'soort' | 'status' | 'agent', k: string) => Number(data.value.tellers?.[groep]?.[k] ?? 0)
 const SOORTEN = computed(() => [['', 'Alle'], ...Object.entries(CONCEPT_SOORT).filter(([k]) => tel('soort', k) > 0 || q('type') === k)] as [string, string][])
@@ -35,9 +30,9 @@ const PERIODES: [string, string][] = [['', 'Alles'], ...Object.entries(CONCEPT_P
 const somSoort = computed(() => Object.values(data.value.tellers?.soort ?? {}).reduce((a: number, b: any) => a + Number(b), 0))
 const somAgent = computed(() => Object.values(data.value.tellers?.agent ?? {}).reduce((a: number, b: any) => a + Number(b), 0))
 
-const filtersOpen = ref(!!(q('agent') || q('sinds')))
+const filtersOpen = ref(!!(q('agent') || q('sinds') || q('status') || q('type')))
 const actieveFilters = computed(() => ['type', 'agent', 'zoek', 'sinds', 'account'].filter((k) => q(k)).length + (q('status') ? 1 : 0))
-function resetFilters() { zoekTekst.value = ''; zet(Object.fromEntries(SLEUTELS.map((k) => [k, undefined]))) }
+function resetFilters() { zet(Object.fromEntries(SLEUTELS.map((k) => [k, undefined]))) }
 const wachten = computed(() => tel('status', 'klaar'))
 
 // Flyout: een klik op een kaart, of ?concept=<id>.
@@ -61,30 +56,31 @@ useHead({ title: 'Concepten · Dealtrace' })
     <template v-else>
       <PaginaKop :kicker="`Concepten · ${wachten} ${wachten === 1 ? 'wacht' : 'wachten'}`" titel="Concepten" uitleg="Wat agents voor je klaarzetten. Jij keurt goed, past aan of wijst af; niets gaat zonder jou de deur uit." helpartikel="concepten-goedkeuren-en-versturen">
         <template #acties>
+          <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'cpg-filters--aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="concepten-filters" @click="filtersOpen = !filtersOpen">
+            <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="cpg-teller">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="cpg-pijl" :class="{ 'cpg-pijl--open': filtersOpen }" />
+          </button>
           <label v-if="team" class="keuze cpg-team"><input type="checkbox" :checked="q('team') === '1'" data-test="concepten-team" @change="zet({ team: ($event.target as HTMLInputElement).checked ? '1' : undefined })"> Ook van mijn team</label>
         </template>
       </PaginaKop>
 
-      <section class="cpg-werkbalk-sectie">
+      <section v-if="filtersOpen" class="cpg-filter-sectie">
         <div class="container">
-          <div class="cpg-werkbalk">
-            <label class="zoekveld cpg-zoek"><span class="sr-only">Zoek op account</span><Icoon naam="Search" :grootte="16" class="cpg-zoek-icoon" /><input v-model="zoekTekst" type="search" class="zoekinvoer" placeholder="Zoek op account of contact" data-test="concepten-zoek"></label>
-            <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'cpg-filters--aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="concepten-filters" @click="filtersOpen = !filtersOpen">
-              <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="cpg-teller">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="cpg-pijl" :class="{ 'cpg-pijl--open': filtersOpen }" />
-            </button>
-          </div>
-          <div class="cpg-groep cpg-groep--strook" role="group" aria-label="Status" data-test="filter-status"><span class="filter-label">Status</span>
-            <button v-for="[k, l] in STATUSSEN" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('status') === k }" :aria-pressed="q('status') === k" :data-test="`status-${k || 'open'}`" @click="zet({ status: k || undefined })">{{ l }}<span class="pil-teller tnum">{{ tel('status', k || 'open') }}</span></button>
-          </div>
-          <div class="cpg-groep cpg-groep--strook" role="group" aria-label="Soort" data-test="filter-soort"><span class="filter-label">Soort</span>
-            <button v-for="[k, l] in SOORTEN" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('type') === k }" :aria-pressed="q('type') === k" :data-test="`soort-${k || 'alle'}`" @click="zet({ type: k || undefined })">{{ l }}<span class="pil-teller tnum">{{ k ? tel('soort', k) : somSoort }}</span></button>
-          </div>
-          <div v-if="filtersOpen" class="cpg-paneel" data-test="concepten-filterpaneel">
+          <div class="cpg-paneel" data-test="concepten-filterpaneel">
+            <div class="cpg-groep" role="group" aria-label="Status" data-test="filter-status"><span class="filter-label">Status</span>
+              <button v-for="[k, l] in STATUSSEN" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('status') === k }" :aria-pressed="q('status') === k" :data-test="`status-${k || 'open'}`" @click="zet({ status: k || undefined })">{{ l }}<span class="pil-teller tnum">{{ tel('status', k || 'open') }}</span></button>
+            </div>
+            <div class="cpg-groep" role="group" aria-label="Soort" data-test="filter-soort"><span class="filter-label">Soort</span>
+              <button v-for="[k, l] in SOORTEN" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('type') === k }" :aria-pressed="q('type') === k" :data-test="`soort-${k || 'alle'}`" @click="zet({ type: k || undefined })">{{ l }}<span class="pil-teller tnum">{{ k ? tel('soort', k) : somSoort }}</span></button>
+            </div>
             <div class="cpg-groep" role="group" aria-label="Agent" data-test="filter-agent"><span class="filter-label">Agent</span>
               <button v-for="[k, l] in AGENTS" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('agent') === k }" :aria-pressed="q('agent') === k" :data-test="`agent-${k || 'alle'}`" @click="zet({ agent: k || undefined })">{{ l }}<span class="pil-teller tnum">{{ k ? tel('agent', k) : somAgent }}</span></button>
             </div>
             <div class="cpg-groep" role="group" aria-label="Periode" data-test="filter-periode"><span class="filter-label">Periode</span>
               <button v-for="[k, l] in PERIODES" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('sinds') === k }" :aria-pressed="q('sinds') === k" :data-test="`sinds-${k || 'alles'}`" @click="zet({ sinds: k || undefined })">{{ l }}</button>
+            </div>
+            <div v-if="q('zoek') || q('account')" class="cpg-groep"><span class="filter-label">Account</span>
+              <span class="filter-pil filter-pil--aan" data-test="concepten-zoekterm">{{ q('zoek') || 'Gekozen account' }}</span>
+              <button type="button" class="dd-act" data-test="concepten-zoek-wis" @click="zet({ zoek: undefined, account: undefined })">Wis</button>
             </div>
             <div v-if="actieveFilters" class="cpg-groep cpg-groep--eind"><button type="button" class="dd-act" data-test="concepten-reset" @click="resetFilters">Reset filters</button></div>
           </div>
@@ -112,20 +108,15 @@ useHead({ title: 'Concepten · Dealtrace' })
 </template>
 
 <style scoped>
-.cpg-werkbalk-sectie { padding: 0 0 8px; }
-.cpg-werkbalk { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-.cpg-zoek { flex: 1 1 260px; max-width: 420px; display: flex; align-items: center; }
-.cpg-zoek .zoekinvoer { width: 100%; min-height: 44px; padding-left: 36px; }
-.cpg-zoek-icoon { position: absolute; left: 12px; color: var(--muted); pointer-events: none; }
 .cpg-filters--aan { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
 .cpg-teller { display: inline-flex; align-items: center; height: 18px; padding: 0 7px; margin-left: 2px; background: var(--yellow); color: var(--ink); font-size: 11px; font-weight: 800; border-radius: 2px; }
 .cpg-pijl { transition: transform var(--transition-fast); }
 .cpg-pijl--open { transform: rotate(180deg); }
 .cpg-groep { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .cpg-groep .filter-label { min-width: 72px; }
-.cpg-groep--strook + .cpg-groep--strook { margin-top: 8px; }
 .cpg-groep--eind { justify-content: flex-end; }
-.cpg-paneel { display: flex; flex-direction: column; gap: 12px; background: var(--wit); border: 1px solid var(--border); padding: 16px 18px; margin-top: 12px; }
+.cpg-filter-sectie { padding: 16px 0 0; }
+.cpg-paneel { display: flex; flex-direction: column; gap: 12px; background: var(--wit); border: 1px solid var(--border); padding: 16px 18px; }
 .cpg-feedkop { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
 .cpg-feedtitel { font-family: var(--font-serif); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 0; color: var(--ink); }
 .cpg-feedmeta { font-size: 12px; color: var(--muted); }
@@ -133,7 +124,6 @@ useHead({ title: 'Concepten · Dealtrace' })
 @media (min-width: 720px) { .cpg-raster { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1100px) { .cpg-raster { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 719px) {
-  .cpg-zoek { max-width: none; flex-basis: 100%; }
   .cpg-groep .filter-label { width: 100%; }
   .cpg-groep .filter-pil { min-height: var(--touch-target-min); }
   .cpg-team { min-height: var(--touch-target-min); display: inline-flex; align-items: center; gap: 6px; }

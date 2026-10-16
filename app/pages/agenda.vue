@@ -1,22 +1,20 @@
 <script setup lang="ts">
-// Agenda (F09) in de opzet van DealDrive: de kop vat de dag samen, rechts zoeken, "+ Taak",
-// "+ Afspraak" en het uitklapmenu Weergave (Werkweek, Week, Maand; in de URL). Daaronder de
-// navigatie met het weeknummer en het weekrooster (AgendaRooster) of de maand (AgendaMaand).
+// Agenda (F09) in de opzet van DealDrive: de kop vat de dag samen, rechts zoeken, AI, hulp, "+ Taak"
+// en "+ Afspraak". Daaronder de navigatie met het weeknummer en Filters; in het filterpaneel staat
+// ook de weergave (Werkweek, Week, Maand; in de URL). Dan het weekrooster (AgendaRooster) of de maand (AgendaMaand).
 // Afspraken in de kleur van de meetingsoort, belblokken en taken op hun tijd, bezet uit de
 // gekoppelde agenda gearceerd, conflicten met een rode rand en "Gepland door" bij afspraken die een
 // collega voor je plande. Klik op een lege tijd plant een afspraak op dat moment.
 import { plusDagen } from '~~/shared/datum'
 const route = useRoute()
 const router = useRouter()
-const { functie } = useMe()
 const toast = useToast()
 const klasse = useSchermklasse()
-const { open: zoekenOpen } = useZoeken()
 const vandaag = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Amsterdam' })
 type Weergave = 'werkweek' | 'week' | 'maand' | 'dag'
 // "Wie is er aan de beurt?" staat sinds de nieuwe zijbalk op /meetings; oude links gaan daarheen.
 if (route.query.weergave === 'meetings') await navigateTo('/meetings', { replace: true })
-// 'dag' is geen keuze in het menu, maar oude links (Vandaag, Acties, Bezoeken) gebruiken hem nog.
+// 'dag' is geen keuze in het filterpaneel, maar oude links (Vandaag, Taken, Bezoeken) gebruiken hem nog.
 const weergave = computed<Weergave>(() => (['werkweek', 'week', 'maand', 'dag'].includes(String(route.query.weergave)) ? route.query.weergave as Weergave : 'werkweek'))
 const OPTIES = [
   { id: 'werkweek', label: 'Werkweek', icoon: 'CalendarRange' },
@@ -85,15 +83,8 @@ const weekendAantal = computed(() => {
   return afspraken.value.filter((a: any) => weekend.has(dagVan(a.start))).length
 })
 
-// Weergavemenu: sluit bij een klik erbuiten en met Escape.
-const menuOpen = ref(false)
-const menuRef = ref<HTMLElement | null>(null)
-const actief = computed(() => OPTIES.find((o) => o.id === weergave.value) ?? OPTIES[0])
-function kies(w: Weergave) { menuOpen.value = false; zet({ weergave: w === 'werkweek' ? undefined : w }) }
-function buiten(e: MouseEvent) { if (menuOpen.value && menuRef.value && !menuRef.value.contains(e.target as Node)) menuOpen.value = false }
-function esc(e: KeyboardEvent) { if (e.key === 'Escape') menuOpen.value = false }
-onMounted(() => { document.addEventListener('mousedown', buiten); document.addEventListener('keydown', esc) })
-onUnmounted(() => { document.removeEventListener('mousedown', buiten); document.removeEventListener('keydown', esc) })
+// De weergave (werkweek, week, maand, dag) staat in het filterpaneel, in de URL.
+function kies(w: Weergave) { zet({ weergave: w === 'werkweek' ? undefined : w }) }
 
 // Flyouts
 const planOpen = ref(false)
@@ -114,20 +105,8 @@ if (import.meta.client && route.query.melding === 'gekoppeld') toast.toon('Agend
   <div>
     <PaginaKop kicker="Planning · Agenda" :titel="titel" helpartikel="agenda">
       <template #acties>
-        <button type="button" class="dd-actie dd-actie--secundair ag-icoonknop" aria-label="Zoeken" title="Zoeken" data-test="agenda-zoek" @click="zoekenOpen = true"><Icoon naam="Search" class="dd-actie-icoon" /></button>
         <button type="button" class="dd-actie dd-actie--primair" data-test="agenda-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
         <button type="button" class="dd-actie dd-actie--zwart" data-test="plan-afspraak-knop" @click="plan()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
-        <div ref="menuRef" class="ag-menu-wrap">
-          <button type="button" class="dd-actie dd-actie--secundair" :aria-expanded="menuOpen" aria-haspopup="menu" data-test="weergave-knop" @click="menuOpen = !menuOpen">
-            <Icoon :naam="actief.icoon" class="dd-actie-icoon" />Weergave<Icoon naam="ChevronDown" class="ag-caret" :class="{ 'ag-caret--open': menuOpen }" />
-          </button>
-          <ul v-if="menuOpen" class="ag-menu" role="menu" data-test="weergave-menu">
-            <li v-for="o in OPTIES" :key="o.id" role="none">
-              <button type="button" role="menuitemradio" :aria-checked="weergave === o.id" class="ag-menu-item" :class="{ 'ag-menu-item--aan': weergave === o.id }" :data-test="`weergave-${o.id}`" @click="kies(o.id)"><Icoon :naam="o.icoon" />{{ o.label }}</button>
-            </li>
-          </ul>
-        </div>
-        <NuxtLink v-if="functie('briefing.bewerken')?.beschikbaar" to="/briefings" class="dd-actie dd-actie--secundair" data-test="briefings-knop"><Icoon naam="ScrollText" class="dd-actie-icoon" />Briefings</NuxtLink>
       </template>
     </PaginaKop>
     <section class="section section--laatste ag-sectie">
@@ -141,7 +120,12 @@ if (import.meta.client && route.query.melding === 'gekoppeld') toast.toon('Agend
           <h2 class="ag-periode" data-test="agenda-periode">{{ navLabel }}</h2>
           <button type="button" class="dd-act ag-filterknop" :class="{ 'ag-filterknop--aan': filterAantal }" :aria-expanded="filtersOpen" data-test="agenda-filters" @click="filtersOpen = !filtersOpen"><Icoon naam="SlidersHorizontal" />Filters<span v-if="filterAantal" class="ag-teller">{{ filterAantal }}</span></button>
         </div>
-        <div v-if="filtersOpen" class="formulier-raster ag-filters">
+        <div v-if="filtersOpen" class="formulier-raster ag-filters" data-test="agenda-filterpaneel">
+          <div class="veld ag-weergave"><span class="veld-label">Weergave</span>
+            <div class="ag-weergave-pillen" role="group" aria-label="Weergave">
+              <button v-for="o in OPTIES" :key="o.id" type="button" class="filter-pil" :class="{ 'filter-pil--aan': weergave === o.id }" :aria-pressed="weergave === o.id" :data-test="`weergave-${o.id}`" @click="kies(o.id)"><Icoon :naam="o.icoon" :grootte="14" />{{ o.label }}</button>
+            </div>
+          </div>
           <label v-if="data.gebruikers.length > 1" class="veld"><span class="veld-label">Gebruiker</span><select class="invoer" :value="gebruiker" data-test="filter-gebruiker" @change="zet({ gebruiker: ($event.target as HTMLSelectElement).value || undefined })"><option value="">Mijn agenda</option><option v-for="u in data.gebruikers" :key="u.id" :value="u.id">{{ u.naam.replace(/^Testgebruiker /, '') }}</option></select></label>
           <label class="veld"><span class="veld-label">Meetingsoort</span><select v-model="filterSoort" class="invoer" data-test="filter-soort"><option value="">Alle</option><option v-for="m in data.meetingsoorten" :key="m.id" :value="m.slug">{{ m.naam }}</option></select></label>
           <label class="veld"><span class="veld-label">Vorm</span><select v-model="filterVorm" class="invoer" data-test="filter-vorm"><option value="">Alle</option><option v-for="(l, k) in vormLabel" :key="k" :value="k">{{ l }}</option></select></label>
@@ -176,14 +160,6 @@ if (import.meta.client && route.query.melding === 'gekoppeld') toast.toon('Agend
 
 <style scoped>
 .ag-sectie { padding-top: 16px; }
-.ag-icoonknop { padding-left: 10px; padding-right: 10px; min-width: var(--touch-target-min); }
-.ag-menu-wrap { position: relative; }
-.ag-caret { width: 14px; height: 14px; margin-left: 2px; transition: transform 150ms ease-out; }
-.ag-caret--open { transform: rotate(180deg); }
-.ag-menu { position: absolute; top: calc(100% + 4px); right: 0; z-index: 30; display: flex; flex-direction: column; gap: 1px; min-width: 200px; margin: 0; padding: 4px; list-style: none; background: var(--wit); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 6px 18px rgba(0, 0, 0, .08); }
-.ag-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 8px 12px; border: 0; border-radius: var(--radius); background: transparent; color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; }
-.ag-menu-item:hover { background: var(--surface); }
-.ag-menu-item--aan, .ag-menu-item--aan:hover { background: var(--ink); color: var(--yellow); }
 .ag-navrij { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
 .ag-nav { display: inline-flex; gap: 6px; }
 .ag-navknop { min-width: var(--touch-target-min); min-height: var(--touch-target-min); padding: 6px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: transparent; color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
@@ -193,6 +169,8 @@ if (import.meta.client && route.query.melding === 'gekoppeld') toast.toon('Agend
 .ag-filterknop--aan { border-color: var(--ink); }
 .ag-teller { padding: 0 6px; font-size: var(--fs-label); background: var(--yellow); border-radius: var(--radius); }
 .ag-filters { margin-bottom: 12px; }
+.ag-weergave { grid-column: 1 / -1; }
+.ag-weergave-pillen { display: flex; flex-wrap: wrap; gap: 8px; }
 .ag-weekend { margin: 0 0 10px; padding: 8px 12px; background: var(--surface); border-left: 3px solid var(--yellow); font-size: 12px; color: var(--ink-soft); }
 .ag-weekend-knop { padding: 0; border: 0; background: none; font: inherit; font-weight: 700; color: var(--ink); text-decoration: underline; cursor: pointer; }
 .ag-leeg { margin: 0 0 10px; }

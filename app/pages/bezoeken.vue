@@ -9,7 +9,6 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const klasse = useSchermklasse()
-const { open: zoekenOpen } = useZoeken()
 onMounted(() => { if (klasse.value === 'telefoon') navigateTo('/onderweg', { replace: true }) })
 const zet = (q: Record<string, string | undefined>) => router.replace({ query: { ...route.query, ...q } })
 const q = computed(() => ({ ...route.query }))
@@ -102,12 +101,12 @@ useHead({ title: 'Bezoeken · Dealtrace' })
   <div>
     <PaginaKop :kicker="kicker" :titel="titel" uitleg="Bezoeken op de kaart en op tijd gesorteerd. Het volgende bezoek pulseert rood; kansen langs je route neem je onderweg mee." helpartikel="bezoeken-en-kansen-langs-de-route">
       <template #acties>
-        <button type="button" class="dd-actie dd-actie--secundair dd-actie--icoon" aria-label="Zoeken" title="Zoeken" @click="zoekenOpen = true"><Icoon naam="Search" /></button>
         <button type="button" class="dd-actie dd-actie--zwart" data-test="plus-bezoek" @click="nieuweAfspraak"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
         <button v-if="heeftFilters" type="button" class="dd-actie dd-actie--secundair" :class="{ 'bz-toggle--aan': filtersOpen || filterTeller }" :aria-expanded="filtersOpen" data-test="bz-filters" @click="filtersOpen = !filtersOpen">
           <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="filterTeller" class="pil-teller pil-teller--geel">{{ filterTeller }}</span><Icoon naam="ChevronDown" :grootte="14" class="bz-caret" :class="{ 'bz-caret--open': filtersOpen }" />
         </button>
         <NuxtLink to="/agenda?weergave=dag" class="dd-actie dd-actie--secundair"><Icoon naam="Calendar" class="dd-actie-icoon" />Agenda</NuxtLink>
+        <NuxtLink v-if="data?.kan.analyse" to="/bezoek-analyse" class="dd-actie dd-actie--secundair" data-test="bezoekanalyse-knop"><Icoon naam="ChartLine" class="dd-actie-icoon" />Bezoekanalyse</NuxtLink>
       </template>
     </PaginaKop>
 
@@ -244,7 +243,6 @@ useHead({ title: 'Bezoeken · Dealtrace' })
             <h2 class="bz-bloktitel">Te plannen bezoeken</h2>
             <p class="bz-subtitel">Open bezoektaken uit de motor en handmatig. Plan elk bezoek met één klik als afspraak, of cluster ze per regio tot een volle dag.</p>
           </div>
-          <NuxtLink v-if="data.kan.analyse" to="/analyse/regio" class="dd-actie dd-actie--secundair" data-test="regio-analyse"><Icoon naam="MapPin" class="dd-actie-icoon" />Regio-analyse</NuxtLink>
         </header>
         <NietAangezetKop v-if="!data.kan.teplannen" sleutel="bezoeken.teplannen" />
         <ol v-else-if="data.teplannen.length" class="bz-plan">

@@ -1,7 +1,7 @@
 ---
 titel: Waarom mensen willen veranderen
 categorie: Waarom klanten kopen
-collectie: werven
+collectie: newbusiness
 samenvatting: Mensen verzetten zich niet tegen elke verandering. Ze willen hun situatie verbeteren op vier punten, en daar begint elke pitch.
 bron: Uit de whitepaper The Perfect Pitch
 routes: /richting

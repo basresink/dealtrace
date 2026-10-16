@@ -10,7 +10,6 @@ const nu = new Date()
 const maandag = new Date(nu); maandag.setDate(nu.getDate() - ((nu.getDay() + 6) % 7))
 const zondag = new Date(maandag); zondag.setDate(maandag.getDate() + 6)
 const d = (x: Date) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short' }).format(x).replace('.', '')
-const planning = computed(() => functie('nav.planning')?.beschikbaar)
 useHead({ title: 'Prospects · Dealtrace' })
 </script>
 
@@ -24,7 +23,6 @@ useHead({ title: 'Prospects · Dealtrace' })
       helpartikel="de-accountkaart-lezen"
     >
       <template #acties>
-        <NuxtLink v-if="planning" class="dd-actie dd-actie--secundair" to="/planning">Jaarplanning →</NuxtLink>
         <NuxtLink class="dd-actie dd-actie--zwart" to="/prospects/alle" data-test="alle-prospects">Alle prospects →</NuxtLink>
       </template>
     </PaginaKop>

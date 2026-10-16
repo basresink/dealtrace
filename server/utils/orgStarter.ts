@@ -95,7 +95,7 @@ export const STARTSET: StartsetOnderdeel[] = [
     naam: 'Meetingsoorten met uitkomsten (P13, P30)',
     async voerUit(tx, org) {
       for (const m of MEETINGSOORTEN_START) {
-        await tx.execute(sql`insert into meetingsoorten (organisation_id, slug, naam, type, duur_min, vorm, data) values (${org}, ${m.slug}, ${m.naam}, ${m.type}, ${m.duurMin}, ${m.vorm}, ${JSON.stringify(m.data)}::jsonb) on conflict (organisation_id, slug) do nothing`)
+        await tx.execute(sql`insert into meetingsoorten (organisation_id, slug, naam, type, categorie, duur_min, vorm, data) values (${org}, ${m.slug}, ${m.naam}, ${m.type}, ${m.categorie}, ${m.duurMin}, ${m.vorm}, ${JSON.stringify(m.data)}::jsonb) on conflict (organisation_id, slug) do nothing`)
       }
     },
   },

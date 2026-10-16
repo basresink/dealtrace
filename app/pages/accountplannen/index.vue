@@ -6,7 +6,6 @@
 import { geldigheidLabel, WEERGAVE_LABEL } from '~~/shared/accountplannen'
 const { functie } = useMe()
 const aan = !!functie('nav.accountplannen')?.beschikbaar
-const { open: zoekenOpen } = useZoeken()
 const route = useRoute()
 const router = useRouter()
 const { data, refresh } = await useFetch<any>('/api/accountplannen', { immediate: aan, default: () => ({ plannen: [], actueel: 0 }) })
@@ -29,7 +28,6 @@ useHead({ title: 'Accountplannen · Dealtrace' })
     <template v-else>
       <PaginaKop :kicker="`Accountplannen · ${data.actueel} actueel`" titel="Eén plan per klant, elke stap aanwijsbaar." uitleg="Wie zijn grootste klanten een plan geeft, hoeft ze volgend jaar niet terug te winnen." helpartikel="accountplannen">
         <template #acties>
-          <button type="button" class="dd-actie dd-actie--secundair dd-actie--icoon" aria-label="Zoeken" title="Zoeken" data-test="ap-zoek" @click="zoekenOpen = true"><Icoon naam="Search" /></button>
           <button type="button" class="dd-actie dd-actie--primair" data-test="ap-nieuw" @click="nieuwOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Accountplan</button>
         </template>
       </PaginaKop>

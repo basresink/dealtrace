@@ -51,10 +51,10 @@ export default defineEventHandler(async (event) => {
     // Prio (DealDrive-opzet): per regel de naam, de reden en een label; tekst en link blijven voor de telefoon.
     type Prio = { soort: string; tekst: string; link: string; naam: string; reden: string; label: string; labelSoort: 'hot' | 'risico' | 'info' }
     const prio: Prio[] = []
-    for (const s of signals.filter((x) => x.status === 'nieuw' && x.relevanceScore >= 75 && x.id !== aanleiding?.id).slice(0, 2)) prio.push({ soort: 'aanleiding', tekst: s.title, link: `/acties?tab=inzichten&inzicht=${s.id}`, naam: (s.accountId && per.get(s.accountId)?.naam) || s.title, reden: s.accountId ? s.title : (s.data?.waarom ?? ''), label: s.relevanceScore >= 85 ? 'Hot' : 'Aanleiding', labelSoort: 'hot' })
+    for (const s of signals.filter((x) => x.status === 'nieuw' && x.relevanceScore >= 75 && x.id !== aanleiding?.id).slice(0, 2)) prio.push({ soort: 'aanleiding', tekst: s.title, link: `/inzichten?inzicht=${s.id}`, naam: (s.accountId && per.get(s.accountId)?.naam) || s.title, reden: s.accountId ? s.title : (s.data?.waarom ?? ''), label: s.relevanceScore >= 85 ? 'Hot' : 'Aanleiding', labelSoort: 'hot' })
     for (const a of eigen.filter((x) => x.terugOp && x.terugOp <= v && ['wachtend', 'nee'].includes(x.nbStatus))) prio.push({ soort: 'terug', tekst: `${a.naam} komt vandaag terug`, link: `/accounts/${a.id}`, naam: a.naam, reden: 'Komt vandaag terug uit de wachtstand', label: 'Terug', labelSoort: 'info' })
-    for (const t of taken.filter((x) => x.actionType !== 'taak' && /bevestig|overdr/i.test(x.title))) prio.push({ soort: 'afspraak', tekst: t.title, link: `/acties?taak=${t.id}`, naam: (t.accountId && per.get(t.accountId)?.naam) || t.title, reden: t.title, label: 'Afspraak', labelSoort: 'risico' })
-    for (const t of taken.filter((x) => isAchterstallig(x, nu) && isDringend(x.priority) && !prio.some((p) => p.link === `/acties?taak=${x.id}`)).slice(0, 2)) prio.push({ soort: 'achter', tekst: t.title, link: `/acties?taak=${t.id}`, naam: (t.accountId && per.get(t.accountId)?.naam) || t.title, reden: t.title, label: 'Risico', labelSoort: 'risico' })
+    for (const t of taken.filter((x) => x.actionType !== 'taak' && /bevestig|overdr/i.test(x.title))) prio.push({ soort: 'afspraak', tekst: t.title, link: `/taken?taak=${t.id}`, naam: (t.accountId && per.get(t.accountId)?.naam) || t.title, reden: t.title, label: 'Afspraak', labelSoort: 'risico' })
+    for (const t of taken.filter((x) => isAchterstallig(x, nu) && isDringend(x.priority) && !prio.some((p) => p.link === `/taken?taak=${x.id}`)).slice(0, 2)) prio.push({ soort: 'achter', tekst: t.title, link: `/taken?taak=${t.id}`, naam: (t.accountId && per.get(t.accountId)?.naam) || t.title, reden: t.title, label: 'Risico', labelSoort: 'risico' })
 
     // Inzichten bij prospects in de laatste 48 uur (eigen accounts), hoogste relevantie eerst, één per account.
     const grens48 = new Date(nu.getTime() - 48 * 3600_000).toISOString()
@@ -66,8 +66,6 @@ export default defineEventHandler(async (event) => {
 
     const [mij] = await tx.select({ werkplek: schema.users.werkplek, data: schema.users.data }).from(schema.users).where(eq(schema.users.id, mijn))
     const werkplek = mij?.werkplek ?? 'binnendienst'
-    const belTaken = vandaagEnEerder.filter((t) => t.actionType === 'bellen').length
-    const bezoekTaken = vandaagEnEerder.filter((t) => t.actionType === 'bezoek').length
 
     // Team vandaag (salesmanager): wie loopt achter, wat wacht op goedkeuring.
     let team: { naam: string; open: number; achterstallig: number; inzichten: number }[] | null = null
@@ -83,12 +81,9 @@ export default defineEventHandler(async (event) => {
 
     const volgendeKoud = geordend.find((t) => t.actionType === 'bellen' && t.dueDate && Date.parse(t.dueDate) >= nu.getTime())
     const aanleidingAccount = aanleiding?.accountId ? per.get(aanleiding.accountId) : null
-    // P10: het belblok van vandaag dat nog loopt, met zijn open gesprekken.
     // P32: de telefoonweergave uit dezelfde rekenkern; de laptop leest er de focusregel uit.
     const niveau = (ctx.organisatie.iedereenAlles ? 'expert' : ctx.gebruiker.niveau) as 'beginner' | 'gevorderd' | 'expert'
     const tel = await telefoonDag(tx, { id: mijn, werkplek, niveau }, dag, echtNu)
-    const [blokVandaag] = (await tx.execute(sql`select s.id, s.start_op, (select count(*)::int from tasks t where t.belblok_id = s.id and t.status in ('open', 'bezig')) as n
-      from belblok_sessies s where s.gebruiker_id = ${ctx.gebruiker.id} and s.status in ('gepland', 'bezig') and s.eind_op > now() and s.start_op < now() + interval '18 hours' order by s.start_op limit 1`)).rows as { id: string; start_op: string; n: number }[]
     return {
       kop: {
         groet: `${groetVoor(nu)}, ${ctx.gebruiker.naam.replace(/^Test(gebruiker|founder)\s+/, '').split(' ')[0]}.`,
@@ -100,11 +95,6 @@ export default defineEventHandler(async (event) => {
       taken: { lijst: geordend.slice(0, 8).map(taakUit), meer: Math.max(0, geordend.length - 8), totaal: geordend.length },
       afspraken: { lijst: [] as unknown[], totaal: 0 },
       prio: prio.slice(0, 4),
-      werkblok: werkplek === 'buitendienst'
-        ? { soort: 'bezoekdag', titel: 'BEZOEKDAG', tekst: bezoekTaken ? `${bezoekTaken} ${bezoekTaken === 1 ? 'bezoek' : 'bezoeken'} vandaag · nog geen regiodag gepland` : 'Nog geen regiodag gepland', knop: { tekst: 'Open bezoeken', naar: '/acties?actiesoort=bezoek' } }
-        : blokVandaag
-          ? { soort: 'belblok', titel: 'BELBLOK', tekst: `${new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(blokVandaag.start_op))} · ${blokVandaag.n} ${blokVandaag.n === 1 ? 'gesprek' : 'gesprekken'}`, knop: { tekst: 'Start belblok', naar: `/belblokken/${blokVandaag.id}` } }
-          : { soort: 'belblok', titel: 'BELBLOK', tekst: belTaken ? `${belTaken} ${belTaken === 1 ? 'gesprek' : 'gesprekken'} · ongeveer ${belTaken * 8} min · nog geen belblok gepland` : 'Nog geen belblok gepland', knop: { tekst: belTaken ? 'Plan een belblok' : 'Naar belblokken', naar: '/belblokken' } },
       team: kan(ctx, 'vandaag.team') ? team : null,
       kan: { nieuwProspect: kan(ctx, 'prospects.nieuw'), voorlezen: kan(ctx, 'vandaag.voorlezen'), week: kan(ctx, 'vandaag.dagkiezerWeek') },
       telefoon: { ...tel, vandaag: nlMoment(echtNu).datum, groet: `${groetVoor(echtNu)}, ${ctx.gebruiker.naam.replace(/^Test(gebruiker|founder)\s+/, '').split(' ')[0]}.`, werkplek, niveau },

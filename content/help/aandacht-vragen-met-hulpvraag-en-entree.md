@@ -1,7 +1,7 @@
 ---
 titel: Aandacht vragen met een hulpvraag en een entree
 categorie: Openen en presenteren
-collectie: werven
+collectie: newbusiness
 samenvatting: Vraag eerst om hulp of input, en trek daarna de aandacht met een idee over een onderwerp waar de ander meer controle wil.
 bron: Uit de whitepaper The Perfect Pitch
 routes: /belblokken

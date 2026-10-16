@@ -1,9 +1,11 @@
 <script setup lang="ts">
 // Accountkaart (F03, 8.5.5) in de opzet van DealDrive: kop met logovlak, kruimel, branche en plaats, naam met
-// klassepil, website en de stuurstrip; rechts Info, Contacten en Briefing. Daaronder de statstrook, de
-// aanleiding en de tabbladen Tijdlijn, Inzichten, Taken, Notities, E-mails, Afspraken, Gespreksverslagen,
-// Deals, Campagnes en Documenten, plus Reis en kwalificatie en Eigen velden. Het tabblad staat in de URL
-// (?tab=); ze staan in KaartTabbladen, gedeeld met de contactkaart, en tonen bij elk item het contact.
+// klassepil, website en de stuurstrip; rechts Info, Contacten en Briefing. Het logovlak toont het logo
+// (eigen logo-URL of het favicon van de website) en anders de initialen. Daaronder de statstrook over de
+// volle breedte, de aanleiding en de tabbladen Tijdlijn, Inzichten, Taken, Notities, E-mails, Afspraken,
+// Gespreksverslagen, Campagnes en Documenten, plus Reis en kwalificatie. Eigen velden staan in het
+// Info-venster. Het tabblad staat in de URL (?tab=); ze staan in KaartTabbladen, gedeeld met de
+// contactkaart, en tonen bij elk item het contact.
 // Op de telefoon compact met een plakkende actiebalk (Bellen, Mail, WhatsApp, Navigeer).
 import { CONTACTROL_LABEL, type ContactRol } from '~~/shared/contactgegevens'
 import { STATUS_LABEL, STATUS_PIL, datumKort, fasePil, klasseKort, telLink, toonTelefoon } from '~/utils/accountWeergave'
@@ -15,8 +17,6 @@ const { data: a, refresh } = await useFetch<any>(() => `/api/accounts/${route.pa
 const leeg = { taken: [], inzichten: [], afspraken: [], mails: [], verslagen: [], deals: [], gebeurtenissen: [], campagnes: [], documenten: [], momenten: [] }
 const { data: t, refresh: refreshTabs } = await useFetch<any>(() => `/api/accounts/${route.params.id}/tabbladen`, { default: () => leeg })
 async function ververs() { await Promise.all([refresh(), refreshTabs()]) }
-const { openen: openAi } = useAssistent()
-const aiAan = computed(() => !!useMe().functie('assistent.chat')?.beschikbaar)
 // P15: contactpersonen zoeken via Datacollectief, met bevestiging van de kosten.
 const dcBezig = ref(false)
 const online = ref(true)
@@ -110,6 +110,10 @@ const initialen = computed(() => a.value.naam.replace(/^(Test)(?=[A-Z])/, '').sp
 const merkKleur = computed(() => MERK[[...a.value.naam].reduce((s: number, c: string) => s + c.charCodeAt(0), 0) % MERK.length])
 const klasseNaam = computed(() => a.value.klassen.find((k: any) => k.id === a.value.klasse)?.naam ?? klasseKort(a.value.klasse, a.value.klassen))
 const klasseKleur = computed(() => ({ A: 'a', B: 'b', C: 'c', D: 'd' } as Record<string, string>)[klasseKort(a.value.klasse, a.value.klassen).charAt(0).toUpperCase()] ?? (a.value.klasse ? 'overig' : 'geen'))
+const extern = (u: string) => (/^https?:\/\//i.test(u) ? u : `https://${u}`)
+// Het logovlak is 64 px, op de telefoon 48 px (zoals de initialen eerder).
+const logoMaat = ref(64)
+onMounted(() => { if (window.matchMedia('(max-width: 719px)').matches) logoMaat.value = 48 })
 const websiteKort = computed(() => (a.value.website ? String(a.value.website).replace(/^https?:\/\//, '').replace(/\/$/, '') : null))
 const datumLang = (d: string | null) => (d ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Amsterdam' }).format(new Date(d)).replace('.', '') : '–')
 const laatsteContact = computed(() => {
@@ -132,7 +136,7 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
     <header class="ak-kop">
       <div class="container">
         <div class="ak-kop-binnen">
-          <div class="ak-merk" :style="{ background: merkKleur }" aria-hidden="true">{{ initialen }}</div>
+          <AccountLogo class="ak-merk" :naam="a.naam" :initialen="initialen" :kleur="merkKleur ?? 'var(--ink)'" :logo-url="a.logoUrl" :website="a.website" :domein="a.domein" :logo-uit="a.logoUit" :grootte="logoMaat" />
           <div class="ak-kop-info">
             <NuxtLink :to="a.soort === 'klant' ? '/klanten' : '/prospects/alle'" class="ak-kruimel"><Icoon naam="ArrowLeft" :grootte="12" /> {{ a.soort === 'klant' ? 'Klanten' : 'Alle prospects' }}</NuxtLink>
             <p class="ak-eyebrow"><span v-for="(c, i) in [a.branche, a.plaats, a.land, a.vvBranche?.naam].filter(Boolean)" :key="i"><template v-if="i"> · </template>{{ c }}</span></p>
@@ -149,9 +153,11 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
               <span v-if="a.vvBranche" class="chip chip--branche" title="Branche (verkoopverhaal)" data-test="vv-branche">{{ a.vvBranche.naam }}</span><span v-if="a.vvBranche?.verwijderd" class="meta" data-test="branche-verwijderd">{{ a.vvBranche.verwijderd }}</span>
             </div>
             <div class="ak-contactstrip">
-              <a v-if="a.website" :href="a.website" target="_blank" rel="noopener"><Icoon naam="Globe" :grootte="14" /> {{ websiteKort }} <span class="ak-ext">↗</span></a>
+              <a v-if="a.website" :href="extern(a.website)" target="_blank" rel="noopener" data-test="ak-website"><Icoon naam="Globe" :grootte="14" /> {{ websiteKort }} <span class="ak-ext">↗</span></a>
               <a v-if="a.telefoon" :href="telLink(a.telefoon)" class="tnum"><Icoon naam="Phone" :grootte="14" /> {{ toonTelefoon(a.telefoon) }}</a>
-              <a v-if="a.linkedin" :href="a.linkedin" target="_blank" rel="noopener"><Icoon naam="Linkedin" :grootte="14" /> LinkedIn <span class="ak-ext">↗</span></a>
+              <a v-if="a.linkedin" :href="extern(a.linkedin)" target="_blank" rel="noopener"><Icoon naam="Linkedin" :grootte="14" /> LinkedIn <span class="ak-ext">↗</span></a>
+              <a v-if="a.instagram" :href="extern(a.instagram)" target="_blank" rel="noopener" data-test="ak-instagram"><Icoon naam="Instagram" :grootte="14" /> Instagram <span class="ak-ext">↗</span></a>
+              <a v-if="a.facebook" :href="extern(a.facebook)" target="_blank" rel="noopener" data-test="ak-facebook"><Icoon naam="Facebook" :grootte="14" /> Facebook <span class="ak-ext">↗</span></a>
               <a v-if="a.crm" :href="a.crm.url" target="_blank" rel="noopener" data-test="open-crm"><Icoon naam="Link" :grootte="14" /> Open in {{ a.crm.label }}</a>
             </div>
             <dl class="ak-stuurstrip alleen-groot" data-test="stuurstrip">
@@ -159,12 +165,11 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
               <div><dt>Laatste call</dt><dd class="tnum">{{ datumLang(a.stuur.laatsteCall) }}</dd></div>
               <div><dt>Laatste bezoek</dt><dd class="tnum">{{ datumLang(a.stuur.laatsteBezoek) }}</dd></div>
               <div><dt>Reis</dt><dd><NuxtLink v-if="a.reis && a.kan.reisBekijken" :to="`/reizen/${a.reis.id}`" data-test="reis-link">{{ a.reis.naam }}</NuxtLink><template v-else>{{ a.reis?.naam ?? 'Geen reis' }}</template></dd></div>
-              <div><dt>Fase</dt><dd>{{ a.reis?.fase?.label ?? '–' }}<template v-if="a.dagenInFase !== null && a.reis"> · <span :class="{ 'meta--oranje': a.reis.fase?.overschreden }">{{ a.dagenInFase }} dagen</span></template></dd></div>
               <div v-if="a.terugkom"><dt>Terug op</dt><dd data-test="terug-op">{{ a.terugkom.tekst.replace(/^Terug op /, '').split(' · ').slice(0, 2).join(' · ') }}</dd></div>
             </dl>
           </div>
           <div class="ak-acties">
-            <button v-if="aiAan" type="button" class="dd-actie dd-actie--secundair ai-knop" data-test="vraag-ai" @click="openAi({ accountId: a.id, label: a.naam })"><Icoon naam="Sparkles" class="dd-actie-icoon" />Vraag AI</button>
+            <KopIconen artikel="de-accountkaart-lezen" :ai="{ accountId: a.id, label: a.naam }" />
             <button v-if="functie('contact.visitekaartje')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair alleen-telefoon" data-test="scan-visitekaartje" @click="kaartjeOpen = true"><Icoon naam="Camera" class="dd-actie-icoon" />Scan visitekaartje</button>
             <button v-if="!inPakket && functie('onderweg.dagpakket')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair alleen-telefoon" data-test="bewaar-offline" @click="bewaarOffline"><Icoon naam="Download" class="dd-actie-icoon" />Bewaar voor offline</button>
             <button v-if="kanKlaarzetten" type="button" class="dd-actie dd-actie--secundair" data-test="klaarzetten-knop" @click="klaarOpen = true"><Icoon naam="MapPin" class="dd-actie-icoon" />Klaarzetten</button>
@@ -172,7 +177,6 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
             <button type="button" class="dd-actie dd-actie--secundair" data-test="info-knop" @click="infoOpen = true">Info</button>
             <button type="button" class="dd-actie dd-actie--secundair" data-test="contacten-knop" @click="contactenOpen = true">Contacten <span class="ak-teller tnum">{{ a.contacten.filter((c: any) => c.status !== 'vertrokken').length }}</span></button>
             <button type="button" class="dd-actie dd-actie--zwart" data-test="briefing-knop" @click="briefingOpen = true">Briefing</button>
-            <a v-if="belNummer" class="dd-actie dd-actie--primair alleen-groot" :href="telLink(belNummer)"><Icoon naam="Phone" class="dd-actie-icoon" />Bel</a>
           </div>
         </div>
 
@@ -286,11 +290,6 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
           <ul class="schakel-lijst kaart mt-16"><li v-for="c in a.contacten" :key="c.id" class="schakel-rij"><NuxtLink :to="`/contacten/${c.id}`">{{ c.naam }}</NuxtLink><span class="meta">{{ CONTACTROL_LABEL[c.rol as ContactRol] }}<template v-if="c.functie"> · {{ c.functie }}</template><template v-if="c.status === 'vertrokken'"> · vertrokken</template><template v-if="c.herkomst?.bron === 'datacollectief'"> · Datacollectief · {{ c.herkomst.op.slice(0, 10) }}</template></span></li></ul>
         </div>
       </template>
-      <template #eigenvelden>
-        <LegeStaat v-if="!a.eigenVelden.length" titel="Geen eigen velden." tekst="Je beheerder maakt eigen velden bij Instellingen." />
-        <dl v-else class="gegevens kaart"><template v-for="v in a.eigenVelden" :key="v.sleutel"><dt>{{ v.naam }}</dt><dd>{{ a.customFields[v.sleutel] ?? '–' }}</dd></template></dl>
-        <EigenVeldVoorstel v-if="a.kan.voorstellen" class="mt-16" />
-      </template>
     </KaartTabbladen>
 
     <!-- Telefoon: plakkende actiebalk (8.5.5). -->
@@ -320,7 +319,7 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
 .ak-kop { padding: 28px 0; background: var(--wit); border-bottom: 1px solid var(--border); }
 .ak-kop-binnen { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: start; }
 @media (min-width: 1000px) { .ak-kop-binnen { grid-template-columns: auto minmax(0, 1fr) auto; } }
-.ak-merk { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; margin-top: 22px; color: #fff; font-size: 18px; font-weight: 800; letter-spacing: 0.02em; }
+.ak-merk { margin-top: 22px; }
 .ak-kruimel { display: inline-flex; align-items: center; gap: 4px; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: var(--muted); text-decoration: none; }
 .ak-kruimel:hover { color: var(--ink); }
 .ak-eyebrow { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
@@ -344,16 +343,18 @@ select.ak-klasse { cursor: pointer; min-height: 26px; }
 .ak-stuurstrip dt { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .ak-stuurstrip dd { margin: 0; }
 .ak-acties { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
-@media (min-width: 1000px) { .ak-acties { grid-column: auto; justify-content: flex-end; max-width: 460px; margin-top: 22px; } }
+@media (min-width: 1000px) { .ak-acties { grid-column: auto; justify-content: flex-end; max-width: 560px; margin-top: 22px; } }
 .ak-teller { padding: 1px 6px; font-size: 10px; font-weight: 800; background: var(--ink); color: var(--yellow); }
 .dd-actie--zwart .ak-teller { background: var(--yellow); color: var(--ink); }
 
 /* Statstrook */
 .ak-stats { padding: 24px 0; background: var(--bg); border-bottom: 1px solid var(--border); }
-.ak-stat-raster { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-@media (min-width: 700px) { .ak-stat-raster { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1000px) { .ak-stat-raster { grid-template-columns: repeat(6, 1fr); } }
-.ak-stat { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; }
+.ak-stats { padding: 0; }
+/* Zes gelijke kolommen van links naar rechts over de volle breedte, gescheiden door een lijn. */
+.ak-stat-raster { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); max-width: none; padding: 0; }
+.ak-stat { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 20px var(--pagina-marge, 24px); border-left: 1px solid var(--border); }
+.ak-stat:first-child { border-left: 0; }
+@media (max-width: 999px) { .ak-stat-raster { grid-template-columns: repeat(3, minmax(0, 1fr)); } .ak-stat:nth-child(3n + 1) { border-left: 0; } .ak-stat:nth-child(n + 4) { border-top: 1px solid var(--border); } }
 .ak-stat-label { font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
 .ak-stat-num { font-family: var(--font-serif); font-size: 22px; font-weight: 700; line-height: 1.1; color: var(--ink); }
 .ak-stat-tekst { font-size: 14px; font-weight: 600; line-height: 1.3; color: var(--ink); }
@@ -370,6 +371,6 @@ select.ak-klasse { cursor: pointer; min-height: 26px; }
 .mt-24 { margin-top: 24px; }
 @media (max-width: 719px) {
   .ak-kop { padding: 20px 0; }
-  .ak-merk { width: 48px; height: 48px; margin-top: 20px; font-size: 15px; }
+  .ak-merk { margin-top: 20px; }
 }
 </style>

@@ -6,7 +6,8 @@ import { eq } from 'drizzle-orm'
 import { alsDoelgroepAccount, instapVelden, laadInstapContext, schrijfInstap } from './reis'
 import { dubbelInBestand, valideerImportRij, type ImportDoel, type ImportRij } from '../../shared/leadGenerator'
 import { magOverschrijven, type Bron } from '../../shared/herkomst'
-import { contactDuplicaat, zoekDuplicaat } from '../../shared/ontdubbelen'
+import { contactDuplicaat, normaliseerDomein, zoekDuplicaat } from '../../shared/ontdubbelen'
+import { websiteUitEmail } from '../../shared/logo'
 import { berekenScore } from '../../shared/score'
 import { schema } from './db'
 import type { DealDriveTreffer } from './dealdriveAdapter'
@@ -140,12 +141,18 @@ export async function verwerk(tx: Tx, opties: {
       const id = crypto.randomUUID()
       const data: any = { importBatchId: opties.batchId, customFields: r.account.customFields, herkomst: {} }
       for (const v of VELDEN_DATA) if ((r.account as any)[v] !== undefined) { data[v] = (r.account as any)[v]; data.herkomst[v] = herkomst }
+      // Logo en website (opzet uit DealDrive): zonder website komt die uit het e-maildomein van bedrijf of contact.
+      let domein = r.account.domein ?? null
+      if (!data.website) {
+        const web = websiteUitEmail(r.account.email, r.contact?.email)
+        if (web) { data.website = web; data.herkomst.website = { ...herkomst, bron: 'web' }; domein = domein ?? normaliseerDomein(web) }
+      }
       for (const v of ['naam', 'kvk', 'domein', 'postcode', 'plaats']) if ((r.account as any)[v === 'domein' ? 'domein' : v]) data.herkomst[v] = herkomst
       for (const s of Object.keys(r.account.customFields)) data.herkomst[`cf.${s}`] = herkomst
       const eigenaar = opties.eigenaars[eigenaarIndex++ % opties.eigenaars.length]!
       nieuweAccounts.push({
         id, organisationId: opties.organisatieId, name: r.account.naam, accountKind: 'prospect', nbStatus: 'nieuw', ownerId: eigenaar, nbBron: 'import',
-        kvk: r.account.kvk ?? null, domein: r.account.domein ?? null, postcode: r.account.postcode ?? null, city: r.account.plaats ?? null, data,
+        kvk: r.account.kvk ?? null, domein, postcode: r.account.postcode ?? null, city: r.account.plaats ?? null, data,
         // Geen contactmoment uit een import (F03): laatste_contact_op blijft leeg.
         laatsteContactOp: null,
       })

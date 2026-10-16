@@ -10,7 +10,7 @@ import { metOrganisatie, schema } from '../../../utils/db'
 import { vereisFunctie, weigerFunctie } from '../../../utils/sessie'
 import { pasDataToe, pasEigenVeldenToe } from '../../../utils/velden'
 
-const DATA_VELDEN = ['website', 'telefoon', 'email', 'linkedin', 'adres', 'branche', 'land', 'medewerkers']
+const DATA_VELDEN = ['website', 'telefoon', 'email', 'linkedin', 'adres', 'branche', 'land', 'medewerkers', 'logoUrl', 'logoUit', 'instagram', 'facebook', 'officieleNaam']
 
 export default defineEventHandler(async (event) => {
   const ctx = await vereisFunctie(event, 'prospects.kaart')
@@ -28,6 +28,9 @@ export default defineEventHandler(async (event) => {
     if (!t.ok) throw createError({ statusCode: 400, statusMessage: t.fout })
     b.telefoon = t.e164
   }
+  // Logo (opzet uit DealDrive): een eigen logo-URL is een webadres; logoUit zet het automatische logo uit.
+  if (b.logoUrl && !/^https?:\/\/[^\s/]+\.[^\s]+$/i.test(String(b.logoUrl).trim())) throw createError({ statusCode: 400, statusMessage: 'Een logo-URL begint met http:// of https://' })
+  if ('logoUit' in b) b.logoUit = b.logoUit ? true : null
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
     const [a] = await tx.select().from(schema.accounts).where(eq(schema.accounts.id, id))
     if (!a) throw createError({ statusCode: 404, statusMessage: 'Account onbekend' })

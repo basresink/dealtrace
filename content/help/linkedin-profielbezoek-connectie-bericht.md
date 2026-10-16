@@ -41,7 +41,7 @@ Bericht na acceptatie:
 
 ## Zo doe je het in Dealtrace
 
-In het ritme **Koud** is de derde poging LinkedIn, op dag 7, na twee keer bellen. De taak staat op **Vandaag** en bij **Acties**. Open de taak en tik bij **Pitstop** op **Bereid voor**. De Schrijver maakt een LinkedIn-bericht van hooguit 80 woorden, met één winpunt en één bewijs uit jullie verkoopverhaal. Je ziet het bij **Concepten** en keurt het goed of past het aan.
+In het ritme **Koud** is de derde poging LinkedIn, op dag 7, na twee keer bellen. De taak staat op **Vandaag** en bij **Taken**. Open de taak en tik bij **Pitstop** op **Bereid voor**. De Schrijver maakt een LinkedIn-bericht van hooguit 80 woorden, met één winpunt en één bewijs uit jullie verkoopverhaal. Je ziet het bij **Concepten** en keurt het goed of past het aan.
 
 De agent voert niets uit. Jij bezoekt het profiel, verbindt en stuurt het bericht zelf op LinkedIn. Rond daarna de taak af met een uitkomst en klik **Afronden**. Je ziet direct wanneer de volgende poging is.
 

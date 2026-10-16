@@ -48,7 +48,7 @@ async function uitloggen() {
 </script>
 
 <template>
-  <aside class="app-sidebar" aria-label="Hoofdmenu">
+  <aside class="app-sidebar" :class="{ 'sb-ingeklapt': props.ingeklapt }" aria-label="Hoofdmenu">
     <div class="sb-merk">
       <NuxtLink class="sb-merk-link" to="/" title="Dealtrace">
         <svg class="sb-merk-icoon" viewBox="0 0 32 32" aria-hidden="true"><circle class="merk-geel" cx="16" cy="16" r="14" /><circle class="merk-inkt" cx="16" cy="16" r="8" /><circle class="merk-geel" cx="16" cy="16" r="3" /></svg>
@@ -140,6 +140,16 @@ async function uitloggen() {
 .sb-icoonknop { width: 44px; min-width: 44px; height: 44px; min-height: 44px; flex: 0 0 44px; }
 .sb-icoonknop .sb-icoon-teller { top: 3px; right: 2px; }
 .sb-icoonknop :deep(.icoon) { width: 22px; height: 22px; }
+/* Ingeklapt (64 px) passen merkteken en inklapknop niet naast elkaar: ze staan dan
+   gecentreerd onder elkaar, zodat de knop nooit over het logo valt. Op de icoonstrook
+   (768 tot 1023 px) is de inklapknop weg en staat het merkteken in het midden. */
+.sb-ingeklapt .sb-merk { flex-direction: column; justify-content: center; gap: 10px; padding: 14px 0 12px; }
+.sb-ingeklapt .sb-merk-link { flex: 0 0 auto; justify-content: center; }
+.sb-ingeklapt .sb-inklap { width: 32px; height: 32px; }
+@media (max-width: 1023px) {
+  .sb-merk { justify-content: center; padding-left: 0; padding-right: 0; }
+  .sb-merk-link { flex: 0 0 auto; justify-content: center; }
+}
 /* De gebruikerskaart opent geen menu meer. */
 .sb-gebruiker-kaart { cursor: default; }
 .sb-gebruiker-kaart:hover { background: transparent; }

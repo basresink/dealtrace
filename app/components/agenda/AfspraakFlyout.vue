@@ -10,7 +10,6 @@
 // schuifvenster met de actiebalk Bellen, Mail, WhatsApp, Navigeer.
 import { NEE_REDENEN } from '~~/shared/nbStatus'
 import { spreekBriefing } from '~~/shared/spreek'
-import { TRANSCRIPT_MAX_BYTES, magTranscript, telWoorden, transcriptUitBestand } from '~~/shared/transcript'
 const props = defineProps<{ open: boolean; afspraakId: string | null }>()
 const emit = defineEmits<{ sluit: []; gewijzigd: [] }>()
 const toast = useToast()
@@ -23,25 +22,14 @@ const verplaatsen = ref(false)
 const bezig = ref(false)
 const f = reactive({ uitkomst: '', laterOp: '', reden: '', toelichting: '', vervolgstap: '', punten: [] as { punt: string; besproken: boolean }[] })
 const vp = reactive({ datum: '', start: '', duurMin: 30, titel: '' })
-// Transcript en gespreksverslag.
+// Het gespreksverslag (blok Transcript en gespreksverslag); het gaat mee bij Rond af.
 const verslag = ref('')
-const transcriptConcept = ref('')
-const transcriptNaam = ref<string | null>(null)
-const transcriptMelding = ref('')
-const transcriptFout = ref('')
-const sleepActief = ref(false)
-const bestandInput = ref<HTMLInputElement | null>(null)
-const bewaartVerslag = ref(false)
-const bewaartTranscript = ref(false)
-const analyseert = ref(false)
-const analyseReden = ref('')
 
 async function laad() { a.value = props.afspraakId ? await $fetch<any>(`/api/afspraken/${props.afspraakId}`).catch(() => null) : null }
 watch(() => [props.open, props.afspraakId], async ([o]) => {
   if (!o) return
-  afronden.value = false; verplaatsen.value = false; analyseReden.value = ''
+  afronden.value = false; verplaatsen.value = false
   Object.assign(f, { uitkomst: '', laterOp: '', reden: '', toelichting: '', vervolgstap: '' })
-  transcriptConcept.value = ''; transcriptNaam.value = null; transcriptMelding.value = ''; transcriptFout.value = ''
   await laad()
   verslag.value = a.value?.verslag?.tekst ?? ''
   f.punten = (a.value?.soort.agenda ?? []).map((p: any) => ({ punt: p.punt, besproken: false }))
@@ -63,11 +51,7 @@ const wanneer = computed(() => a.value ? `${new Date(a.value.start).toLocaleDate
 const eigenaar = computed(() => String(a.value?.eigenaar?.naam ?? '').replace(/^Testgebruiker /, ''))
 const initialen = computed(() => String(a.value?.account?.naam ?? '').split(/\s+/).filter((w) => /^[\p{L}\d]/u.test(w)).slice(0, 2).map((w) => w[0]!.toUpperCase()).join(''))
 const kicker = computed(() => a.value ? `${a.value.soort.naam.toUpperCase()} · ${STATUS[a.value.status]}` : 'Afspraak')
-const verslagGewijzigd = computed(() => verslag.value.trim() !== String(a.value?.verslag?.tekst ?? '').trim())
-const heeftTekst = computed(() => !!(String(a.value?.verslag?.tekst ?? '').trim() || a.value?.transcript))
 const opKlantkaart = computed(() => !!a.value?.account && route.path === `/accounts/${a.value.account.id}`)
-const herkomst = computed(() => { const b = a.value?.analyse?.basis; if (!b) return [] as string[]; return [b.verslag && 'Verslag', b.transcript && 'Transcript'].filter(Boolean) as string[] })
-const snippet = (t: string) => (t.length > 280 ? `${t.slice(0, 280).trim()}…` : t)
 const tekstVan = (fout: unknown) => foutTekst(fout)
 
 async function rondAf() {
@@ -111,55 +95,8 @@ async function bewaarVerplaatsen() {
   } catch (e) { toast.toon(tekstVan(e), 'fout') } finally { bezig.value = false }
 }
 
-// Transcript: een bestand (.txt, .md, .vtt, .srt) of geplakte tekst. Ondertitels worden beurten.
-async function leesBestand(bestand: File | null | undefined) {
-  transcriptFout.value = ''; transcriptMelding.value = ''
-  if (!bestand) return
-  if (!magTranscript(bestand.name)) { transcriptFout.value = 'Kies een .txt, .md, .vtt of .srt. Een Word- of pdf-bestand: kopieer de tekst en plak hem hieronder.'; return }
-  if (bestand.size > TRANSCRIPT_MAX_BYTES) { transcriptFout.value = 'Dit bestand is groter dan 5 MB.'; return }
-  const r = transcriptUitBestand(bestand.name, await bestand.text())
-  if (!r.tekst.trim()) { transcriptFout.value = 'In dit bestand staat geen tekst.'; return }
-  transcriptConcept.value = r.tekst; transcriptNaam.value = bestand.name
-  transcriptMelding.value = `${bestand.name} · ${r.woorden} woorden${r.afgekapt ? ' (ingekort)' : ''}. Controleer de tekst en bewaar.`
-}
-function onDrop(e: DragEvent) { sleepActief.value = false; leesBestand(e.dataTransfer?.files?.[0]) }
-function onKies(e: Event) { const i = e.target as HTMLInputElement; leesBestand(i.files?.[0]); i.value = '' }
-async function bewaarTranscript() {
-  if (transcriptConcept.value.trim().length < 5) return
-  bewaartTranscript.value = true
-  try {
-    const t = await $fetch<any>(`/api/afspraken/${a.value.id}/transcript`, { method: 'POST', body: { tekst: transcriptConcept.value, bestandsnaam: transcriptNaam.value } })
-    a.value = { ...a.value, transcript: t }
-    transcriptConcept.value = ''; transcriptNaam.value = null; transcriptMelding.value = ''
-    toast.toon('Transcript bewaard. Analyseer het verslag voor actiepunten en koopsignalen.')
-    emit('gewijzigd')
-  } catch (e) { toast.toon(tekstVan(e), 'fout') } finally { bewaartTranscript.value = false }
-}
-async function verwijderTranscript() {
-  try { await $fetch(`/api/afspraken/${a.value.id}/transcript`, { method: 'DELETE' }); a.value = { ...a.value, transcript: null }; toast.toon('Transcript verwijderd.'); emit('gewijzigd') } catch (e) { toast.toon(tekstVan(e), 'fout') }
-}
-async function bewaarVerslag(stil = false) {
-  if (!verslagGewijzigd.value) return true
-  bewaartVerslag.value = true
-  try {
-    const r = await $fetch<any>(`/api/afspraken/${a.value.id}/verslag`, { method: 'PUT', body: { tekst: verslag.value } })
-    a.value = { ...a.value, verslag: r.verslag }
-    if (!stil) toast.toon(r.verslag ? 'Verslag bewaard. Het staat op het tabblad Gespreksverslagen.' : 'Verslag gewist.')
-    emit('gewijzigd'); return true
-  } catch (e) { toast.toon(tekstVan(e), 'fout'); return false } finally { bewaartVerslag.value = false }
-}
-async function analyseer() {
-  analyseReden.value = ''
-  if (!(await bewaarVerslag(true))) return
-  analyseert.value = true
-  try {
-    const r = await $fetch<any>(`/api/afspraken/${a.value.id}/analyse`, { method: 'POST' })
-    if (!r.ok) { analyseReden.value = r.reden ?? 'De analyse is tegengehouden.'; return }
-    await laad()
-    toast.toon(r.actiepunten ? `Analyse klaar: ${r.actiepunten} ${r.actiepunten === 1 ? 'actiepunt staat' : 'actiepunten staan'} als concept klaar.` : 'Analyse klaar.')
-    emit('gewijzigd')
-  } catch (e) { analyseReden.value = tekstVan(e) } finally { analyseert.value = false }
-}
+// De voorgestelde uitkomst van de Notulist; de mens kiest bij Rond af.
+const voorgesteld = computed(() => { const v = a.value?.analyse?.voorgesteldeUitkomst; if (!v || a.value?.status !== 'gepland') return null; return `Voorgestelde uitkomst: ${a.value.soort.uitkomsten.find((u: any) => u.code === v)?.label ?? v}. Jij kiest bij Rond af.` })
 
 // Voorlezen (P31): de briefing voor het oor, hooguit een minuut.
 const { functie } = useMe()
@@ -256,65 +193,11 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
           </article>
 
           <!-- Transcript en gespreksverslag: drie wegen (bestand, plakken, inspreken) naar één analyse. -->
-          <article class="fo-blok af-verslagblok" data-test="af-verslagblok">
-            <header class="af-vb-kop"><Icoon naam="FileText" /><h3 class="fo-blok-titel">Transcript en gespreksverslag</h3><span v-if="heeftTekst" class="pil pil--groen">Aanwezig</span></header>
-
-            <section class="af-vb-deel" aria-labelledby="af-tr-kop">
-              <h4 id="af-tr-kop" class="af-vb-sub">Transcript</h4>
-              <div v-if="a.transcript" class="af-tr-voorbeeld" data-test="af-transcript">
-                <p class="af-pre af-snippet">{{ snippet(a.transcript.tekst) }}</p>
-                <p class="meta"><template v-if="a.transcript.bestandsnaam"><Icoon naam="FileText" :grootte="12" /> {{ a.transcript.bestandsnaam }} · </template>{{ a.transcript.woorden }} woorden · {{ a.transcript.bron === 'upload' ? 'geüpload' : 'geplakt' }}</p>
-                <div class="dd-acties mt-8"><button type="button" class="dd-act" data-test="af-transcript-weg" @click="verwijderTranscript">Verwijder transcript</button></div>
-              </div>
-              <template v-else>
-                <button type="button" class="af-drop" :class="{ 'af-drop--over': sleepActief }" data-test="af-transcript-drop" @dragover.prevent="sleepActief = true" @dragleave="sleepActief = false" @drop.prevent="onDrop" @click="bestandInput?.click()">
-                  <Icoon naam="Upload" :grootte="22" />
-                  <span class="af-drop-titel">Sleep een transcript hierheen of klik om te kiezen</span>
-                  <span class="meta">.txt, .md of een Teams- of Zoom-transcript (.vtt, .srt), hooguit 5 MB</span>
-                </button>
-                <input ref="bestandInput" type="file" accept=".txt,.md,.vtt,.srt,text/plain,text/vtt" class="af-verborgen" data-test="af-transcript-bestand" aria-label="Kies een transcript" @change="onKies">
-                <div class="af-scheiding"><span>Of plak tekst</span></div>
-                <textarea v-model="transcriptConcept" class="invoer" rows="4" placeholder="Plak hier het transcript van het gesprek" data-test="af-transcript-tekst" aria-label="Transcript" />
-                <p v-if="transcriptMelding" class="af-gelezen"><Icoon naam="CircleCheck" :grootte="14" /> {{ transcriptMelding }}</p>
-                <p v-if="transcriptFout" class="veld-fout">{{ transcriptFout }}</p>
-                <div class="dd-acties mt-8"><span class="dd-acties-vul" /><button type="button" class="dd-act" :disabled="transcriptConcept.trim().length < 5 || bewaartTranscript" data-test="af-transcript-bewaar" @click="bewaarTranscript">{{ bewaartTranscript ? 'Bewaren…' : 'Bewaar transcript' }}</button></div>
-              </template>
-            </section>
-
-            <section class="af-vb-deel" aria-labelledby="af-vs-kop">
-              <h4 id="af-vs-kop" class="af-vb-sub">Gespreksverslag</h4>
-              <VerslagVeld v-model="verslag" :record="{ soort: 'appointments', id: a.id }" groot placeholder="Typ je verslag: wat is besproken, wat speelt er en wat is afgesproken" />
-              <p class="meta mt-8">{{ verslag.trim() ? `${telWoorden(verslag)} woorden.` : 'Typ, plak of spreek in.' }} Het verslag staat op het tabblad Gespreksverslagen van de klant{{ a.contact ? ' en het contact' : '' }}.</p>
-              <div class="dd-acties mt-8"><span class="dd-acties-vul" /><button type="button" class="dd-act" :disabled="!verslagGewijzigd || bewaartVerslag" data-test="af-verslag-bewaar" @click="bewaarVerslag()">{{ bewaartVerslag ? 'Bewaren…' : 'Bewaar verslag' }}</button></div>
-            </section>
-
-            <section class="af-vb-deel af-analyse" aria-labelledby="af-an-kop" data-test="af-analyse">
-              <div class="af-an-kop"><div><span class="fo-blok-kicker">Notulist</span><h4 id="af-an-kop" class="af-vb-sub">AI-analyse van het verslag</h4></div>
-                <button type="button" class="dd-act dd-act--primair" :disabled="analyseert || !a.account || !(verslag.trim() || a.transcript)" data-test="af-analyseer" @click="analyseer"><Icoon naam="Sparkles" />{{ analyseert ? 'Analyseren…' : a.analyse ? 'Opnieuw analyseren' : 'Analyseer verslag' }}</button>
-              </div>
-              <p v-if="!a.account" class="meta">Een analyse hoort bij een afspraak met een klant.</p>
-              <p v-else-if="!a.analyse && !analyseReden" class="meta">De Notulist maakt een samenvatting, zet actiepunten als concepttaak klaar en legt koopsignalen vast als inzicht. Jij keurt goed.</p>
-              <p v-if="analyseReden" class="veld-fout" data-test="af-analyse-reden">{{ analyseReden }}</p>
-              <template v-if="a.analyse">
-                <p v-if="herkomst.length" class="af-herkomst"><span class="meta">Gebaseerd op</span><span v-for="h in herkomst" :key="h" class="pil pil--paars">{{ h }}</span></p>
-                <div v-if="a.analyse.samenvatting" class="af-an-blok" data-test="af-samenvatting"><span class="af-an-label">Samenvatting</span><p>{{ a.analyse.samenvatting }}</p></div>
-                <div class="af-an-blok" data-test="af-actiepunten"><span class="af-an-label">Actiepunten</span>
-                  <ul v-if="a.analyse.actiepunten.length"><li v-for="p in a.analyse.actiepunten" :key="p">{{ p }}</li></ul>
-                  <p v-else class="meta">Geen actiepunten gevonden.</p>
-                  <p v-if="a.analyse.actiepunten.length" class="meta">Staan als concepttaak klaar in <NuxtLink to="/concepten" class="tekst-link" @click="emit('sluit')">Concepten</NuxtLink>.</p>
-                </div>
-                <div class="af-an-blok" data-test="af-koopsignalen"><span class="af-an-label">Koopsignalen</span>
-                  <ul v-if="a.analyse.koopsignalen.length"><li v-for="k in a.analyse.koopsignalen" :key="k">{{ k }}</li></ul>
-                  <p v-else class="meta">Geen koopsignalen gevonden.</p>
-                  <p v-if="a.analyse.koopsignalen.length && a.account" class="meta">Staan als inzicht op de <NuxtLink :to="`/accounts/${a.account.id}?tab=inzichten`" class="tekst-link" @click="emit('sluit')">klantkaart</NuxtLink>.</p>
-                </div>
-                <div v-if="a.analyse.bezwaren.length" class="af-an-blok"><span class="af-an-label">Bezwaren</span><ul><li v-for="b in a.analyse.bezwaren" :key="b">{{ b }}</li></ul></div>
-                <div v-if="a.analyse.openVragen.length" class="af-an-blok"><span class="af-an-label">Open vragen</span><ul><li v-for="q in a.analyse.openVragen" :key="q">{{ q }}</li></ul></div>
-                <div v-if="a.analyse.concurrenten.length" class="af-an-blok"><span class="af-an-label">Concurrenten genoemd</span><p>{{ a.analyse.concurrenten.join(', ') }}</p></div>
-                <p v-if="a.analyse.voorgesteldeUitkomst && a.status === 'gepland'" class="meta">Voorgestelde uitkomst: {{ a.soort.uitkomsten.find((u: any) => u.code === a.analyse.voorgesteldeUitkomst)?.label ?? a.analyse.voorgesteldeUitkomst }}. Jij kiest bij Rond af.</p>
-              </template>
-            </section>
-          </article>
+          <GespreksverslagBlok
+            v-model="verslag" :api="`/api/afspraken/${a.id}`" :record="{ soort: 'appointments', id: a.id }" prefix="af" onderwerp="afspraak"
+            :verslag="a.verslag" :transcript="a.transcript" :analyse="a.analyse" :account="a.account" :heeft-contact="!!a.contact" :herlaad="laad" :uitkomst-tekst="voorgesteld"
+            @patch="(p) => (a = { ...a, ...p })" @gewijzigd="emit('gewijzigd')" @sluit="emit('sluit')"
+          />
 
           <article v-if="afronden" class="fo-blok" data-test="rond-af">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Rond af</h3></header>
@@ -383,32 +266,10 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
 .af-account-naam { font-weight: 700; }
 .af-aanleiding { margin: 6px 0 0; font-size: var(--fs-klein); }
 .af-voorbereiding { padding-left: 18px; font-size: var(--fs-klein); color: var(--ink-soft); }
-.af-verslagblok { border-left-color: var(--ink); }
-.af-vb-kop { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-.af-vb-kop .pil { margin-left: auto; }
-.af-vb-deel { padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--border); }
-.af-vb-deel:first-of-type { margin-top: 0; }
-.af-vb-sub { margin: 0 0 8px; font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); }
-.af-drop { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; min-height: 96px; padding: 16px; background: var(--surface); border: 1px dashed var(--border-strong); border-radius: var(--radius); font: inherit; color: var(--ink); text-align: center; cursor: pointer; }
-.af-drop:hover, .af-drop--over { border-color: var(--ink); background: var(--yellow-zacht); }
-.af-drop-titel { font-weight: 700; font-size: var(--fs-klein); }
-.af-verborgen { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-.af-scheiding { display: flex; align-items: center; gap: 10px; margin: 12px 0 8px; font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-.af-scheiding::before, .af-scheiding::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-.af-gelezen { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; font-size: var(--fs-klein); color: var(--green); }
-.af-tr-voorbeeld { padding: 10px 12px; background: var(--surface); border-radius: var(--radius); }
-.af-snippet { margin: 0 0 6px; font-size: var(--fs-klein); }
-.af-an-kop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
-.af-herkomst { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
-.af-an-blok { margin-top: 10px; font-size: var(--fs-klein); }
-.af-an-blok ul { margin: 4px 0; padding-left: 18px; }
-.af-an-blok p { margin: 4px 0; }
-.af-an-label { display: block; font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .af-rij3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 @media (max-width: 720px) {
   .af-def { grid-template-columns: 1fr; gap: 2px; }
   .af-rij3 { grid-template-columns: 1fr 1fr; }
-  .af-an-kop .dd-act, .af-vb-deel .dd-act { min-height: 44px; }
   .af-def dd a, .af-account-naam { display: inline-block; padding: 13px 0; border-bottom: 0; text-decoration: underline; text-decoration-color: var(--yellow); text-decoration-thickness: 2px; text-underline-offset: 3px; }
   .af-kop-links { display: none; }
   .af-foot { flex-wrap: wrap; }

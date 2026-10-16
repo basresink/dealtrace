@@ -16,7 +16,7 @@ export const ACCOUNTPLAN_SECTIES: readonly { sleutel: AccountplanSectie; titel: 
   { sleutel: 'evaluatie', titel: 'Evaluatie', uitleg: 'Wat er van het plan terechtkwam en wat je bijstelt. Zo sluit je de periode af.' },
 ]
 export const SECTIE_SLEUTELS: readonly AccountplanSectie[] = ACCOUNTPLAN_SECTIES.map((s) => s.sleutel)
-export const ACTIEPLAN_UITLEG = 'Acties met een datum en een contactpersoon. Elke actie is een taak op het account, dus je ziet hem ook op de accountkaart, op Vandaag en bij Acties.'
+export const ACTIEPLAN_UITLEG = 'Acties met een datum en een contactpersoon. Elke actie is een taak op het account, dus je ziet hem ook op de accountkaart, op Vandaag en bij Taken.'
 
 export const WEERGAVE_LABEL: Record<AccountplanWeergave, string> = { actueel: 'Actueel', verlopen: 'Verlopen', afgerond: 'Afgerond' }
 

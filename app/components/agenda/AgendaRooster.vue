@@ -92,7 +92,7 @@ const kolommen = computed(() => {
     for (const b of props.belblokken) if (b.status === 'klaar' && dagVan(b.start) === d) heleDag.push({ id: b.id, soort: 'belblok', tekst: `Belblok: afgerond, ${b.gesprekken} ${b.gesprekken === 1 ? 'gesprek' : 'gesprekken'}`, titel: `${tijd(b.start)} tot ${tijd(b.eind)}`, link: `/belblokken/${b.id}` })
     const zonderTijd = props.taken.filter((t) => dagVan(t.due) === d && minuut(t.due) === 0)
     if (zonderTijd.length === 1) heleDag.push({ id: zonderTijd[0].id, soort: 'taak', tekst: `Taak: ${zonderTijd[0].titel}`, titel: zonderTijd[0].accountNaam ?? '', taakId: zonderTijd[0].id })
-    else if (zonderTijd.length > 1) heleDag.push({ id: `taken-${d}`, soort: 'taak', tekst: `${zonderTijd.length} taken`, titel: 'Taken zonder tijd', link: '/acties' })
+    else if (zonderTijd.length > 1) heleDag.push({ id: `taken-${d}`, soort: 'taak', tekst: `${zonderTijd.length} taken`, titel: 'Taken zonder tijd', link: '/taken' })
     for (const b of props.bezet) if (dagVan(b.start) === d && Date.parse(b.eind) - Date.parse(b.start) >= 20 * 3600_000) heleDag.push({ id: `hd-${b.start}`, soort: 'bezet', tekst: b.titel ?? 'Bezet', titel: 'Uit je gekoppelde agenda' })
     const datum = new Date(`${d}T12:00:00Z`)
     return {
@@ -174,7 +174,7 @@ const uren = Array.from({ length: 25 }, (_, i) => i)
             <span class="ar-tijd tnum">{{ tijd(b.data[0].due) }}</span>
             <span class="ar-titel">{{ b.data[0].titel }}</span>
           </button>
-          <NuxtLink v-else-if="b.soort === 'taak'" to="/acties" class="ar-blok ar-blok--taak ar-blok--kort" :style="b.stijl" :data-test="`taken-${b.id}`" :title="`${b.data.length} taken om ${tijd(b.data[0].due)}`" @click.stop>
+          <NuxtLink v-else-if="b.soort === 'taak'" to="/taken" class="ar-blok ar-blok--taak ar-blok--kort" :style="b.stijl" :data-test="`taken-${b.id}`" :title="`${b.data.length} taken om ${tijd(b.data[0].due)}`" @click.stop>
             <span class="ar-tijd tnum">{{ tijd(b.data[0].due) }}</span>
             <span class="ar-titel">{{ b.data.length }} taken</span>
           </NuxtLink>

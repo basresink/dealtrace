@@ -9,9 +9,9 @@ const MEER = t('meer', 'Meer', 'Ellipsis', null)
 
 const PROFIELEN: Record<'buitendienst' | 'binnendienst' | 'hybride' | 'manager', Tab[]> = {
   buitendienst: [t('vandaag', 'Vandaag', 'House', '/'), t('route', 'Route', 'Navigation', '/onderweg'), t('bellen', 'Bellen', 'Phone', '/bellen'), t('prospects', 'Prospects', 'Building2', '/prospects'), MEER],
-  binnendienst: [t('vandaag', 'Vandaag', 'House', '/'), t('belblok', 'Belblok', 'Phone', '/belblokken'), t('acties', 'Acties', 'SquareCheck', '/acties'), t('prospects', 'Prospects', 'Building2', '/prospects'), MEER],
+  binnendienst: [t('vandaag', 'Vandaag', 'House', '/'), t('belblok', 'Belblok', 'Phone', '/belblokken'), t('taken', 'Taken', 'SquareCheck', '/taken'), t('prospects', 'Prospects', 'Building2', '/prospects'), MEER],
   hybride: [t('vandaag', 'Vandaag', 'House', '/'), t('route', 'Route', 'Navigation', '/onderweg'), t('belblok', 'Belblok', 'Phone', '/belblokken'), t('prospects', 'Prospects', 'Building2', '/prospects'), MEER],
-  manager: [t('team', 'Team', 'UsersRound', '/team'), t('coaching', 'Coaching', 'MessagesSquare', '/coaching'), t('acties', 'Acties', 'SquareCheck', '/acties'), t('prospects', 'Prospects', 'Building2', '/prospects'), MEER],
+  manager: [t('team', 'Team', 'UsersRound', '/team'), t('coaching', 'Coaching', 'MessagesSquare', '/coaching'), t('taken', 'Taken', 'SquareCheck', '/taken'), t('prospects', 'Prospects', 'Building2', '/prospects'), MEER],
 }
 
 /** Vijf tabs; een onbekend profiel valt terug op binnendienst. Op elk niveau gelijk. */

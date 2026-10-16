@@ -1286,13 +1286,14 @@ a.acc-kanaal:focus-visible, .acc-tel:focus-visible { outline: 2px solid var(--ye
 }
 
 /* Paginakop met de knoppen op de hoogte van de titel (zoals DealDrive /prospects):
-   vanaf 720 px staat de werkbalk rechts naast de titel; kicker en uitleg lopen
-   links en onder door. Op de telefoon gewoon onder de tekst (zie .sec-head). */
+   vanaf 720 px twee kolommen. Links kicker, titel en uitleg in een eigen kolom die
+   nooit onder de knoppen doorloopt; rechts de knoppenrij, met de bovenkant op de
+   hoogte van de titel (kickerhoogte plus de marge boven de titel, en de helft van
+   het verschil tussen regelhoogte van de titel en de knop). Op de telefoon staan
+   de knoppen gewoon onder de tekst (zie .sec-head). */
 @media (min-width: 720px) {
-  .sec-head--naast { display: grid; grid-template-columns: minmax(min(260px, 40%), 1fr) auto; column-gap: var(--pagina-marge); align-items: start; }
-  .sec-head--naast > .sec-head-tekst { display: contents; }
-  .sec-head--naast > .sec-head-tekst > * { grid-column: 1 / -1; }
-  .sec-head--naast > .sec-head-tekst > :first-child { grid-column: 1; grid-row: 1; justify-self: start; }
-  .sec-head--naast > .sec-head-tekst > .title { grid-column: 1; grid-row: 2; }
-  .sec-head--naast > .toolbar-buttons { grid-column: 2; grid-row: 2; align-self: start; justify-content: flex-end; max-width: min(660px, 58vw); margin-top: 12px; }
+  .sec-head--naast { --kop-kicker-h: 26px; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--pagina-marge); align-items: start; }
+  .sec-head--naast:has(> .sec-head-tekst > .lijst-kruimel:first-child) { --kop-kicker-h: 32px; }
+  .sec-head--naast > .sec-head-tekst { grid-column: 1; grid-row: 1; min-width: 0; }
+  .sec-head--naast > .toolbar-buttons { grid-column: 2; grid-row: 1; align-self: start; justify-content: flex-end; max-width: min(620px, 52vw); margin-top: max(0px, calc(var(--kop-kicker-h) + 12px + (1.1 * clamp(28px, 4vw, 44px) - 44px) / 2)); }
 }

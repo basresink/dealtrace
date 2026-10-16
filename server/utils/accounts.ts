@@ -34,10 +34,11 @@ export async function accountRijen(tx: Tx, soort: 'prospect' | 'klant', zichtbar
     id: a.id, name: a.name, city: a.city, klasse: a.klasse, ownerId: a.ownerId, ownerTeamId: a.ownerId ? teams.get(a.ownerId) ?? null : null,
     nbStatus: a.nbStatus, score: a.score, aanleiding: a.data?.aanleiding ?? null, laatsteContactOp: a.laatsteContactOp, faseSinds: a.faseSinds, faseId: a.faseId, reisId: a.reisId,
     telefoon: a.data?.telefoon ?? null, email: a.data?.email ?? null,
-    contacten: sorteerContacten((perAccount.get(a.id) ?? []).map((c) => ({ id: c.id, naam: `${c.firstName ?? ''} ${c.lastName}`.trim(), rol: c.rol, status: c.status, email: c.email, telefoon: c.data?.telefoon ?? null, mobiel: c.data?.mobiel ?? null, updatedAt: c.updatedAt }))),
+    contacten: sorteerContacten((perAccount.get(a.id) ?? []).map((c) => ({ id: c.id, naam: `${c.firstName ?? ''} ${c.lastName}`.trim(), rol: c.rol, status: c.status, email: c.email, telefoon: c.data?.telefoon ?? null, mobiel: c.data?.mobiel ?? null, updatedAt: c.updatedAt, fotoUrl: typeof c.data?.fotoId === 'string' ? `/api/bijlagen/${c.data.fotoId}` : null }))),
     cf: zichtbareCustomFields(a.data?.customFields, zichtbareVelden),
     // extra velden voor de rij
     website: a.data?.website ?? null, linkedin: a.data?.linkedin ?? null, branche: a.data?.branche ?? null, domein: a.domein, kind: a.accountKind,
+    logoUrl: (a.data as any)?.logoUrl ?? null, logoUit: !!(a.data as any)?.logoUit,
   } as AccountRij & Record<string, unknown>))
 }
 
@@ -63,6 +64,10 @@ export function contactUit(c: typeof schema.contacts.$inferSelect, zichtbaar: { 
     linkedin: c.data?.linkedin ?? null, consent: c.data?.consent ?? {}, voorkeurskanaal: c.data?.voorkeurskanaal ?? null, belMeNiet: !!c.data?.belMeNiet,
     vertrokkenOp: c.data?.vertrokkenOp ?? null, bron: c.data?.bron ?? null, herkomst: c.data?.herkomst?.naam ?? null, zekerheid: c.data?.zekerheid ?? null, updatedAt: c.updatedAt,
     customFields: zichtbareCustomFields(c.data?.customFields, zichtbaar),
+    // Foto (bijlage met record_soort 'contact'), sociale kanalen en eigen bronnen (opzet uit DealDrive).
+    fotoUrl: typeof c.data?.fotoId === 'string' ? `/api/bijlagen/${c.data.fotoId}` : null,
+    instagram: (c.data?.instagram as string | undefined) ?? null, facebook: (c.data?.facebook as string | undefined) ?? null,
+    extraBronnen: Array.isArray(c.data?.extraBronnen) ? c.data.extraBronnen as { label: string; url: string }[] : [],
   }
 }
 

@@ -33,7 +33,7 @@ function label(t: any) {
             <span class="vp-tag" :class="`vp-tag--${label(t).soort}`">{{ label(t).tekst }}</span>
           </span>
         </button>
-        <NuxtLink v-if="taken.meer" to="/acties" class="vp-meer" data-test="nog-meer">nog {{ taken.meer }} meer →</NuxtLink>
+        <NuxtLink v-if="taken.meer" to="/taken" class="vp-meer" data-test="nog-meer">nog {{ taken.meer }} meer →</NuxtLink>
       </div>
       <div class="vp-kolom" data-test="kolom-afspraken">
         <div class="vp-kolomkop"><span>Afspraken</span><span class="vp-num tnum">{{ afspraken.length }}</span></div>

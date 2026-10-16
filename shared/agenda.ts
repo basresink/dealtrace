@@ -9,7 +9,25 @@ export type AfspraakStatus = 'gepland' | 'afgerond' | 'niet_verschenen' | 'geann
 export interface Gevolg { type: 'gehouden' | 'later' | 'contactpersoon' | 'nee' | 'afspraak' | 'geen'; meetingsoortSlug?: string; termijnDagen?: number; overdragen?: boolean }
 export interface Uitkomst { code: string; label: string; gevolg: Gevolg }
 export interface MeetingsoortData { doel: string; standaardLocatie?: 'account' | 'online' | null; agenda: { punt: string; verplicht: boolean }[]; voorbereiding: string[]; uitkomsten: Uitkomst[]; eersteAfspraak?: boolean; herinneringMin: number; kleur: string }
-export interface Meetingsoort { id?: string; slug: string; naam: string; type: 'klant' | 'intern'; duurMin: number; vorm: Vorm; data: MeetingsoortData }
+/** De groep in de keuzelijst Type afspraak: Afspraak (bezoek op locatie) of Meeting (op afstand). */
+export type Categorie = 'bezoek' | 'meeting'
+export interface Meetingsoort { id?: string; slug: string; naam: string; type: 'klant' | 'intern'; categorie: Categorie; duurMin: number; vorm: Vorm; data: MeetingsoortData }
+export const CATEGORIE_LABEL: Record<Categorie, string> = { bezoek: 'Afspraak', meeting: 'Meeting' }
+export const CATEGORIE_UITLEG: Record<Categorie, string> = { bezoek: 'Bezoek op locatie, komt op de route', meeting: 'Op afstand: online of telefonisch' }
+/** De categorie van een soort; een oude soort zonder categorie volgt zijn vorm. */
+export const categorieVan = (m: { categorie?: string | null; vorm?: string | null }): Categorie => (m.categorie === 'bezoek' || m.categorie === 'meeting' ? m.categorie : m.vorm === 'bezoek' ? 'bezoek' : 'meeting')
+/** De vormen die bij een categorie horen: een bezoek is op locatie, een meeting online of telefonisch. */
+export const VORMEN_PER_CATEGORIE: Record<Categorie, Vorm[]> = { bezoek: ['bezoek'], meeting: ['online', 'telefoon'] }
+/**
+ * De vorm volgt uit het type: categorie bezoek geeft altijd een bezoek (en de route); een meeting is
+ * online of telefonisch, met de gewenste vorm als die past en anders de vorm van de soort.
+ */
+export function vormVoorSoort(soort: { categorie?: string | null; vorm?: string | null }, gewenst?: string | null): Vorm {
+  const c = categorieVan(soort)
+  if (c === 'bezoek') return 'bezoek'
+  if (gewenst === 'online' || gewenst === 'telefoon') return gewenst
+  return soort.vorm === 'telefoon' ? 'telefoon' : 'online'
+}
 
 const EERSTE: Uitkomst[] = [
   { code: 'vervolg', label: 'Vervolg afgesproken', gevolg: { type: 'gehouden', overdragen: true } },
@@ -24,16 +42,30 @@ const BEL: Uitkomst[] = [
 ]
 const AGENDA_KENNIS = [{ punt: 'Aanleiding', verplicht: true }, { punt: 'Situatie', verplicht: true }, { punt: 'Behoefte', verplicht: true }, { punt: 'Vervolg', verplicht: true }]
 
-/** De meetingsoorten van de startset (F09, F23): zes uit P13 plus Ongepland bezoek (P30). Geen offertebespreking (B17). */
+/**
+ * De meetingsoorten van de startset (F09, F23): zes uit P13, Ongepland bezoek (P30) en de soorten uit
+ * DealDrive in twee categorieën. Afspraak (bezoek op locatie): Gepland bezoek, Ongepland bezoek, Demo,
+ * Event, Beurs (en Inventarisatie). Meeting (op afstand): Online meeting, Belafspraak, Online demo,
+ * Webinar, Accountoverleg (en Kennismaking, Terugbelafspraak, Weekoverleg). Geen offertebespreking (B17).
+ */
 export const MEETINGSOORTEN_START: Meetingsoort[] = [
-  { slug: 'kennismaking', naam: 'Kennismaking', type: 'klant', duurMin: 30, vorm: 'online', data: { doel: 'Kennismaken en de behoefte verkennen.', standaardLocatie: 'online', agenda: AGENDA_KENNIS, voorbereiding: ['Lees het dossier en de aanleiding', 'Kies één winpunt'], uitkomsten: EERSTE, eersteAfspraak: true, herinneringMin: 30, kleur: 'geel' } },
-  { slug: 'inventarisatie', naam: 'Inventarisatie', type: 'klant', duurMin: 60, vorm: 'bezoek', data: { doel: 'Ter plaatse de situatie en het project bekijken.', standaardLocatie: 'account', agenda: [...AGENDA_KENNIS, { punt: 'Rondgang', verplicht: false }], voorbereiding: ['Plan de route', 'Neem het leverplan mee'], uitkomsten: EERSTE, eersteAfspraak: true, herinneringMin: 60, kleur: 'paars' } },
-  { slug: 'demo', naam: 'Demo', type: 'klant', duurMin: 45, vorm: 'online', data: { doel: 'Laten zien hoe het werkt in hun situatie.', standaardLocatie: 'online', agenda: [{ punt: 'Situatie', verplicht: true }, { punt: 'Demo', verplicht: true }, { punt: 'Vragen', verplicht: false }, { punt: 'Vervolg', verplicht: true }], voorbereiding: ['Zet de demo klaar met hun voorbeeld'], uitkomsten: EERSTE, eersteAfspraak: true, herinneringMin: 30, kleur: 'blauw' } },
-  { slug: 'belafspraak', naam: 'Belafspraak', type: 'klant', duurMin: 15, vorm: 'telefoon', data: { doel: 'Een kort gesprek op een afgesproken moment.', standaardLocatie: null, agenda: [{ punt: 'Aanleiding', verplicht: true }, { punt: 'Vervolg', verplicht: true }], voorbereiding: ['Lees de laatste notitie'], uitkomsten: BEL, herinneringMin: 15, kleur: 'groen' } },
-  { slug: 'terugbelafspraak', naam: 'Terugbelafspraak', type: 'klant', duurMin: 10, vorm: 'telefoon', data: { doel: 'Terugbellen zoals afgesproken.', standaardLocatie: null, agenda: [{ punt: 'Vraag van de klant', verplicht: true }], voorbereiding: [], uitkomsten: BEL, herinneringMin: 15, kleur: 'groen' } },
+  { slug: 'kennismaking', naam: 'Kennismaking', type: 'klant', categorie: 'meeting', duurMin: 30, vorm: 'online', data: { doel: 'Kennismaken en de behoefte verkennen.', standaardLocatie: 'online', agenda: AGENDA_KENNIS, voorbereiding: ['Lees het dossier en de aanleiding', 'Kies één winpunt'], uitkomsten: EERSTE, eersteAfspraak: true, herinneringMin: 30, kleur: 'geel' } },
+  { slug: 'inventarisatie', naam: 'Inventarisatie', type: 'klant', categorie: 'bezoek', duurMin: 60, vorm: 'bezoek', data: { doel: 'Ter plaatse de situatie en het project bekijken.', standaardLocatie: 'account', agenda: [...AGENDA_KENNIS, { punt: 'Rondgang', verplicht: false }], voorbereiding: ['Plan de route', 'Neem het leverplan mee'], uitkomsten: EERSTE, eersteAfspraak: true, herinneringMin: 60, kleur: 'paars' } },
+  { slug: 'demo', naam: 'Online demo', type: 'klant', categorie: 'meeting', duurMin: 45, vorm: 'online', data: { doel: 'Laten zien hoe het werkt in hun situatie.', standaardLocatie: 'online', agenda: [{ punt: 'Situatie', verplicht: true }, { punt: 'Demo', verplicht: true }, { punt: 'Vragen', verplicht: false }, { punt: 'Vervolg', verplicht: true }], voorbereiding: ['Zet de demo klaar met hun voorbeeld'], uitkomsten: EERSTE, eersteAfspraak: true, herinneringMin: 30, kleur: 'blauw' } },
+  { slug: 'belafspraak', naam: 'Belafspraak', type: 'klant', categorie: 'meeting', duurMin: 15, vorm: 'telefoon', data: { doel: 'Een kort gesprek op een afgesproken moment.', standaardLocatie: null, agenda: [{ punt: 'Aanleiding', verplicht: true }, { punt: 'Vervolg', verplicht: true }], voorbereiding: ['Lees de laatste notitie'], uitkomsten: BEL, herinneringMin: 15, kleur: 'groen' } },
+  { slug: 'terugbelafspraak', naam: 'Terugbelafspraak', type: 'klant', categorie: 'meeting', duurMin: 10, vorm: 'telefoon', data: { doel: 'Terugbellen zoals afgesproken.', standaardLocatie: null, agenda: [{ punt: 'Vraag van de klant', verplicht: true }], voorbereiding: [], uitkomsten: BEL, herinneringMin: 15, kleur: 'groen' } },
   // P30: inloopbezoek langs de route; dezelfde uitkomsten als Kennismaking, telt niet als eerste afspraak.
-  { slug: 'ongepland-bezoek', naam: 'Ongepland bezoek', type: 'klant', duurMin: 30, vorm: 'bezoek', data: { doel: 'Binnenlopen langs de route.', standaardLocatie: 'account', agenda: [{ punt: 'Aanleiding', verplicht: false }, { punt: 'Vervolg', verplicht: true }], voorbereiding: [], uitkomsten: EERSTE, herinneringMin: 0, kleur: 'oranje' } },
-  { slug: 'weekoverleg', naam: 'Weekoverleg new business', type: 'intern', duurMin: 30, vorm: 'online', data: { doel: 'De pijplijn van de week doornemen.', standaardLocatie: 'online', agenda: [{ punt: 'Cijfers', verplicht: false }, { punt: 'Wat knelt', verplicht: false }], voorbereiding: [], uitkomsten: [], herinneringMin: 10, kleur: 'grijs' } },
+  { slug: 'ongepland-bezoek', naam: 'Ongepland bezoek', type: 'klant', categorie: 'bezoek', duurMin: 30, vorm: 'bezoek', data: { doel: 'Binnenlopen langs de route.', standaardLocatie: 'account', agenda: [{ punt: 'Aanleiding', verplicht: false }, { punt: 'Vervolg', verplicht: true }], voorbereiding: [], uitkomsten: EERSTE, herinneringMin: 0, kleur: 'oranje' } },
+  { slug: 'weekoverleg', naam: 'Weekoverleg new business', type: 'intern', categorie: 'meeting', duurMin: 30, vorm: 'online', data: { doel: 'De pijplijn van de week doornemen.', standaardLocatie: 'online', agenda: [{ punt: 'Cijfers', verplicht: false }, { punt: 'Wat knelt', verplicht: false }], voorbereiding: [], uitkomsten: [], herinneringMin: 10, kleur: 'grijs' } },
+  // Afspraak (bezoek op locatie), in de opzet van DealDrive.
+  { slug: 'gepland-bezoek', naam: 'Gepland bezoek', type: 'klant', categorie: 'bezoek', duurMin: 60, vorm: 'bezoek', data: { doel: 'Op locatie de situatie en de behoefte bespreken.', standaardLocatie: 'account', agenda: AGENDA_KENNIS, voorbereiding: ['Plan de route', 'Lees het dossier en de aanleiding'], uitkomsten: EERSTE, eersteAfspraak: true, herinneringMin: 60, kleur: 'paars' } },
+  { slug: 'demo-op-locatie', naam: 'Demo', type: 'klant', categorie: 'bezoek', duurMin: 60, vorm: 'bezoek', data: { doel: 'Op locatie laten zien hoe het werkt in hun situatie.', standaardLocatie: 'account', agenda: [{ punt: 'Situatie', verplicht: true }, { punt: 'Demo', verplicht: true }, { punt: 'Vragen', verplicht: false }, { punt: 'Vervolg', verplicht: true }], voorbereiding: ['Neem de demo mee en plan de route'], uitkomsten: EERSTE, eersteAfspraak: true, herinneringMin: 60, kleur: 'blauw' } },
+  { slug: 'event', naam: 'Event', type: 'klant', categorie: 'bezoek', duurMin: 120, vorm: 'bezoek', data: { doel: 'Contact leggen of verdiepen op een event.', standaardLocatie: null, agenda: [{ punt: 'Gesprek', verplicht: false }, { punt: 'Vervolg', verplicht: true }], voorbereiding: ['Kijk wie er komt'], uitkomsten: EERSTE, herinneringMin: 60, kleur: 'oranje' } },
+  { slug: 'beurs', naam: 'Beurs', type: 'klant', categorie: 'bezoek', duurMin: 60, vorm: 'bezoek', data: { doel: 'Elkaar spreken op de beurs.', standaardLocatie: null, agenda: [{ punt: 'Gesprek', verplicht: false }, { punt: 'Vervolg', verplicht: true }], voorbereiding: ['Spreek een tijd en plek op de beurs af'], uitkomsten: EERSTE, herinneringMin: 60, kleur: 'oranje' } },
+  // Meeting (op afstand).
+  { slug: 'online-meeting', naam: 'Online meeting', type: 'klant', categorie: 'meeting', duurMin: 30, vorm: 'online', data: { doel: 'Online de situatie en het vervolg bespreken.', standaardLocatie: 'online', agenda: AGENDA_KENNIS, voorbereiding: ['Lees het dossier en de aanleiding'], uitkomsten: EERSTE, eersteAfspraak: true, herinneringMin: 15, kleur: 'geel' } },
+  { slug: 'webinar', naam: 'Webinar', type: 'klant', categorie: 'meeting', duurMin: 60, vorm: 'online', data: { doel: 'Een webinar waar de klant aan meedoet.', standaardLocatie: 'online', agenda: [{ punt: 'Webinar', verplicht: false }, { punt: 'Vervolg', verplicht: true }], voorbereiding: [], uitkomsten: EERSTE, herinneringMin: 30, kleur: 'blauw' } },
+  { slug: 'accountoverleg', naam: 'Accountoverleg', type: 'intern', categorie: 'meeting', duurMin: 30, vorm: 'online', data: { doel: "Met collega's de aanpak van een account bespreken.", standaardLocatie: 'online', agenda: [{ punt: 'Stand van het account', verplicht: false }, { punt: 'Volgende stap', verplicht: false }], voorbereiding: [], uitkomsten: [], herinneringMin: 10, kleur: 'grijs' } },
 ]
 
 export interface AfspraakKort { id: string; accountId: string | null; status: AfspraakStatus; start: string; meetingsoortType?: 'klant' | 'intern' }

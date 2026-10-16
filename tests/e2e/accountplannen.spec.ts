@@ -12,7 +12,7 @@ test.describe('accountplannen', () => {
     await ga(page, '/accountplannen')
     await expect(page.getByText(/Accountplannen · \d+ actueel/)).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Eén plan per klant, elke stap aanwijsbaar.' })).toBeVisible()
-    await expect(page.getByTestId('ap-zoek')).toBeVisible()
+    await expect(page.getByTestId('kop-zoeken')).toBeVisible()
     const kaart = page.getByTestId('ap-groep-actueel').getByTestId('ap-kaart-eva-plan-01')
     await expect(kaart).toContainText('KLANT')
     await expect(kaart).toContainText('ACTUEEL')

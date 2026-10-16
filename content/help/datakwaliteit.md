@@ -25,4 +25,6 @@ Een accountmanager ziet zijn eigen accounts. Een salesmanager ziet de accounts v
 
 ## Zo los je het op
 
-Waar het kan, brengt de knop je naar **Alle prospects** met het filter al aan, bijvoorbeeld **Zonder beslisser** of **Geen contact in 90 dagen**. Anders klapt de kaart een lijst uit met een link naar de accountkaart, de taak of de afspraak. Vul het gegeven aan en de teller loopt bij de volgende keer openen terug.
+Klik **Bekijk** op een kaart. Er schuift een venster open met per regel de naam, het account of de plaats en wat er ontbreekt. Een klik op een regel brengt je naar de accountkaart of het contact (een taak opent op Acties, een afspraak op het tabblad Afspraken). Waar het kan, staat onderin **Toon in lijst**: dat opent **Alle prospects** met het filter al aan, bijvoorbeeld **Zonder beslisser** of **Geen contact in 90 dagen**. Vul het gegeven aan en de teller loopt bij de volgende keer openen terug.
+
+Laat de beheerder een eigen veld meetellen, dan komt er een kaart "Zonder" met de naam van dat veld bij, met het label **Eigen veld**.

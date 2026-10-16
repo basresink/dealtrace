@@ -11,6 +11,7 @@ import { afkoelingTot, KANALEN, magBenaderen } from '../../../../shared/nbStatus
 import { terugkomTekst } from '../../../../shared/verkoopverhaal'
 import { terugkomControleLui, verkoopverhaal } from '../../../utils/reis'
 import { vereisFunctie } from '../../../utils/sessie'
+import { extraBronnenUit } from '../../../utils/extraBronnen'
 
 export default defineEventHandler(async (event) => {
   const ctx = await vereisFunctie(event, 'prospects.kaart')
@@ -82,6 +83,9 @@ export default defineEventHandler(async (event) => {
       plaats: a.city, postcode: a.postcode, kvk: a.kvk, domein: a.domein, laatsteContactOp: a.laatsteContactOp,
       website: a.data?.website ?? null, telefoon: a.data?.telefoon ?? null, email: a.data?.email ?? null, linkedin: a.data?.linkedin ?? null,
       adres: a.data?.adres ?? null, branche: a.data?.branche ?? null, land: a.data?.land ?? 'NL', medewerkers: a.data?.medewerkers ?? null,
+      // Logo, sociale kanalen en eigen bronnen (opzet uit DealDrive). Extra bronnen zijn de URL's onder volgBronnen.
+      logoUrl: (a.data as any)?.logoUrl ?? null, logoUit: !!(a.data as any)?.logoUit, instagram: (a.data as any)?.instagram ?? null, facebook: (a.data as any)?.facebook ?? null, officieleNaam: (a.data as any)?.officieleNaam ?? null,
+      extraBronnen: extraBronnenUit((a.data as any)?.volgBronnen),
       aanleiding: a.data?.aanleiding ?? null, dossier: a.data?.dossier ?? null, band: a.data?.band ?? {},
       // P20: het extern id uit het CRM; de link alleen met een echte koppeling (de mock heeft geen portaal).
       crm: (a.data as any)?.extern?.hubspot?.id ? { label: 'HubSpot', id: (a.data as any).extern.hubspot.id, url: `https://app.hubspot.com/contacts/${process.env.HUBSPOT_PORTAAL ?? '0'}/company/${(a.data as any).extern.hubspot.id}` } : null,

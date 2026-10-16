@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Inzichten (vanaf Gevorderd) in de opzet van DealDrive: kop met Alle, Klanten en Prospects en Filters,
+// Inzichten (vanaf Gevorderd) in de opzet van DealDrive: kop met Alle en Prospects, Filters en + Inzicht,
 // statkaarten en een raster van inzichtkaarten (InzichtenFeed). Het tabblad Inzichten van Acties toont
 // dezelfde feed. Een Beginner ziet de uitleg "Nog niet aangezet" (6.1); zijn inzichten staan bij Acties.
 const { functie } = useMe()

@@ -15,7 +15,7 @@ export function useAssistent() {
   return { open, context, voorvraag, openen }
 }
 function schermNaam(p: string) {
-  const n: Record<string, string> = { '/': 'Vandaag', '/helpcenter': 'Helpcenter', '/notificaties': 'Notificaties', '/belblokken': 'Belblokken', '/bellen': 'Bellen', '/richting': 'Richting', '/planning': 'Prospectplanning', '/leadgenerator': 'Leadgenerator', '/acties': 'Acties', '/prospects': 'Prospects' }
+  const n: Record<string, string> = { '/': 'Vandaag', '/helpcenter': 'Helpcenter', '/notificaties': 'Notificaties', '/belblokken': 'Belblokken', '/bellen': 'Bellen', '/richting': 'Richting', '/planning': 'Prospectplanning', '/leadgenerator': 'Leadgenerator', '/taken': 'Taken', '/prospects': 'Prospects' }
   const k = Object.keys(n).filter((x) => x === '/' ? p === '/' : p.startsWith(x)).sort((a, b) => b.length - a.length)[0]
   return k ? n[k]! : 'dit scherm'
 }

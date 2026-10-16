@@ -1,18 +1,22 @@
 import { expect, test } from '@playwright/test'
 import { ga, login } from './hulp'
 
-// Agenda in de opzet van DealDrive: kop met de dag, Weergave-menu in de URL, navigatie met weeknummer,
+// Agenda in de opzet van DealDrive: kop met de dag, weergave in het filterpaneel en in de URL, navigatie met weeknummer,
 // weekrooster met hele-dag-rij en nu-lijn, klik op een lege tijd plant een afspraak, maand.
 test.describe('agenda', () => {
-  test('kop, weergavemenu en navigatie', async ({ page }) => {
+  test('kop, weergave in het filterpaneel en navigatie', async ({ page }) => {
     await login(page, 'u-07')
     await ga(page, '/agenda')
     await expect(page.locator('h1.title')).toHaveText(/^(Geen afspraken vandaag\.|1 afspraak vandaag\.|\d+ afspraken vandaag\.)$/)
     await expect(page.getByTestId('agenda-periode')).toHaveText(/^Week \d+ · \d+ t\/m \d+ \w+ \d{4}$/)
     await expect(page.locator('[data-test^="dagkop-"]')).toHaveCount(5)
     await expect(page.getByTestId('nu-lijn')).toHaveCount(1)
-    await page.getByTestId('weergave-knop').click()
-    await expect(page.getByTestId('weergave-werkweek')).toHaveAttribute('aria-checked', 'true')
+    // Briefings staat sinds de ronde Taken op /taken, niet meer in de agenda.
+    await expect(page.getByTestId('briefings-knop')).toHaveCount(0)
+    // De weergave staat in het filterpaneel.
+    await expect(page.getByTestId('weergave-knop')).toHaveCount(0)
+    await page.getByTestId('agenda-filters').click()
+    await expect(page.getByTestId('weergave-werkweek')).toHaveAttribute('aria-pressed', 'true')
     await page.getByTestId('weergave-week').click()
     await expect(page).toHaveURL(/weergave=week/)
     await expect(page.locator('[data-test^="dagkop-"]')).toHaveCount(7)
@@ -21,7 +25,6 @@ test.describe('agenda', () => {
     await expect(page.getByTestId('agenda-periode')).not.toHaveText(periode!)
     await page.getByTestId('agenda-vandaag').click()
     await expect(page.getByTestId('agenda-periode')).toHaveText(periode!)
-    await page.getByTestId('weergave-knop').click()
     await page.getByTestId('weergave-maand').click()
     await expect(page).toHaveURL(/weergave=maand/)
     await expect(page.getByTestId('agenda-maand')).toBeVisible()

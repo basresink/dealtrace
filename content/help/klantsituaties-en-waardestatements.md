@@ -1,7 +1,7 @@
 ---
 titel: Klantsituaties en waardestatements
 categorie: Je pitch onderzoeken
-collectie: werven
+collectie: newbusiness
 samenvatting: Bedenk per voordeel in welke situatie je klant controle mist, en schrijf voor elke situatie een zin over de waarde die jij brengt.
 bron: Uit de whitepaper The Perfect Pitch
 routes: /richting

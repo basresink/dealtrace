@@ -20,6 +20,7 @@ import { seedFunnel } from './seedFunnel'
 import { seedConcepten } from './seedConcepten'
 import { seedTeam } from './seedTeam'
 import { seedEva } from './seedEva'
+import { seedKennisbank } from './seedKennisbank'
 import { versleutel } from '../utils/geheimen'
 
 interface SeedGebruiker {
@@ -119,8 +120,8 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
     const meldingen = [
       ['m-1', 'u-02', 'dagstart', 'Je dag staat klaar', '3 afspraken, 5 belacties. Eerst: Testbrontsma Installatietechniek om 09:30.', '/'],
       ['m-2', 'u-02', 'hot', 'Nieuwe aanleiding bij Testbrontsma Installatietechniek', 'Vacature servicemonteur (12 okt).', '/prospects'],
-      ['m-3', 'u-02', 'herinnering', 'Terugbellen: Testoldenhave Klimaattechniek', 'Vandaag 14:00.', '/acties'],
-      ['m-4', 'u-03', 'inzicht', 'Concept klaar ter goedkeuring', 'Opvolgmail aan Testmarskamp Installaties.', '/acties'],
+      ['m-3', 'u-02', 'herinnering', 'Terugbellen: Testoldenhave Klimaattechniek', 'Vandaag 14:00.', '/taken'],
+      ['m-4', 'u-03', 'inzicht', 'Concept klaar ter goedkeuring', 'Opvolgmail aan Testmarskamp Installaties.', '/taken'],
     ]
     for (const [id, gebruiker, soort, titel, tekst, link] of meldingen) {
       await client.query(
@@ -142,6 +143,8 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
     // Testgebruiker Eva Ervaren (u-07): een gevulde werkplek voor de komende vier weken. Na de
     // campagnes en het team, zodat die sets niet veranderen.
     await seedEva(client, org.id)
+    // Kennisbank: vijf fictieve documenten, een paar gekoppeld aan prospects en een contact.
+    await seedKennisbank(client, org.id)
     // Taken bij een account krijgen het primaire contact (de beslisser, anders het eerste actieve contact)
     // als contact_id, zodat de tabbladen op de contactkaart gevuld zijn. Alleen waar nog geen contact staat.
     await client.query(`update tasks t set contact_id = (select c.id from contacts c where c.account_id = t.account_id and c.status <> 'vertrokken' order by (c.rol = 'beslisser') desc, c.created_at, c.id limit 1)

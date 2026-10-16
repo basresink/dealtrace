@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Inzichtenfeed in de opzet van DealDrive (pagina /inzichten en het tabblad Inzichten van Acties):
-// werkbalk met Alle, Klanten en Prospects, Filters (gelezen, bron, agent, periode, fase, tegengehouden),
-// statkaarten die ook filteren, "Waarom niet?" (Expert), een kopregel met het aantal en een raster van
+// werkbalk met Alle en Prospects, Filters (gelezen, bron, agent, periode, fase, tegengehouden),
+// statkaarten die ook filteren, "+ Inzicht" (met prospect en optioneel een contact), "Waarom niet?" (Expert), een kopregel met het aantal en een raster van
 // InzichtKaart (3 per rij, 2 op een tablet, 1 op de telefoon). Alle filters staan in de URL.
 // Een klik op een kaart opent de InzichtFlyout; ?inzicht=<id> opent er meteen een.
 const props = defineProps<{ metKop?: boolean }>()
@@ -30,7 +30,7 @@ const filtersOpen = ref(false)
 const actieveFilters = computed(() => ['gelezen', 'bron', 'agent', 'sinds', 'fase'].filter((k) => q(k)).length)
 function resetFilters() { zet(Object.fromEntries(SLEUTELS.map((k) => [k, undefined]))); toonTegengehouden(false) }
 
-const SOORTEN = [['', 'Alle'], ['klant', 'Klanten'], ['prospect', 'Prospects']] as const
+const SOORTEN = [['', 'Alle'], ['prospect', 'Prospects']] as const
 const GELEZEN = [['', 'Ongelezen'], ['gelezen', 'Gelezen'], ['alle', 'Beide']] as const
 const BRONNEN = [['', 'Alle'], ['extern', 'Extern'], ['intern', 'Intern']] as const
 const PERIODES = [['', 'Alles'], ['vandaag', 'Vandaag'], ['week', 'Afgelopen week'], ['maand', 'Afgelopen maand'], ['kwartaal', 'Afgelopen kwartaal']] as const
@@ -77,7 +77,7 @@ defineExpose({ refresh })
             <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'if-filters--aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="inzicht-filters" @click="filtersOpen = !filtersOpen">
               <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="if-teller">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="if-pijl" :class="{ 'if-pijl--open': filtersOpen }" />
             </button>
-            <button v-if="magMetBron" type="button" class="dd-actie dd-actie--secundair" data-test="inzicht-met-bron-knop" @click="metBron = true"><Icoon naam="Plus" class="dd-actie-icoon" />Inzicht met bron</button>
+            <button v-if="magMetBron" type="button" class="dd-actie dd-actie--secundair" data-test="inzicht-met-bron-knop" @click="metBron = true"><Icoon naam="Plus" class="dd-actie-icoon" />Inzicht</button>
             <HulpKnop v-if="props.metKop" artikel="inzichten" />
           </div>
         </div>

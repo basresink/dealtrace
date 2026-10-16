@@ -42,7 +42,7 @@ useHead({ title: 'Helpartikelen · Dealtrace' })
           <template v-if="tab === 'artikelen'">
             <div class="chips">
               <button v-for="[k, l] in [['', 'Alle'], ['eigen', 'Eigen'], ['platform', 'Van Dealtrace']]" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': (route.query.herkomst ?? '') === k }" @click="zet('herkomst', k)">{{ l }}</button>
-              <button v-for="[k, l] in [['product', 'Hoe werkt Dealtrace'], ['newbusiness', 'New business']]" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': route.query.collectie === k }" @click="zet('collectie', route.query.collectie === k ? '' : k)">{{ l }}</button>
+              <button v-for="[k, l] in [['product', 'Hoe werkt Dealtrace'], ['newbusiness', 'New business'], ['tips', 'Tips & Tricks']]" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': route.query.collectie === k }" @click="zet('collectie', route.query.collectie === k ? '' : k)">{{ l }}</button>
             </div>
             <article v-if="kennisbankAan" class="kaart" data-test="kennisbank"><label class="veld veld--rij"><input type="checkbox" :checked="data.kennisbank" @change="zetKennisbank(($event.target as HTMLInputElement).checked)"> <span>Eigen artikelen gebruiken als bron voor de AI-assistent</span></label></article>
             <table class="tabel tabel--kaarten" data-test="help-beheerlijst"><thead><tr><th>Titel</th><th>Categorie</th><th>Herkomst</th><th>Status</th><th>Gelezen</th><th>Nuttig</th><th /></tr></thead>

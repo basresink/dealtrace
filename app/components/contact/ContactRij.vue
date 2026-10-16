@@ -21,7 +21,7 @@ const nummers = computed(() => [c.value.mobiel, c.value.telefoon].filter((n, i, 
 
 <template>
   <li class="ct-rij" :class="[`ct-rij--${weergave ?? 'lijst'}`, { 'ct-rij--vertrokken': vertrokken }]" :data-contact="c.id" data-test="contact-rij">
-    <span class="ct-avatar" :style="{ background: kleurUitNaam(c.naam) }" aria-hidden="true">{{ initialen(c.naam) }}</span>
+    <span class="ct-avatar" :style="{ background: kleurUitNaam(c.naam) }" aria-hidden="true"><img v-if="c.fotoUrl" :src="c.fotoUrl" alt="" class="ct-foto" loading="lazy" data-test="contact-foto"><template v-else>{{ initialen(c.naam) }}</template></span>
     <div class="ct-info">
       <div class="ct-regel1">
         <h3 class="ct-naam"><NuxtLink :to="`/contacten/${c.id}`" class="ct-link">{{ c.naam }}</NuxtLink></h3>
@@ -65,7 +65,8 @@ const nummers = computed(() => [c.value.mobiel, c.value.telefoon].filter((n, i, 
 .ct-rij:last-child { border-bottom: 0; }
 .ct-rij:hover { background: var(--surface); }
 .ct-rij--vertrokken .ct-naam, .ct-rij--vertrokken .ct-avatar { opacity: 0.55; }
-.ct-avatar { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; flex-shrink: 0; color: var(--wit); font-family: var(--font-serif); font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+.ct-foto { width: 100%; height: 100%; object-fit: cover; }
+.ct-avatar { overflow: hidden; display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; flex-shrink: 0; color: var(--wit); font-family: var(--font-serif); font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
 .ct-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .ct-regel1 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .ct-naam { margin: 0; font-family: var(--font-serif); font-size: 17px; font-weight: 700; line-height: 1.3; color: var(--ink); overflow-wrap: anywhere; }

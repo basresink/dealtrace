@@ -54,7 +54,7 @@ export async function cijfers(tx: Tx, gebruiker: { id: string; werkplek?: string
   }
 }
 
-const notitieUit = (n: Rij) => ({ id: n.id as string, soort: n.soort as 'afspraak' | 'prive', tekst: n.tekst as string, termijn: datum(n.termijn), status: n.status as string, op: iso(n.op)!, reactie: n.data?.reactie ?? null, sessieId: n.sessie_id ?? null })
+export const notitieUit = (n: Rij) => ({ id: n.id as string, soort: n.soort as 'afspraak' | 'prive', tekst: n.tekst as string, termijn: datum(n.termijn), status: n.status as string, op: iso(n.op)!, reactie: n.data?.reactie ?? null, sessieId: n.sessie_id ?? null })
 
 /** De coachingkaart voor de manager. */
 export async function coachingKaart(tx: Tx, g: Kijker, gebruikerId: string, nu = new Date()) {

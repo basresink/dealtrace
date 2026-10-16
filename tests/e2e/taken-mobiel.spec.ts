@@ -1,4 +1,4 @@
-// P07 op de telefoon: Acties zonder horizontale scroll, de taakflyout als schuifvenster,
+// P07 op de telefoon: Taken zonder horizontale scroll, de taakflyout als schuifvenster,
 // uitkomsttegels van minstens 44 px, en afronden offline: precies één keer na herstel.
 import { expect, test } from '@playwright/test'
 import { apiLogin, ga, login } from './hulp'
@@ -12,7 +12,7 @@ test('offline afronden met "Ongedaan maken"-strook, en na herstel precies één 
   await page.request.post('/api/reis/gebeurtenis', { data: { accountId: id, gebeurtenis: 'gekwalificeerd' } })
   const taak = (await (await page.request.get('/api/tasks?eigenaar=mij')).json()).groepen.flatMap((g: any) => g.taken).find((t: any) => t.account?.id === id && t.poging)
   await login(page, 'u-03')
-  await ga(page, `/acties?taak=${taak.id}`)
+  await ga(page, `/taken?taak=${taak.id}`)
   const breed = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(breed).toBeLessThanOrEqual(0)
   const kader = await page.getByTestId('taak-flyout').boundingBox()
@@ -41,7 +41,7 @@ test('Ongedaan maken: de taak blijft open', async ({ page }) => {
   await page.request.post('/api/reis/gebeurtenis', { data: { accountId: id, gebeurtenis: 'gekwalificeerd' } })
   const taak = (await (await page.request.get('/api/tasks?eigenaar=mij')).json()).groepen.flatMap((g: any) => g.taken).find((t: any) => t.account?.id === id && t.poging)
   await login(page, 'u-03')
-  await ga(page, `/acties?taak=${taak.id}`)
+  await ga(page, `/taken?taak=${taak.id}`)
   await page.getByTestId('uitkomst-geen_reactie').click()
   await page.getByTestId('afronden').click()
   await page.getByTestId('ongedaan').click()

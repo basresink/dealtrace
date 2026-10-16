@@ -5,7 +5,6 @@
 const { functie } = useMe()
 const route = useRoute()
 const router = useRouter()
-const { open: zoekenOpen } = useZoeken()
 const tabs = computed(() => [
   { k: 'jaar', t: 'Jaarplanning', aan: !!functie('planning.jaar')?.beschikbaar },
   { k: 'ritme', t: 'Hercontactritme', aan: !!functie('ritme.lezen')?.beschikbaar },
@@ -27,7 +26,6 @@ useHead({ title: 'Prospectplanning · Dealtrace' })
     <template v-else>
       <PaginaKop :kicker="kicker" :titel="KOP[tab!]!.titel" :uitleg="KOP[tab!]!.uitleg" :helpartikel="KOP[tab!]!.hulp">
         <template #acties>
-          <button type="button" class="dd-actie dd-actie--secundair dd-actie--icoon" aria-label="Zoeken" title="Zoeken" @click="zoekenOpen = true"><Icoon naam="Search" /></button>
           <NuxtLink to="/prospects" class="dd-actie dd-actie--secundair" data-test="alle-prospects">Alle prospects<Icoon naam="ArrowRight" class="dd-actie-icoon" /></NuxtLink>
         </template>
       </PaginaKop>

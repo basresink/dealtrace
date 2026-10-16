@@ -2,18 +2,42 @@
 // aan de beurt?" met prospects zonder klasse (gat 33), vormadvies, vrije momenten met bezet uit de
 // koppeling (gat 37) en conflicten.
 import { describe, expect, it } from 'vitest'
-import { aanDeBeurt, adviesCode, conflicten, isEersteAfspraak, meetingUitkomst, MEETINGSOORTEN_START, vormAdvies, vrijeMomentenAgenda, type AfspraakKort } from '../../shared/agenda'
+import { aanDeBeurt, adviesCode, CATEGORIE_LABEL, categorieVan, conflicten, VORMEN_PER_CATEGORIE, vormVoorSoort, isEersteAfspraak, meetingUitkomst, MEETINGSOORTEN_START, vormAdvies, vrijeMomentenAgenda, type AfspraakKort } from '../../shared/agenda'
 
 const soort = (slug: string) => MEETINGSOORTEN_START.find((m) => m.slug === slug)!
 const nu = new Date('2026-10-20T08:00:00Z')
 
 describe('startset', () => {
-  it('zeven meetingsoorten (met Ongepland bezoek), geen offertebespreking, eerste afspraak alleen bij kennismaking, inventarisatie en demo', () => {
-    expect(MEETINGSOORTEN_START).toHaveLength(7)
+  it('veertien meetingsoorten (met Ongepland bezoek en de soorten uit DealDrive), geen offertebespreking, eerste afspraak bij de kennismakende soorten', () => {
+    expect(MEETINGSOORTEN_START).toHaveLength(14)
+    expect(new Set(MEETINGSOORTEN_START.map((m) => m.slug)).size).toBe(14)
     expect(MEETINGSOORTEN_START.some((m) => /offerte/i.test(m.naam))).toBe(false)
-    expect(MEETINGSOORTEN_START.filter((m) => m.data.eersteAfspraak).map((m) => m.slug)).toEqual(['kennismaking', 'inventarisatie', 'demo'])
+    expect(MEETINGSOORTEN_START.filter((m) => m.data.eersteAfspraak).map((m) => m.slug)).toEqual(['kennismaking', 'inventarisatie', 'demo', 'gepland-bezoek', 'demo-op-locatie', 'online-meeting'])
     expect(soort('weekoverleg').type).toBe('intern')
     for (const m of MEETINGSOORTEN_START) for (const u of m.data.uitkomsten) expect(u.gevolg.type).toBeTruthy()
+  })
+})
+
+describe('categorie: Type afspraak in twee groepen', () => {
+  const naam = (c: 'bezoek' | 'meeting') => MEETINGSOORTEN_START.filter((m) => m.categorie === c).map((m) => m.naam)
+  it('Afspraak (op locatie) en Meeting (op afstand) zoals in DealDrive', () => {
+    expect(naam('bezoek')).toEqual(expect.arrayContaining(['Gepland bezoek', 'Ongepland bezoek', 'Demo', 'Event', 'Beurs']))
+    expect(naam('meeting')).toEqual(expect.arrayContaining(['Online meeting', 'Belafspraak', 'Online demo', 'Webinar', 'Accountoverleg']))
+    expect(CATEGORIE_LABEL).toEqual({ bezoek: 'Afspraak', meeting: 'Meeting' })
+    // Elke soort heeft een vorm die bij zijn categorie past.
+    for (const m of MEETINGSOORTEN_START) expect(VORMEN_PER_CATEGORIE[m.categorie]).toContain(m.vorm)
+  })
+  it('een oude soort zonder categorie volgt zijn vorm', () => {
+    expect(categorieVan({ vorm: 'bezoek' })).toBe('bezoek')
+    expect(categorieVan({ vorm: 'telefoon' })).toBe('meeting')
+    expect(categorieVan({ categorie: 'bezoek', vorm: 'online' })).toBe('bezoek')
+  })
+  it('de vorm volgt uit het type: bezoek altijd op locatie, een meeting online of telefonisch', () => {
+    expect(vormVoorSoort(soort('gepland-bezoek'), 'online')).toBe('bezoek')
+    expect(vormVoorSoort(soort('belafspraak'))).toBe('telefoon')
+    expect(vormVoorSoort(soort('online-meeting'))).toBe('online')
+    expect(vormVoorSoort(soort('online-meeting'), 'telefoon')).toBe('telefoon')
+    expect(vormVoorSoort(soort('kennismaking'), 'bezoek')).toBe('online')
   })
 })
 

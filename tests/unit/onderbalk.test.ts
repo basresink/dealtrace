@@ -8,10 +8,10 @@ import { zijbalkVoor } from '../../shared/zijbalk'
 describe('onderbalk', () => {
   it('vijf tabs per profiel; onbekend valt terug op binnendienst; salesmanager zonder portefeuille', () => {
     expect(tabsVoor('buitendienst', 'accountmanager').map((t) => t.label)).toEqual(['Vandaag', 'Route', 'Bellen', 'Prospects', 'Meer'])
-    expect(tabsVoor('binnendienst', 'accountmanager').map((t) => t.label)).toEqual(['Vandaag', 'Belblok', 'Acties', 'Prospects', 'Meer'])
+    expect(tabsVoor('binnendienst', 'accountmanager').map((t) => t.label)).toEqual(['Vandaag', 'Belblok', 'Taken', 'Prospects', 'Meer'])
     expect(tabsVoor('hybride', 'accountmanager').map((t) => t.label)).toEqual(['Vandaag', 'Route', 'Belblok', 'Prospects', 'Meer'])
-    expect(tabsVoor('raar', 'accountmanager').map((t) => t.label)).toEqual(['Vandaag', 'Belblok', 'Acties', 'Prospects', 'Meer'])
-    expect(tabsVoor('binnendienst', 'salesmanager', false).map((t) => t.label)).toEqual(['Team', 'Coaching', 'Acties', 'Prospects', 'Meer'])
+    expect(tabsVoor('raar', 'accountmanager').map((t) => t.label)).toEqual(['Vandaag', 'Belblok', 'Taken', 'Prospects', 'Meer'])
+    expect(tabsVoor('binnendienst', 'salesmanager', false).map((t) => t.label)).toEqual(['Team', 'Coaching', 'Taken', 'Prospects', 'Meer'])
   })
   it('elke route uit de zijbalk geeft precies één tab; subpagina\'s van accounts horen bij Prospects', () => {
     const tabs = tabsVoor('binnendienst', 'accountmanager')

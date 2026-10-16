@@ -3,7 +3,7 @@ titel: Waarom de vierde en vijfde poging het verschil maken
 categorie: Volhouden
 collectie: newbusiness
 samenvatting: De meeste afspraken ontstaan pas na de derde poging, dus wie na twee keer stopt, laat ze liggen.
-routes: /acties
+routes: /taken
 ---
 
 # Waarom de vierde en vijfde poging het verschil maken
@@ -52,7 +52,7 @@ Twee dagen later belt Joost terug: hij start in november met veertig woningen.
 
 Elk gekwalificeerd account loopt in een **hercontactritme**. Het ritme **Koud** heeft vijf stappen: bellen op dag 0, bellen op dag 3, LinkedIn op dag 7, bellen op dag 12 en een mail op dag 21.
 
-1. Open **Acties** of **Vandaag**. Bij elke taak zie je "poging 4 van 5" en wat er de vorige keer gebeurde.
+1. Open **Taken** of **Vandaag**. Bij elke taak zie je "poging 4 van 5" en wat er de vorige keer gebeurde.
 2. Open de taak en lees de **Briefing en Pitstop**. Tik **Bereid voor** voor een concept met een nieuw winpunt.
 3. Rond af met een uitkomst en klik **Afronden**. De volgende poging komt vanzelf, met een nieuw kanaal en een datum.
 

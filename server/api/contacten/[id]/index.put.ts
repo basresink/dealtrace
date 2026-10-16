@@ -6,6 +6,7 @@ import { contactUit, effectiefNiveau, eigenVeldenVoor, herbereken } from '../../
 import { metOrganisatie, schema } from '../../../utils/db'
 import { vereisFunctie } from '../../../utils/sessie'
 import { pasDataToe, pasEigenVeldenToe } from '../../../utils/velden'
+import { controleerExtraBronnen } from '../../../utils/extraBronnen'
 
 export default defineEventHandler(async (event) => {
   const ctx = await vereisFunctie(event, 'contacten.basis')
@@ -22,7 +23,7 @@ export default defineEventHandler(async (event) => {
     if ('achternaam' in b) { if (!b.achternaam?.trim()) throw createError({ statusCode: 400, statusMessage: 'Achternaam is verplicht' }); set.lastName = b.achternaam.trim() }
     if ('email' in b) set.email = b.email ? String(b.email).toLowerCase() : null
     if ('rol' in b) set.rol = b.rol
-    const data = pasDataToe({ ...(c.data ?? {}) }, b, ['functie', 'telefoon', 'mobiel', 'linkedin', 'voorkeurskanaal'], ctx.gebruiker.id)
+    const data = pasDataToe({ ...(c.data ?? {}) }, b, ['functie', 'telefoon', 'mobiel', 'linkedin', 'voorkeurskanaal', 'instagram', 'facebook'], ctx.gebruiker.id)
     if (b.consent) {
       const consent = { ...(data.consent ?? {}) }
       for (const k of ['email', 'whatsapp'] as const) if (b.consent[k]) consent[k] = { status: b.consent[k], op: new Date().toISOString(), bron: `door ${ctx.gebruiker.naam}` }
@@ -42,6 +43,7 @@ export default defineEventHandler(async (event) => {
         }
       }
     }
+    if ('extraBronnen' in b) data.extraBronnen = controleerExtraBronnen(b.extraBronnen)
     if (b.customFields) {
       const velden = await eigenVeldenVoor(tx, 'contact', effectiefNiveau(ctx))
       data.customFields = pasEigenVeldenToe(c.data?.customFields, b.customFields, velden, { rol: ctx.gebruiker.rol, eigenaar: true }, data.herkomst, ctx.gebruiker.id)

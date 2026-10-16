@@ -1,7 +1,7 @@
 ---
 titel: Vertel een userstory
 categorie: Je verhaal schrijven
-collectie: werven
+collectie: newbusiness
 samenvatting: Mensen kunnen zich niet verzetten tegen een goed verhaal. Bouw het op als situatie, probleem en oplossing, met je product als held.
 bron: Uit de whitepaper The Perfect Pitch
 routes: /belblokken

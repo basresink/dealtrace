@@ -18,6 +18,7 @@ export function leesDefinitie(b: any): Omit<VeldDefinitie, 'sleutel' | 'object'>
       hulp: d.hulp ? String(d.hulp).slice(0, 300) : undefined, zichtbaarVanaf: niveaus.includes(d.zichtbaarVanaf) ? d.zichtbaarVanaf : 'beginner',
       bewerkbaarDoor: ['iedereen', 'eigenaarEnManager', 'beheerder'].includes(d.bewerkbaarDoor) ? d.bewerkbaarDoor : 'iedereen',
       filterbaar: !!d.filterbaar, bron: ['handmatig', 'import', 'kvk', 'datacollectief', 'crm'].includes(d.bron) ? d.bron : 'handmatig', toonInKop: !!d.toonInKop,
+      datakwaliteit: ['account', 'contact'].includes(b.object ?? 'account') && !!d.datakwaliteit,
     },
   }
 }

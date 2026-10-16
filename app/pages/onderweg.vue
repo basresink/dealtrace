@@ -47,12 +47,13 @@ const plan = reactive({ open: false, account: null as any, taskId: null as strin
 async function tussenstop(k: any) {
   const start = k.momentStart ? tijd(k.momentStart).replace(/:(\d)\d$/, (_m: string, t: string) => `:${Number(t) >= 3 ? '30' : '00'}`) : '12:00'
   if (navigator.onLine) { Object.assign(plan, { open: true, account: { id: k.id, naam: k.naam }, taskId: k.taakId ?? null, voorstel: { datum: dag.value.dag, start, duurMin: 30, vorm: 'bezoek', soort: 'kennismaking' } }); return }
-  const ms = (pakket.value?.meetingsoorten ?? []).find((m: any) => m.slug === 'kennismaking')
+  // Een tussenstop is een bezoek: de soort komt uit de groep Afspraak (Gepland bezoek).
+  const ms = (pakket.value?.meetingsoorten ?? []).find((m: any) => m.slug === 'gepland-bezoek') ?? (pakket.value?.meetingsoorten ?? []).find((m: any) => m.slug === 'kennismaking')
   const id = crypto.randomUUID()
   const iso = k.momentStart ?? new Date().toISOString()
   await voegToe({ tabel: 'appointments', op: 'patch', recordId: id, patch: { soort: 'afspraak.nieuw', accountId: k.id, meetingsoortId: ms?.id, vorm: 'bezoek', start: iso, duurMin: 30, taskId: k.taakId ?? null } })
   // Lokaal invoegen met de geschatte reistijd; de route wordt herberekend zodra er verbinding is.
-  dag.value.stops = [...dag.value.stops, { id, soort: 'afspraak', titel: 'Kennismaking', accountId: k.id, accountNaam: k.naam, adres: '', start: iso, eind: new Date(Date.parse(iso) + 30 * 60_000).toISOString(), status: 'gepland', punt: k.punt, soortSlug: 'kennismaking', reistijdNaVolgende: null }].sort((a: any, b: any) => a.start.localeCompare(b.start))
+  dag.value.stops = [...dag.value.stops, { id, soort: 'afspraak', titel: ms?.naam ?? 'Gepland bezoek', accountId: k.id, accountNaam: k.naam, adres: '', start: iso, eind: new Date(Date.parse(iso) + 30 * 60_000).toISOString(), status: 'gepland', punt: k.punt, soortSlug: ms?.slug ?? 'gepland-bezoek', reistijdNaVolgende: null }].sort((a: any, b: any) => a.start.localeCompare(b.start))
   verborgen.value = new Set([...verborgen.value, k.id])
   toast.toon(`Tussenstop bij ${k.naam} bewaard op je telefoon.`)
 }

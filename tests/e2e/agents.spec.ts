@@ -74,7 +74,7 @@ test.describe('Agents en mandaten', () => {
     const stand = await (await page.request.get('/api/agents')).json()
     expect(stand.agents.find((a: any) => a.sleutel === 'verzender').voorMij).toBe('C')
     await page.request.put('/api/agents/verzender/mandaat', { data: { mandaat: 'B', eigen: true } })
-    await ga(page, '/acties?tab=inzichten')
+    await ga(page, '/inzichten')
     await page.getByTestId('waarom-niet').locator('summary').click()
     await expect(page.getByTestId('waarom-niet')).toContainText(/Bewaker/)
   })

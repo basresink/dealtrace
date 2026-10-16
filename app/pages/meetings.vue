@@ -8,9 +8,6 @@ import { nlMoment, plusDagen } from '~~/shared/datum'
 const { functie } = useMe()
 const route = useRoute()
 const router = useRouter()
-const { open: zoekenOpen } = useZoeken()
-const { openen: openAi } = useAssistent()
-const aiAan = computed(() => !!functie('assistent.chat')?.beschikbaar)
 const vandaag = nlMoment(new Date()).datum
 const tot = plusDagen(vandaag, 30)
 const { data, refresh } = await useFetch<any>('/api/agenda', { query: { van: vandaag, tot }, default: () => ({ afspraken: [], meetingsoorten: [] }) })
@@ -81,34 +78,26 @@ const PLAN: Record<string, { knop: string; vorm: string; soort: string }> = {
   fysiek: { knop: '+ Plan bezoek', vorm: 'bezoek', soort: 'inventarisatie' },
 }
 function planBeurt(v: any) { const p = PLAN[v.advies] ?? PLAN.belafspraak!; plan({ id: v.accountId, naam: v.naam }, { vorm: p.vorm, soort: p.soort }, v.reden) }
-// Er is (nog) geen aparte meetinganalyse: de manager gaat naar Analyse, de rest naar Mijn resultaten.
-const analyseLink = computed(() => (functie('nav.analyse')?.beschikbaar ? '/analyse' : '/resultaten'))
+// Rechtsboven Analyse naar de meetinganalyse (vanaf Gevorderd, functie agenda.meetingAnalyse).
+const analyseAan = computed(() => !!functie('agenda.meetingAnalyse')?.beschikbaar)
 useHead({ title: 'Meetings · Dealtrace' })
 </script>
 
 <template>
   <div>
-    <section class="section">
-      <div class="container">
-        <div class="sec-head">
-          <div>
-            <span class="kicker kicker--streep" data-test="meetings-kicker">Meetings · Komende 30 dagen<template v-if="vandaagAantal"> · {{ vandaagAantal }} vandaag</template></span>
-            <h1 class="title title--groot">Elk gesprek op het juiste moment.</h1>
-            <p class="subtitle subtitle--groot">Online meetings, belafspraken en intern overleg rond je klanten. Voor bezoeken op locatie is er <NuxtLink to="/bezoeken" class="mt-sublink" data-test="meetings-bezoeken">Bezoeken</NuxtLink>.</p>
-          </div>
-          <div class="toolbar-buttons">
-            <button type="button" class="dd-actie dd-actie--secundair mt-icoonknop" aria-label="Zoeken" title="Zoeken" data-test="meetings-zoek" @click="zoekenOpen = true"><Icoon naam="Search" class="dd-actie-icoon" /></button>
-            <button type="button" class="dd-actie dd-actie--zwart" data-test="meetings-afspraak" @click="plan()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
-            <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'mt-filterknop--aan': filtersOpen || filterAantal }" :aria-expanded="filtersOpen" data-test="meetings-filterknop" @click="filtersOpen = !filtersOpen">
-              <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="filterAantal" class="mt-teller">{{ filterAantal }}</span><Icoon naam="ChevronDown" class="mt-caret" :class="{ 'mt-caret--open': filtersOpen }" />
-            </button>
-            <NuxtLink to="/agenda" class="dd-actie dd-actie--secundair" data-test="meetings-agenda"><Icoon naam="Calendar" class="dd-actie-icoon" />Agenda</NuxtLink>
-            <button v-if="aiAan" type="button" class="dd-actie dd-actie--secundair" data-test="vraag-ai" @click="openAi()"><Icoon naam="Sparkles" class="dd-actie-icoon" />Vraag AI</button>
-            <HulpKnop artikel="agenda" />
-          </div>
-        </div>
-      </div>
-    </section>
+    <PaginaKop helpartikel="agenda">
+      <template #kicker><span class="kicker kicker--streep" data-test="meetings-kicker">Meetings · Komende 30 dagen<template v-if="vandaagAantal"> · {{ vandaagAantal }} vandaag</template></span></template>
+      <template #titel><h1 class="title title--groot">Elk gesprek op het juiste moment.</h1></template>
+      <template #uitleg><p class="subtitle subtitle--groot">Online meetings, belafspraken en intern overleg rond je klanten. Voor bezoeken op locatie is er <NuxtLink to="/bezoeken" class="mt-sublink" data-test="meetings-bezoeken">Bezoeken</NuxtLink>.</p></template>
+      <template #acties>
+        <button type="button" class="dd-actie dd-actie--zwart" data-test="meetings-afspraak" @click="plan()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+        <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'mt-filterknop--aan': filtersOpen || filterAantal }" :aria-expanded="filtersOpen" data-test="meetings-filterknop" @click="filtersOpen = !filtersOpen">
+          <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="filterAantal" class="mt-teller">{{ filterAantal }}</span><Icoon naam="ChevronDown" class="mt-caret" :class="{ 'mt-caret--open': filtersOpen }" />
+        </button>
+        <NuxtLink to="/agenda" class="dd-actie dd-actie--secundair" data-test="meetings-agenda"><Icoon naam="Calendar" class="dd-actie-icoon" />Agenda</NuxtLink>
+        <NuxtLink v-if="analyseAan" to="/meeting-analyse" class="dd-actie dd-actie--secundair" data-test="meetings-analyse"><Icoon naam="ChartLine" class="dd-actie-icoon" />Analyse</NuxtLink>
+      </template>
+    </PaginaKop>
 
     <section v-if="filtersOpen" class="section mt-filterstrook" data-test="meetings-filters">
       <div class="container mt-filterbalk">
@@ -172,7 +161,6 @@ useHead({ title: 'Meetings · Dealtrace' })
             <h2 class="mt-plan-titel">Wie is er aan de beurt?</h2>
             <p class="mt-plan-sub">Wie je vandaag inplant, hoef je morgen niet achterna. Zet elk gesprek met één klik vast in de vorm die het advies aangeeft.</p>
           </div>
-          <NuxtLink :to="analyseLink" class="dd-actie dd-actie--secundair" data-test="meeting-analyse"><Icoon naam="ChartLine" class="dd-actie-icoon" />Meeting-analyse</NuxtLink>
         </header>
         <p v-if="beurt && !beurt.voorstellen.length" class="mt-leeg-tekst" data-test="beurt-leeg">Niemand loopt achter op zijn ritme en er wacht geen vervolg op een gesprek. Zo hoort het.</p>
         <ol v-else-if="beurt" class="mt-plan-lijst">
@@ -195,7 +183,6 @@ useHead({ title: 'Meetings · Dealtrace' })
 
 <style scoped>
 .mt-sublink { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; font-weight: 600; }
-.mt-icoonknop { padding-left: 10px; padding-right: 10px; min-width: var(--touch-target-min); }
 .mt-filterknop--aan { border-color: var(--ink); }
 .mt-teller { padding: 0 6px; font-size: var(--fs-label); background: var(--yellow); border-radius: var(--radius); }
 .mt-caret { width: 14px; height: 14px; transition: transform 150ms ease-out; }

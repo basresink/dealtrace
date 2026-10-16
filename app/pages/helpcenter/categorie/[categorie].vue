@@ -2,19 +2,24 @@
 // Eén categorie van het helpcenter: de artikelen als kaarten, de andere categorieën van dezelfde
 // collectie eronder. Een onbekende categorie en een categorie die niet voor jouw rol is (Inrichten,
 // Voor de salesmanager) geven hetzelfde antwoord, zodat het adres niets verklapt.
-import { CATEGORIE_UITLEG, COLLECTIES, categorieLink, categorieUitSlug } from '~~/shared/help'
+import { CATEGORIE_UITLEG, COLLECTIES, categorieLink, categorieUitSlug, hoofdstukVan } from '~~/shared/help'
 const route = useRoute()
 const cat = computed(() => categorieUitSlug(String(route.params.categorie ?? '')))
 const { data } = await useFetch<any>('/api/help', { key: 'help-categorie', default: () => ({ artikelen: [] }) })
 const artikelen = computed<any[]>(() => (cat.value ? data.value.artikelen.filter((a: any) => a.collectie === cat.value!.collectie && a.categorie === cat.value!.naam) : []))
 const collectieNaam = computed(() => COLLECTIES[cat.value?.collectie ?? 'product'].naam)
-const overzicht = computed(() => COLLECTIES[cat.value?.collectie ?? 'product'].overzicht)
+// Een categorie uit Nieuwe klanten werven gaat terug naar dat hoofdstuk van de academie.
+const overzicht = computed(() => {
+  const o = COLLECTIES[cat.value?.collectie ?? 'product'].overzicht
+  const h = cat.value?.collectie === 'newbusiness' ? hoofdstukVan(cat.value.naam) : null
+  return h && h.sleutel !== 'vak' ? `${o}#${h.sleutel}` : o
+})
 const verwant = computed(() => {
   if (!cat.value) return []
   const namen = COLLECTIES[cat.value.collectie].categorieen
   return namen.filter((n) => n !== cat.value!.naam && data.value.artikelen.some((a: any) => a.collectie === cat.value!.collectie && a.categorie === n))
 })
-// Een productcategorie zonder artikelen voor jou bestaat niet; de academie en werven tonen een lege staat.
+// Een productcategorie zonder artikelen voor jou bestaat niet; de academie en de tips tonen een lege staat.
 const bestaat = computed(() => !!cat.value && (artikelen.value.length > 0 || cat.value.collectie !== 'product'))
 useHead({ title: () => `${bestaat.value ? cat.value!.naam : 'Categorie'} · Helpcenter · Dealtrace` })
 </script>
@@ -30,7 +35,7 @@ useHead({ title: () => `${bestaat.value ? cat.value!.naam : 'Categorie'} · Help
           <HelpGroep :titel="`${artikelen.length} ${artikelen.length === 1 ? 'artikel' : 'artikelen'}`" data-test="categorie-artikelen">
             <HelpKaart v-for="a in artikelen" :key="a.id" :artikel="a" />
           </HelpGroep>
-          <p v-if="!artikelen.length" class="hcat-leeg">{{ cat!.collectie === 'werven' ? 'De artikelen in deze categorie volgen.' : 'De artikelen volgen met de academie.' }}</p>
+          <p v-if="!artikelen.length" class="hcat-leeg">{{ cat!.collectie === 'newbusiness' ? 'De artikelen volgen met de academie.' : 'De artikelen in deze categorie volgen.' }}</p>
           <nav v-if="verwant.length" class="hcat-verwant" aria-label="Andere categorieën">
             <h2 class="hcat-verwant-titel">Andere categorieën</h2>
             <ul class="hcat-verwant-lijst" role="list">

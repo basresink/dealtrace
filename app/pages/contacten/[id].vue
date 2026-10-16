@@ -2,8 +2,10 @@
 // Contactkaart (F04) in de opzet van DealDrive: kop met avatar en rol, kruimel, functie en account (link),
 // naam met rolpil, contactgegevens (mail, telefoon, mobiel, LinkedIn), de stuurstrip van het account en rechts
 // Vraag AI, Info, Briefing en Bel. Daaronder de statstrook en dezelfde tabbladen als de accountkaart
-// (KaartTabbladen), met alleen wat bij dit contact hoort. Reis en kwalificatie en Deals tonen de stand van het
-// account met een verwijzing naar de accountkaart. Op de telefoon een plakkende actiebalk.
+// (KaartTabbladen), met alleen wat bij dit contact hoort. Reis en kwalificatie tonen de stand van het account
+// met een verwijzing naar de accountkaart; eigen velden staan in het Info-venster. De avatar toont de foto van
+// het contact (uploaden, wijzigen en verwijderen via het potlood), anders de initialen. Op de telefoon een
+// plakkende actiebalk.
 import { CONTACTROL_LABEL, ROLLEN_CONTACT, type ContactRol } from '~~/shared/contactgegevens'
 import { STATUS_LABEL, initialen, telLink, toonTelefoon } from '~/utils/accountWeergave'
 const route = useRoute()
@@ -19,13 +21,14 @@ if (!c.value) throw createError({ statusCode: 404, statusMessage: 'Contact onbek
 // De stand van het account (stuurstrip, eigenaar, reis en kwalificatie, deals); zonder recht blijft dit leeg.
 const { data: a, refresh: refreshAccount } = await useFetch<any>(() => `/api/accounts/${c.value?.accountId}`, { default: () => null })
 async function ververs() { await Promise.all([refresh(), refreshTabs(), refreshAccount()]) }
-const { openen: openAi } = useAssistent()
-const aiAan = computed(() => !!functie('assistent.chat')?.beschikbaar)
 async function wijzig(patch: Record<string, unknown>) {
   try { await $fetch(`/api/contacten/${c.value.id}`, { method: 'PUT', body: patch }); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 useHead({ title: computed(() => `${c.value?.naam ?? 'Contact'} · Dealtrace`) })
 const infoOpen = ref(false)
+const fotoOpen = ref(false)
+const fotoMislukt = ref(false)
+async function fotoGewijzigd() { fotoOpen.value = false; fotoMislukt.value = false; await refresh() }
 const briefingOpen = ref(false)
 
 // Kop: avatar met initialen in een vaste kleur per naam, de rol als gekleurde pil.
@@ -60,8 +63,16 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
       <div class="container">
         <NuxtLink to="/contacten/alle" class="ck-kruimel" data-test="kruimel"><Icoon naam="ArrowLeft" :grootte="12" /> Alle contacten</NuxtLink>
         <div class="ck-kop-binnen">
-          <div class="ck-avatar" :style="{ background: kleur }" aria-hidden="true">
-            <span class="ck-initialen">{{ initialen(c.naam) }}</span>
+          <div class="ck-avatar" :class="{ 'ck-avatar--foto': c.fotoUrl && !fotoMislukt }" :style="{ background: kleur }" data-test="contact-avatar">
+            <img v-if="c.fotoUrl && !fotoMislukt" :src="c.fotoUrl" :alt="`Foto van ${c.naam}`" class="ck-foto" data-test="contact-foto" @error="fotoMislukt = true">
+            <span v-else class="ck-initialen" aria-hidden="true">{{ initialen(c.naam) }}</span>
+            <button type="button" class="ck-foto-potlood" :aria-label="c.fotoUrl ? 'Foto wijzigen' : 'Foto uploaden'" :aria-expanded="fotoOpen" data-test="contact-foto-potlood" @click="fotoOpen = !fotoOpen"><Icoon naam="Pencil" :grootte="14" /></button>
+            <div v-if="fotoOpen" class="ck-foto-paneel" data-test="contact-foto-paneel">
+              <p class="ck-foto-titel">Foto van {{ roepnaam }}</p>
+              <p class="ck-foto-uitleg">Een jpg of png; we verkleinen hem tot 256 px.</p>
+              <ContactFotoKnoppen :contact-id="c.id" :foto-url="c.fotoUrl" @gewijzigd="fotoGewijzigd" />
+              <button type="button" class="dd-act ck-foto-sluit" @click="fotoOpen = false">Sluiten</button>
+            </div>
           </div>
           <div class="ck-info">
             <p class="ck-eyebrow" data-test="contact-functie"><template v-if="c.functie">{{ c.functie }}</template><template v-if="c.functie && c.account"> · </template><NuxtLink v-if="c.account" :to="`/accounts/${c.accountId}`" class="ck-account" data-test="contact-account">{{ c.account.naam }}</NuxtLink></p>
@@ -87,7 +98,7 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
             </dl>
           </div>
           <div class="ck-acties">
-            <button v-if="aiAan" type="button" class="dd-actie dd-actie--secundair" data-test="vraag-ai" @click="openAi({ accountId: c.accountId, label: c.account?.naam ?? c.naam })"><Icoon naam="Sparkles" class="dd-actie-icoon" />Vraag AI</button>
+            <KopIconen :ai="{ accountId: c.accountId, label: c.account?.naam ?? c.naam }" />
             <button type="button" class="dd-actie dd-actie--secundair" data-test="contact-info-knop" @click="infoOpen = true"><Icoon naam="Info" class="dd-actie-icoon" />Info</button>
             <button v-if="c.account" type="button" class="dd-actie dd-actie--zwart" data-test="briefing-knop" @click="briefingOpen = true">Briefing</button>
             <a v-if="belNummer" class="dd-actie dd-actie--primair alleen-groot" :href="telLink(belNummer)" data-test="bel-knop"><Icoon naam="Phone" class="dd-actie-icoon" />Bel</a>
@@ -132,12 +143,6 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
         </div>
         <p class="meta mt-16">Reis, ritme en kwalificatie horen bij het account. <NuxtLink :to="`/accounts/${c.accountId}?tab=kwalificatie`" class="tekst-link" data-test="naar-accountkaart">Open de accountkaart van {{ c.account?.naam }} →</NuxtLink></p>
       </template>
-      <template #eigenvelden>
-        <LegeStaat v-if="!c.eigenVelden?.length" titel="Geen eigen velden." tekst="Je beheerder maakt eigen velden voor contacten bij Instellingen." />
-        <div v-else class="kaart formulier-raster" data-test="contact-eigen-velden">
-          <EigenVeldInvoer v-for="v in c.eigenVelden" :key="v.sleutel" :model-value="c.customFields?.[v.sleutel] ?? ''" :veld="v" @update:model-value="(w: any) => (c.customFields = { ...(c.customFields ?? {}), [v.sleutel]: w })" @change="wijzig({ customFields: { [v.sleutel]: c.customFields?.[v.sleutel] === '' ? null : c.customFields?.[v.sleutel] ?? null } })" />
-        </div>
-      </template>
     </KaartTabbladen>
 
     <!-- Telefoon: plakkende actiebalk. -->
@@ -162,6 +167,15 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
 @media (min-width: 1000px) { .ck-kop-binnen { grid-template-columns: 140px minmax(0, 1fr) auto; } }
 .ck-avatar { position: relative; display: flex; align-items: center; justify-content: center; aspect-ratio: 4 / 3; }
 .ck-avatar::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.15)); pointer-events: none; }
+.ck-avatar--foto { background: var(--bg) !important; }
+.ck-foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ck-foto-potlood { position: absolute; right: 6px; bottom: 6px; z-index: 2; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; border: 1px solid var(--border-strong); border-radius: 2px; background: var(--wit); color: var(--ink); cursor: pointer; opacity: 0; }
+.ck-avatar:hover .ck-foto-potlood, .ck-foto-potlood:focus-visible, .ck-foto-potlood[aria-expanded="true"] { opacity: 1; }
+@media (hover: none) { .ck-foto-potlood { opacity: 1; } }
+.ck-foto-paneel { position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; display: flex; flex-direction: column; gap: 8px; width: 260px; padding: 14px; background: var(--wit); border: 1px solid var(--border-strong); box-shadow: 0 6px 18px rgba(10, 10, 10, 0.12); }
+.ck-foto-titel { margin: 0; font-family: var(--font-serif); font-size: 14px; font-weight: 700; color: var(--ink); }
+.ck-foto-uitleg { margin: 0; font-size: 12px; color: var(--muted); }
+.ck-foto-sluit { align-self: flex-start; }
 .ck-initialen { position: relative; z-index: 1; font-family: var(--font-serif); font-size: 40px; font-weight: 700; letter-spacing: -0.02em; color: #fff; }
 .ck-eyebrow { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
 .ck-account { color: var(--ink); text-decoration: none; border-bottom: 2px solid var(--yellow); }
@@ -188,7 +202,7 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
 .ck-stuurstrip dt { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .ck-stuurstrip dd { margin: 0; }
 .ck-acties { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
-@media (min-width: 1000px) { .ck-acties { grid-column: auto; justify-content: flex-end; max-width: 420px; } }
+@media (min-width: 1000px) { .ck-acties { grid-column: auto; justify-content: flex-end; max-width: 520px; } }
 
 /* Statstrook */
 .ck-stats { padding: 24px 0; background: var(--bg); border-bottom: 1px solid var(--border); }
@@ -209,6 +223,9 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
   .ck-kop-binnen { grid-template-columns: 76px minmax(0, 1fr); gap: 14px; }
   .ck-avatar { aspect-ratio: 1; }
   .ck-initialen { font-size: 24px; }
+  .ck-foto-potlood { width: 44px; height: 44px; right: -6px; bottom: -6px; }
+  .ck-foto-paneel { width: min(280px, calc(100vw - 32px)); }
+  .ck-foto-paneel .dd-act { min-height: 44px; }
   .ck-kruimel { min-height: 44px; margin-bottom: 4px; }
   /* Tikdoel van 44 px; de pil zelf blijft klein (transparante rand). */
   .ck-rolpil { min-height: 44px; border-width: 9px 0; border-color: transparent; background-clip: padding-box; }

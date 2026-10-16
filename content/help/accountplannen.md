@@ -38,7 +38,7 @@ Leeg opslaan wist een blok. Onder **Beslissers** zet je de contactpersonen die m
 
 ## Het actieplan
 
-Een actie heeft een titel, een datum en eventueel een contactpersoon. Elke actie is een echte taak op het account: je ziet hem op de accountkaart, op Vandaag en bij Acties. Vink je een actie af, dan is de taak afgerond, en rond je de taak elders af, dan staat hij ook in het plan op klaar. Haal je een actie uit het plan, dan wordt de taak geannuleerd.
+Een actie heeft een titel, een datum en eventueel een contactpersoon. Elke actie is een echte taak op het account: je ziet hem op de accountkaart, op Vandaag en bij Taken. Vink je een actie af, dan is de taak afgerond, en rond je de taak elders af, dan staat hij ook in het plan op klaar. Haal je een actie uit het plan, dan wordt de taak geannuleerd.
 
 ## Afronden en verwijderen
 

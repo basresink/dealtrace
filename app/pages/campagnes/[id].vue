@@ -113,19 +113,8 @@ useHead(() => ({ title: `${c.value?.naam ?? 'Campagne'} · Dealtrace` }))
                 <p class="cb-doel"><span class="cb-doel-kop">Doel en stand</span><strong data-test="stand">{{ c.gehaald }} van {{ doelNodig }} afspraken</strong></p>
               </div>
             </div>
-            <div class="cb-stats">
-              <div class="cb-stat"><span class="cb-stat-num tnum">{{ c.accounts }}</span><span class="cb-stat-label">accounts</span></div>
-              <div class="cb-stat"><span class="cb-stat-num tnum">{{ voortgangPct }}%</span><span class="cb-stat-label">voortgang</span></div>
-              <div v-if="c.tempo" class="cb-stat"><span class="cb-stat-num tnum">{{ c.tempo.verwacht }}%</span><span class="cb-stat-label">verwacht</span></div>
-            </div>
-          </div>
-
-          <div class="cb-tempo-rij">
-            <span v-if="c.tempo" class="cb-tempo" :class="`cb-tempo--${pilKlas(c.tempo.pil)}`" data-test="bord-tempo">{{ c.tempo.pil }}</span>
-            <span v-if="c.dagenOver !== null" class="cb-dagen tnum">nog {{ c.dagenOver }} {{ c.dagenOver === 1 ? 'dag' : 'dagen' }}</span>
-            <span v-if="c.status === 'actief' && c.accounts && !data.zonderTaak" class="cb-hint">Alle accounts hebben een taak.</span>
-            <span class="cb-vul" />
-            <div class="cb-knoppen">
+            <div class="toolbar-buttons cb-knoppen" data-test="kop-knoppen">
+              <KopIconen artikel="campagnes" />
               <template v-if="data.kan.wijzigen">
                 <button v-if="c.status === 'concept'" type="button" class="dd-actie dd-actie--primair" :disabled="bezig" data-test="bord-activeer" @click="activeer()">Activeer</button>
                 <button v-if="c.status === 'actief' && data.zonderTaak" type="button" class="dd-actie dd-actie--primair" :disabled="bezig" data-test="zet-om" @click="zetOm">Zet om naar taken ({{ data.zonderTaak }})</button>
@@ -136,7 +125,18 @@ useHead(() => ({ title: `${c.value?.naam ?? 'Campagne'} · Dealtrace` }))
               </template>
               <button v-if="c.status !== 'afgerond'" type="button" class="dd-actie dd-actie--secundair" :aria-expanded="voortgangOpen" data-test="voortgang" @click="voortgangOpen = !voortgangOpen">Voortgang</button>
               <button v-if="data.kan.wijzigen && c.status !== 'afgerond'" type="button" class="dd-actie dd-actie--zwart" data-test="plus-accounts" @click="toevoegen = !toevoegen"><Icoon naam="Plus" class="dd-actie-icoon" />Accounts</button>
-              <HulpKnop artikel="campagnes" />
+            </div>
+          </div>
+
+          <div class="cb-tempo-rij">
+            <span v-if="c.tempo" class="cb-tempo" :class="`cb-tempo--${pilKlas(c.tempo.pil)}`" data-test="bord-tempo">{{ c.tempo.pil }}</span>
+            <span v-if="c.dagenOver !== null" class="cb-dagen tnum">nog {{ c.dagenOver }} {{ c.dagenOver === 1 ? 'dag' : 'dagen' }}</span>
+            <span v-if="c.status === 'actief' && c.accounts && !data.zonderTaak" class="cb-hint">Alle accounts hebben een taak.</span>
+            <span class="cb-vul" />
+            <div class="cb-stats">
+              <div class="cb-stat"><span class="cb-stat-num tnum">{{ c.accounts }}</span><span class="cb-stat-label">accounts</span></div>
+              <div class="cb-stat"><span class="cb-stat-num tnum">{{ voortgangPct }}%</span><span class="cb-stat-label">voortgang</span></div>
+              <div v-if="c.tempo" class="cb-stat"><span class="cb-stat-num tnum">{{ c.tempo.verwacht }}%</span><span class="cb-stat-label">verwacht</span></div>
             </div>
           </div>
           <div v-if="c.tempo" class="cb-balk" :aria-label="`Voortgang ${c.tempo.voortgang} procent, verwacht ${c.tempo.verwacht} procent`"><div class="cb-vulling" :style="{ width: `${c.tempo.voortgang}%` }" /><div class="cb-verwacht" :style="{ left: `${c.tempo.verwacht}%` }" title="Verwachte stand" /></div>
@@ -184,7 +184,7 @@ useHead(() => ({ title: `${c.value?.naam ?? 'Campagne'} · Dealtrace` }))
                   <NuxtLink :to="`/accounts/${i.accountId}`" class="cb-item-link"><span class="cb-item-merk" :class="`cb-item-merk--${faseKleur(i.faseId)}`">{{ initialen(i.naam) }}</span><span class="cb-item-naam">{{ i.naam }}</span></NuxtLink>
                   <div class="cb-item-poging">poging {{ i.poging }} van {{ i.pogingen }}</div>
                   <p v-if="i.volgendeStap" class="cb-item-noot">{{ i.volgendeStap }}<template v-if="i.volgendeOp"> · {{ datum(i.volgendeOp) }}</template></p>
-                  <NuxtLink v-if="i.taakId" :to="`/acties?taak=${i.taakId}`" class="cb-item-taak" :data-test="`taak-${i.accountId}`">Bekijk taak <Icoon naam="ArrowRight" :grootte="12" /></NuxtLink>
+                  <NuxtLink v-if="i.taakId" :to="`/taken?taak=${i.taakId}`" class="cb-item-taak" :data-test="`taak-${i.accountId}`">Bekijk taak <Icoon naam="ArrowRight" :grootte="12" /></NuxtLink>
                   <div class="kanban-kaart-voet"><span>{{ i.eigenaar ?? '' }}</span>
                     <select v-if="data.kan.slepen && c.status === 'actief'" class="cp-verplaats" :aria-label="`Verplaats ${i.naam}`" :value="i.kolom" :data-test="`verplaats-${i.accountId}`" @change="verplaats(i, ($event.target as HTMLSelectElement).value as Kolom)">
                       <option v-for="kk in KOLOMMEN" :key="kk" :value="kk">{{ KOLOM_LABEL[kk] }}</option>
@@ -248,6 +248,8 @@ useHead(() => ({ title: `${c.value?.naam ?? 'Campagne'} · Dealtrace` }))
 .cb-dagen, .cb-hint { font-size: 12px; color: var(--muted); }
 .cb-vul { flex: 1; }
 .cb-knoppen { display: flex; flex-wrap: wrap; gap: 8px; }
+/* De knoppen staan rechts op de hoogte van de titel (kicker plus de marge boven de titel). */
+@media (min-width: 720px) { .cb-knoppen { justify-content: flex-end; max-width: min(620px, 52vw); margin-top: max(0px, calc(26px + 12px + (1.1 * clamp(28px, 4vw, 44px) - 44px) / 2)); } }
 .cb-balk { position: relative; height: 6px; margin-top: 12px; background: var(--surface); }
 .cb-vulling { height: 100%; background: var(--green); }
 .cb-verwacht { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--red); }

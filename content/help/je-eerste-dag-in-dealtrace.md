@@ -29,7 +29,7 @@ Dealtrace heeft geen wachtwoord. Vul je e-mailadres in en tik **Stuur mij een co
 
 ## Op je telefoon
 
-Op de telefoon staat onderin de **onderbalk** met vijf tabs, afgestemd op je werk: voor de binnendienst Vandaag, Belblok, Acties en Prospects, voor de buitendienst Vandaag, Route, Bellen en Prospects. Onder **Meer** vind je de rest. Lees "Dealtrace op je telefoon en offline".
+Op de telefoon staat onderin de **onderbalk** met vijf tabs, afgestemd op je werk: voor de binnendienst Vandaag, Belblok, Taken en Prospects, voor de buitendienst Vandaag, Route, Bellen en Prospects. Onder **Meer** vind je de rest. Lees "Dealtrace op je telefoon en offline".
 
 ## Een wens indienen
 

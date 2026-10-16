@@ -6,8 +6,6 @@ const props = defineProps<{ open: boolean; account?: { id: string; naam: string 
 const emit = defineEmits<{ sluit: [] }>()
 const toast = useToast()
 const gekozen = ref<{ id: string; naam: string } | null>(null)
-const q = ref('')
-const treffers = ref<{ id: string; naam: string; plaats?: string | null }[]>([])
 const titel = ref('')
 const van = ref('')
 const tot = ref('')
@@ -16,17 +14,12 @@ watch(() => props.open, (o) => {
   if (!o) return
   const vandaag = nlMoment(new Date()).datum
   gekozen.value = props.account ?? null
-  q.value = ''; treffers.value = []
   titel.value = `Accountplan ${vandaag.slice(0, 4)}`
   van.value = vandaag
   tot.value = `${vandaag.slice(0, 4)}-12-31`
 })
-let timer: ReturnType<typeof setTimeout> | undefined
-watch(q, (v) => {
-  clearTimeout(timer)
-  timer = setTimeout(async () => { treffers.value = v.trim().length < 2 ? [] : await $fetch<any[]>('/api/accounts/kies', { query: { q: v } }).catch(() => []) }, 250)
-})
-function kies(a: { id: string; naam: string }) { gekozen.value = { id: a.id, naam: a.naam }; q.value = ''; treffers.value = [] }
+const zoek = (q: string) => zoekAccounts(q)
+function kies(a: { id: string; naam: string }) { gekozen.value = { id: a.id, naam: a.naam } }
 async function maak() {
   if (!gekozen.value) return
   bezig.value = true
@@ -54,12 +47,7 @@ async function maak() {
               <span>{{ gekozen.naam }}</span>
               <button v-if="!account" type="button" class="dd-act dd-act--icoon" aria-label="Andere klant kiezen" @click="gekozen = null"><Icoon naam="X" :grootte="14" /></button>
             </div>
-            <template v-else>
-              <input v-model="q" class="invoer" placeholder="Zoek een klant of prospect op naam" aria-label="Zoek een klant of prospect" data-test="apn-zoek">
-              <ul v-if="treffers.length" class="apn-treffers" role="list">
-                <li v-for="t in treffers" :key="t.id"><button type="button" class="apn-treffer" :data-test="`apn-kies-${t.id}`" @click="kies(t)">{{ t.naam }}<span v-if="t.plaats" class="meta"> · {{ t.plaats }}</span></button></li>
-              </ul>
-            </template>
+            <ZoekKiezer v-else :zoek="zoek" placeholder="Zoek een klant of prospect op naam" label="Zoek een klant of prospect" data-test="apn-zoek" :optie-test="(t) => `apn-kies-${t.id}`" :sub="(t) => t.plaats" leeg="Geen klant of prospect gevonden." @kies="kies" />
           </div>
           <label class="veld mt-16"><span class="veld-label">Titel</span><input v-model="titel" class="invoer" maxlength="160" required data-test="apn-titel"><span class="veld-uitleg">Zet de periode in de titel, dan zie je in elke lijst voor welk jaar het plan geldt.</span></label>
           <div class="apn-rij mt-16">
@@ -76,9 +64,6 @@ async function maak() {
 
 <style scoped>
 .apn-gekozen { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 0 0 12px; border: 1px solid var(--border-strong); font-weight: 600; }
-.apn-treffers { list-style: none; margin: 4px 0 0; padding: 0; border: 1px solid var(--border); max-height: 240px; overflow-y: auto; }
-.apn-treffer { display: block; width: 100%; min-height: 44px; padding: 8px 12px; text-align: left; background: var(--wit); border: 0; border-bottom: 1px solid var(--border); font: inherit; cursor: pointer; }
-.apn-treffer:hover { background: var(--surface); }
 .apn-rij { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 719px) { .apn-rij { grid-template-columns: 1fr; } }
 </style>

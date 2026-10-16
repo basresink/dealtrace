@@ -10,16 +10,13 @@ const toast = useToast()
 const leeg = () => ({ voornaam: '', achternaam: '', functie: '', email: '', telefoon: '', mobiel: '', rol: 'onbekend', linkedin: '' })
 const f = reactive(leeg())
 const klant = ref<{ id: string; naam: string } | null>(null)
-const zoek = ref('')
-const treffers = ref<{ id: string; naam: string; plaats: string | null }[]>([])
 const dubbel = ref<{ id: string; naam: string } | null>(null)
 const bezig = ref(false)
 watch(() => props.open, (o) => {
   if (!o) return
-  Object.assign(f, leeg()); klant.value = props.account ?? null; zoek.value = ''; treffers.value = []; dubbel.value = null
+  Object.assign(f, leeg()); klant.value = props.account ?? null; dubbel.value = null
 })
-let timer: any
-watch(zoek, (q) => { clearTimeout(timer); timer = setTimeout(async () => { treffers.value = q.trim().length >= 2 ? await $fetch<any[]>('/api/accounts/kies', { query: { q } }) : [] }, 250) })
+const zoekBedrijf = (q: string) => zoekAccounts(q)
 async function maak() {
   if (!klant.value) return
   bezig.value = true; dubbel.value = null
@@ -48,9 +45,8 @@ async function maak() {
             <div class="veld"><span class="veld-label">Bedrijf <span class="veld-verplicht">*</span></span>
               <p v-if="klant" class="schakel-rij"><strong data-test="nc-gekozen">{{ klant.naam }}</strong><button type="button" class="dd-act" @click="klant = null">Wijzig</button></p>
               <template v-else>
-                <input v-model="zoek" class="invoer" placeholder="Zoek een bedrijf" aria-label="Zoek een bedrijf" data-test="nc-account">
+                <ZoekKiezer :zoek="zoekBedrijf" placeholder="Zoek een bedrijf" label="Zoek een bedrijf" data-test="nc-account" :optie-test="(a) => `nc-kies-${a.id}`" :sub="(a) => a.plaats" leeg="Geen bedrijf gevonden." @kies="(a) => (klant = { id: a.id, naam: a.naam })" />
                 <span class="veld-uitleg">Een contact hoort altijd bij een bedrijf.</span>
-                <ul v-if="treffers.length" class="schakel-lijst"><li v-for="a in treffers" :key="a.id" class="schakel-rij"><button type="button" class="taak-titel" :data-test="`nc-kies-${a.id}`" @click="klant = { id: a.id, naam: a.naam }; treffers = []">{{ a.naam }} <span class="meta">{{ a.plaats }}</span></button></li></ul>
               </template>
             </div>
             <div class="formulier-raster mt-16">

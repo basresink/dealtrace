@@ -25,7 +25,8 @@ test.describe('meetings', () => {
     await ga(page, '/meetings')
     const lijst = page.getByTestId('aan-de-beurt')
     await expect(lijst).toContainText('Wie is er aan de beurt?')
-    await expect(page.getByTestId('meeting-analyse')).toBeVisible()
+    // De knop Meeting-analyse staat nu rechtsboven als Analyse (analyse.spec.ts).
+    await expect(lijst.getByTestId('meeting-analyse')).toHaveCount(0)
     const rij = lijst.locator('[data-test^="beurt-"]').filter({ has: page.locator('button') }).first()
     await expect(rij.locator('.pil')).toHaveText(/vandaag|deze week|Fysiek/i)
     await rij.locator('button').click()

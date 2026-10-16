@@ -14,7 +14,7 @@ const secties = computed(() => {
   const namen = [...new Set([...SECTIES[object.value]!, ...data.value.velden.map((v: any) => v.sectie)])]
   return namen.map((n) => ({ naam: n, velden: data.value.velden.filter((v: any) => v.sectie === n) }))
 })
-const leeg = () => ({ id: '', naam: '', sleutel: '', type: 'tekst', sectie: SECTIES[object.value]![0], volgorde: 0, data: { opties: [] as any[], verplicht: 'nee', hulp: '', zichtbaarVanaf: 'beginner', bewerkbaarDoor: 'iedereen', filterbaar: false, bron: 'handmatig', toonInKop: false } })
+const leeg = () => ({ id: '', naam: '', sleutel: '', type: 'tekst', sectie: SECTIES[object.value]![0], volgorde: 0, data: { opties: [] as any[], verplicht: 'nee', hulp: '', zichtbaarVanaf: 'beginner', bewerkbaarDoor: 'iedereen', filterbaar: false, bron: 'handmatig', toonInKop: false, datakwaliteit: false } })
 const veld = ref<any>(null)
 const nieuweSectie = ref('')
 function open(v?: any) { veld.value = v ? JSON.parse(JSON.stringify({ ...v, data: { opties: [], ...v.data } })) : leeg() }
@@ -52,12 +52,13 @@ useHead({ title: 'Eigen velden · Instellingen · Dealtrace' })
           <header class="kaart-kop"><h2 class="kaart-titel">{{ s.naam }}</h2><span class="meta">{{ s.velden.length }} velden</span></header>
           <p v-if="!s.velden.length" class="kaart-meta">Nog geen eigen velden in deze sectie.</p>
           <table v-else class="tabel tabel--kaarten" data-test="velden-tabel">
-            <thead><tr><th>Naam</th><th>Type</th><th>Zichtbaar voor</th><th>Filterbaar</th><th>Ingevuld</th><th><span class="sr-only">Acties</span></th></tr></thead>
+            <thead><tr><th>Naam</th><th>Type</th><th>Zichtbaar voor</th><th>Filterbaar</th><th v-if="object === 'account' || object === 'contact'">Datakwaliteit</th><th>Ingevuld</th><th><span class="sr-only">Acties</span></th></tr></thead>
             <tbody><tr v-for="v in s.velden" :key="v.id" :class="{ 'contact-vertrokken': v.gearchiveerd }">
               <td><strong>{{ v.naam }}</strong><br><span class="meta">{{ cfVariabele(v.sleutel) }}</span></td>
               <td>{{ VELDTYPE_LABEL[v.type as keyof typeof VELDTYPE_LABEL] }}</td>
               <td>{{ v.data.zichtbaarVanaf === 'beginner' ? 'Alle niveaus' : `Vanaf ${NIVEAU_LABEL[v.data.zichtbaarVanaf as Niveau]}` }}</td>
               <td>{{ v.data.filterbaar ? 'Ja' : 'Nee' }}</td>
+              <td v-if="object === 'account' || object === 'contact'" data-test="ev-dk-kolom">{{ v.data.datakwaliteit ? 'Telt mee' : 'Nee' }}</td>
               <td class="tnum">{{ v.ingevuld }}</td>
               <td><div class="dd-acties"><button type="button" class="dd-act" @click="open(v)">Wijzigen</button><button type="button" class="dd-act" @click="archiveer = v">{{ v.gearchiveerd ? 'Terugzetten' : 'Archiveren' }}</button></div></td>
             </tr></tbody>
@@ -91,6 +92,10 @@ useHead({ title: 'Eigen velden · Instellingen · Dealtrace' })
             <label class="veld mt-16"><span class="veld-label">Hulptekst</span><input v-model="veld.data.hulp" class="invoer"></label>
             <div class="schakel-rij mt-16"><span class="schakel-naam">Filterbaar</span><Schakelaar :aan="veld.data.filterbaar" label="Filterbaar" data-test="ev-filterbaar" @wissel="veld.data.filterbaar = $event" /></div>
             <div class="schakel-rij"><span class="schakel-naam">Toon in kop</span><Schakelaar :aan="veld.data.toonInKop" label="Toon in kop" @wissel="veld.data.toonInKop = $event" /></div>
+            <div v-if="object === 'account' || object === 'contact'" class="schakel-rij">
+              <span class="ev-dk-tekst"><span class="schakel-naam">Meenemen in Datakwaliteit</span><span class="veld-uitleg">Een leeg veld telt als gat: op Datakwaliteit komt de controle "Zonder {{ veld.naam || 'dit veld' }}" voor de {{ object === 'contact' ? 'contacten' : 'prospects' }}.</span></span>
+              <Schakelaar :aan="!!veld.data.datakwaliteit" label="Meenemen in Datakwaliteit" data-test="ev-datakwaliteit" @wissel="veld.data.datakwaliteit = $event" />
+            </div>
           </article></div>
           <footer class="fo-foot dd-acties"><button type="submit" class="dd-act dd-act--primair" data-test="ev-bewaar">Veld opslaan</button><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="veld = null">Annuleren</button></footer>
         </form>
@@ -99,3 +104,7 @@ useHead({ title: 'Eigen velden · Instellingen · Dealtrace' })
     <BevestigVenster :open="!!archiveer" :titel="archiveer?.gearchiveerd ? 'Veld terugzetten' : 'Veld archiveren'" :tekst="archiveer?.gearchiveerd ? 'Het veld is weer zichtbaar.' : `Archiveren verbergt het veld; de ${archiveer?.ingevuld ?? 0} ingevulde waarden blijven bewaard.`" :bevestig="archiveer?.gearchiveerd ? 'Terugzetten' : 'Archiveren'" @geannuleerd="archiveer = null" @bevestigd="doeArchiveer" />
   </div>
 </template>
+
+<style scoped>
+.ev-dk-tekst { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+</style>

@@ -2,7 +2,7 @@
 // Editor voor een helpartikel (F21): titel, collectie, categorie, niveau, samenvatting, inhoud in Markdown
 // (met afbeeldingen en een videolink), het scherm voor "Probeer het", controlevragen en de status. Voor de
 // beheerder een eigen artikel, voor de founder een platformartikel. Op de telefoon "Beter op een groot scherm".
-import { COLLECTIES, NB_ONDERDELEN, isCollectie, controleerArtikel, type Controlevraag } from '~~/shared/help'
+import { COLLECTIES, NB_ONDERDELEN, TIPS_ONDERDELEN, isCollectie, controleerArtikel, type Controlevraag } from '~~/shared/help'
 import { markdownNaarHtml } from '~~/shared/markdown'
 import { NIVEAU_LABEL, NIVEAUS } from '~~/shared/types'
 const props = defineProps<{ artikel?: any; bewaarUrl: string; methode: 'POST' | 'PUT'; platform?: boolean }>()
@@ -30,7 +30,7 @@ async function bewaar(status: 'concept' | 'gepubliceerd') {
     <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm.</p>
     <div class="formulier-raster">
       <label class="veld"><span class="veld-label">Titel</span><input v-model="f.titel" class="invoer" data-test="he-titel"></label>
-      <label class="veld"><span class="veld-label">Collectie</span><select v-model="f.collectie" class="invoer"><option value="product">Hoe werkt Dealtrace</option><option value="newbusiness">New business</option><option value="werven">Nieuwe klanten werven</option></select></label>
+      <label class="veld"><span class="veld-label">Collectie</span><select v-model="f.collectie" class="invoer"><option value="product">Hoe werkt Dealtrace</option><option value="newbusiness">New business</option><option value="tips">Tips &amp; Tricks</option></select></label>
       <label class="veld"><span class="veld-label">Categorie</span><select v-model="f.categorie" class="invoer" data-test="he-categorie"><option value="" disabled>Kies</option><option v-for="c in categorieen" :key="c" :value="c">{{ c }}</option></select></label>
       <label class="veld"><span class="veld-label">Niveau</span><select v-model="f.niveau" class="invoer"><option value="">Iedereen</option><option v-for="n in NIVEAUS" :key="n" :value="n">{{ NIVEAU_LABEL[n] }}</option></select></label>
       <label class="veld"><span class="veld-label">Probeer het (scherm)</span><input v-model="f.route" class="invoer" placeholder="/belblokken"></label>
@@ -40,7 +40,7 @@ async function bewaar(status: 'concept' | 'gepubliceerd') {
     <textarea v-if="!voorbeeld" v-model="f.inhoud" class="invoer he-inhoud mt-8" rows="16" aria-label="Inhoud in Markdown" data-test="he-inhoud" />
     <!-- eslint-disable-next-line vue/no-v-html -->
     <div v-else class="help-tekst mt-8" v-html="html" />
-    <p class="veld-uitleg">Markdown: ## voor een kop, - voor een opsomming, ![tekst](url) voor een afbeelding, een losse link naar een video. New business-artikelen hebben de koppen {{ NB_ONDERDELEN.join(', ') }}.</p>
+    <p class="veld-uitleg">Markdown: ## voor een kop, - voor een opsomming, ![tekst](url) voor een afbeelding, een losse link naar een video. New business-artikelen hebben de koppen {{ NB_ONDERDELEN.join(', ') }}; een tip de koppen {{ TIPS_ONDERDELEN.join(', ') }}.</p>
     <h3 class="fo-blok-titel mt-16">Controlevragen</h3>
     <div v-for="(v, i) in f.vragen" :key="i" class="he-vraag mt-8">
       <input v-model="v.vraag" class="invoer" :placeholder="`Vraag ${i + 1}`">

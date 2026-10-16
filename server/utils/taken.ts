@@ -52,9 +52,9 @@ export async function rondAf(tx: Tx, taakId: string, invoer: AfrondInvoer & { ac
   if (r.fout) throw new ReisFout(r.alAfgerond ? 409 : 422, r.fout)
   const tijd = nu.toISOString()
 
-  // Taak, activiteit en stuurvelden.
+  // Taak, activiteit en stuurvelden. Het gespreksverslag van een beltaak gaat mee naar de belactiviteit.
   await tx.update(schema.tasks).set({ status: 'klaar', uitkomst: r.taakPatch.uitkomst, laterOp: r.taakPatch.laterOp, data: { ...(t.data ?? {}), ...r.taakPatch.data }, updatedAt: tijd }).where(eq(schema.tasks.id, t.id))
-  await tx.insert(schema.activiteiten).values({ organisationId: t.organisationId, accountId: t.accountId, contactId: t.contactId, taskId: t.id, soort: r.activiteit.soort, kanaal: r.activiteit.kanaal, uitkomst: r.activiteit.uitkomst, door, op: tijd, data: { ...r.activiteit.data, ...(invoer.activiteit ?? {}), status: 'afgerond' } })
+  await tx.insert(schema.activiteiten).values({ organisationId: t.organisationId, accountId: t.accountId, contactId: t.contactId, taskId: t.id, soort: r.activiteit.soort, kanaal: r.activiteit.kanaal, uitkomst: r.activiteit.uitkomst, door, op: tijd, data: { ...r.activiteit.data, ...(invoer.activiteit ?? {}), ...((t.data as any)?.verslag?.tekst ? { verslag: (t.data as any).verslag.tekst } : {}), status: 'afgerond' } })
   if (a) {
     if (r.ritme) await tx.update(schema.accounts).set({ data: { ...(a.data ?? {}), reis: { ...((a.data as any)?.reis ?? {}), ritme: r.ritme.stand } } }).where(eq(schema.accounts.id, a.id))
     await herbereken(tx, a.id, nu)

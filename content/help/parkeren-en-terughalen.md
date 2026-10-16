@@ -51,7 +51,7 @@ Dealtrace parkeert vanzelf. Na de laatste poging zonder reactie gaat het account
 3. Wil je een andere datum, klik **Pas datum aan** en geef een reden.
 4. Bovenaan zie je **Hercontact op tijd**: welk deel binnen vijf werkdagen na de terugkomdatum weer benaderd is. Vanaf 90 procent is dat gezond.
 
-Op de terugkomdatum staat er een taak met de aanpak, en begint het account opnieuw aan het ritme. Je ziet hem op **Vandaag** en bij **Acties**.
+Op de terugkomdatum staat er een taak met de aanpak, en begint het account opnieuw aan het ritme. Je ziet hem op **Vandaag** en bij **Taken**.
 
 ## Controlevragen
 

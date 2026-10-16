@@ -70,8 +70,8 @@ describe('helpcenter (F21)', () => {
   })
   it('artikelVoorRoute: exacte route, met query, met een id en via de zijbalk', () => {
     expect(artikelVoorRoute('/', artikelen)).toBe('vandaag')
-    expect(artikelVoorRoute('/acties', artikelen)).toBe('een-taak-afronden-met-een-uitkomst')
-    expect(artikelVoorRoute('/acties?tab=inzichten', artikelen)).toBe('inzichten')
+    expect(artikelVoorRoute('/taken', artikelen)).toBe('een-taak-afronden-met-een-uitkomst')
+    expect(artikelVoorRoute('/taken?weergave=horizon', artikelen)).toBe('een-taak-afronden-met-een-uitkomst')
     expect(artikelVoorRoute('/accounts/abc-123', artikelen)).toBe('de-accountkaart-lezen')
     expect(artikelVoorRoute('/instellingen/agents', artikelen)).toBe('agents-en-mandaten')
     expect(artikelVoorRoute('/funnel', artikelen)).toBe('funnel')
