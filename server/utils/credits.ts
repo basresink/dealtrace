@@ -8,6 +8,7 @@ import {
   AI_SOORTEN, creditsStand, creditsVoor, magVragenVoor, meldingNodig, type AiSoort, type CreditsStand,
 } from '../../shared/credits'
 import { nlMoment, nlTijdstip } from '../../shared/datum'
+import { prijzenOp } from '../../shared/platform'
 import type { Pakket } from '../../shared/types'
 import { logAgentRun } from './agents/bewaker'
 import { gebruikDb, metOrganisatie } from './db'
@@ -20,7 +21,9 @@ const maandStart = (nu: Date) => nlTijdstip(`${maandVan(nu)}-01`, 0).toISOString
 export const RESERVERING_VERVALT_MIN = 10
 
 /** Prijzen en credits per pakket van de founder (credit_instellingen); zonder rij de standaard. */
-export async function platformCredits(tx: Tx): Promise<{ prijzen: Partial<Record<AiSoort, number>>; perGebruiker: Partial<Record<Pakket, number>> }> {
+export const AI_GEPAUZEERD_TEKST = 'AI staat stil: er staat een factuur open. De rest van Dealtrace werkt gewoon door.'
+
+export async function platformCredits(tx: Tx, nu = new Date()): Promise<{ prijzen: Partial<Record<AiSoort, number>>; perGebruiker: Partial<Record<Pakket, number>> }> {
   const r = await rijen(tx, sql`select sleutel, waarde from credit_instellingen`)
   const prijzen: Partial<Record<AiSoort, number>> = {}
   const perGebruiker: Partial<Record<Pakket, number>> = {}
@@ -29,7 +32,10 @@ export async function platformCredits(tx: Tx): Promise<{ prijzen: Partial<Record
     if (soort === 'prijs' && (AI_SOORTEN as readonly string[]).includes(naam!)) prijzen[naam as AiSoort] = Number(x.waarde)
     if (soort === 'pot') perGebruiker[naam as Pakket] = Number(x.waarde)
   }
-  return { prijzen, perGebruiker }
+  // P24: de prijs per handeling met geldig-vanaf gaat voor; een boeking van gisteren houdt haar eigen prijs.
+  const datum = nu.toISOString().slice(0, 10)
+  const met = (await rijen(tx, sql`select soort, credits, geldig_vanaf::text as g, op from credit_prijzen where geldig_vanaf <= ${datum}`)).map((x) => ({ soort: x.soort, credits: Number(x.credits), geldigVanaf: x.g, op: new Date(x.op).toISOString() }))
+  return { prijzen: { ...prijzen, ...prijzenOp(met, datum) }, perGebruiker }
 }
 
 /** De maandrij: toegekend = credits per gebruiker maal actieve gebruikers, verhoogd als er gebruikers bijkomen, nooit verlaagd. */
@@ -74,7 +80,10 @@ export interface ReserveerOpties { soort: AiSoort; gebruikerId?: string | null; 
 /** Reserveer vóór de aanroep. Gooit 402 (op, plafond, agentgrens) of 403 (niet in het pakket). */
 export async function reserveer(tx: Tx, org: string, o: ReserveerOpties, nu = new Date()): Promise<Reservering> {
   await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`credits:${org}`}))`)
-  const { prijzen } = await platformCredits(tx)
+  // P24: een achterstallige factuur pauzeert alle AI; de rest van de app werkt door.
+  const [org0] = await rijen(tx, sql`select coalesce((data->>'aiGepauzeerd')::boolean, false) as p from organisations where id = ${org}`)
+  if (org0?.p) throw Object.assign(new Error(AI_GEPAUZEERD_TEKST), { statusCode: 402, statusMessage: AI_GEPAUZEERD_TEKST, data: { reden: 'gepauzeerd' } })
+  const { prijzen } = await platformCredits(tx, nu)
   const kosten = creditsVoor(o.soort, { ...(o.context ?? {}), prijzen })
   const s = await stand(tx, org, nu)
   const g = o.gebruikerId && !o.automatisch ? await verbruikGebruiker(tx, org, o.gebruikerId, nu) : { verbruikt: 0, plafond: null }

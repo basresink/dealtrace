@@ -3,8 +3,8 @@
 import { STANDAARD_GEHEIM, TOEGANG_COOKIE, gelijk, ontbrekendeInstellingen, toegangsPagina, toegangsbewijs } from '../utils/toegang'
 
 // /api/motor/run-all heeft een eigen geheim (x-motor-secret) voor de geplande functie; de
-// SalesDNA-webhook en de DealDrive-koppeling (v1) controleren zelf de HMAC-handtekening; de afmeldlink is ondertekend (P18).
-const VRIJ = ['/toegang', '/_nuxt/', '/favicon.ico', '/robots.txt', '/manifest.webmanifest', '/iconen/', '/api/motor/run-all', '/api/motor/reminders-sweep', '/api/motor/onderweg-meldingen', '/api/koppelingen/salesdna/webhook', '/api/koppelingen/salesdna/webhook/', '/api/koppelingen/dealdrive/v1/', '/api/afmelden']
+// SalesDNA-webhook, de DealDrive-koppeling (v1) en de Stripe-webhook controleren zelf de handtekening; de afmeldlink is ondertekend (P18).
+const VRIJ = ['/toegang', '/_nuxt/', '/favicon.ico', '/robots.txt', '/manifest.webmanifest', '/iconen/', '/api/motor/run-all', '/api/motor/reminders-sweep', '/api/motor/onderweg-meldingen', '/api/koppelingen/salesdna/webhook', '/api/koppelingen/salesdna/webhook/', '/api/koppelingen/dealdrive/v1/', '/api/stripe/webhook', '/api/afmelden']
 
 export default defineEventHandler((event) => {
   const config = useRuntimeConfig(event)

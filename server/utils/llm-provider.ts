@@ -9,6 +9,8 @@ import { logAgentRun, toets, type Voorstel } from './agents/bewaker'
 import { boek, geefVrij, metCredits, reserveer, type ReserveerOpties, type Reservering } from './credits'
 import { mockGids } from './assistent'
 import { mockOpdracht } from '../../shared/spraakOpdracht'
+import { promptVoor, providerVoor } from './aiKoppeling'
+import { metOrganisatie } from './db'
 
 type Tx = Parameters<Parameters<ReturnType<typeof import('./db').gebruikDb>['transaction']>[0]>[0]
 
@@ -157,7 +159,7 @@ export const mockProvider: AiProvider = async ({ soort, prompt, materiaal }) => 
   return rij.length > 1 ? rij.shift() : rij[0]
 }
 
-/** De echte provider komt met de AI-koppeling (F23); tot dan altijd de mock. */
+/** Zonder database (buiten een organisatie): de mock. Binnen een organisatie kiest providerVoor (P24). */
 export function kiesProvider(): AiProvider {
   return mockProvider
 }
@@ -173,6 +175,8 @@ export interface AiStap {
   accountId?: string | null
   /** Een handeling van de gebruiker die toch als agentrun telt (credits), zonder de agentgrens van 10 procent. */
   boekAls?: string | null
+  /** Proefdraai (P24): de prompt staat al vast, zonder de keten per slot. */
+  zonderKeten?: boolean
 }
 
 /**
@@ -180,7 +184,7 @@ export interface AiStap {
  * wordt door de Bewaker tegengehouden (onder 10 procent, dagplafond). Een stap zonder geldig
  * antwoord na twee pogingen wordt als fout gelogd en levert niets op (geen opslag).
  */
-export async function voerAiStapUit<T = unknown>(tx: Tx, org: string, stap: AiStap, nu = new Date(), provider: AiProvider = kiesProvider()) {
+export async function voerAiStapUit<T = unknown>(tx: Tx, org: string, stap: AiStap, nu = new Date(), provider?: AiProvider) {
   if (stap.agent) {
     const b = await toets(tx, org, { agent: stap.agent, handeling: `ai:${stap.soort}`, gebruiker: stap.gebruiker, accountId: stap.accountId, ai: stap.soort }, nu)
     if (!b.mag) return { ok: false as const, reden: b.reden ?? 'Tegengehouden door de Bewaker' }
@@ -193,7 +197,9 @@ export async function voerAiStapUit<T = unknown>(tx: Tx, org: string, stap: AiSt
     if (stap.agent) return { ok: false as const, reden: e?.statusMessage ?? 'De AI-credits van deze maand zijn op' }
     throw createError({ statusCode: e?.statusCode ?? 402, statusMessage: e?.statusMessage ?? 'De AI-credits van deze maand zijn op' })
   }
-  const uit = await voerAiKern<T>(provider, stap)
+  // P24: de provider uit de oplosketen en de prompt uit de keten per slot, met het vaste kader.
+  const p = provider ?? await providerVoor(tx, org)
+  const uit = await voerAiKern<T>(p, { ...stap, prompt: await promptVoor(tx, stap.soort, stap.materiaal, stap.prompt) })
   if (uit.ok) await boek(tx, r, { agent: stap.agent ?? stap.boekAls ?? 'gebruiker', accountId: stap.accountId }, nu)
   else {
     await geefVrij(tx, r)
@@ -206,9 +212,10 @@ export async function voerAiStapUit<T = unknown>(tx: Tx, org: string, stap: AiSt
  * Een AI-stap buiten een transactie (de assistent): via metCredits reserveren, aanroepen en boeken
  * of vrijgeven. Zo lopen ook lange aanroepen niet binnen een databasetransactie.
  */
-export async function voerAiStapMetCredits<T = unknown>(org: string, stap: Omit<AiStap, 'agent'> & { agent: string }, opties: Omit<ReserveerOpties, 'soort'> & { credits?: (antwoord: T) => number }, provider: AiProvider = kiesProvider()) {
+export async function voerAiStapMetCredits<T = unknown>(org: string, stap: Omit<AiStap, 'agent'> & { agent: string }, opties: Omit<ReserveerOpties, 'soort'> & { credits?: (antwoord: T) => number }, provider?: AiProvider) {
+  const keuze = await metOrganisatie(org, async (tx) => ({ p: provider ?? await providerVoor(tx, org), prompt: stap.zonderKeten ? stap.prompt : await promptVoor(tx, stap.soort, stap.materiaal, stap.prompt) }))
   return metCredits<T>(org, { ...opties, soort: stap.soort, agent: stap.agent, accountId: stap.accountId }, async () => {
-    const uit = await voerAiKern<T>(provider, stap)
+    const uit = await voerAiKern<T>(keuze.p, { ...stap, prompt: keuze.prompt })
     return uit.ok ? { ok: true as const, waarde: uit.antwoord as T, credits: opties.credits?.(uit.antwoord as T) } : { ok: false as const, reden: uit.fouten.join(' | ') }
   })
 }

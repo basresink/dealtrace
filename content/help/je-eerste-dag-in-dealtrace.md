@@ -31,6 +31,10 @@ Dealtrace heeft geen wachtwoord. Vul je e-mailadres in en tik **Stuur mij een co
 
 Op de telefoon staat onderin de **onderbalk** met vijf tabs, afgestemd op je werk: voor de binnendienst Vandaag, Belblok, Acties en Prospects, voor de buitendienst Vandaag, Route, Bellen en Prospects. Onder **Meer** vind je de rest. Lees "Dealtrace op je telefoon en offline".
 
+## Een wens indienen
+
+Mist er iets in Dealtrace? Open **Roadmap** in het menu onder je naam (op de telefoon onder **Meer**). Klik **Nieuwe wens**, beschrijf wat je wilt kunnen en klik **Dien in**. Met de ster stem je op een wens van een collega. Je ziet bij elke wens wat Dealtrace ermee doet: ingediend, gestart, in ontwikkeling, opgeleverd of niet gedaan.
+
 ## Hulp nodig?
 
 Elk scherm heeft een knop **Hulp**. In het **Helpcenter** zoek je op een woord, bijvoorbeeld "poging" of "afkoeling".

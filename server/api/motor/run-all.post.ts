@@ -12,6 +12,7 @@ import { actieveCrm, syncCrm } from '../../utils/crm'
 import { herberekenKpi } from '../../utils/team'
 import { maandVerbetervoorstel } from '../../utils/agents/coach'
 import { maakBundel } from '../../utils/suggesties'
+import { proefControle, synchroniseerMoneybird } from '../../utils/platformBeheer'
 import { nlMoment, plusDagen } from '../../../shared/datum'
 
 export default defineEventHandler(async (event) => {
@@ -23,6 +24,10 @@ export default defineEventHandler(async (event) => {
     await tx.execute(sql`set local role dealtrace_platform`)
     return (await tx.execute(sql`select id from organisations where status <> 'systeem'`)).rows as { id: string }[]
   })
+  // P24: de proefperiode (melding 7 dagen vooraf, op de einddatum terug naar Starter) als platformjob.
+  try {
+    await gebruikDb().transaction(async (tx) => { await tx.execute(sql`set local role dealtrace_platform`); await proefControle(tx) })
+  } catch (e) { console.error('proef', (e as Error).message) }
   const uit: Record<string, unknown> = {}
   for (const o of orgs) {
     try { uit[o.id] = await metOrganisatie(o.id, (tx) => draaiMotor(tx, o.id, { soort: 'uur' })) } catch (e) { uit[o.id] = { fout: e instanceof MotorBezig ? 'bezig' : (e as Error).message } }
@@ -43,6 +48,8 @@ export default defineEventHandler(async (event) => {
       const m = nlMoment(new Date())
       if (new Date(`${m.datum}T12:00:00Z`).getUTCDay() === 1 && m.uur >= 6) await metOrganisatie(o.id, (tx) => maakBundel(tx, o.id))
     } catch (e) { console.error('suggesties', o.id, (e as Error).message) }
+    // P24: betaalde facturen naar Moneybird (lokaal de mock).
+    try { await metOrganisatie(o.id, (tx) => synchroniseerMoneybird(tx, o.id)) } catch (e) { console.error('moneybird', o.id, (e as Error).message) }
     // P33: vervallen reserveringen vrijgeven en gesprekken ouder dan 30 dagen verwijderen.
     try { await metOrganisatie(o.id, (tx) => ruimOp(tx)) } catch { /* volgende ronde opnieuw */ }
   }

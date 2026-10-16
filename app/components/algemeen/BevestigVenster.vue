@@ -12,6 +12,7 @@ watch(() => props.open, (o) => { if (o) reden.value = '' })
       <div class="cd-dialog" role="alertdialog" aria-modal="true" aria-labelledby="bv-titel">
         <div class="cd-head"><h2 id="bv-titel" class="cd-title">{{ titel }}</h2></div>
         <p class="cd-message">{{ tekst }}</p>
+        <slot />
         <label v-if="metReden" class="veld">
           <span class="veld-label">Reden <span class="veld-verplicht">verplicht</span></span>
           <textarea v-model="reden" class="invoer" rows="3" data-test="reden" />

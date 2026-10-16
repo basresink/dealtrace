@@ -45,6 +45,7 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
   {
     naam: 'Data en AI',
     kaarten: [
+      { titel: 'Eigen agent-prompts', tekst: 'Per slot een eigen laag boven de prompt van het platform, met Proefdraai.', link: '/instellingen/prompts', toon: !!functie('instellingen.prompts')?.beschikbaar },
       { titel: 'Verbruik en AI-credits', tekst: 'De pot van deze maand, verbruik per soort en per gebruiker, plafonds en extra credits.', link: '/instellingen/verbruik', toon: !!functie('credits.verbruikLezen')?.beschikbaar },
       { titel: 'Agents en mandaten', tekst: 'Wat de agents zelf mogen, de Bewaker en de knop Agents pauzeren.', link: '/instellingen/agents', toon: !!functie('agents.lezen')?.beschikbaar || beheerder.value },
       { titel: 'Waarnemer en signaalregels', tekst: 'Per doelgroep de signalen waar de Waarnemer op let: vacatures, nieuws, KvK en websites.', link: '/instellingen/waarnemer', toon: !!functie('agents.lezen')?.beschikbaar },

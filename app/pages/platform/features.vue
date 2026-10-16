@@ -60,7 +60,7 @@ useHead({ title: 'Features per niveau · Platformbeheer · Dealtrace' })
     <PaginaKop kicker="Platformbeheer · Features per niveau" :titel="titel" uitleg="Per functie en niveau aan of uit. Een wijziging werkt direct, zonder release." helpartikel="platformbeheer" />
     <section class="section section--laatste">
       <div class="container">
-        <nav class="tabbalk" aria-label="Platformbeheer"><NuxtLink to="/platform/klanten" class="tab">Klanten</NuxtLink><NuxtLink to="/platform/features" class="tab tab--actief">Features per niveau</NuxtLink><NuxtLink to="/platform/credits" class="tab">AI-credits</NuxtLink></nav>
+        <nav class="tabbalk" aria-label="Platformbeheer"><NuxtLink to="/platform/klanten" class="tab">Klanten</NuxtLink><NuxtLink to="/platform/features" class="tab tab--actief">Features per niveau</NuxtLink><NuxtLink to="/platform/verbruik" class="tab">Verbruik en credits</NuxtLink></nav>
         <p class="alleen-groot-melding kaart kaart--geel mt-8">Beter op een groot scherm.</p>
         <div class="formulier-raster mt-16">
           <label class="veld"><span class="veld-label">Organisatie</span>

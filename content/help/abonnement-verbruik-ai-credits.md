@@ -2,11 +2,17 @@
 titel: Abonnement, verbruik en AI-credits
 categorie: Inrichten
 collectie: product
-samenvatting: Je pakket, de pot met AI-credits, wat een handeling kost, plafonds en extra credits.
-routes: /instellingen/abonnement,/instellingen/verbruik
+samenvatting: Je pakket, facturen, de pot met AI-credits, wat een handeling kost, plafonds, extra credits en eigen prompts.
+routes: /instellingen/abonnement,/instellingen/verbruik,/instellingen/prompts
 ---
 
 # Abonnement, verbruik en AI-credits
+
+## Je abonnement
+
+Onder **Instellingen, Abonnement** zie je je pakket in gewone woorden, hoeveel seats in gebruik zijn, je AI-credits per gebruiker per maand en je contract. Met **Upgrade aanvragen** vraag je een hoger pakket aan; Dealtrace neemt contact met je op.
+
+Bij **Facturen** staan je facturen met hun status. Een open factuur betaal je met **Betaal**; een betaalde download je als pdf. Staat een factuur te lang open, dan pauzeert Dealtrace de AI: je ziet **AI gepauzeerd**. Al het andere werk gaat gewoon door. Zodra de factuur betaald is, werkt de AI weer.
 
 Alle AI in Dealtrace rekent in AI-credits: de AI-assistent, belscripts, de leadgenerator, dossiers en de agents. Je organisatie heeft één pot per maand. De pot is het aantal credits per gebruiker van jullie pakket maal het aantal actieve gebruikers (Starter 200, Plus 600, Compleet 1.500). Komt er in de maand iemand bij, dan groeit de pot mee. Credits die over zijn, vervallen aan het eind van de maand.
 
@@ -33,3 +39,11 @@ Onder **Instellingen, Verbruik en AI-credits** zie je de pot, het verbruik per s
 ## Je eigen verbruik
 
 Onder **Mijn instellingen** zie je hoeveel credits je deze maand zelf gebruikte, per soort, en je plafond als je er een hebt.
+
+## Eigen agent-prompts (vanaf Plus)
+
+Onder **Instellingen, Eigen agent-prompts** geef je de AI per onderdeel (belscript, mailconcept, LinkedIn-bericht, briefing en meer) je eigen aanwijzingen, bijvoorbeeld over toon. De tekst van Dealtrace staat er als voorbeeld bij. Met **Proefdraai** zie je wat de AI ermee doet op voorbeelddata. Onder elke prompt gelden altijd vaste regels die je niet kunt opheffen: Nederlands in de je-vorm, alleen het meegegeven materiaal, nooit privégegevens.
+
+## Wat de leverancier mag
+
+Dealtrace kan in je organisatie meekijken als jij dat toestaat, met een reden en een tijdslimiet. Onder **Instellingen, Audit** zie je alles wat de leverancier deed, met reden en of het meekijken of wijzigen was. Pakket, credits, prijzen en de standaardprompts zet alleen Dealtrace; die kun je zelf niet wijzigen.

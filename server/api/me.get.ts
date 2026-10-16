@@ -9,6 +9,15 @@ import { resterendTekst } from '../../shared/werkIn'
 import { metOrganisatie, schema } from '../utils/db'
 import { vereisSessie } from '../utils/sessie'
 
+// P24: de founder buiten een organisatie ziet alle platformschermen (elk een eigen, lui geladen deel van de bundel).
+const PLATFORM_ITEMS = ([
+  ['platform.klanten', 'Klanten', '/platform/klanten', 'Building2'], ['platform.abonnementen', 'Abonnementen', '/platform/abonnementen', 'Briefcase'],
+  ['platform.features', 'Features per niveau', '/platform/features', 'LayoutGrid'], ['platform.facturen', 'Facturen', '/platform/facturen', 'ScrollText'],
+  ['platform.verbruik', 'Verbruik en credits', '/platform/verbruik', 'ChartColumn'], ['platform.ai', 'AI-koppeling', '/platform/ai', 'Sparkles'],
+  ['platform.prompts', 'Agent-prompts', '/platform/prompts', 'MessagesSquare'], ['platform.help', 'Help-artikelen', '/platform/help', 'BookOpen'],
+  ['platform.roadmap', 'Roadmap', '/platform/roadmap', 'Route'], ['platform.motor', 'Motor', '/platform/motor', 'RefreshCw'], ['platform.audit', 'Platformaudit', '/platform/audit', 'Lock'],
+] as const).map(([sleutel, naam, route, icoon]) => ({ sleutel, naam, route, icoon, groep: 'Beheer' as const }))
+
 export default defineEventHandler(async (event) => {
   const { gebruiker, organisatie, stand, werkIn, echteRol } = await vereisSessie(event)
   const platformItem = { sleutel: 'nav.platform', naam: 'Platformbeheer', route: '/platform/klanten', icoon: 'Server', groep: 'Beheer' }
@@ -21,7 +30,7 @@ export default defineEventHandler(async (event) => {
       werkIn: null,
       organisatie: null,
       team: null,
-      zijbalk: { groepen: [{ naam: 'Beheer', items: [platformItem] }], nietAangezet: [] },
+      zijbalk: { groepen: [{ naam: 'Beheer', items: PLATFORM_ITEMS }], nietAangezet: [] },
       functies: [],
       nieuw: [],
       nogTonen: [],

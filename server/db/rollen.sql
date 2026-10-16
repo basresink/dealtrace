@@ -21,6 +21,12 @@ revoke insert, update, delete on functies_per_niveau from dealtrace_app;
 revoke insert, delete on organisations from dealtrace_app;
 -- P22: gepubliceerde reisversies alleen toevoegen.
 revoke update, delete on reisversies from dealtrace_app;
+-- P24: prijzen zet alleen de founder (platformrol); de AI-koppeling leest de app alleen via
+-- dealtrace_llm_koppeling(); promptversies worden toegevoegd, nooit gewijzigd.
+revoke insert, update, delete on pakketprijzen, credit_prijzen, llm_prijzen from dealtrace_app;
+revoke all on llm_connections from dealtrace_app;
+revoke update on prompt_versies from dealtrace_app;
+revoke update, delete on stripe_events from dealtrace_app;
 
 grant execute on function current_org_id() to dealtrace_app;
 grant execute on function dealtrace_sessie_gebruiker(text) to dealtrace_app;

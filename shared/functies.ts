@@ -926,6 +926,27 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'platform.werkIn', naam: 'Werken in een organisatie', pakket: 'starter', rollen: ['founder'], helpartikel: '', startNiveau: 'beginner',
     uitleg: { watHetDoet: 'Met reden, modus en tijdslimiet werken in een organisatie.', totDieTijd: 'Geen.' },
   },
+  // P24: de rest van Platformbeheer (alleen founder) en de spiegels voor de beheerder.
+  ...([
+    ['platform.abonnementen', 'Abonnementen', 'Pakketten met functies, bronnen, AI-credits per gebruiker en prijzen met geldig-vanaf.'],
+    ['platform.features', 'Features per niveau', 'Per functie en niveau aan of uit, voor alle organisaties of als afwijking voor één.'],
+    ['platform.facturen', 'Facturen', 'Facturen uit Stripe, marge per klant, extra credits als factuurregel en Moneybird.'],
+    ['platform.verbruik', 'Verbruik en credits', 'Credits per klant, soort en gebruiker; extra credits en de prijs per handeling.'],
+    ['platform.ai', 'AI-koppeling', 'Provider, sleutel als vingerafdruk, modellen per soort en modelprijzen.'],
+    ['platform.prompts', 'Agent-prompts', 'Per slot de platformlaag met versies, het vaste kader en Proefdraai.'],
+    ['platform.help', 'Help-artikelen', 'De platformartikelen met versie en status.'],
+    ['platform.roadmap', 'Roadmap', 'Het bord over alle klanten met Maak issue.'],
+    ['platform.motor', 'Motor', 'Laatste runs per organisatie, fouten per stap en Draai opnieuw.'],
+    ['platform.audit', 'Platformaudit', 'Alles wat founders deden, met filters.'],
+  ] as const).map(([sleutel, naam, wat]) => ({ sleutel, naam, pakket: 'starter' as const, rollen: ['founder'] as Rol[], helpartikel: '', startNiveau: 'beginner' as const, uitleg: { watHetDoet: wat, totDieTijd: 'Geen.' } })),
+  {
+    sleutel: 'instellingen.prompts', naam: 'Eigen agent-prompts', pakket: 'plus', rollen: ['beheerder'], helpartikel: 'abonnement-verbruik-ai-credits', startNiveau: 'expert',
+    uitleg: { watHetDoet: 'Per slot een eigen laag boven de prompt van het platform, met Proefdraai.', totDieTijd: 'De AI gebruikt de prompts van het platform.' },
+  },
+  {
+    sleutel: 'roadmap', naam: 'Roadmap', pakket: 'starter', rollen: 'iedereen', helpartikel: 'je-eerste-dag-in-dealtrace', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Wensen indienen en stemmen binnen je organisatie, en zien wat er gebouwd wordt.', totDieTijd: 'Geef je wens door aan je beheerder.' },
+  },
   {
     sleutel: 'instellingen.abonnement', naam: 'Abonnement', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'abonnement-verbruik-ai-credits', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Je pakket in gewone woorden, seats in gebruik en je contract.', totDieTijd: 'Vraag je beheerder.' },
@@ -1092,7 +1113,7 @@ const FEATURE_GROEPEN: [RegExp, string][] = [
   [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|reizen|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],
-  [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^auth\.|^schil\./, 'F24 Inloggen en telefoon'], [/^richting\.|^verkoopverhaal\.|^account\.huidigeLeverancier|^koppeling\.salesdna|^salesdna\./, 'F25 Verkoopverhaal en Richting'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^leads\.|^koppeling\.kvk|^koppeling\.crm|^leadgenerator\.crm|^onderweg\.kvk|datacollectief/, 'F02 Leadgenerator'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
+  [/^platform\.|^roadmap$|^instellingen\.(abonnement|prompts|audit)$|^credits\./, 'F23 Platformbeheer en abonnement'], [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^auth\.|^schil\./, 'F24 Inloggen en telefoon'], [/^richting\.|^verkoopverhaal\.|^account\.huidigeLeverancier|^koppeling\.salesdna|^salesdna\./, 'F25 Verkoopverhaal en Richting'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^leads\.|^koppeling\.kvk|^koppeling\.crm|^leadgenerator\.crm|^onderweg\.kvk|datacollectief/, 'F02 Leadgenerator'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],
 ]
 export function featureGroep(sleutel: string): string {
   return FEATURE_GROEPEN.find(([r]) => r.test(sleutel))?.[1] ?? 'Overig'

@@ -35,6 +35,7 @@ async function uitloggen() {
             <NuxtLink v-if="functie('concepten.inbox')?.beschikbaar" to="/concepten" class="meer-item" data-route="/concepten" @click="open = false"><Icoon naam="Inbox" :grootte="20" /><span>Concepten</span><span v-if="conceptenTeller" class="pil-teller">{{ conceptenTeller }}</span></NuxtLink>
             <NuxtLink to="/help" class="meer-item" @click="open = false"><Icoon naam="CircleHelp" :grootte="20" /><span>Helpcenter</span></NuxtLink>
             <NuxtLink to="/mij" class="meer-item" data-route="/mij" @click="open = false"><Icoon naam="UserCog" :grootte="20" /><span>Mijn instellingen</span></NuxtLink>
+            <NuxtLink to="/roadmap" class="meer-item" data-route="/roadmap" @click="open = false"><Icoon naam="Route" :grootte="20" /><span>Roadmap</span></NuxtLink>
             <button type="button" class="meer-item" data-test="meer-uitloggen" @click="uitloggen"><Icoon naam="LogOut" :grootte="20" /><span>Uitloggen</span></button>
           </section>
           <section v-if="lijst.nietAangezet.length" class="meer-groep" data-test="meer-niet-aangezet">
