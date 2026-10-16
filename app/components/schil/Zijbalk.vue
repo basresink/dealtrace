@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Zijbalk per niveau (6.1, 14). Zwart, 240 px, inklapbaar naar 64 px. Volgorde: Start, Activiteiten,
-// Prospects, Resultaten en Plannen (uitklapmenu). Onderaan een rij iconen (mijn instellingen, instellingen,
-// helpcenter, meldingen, uitloggen) en het gebruikersblok met een drop-up-menu.
+// Prospects, Rapportages en Plannen (uitklapmenu). Onderaan een rij iconen van 22 px op knoppen van 44 px
+// (mijn instellingen, instellingen, helpcenter, meldingen, uitloggen) en de gebruikerskaart, zonder menu.
 // Wat voor het niveau uit staat, staat in de ingeklapte groep "Nog niet aangezet".
 import { NIVEAU_LABEL, ROL_LABEL, type Niveau, type Rol } from '~~/shared/types'
 
@@ -17,7 +17,6 @@ const route = useRoute()
 const slotOpen = useCookie<boolean>('dt_slotgroep', { default: () => false, maxAge: 60 * 60 * 24 * 365 })
 // Plannen is een uitklapmenu; het gaat vanzelf open als je op een van zijn pagina's staat.
 const plannenOpen = useCookie<boolean>('dt_plannen', { default: () => false, maxAge: 60 * 60 * 24 * 365 })
-const menuOpen = ref(false)
 // Instellingen staat in de icoonrij onderaan, niet in de lijst.
 const ICOONRIJ = new Set(['nav.instellingen'])
 const groepen = computed(() => (zijbalk.value?.groepen ?? []).map((g) => ({ ...g, items: g.items.filter((i) => !ICOONRIJ.has(i.sleutel)) })).filter((g) => g.items.length))
@@ -112,28 +111,32 @@ async function uitloggen() {
 
     <div class="sb-voet">
       <div class="sb-iconen" data-test="sb-iconen">
-        <NuxtLink to="/mij" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/mij') }" title="Mijn instellingen" aria-label="Mijn instellingen"><Icoon naam="CircleUser" /></NuxtLink>
-        <NuxtLink v-if="instellingenAan" to="/instellingen" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/instellingen') }" title="Instellingen" aria-label="Instellingen" data-sleutel="nav.instellingen"><Icoon naam="Settings" /></NuxtLink>
-        <NuxtLink to="/help" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/help') }" title="Helpcenter" aria-label="Helpcenter"><Icoon naam="CircleHelp" /></NuxtLink>
-        <NuxtLink to="/meldingen" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/meldingen') }" title="Meldingen" aria-label="Meldingen"><Icoon naam="Bell" /><span v-if="ongelezen" class="sb-icoon-teller tnum">{{ ongelezen > 9 ? '9+' : ongelezen }}</span></NuxtLink>
-        <button type="button" class="sb-icoonknop" title="Uitloggen" aria-label="Uitloggen" @click="uitloggen"><Icoon naam="LogOut" /></button>
+        <NuxtLink to="/mij" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/mij') }" title="Mijn instellingen" aria-label="Mijn instellingen"><Icoon naam="CircleUser" :grootte="22" /></NuxtLink>
+        <NuxtLink v-if="instellingenAan" to="/instellingen" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/instellingen') }" title="Instellingen" aria-label="Instellingen" data-sleutel="nav.instellingen"><Icoon naam="Settings" :grootte="22" /></NuxtLink>
+        <NuxtLink to="/help" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/help') }" title="Helpcenter" aria-label="Helpcenter"><Icoon naam="CircleHelp" :grootte="22" /></NuxtLink>
+        <NuxtLink to="/meldingen" class="sb-icoonknop" :class="{ 'sb-icoonknop--actief': isActief('/meldingen') }" title="Meldingen" aria-label="Meldingen"><Icoon naam="Bell" :grootte="22" /><span v-if="ongelezen" class="sb-icoon-teller tnum">{{ ongelezen > 9 ? '9+' : ongelezen }}</span></NuxtLink>
+        <button type="button" class="sb-icoonknop" title="Uitloggen" aria-label="Uitloggen" @click="uitloggen"><Icoon naam="LogOut" :grootte="22" /></button>
       </div>
-      <div class="sb-gebruiker" :class="{ 'sb-gebruiker--open': menuOpen }">
-        <div v-show="menuOpen" class="sb-gebruiker-menu sb-gebruiker-menu--op" role="menu" data-test="sb-gebruikersmenu">
-          <NuxtLink role="menuitem" to="/mij" @click="menuOpen = false"><Icoon naam="UserCog" />Mijn instellingen</NuxtLink>
-          <NuxtLink role="menuitem" to="/meldingen" @click="menuOpen = false"><Icoon naam="Bell" />Meldingen<span v-if="ongelezen" class="sb-menu-teller tnum">{{ ongelezen > 9 ? '9+' : ongelezen }}</span></NuxtLink>
-          <NuxtLink role="menuitem" to="/help" @click="menuOpen = false"><Icoon naam="CircleHelp" />Helpcenter</NuxtLink>
-          <button role="menuitem" type="button" @click="uitloggen"><Icoon naam="LogOut" />Uitloggen</button>
-        </div>
-        <button class="sb-gebruiker-knop" type="button" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">
+      <div class="sb-gebruiker" data-test="sb-gebruikerskaart">
+        <div class="sb-gebruiker-knop sb-gebruiker-kaart">
           <span class="sb-avatar">{{ initialen }}<span v-if="ongelezen" class="sb-avatar-stip" /></span>
           <span class="sb-gebruiker-info">
             <span class="sb-gebruiker-naam">{{ me?.gebruiker.naam }}</span>
             <span class="sb-gebruiker-rol" data-test="gebruikersblok">{{ gebruikerRol }}</span>
           </span>
-          <Icoon naam="ChevronUp" class="sb-gebruiker-pijl" />
-        </button>
+        </div>
       </div>
     </div>
   </aside>
 </template>
+
+<style scoped>
+/* Icoonrij onderaan: iconen van 22 px op knoppen van minstens 44 bij 44 px. */
+.sb-iconen { gap: 0; padding: 4px 0 8px; }
+.sb-icoonknop { width: 44px; min-width: 44px; height: 44px; min-height: 44px; flex: 0 0 44px; }
+.sb-icoonknop .sb-icoon-teller { top: 3px; right: 2px; }
+.sb-icoonknop :deep(.icoon) { width: 22px; height: 22px; }
+/* De gebruikerskaart opent geen menu meer. */
+.sb-gebruiker-kaart { cursor: default; }
+.sb-gebruiker-kaart:hover { background: transparent; }
+</style>

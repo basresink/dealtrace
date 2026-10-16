@@ -43,7 +43,7 @@ Joost noteert: Hilde is beslisser, Marloes beïnvloeder, Pieter gebruiker. Met M
 
 ## Zo doe je het in Dealtrace
 
-Open de accountkaart. Onder **Contactpersonen** zie je iedereen met zijn rol in het buying committee. Bij **Contacten** geef je elk contact een rol: **Beslisser**, **Beïnvloeder**, **Gebruiker** of **Poortwachter**. Vertrekt iemand, zet het contact dan op vertrokken; de geschiedenis blijft bewaard. Word je in de belmodus doorverbonden, kies dan **Doorverbonden, nieuw contact**. Een mail aan een beslisser gaat nooit zonder jouw goedkeuring de deur uit. Bij **Mijn resultaten** zie je hoe vaak je **Beslisser bereikt**; de norm is meer dan 20 procent.
+Open de accountkaart. Onder **Contactpersonen** zie je iedereen met zijn rol in het buying committee. Bij **Contacten** geef je elk contact een rol: **Beslisser**, **Beïnvloeder**, **Gebruiker** of **Poortwachter**. Vertrekt iemand, zet het contact dan op vertrokken; de geschiedenis blijft bewaard. Word je in de belmodus doorverbonden, kies dan **Doorverbonden, nieuw contact**. Een mail aan een beslisser gaat nooit zonder jouw goedkeuring de deur uit. Bij **Mijn dashboard** zie je hoe vaak je **Beslisser bereikt**; de norm is meer dan 20 procent.
 
 ## Controlevragen
 

@@ -167,6 +167,27 @@ export async function bezoekDag(tx: Tx, g: Gebruiker, dag: string, filters: Bezo
   }
 }
 
+/**
+ * De werkweek rond een dag voor de dag- en weekindeling op /bezoeken: per werkdag de regiodag,
+ * de stops en een telling (bezoeken, klantcontact, rijtijd en km als schatting langs de stops).
+ */
+export async function bezoekWeek(tx: Tx, g: { id: string; data?: any }, dag: string) {
+  const { regios } = await gebiedenInstelling(tx)
+  const feestdagen = ((await instelling<{ feestdagen?: string[] }>(tx, 'werkdagen'))?.feestdagen ?? []) as string[]
+  const maandag = plusDagen(dag, -((new Date(`${dag}T12:00:00Z`).getUTCDay() + 6) % 7))
+  const thuis: Punt | null = g.data?.thuisbasis?.lat != null ? { lat: g.data.thuisbasis.lat, lng: g.data.thuisbasis.lng } : null
+  const uit = []
+  for (let i = 0; i < 5; i++) {
+    const d = plusDagen(maandag, i)
+    const stops = await stopsVan(tx, g.id, d)
+    const metPunt = stops.filter((s) => s.punt)
+    const punten = metPunt.length ? [thuis ?? metPunt[0]!.punt!, ...metPunt.map((s) => s.punt!), thuis ?? metPunt[metPunt.length - 1]!.punt!] : []
+    const stat = dagStatistiek(punten, metPunt.map((s) => ({ id: s.id, start: s.start, eind: s.eind, punt: s.punt })), schatReistijd)
+    uit.push({ datum: d, regio: regiodagVan(g.id, d, regios, feestdagen)?.naam ?? null, stops, stat: { ...stat, bezoeken: stops.length } })
+  }
+  return uit
+}
+
 /** De regio-analyse: tellingen en dekking per regio, plus per regio de lijst (nooit bezocht, langst stil, klasse). */
 export async function regioAnalyse(tx: Tx, eigenaren: string[] | null, nu = new Date()) {
   await geocodeerOntbrekend(tx)

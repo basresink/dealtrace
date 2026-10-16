@@ -15,6 +15,39 @@ test.describe('zijbalk per niveau', () => {
     await expect(page.getByTestId('gebruikersblok')).toHaveText('ACCOUNTMANAGER · BEGINNER')
   })
 
+  test('Rapportages met Mijn dashboard en Funnel; de gebruikerskaart opent geen menu', async ({ page }) => {
+    await login(page, 'u-01')
+    const groep = page.locator('.sb-groep[data-groep="Rapportages"]')
+    await expect(groep.locator('.sb-groep-kop')).toHaveText('Rapportages')
+    await expect(groep.locator('.sb-link')).toHaveText(['Mijn dashboard', 'Funnel'])
+    await expect(page.locator('.sb-groep[data-groep="Resultaten"]')).toHaveCount(0)
+    await groep.locator('.sb-link[data-sleutel="nav.resultaten"]').click()
+    await expect(page).toHaveURL(/\/mijn-dashboard$/)
+    await expect(page.getByTestId('mijn-cijfers')).toBeVisible()
+    // Geen drop-up meer: de kaart blijft zichtbaar maar is geen knop.
+    const kaart = page.getByTestId('sb-gebruikerskaart')
+    await expect(kaart).toBeVisible()
+    await expect(kaart.locator('button')).toHaveCount(0)
+    await kaart.click()
+    await expect(page.getByTestId('sb-gebruikersmenu')).toHaveCount(0)
+    // Icoonrij: knoppen van minstens 44 bij 44 en iconen van 22 px.
+    const knoppen = page.getByTestId('sb-iconen').locator('.sb-icoonknop')
+    for (const k of await knoppen.all()) {
+      const b = (await k.boundingBox())!
+      expect(b.width).toBeGreaterThanOrEqual(44)
+      expect(b.height).toBeGreaterThanOrEqual(44)
+      const i = (await k.locator('svg').first().boundingBox())!
+      expect(Math.round(i.width)).toBe(22)
+    }
+  })
+
+  test('/resultaten stuurt door naar /mijn-dashboard met de query', async ({ page }) => {
+    await login(page, 'u-01')
+    await page.goto('/resultaten?bron=melding')
+    await expect(page).toHaveURL(/\/mijn-dashboard\?bron=melding$/)
+    await expect(page.getByTestId('mijn-cijfers')).toBeVisible()
+  })
+
   test('Nog niet aangezet opent de uitlegflyout', async ({ page }) => {
     await login(page, 'u-02')
     await page.click('.sb-slotgroep-kop')

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { FUNCTIES, aanVoorNiveau, beschikbaar, startindeling } from '../../shared/functies'
+import { FUNCTIES, aanVoorNiveau, beschikbaar, functie, startindeling } from '../../shared/functies'
+import { KWALITEIT_CATEGORIEEN, eigenaarFilter, filterLink, kwaliteitScore } from '../../shared/datakwaliteit'
 import { telItems, zijbalkVoor } from '../../shared/zijbalk'
 import type { FunctieRegel, GebruikerContext, OrganisatieContext } from '../../shared/types'
 
@@ -50,6 +51,20 @@ describe('zijbalk per niveau (6.1)', () => {
     expect(sm.groepen.find((g) => g.naam === 'Manager')?.items).toHaveLength(4)
   })
 
+  it('Rapportages: Mijn dashboard op /mijn-dashboard en Funnel, na Prospects en voor Plannen', () => {
+    const z = zijbalkVoor(gebruiker(), org, stand)
+    expect(z.groepen.map((g) => g.naam)).toEqual(['Start', 'Activiteiten', 'Prospects', 'Rapportages', 'Plannen'])
+    expect(z.groepen.some((g) => (g.naam as string) === 'Resultaten')).toBe(false)
+    expect(z.groepen.find((g) => g.naam === 'Rapportages')!.items.map((i) => [i.naam, i.route])).toEqual([['Mijn dashboard', '/mijn-dashboard'], ['Funnel', '/funnel']])
+  })
+
+  it('Datakwaliteit staat niet in de zijbalk en gaat aan vanaf Gevorderd', () => {
+    expect(functie('data.kwaliteit')?.zijbalk).toBeUndefined()
+    expect(beschikbaar('data.kwaliteit', gebruiker(), org, stand)).toEqual({ ok: false, reden: 'niveau' })
+    expect(beschikbaar('data.kwaliteit', gebruiker({ niveau: 'gevorderd' }), org, stand).ok).toBe(true)
+    expect(beschikbaar('data.kwaliteit', gebruiker({ niveau: 'expert' }), org, stand).ok).toBe(true)
+  })
+
   it('Iedereen ziet alles: geen groep Nog niet aangezet', () => {
     const z = zijbalkVoor(gebruiker(), { ...org, iedereenAlles: true }, stand)
     expect(z.nietAangezet).toHaveLength(0)
@@ -88,5 +103,29 @@ describe('beschikbaar (4.2)', () => {
     for (const f of FUNCTIES) if (!alleenFounder(f)) expect(f.helpartikel).toBeTruthy()
     expect(startindeling()).toHaveLength(FUNCTIES.filter((f) => !alleenFounder(f)).length * 3)
     expect(startindeling().some((r) => r.functie.startsWith('platform.') || r.functie === 'nav.platform')).toBe(false)
+  })
+})
+
+describe('datakwaliteit', () => {
+  it('score is het deel van de controles dat klopt; zonder controles 100', () => {
+    expect(kwaliteitScore([])).toBe(100)
+    expect(kwaliteitScore([{ aantal: 0, noemer: 0 }])).toBe(100)
+    expect(kwaliteitScore([{ aantal: 1, noemer: 4 }, { aantal: 0, noemer: 6 }])).toBe(90)
+    expect(kwaliteitScore([{ aantal: 9, noemer: 3 }])).toBe(0)
+  })
+  it('elke categorie heeft een unieke sleutel, uitleg en een basis', () => {
+    expect(new Set(KWALITEIT_CATEGORIEEN.map((c) => c.sleutel)).size).toBe(KWALITEIT_CATEGORIEEN.length)
+    for (const c of KWALITEIT_CATEGORIEEN) expect(c.uitleg.length, c.sleutel).toBeGreaterThan(20)
+  })
+  it('de link naar de prospectlijst volgt de rol en vraagt soms Alle filters', () => {
+    const beslisser = KWALITEIT_CATEGORIEEN.find((c) => c.sleutel === 'zonderBeslisser')!
+    const klasse = KWALITEIT_CATEGORIEEN.find((c) => c.sleutel === 'zonderKlasse')!
+    const website = KWALITEIT_CATEGORIEEN.find((c) => c.sleutel === 'zonderWebsite')!
+    expect(filterLink(beslisser, 'accountmanager', true)).toBe('/prospects/alle?bereikbaarheid=zonderBeslisser')
+    expect(filterLink(beslisser, 'salesmanager', true)).toBe('/prospects/alle?eigenaar=team&bereikbaarheid=zonderBeslisser')
+    expect(filterLink(klasse, 'beheerder', false)).toBe('/prospects/alle?eigenaar=iedereen&klasse=geen')
+    expect(filterLink(beslisser, 'accountmanager', false)).toBeNull()
+    expect(filterLink(website, 'beheerder', true)).toBeNull()
+    expect(eigenaarFilter('founder')).toBe('iedereen')
   })
 })

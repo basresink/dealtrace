@@ -1,85 +1,110 @@
 <script setup lang="ts">
-// Agenda (F09): dag, week of maand met afspraken (kleur per meetingsoort), belblokken, bezet uit de
-// gekoppelde agenda en conflicten met een rode rand. "Gepland door" bij afspraken die een collega
-// voor je plande.
+// Agenda (F09) in de opzet van DealDrive: de kop vat de dag samen, rechts zoeken, "+ Taak",
+// "+ Afspraak" en het uitklapmenu Weergave (Werkweek, Week, Maand; in de URL). Daaronder de
+// navigatie met het weeknummer en het weekrooster (AgendaRooster) of de maand (AgendaMaand).
+// Afspraken in de kleur van de meetingsoort, belblokken en taken op hun tijd, bezet uit de
+// gekoppelde agenda gearceerd, conflicten met een rode rand en "Gepland door" bij afspraken die een
+// collega voor je plande. Klik op een lege tijd plant een afspraak op dat moment.
 import { plusDagen } from '~~/shared/datum'
 const route = useRoute()
 const router = useRouter()
 const { functie } = useMe()
 const toast = useToast()
 const klasse = useSchermklasse()
+const { open: zoekenOpen } = useZoeken()
 const vandaag = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Amsterdam' })
-type Weergave = 'dag' | 'week' | 'maand'
+type Weergave = 'werkweek' | 'week' | 'maand' | 'dag'
 // "Wie is er aan de beurt?" staat sinds de nieuwe zijbalk op /meetings; oude links gaan daarheen.
 if (route.query.weergave === 'meetings') await navigateTo('/meetings', { replace: true })
-const weergave = computed<Weergave>(() => (['dag', 'week', 'maand'].includes(String(route.query.weergave)) ? route.query.weergave as Weergave : 'week'))
-// Op de telefoon is de dag de standaard; pas na het laden, zodat server en browser hetzelfde tonen.
-onMounted(() => { if (!route.query.weergave && klasse.value === 'telefoon') zet({ weergave: 'dag' }) })
+// 'dag' is geen keuze in het menu, maar oude links (Vandaag, Acties, Bezoeken) gebruiken hem nog.
+const weergave = computed<Weergave>(() => (['werkweek', 'week', 'maand', 'dag'].includes(String(route.query.weergave)) ? route.query.weergave as Weergave : 'werkweek'))
+const OPTIES = [
+  { id: 'werkweek', label: 'Werkweek', icoon: 'CalendarRange' },
+  { id: 'week', label: 'Week', icoon: 'Calendar' },
+  { id: 'maand', label: 'Maand', icoon: 'LayoutGrid' },
+] as const
+const telefoon = computed(() => klasse.value === 'telefoon')
 const datum = computed(() => (typeof route.query.datum === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(route.query.datum) ? route.query.datum : vandaag))
 const gebruiker = computed(() => (typeof route.query.gebruiker === 'string' ? route.query.gebruiker : ''))
 const filterSoort = ref('')
 const filterVorm = ref('')
 const zet = (q: Record<string, string | undefined>) => router.replace({ query: { ...route.query, ...q } })
 const wd = (d: string) => (new Date(`${d}T12:00:00Z`).getUTCDay() + 6) % 7
-const periode = computed(() => {
-  const d = datum.value
-  if (weergave.value === 'dag') return { van: d, tot: plusDagen(d, 1), dagen: [d] }
-  if (weergave.value === 'maand') {
-    const eerste = `${d.slice(0, 8)}01`
-    const start = plusDagen(eerste, -wd(eerste))
-    const dagen = Array.from({ length: 42 }, (_, i) => plusDagen(start, i))
-    return { van: start, tot: plusDagen(start, 42), dagen }
-  }
-  const ma = plusDagen(d, -wd(d))
-  return { van: ma, tot: plusDagen(ma, 7), dagen: Array.from({ length: 5 }, (_, i) => plusDagen(ma, i)) }
+const maandag = computed(() => plusDagen(datum.value, -wd(datum.value)))
+/** Eén dag op de telefoon en bij ?weergave=dag; anders ma tot en met vr of de hele week. */
+const eenDag = computed(() => weergave.value === 'dag' || telefoon.value)
+const dagen = computed(() => {
+  if (eenDag.value) return [datum.value]
+  return Array.from({ length: weergave.value === 'week' ? 7 : 5 }, (_, i) => plusDagen(maandag.value, i))
 })
-const { data, refresh } = await useFetch<any>('/api/agenda', { query: computed(() => ({ van: periode.value.van, tot: periode.value.tot, gebruiker: gebruiker.value || undefined })), default: () => ({ afspraken: [], belblokken: [], bezet: [], conflicten: [], gebruikers: [], meetingsoorten: [], titel: '', kan: {} }) })
+const maandDagen = computed(() => {
+  const eerste = `${datum.value.slice(0, 8)}01`
+  const start = plusDagen(eerste, -wd(eerste))
+  return Array.from({ length: 42 }, (_, i) => plusDagen(start, i))
+})
+const periode = computed(() => (weergave.value === 'maand'
+  ? { van: maandDagen.value[0]!, tot: plusDagen(maandDagen.value[0]!, 42) }
+  : { van: maandag.value, tot: plusDagen(maandag.value, 7) }))
+const leeg = () => ({ afspraken: [], belblokken: [], taken: [], bezet: [], conflicten: [], gebruikers: [], meetingsoorten: [], vandaagAantal: 0, titel: '', kan: {} })
+const { data, refresh } = await useFetch<any>('/api/agenda', { query: computed(() => ({ van: periode.value.van, tot: periode.value.tot, gebruiker: gebruiker.value || undefined })), default: leeg })
 const afspraken = computed(() => data.value.afspraken.filter((a: any) => (!filterSoort.value || a.soort.slug === filterSoort.value) && (!filterVorm.value || a.vorm === filterVorm.value)))
-const conflict = computed(() => new Set<string>(data.value.conflicten))
 const dagVan = (iso: string) => new Date(iso).toLocaleDateString('sv-SE', { timeZone: 'Europe/Amsterdam' })
-const tijd = (iso: string) => new Date(iso).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })
-const BEGIN = 7; const EIND = 20; const UUR = 56
-const minuut = (iso: string) => { const [h, m] = tijd(iso).split(':').map(Number); return h! * 60 + m! }
-const plek = (start: string, eind: string) => {
-  const s = Math.max(BEGIN * 60, minuut(start)); const e = Math.min(EIND * 60, Math.max(s + 15, minuut(eind)))
-  return { top: `${((s - BEGIN * 60) / 60) * UUR}px`, height: `${Math.max(22, ((e - s) / 60) * UUR - 2)}px` }
-}
-const opDag = (lijst: any[], d: string) => lijst.filter((x) => dagVan(x.start) === d)
-// Overlappende afspraken staan naast elkaar: per groep die elkaar raakt een baan per afspraak.
-function banen(lijst: any[]) {
-  const uit: { a: any; baan: number; van: number }[] = []
-  let groep: typeof uit = []; let eindGroep = 0
-  const sluit = () => { const n = Math.max(...groep.map((g) => g.baan)) + 1; groep.forEach((g) => (g.van = n)); groep = [] }
-  for (const a of [...lijst].sort((x, y) => x.start.localeCompare(y.start))) {
-    if (groep.length && Date.parse(a.start) >= eindGroep) sluit()
-    const bezet = new Set(groep.filter((g) => Date.parse(g.a.eind) > Date.parse(a.start)).map((g) => g.baan))
-    let baan = 0; while (bezet.has(baan)) baan++
-    const r = { a, baan, van: 1 }; groep.push(r); uit.push(r); eindGroep = Math.max(eindGroep, Date.parse(a.eind))
-  }
-  if (groep.length) sluit()
-  return uit
-}
-const kort = (a: any) => (minuut(a.eind) - minuut(a.start)) < 40
-const dagKop = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString('nl-NL', { weekday: weergave.value === 'dag' ? 'long' : 'short', day: 'numeric', month: weergave.value === 'dag' ? 'long' : undefined, timeZone: 'UTC' })
-const kop = computed(() => {
-  const n = afspraken.value.filter((a: any) => a.status === 'gepland').length
-  const eerste = afspraken.value.filter((a: any) => a.status === 'gepland' && a.soort.type === 'klant').length
-  const ander = weergave.value === 'dag' && datum.value !== vandaag
-  const w = weergave.value === 'dag' ? (ander ? dagKop(datum.value) : 'Vandaag') : weergave.value === 'week' ? 'Deze week' : 'Deze maand'
-  const wanneer = `${w[0]!.toUpperCase()}${w.slice(1)}${ander ? ':' : ''}`
-  return n ? `${wanneer} ${n === 1 ? '1 afspraak' : `${n} afspraken`}${eerste && eerste !== n ? `, waarvan ${eerste} met klanten` : ''}.` : `${wanneer} geen afspraken.`
+
+// Kop: de dag samengevat, zoals in DealDrive (geannuleerde afspraken tellen niet mee).
+const titel = computed(() => {
+  const n = data.value.vandaagAantal ?? 0
+  return n === 0 ? 'Geen afspraken vandaag.' : n === 1 ? '1 afspraak vandaag.' : `${n} afspraken vandaag.`
 })
+
+// Navigatie: per dag op de telefoon, per week in het rooster, per maand in de maand.
 function verschuif(stap: number) {
   const d = datum.value
-  zet({ datum: weergave.value === 'dag' ? plusDagen(d, stap) : weergave.value === 'week' ? plusDagen(d, 7 * stap) : `${new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1 + stap, 1)).toISOString().slice(0, 10)}` })
+  if (weergave.value === 'maand') zet({ datum: new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1 + stap, 1)).toISOString().slice(0, 10) })
+  else zet({ datum: plusDagen(d, eenDag.value ? stap : 7 * stap) })
 }
+function isoWeek(d: string) {
+  const doel = new Date(`${d}T12:00:00Z`)
+  doel.setUTCDate(doel.getUTCDate() + 3 - ((doel.getUTCDay() + 6) % 7))
+  const jan4 = new Date(Date.UTC(doel.getUTCFullYear(), 0, 4))
+  jan4.setUTCDate(jan4.getUTCDate() + 3 - ((jan4.getUTCDay() + 6) % 7))
+  return 1 + Math.round((doel.getTime() - jan4.getTime()) / (7 * 864e5))
+}
+const fmt = (d: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('nl-NL', { ...o, timeZone: 'UTC' }).format(new Date(`${d}T12:00:00Z`)).replace(/\./g, '')
+const navLabel = computed(() => {
+  if (weergave.value === 'maand') { const m = fmt(datum.value, { month: 'long', year: 'numeric' }); return m[0]!.toUpperCase() + m.slice(1) }
+  const week = `Week ${isoWeek(datum.value)}`
+  if (eenDag.value) return `${week} · ${fmt(datum.value, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`
+  const eerste = dagen.value[0]!; const laatste = dagen.value.at(-1)!
+  const van = eerste.slice(5, 7) === laatste.slice(5, 7) ? String(Number(eerste.slice(8))) : fmt(eerste, { day: 'numeric', month: 'short' })
+  return `${week} · ${van} t/m ${fmt(laatste, { day: 'numeric', month: 'short', year: 'numeric' })}`
+})
+// Werkweek toont ma tot en met vr; wat in het weekend staat, mag niet stil verdwijnen.
+const weekendAantal = computed(() => {
+  if (weergave.value !== 'werkweek' || eenDag.value) return 0
+  const weekend = new Set([plusDagen(maandag.value, 5), plusDagen(maandag.value, 6)])
+  return afspraken.value.filter((a: any) => weekend.has(dagVan(a.start))).length
+})
+
+// Weergavemenu: sluit bij een klik erbuiten en met Escape.
+const menuOpen = ref(false)
+const menuRef = ref<HTMLElement | null>(null)
+const actief = computed(() => OPTIES.find((o) => o.id === weergave.value) ?? OPTIES[0])
+function kies(w: Weergave) { menuOpen.value = false; zet({ weergave: w === 'werkweek' ? undefined : w }) }
+function buiten(e: MouseEvent) { if (menuOpen.value && menuRef.value && !menuRef.value.contains(e.target as Node)) menuOpen.value = false }
+function esc(e: KeyboardEvent) { if (e.key === 'Escape') menuOpen.value = false }
+onMounted(() => { document.addEventListener('mousedown', buiten); document.addEventListener('keydown', esc) })
+onUnmounted(() => { document.removeEventListener('mousedown', buiten); document.removeEventListener('keydown', esc) })
+
 // Flyouts
 const planOpen = ref(false)
-const planAccount = ref<{ id: string; naam: string } | null>(null)
-function plan(account: { id: string; naam: string } | null = null) { planAccount.value = account; planOpen.value = true }
+const planVoorstel = ref<{ datum?: string; start?: string } | null>(null)
+function plan(voorstel: { datum: string; start: string } | null = null) { planVoorstel.value = voorstel; planOpen.value = true }
 const afspraakId = computed(() => (typeof route.query.afspraak === 'string' ? route.query.afspraak : null))
 async function gepland(id: string) { planOpen.value = false; await refresh(); zet({ afspraak: id }) }
+const nieuweTaak = ref(false)
+const taakId = ref<string | null>(null)
 const filtersOpen = ref(false)
+const filterAantal = computed(() => Number(!!filterSoort.value) + Number(!!filterVorm.value) + Number(!!gebruiker.value))
 const vormLabel: Record<string, string> = { bezoek: 'Bezoek', online: 'Online', telefoon: 'Telefoon' }
 useHead({ title: 'Agenda · Dealtrace' })
 if (import.meta.client && route.query.melding === 'gekoppeld') toast.toon('Agenda gekoppeld.')
@@ -87,63 +112,100 @@ if (import.meta.client && route.query.melding === 'gekoppeld') toast.toon('Agend
 
 <template>
   <div>
-    <PaginaKop kicker="Start · Agenda" :titel="kop" uitleg="Je afspraken, belblokken en wat er in je gekoppelde agenda staat." helpartikel="agenda">
+    <PaginaKop kicker="Planning · Agenda" :titel="titel" helpartikel="agenda">
       <template #acties>
+        <button type="button" class="dd-actie dd-actie--secundair ag-icoonknop" aria-label="Zoeken" title="Zoeken" data-test="agenda-zoek" @click="zoekenOpen = true"><Icoon naam="Search" class="dd-actie-icoon" /></button>
+        <button type="button" class="dd-actie dd-actie--primair" data-test="agenda-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
         <button type="button" class="dd-actie dd-actie--zwart" data-test="plan-afspraak-knop" @click="plan()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+        <div ref="menuRef" class="ag-menu-wrap">
+          <button type="button" class="dd-actie dd-actie--secundair" :aria-expanded="menuOpen" aria-haspopup="menu" data-test="weergave-knop" @click="menuOpen = !menuOpen">
+            <Icoon :naam="actief.icoon" class="dd-actie-icoon" />Weergave<Icoon naam="ChevronDown" class="ag-caret" :class="{ 'ag-caret--open': menuOpen }" />
+          </button>
+          <ul v-if="menuOpen" class="ag-menu" role="menu" data-test="weergave-menu">
+            <li v-for="o in OPTIES" :key="o.id" role="none">
+              <button type="button" role="menuitemradio" :aria-checked="weergave === o.id" class="ag-menu-item" :class="{ 'ag-menu-item--aan': weergave === o.id }" :data-test="`weergave-${o.id}`" @click="kies(o.id)"><Icoon :naam="o.icoon" />{{ o.label }}</button>
+            </li>
+          </ul>
+        </div>
         <NuxtLink v-if="functie('briefing.bewerken')?.beschikbaar" to="/briefings" class="dd-actie dd-actie--secundair" data-test="briefings-knop"><Icoon naam="ScrollText" class="dd-actie-icoon" />Briefings</NuxtLink>
       </template>
     </PaginaKop>
-    <section class="section">
+    <section class="section section--laatste ag-sectie">
       <div class="container">
-        <div class="kop-rij ag-werkbalk">
-          <div class="keuzegroep" role="group" aria-label="Weergave">
-            <button v-for="w in (['dag', 'week', 'maand'] as const)" :key="w" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': weergave === w }" :aria-pressed="weergave === w" :data-test="`weergave-${w}`" @click="zet({ weergave: w })">{{ w[0]!.toUpperCase() + w.slice(1) }}</button>
-          </div>
+        <div class="ag-navrij">
           <div class="ag-nav">
-            <button type="button" class="dd-act dd-act--icoon" aria-label="Vorige" @click="verschuif(-1)"><Icoon naam="ArrowLeft" /></button>
-            <button type="button" class="dd-act" @click="zet({ datum: undefined })">Vandaag</button>
-            <button type="button" class="dd-act dd-act--icoon" aria-label="Volgende" @click="verschuif(1)"><Icoon naam="ArrowRight" /></button>
-            <button type="button" class="dd-act" :aria-expanded="filtersOpen" data-test="agenda-filters" @click="filtersOpen = !filtersOpen"><Icoon naam="Filter" />Filters</button>
+            <button type="button" class="ag-navknop" :aria-label="weergave === 'maand' ? 'Vorige maand' : eenDag ? 'Vorige dag' : 'Vorige week'" data-test="agenda-vorige" @click="verschuif(-1)">←</button>
+            <button type="button" class="ag-navknop" data-test="agenda-vandaag" @click="zet({ datum: undefined })">Vandaag</button>
+            <button type="button" class="ag-navknop" :aria-label="weergave === 'maand' ? 'Volgende maand' : eenDag ? 'Volgende dag' : 'Volgende week'" data-test="agenda-volgende" @click="verschuif(1)">→</button>
           </div>
+          <h2 class="ag-periode" data-test="agenda-periode">{{ navLabel }}</h2>
+          <button type="button" class="dd-act ag-filterknop" :class="{ 'ag-filterknop--aan': filterAantal }" :aria-expanded="filtersOpen" data-test="agenda-filters" @click="filtersOpen = !filtersOpen"><Icoon naam="SlidersHorizontal" />Filters<span v-if="filterAantal" class="ag-teller">{{ filterAantal }}</span></button>
         </div>
         <div v-if="filtersOpen" class="formulier-raster ag-filters">
           <label v-if="data.gebruikers.length > 1" class="veld"><span class="veld-label">Gebruiker</span><select class="invoer" :value="gebruiker" data-test="filter-gebruiker" @change="zet({ gebruiker: ($event.target as HTMLSelectElement).value || undefined })"><option value="">Mijn agenda</option><option v-for="u in data.gebruikers" :key="u.id" :value="u.id">{{ u.naam.replace(/^Testgebruiker /, '') }}</option></select></label>
-          <label class="veld"><span class="veld-label">Meetingsoort</span><select v-model="filterSoort" class="invoer"><option value="">Alle</option><option v-for="m in data.meetingsoorten" :key="m.id" :value="m.slug">{{ m.naam }}</option></select></label>
-          <label class="veld"><span class="veld-label">Vorm</span><select v-model="filterVorm" class="invoer"><option value="">Alle</option><option v-for="(l, k) in vormLabel" :key="k" :value="k">{{ l }}</option></select></label>
+          <label class="veld"><span class="veld-label">Meetingsoort</span><select v-model="filterSoort" class="invoer" data-test="filter-soort"><option value="">Alle</option><option v-for="m in data.meetingsoorten" :key="m.id" :value="m.slug">{{ m.naam }}</option></select></label>
+          <label class="veld"><span class="veld-label">Vorm</span><select v-model="filterVorm" class="invoer" data-test="filter-vorm"><option value="">Alle</option><option v-for="(l, k) in vormLabel" :key="k" :value="k">{{ l }}</option></select></label>
         </div>
+        <p v-if="weekendAantal" class="ag-weekend" data-test="agenda-weekend">{{ weekendAantal }} {{ weekendAantal === 1 ? 'afspraak' : 'afspraken' }} in het weekend. <button type="button" class="ag-weekend-knop" @click="kies('week')">Toon de hele week</button></p>
+        <p v-if="(filterSoort || filterVorm) && !afspraken.length" class="meta ag-leeg" data-test="agenda-leeg">Geen afspraken met dit filter. <button type="button" class="tekst-link" @click="filterSoort = ''; filterVorm = ''">Toon alles</button></p>
 
-        <!-- Maand -->
-        <div v-if="weergave === 'maand'" class="ag-maand" data-test="agenda-maand">
-          <span v-for="d in ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo']" :key="d" class="ag-maand-kop">{{ d }}</span>
-          <div v-for="d in periode.dagen" :key="d" class="ag-maand-dag" :class="{ 'ag-maand-dag--anders': d.slice(5, 7) !== datum.slice(5, 7), 'ag-maand-dag--vandaag': d === vandaag }">
-            <button type="button" class="ag-maand-nr" @click="zet({ weergave: 'dag', datum: d })">{{ Number(d.slice(8)) }}</button>
-            <button v-for="a in opDag(afspraken, d).slice(0, 3)" :key="a.id" type="button" class="ag-maand-item" :class="[`ag-kleur--${a.soort.kleur ?? 'grijs'}`, { 'ag-conflict': conflict.has(a.id) }]" @click="zet({ afspraak: a.id })">{{ tijd(a.start) }} {{ a.accountNaam ?? a.soort.naam }}</button>
-            <span v-if="opDag(afspraken, d).length > 3" class="meta">+{{ opDag(afspraken, d).length - 3 }}</span>
-          </div>
+        <AgendaMaand
+          v-if="weergave === 'maand'" :dagen="maandDagen" :maand="datum.slice(0, 7)" :vandaag="vandaag" :afspraken="afspraken" :belblokken="data.belblokken" :taken="data.taken" :telefoon="telefoon"
+          @afspraak="zet({ afspraak: $event })" @dag="zet({ weergave: telefoon ? 'dag' : 'week', datum: $event })"
+        />
+        <AgendaRooster
+          v-else :dagen="dagen" :vandaag="vandaag" :afspraken="afspraken" :belblokken="data.belblokken" :taken="data.taken" :bezet="data.bezet" :conflicten="data.conflicten"
+          :toon-eigenaar="gebruiker.includes(',')" :telefoon="telefoon"
+          @afspraak="zet({ afspraak: $event })" @taak="taakId = $event" @plan="plan($event)"
+        />
+        <div class="ag-legenda" aria-label="Legenda">
+          <span class="ag-legenda-item"><span class="ag-vlak ag-vlak--afspraak" />Afspraak (kleur van de meetingsoort)</span>
+          <span class="ag-legenda-item"><span class="ag-vlak ag-vlak--belblok" />Belblok</span>
+          <span class="ag-legenda-item"><span class="ag-vlak ag-vlak--taak" />Taak</span>
+          <span class="ag-legenda-item"><span class="ag-vlak ag-vlak--bezet" />Bezet in je <NuxtLink v-if="data.kan?.koppeling" to="/mij" class="tekst-link">gekoppelde agenda</NuxtLink><template v-else>gekoppelde agenda</template></span>
+          <span v-if="weergave !== 'maand'" class="ag-legenda-item ag-legenda-tip">Klik op een lege tijd om een afspraak te plannen.</span>
         </div>
-
-        <!-- Dag en week -->
-        <template v-else>
-          <p v-if="!afspraken.length" class="meta ag-leeg" data-test="agenda-leeg">{{ filterSoort || filterVorm ? 'Geen afspraken met dit filter.' : 'Geen afspraken in deze periode.' }} <button v-if="filterSoort || filterVorm" type="button" class="tekst-link" @click="filterSoort = ''; filterVorm = ''">Toon alles</button></p>
-          <div class="ag-raster" :class="`ag-raster--${weergave}`" :style="{ '--ag-kolommen': periode.dagen.length }" data-test="agenda-raster">
-            <div class="ag-uren"><span class="ag-dagkop" /><div class="ag-kolom-body" :style="{ height: `${(EIND - BEGIN) * UUR}px` }"><span v-for="h in EIND - BEGIN" :key="h" class="ag-uur" :style="{ top: `${(h - 1) * UUR}px` }">{{ String(BEGIN + h - 1).padStart(2, '0') }}:00</span></div></div>
-            <div v-for="d in periode.dagen" :key="d" class="ag-kolom">
-              <span class="ag-dagkop" :class="{ 'ag-dagkop--vandaag': d === vandaag }">{{ dagKop(d) }}</span>
-              <div class="ag-kolom-body" :style="{ height: `${(EIND - BEGIN) * UUR}px` }">
-                <span v-for="(b, i) in opDag(data.bezet, d)" :key="`z${i}`" class="ag-bezet" :style="plek(b.start, b.eind)" :title="b.titel">{{ b.titel ?? 'Bezet' }}</span>
-                <span v-for="b in opDag(data.belblokken, d)" :key="b.id" class="ag-belblok" :style="plek(b.start, b.eind)">Belblok</span>
-                <button v-for="{ a, baan, van } in banen(opDag(afspraken, d))" :key="a.id" type="button" class="ag-afspraak" :class="[`ag-kleur--${a.soort.kleur ?? 'grijs'}`, { 'ag-conflict': conflict.has(a.id), 'ag-afspraak--klaar': a.status !== 'gepland', 'ag-afspraak--kort': kort(a) }]" :style="{ ...plek(a.start, a.eind), left: `calc(${(baan / van) * 100}% + 3px)`, width: `calc(${100 / van}% - 6px)`, right: 'auto' }" :data-test="`afspraak-${a.id}`" :title="`${tijd(a.start)} ${a.accountNaam ?? a.soort.naam} · ${a.soort.naam}`" @click="zet({ afspraak: a.id })">
-                  <strong>{{ tijd(a.start) }} {{ a.accountNaam ?? a.soort.naam }}</strong>
-                  <span v-if="!kort(a)">{{ a.soort.naam }} · {{ vormLabel[a.vorm] }}<template v-if="gebruiker && gebruiker.includes(',')"> · {{ a.ownerNaam }}</template></span>
-                  <span v-if="a.geplandDoor && !kort(a)" class="ag-door">Gepland door {{ a.geplandDoor.replace(/^Testgebruiker /, '') }}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </template>
       </div>
     </section>
-    <PlanAfspraakFlyout :open="planOpen" :account="planAccount" @sluit="planOpen = false" @gepland="gepland" />
+    <PlanAfspraakFlyout :open="planOpen" :voorstel="planVoorstel" @sluit="planOpen = false" @gepland="gepland" />
     <AfspraakFlyout :open="!!afspraakId" :afspraak-id="afspraakId" @sluit="zet({ afspraak: undefined })" @gewijzigd="refresh()" />
+    <NieuweTaakFlyout :open="nieuweTaak" @sluit="nieuweTaak = false" @gemaakt="nieuweTaak = false; refresh()" />
+    <TaakFlyout :open="!!taakId" :taak-id="taakId" @sluit="taakId = null" @klaar="taakId = null; refresh()" @gewijzigd="refresh()" />
   </div>
 </template>
+
+<style scoped>
+.ag-sectie { padding-top: 16px; }
+.ag-icoonknop { padding-left: 10px; padding-right: 10px; min-width: var(--touch-target-min); }
+.ag-menu-wrap { position: relative; }
+.ag-caret { width: 14px; height: 14px; margin-left: 2px; transition: transform 150ms ease-out; }
+.ag-caret--open { transform: rotate(180deg); }
+.ag-menu { position: absolute; top: calc(100% + 4px); right: 0; z-index: 30; display: flex; flex-direction: column; gap: 1px; min-width: 200px; margin: 0; padding: 4px; list-style: none; background: var(--wit); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 6px 18px rgba(0, 0, 0, .08); }
+.ag-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 8px 12px; border: 0; border-radius: var(--radius); background: transparent; color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; }
+.ag-menu-item:hover { background: var(--surface); }
+.ag-menu-item--aan, .ag-menu-item--aan:hover { background: var(--ink); color: var(--yellow); }
+.ag-navrij { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.ag-nav { display: inline-flex; gap: 6px; }
+.ag-navknop { min-width: var(--touch-target-min); min-height: var(--touch-target-min); padding: 6px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: transparent; color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.ag-navknop:hover { border-color: var(--ink); }
+.ag-periode { margin: 0; font-family: var(--font-serif); font-size: 18px; font-weight: 700; }
+.ag-filterknop { margin-left: auto; }
+.ag-filterknop--aan { border-color: var(--ink); }
+.ag-teller { padding: 0 6px; font-size: var(--fs-label); background: var(--yellow); border-radius: var(--radius); }
+.ag-filters { margin-bottom: 12px; }
+.ag-weekend { margin: 0 0 10px; padding: 8px 12px; background: var(--surface); border-left: 3px solid var(--yellow); font-size: 12px; color: var(--ink-soft); }
+.ag-weekend-knop { padding: 0; border: 0; background: none; font: inherit; font-weight: 700; color: var(--ink); text-decoration: underline; cursor: pointer; }
+.ag-leeg { margin: 0 0 10px; }
+.ag-legenda { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 10px; font-size: var(--fs-label); color: var(--muted); }
+.ag-legenda-item { display: inline-flex; align-items: center; gap: 6px; }
+.ag-legenda-tip { margin-left: auto; }
+.ag-vlak { width: 12px; height: 12px; border: 1px solid var(--border-strong); border-radius: var(--radius); }
+.ag-vlak--afspraak { background: color-mix(in srgb, var(--yellow) 22%, var(--wit)); border-left: 3px solid var(--yellow-dark); }
+.ag-vlak--belblok { background: var(--yellow); border-left: 3px solid var(--ink); }
+.ag-vlak--taak { background: var(--wit); border-style: dashed; border-left: 3px solid var(--blue); }
+.ag-vlak--bezet { background: repeating-linear-gradient(-45deg, var(--surface), var(--surface) 3px, var(--border) 3px, var(--border) 4px); }
+@media (max-width: 719px) {
+  .ag-periode { order: 3; width: 100%; font-size: 16px; }
+  .ag-legenda-tip { margin-left: 0; }
+}
+</style>

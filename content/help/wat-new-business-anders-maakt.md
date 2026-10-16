@@ -40,7 +40,7 @@ Hilde zegt ja. Joost legt de afspraak vast en belt meteen de volgende.
 
 ## Zo doe je het in Dealtrace
 
-Dealtrace is gebouwd voor new business en stopt bij de eerste afspraak en de overdracht. Begin je dag op **Vandaag**: daar staan je taken, je afspraken en je werkblok. Start je belblok met **Start belblok**. Elk gekwalificeerd account loopt in een **hercontactritme**, dus de volgende poging komt vanzelf. Ziet je taak "poging 3 van 5", dan weet je waar je staat. Rond je een eerste afspraak af met **Vervolg afgesproken**, dan vraagt Dealtrace **Overdragen?** en kies je **DealDrive**, **Het CRM** of **Een collega**. Wat daarna gebeurt, gebeurt buiten Dealtrace. Je eigen voortgang lees je bij **Mijn resultaten**.
+Dealtrace is gebouwd voor new business en stopt bij de eerste afspraak en de overdracht. Begin je dag op **Vandaag**: daar staan je taken, je afspraken en je werkblok. Start je belblok met **Start belblok**. Elk gekwalificeerd account loopt in een **hercontactritme**, dus de volgende poging komt vanzelf. Ziet je taak "poging 3 van 5", dan weet je waar je staat. Rond je een eerste afspraak af met **Vervolg afgesproken**, dan vraagt Dealtrace **Overdragen?** en kies je **DealDrive**, **Het CRM** of **Een collega**. Wat daarna gebeurt, gebeurt buiten Dealtrace. Je eigen voortgang lees je bij **Mijn dashboard**.
 
 ## Controlevragen
 

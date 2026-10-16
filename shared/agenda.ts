@@ -86,23 +86,56 @@ export function meetingUitkomst(afspraak: { accountNaam?: string | null; start: 
   }
 }
 
-export interface Voorstel { accountId: string; naam: string; reden: string; vormAdvies: string; dagenAchter: number; soort: 'eerste-gesprek' | 'no-show' | 'ritme' }
-const REDEN_VOLGORDE: Voorstel['soort'][] = ['no-show', 'eerste-gesprek', 'ritme']
+export type VoorstelAdvies = 'belafspraak' | 'online' | 'fysiek' | 'belblok'
+export interface Voorstel {
+  accountId: string; naam: string; reden: string; vormAdvies: string; dagenAchter: number
+  soort: 'no-show' | 'na-eerste-afspraak' | 'eerste-gesprek' | 'terugkomen' | 'ritme'
+  /** Een zin waarom dit account nu aan de beurt is (Meetinglijst op /meetings). */
+  uitleg: string
+  /** De vorm uit het advies als code, voor de planknop. */
+  advies: VoorstelAdvies
+  /** Label voor de tag, bijvoorbeeld "Belafspraak vandaag". */
+  adviesLabel: string
+}
+const REDEN_VOLGORDE: Voorstel['soort'][] = ['no-show', 'na-eerste-afspraak', 'eerste-gesprek', 'terugkomen', 'ritme']
+/** Het vormadvies (tekst uit vormAdvies) als code voor de planknop. */
+export function adviesCode(vorm: string): VoorstelAdvies {
+  if (vorm.startsWith('Fysiek')) return 'fysiek'
+  if (vorm.startsWith('Online')) return 'online'
+  if (vorm.startsWith('Taak in belblok')) return 'belblok'
+  return 'belafspraak'
+}
+const dagLabel = (iso: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'long', timeZone: 'Europe/Amsterdam' }).format(new Date(iso))
+const dagenTekst = (n: number) => (n === 0 ? 'vandaag' : n === 1 ? 'gisteren' : `${n} dagen geleden`)
 /**
- * "Wie is er aan de beurt?" (hooguit 8): no-show opnieuw inplannen, eerste gesprek nog niet ingepland
- * (positief contact zonder afspraak) en verlopen ritmes. Prospects zonder historie of klasse doen mee (gat 33).
+ * "Wie is er aan de beurt?" (hooguit 8): no-show opnieuw inplannen, eerste afspraak gehouden zonder
+ * vervolg, eerste gesprek nog niet ingepland (positief contact zonder afspraak), terugkomdatum bereikt
+ * en verlopen ritmes. Prospects zonder historie of klasse doen mee (gat 33). Elk voorstel krijgt een
+ * uitleg en een adviescode met label, zodat de Meetinglijst meteen de juiste planknop toont.
  */
-export function aanDeBeurt(accounts: { id: string; naam: string; faseId?: string | null; nbStatus?: string | null; klasse?: string | null; laatsteContactOp?: string | null; ritmeVolgendeOp?: string | null; laatsteUitkomst?: string | null; plaats?: string | null }[], afspraken: AfspraakKort[], nu: Date, advies: (a: { id: string; plaats?: string | null }) => string): Voorstel[] {
+export function aanDeBeurt(accounts: { id: string; naam: string; faseId?: string | null; nbStatus?: string | null; klasse?: string | null; laatsteContactOp?: string | null; ritmeVolgendeOp?: string | null; laatsteUitkomst?: string | null; plaats?: string | null; terugOp?: string | null }[], afspraken: AfspraakKort[], nu: Date, advies: (a: { id: string; plaats?: string | null }) => string): Voorstel[] {
   const uit: Voorstel[] = []
+  const vandaag = nu.toLocaleDateString('sv-SE', { timeZone: 'Europe/Amsterdam' })
   for (const a of accounts) {
     const eigen = afspraken.filter((x) => x.accountId === a.id)
     const toekomst = eigen.some((x) => x.status === 'gepland' && Date.parse(x.start) >= nu.getTime())
     if (toekomst || ['nee', 'overgedragen', 'klant'].includes(a.nbStatus ?? '')) continue
-    const laatsteNoShow = eigen.filter((x) => x.status === 'niet_verschenen').sort((x, y) => y.start.localeCompare(x.start))[0]
+    const laatste = (status: AfspraakStatus) => eigen.filter((x) => x.status === status).sort((x, y) => y.start.localeCompare(x.start))[0]
     const dagen = (iso: string | null | undefined) => (iso ? Math.max(0, Math.floor((nu.getTime() - Date.parse(iso)) / 864e5)) : 0)
-    if (laatsteNoShow) { uit.push({ accountId: a.id, naam: a.naam, reden: 'No-show opnieuw inplannen', vormAdvies: advies(a), dagenAchter: dagen(laatsteNoShow.start), soort: 'no-show' }); continue }
-    if (['afspraak', 'gesproken'].includes(a.laatsteUitkomst ?? '') && !['afspraak-gepland', 'afspraak-gehouden', 'overgedragen', 'verloren', 'geparkeerd'].includes(a.faseId ?? '')) { uit.push({ accountId: a.id, naam: a.naam, reden: 'Eerste gesprek nog niet ingepland', vormAdvies: advies(a), dagenAchter: dagen(a.laatsteContactOp), soort: 'eerste-gesprek' }); continue }
-    if (a.ritmeVolgendeOp && Date.parse(a.ritmeVolgendeOp) <= nu.getTime()) uit.push({ accountId: a.id, naam: a.naam, reden: a.klasse ? 'Ritme loopt af' : 'Ritme loopt af (nog geen klasse)', vormAdvies: advies(a), dagenAchter: dagen(a.ritmeVolgendeOp), soort: 'ritme' })
+    const voeg = (soort: Voorstel['soort'], reden: string, dagenAchter: number, uitleg: string, nuNodig: boolean) => {
+      const vorm = advies(a)
+      const code = adviesCode(vorm)
+      // Fysiek op de regiodag heeft zijn eigen dag; de andere vormen krijgen hoe snel het moet.
+      const adviesLabel = code === 'fysiek' ? vorm : `${vorm} ${nuNodig ? 'vandaag' : 'deze week'}`
+      uit.push({ accountId: a.id, naam: a.naam, reden, vormAdvies: vorm, dagenAchter, soort, uitleg, advies: code, adviesLabel })
+    }
+    const noShow = laatste('niet_verschenen')
+    if (noShow) { voeg('no-show', 'No-show opnieuw inplannen', dagen(noShow.start), `De afspraak van ${dagLabel(noShow.start)} ging niet door. Plan een nieuw moment voordat het contact afkoelt.`, true); continue }
+    const gehouden = laatste('afgerond')
+    if (gehouden && a.faseId === 'afspraak-gehouden') { const n = dagen(gehouden.start); voeg('na-eerste-afspraak', 'Eerste afspraak gehouden, nog geen vervolg', n, `De eerste afspraak was ${dagenTekst(n)}, maar er staat nog geen vervolg in de agenda. Zet de volgende stap vast zolang het gesprek vers is.`, n >= 3); continue }
+    if (['afspraak', 'gesproken'].includes(a.laatsteUitkomst ?? '') && !['afspraak-gepland', 'afspraak-gehouden', 'overgedragen', 'verloren', 'geparkeerd'].includes(a.faseId ?? '')) { const n = dagen(a.laatsteContactOp); voeg('eerste-gesprek', 'Eerste gesprek nog niet ingepland', n, `Het laatste contact ${n ? `${dagenTekst(n)} ` : ''}was positief, maar er staat nog geen eerste afspraak. Leg het moment vast.`, n >= 2); continue }
+    if (a.terugOp && a.terugOp <= vandaag) { const n = dagen(`${a.terugOp}T08:00:00Z`); voeg('terugkomen', 'Terugkomdatum bereikt', n, `Je zou op ${dagLabel(`${a.terugOp}T12:00:00Z`)} terugkomen op dit account. Zoek opnieuw contact.`, true); continue }
+    if (a.ritmeVolgendeOp && Date.parse(a.ritmeVolgendeOp) <= nu.getTime()) { const n = dagen(a.ritmeVolgendeOp); voeg('ritme', a.klasse ? 'Ritme loopt af' : 'Ritme loopt af (nog geen klasse)', n, a.klasse ? `Klasse ${/^kl-([a-z])-/i.test(a.klasse) ? a.klasse.slice(3, 4).toUpperCase() : a.klasse}: het contactritme liep ${dagenTekst(n)} af. Plan het volgende gesprek.` : `Het contactritme liep ${dagenTekst(n)} af. Dit account heeft nog geen klasse.`, n >= 1) }
   }
   return uit.sort((x, y) => REDEN_VOLGORDE.indexOf(x.soort) - REDEN_VOLGORDE.indexOf(y.soort) || y.dagenAchter - x.dagenAchter).slice(0, 8)
 }

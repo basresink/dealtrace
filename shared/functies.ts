@@ -15,7 +15,7 @@ import type {
 } from './types'
 import { NIVEAUS, PAKKETTEN } from './types'
 
-export type ZijbalkGroep = 'Start' | 'Activiteiten' | 'Prospects' | 'Resultaten' | 'Plannen' | 'Manager' | 'Beheer'
+export type ZijbalkGroep = 'Start' | 'Activiteiten' | 'Prospects' | 'Rapportages' | 'Plannen' | 'Manager' | 'Beheer'
 
 export interface Functie {
   sleutel: string
@@ -119,13 +119,13 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Een eigen prospectreis per doelgroep bouwen, met fases, overgangen en startactiviteiten.', totDieTijd: 'Je werkt met de standaardreis die je salesmanager heeft gekozen.' },
   },
   {
-    sleutel: 'nav.resultaten', naam: 'Mijn resultaten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'resultaten', startNiveau: 'beginner',
-    zijbalk: { groep: 'Resultaten', route: '/resultaten', icoon: 'ChartColumn' },
-    uitleg: { watHetDoet: 'Je eigen cijfers: pogingen, gesprekken, afspraken en overdrachten.', totDieTijd: 'Niets; Mijn resultaten staat altijd aan.' },
+    sleutel: 'nav.resultaten', naam: 'Mijn dashboard', pakket: 'starter', rollen: 'iedereen', helpartikel: 'resultaten', startNiveau: 'beginner',
+    zijbalk: { groep: 'Rapportages', route: '/mijn-dashboard', icoon: 'ChartColumn' },
+    uitleg: { watHetDoet: 'Je eigen cijfers: pogingen, gesprekken, afspraken en overdrachten.', totDieTijd: 'Niets; Mijn dashboard staat altijd aan.' },
   },
   {
     sleutel: 'nav.funnel', naam: 'Funnel', pakket: 'starter', rollen: 'iedereen', helpartikel: 'funnel', startNiveau: 'beginner',
-    zijbalk: { groep: 'Resultaten', route: '/funnel', icoon: 'Filter' },
+    zijbalk: { groep: 'Rapportages', route: '/funnel', icoon: 'Filter' },
     uitleg: { watHetDoet: 'Hoeveel accounts per fase van de prospectreis staan, doorstromen en uitvallen, tot en met de eerste afspraak.', totDieTijd: 'Je salesmanager bespreekt de funnel met je.' },
   },
   {
@@ -939,6 +939,11 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'verbruik.lezen', naam: 'AI-verbruik lezen', pakket: 'starter', rollen: ['salesmanager'], helpartikel: 'abonnement-verbruik-ai-credits', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'De AI-credits die de agents deze maand verbruikten.', totDieTijd: 'Vraag je beheerder.' },
   },
+  // Datakwaliteit: de gaten in je accounts, contacten, taken en afspraken, met een score.
+  {
+    sleutel: 'data.kwaliteit', naam: 'Datakwaliteit', pakket: 'starter', rollen: 'iedereen', helpartikel: 'datakwaliteit', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'Welke gegevens ontbreken bij je prospects en contacten: beslisser, telefoon, e-mail, branche, reis, verslagen en meer, met een score en een lijst per gat.', totDieTijd: 'Op de accountkaart zie je per account wat er ontbreekt.' },
+  },
   // P21: team, coaching, analyse en Mijn resultaten (F20).
   {
     sleutel: 'resultaten.trend', naam: 'Trend en teamgemiddelde', pakket: 'starter', rollen: 'iedereen', helpartikel: 'je-cijfers-lezen', startNiveau: 'gevorderd',
@@ -1149,7 +1154,7 @@ export function nieuwVoorMij(aanNu: string[], gezien: Record<string, string> | u
 /** De feature (hoofdstuk 7, F01 tot en met F26) waar een functie bij hoort, voor het raster van de founder. */
 const FEATURE_GROEPEN: [RegExp, string][] = [
   [/^(resultaten|coaching|analyse)\./, 'F20 Salesmanager en resultaten'], [/^waarnemer\.|^account\.(opnieuwOnderzoeken|bronnenVolgen)$/, 'F14 Agents en mandaten'], [/^nav\./, 'Navigatie'], [/^agenda\.|^instellingen\.meetingsoorten/, 'F09 Agenda en meetings'], [/^(bezoeken|onderweg)\./, 'F10 Bezoeken en kansen'], [/^regio\.|^instellingen\.gebieden/, 'F18 Gebieden en regio-analyse'], [/^(assistent|credits)\./, 'F26 AI-assistent en credits'], [/^campagnes\.|^instellingen\.campagnesoorten/, 'F12 Campagnes'], [/^(funnel|overdracht)\.|^instellingen\.funnelNormen|^koppelingen\.dealdrive/, 'F17 Funnel en overdracht'], [/^(briefing|pitstop|concepten|mail|whatsapp)\.|^koppeling\.(mail|whatsapp)|^instellingen\.(mailsjablonen|kanalen)/, 'F11 Briefings, Pitstop en mail'], [/^(spraak|meldingen)\.|^contact\.visitekaartje/, 'F24 Spraak en meldingen'], [/^vandaag\./, 'F06 Vandaag'], [/^(taken|inzichten)\./, 'F06 Taken en inzichten'],
-  [/^prospects\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
+  [/^prospects\.|^data\./, 'F02 Prospects'], [/^contacten\./, 'F03 Contacten'], [/^eigenVelden\./, 'F04 Eigen velden'], [/^import\./, 'F04 Importeren'],
   [/^(reis|reizen|account|doelgroepen)\.|^instellingen\.afkoeling/, 'F05 Prospectreis'], [/^ritme\.|^planning\.|^terugkomen\./, 'F13 Prospectplanning en ritme'],
   [/^agents\.|^verbruik\./, 'F14 Agents en mandaten'], [/^(regels|motor)\./, 'F15 Regels en motor'], [/^matrix\./, 'F16 Accountmatrix'],
   [/^platform\.|^roadmap$|^instellingen\.(abonnement|prompts|audit)$|^credits\./, 'F23 Platformbeheer en abonnement'], [/^help\.|^niveaus\.|^mij\./, 'F21 Helpcenter en niveaus'], [/^auth\.|^schil\./, 'F24 Inloggen en telefoon'], [/^richting\.|^verkoopverhaal\.|^account\.huidigeLeverancier|^koppeling\.salesdna|^salesdna\./, 'F25 Verkoopverhaal en Richting'], [/^belblok\.|^bellen\./, 'F07 Belblokken en belmodus'], [/^belscript\./, 'F08 Belscripts'], [/^leads\.|^koppeling\.kvk|^koppeling\.crm|^leadgenerator\.crm|^onderweg\.kvk|datacollectief/, 'F02 Leadgenerator'], [/^(gebruikers|instellingen)\./, 'F22 Instellingen'],

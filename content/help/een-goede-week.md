@@ -50,7 +50,7 @@ De week van Marloes, accountmanager bij Voltvast:
 2. Kies in de **Agenda** de weergave **Week**. Je belblokken staan er als grijs gestippeld vak, bezet uit je gekoppelde agenda als gearceerd vak.
 3. Bij **Acties** kies je de horizon om te zien wat er deze week aankomt.
 4. Vanaf Gevorderd zie je bij **Prospectplanning** onder **Wat knelt er nu** welke grote prospects nog niet benaderd zijn.
-5. Kijk op vrijdag bij **Mijn resultaten** naar je pogingen, gesprekken, afspraken en overdrachten.
+5. Kijk op vrijdag bij **Mijn dashboard** naar je pogingen, gesprekken, afspraken en overdrachten.
 
 ## Controlevragen
 

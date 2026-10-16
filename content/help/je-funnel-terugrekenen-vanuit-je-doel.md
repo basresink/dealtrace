@@ -44,7 +44,7 @@ Na een maand ziet Joost dat hij genoeg spreekt, maar dat maar 12 procent een afs
 
 ## Zo doe je het in Dealtrace
 
-Open de **Funnel**. Bovenaan staat waar het stokt, bijvoorbeeld "Hier stokt het: van Benaderd naar In gesprek 18 procent, norm 30 procent." Vanaf Gevorderd zie je per fase de conversie, de doorlooptijd en **Pogingen tot afspraak**. Kies **kwartaal** of **verkoopjaar** voor een stabieler beeld. Bij **Mijn resultaten** lees je **Gesprek naar afspraak** (norm meer dan 15 procent) en **Pogingen tot afspraak** (gezond is 4 tot 5). Gebruik die cijfers in je som. Je pogingen per dag plan je in bij **Belblokken**.
+Open de **Funnel**. Bovenaan staat waar het stokt, bijvoorbeeld "Hier stokt het: van Benaderd naar In gesprek 18 procent, norm 30 procent." Vanaf Gevorderd zie je per fase de conversie, de doorlooptijd en **Pogingen tot afspraak**. Kies **kwartaal** of **verkoopjaar** voor een stabieler beeld. Bij **Mijn dashboard** lees je **Gesprek naar afspraak** (norm meer dan 15 procent) en **Pogingen tot afspraak** (gezond is 4 tot 5). Gebruik die cijfers in je som. Je pogingen per dag plan je in bij **Belblokken**.
 
 ## Controlevragen
 

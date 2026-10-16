@@ -245,18 +245,21 @@ export async function zetAfspraakStatus(tx: Tx, org: string, afspraakId: string,
 export async function agendaVoor(tx: Tx, gebruikers: string[], van: Date, tot: Date) {
   if (!gebruikers.length) return { afspraken: [], belblokken: [], bezet: [], conflicten: [] as string[] }
   const lijst = gebruikers.join(',')
-  const afs = await rijen(tx, sql`select ap.*, m.naam as soort_naam, m.slug, m.type, m.data->>'kleur' as kleur, a.name as account_naam, u.name as owner_naam, g.name as gepland_door_naam
-    from appointments ap join meetingsoorten m on m.id = ap.meetingsoort_id left join accounts a on a.id = ap.account_id join users u on u.id = ap.owner_id left join users g on g.id = ap.gepland_door
+  const afs = await rijen(tx, sql`select ap.*, m.naam as soort_naam, m.slug, m.type, m.data->>'kleur' as kleur, a.name as account_naam, u.name as owner_naam, g.name as gepland_door_naam,
+    trim(coalesce(c.first_name, '') || ' ' || coalesce(c.last_name, '')) as contact_naam
+    from appointments ap join meetingsoorten m on m.id = ap.meetingsoort_id left join accounts a on a.id = ap.account_id join users u on u.id = ap.owner_id left join users g on g.id = ap.gepland_door left join contacts c on c.id = ap.contact_id
     where ap.owner_id = any(string_to_array(${lijst}, ',')) and ap.end_at > ${van.toISOString()} and ap.start_at < ${tot.toISOString()} and ap.status <> 'geannuleerd' order by ap.start_at`)
-  const blokken = await rijen(tx, sql`select id, gebruiker_id, start_op, eind_op, status from belblok_sessies where gebruiker_id = any(string_to_array(${lijst}, ',')) and eind_op > ${van.toISOString()} and start_op < ${tot.toISOString()} and status in ('gepland', 'bezig')`)
+  // Afgeronde blokken komen mee (de agenda toont ze als hele-dag-item met het aantal gesprekken).
+  const blokken = await rijen(tx, sql`select s.id, s.gebruiker_id, s.start_op, s.eind_op, s.status, greatest(coalesce((s.data->'resultaat'->>'gevoerd')::int, 0), jsonb_array_length(coalesce(s.data->'gesprekken', '[]'::jsonb)), (select count(*)::int from tasks t where t.belblok_id = s.id)) as gesprekken
+    from belblok_sessies s where s.gebruiker_id = any(string_to_array(${lijst}, ',')) and s.eind_op > ${van.toISOString()} and s.start_op < ${tot.toISOString()} and s.status in ('gepland', 'bezig', 'klaar')`)
   const uitAfs = afs.map((x) => ({
     id: x.id, ownerId: x.owner_id, ownerNaam: x.owner_naam, geplandDoor: x.gepland_door !== x.owner_id ? x.gepland_door_naam : null, accountId: x.account_id, accountNaam: x.account_naam,
-    soort: { naam: x.soort_naam, slug: x.slug, type: x.type, kleur: x.kleur }, vorm: x.vorm, status: x.status, start: new Date(x.start_at).toISOString(), eind: new Date(x.end_at).toISOString(), uitkomst: x.uitkomst_code, locatie: x.data?.locatie ?? null, meetinglink: x.data?.meetinglink ?? null,
+    soort: { naam: x.soort_naam, slug: x.slug, type: x.type, kleur: x.kleur }, vorm: x.vorm, status: x.status, start: new Date(x.start_at).toISOString(), eind: new Date(x.end_at).toISOString(), uitkomst: x.uitkomst_code, locatie: x.data?.locatie ?? null, meetinglink: x.data?.meetinglink ?? null, contactNaam: x.contact_naam || null,
   }))
   const bezet = gebruikers.length === 1 ? await bezetExtern(tx, gebruikers[0]!, van, tot) : []
   return {
     afspraken: uitAfs,
-    belblokken: blokken.map((b) => ({ id: b.id, gebruikerId: b.gebruiker_id, start: new Date(b.start_op).toISOString(), eind: new Date(b.eind_op).toISOString(), status: b.status })),
+    belblokken: blokken.map((b) => ({ id: b.id, gebruikerId: b.gebruiker_id, start: new Date(b.start_op).toISOString(), eind: new Date(b.eind_op).toISOString(), status: b.status, gesprekken: Number(b.gesprekken ?? 0) })),
     bezet, conflicten: [...conflicten(uitAfs.map((a) => ({ id: a.id, ownerId: a.ownerId, start: a.start, eind: a.eind, status: a.status })))],
   }
 }

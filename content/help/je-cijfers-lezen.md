@@ -2,8 +2,8 @@
 titel: Je cijfers lezen
 categorie: Jezelf verbeteren
 collectie: newbusiness
-samenvatting: Wat Mijn resultaten laat zien, hoe je de vergelijking met het team leest en wat de Coach voorstelt.
-routes: /resultaten
+samenvatting: Wat Mijn dashboard laat zien, hoe je de vergelijking met het team leest en wat de Coach voorstelt.
+routes: /mijn-dashboard
 ---
 
 # Je cijfers lezen
@@ -39,7 +39,7 @@ Marloes belt genoeg, maar spreekt te weinig beslissers en stopt te vroeg. Ze vra
 
 ## Zo doe je het in Dealtrace
 
-Bij **Mijn resultaten** zie je je eigen cijfers. Ze komen allemaal uit wat je in Dealtrace doet: pogingen, gesprekken, afspraken en overdrachten. Niemand vult ze met de hand in.
+Bij **Mijn dashboard** zie je je eigen cijfers. Ze komen allemaal uit wat je in Dealtrace doet: pogingen, gesprekken, afspraken en overdrachten. Niemand vult ze met de hand in.
 
 - **Pogingen**: elke keer dat je belt, mailt, een bericht stuurt of langsgaat.
 - **Gesprekken**: pogingen waarin je iemand sprak.

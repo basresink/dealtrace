@@ -17,6 +17,27 @@ test('Jaarplanning: knelpunten, kalender en maanddetail; Plan in belblokken met 
   await expect(page.getByText(/belpogingen ingepland/)).toBeVisible()
 })
 
+test('Opzet DealDrive: tellers, Jaar of Kwartaal, maanddetail met Toon ook benaderde', async ({ page }) => {
+  await login(page, 'u-07')
+  await ga(page, '/planning')
+  await expect(page.getByTestId('plan-tellers')).toContainText('Ingedeeld')
+  await expect(page.getByTestId('teller-telaat')).toContainText('Te laat')
+  await page.getByTestId('weergave-kwartaal').click()
+  await expect(page.getByTestId('kwartalen').locator('[data-test^="kwartaal-"]')).toHaveCount(4)
+  await expect(page.getByTestId('kalender').locator('.maandtegel')).toHaveCount(3)
+  await page.getByTestId('kwartaal-1').click()
+  await expect(page.getByTestId('kalender').locator('.maandtegel').first()).toHaveAttribute('data-maand', '1')
+  await expect(page.getByTestId('maand-titel')).toContainText('Aan de beurt')
+  await page.getByTestId('weergave-jaar').click()
+  await expect(page.getByTestId('kalender').locator('.maandtegel')).toHaveCount(12)
+  const toon = page.getByTestId('toon-benaderde')
+  if (await toon.count()) {
+    const voor = await page.locator('.plan-rij').count()
+    await toon.click()
+    expect(await page.locator('.plan-rij').count()).toBeGreaterThan(voor)
+  }
+})
+
 test('Terugkomregels: zes regels in twee lijsten, hc-04 direct, alle klassen; slapende klanten leeg', async ({ page }) => {
   await login(page, 'u-07')
   await ga(page, '/planning?tab=terugkom')

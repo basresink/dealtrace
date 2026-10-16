@@ -1,8 +1,8 @@
 // GET /api/vandaag: alle blokken van Vandaag in één antwoord (F01). De laptop (P07) en de
-// telefoon (P32) gebruiken hetzelfde. Blokken zonder bron laten we weg.
-import { doorAgentsSamenvatting } from '../../../shared/agents'
+// telefoon (P32) gebruiken hetzelfde. Blokken zonder bron laten we weg. Het dashboard en de AI-blokken
+// komen uit /api/vandaag/dashboard.
 import { and, eq, gte, inArray, sql } from 'drizzle-orm'
-import { nlMoment, plusDagen, volgendeWerkdag } from '../../../shared/datum'
+import { nlMoment, plusDagen } from '../../../shared/datum'
 import { ordenTaken, isAchterstallig } from '../../../shared/taken'
 import { groetVoor, kiesAanleidingVanDeDag, samenvattingsregel, vandaagKicker } from '../../../shared/vandaag'
 import { kan } from '../../utils/accounts'
@@ -64,38 +64,10 @@ export default defineEventHandler(async (event) => {
       .filter((s, i, l) => l.findIndex((x) => x.accountId === s.accountId) === i).slice(0, 6)
       .map((s) => ({ id: s.id, titel: s.title, tekst: s.data?.waarom ?? null, bron: s.bron, bronNaam: (s.data as any)?.specifiekeBron ?? (s.agent ? s.agent[0]!.toUpperCase() + s.agent.slice(1) : s.bron === 'extern' ? 'Extern' : 'Intern'), op: s.createdAt, relevantie: s.relevanceScore, type: s.type, account: { id: s.accountId!, naam: per.get(s.accountId!)?.naam ?? '' } }))
 
-    const gevorderd = ctx.gebruiker.niveau !== 'beginner' || ctx.organisatie.iedereenAlles
     const [mij] = await tx.select({ werkplek: schema.users.werkplek, data: schema.users.data }).from(schema.users).where(eq(schema.users.id, mijn))
     const werkplek = mij?.werkplek ?? 'binnendienst'
     const belTaken = vandaagEnEerder.filter((t) => t.actionType === 'bellen').length
     const bezoekTaken = vandaagEnEerder.filter((t) => t.actionType === 'bezoek').length
-
-    // Door agents en de motor gedaan sinds gisteren.
-    const gisteren = new Date(nu.getTime() - 24 * 3600_000).toISOString()
-    const motorTaken = (await tx.execute(sql`select count(*)::int n from tasks where owner_id = ${mijn} and rule_id is not null and created_at >= ${gisteren}`)).rows[0] as { n: number }
-    const motorInzichten = (await tx.execute(sql`select count(*)::int n from signals where owner_id = ${mijn} and created_at >= ${gisteren}`)).rows[0] as { n: number }
-    const geparkeerd = (await tx.execute(sql`select count(*)::int n from reisgeschiedenis r join accounts a on a.id = r.account_id where a.owner_id = ${mijn} and r.gebeurtenis = 'geparkeerd' and r.op >= ${gisteren}`)).rows[0] as { n: number }
-    // P19: één regel uit het logboek van de agents ("3 dossiers ververst · 2 nieuwe aanleidingen").
-    const agentRuns = (await tx.execute(sql`select r.agent, r.handeling, r.uitkomst from agent_runs r left join accounts a on a.id = r.account_id
-      where r.op >= ${gisteren} and r.uitkomst = 'uitgevoerd' and (a.owner_id = ${mijn} or r.gebruiker_id = ${mijn})`)).rows as { agent: string; handeling: string; uitkomst: string }[]
-
-    // Datakwaliteit: de drie grootste gaten bij je actieve prospects.
-    const actief = eigen.filter((a) => a.kind === 'prospect' && ['nieuw', 'in reis'].includes(a.nbStatus))
-    const contacten = actief.length ? await tx.select({ accountId: schema.contacts.accountId, rol: schema.contacts.rol, status: schema.contacts.status, email: schema.contacts.email, data: schema.contacts.data }).from(schema.contacts).where(inArray(schema.contacts.accountId, actief.map((a) => a.id))) : []
-    const cs = (id: string) => contacten.filter((c) => c.accountId === id && c.status !== 'vertrokken')
-    const gaten = [
-      { sleutel: 'zonderTelefoon', tekst: 'actieve prospects zonder telefoonnummer', aantal: actief.filter((a) => !a.data?.telefoon && !cs(a.id).some((c) => c.data?.telefoon || c.data?.mobiel)).length, knop: 'Verrijk' },
-      { sleutel: 'zonderBeslisser', tekst: 'actieve prospects zonder beslisser', aantal: actief.filter((a) => !cs(a.id).some((c) => c.rol === 'beslisser')).length, knop: 'Maak taak' },
-      { sleutel: 'zonderEmail', tekst: 'actieve prospects zonder e-mailadres', aantal: actief.filter((a) => !a.data?.email && !cs(a.id).some((c) => c.email)).length, knop: 'Verrijk' },
-    ].filter((g) => g.aantal > 0).sort((a, b) => b.aantal - a.aantal).slice(0, 3)
-
-    // Jouw week: vijf werkdagen met aantallen taken.
-    const week: { datum: string; taken: number; afspraken: number; belblokken: number; regiodagen: number }[] = []
-    let d = v
-    for (let i = 0; i < 5; i++) {
-      week.push({ datum: d, taken: taken.filter((t) => t.dueDate && nlMoment(new Date(t.dueDate)).datum === d).length, afspraken: 0, belblokken: 0, regiodagen: 0 })
-      d = volgendeWerkdag(d)
-    }
 
     // Team vandaag (salesmanager): wie loopt achter, wat wacht op goedkeuring.
     let team: { naam: string; open: number; achterstallig: number; inzichten: number }[] | null = null
@@ -110,7 +82,6 @@ export default defineEventHandler(async (event) => {
     }
 
     const volgendeKoud = geordend.find((t) => t.actionType === 'bellen' && t.dueDate && Date.parse(t.dueDate) >= nu.getTime())
-    const volgorde = ((mij?.data as any)?.vandaagVolgorde as string[] | undefined) ?? ['agents', 'datakwaliteit', 'week']
     const aanleidingAccount = aanleiding?.accountId ? per.get(aanleiding.accountId) : null
     // P10: het belblok van vandaag dat nog loopt, met zijn open gesprekken.
     // P32: de telefoonweergave uit dezelfde rekenkern; de laptop leest er de focusregel uit.
@@ -134,13 +105,8 @@ export default defineEventHandler(async (event) => {
         : blokVandaag
           ? { soort: 'belblok', titel: 'BELBLOK', tekst: `${new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(blokVandaag.start_op))} · ${blokVandaag.n} ${blokVandaag.n === 1 ? 'gesprek' : 'gesprekken'}`, knop: { tekst: 'Start belblok', naar: `/belblokken/${blokVandaag.id}` } }
           : { soort: 'belblok', titel: 'BELBLOK', tekst: belTaken ? `${belTaken} ${belTaken === 1 ? 'gesprek' : 'gesprekken'} · ongeveer ${belTaken * 8} min · nog geen belblok gepland` : 'Nog geen belblok gepland', knop: { tekst: belTaken ? 'Plan een belblok' : 'Naar belblokken', naar: '/belblokken' } },
-      concepten: { aantal: taken.filter((t) => (t.data as any)?.concept).length },
-      agents: gevorderd && kan(ctx, 'vandaag.agentsGedaan') ? { taken: motorTaken.n, inzichten: motorInzichten.n, geparkeerd: geparkeerd.n, samenvatting: doorAgentsSamenvatting(agentRuns) } : null,
-      datakwaliteit: gevorderd ? gaten : null,
-      week: gevorderd && kan(ctx, 'vandaag.week') ? week : null,
       team: kan(ctx, 'vandaag.team') ? team : null,
-      volgorde,
-      kan: { indeling: kan(ctx, 'vandaag.indeling'), nieuwProspect: kan(ctx, 'prospects.nieuw'), voorlezen: kan(ctx, 'vandaag.voorlezen'), week: kan(ctx, 'vandaag.dagkiezerWeek') },
+      kan: { nieuwProspect: kan(ctx, 'prospects.nieuw'), voorlezen: kan(ctx, 'vandaag.voorlezen'), week: kan(ctx, 'vandaag.dagkiezerWeek') },
       telefoon: { ...tel, vandaag: nlMoment(echtNu).datum, groet: `${groetVoor(echtNu)}, ${ctx.gebruiker.naam.replace(/^Test(gebruiker|founder)\s+/, '').split(' ')[0]}.`, werkplek, niveau },
     }
   })

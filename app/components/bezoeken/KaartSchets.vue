@@ -36,3 +36,9 @@ const lijn = computed(() => props.punten.map((p) => { const q = xy(p); return `$
     <p v-else class="meta">Nog geen punten om te tonen.</p>
   </div>
 </template>
+
+<style scoped>
+/* Stops zoals in DealDrive: zwart met gele rand, de volgende rood met witte rand. */
+.ks-stop circle { stroke: var(--yellow); stroke-width: 2.5; }
+.ks-stop--volgende circle { stroke: var(--wit); }
+</style>

@@ -2,7 +2,7 @@
 // aan de beurt?" met prospects zonder klasse (gat 33), vormadvies, vrije momenten met bezet uit de
 // koppeling (gat 37) en conflicten.
 import { describe, expect, it } from 'vitest'
-import { aanDeBeurt, conflicten, isEersteAfspraak, meetingUitkomst, MEETINGSOORTEN_START, vormAdvies, vrijeMomentenAgenda, type AfspraakKort } from '../../shared/agenda'
+import { aanDeBeurt, adviesCode, conflicten, isEersteAfspraak, meetingUitkomst, MEETINGSOORTEN_START, vormAdvies, vrijeMomentenAgenda, type AfspraakKort } from '../../shared/agenda'
 
 const soort = (slug: string) => MEETINGSOORTEN_START.find((m) => m.slug === slug)!
 const nu = new Date('2026-10-20T08:00:00Z')
@@ -83,6 +83,27 @@ describe('aanDeBeurt', () => {
     expect(r[0]).toMatchObject({ accountId: 'p5', reden: 'No-show opnieuw inplannen' })
     expect(r[1]).toMatchObject({ accountId: 'p3', reden: 'Eerste gesprek nog niet ingepland' })
     expect(r.some((v) => v.accountId === 'p6')).toBe(false)
+  })
+  it('eerste afspraak gehouden zonder vervolg en terugkomdatum, met uitleg en adviescode', () => {
+    const accounts = [
+      { id: 'g1', naam: 'Gehouden', faseId: 'afspraak-gehouden' },
+      { id: 't1', naam: 'Terug', nbStatus: 'wachtend', terugOp: '2026-10-01' },
+      { id: 't2', naam: 'Nog niet terug', nbStatus: 'wachtend', terugOp: '2099-01-01' },
+    ]
+    const afs: AfspraakKort[] = [{ id: 'h', accountId: 'g1', status: 'afgerond', start: '2026-10-01T08:00:00Z' }]
+    const r = aanDeBeurt(accounts, afs, nu, (a) => (a.id === 'g1' ? 'Online' : 'Taak in belblok'))
+    expect(r.map((v) => v.soort)).toEqual(['na-eerste-afspraak', 'terugkomen'])
+    expect(r[0]).toMatchObject({ advies: 'online', adviesLabel: 'Online vandaag' })
+    expect(r[0]!.uitleg).toMatch(/geen vervolg/)
+    expect(r[1]).toMatchObject({ advies: 'belblok', reden: 'Terugkomdatum bereikt' })
+    expect(r[1]!.uitleg).toMatch(/1 oktober/)
+  })
+  it('adviescode volgt het vormadvies; fysiek houdt zijn regiodag', () => {
+    expect(adviesCode('Belafspraak')).toBe('belafspraak')
+    expect(adviesCode('Fysiek · dinsdag Regio Oost')).toBe('fysiek')
+    const r = aanDeBeurt([{ id: 'p1', naam: 'P', klasse: 'B', ritmeVolgendeOp: '2026-10-01T08:00:00Z' }], [], nu, () => 'Fysiek · dinsdag Regio Oost')
+    expect(r[0]).toMatchObject({ advies: 'fysiek', adviesLabel: 'Fysiek · dinsdag Regio Oost' })
+    expect(r[0]!.uitleg).toMatch(/^Klasse B: het contactritme liep \d+ dagen geleden af/)
   })
 })
 

@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
       if (al) return { id: al.id, herhaald: true }
     }
     const [n] = (await tx.execute(sql`insert into coaching_notities (organisation_id, gebruiker_id, manager_id, soort, tekst, termijn, sessie_id, data) values (${ctx.organisatie.id}, ${u.id}, ${ctx.gebruiker.id}, ${b.soort}, ${tekst.slice(0, 1000)}, ${b.termijn ?? null}, ${b.sessieId ?? null}, ${JSON.stringify(b.sleutel ? { sleutel: b.sleutel } : {})}::jsonb) returning id`)).rows as any[]
-    if (b.soort === 'afspraak') await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${crypto.randomUUID()}, ${ctx.organisatie.id}, ${u.id}, 'systeem', 'Coachingafspraak gedeeld', ${tekst.slice(0, 200)}, '/resultaten', now(), '{}'::jsonb)`)
+    if (b.soort === 'afspraak') await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${crypto.randomUUID()}, ${ctx.organisatie.id}, ${u.id}, 'systeem', 'Coachingafspraak gedeeld', ${tekst.slice(0, 200)}, '/mijn-dashboard', now(), '{}'::jsonb)`)
     return { id: n.id }
   })
 })

@@ -7,7 +7,7 @@ samenvatting: Zo haal je meer uit je coachingsgesprek: kies één ding, neem een
 
 # Feedback vragen aan je salesmanager
 
-Een coachingsgesprek levert het meest op als jij de vraag meeneemt. Je salesmanager ziet dezelfde cijfers als jij bij **Mijn resultaten**. Gebruik dat.
+Een coachingsgesprek levert het meest op als jij de vraag meeneemt. Je salesmanager ziet dezelfde cijfers als jij bij **Mijn dashboard**. Gebruik dat.
 
 ## Waarom dit werkt
 
@@ -46,10 +46,10 @@ Joost in zijn coachingsgesprek met Hilde, zijn salesmanager:
 
 ## Zo doe je het in Dealtrace
 
-1. Open **Mijn resultaten** en kijk welk cijfer bij je vraag hoort, bijvoorbeeld **Gesprek naar afspraak**.
+1. Open **Mijn dashboard** en kijk welk cijfer bij je vraag hoort, bijvoorbeeld **Gesprek naar afspraak**.
 2. Zoek het verslag van het gesprek dat je wilt bespreken. Het staat bij de afspraak of in de **Geschiedenis** op de accountkaart.
 3. Je salesmanager bereidt het gesprek voor bij **Coaching**, met cijfers en voorbeelden uit je eigen werk.
-4. De afspraken die jullie maken, staan daarna onderaan bij **Mijn resultaten**. Met **Reageer** laat je weten hoe het gaat.
+4. De afspraken die jullie maken, staan daarna onderaan bij **Mijn dashboard**. Met **Reageer** laat je weten hoe het gaat.
 
 Een privénotitie van je salesmanager zie je niet. Alles wat met jou is afgesproken, wel.
 

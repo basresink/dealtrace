@@ -33,3 +33,41 @@ export function vandaagKicker(nu: Date): string {
   const week = Math.ceil(((d.getTime() - Date.UTC(d.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7)
   return `VANDAAG · ${dag} · WEEK ${week}`
 }
+
+/** De cijfers achter het dashboard op Vandaag ("Jouw resultaten · deze maand"). */
+export interface DashboardStand {
+  prospects: number; zonderContact: number; inzichtenOpen: number; verlopen: number; afsprakenMaand: number
+  tempo: { stand: 'op schema' | 'achter' | 'geen'; pogingen: number }; conversie: { waarde: number; noemer: number | null }
+}
+/** Eén zin die de stand samenvat en een duiding eronder; de eerste regel die past, wint. */
+export function dashboardKop(s: DashboardStand): { kop: string; duiding: string } {
+  const mv = (n: number, een: string, meer: string) => `${n} ${n === 1 ? een : meer}`
+  const kop = s.inzichtenOpen > 5
+    ? `${mv(s.inzichtenOpen, 'inzicht wacht', 'inzichten wachten')}. Er ligt ruimte om op te pakken.`
+    : s.tempo.stand === 'op schema'
+      ? `Op schema: ${mv(s.tempo.pogingen, 'poging', 'pogingen')} deze week en ${mv(s.afsprakenMaand, 'afspraak', 'afspraken')} deze maand.`
+      : s.afsprakenMaand > 0
+        ? `${mv(s.afsprakenMaand, 'afspraak', 'afspraken')} deze maand. Elke poging brengt de volgende dichterbij.`
+        : `${mv(s.prospects, 'prospect', 'prospects')} in je lijst. Elke dag dat je er één raakt, telt.`
+  const pct = Math.round(s.conversie.waarde * 100)
+  const duiding = s.verlopen > 0
+    ? `${mv(s.verlopen, 'taak staat', 'taken staan')} over tijd. Wie die vandaag wegwerkt, begint morgen schoon.`
+    : s.conversie.noemer && s.conversie.waarde >= 0.15
+      ? `Je zet ${pct}% van je gesprekken om in een afspraak, boven de norm van 15%. Meer gesprekken is nu de hefboom.`
+      : s.zonderContact > 0
+        ? `${mv(s.zonderContact, 'prospect heeft', 'prospects hebben')} nog geen eerste contactmoment. Daar zitten de afspraken van volgende maand.`
+        : 'Regelmaat wint van losse uitschieters. Vandaag is de dag waar je iets aan kunt doen.'
+  return { kop, duiding }
+}
+
+/** Een regel in de tijdlijn "Door AI agents gedaan". */
+export interface AgentGebeurtenis { soort: 'taak' | 'inzicht' | 'geparkeerd' | 'verrijkt' | 'tegengehouden' | 'concept' | 'overig'; agent: string; actie: string; account: string | null; accountId: string | null; op: string }
+/** Tellers boven de tijdlijn; alleen soorten die voorkomen, in vaste volgorde. */
+export function agentTellers(tel: Partial<Record<AgentGebeurtenis['soort'], number>>): { soort: AgentGebeurtenis['soort']; aantal: number; label: string }[] {
+  const LABEL: [AgentGebeurtenis['soort'], string, string][] = [
+    ['taak', 'taak klaargezet', 'taken klaargezet'], ['inzicht', 'inzicht', 'inzichten'], ['concept', 'concept', 'concepten'],
+    ['verrijkt', 'verrijkt', 'verrijkt'], ['geparkeerd', 'geparkeerd', 'geparkeerd'], ['tegengehouden', 'tegengehouden', 'tegengehouden'],
+  ]
+  return LABEL.map(([soort, een, meer]) => { const n = tel[soort] ?? 0; return { soort, aantal: n, label: n === 1 ? een : meer } })
+    .filter((t) => t.aantal > 0 || ['taak', 'inzicht', 'tegengehouden'].includes(t.soort))
+}

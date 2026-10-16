@@ -444,7 +444,7 @@ export async function seedEva(client: pg.Client, orgId: string, nu = new Date())
     ['m-eva-5', 'inzicht', 'Concept klaar ter goedkeuring', 'Opvolgmail aan Testtechniek Vathorst.', '/concepten', 2, false],
     ['m-eva-6', 'herinnering', 'Testwater Baarn komt vandaag terug', 'Uit de wachtstand, met de overname als aanleiding.', '/accounts/eva-a11', 4, false],
     ['m-eva-7', 'systeem', 'Belblok gevuld', 'Je belblok van vandaag 09:00 heeft 3 gesprekken.', '/belblokken', 20, true],
-    ['m-eva-8', 'inzicht', 'Coachingpunt gedeeld', 'Joost deelde een punt uit jullie gesprek.', '/resultaten', 6 * 24, true],
+    ['m-eva-8', 'inzicht', 'Coachingpunt gedeeld', 'Joost deelde een punt uit jullie gesprek.', '/mijn-dashboard', 6 * 24, true],
   ]
   for (const [id, soort, titel, tekst, link, uren, gelezen] of MELDINGEN) {
     const op = uurGeleden(uren)

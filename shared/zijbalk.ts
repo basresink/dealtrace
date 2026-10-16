@@ -24,7 +24,7 @@ export interface Zijbalk {
   nietAangezet: ZijbalkItem[]
 }
 
-const GROEPEN: ZijbalkGroep[] = ['Start', 'Activiteiten', 'Prospects', 'Resultaten', 'Plannen', 'Manager', 'Beheer']
+const GROEPEN: ZijbalkGroep[] = ['Start', 'Activiteiten', 'Prospects', 'Rapportages', 'Plannen', 'Manager', 'Beheer']
 
 function naarItem(f: Functie, label?: string): ZijbalkItem {
   const z = f.zijbalk!

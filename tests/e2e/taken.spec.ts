@@ -35,11 +35,13 @@ test.describe('Vandaag', () => {
     await expect(page.getByTestId('werkblok')).toContainText('BEZOEKDAG')
   })
 
-  test('binnendienst ziet het belblokvak; salesmanager ziet Team vandaag; Beginner geen blok 6 tot en met 8', async ({ page }) => {
+  test('binnendienst ziet het belblokvak; salesmanager ziet Team vandaag; Beginner geen agents-blok', async ({ page }) => {
     await login(page, 'u-03')
     await ga(page, '/')
     await expect(page.getByTestId('werkblok')).toContainText('BELBLOK')
-    await expect(page.getByTestId('week')).toBeVisible()
+    await expect(page.getByTestId('agents')).toBeVisible()
+    await expect(page.getByTestId('week')).toHaveCount(0)
+    await expect(page.getByTestId('datakwaliteit')).toHaveCount(0)
     await expect(page.getByTestId('team-vandaag')).toHaveCount(0)
     await login(page, 'u-04')
     await ga(page, '/')
@@ -128,6 +130,52 @@ test.describe('inzichten', () => {
     expect(taken.some((t: any) => t.herkomst === 'inzicht')).toBe(true)
     await ga(page, '/acties?herkomst=inzicht')
     await expect(page.locator('.taak-kaart').first()).toContainText('Uit inzicht')
+  })
+
+  test('/inzichten in de opzet van DealDrive: kopregel, 3 kaarten per rij, flyout, filters in de URL en gelezen', async ({ page }) => {
+    await apiLogin(page.request, 'u-06')
+    await page.request.post('/api/motor/run', { data: {} })
+    await login(page, 'u-03')
+    await ga(page, '/inzichten?gelezen=alle')
+    await expect(page.getByTestId('inzichten-titel')).toHaveText('Wat speelt er bij je accounts?')
+    await expect(page.getByTestId('inzichten-aantal')).toHaveText(/^\d+ inzicht(en)?$/)
+    await expect(page.getByText('Klik op een kaart voor de volledige context')).toBeVisible()
+    const kaarten = page.locator('[data-test=inzichten] .inzicht-kaart')
+    await expect(kaarten.first()).toBeVisible()
+    // Kopbalk met accountnaam en soort, scoretegel, AI-context en de voet.
+    const eerste = kaarten.first()
+    await expect(eerste.locator('.ik-balk')).toBeVisible()
+    await expect(eerste.locator('.ik-score')).toHaveText(/^\d+$/)
+    await expect(eerste.locator('.ik-tag')).toHaveText(/^(Intern|Extern|Agenda)$/)
+    await expect(eerste.getByRole('button', { name: '+ Maak taak' })).toBeVisible()
+    // Drie per rij op een breed scherm.
+    if ((await kaarten.count()) >= 3) {
+      const y = await Promise.all([0, 1, 2].map(async (n) => (await kaarten.nth(n).boundingBox())!.y))
+      expect(new Set(y.map(Math.round)).size).toBe(1)
+      if ((await kaarten.count()) >= 4) expect(Math.round((await kaarten.nth(3).boundingBox())!.y)).toBeGreaterThan(Math.round(y[0]!))
+    }
+    // Klik op de kaart opent de flyout.
+    await eerste.locator('.ik-tekst, .ik-titel').first().click()
+    await expect(page.getByTestId('inzicht-flyout')).toBeVisible()
+    await page.getByTestId('inzicht-flyout').getByRole('button', { name: 'Sluiten' }).click()
+    // Filters staan in de URL; teller en periode.
+    await page.getByTestId('inzicht-filters').click()
+    await page.getByTestId('sinds-week').click()
+    await expect(page).toHaveURL(/sinds=week/)
+    await page.getByTestId('inzicht-stat-hot').click()
+    await expect(page).toHaveURL(/teller=hot/)
+    await page.getByTestId('reset-filters').click()
+    await expect(page).not.toHaveURL(/sinds=/)
+    // Markeer als gelezen vanaf de kaart: de kaart verdwijnt uit Ongelezen.
+    await ga(page, '/inzichten')
+    const kaart = page.locator('[data-test=inzichten] .inzicht-kaart').first()
+    const id = (await kaart.getAttribute('data-test'))!
+    await kaart.getByTestId('kaart-gelezen').click()
+    await expect(page.locator(`[data-test="${id}"]`)).toHaveCount(0)
+    // Een link met ?inzicht= opent dat inzicht, ook als het gelezen is; dezelfde feed staat bij Acties.
+    await ga(page, `/acties?tab=inzichten&inzicht=${id.replace('inzicht-', '')}`)
+    await expect(page.getByTestId('inzicht-flyout')).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1440)
   })
 })
 

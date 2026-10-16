@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
     const punten = b?.punten ? b.punten.filter((p) => p.tekst?.trim()).slice(0, 3).map((p) => ({ tekst: p.tekst.trim().slice(0, 300), onderbouwing: p.onderbouwing ?? null, artikelSleutel: p.artikelSleutel ?? null, gedeeld: !!p.gedeeld })) : s.data?.punten ?? []
     const nieuwGedeeld = punten.filter((p: any) => p.gedeeld).length > (s.data?.punten ?? []).filter((p: any) => p.gedeeld).length
     await tx.execute(sql`update coaching_sessies set data = data || ${JSON.stringify({ punten, ...(b?.gesprekken ? { gesprekken: b.gesprekken.slice(0, 5) } : {}) })}::jsonb, updated_at = now() where id = ${id}`)
-    if (nieuwGedeeld) await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${crypto.randomUUID()}, ${ctx.organisatie.id}, ${s.gebruiker_id}, 'systeem', 'Coachingpunt gedeeld', 'Je salesmanager deelde een coachingpunt met je.', '/resultaten', now(), '{}'::jsonb)`)
+    if (nieuwGedeeld) await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${crypto.randomUUID()}, ${ctx.organisatie.id}, ${s.gebruiker_id}, 'systeem', 'Coachingpunt gedeeld', 'Je salesmanager deelde een coachingpunt met je.', '/mijn-dashboard', now(), '{}'::jsonb)`)
     return { id, punten }
   })
 })
