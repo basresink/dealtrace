@@ -13,11 +13,6 @@ const niveau = computed(() => {
   return n ? NIVEAU_LABEL[n] : 'Gevorderd'
 })
 
-function opEscape(e: KeyboardEvent) {
-  if (e.key === 'Escape' && open.value) sluit()
-}
-onMounted(() => window.addEventListener('keydown', opEscape))
-onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 </script>
 
 <template>
@@ -40,7 +35,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
         <footer class="fo-foot fs-voet">
           <NuxtLink class="dd-actie dd-actie--zwart fs-hoofdactie" :to="`/helpcenter/${f.helpartikel}`" @click="sluit"><Icoon naam="BookOpen" class="dd-act-icoon" />Lees hoe het werkt</NuxtLink>
           <span class="fo-foot-vul" />
-          <button type="button" class="dd-act" @click="sluit">Sluiten</button>
         </footer>
       </template>
     </FlyoutShell>

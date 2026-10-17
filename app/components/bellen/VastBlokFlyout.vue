@@ -18,9 +18,6 @@ const duren = computed(() => (DUREN.includes(f.value.minuten) ? DUREN : [...DURE
 watch(() => f.value.soort, (s) => { if (s === 'gemengd' && f.value.verhouding === undefined) f.value.verhouding = STANDAARD_VERHOUDING })
 
 function bewaar() { if (!fouten.value.length) emit('bewaar', { ...f.value }) }
-function toets(e: KeyboardEvent) { if (e.key === 'Escape' && props.open) emit('sluit') }
-onMounted(() => window.addEventListener('keydown', toets))
-onBeforeUnmount(() => window.removeEventListener('keydown', toets))
 </script>
 
 <template>

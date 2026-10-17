@@ -43,7 +43,7 @@ const BRON: Record<string, string> = { koud: 'Koud', warm: 'Warm', winback: 'Win
           </div>
       <FlyoutShell v-if="bewerk" open titel-id="fs-planningritme0" breedte="smal" data-test="ritme-flyout" @sluit="bewerk = null">
         <template #kop><span class="fo-kicker">Hercontactritme</span><h2 id="fs-planningritme0" class="fo-titel">{{ bewerk.naam }}</h2></template>
-        <form id="fs-form" class="fs-form" @submit.prevent="bewaar">
+        <form id="pr-form" class="fs-form" @submit.prevent="bewaar">
           <div class="fo-body fo-body--formulier">
             <article class="fo-blok">
               <div v-for="(s, i) in bewerk.stappen" :key="i" class="formulier-raster">
@@ -57,7 +57,7 @@ const BRON: Record<string, string> = { koud: 'Koud', warm: 'Warm', winback: 'Win
         </form>
         <template #voet>
           <footer class="fo-foot fs-voet">
-          <button type="submit" form="fs-form" class="dd-actie dd-actie--zwart fs-hoofdactie"><Icoon naam="Check" :grootte="16" />Bewaren</button>
+          <button type="submit" form="pr-form" class="dd-actie dd-actie--zwart fs-hoofdactie"><Icoon naam="Check" :grootte="16" />Bewaren</button>
           <span class="fo-foot-vul" />
         </footer>
         </template>

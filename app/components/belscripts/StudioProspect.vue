@@ -74,9 +74,6 @@ const bron = ref<ProspectGegeven | null>(null)
 const waarom = ref(false)
 function toonBron(sleutel: string) { bron.value = p.value?.gegevens.find((g: ProspectGegeven) => g.sleutel === sleutel) ?? null }
 const gebruiktIn = (sleutel: string) => Object.entries(AI_HERKOMST).filter(([, l]) => (l ?? []).includes(sleutel as any)).map(([s]) => BLOK_LABEL[s as BlokSoortScript]).join(', ')
-const sluitMetEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') { bron.value = null; waarom.value = false } }
-onMounted(() => window.addEventListener('keydown', sluitMetEsc))
-onBeforeUnmount(() => window.removeEventListener('keydown', sluitMetEsc))
 
 const STATUS: Record<string, { label: string; klas: string }> = {
   bevestigd: { label: 'Bevestigd', klas: 'pil--groen' }, bewerkt: { label: 'Aangepast', klas: 'pil--groen' }, verworpen: { label: 'Terugvalzin', klas: 'pil--oranje' },
@@ -203,9 +200,6 @@ const rolTekst = (k: any) => [k.contactNaam, k.contactRol].filter(Boolean).join(
               <div class="def-rij"><dt>Status</dt><dd>{{ bron.gebruikt ? 'meegestuurd naar de AI' : 'ontbreekt, de terugvalzin geldt' }}</dd></div>
             </dl>
           </div>
-        <template #voet>
-          <footer class="fo-foot fs-voet"><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="bron = null">Sluiten</button></footer>
-        </template>
       </FlyoutShell>
       <FlyoutShell v-if="waarom && p" open titel-id="sp-waarom-titel" breedte="smal" data-test="sp-waarom-flyout" @sluit="waarom = false">
         <template #kop><span class="fo-kicker">Voorselectie</span><h2 id="sp-waarom-titel" class="fo-titel">Waarom dit script</h2></template>
@@ -217,9 +211,6 @@ const rolTekst = (k: any) => [k.contactNaam, k.contactRol].filter(Boolean).join(
               <div class="def-rij"><dt>AI-blokken</dt><dd>{{ p.aiBlokken }}</dd></div>
             </dl>
           </div>
-        <template #voet>
-          <footer class="fo-foot fs-voet"><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="waarom = false">Sluiten</button></footer>
-        </template>
       </FlyoutShell>
   </div>
 </template>

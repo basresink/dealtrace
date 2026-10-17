@@ -21,7 +21,7 @@ const emit = defineEmits<{ sluit: []; afspraak: [id: string] }>()
           </article>
         </div>
       <template #voet>
-        <footer v-if="verslag.afspraakId" class="fo-foot fs-voet"><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="emit('afspraak', verslag.afspraakId)">Open de afspraak</button></footer>
+        <footer v-if="verslag.afspraakId" class="fo-foot fs-voet"><button type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" @click="emit('afspraak', verslag.afspraakId)"><Icoon naam="Calendar" :grootte="16" />Open de afspraak</button><span class="fo-foot-vul" /></footer>
       </template>
     </FlyoutShell>
 </template>

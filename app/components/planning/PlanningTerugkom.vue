@@ -72,7 +72,7 @@ const datumLang = (d: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeri
 
     <FlyoutShell v-if="aanpassen" open titel-id="fs-planningterugkom0" breedte="smal" data-test="datum-flyout" @sluit="aanpassen = null">
       <template #kop><span class="fo-kicker">Pas datum aan</span><h2 id="fs-planningterugkom0" class="fo-titel">{{ aanpassen.naam }}</h2></template>
-        <form id="fs-form" class="fs-form" @submit.prevent="bewaarDatum">
+        <form id="pt-datum-form" class="fs-form" @submit.prevent="bewaarDatum">
         <div class="fo-body fo-body--formulier">
           <label class="veld"><span class="veld-label">Terugkomdatum</span><input v-model="datum" type="date" class="invoer" required data-test="nieuwe-datum"></label>
           <label class="veld"><span class="veld-label">Reden <span class="veld-verplicht">*</span></span><input v-model="reden" class="invoer" required data-test="datum-reden"></label>
@@ -81,14 +81,14 @@ const datumLang = (d: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeri
         </form>
       <template #voet>
         <footer class="fo-foot fs-voet">
-          <button type="submit" form="fs-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!datum || !reden.trim()" data-test="datum-bewaar"><Icoon naam="Check" :grootte="16" />Bewaar</button>
+          <button type="submit" form="pt-datum-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!datum || !reden.trim()" data-test="datum-bewaar"><Icoon naam="Check" :grootte="16" />Bewaar</button>
           <span class="fo-foot-vul" />
         </footer>
       </template>
     </FlyoutShell>
     <FlyoutShell v-if="voorstel" open titel-id="fs-planningterugkom1" breedte="smal" data-test="voorstel-flyout" @sluit="voorstel = null">
       <template #kop><span class="fo-kicker">Stel wijziging voor</span><h2 id="fs-planningterugkom1" class="fo-titel">{{ voorstel.reden }}</h2></template>
-        <form id="fs-form" class="fs-form" @submit.prevent="stelVoor">
+        <form id="pt-voorstel-form" class="fs-form" @submit.prevent="stelVoor">
         <div class="fo-body fo-body--formulier">
           <label class="veld"><span class="veld-label">Koppel aan hercontactritme</span><select v-model="voorstelRitme" class="invoer"><option value="">Geen wijziging</option><option v-for="r in ritmes.ritmes" :key="r.id" :value="r.id">{{ r.naam }}</option></select></label>
           <label class="veld"><span class="veld-label">Toelichting</span><textarea v-model="voorstelTekst" class="invoer" rows="3" /></label>
@@ -96,7 +96,7 @@ const datumLang = (d: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeri
         </form>
       <template #voet>
         <footer class="fo-foot fs-voet">
-          <button type="submit" form="fs-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!voorstelRitme && !voorstelTekst.trim()"><Icoon naam="Check" :grootte="16" />Stuur voorstel</button>
+          <button type="submit" form="pt-voorstel-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!voorstelRitme && !voorstelTekst.trim()"><Icoon naam="Check" :grootte="16" />Stuur voorstel</button>
           <span class="fo-foot-vul" />
         </footer>
       </template>

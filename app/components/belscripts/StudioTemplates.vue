@@ -21,9 +21,6 @@ async function open(t: any) {
   if (!voorbeeld.value.accountId) voorbeeld.value = await $fetch<any>('/api/belscripts/voorbeeld').catch(() => voorbeeld.value)
 }
 const voorbeeldNaam = computed(() => voorbeeld.value.accounts?.find((a: any) => a.id === voorbeeld.value.accountId)?.naam ?? 'een prospect')
-const sluitMetEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') bekijk.value = null }
-watch(bekijk, (o) => { if (import.meta.client) (o ? window.addEventListener : window.removeEventListener)('keydown', sluitMetEsc) })
-onBeforeUnmount(() => { if (import.meta.client) window.removeEventListener('keydown', sluitMetEsc) })
 
 const bezig = ref(false)
 async function gebruik(t: ScriptTemplate) {
@@ -94,7 +91,6 @@ async function gebruik(t: ScriptTemplate) {
           <footer class="fo-foot fs-voet">
           <button v-if="data.kan.gebruiken" type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig" data-test="tpl-flyout-gebruik" @click="gebruik(bekijk)"><Icoon naam="Check" :grootte="16" />Gebruik als basis</button>
           <span class="fo-foot-vul" />
-          <button type="button" class="dd-act" @click="bekijk = null">Sluiten</button>
         </footer>
         </template>
       </FlyoutShell>

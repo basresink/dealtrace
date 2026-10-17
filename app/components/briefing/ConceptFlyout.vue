@@ -22,9 +22,6 @@ const titel = computed(() => c.value?.concept?.onderwerp || (c.value?.concept?.t
 const datum = (d: string | null) => (d ? new Date(d).toLocaleString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }) : '')
 const VIA: Record<string, string> = { concept: 'ontvanger van dit concept', taak: 'uit de taak', afspraak: 'uit de afspraak', beslisser: 'beslisser van het account' }
 const ROL: Record<string, string> = { beslisser: 'Beslisser', champion: 'Champion', beinvloeder: 'Beïnvloeder', gebruiker: 'Gebruiker', poortwachter: 'Poortwachter' }
-function toets(e: KeyboardEvent) { if (e.key === 'Escape' && props.concept) emit('sluit') }
-onMounted(() => window.addEventListener('keydown', toets))
-onBeforeUnmount(() => window.removeEventListener('keydown', toets))
 </script>
 
 <template>

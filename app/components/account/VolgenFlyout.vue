@@ -29,9 +29,6 @@ async function laad() {
 }
 watch(() => props.open, (o) => { if (o) { nietNuOpen.value = false; laad() } }, { immediate: true })
 function sluit() { emit('sluit') }
-function toets(e: KeyboardEvent) { if (e.key === 'Escape' && props.open && !taakId.value) sluit() }
-onMounted(() => document.addEventListener('keydown', toets))
-onBeforeUnmount(() => document.removeEventListener('keydown', toets))
 
 async function kies(keuze: 'nu' | 'plan' | 'niet-nu' | 'alternatief', k: any, reden?: string) {
   bezig.value = true

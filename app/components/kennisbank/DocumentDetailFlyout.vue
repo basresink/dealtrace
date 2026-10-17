@@ -52,9 +52,6 @@ async function verwijder() {
   if (!id) return
   try { await $fetch(`/api/documenten/${id}`, { method: 'DELETE' }); toast.toon('Document verwijderd.'); emit('verwijderd', id) } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
-function opEscape(e: KeyboardEvent) { if (e.key === 'Escape' && props.documentId && !vraagVerwijder.value) emit('sluit') }
-onMounted(() => window.addEventListener('keydown', opEscape))
-onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 </script>
 
 <template>
@@ -130,9 +127,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
       <template #voet>
 
         <footer v-if="doc" class="fo-foot fs-voet ddf-voet">
-          <button v-if="doc.magVerwijderen" type="button" class="dd-actie dd-actie--gevaar" data-test="ddf-verwijder" @click="vraagVerwijder = true"><Icoon naam="Trash2" :grootte="14" />Verwijderen</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <a :href="bestandUrl" target="_blank" rel="noopener" class="dd-actie dd-actie--zwart" data-test="ddf-open"><Icoon naam="ExternalLink" :grootte="14" />Openen</a>
+          <a :href="bestandUrl" target="_blank" rel="noopener" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="ddf-open"><Icoon naam="ExternalLink" :grootte="16" />Openen</a>
+          <span class="fo-foot-vul" />
+          <button v-if="doc.magVerwijderen" type="button" class="fs-ibtn fs-ibtn--rood" title="Verwijderen" aria-label="Verwijderen" data-test="ddf-verwijder" @click="vraagVerwijder = true"><Icoon naam="Trash2" :grootte="18" /></button>
         </footer>
       </template>
     </FlyoutShell>

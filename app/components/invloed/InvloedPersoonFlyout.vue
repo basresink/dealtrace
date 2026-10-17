@@ -29,13 +29,10 @@ async function zet(body: Record<string, unknown>, melding: string) {
   bezig.value = true
   try { await $fetch(`/api/contacten/${p.value.id}/invloed`, { method: 'PUT', body }); toast.toon(melding); emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }
-function opEscape(e: KeyboardEvent) { if (e.key === 'Escape' && props.persoon) emit('sluit') }
-onMounted(() => window.addEventListener('keydown', opEscape))
-onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 </script>
 
 <template>
-  <FlyoutShell v-if="p" open titel-id="ivp-titel" bovenop data-test="invloed-persoon" @sluit="emit('sluit')">
+  <FlyoutShell v-if="p" open titel-id="ivp-titel" bovenop sluit-test="ivp-sluit" data-test="invloed-persoon" @sluit="emit('sluit')">
     <template #kop>
           <span class="fo-kicker" data-test="ivp-kicker">{{ rolLabel(p.rol) }} · {{ zekerheidTekst }}</span>
           <h2 id="ivp-titel" class="fo-titel">{{ p.functie ?? p.naam }}</h2>
@@ -99,7 +96,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
       <footer class="fo-foot fs-voet">
           <button v-if="kanBewerken && !p.rolBevestigd" type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig" data-test="ivp-bevestig-rol" @click="zet({ bevestigRol: true }, 'Rol bevestigd.')"><Icoon naam="Check" class="dd-act-icoon" />Bevestig rol</button>
           <span class="fo-foot-vul" />
-          <button type="button" class="dd-act" data-test="ivp-sluit" @click="emit('sluit')">Sluiten</button>
         </footer>
     </template>
   </FlyoutShell>

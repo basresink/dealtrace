@@ -68,9 +68,6 @@ async function maakTaak(titel: string, contactId: string | null, aanleiding: str
 }
 async function gewijzigd() { await laad(); emit('gewijzigd') }
 function sluit() { gekozen.value = null; emit('sluit') }
-function opEscape(e: KeyboardEvent) { if (e.key === 'Escape' && props.open && !gekozen.value) sluit() }
-onMounted(() => window.addEventListener('keydown', opEscape))
-onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 </script>
 
 <template>
@@ -168,12 +165,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
             </div>
           </template>
         </div>
-      <template #voet>
-        <footer class="fo-foot fs-voet">
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="button" class="dd-act" data-test="inv-sluit" @click="sluit">Sluiten</button>
-        </footer>
-      </template>
     </FlyoutShell>
     <InvloedPersoonFlyout
       :persoon="persoon" :personen="personen" :account-id="accountId" :kan="data?.kan ?? {}"

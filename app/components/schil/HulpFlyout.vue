@@ -30,9 +30,6 @@ function controleerGelezen() {
   if (!el || !artikel.value || artikel.value.gelezen) return
   if (isGelezen(el.scrollTop, el.clientHeight, el.scrollHeight)) { artikel.value.gelezen = true; void voegToe({ tabel: 'help_gelezen', op: 'patch', recordId: artikel.value.id, patch: { soort: 'help.gelezen' } }) }
 }
-function opEscape(e: KeyboardEvent) { if (e.key === 'Escape' && open.value) sluit() }
-onMounted(() => window.addEventListener('keydown', opEscape))
-onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 watch(() => route.fullPath, () => sluit())
 </script>
 
@@ -48,9 +45,8 @@ watch(() => route.fullPath, () => sluit())
         </div>
       <template #voet>
         <footer class="fo-foot fs-voet">
-          <NuxtLink v-if="artikel" class="dd-act" :to="`/helpcenter/${artikel.slug}`" @click="sluit"><Icoon naam="BookOpen" class="dd-act-icoon" />Open in het helpcenter</NuxtLink>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="button" class="dd-act" @click="sluit">Sluiten</button>
+          <NuxtLink v-if="artikel" class="dd-actie dd-actie--zwart fs-hoofdactie" :to="`/helpcenter/${artikel.slug}`" @click="sluit"><Icoon naam="BookOpen" :grootte="16" />Open in het helpcenter</NuxtLink>
+          <span class="fo-foot-vul" />
         </footer>
       </template>
     </FlyoutShell>

@@ -49,9 +49,6 @@ async function verwijder() {
   try { await $fetch(`/api/accountplannen/${props.planId}`, { method: 'DELETE' }); toast.toon('Accountplan verwijderd. De acties staan nog als taak op het account.'); emit('verwijderd') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 function sluit() { if (bewerk.value) { bewerk.value = false; return } emit('sluit') }
-function opEscape(e: KeyboardEvent) { if (e.key === 'Escape' && props.planId && !vraagVerwijder.value) sluit() }
-onMounted(() => window.addEventListener('keydown', opEscape))
-onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 </script>
 
 <template>

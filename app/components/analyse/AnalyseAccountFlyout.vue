@@ -8,9 +8,6 @@ const props = defineProps<{ open: boolean; kicker: string; titel: string; accoun
 const emit = defineEmits<{ sluit: []; plan: [a: { id: string; naam: string }]; klaarzet: [a: { id: string; naam: string }] }>()
 const laatsteLabel = (a: FlyoutAccount) => (a.dagenGeleden === null ? 'nooit' : a.dagenGeleden === 0 ? 'vandaag' : `${a.dagenGeleden} ${a.dagenGeleden === 1 ? 'dag' : 'dagen'}`)
 const datum = (iso: string) => new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Amsterdam' })
-function toets(e: KeyboardEvent) { if (e.key === 'Escape' && props.open) emit('sluit') }
-onMounted(() => window.addEventListener('keydown', toets))
-onBeforeUnmount(() => window.removeEventListener('keydown', toets))
 </script>
 
 <template>

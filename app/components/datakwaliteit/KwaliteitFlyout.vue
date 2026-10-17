@@ -76,9 +76,8 @@ const zichtbaar = computed(() => {
         </div>
       <template #voet>
         <footer class="fo-foot fs-voet">
-          <NuxtLink v-if="categorie.link" :to="categorie.link" class="dd-act" data-test="dk-filter"><Icoon naam="Filter" :grootte="14" />Toon in lijst</NuxtLink>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="button" class="dd-act" @click="emit('sluit')">Sluiten</button>
+          <NuxtLink v-if="categorie.link" :to="categorie.link" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="dk-filter"><Icoon naam="Filter" :grootte="16" />Toon in lijst</NuxtLink>
+          <span class="fo-foot-vul" />
         </footer>
       </template>
     </FlyoutShell>

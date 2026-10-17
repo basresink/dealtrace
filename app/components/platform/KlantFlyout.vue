@@ -72,9 +72,6 @@ const looptTot = computed(() => {
   const opzeg = new Date(tot); opzeg.setMonth(opzeg.getMonth() - (c.opzegtermijnMaanden ?? 1))
   return `Loopt tot ${datum(tot.toISOString())} · opzeggen vóór ${datum(opzeg.toISOString())}`
 })
-function opEscape(e: KeyboardEvent) { if (e.key === 'Escape' && props.id && !voorstel.value) emit('sluit') }
-onMounted(() => window.addEventListener('keydown', opEscape))
-onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 </script>
 
 <template>
@@ -176,7 +173,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
         <footer class="fo-foot fs-voet">
           <button v-if="klant" type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" @click="emit('werkIn', { id: klant.id, naam: klant.naam })"><Icoon naam="Check" :grootte="16" />Werk in deze organisatie</button>
           <span class="fo-foot-vul" />
-          <button type="button" class="dd-act" @click="emit('sluit')">Sluiten</button>
         </footer>
       </template>
     </FlyoutShell>

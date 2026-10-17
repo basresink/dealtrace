@@ -21,6 +21,8 @@ function taakItem(t: any): Item {
   return { id: `taak-${t.id}`, soort, titel: t.title, meta: [t.account?.naam, t.poging ? `poging ${t.poging.n} van ${t.poging.van}` : null].filter(Boolean).join(' · '), tijd: t.dueDate ? tijd(t.dueDate) : '', ts: t.dueDate ? Date.parse(t.dueDate) : 0, dag: d < vandaag ? vandaag : d, afspraak: false, tag: d < vandaag ? 'Over tijd' : null, taakId: t.id }
 }
 const VORM: Record<string, string> = { bezoek: 'Bezoek', online: 'Online', telefoon: 'Telefoon' }
+/** Vorm van een afspraak als actielabel (rand met icoon). */
+const AFSPRAAK_ACTIE: Record<string, string> = { Bezoek: 'bezoek', Online: 'online', Telefoon: 'bellen' }
 function afspraakItem(a: any): Item {
   return { id: `afspraak-${a.id}`, soort: a.vorm === 'bezoek' ? 'visit' : 'call', titel: a.accountNaam ?? a.soort.naam, meta: [a.soort.naam, a.locatie].filter(Boolean).join(' · '), tijd: tijd(a.start), ts: Date.parse(a.start), dag: dagVan(a.start), afspraak: true, tag: VORM[a.vorm] ?? 'Afspraak', taakId: `afspraak:${a.id}` }
 }
@@ -55,7 +57,7 @@ const totaal = computed(() => kolommen.value.reduce((s, k) => s + k.aantal, 0))
           <button v-for="it in d.items" :key="it.id" type="button" class="hz-item item-rij" :data-test="it.id" @click="it.taakId && emit('open', it.taakId)">
             <span class="item-tijd" :class="{ 'item-tijd--rood': it.tag === 'Over tijd' }">{{ it.tijd || '·' }}</span>
             <span class="item-icoon" :class="`item-icoon--${it.soort}`" aria-hidden="true"><Icoon :naam="ICOON[it.soort]" :grootte="16" /></span>
-            <span class="item-body"><span class="item-naam">{{ it.titel }}</span><span v-if="it.meta" class="item-meta">{{ it.meta }}</span><span v-if="it.tag" class="pil" :class="it.tag === 'Over tijd' ? 'pil--rood' : it.afspraak ? 'pil--groen' : 'pil--grijs'">{{ it.tag }}</span></span>
+            <span class="item-body"><span class="item-naam">{{ it.titel }}</span><span v-if="it.meta" class="item-meta">{{ it.meta }}</span><Label v-if="it.tag === 'Over tijd'" soort="urgentie" waarde="over-tijd" /><Label v-else-if="it.tag" soort="actie" :waarde="it.afspraak ? AFSPRAAK_ACTIE[it.tag] ?? 'bezoek' : 'taak'" :tekst="it.tag" /></span>
           </button>
         </template>
       </div>

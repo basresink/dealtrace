@@ -93,9 +93,6 @@ function voegIn(variabele: string) {
   nextTick(() => { if (el) { el.focus(); el.selectionStart = el.selectionEnd = r.cursor } })
 }
 const alleVariabelen = ref(false)
-const sluitMetEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') alleVariabelen.value = false }
-watch(alleVariabelen, (o) => { if (import.meta.client) (o ? window.addEventListener : window.removeEventListener)('keydown', sluitMetEsc) })
-onBeforeUnmount(() => { if (import.meta.client) window.removeEventListener('keydown', sluitMetEsc) })
 
 // Bezwaren.
 const concurrentNaam = (ref?: string | null) => (ref ? voorbeeld.value.concurrenten.find((c: any) => c.id === ref)?.naam ?? 'het verkoopverhaal' : null)
@@ -280,9 +277,6 @@ const code = (v: string) => '{' + v + '}'
               </table>
             </div>
           </div>
-        <template #voet>
-          <footer class="fo-foot fs-voet"><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="alleVariabelen = false">Sluiten</button></footer>
-        </template>
       </FlyoutShell>
   </div>
 </template>
