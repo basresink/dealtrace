@@ -336,7 +336,7 @@ const BESLISSER = /eigenaar|directeur|dga|bedrijfsleider/i
  * Een prospect uit feiten (overnemen van een lead, KvK opzoeken): account, contacten, herkomst
  * per veld, instap in de reis met `lead-overgenomen`, en de klasse in accounts.klasse (gat 2).
  */
-export async function maakProspect(tx: Tx, org: string, door: string, eigenaar: string, f: LeadFeiten, opties: { nbBron: string; reisId?: string | null; notitie?: string | null; leadId?: string | null } ) {
+export async function maakProspect(tx: Tx, org: string, door: string, eigenaar: string, f: LeadFeiten, opties: { nbBron: string; reisId?: string | null; faseId?: string | null; zonderReis?: boolean; notitie?: string | null; leadId?: string | null; telefoon?: string | null; email?: string | null } ) {
   const accounts = await bestand(tx)
   const d = zoekDuplicaat({ name: f.naam, kvk: f.kvk, domein: f.domein, postcode: f.postcode }, accounts)
   if (d.soort === 'zeker') {
@@ -355,7 +355,7 @@ export async function maakProspect(tx: Tx, org: string, door: string, eigenaar: 
     id, organisationId: org, name: f.naam, accountKind: 'prospect', nbStatus: 'nieuw', ownerId: eigenaar, klasse,
     city: f.plaats ?? null, postcode: f.postcode ?? null, kvk: f.kvk?.replace(/\D/g, '') || null, domein: f.domein ?? normaliseerDomein(f.website), lat: f.lat ?? null, lng: f.lng ?? null,
     nbBron: opties.nbBron, vvBrancheId: brancheUitSbi(f.sbi, mapping, [f.naam, ...(f.zinnen ?? []).map((z) => z.tekst)].join(' ')),
-    data: { sbi: f.sbi ?? [], medewerkers: f.medewerkers ?? undefined, adres: f.adres ?? undefined, website: f.website ?? undefined, customFields: {}, herkomst, leadId: opties.leadId ?? undefined } as any,
+    data: { sbi: f.sbi ?? [], medewerkers: f.medewerkers ?? undefined, adres: f.adres ?? undefined, website: f.website ?? undefined, telefoon: opties.telefoon || undefined, email: opties.email || undefined, customFields: {}, herkomst, leadId: opties.leadId ?? undefined } as any,
   }
   let iv = instapVelden(await laadInstapContext(tx), alsDoelgroepAccount({ klasse: rij.klasse, postcode: rij.postcode, gebiedId: null, nbBron: rij.nbBron, vvBrancheId: rij.vvBrancheId, data: rij.data }), 'lead-overgenomen')
   if (opties.reisId && opties.reisId !== iv.reisId) {
@@ -363,15 +363,30 @@ export async function maakProspect(tx: Tx, org: string, door: string, eigenaar: 
     if (!r || r.status !== 'actief') fout(422, 'Deze reis bestaat niet of is niet actief')
     iv = { ...iv, reisId: r!.id, versie: r!.versie, faseId: instapFase(r!.data as any, 'lead-overgenomen') }
   }
-  await tx.insert(schema.accounts).values({ ...rij, reisId: iv.reisId, faseId: iv.faseId, doelgroepId: iv.doelgroepId, faseSinds: nu })
-  await schrijfInstap(tx, org, [{ accountId: id, reisId: iv.reisId, faseId: iv.faseId, versie: iv.versie }], 'lead-overgenomen', door)
-  const contacten = (f.contacten ?? []).filter((c) => c.naam?.trim())
-  for (const c of contacten) {
+  // Een gekozen fase (Voeg toe): alleen een fase van deze reis en geen eindfase.
+  if (opties.faseId && !opties.zonderReis && opties.faseId !== iv.faseId) {
+    const [r] = iv.reisId ? await tx.select().from(schema.reistemplates).where(eq(schema.reistemplates.id, iv.reisId)) : []
+    const fase = r ? (r.data as any).fases?.find((x: any) => x.id === opties.faseId) : null
+    if (!fase || fase.eind) fout(422, 'Deze fase hoort niet bij de gekozen reis')
+    iv = { ...iv, faseId: fase.id }
+  }
+  // Zonder prospectreis (Voeg toe zonder vinkje): het account staat erbij, nog niet in een reis.
+  if (opties.zonderReis) {
+    await tx.insert(schema.accounts).values({ ...rij, reisId: null, faseId: null, doelgroepId: iv.doelgroepId })
+  } else {
+    await tx.insert(schema.accounts).values({ ...rij, reisId: iv.reisId, faseId: iv.faseId, doelgroepId: iv.doelgroepId, faseSinds: nu })
+    await schrijfInstap(tx, org, [{ accountId: id, reisId: iv.reisId, faseId: iv.faseId, versie: iv.versie }], 'lead-overgenomen', door)
+  }
+  const contacten = (f.contacten ?? []).map((c, i) => ({ c, i })).filter(({ c }) => c.naam?.trim())
+  const contactIds: (string | null)[] = (f.contacten ?? []).map(() => null)
+  for (const { c, i } of contacten) {
     const delen = c.naam.trim().split(/\s+/)
     const tel = c.telefoon ? normaliseerTelefoon(c.telefoon) : null
     const h = { bron: c.bron === 'kvk' ? 'kvk' : 'web', op: nu }
+    const contactId = crypto.randomUUID()
+    contactIds[i] = contactId
     await tx.insert(schema.contacts).values({
-      organisationId: org, accountId: id, firstName: delen.length > 1 ? delen[0]! : null, lastName: delen.length > 1 ? delen.slice(1).join(' ') : delen[0]!,
+      id: contactId, organisationId: org, accountId: id, firstName: delen.length > 1 ? delen[0]! : null, lastName: delen.length > 1 ? delen.slice(1).join(' ') : delen[0]!,
       email: c.aanname ? null : c.email ?? null, rol: c.functie && BESLISSER.test(c.functie) ? 'beslisser' : 'onbekend',
       data: { functie: c.functie ?? undefined, telefoon: tel?.ok ? tel.e164 : undefined, linkedin: c.linkedin ?? undefined, emailVoorstel: c.aanname ? c.email : undefined, bron: 'leadgenerator', herkomst: { naam: h, ...(c.functie ? { functie: h } : {}), ...(tel?.ok ? { telefoon: h } : {}) }, consent: { email: { status: 'onbekend' }, whatsapp: { status: 'onbekend' } } } as any,
     })
@@ -379,10 +394,15 @@ export async function maakProspect(tx: Tx, org: string, door: string, eigenaar: 
   if (opties.notitie) await tx.insert(schema.activiteiten).values({ organisationId: org, accountId: id, soort: 'notitie', door, data: { tekst: opties.notitie, bron: 'leadgenerator', leadId: opties.leadId ?? null } })
   const s = await herbereken(tx, id)
   await schrijfAudit(tx, { organisationId: org, actorId: door, action: 'account.aanmaken', resourceType: 'accounts', resourceId: id, changes: { naam: f.naam, bron: opties.nbBron } })
-  return { id, naam: f.naam, klasse: klasse ? klasseCode(klassen.find((k) => k.id === klasse) ?? { id: klasse, naam: klasse }) : null, score: s?.score ?? 0, contacten: contacten.length }
+  return { id, naam: f.naam, klasse: klasse ? klasseCode(klassen.find((k) => k.id === klasse) ?? { id: klasse, naam: klasse }) : null, score: s?.score ?? 0, contacten: contacten.length, contactIds, reisId: opties.zonderReis ? null : iv.reisId, faseId: opties.zonderReis ? null : iv.faseId }
 }
 
 const DAGNAAM = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', timeZone: 'Europe/Amsterdam' })
+const DATUM_LANG = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Amsterdam' })
+/** Taaktypes die je in Voeg toe kiest voor de eerste taak (naast het eerstvolgende belblok). */
+export const EERSTE_TAAK_TYPES = ['bellen', 'mailen', 'bezoek', 'linkedin', 'bericht', 'taak'] as const
+const TAAK_LABEL: Record<string, string> = { bellen: 'Bellen', mailen: 'Mail', bezoek: 'Bezoek', linkedin: 'LinkedIn', bericht: 'Bericht', taak: 'Taak' }
+export interface EigenTaak { type?: typeof EERSTE_TAAK_TYPES[number] | null; datum?: string | null; contactId?: string | null }
 const TIJD = new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })
 
 /**
@@ -390,12 +410,34 @@ const TIJD = new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digi
  * eerstvolgende acquisitieblok, buitendienst een bezoek of eerst bellen. De motor draait eerst
  * (regels per gebeurtenis); bestaat er daarna al een contacttaak, dan komt er geen tweede.
  */
-export async function eersteTaak(tx: Tx, org: string, eigenaar: { id: string; werkplek?: string | null; data?: any }, account: { id: string; naam: string }, stap: EersteStap, nu = new Date()): Promise<{ taskId: string; tekst: string }> {
+export async function eersteTaak(tx: Tx, org: string, eigenaar: { id: string; werkplek?: string | null; data?: any }, account: { id: string; naam: string }, stap: EersteStap, nu = new Date(), keuze: EigenTaak = {}): Promise<{ taskId: string; tekst: string }> {
   await draaiMotor(tx, org, { soort: 'gebeurtenis', door: eigenaar.id, accountIds: [account.id], nu })
   // Maakte de motor al een contacttaak (bijvoorbeeld SR07), dan wordt die de eerste taak.
   const [open] = await tx.select().from(schema.tasks).where(and(eq(schema.tasks.accountId, account.id), inArray(schema.tasks.status, ['open', 'bezig']), inArray(schema.tasks.actionType, ['bellen', 'bezoek'])))
-  if (open && !(stap === 'belblok' && open.actionType === 'bellen')) return { taskId: open.id, tekst: 'De eerste taak staat klaar.' }
+  const contactId = keuze.contactId ?? null
   const tijd = nu.toISOString()
+  // Een eigen keuze uit Voeg toe (type, datum, contact): de taak van de motor wordt die taak, anders een nieuwe.
+  if (keuze.type) {
+    const type = keuze.type
+    const due = nlTijdstip(keuze.datum ?? plusDagen(nlMoment(nu).datum, 1), 9, 0).toISOString()
+    const titel = `${type === 'bellen' ? 'Poging 1' : TAAK_LABEL[type] ?? 'Taak'}: ${account.naam}`
+    const extra = type === 'bellen' ? { poging: { n: 1, van: 5, kanaal: 'bellen' } } : {}
+    const herkomstEigen = { bron: 'leadgenerator', actiesoort: type, uitvoerder: eigenaar.id }
+    const wanneer = `op ${DATUM_LANG.format(new Date(due))}`
+    if (open) {
+      await tx.update(schema.tasks).set({ actionType: type, title: titel, dueDate: due, contactId, belblokId: null, data: { ...(open.data as any), ...extra, belblokId: undefined }, updatedAt: tijd }).where(eq(schema.tasks.id, open.id))
+      return { taskId: open.id, tekst: `De eerste taak staat ${wanneer}.` }
+    }
+    const [t] = await tx.insert(schema.tasks).values({
+      organisationId: org, ownerId: eigenaar.id, accountId: account.id, contactId, actionType: type, title: titel, priority: 'middel', dueDate: due, executor: 'mens',
+      onderwerp: `${account.id}:eerste`, data: { waarom: 'Nieuwe lead uit de leadgenerator', herkomst: herkomstEigen, ...extra }, createdAt: tijd, updatedAt: tijd,
+    }).returning({ id: schema.tasks.id })
+    return { taskId: t!.id, tekst: `De eerste taak staat ${wanneer}.` }
+  }
+  if (open && !(stap === 'belblok' && open.actionType === 'bellen')) {
+    if (contactId && !open.contactId) await tx.update(schema.tasks).set({ contactId, updatedAt: tijd }).where(eq(schema.tasks.id, open.id))
+    return { taskId: open.id, tekst: 'De eerste taak staat klaar.' }
+  }
   const herkomst = { bron: 'leadgenerator', actiesoort: stap === 'bezoek' ? 'bezoek' : 'bellen', uitvoerder: eigenaar.id }
   if (stap === 'belblok') {
     const { blokken } = blokkenVan(eigenaar)
@@ -404,11 +446,11 @@ export async function eersteTaak(tx: Tx, org: string, eigenaar: { id: string; we
       const start = v.start.toISOString()
       const s = await sessieOp(tx, org, eigenaar.id, start, new Date(v.start.getTime() + v.blok.minuten * 60_000).toISOString(), { plek: v.blok.plek, soort: v.blok.soort, verhouding: v.blok.verhouding, scriptId: v.blok.scriptId ?? null, gesprekken: [] }, v.blok.id)
       if (open) {
-        await tx.update(schema.tasks).set({ title: `Poging 1: ${account.naam}`, dueDate: start, belblokId: s.status === 'gepland' ? s.id : null, data: { ...(open.data as any), poging: { n: 1, van: 5, kanaal: 'bellen' }, ...(s.status === 'gepland' ? { belblokId: s.id } : {}) }, updatedAt: tijd }).where(eq(schema.tasks.id, open.id))
+        await tx.update(schema.tasks).set({ title: `Poging 1: ${account.naam}`, dueDate: start, ...(contactId ? { contactId } : {}), belblokId: s.status === 'gepland' ? s.id : null, data: { ...(open.data as any), poging: { n: 1, van: 5, kanaal: 'bellen' }, ...(s.status === 'gepland' ? { belblokId: s.id } : {}) }, updatedAt: tijd }).where(eq(schema.tasks.id, open.id))
         return { taskId: open.id, tekst: `Eerste belpoging staat in je blok van ${DAGNAAM.format(v.start)} ${TIJD.format(v.start)}.` }
       }
       const [t] = await tx.insert(schema.tasks).values({
-        organisationId: org, ownerId: eigenaar.id, accountId: account.id, actionType: 'bellen', title: `Poging 1: ${account.naam}`, priority: 'middel', dueDate: start, executor: 'mens',
+        organisationId: org, ownerId: eigenaar.id, accountId: account.id, contactId, actionType: 'bellen', title: `Poging 1: ${account.naam}`, priority: 'middel', dueDate: start, executor: 'mens',
         belblokId: s.status === 'gepland' ? s.id : null, onderwerp: `${account.id}:eerste`, data: { waarom: 'Nieuwe lead uit de leadgenerator', herkomst, poging: { n: 1, van: 5, kanaal: 'bellen' }, ...(s.status === 'gepland' ? { belblokId: s.id } : {}) }, createdAt: tijd, updatedAt: tijd,
       }).returning({ id: schema.tasks.id })
       return { taskId: t!.id, tekst: `Eerste belpoging staat in je blok van ${DAGNAAM.format(v.start)} ${TIJD.format(v.start)}.` }
@@ -417,7 +459,7 @@ export async function eersteTaak(tx: Tx, org: string, eigenaar: { id: string; we
   const dag = plusDagen(nlMoment(nu).datum, 1)
   const due = nlTijdstip(dag, 9, 0).toISOString()
   const [t] = await tx.insert(schema.tasks).values({
-    organisationId: org, ownerId: eigenaar.id, accountId: account.id, actionType: stap === 'bezoek' ? 'bezoek' : 'bellen', title: `${stap === 'bezoek' ? 'Bezoek' : 'Poging 1'}: ${account.naam}`, priority: 'middel',
+    organisationId: org, ownerId: eigenaar.id, accountId: account.id, contactId, actionType: stap === 'bezoek' ? 'bezoek' : 'bellen', title: `${stap === 'bezoek' ? 'Bezoek' : 'Poging 1'}: ${account.naam}`, priority: 'middel',
     dueDate: due, executor: 'mens', onderwerp: `${account.id}:eerste`, data: { waarom: 'Nieuwe lead uit de leadgenerator', herkomst, ...(stap === 'bezoek' ? {} : { poging: { n: 1, van: 5, kanaal: 'bellen' } }) }, createdAt: tijd, updatedAt: tijd,
   }).returning({ id: schema.tasks.id })
   return { taskId: t!.id, tekst: stap === 'bezoek' ? 'Het bezoek staat morgen op je lijst.' : 'De eerste belpoging staat morgen op je lijst.' }
@@ -425,7 +467,46 @@ export async function eersteTaak(tx: Tx, org: string, eigenaar: { id: string; we
 
 const bewijsNotitie = (l: LeadRij) => ['Gevonden met de leadgenerator.', ...(l.data.bewijs ?? []).filter((b) => b.oordeel !== 'onbekend').map((b) => `${b.oordeel === 'ja' ? 'Ja' : 'Nee'}: ${b.zin} (${b.bron}${b.datum ? `, ${b.datum.slice(0, 10)}` : ''})`)].join('\n')
 
-export async function neemOver(tx: Tx, org: string, door: LeadGebruiker, leadId: string, b: { eigenaar?: string | null; reisId?: string | null; eersteStap?: EersteStap | null }) {
+/** Wat de gebruiker in Voeg toe aanvult of kiest; alles is optioneel, zonder keuze geldt het oude Neem over. */
+export interface VoegToeKeuze {
+  eigenaar?: string | null
+  reisId?: string | null
+  faseId?: string | null
+  /** false: niet in een prospectreis. */
+  inReis?: boolean
+  eersteStap?: EersteStap | null
+  /** null: geen eerste taak; een type met datum en contact (index in gegevens.contacten); 'belblok' het eerstvolgende acquisitieblok. */
+  taak?: { type: 'belblok' | typeof EERSTE_TAAK_TYPES[number]; datum?: string | null; contact?: number | null } | null
+  gegevens?: Partial<Pick<LeadFeiten, 'naam' | 'plaats' | 'postcode' | 'adres' | 'website' | 'kvk' | 'medewerkers' | 'contacten'>> & { telefoon?: string | null; email?: string | null }
+}
+
+const tekstOf = (v: unknown, max = 200) => (typeof v === 'string' ? v.trim().slice(0, max) : '')
+
+/** Past de aangevulde gegevens uit Voeg toe toe op de feiten van de lead; leeg laten wist niets wat de bron gaf. */
+export function vulFeitenAan(f: LeadFeiten, g: VoegToeKeuze['gegevens']): { feiten: LeadFeiten; telefoon: string | null; email: string | null } {
+  if (!g) return { feiten: f, telefoon: null, email: null }
+  const uit: LeadFeiten = { ...f }
+  const naam = tekstOf(g.naam)
+  if (naam) uit.naam = naam
+  for (const k of ['plaats', 'postcode', 'adres', 'website'] as const) { const v = tekstOf(g[k]); if (v) uit[k] = v }
+  const kvk = tekstOf(g.kvk, 20).replace(/\D/g, '')
+  if (kvk) uit.kvk = kvk
+  if (uit.website && uit.website !== f.website) uit.domein = normaliseerDomein(uit.website)
+  const m = Number(g.medewerkers)
+  if (g.medewerkers !== undefined && g.medewerkers !== null && String(g.medewerkers) !== '' && Number.isFinite(m) && m >= 0) uit.medewerkers = Math.round(m)
+  if (Array.isArray(g.contacten)) {
+    uit.contacten = g.contacten.slice(0, 10).map((c, i) => {
+      const bron = (f.contacten ?? [])[i]
+      return { ...(bron ?? {}), naam: tekstOf(c?.naam, 120), functie: tekstOf(c?.functie, 120) || null, email: tekstOf(c?.email, 200) || null, telefoon: tekstOf(c?.telefoon, 40) || null, bron: bron?.bron ?? 'handmatig', aanname: bron && tekstOf(c?.email, 200) === (bron.email ?? '') ? bron.aanname : false }
+    })
+  }
+  const telefoon = tekstOf(g.telefoon, 40)
+  const tel = telefoon ? normaliseerTelefoon(telefoon) : null
+  const email = tekstOf(g.email, 200)
+  return { feiten: uit, telefoon: tel?.ok ? tel.e164 : null, email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email.toLowerCase() : null }
+}
+
+export async function neemOver(tx: Tx, org: string, door: LeadGebruiker, leadId: string, b: VoegToeKeuze) {
   const [l] = await tx.select().from(schema.leads).where(eq(schema.leads.id, leadId))
   if (!l) fout(404, 'Lead onbekend')
   if (l!.status !== 'nieuw') fout(409, l!.status === 'overgenomen' ? 'Deze lead is al overgenomen' : 'Deze lead is afgewezen')
@@ -433,7 +514,14 @@ export async function neemOver(tx: Tx, org: string, door: LeadGebruiker, leadId:
   if (eigenaarId !== door.id && !['salesmanager', 'beheerder', 'founder'].includes(door.rol)) fout(403, 'Alleen een salesmanager zet leads klaar voor een ander')
   const [eigenaar] = await tx.select({ id: schema.users.id, werkplek: schema.users.werkplek, data: schema.users.data, naam: schema.users.name }).from(schema.users).where(eq(schema.users.id, eigenaarId))
   if (!eigenaar) fout(422, 'Deze eigenaar bestaat niet in je organisatie')
-  const f = feitenVan(l!)
+  const { feiten: f, telefoon, email } = vulFeitenAan(feitenVan(l!), b.gegevens)
+  if (!f.naam?.trim()) fout(422, 'Geef het bedrijf een naam')
+  // De eerste taak: datum vanaf vandaag.
+  const taak = b.taak
+  if (taak && taak.type !== 'belblok') {
+    if (!(EERSTE_TAAK_TYPES as readonly string[]).includes(taak.type)) fout(422, 'Kies een type voor de eerste taak')
+    if (taak.datum && (!/^\d{4}-\d{2}-\d{2}$/.test(taak.datum) || taak.datum < nlMoment(new Date()).datum)) fout(422, 'Kies een datum vanaf vandaag voor de eerste taak')
+  }
   // P20: ontdubbelen tegen het CRM, ook voor een Beginner bij een klaargezette lead.
   if (l!.bron !== 'crm') {
     const c = zoekDuplicaat({ name: f.naam, kvk: f.kvk, domein: f.domein, postcode: f.postcode }, await crmBestand(tx))
@@ -443,19 +531,24 @@ export async function neemOver(tx: Tx, org: string, door: LeadGebruiker, leadId:
       fout(409, `${m.name} staat al in het CRM${m.eigenaar ? ` bij ${m.eigenaar}` : ''}.`)
     }
   }
-  const p = await maakProspect(tx, org, door.id, eigenaar!.id, f, { nbBron: l!.bron === 'crm' ? 'crm' : 'leadgenerator', reisId: b.reisId, notitie: bewijsNotitie(l!), leadId: l!.id })
+  const inReis = b.inReis !== false
+  const p = await maakProspect(tx, org, door.id, eigenaar!.id, f, { nbBron: l!.bron === 'crm' ? 'crm' : 'leadgenerator', reisId: inReis ? b.reisId : null, faseId: inReis ? b.faseId : null, zonderReis: !inReis, notitie: bewijsNotitie(l!), leadId: l!.id, telefoon, email })
   await naNeemOver(tx, org, p.id, { bron: l!.bron, data: { ...l!.data, crmId: (l!.data as any)?.crmId ?? (l!.bron === 'crm' ? l!.bronRef : null) } })
-  const stap: EersteStap = b.eersteStap ?? (eigenaar!.werkplek === 'buitendienst' ? 'bezoek' : 'belblok')
-  const taak = await eersteTaak(tx, org, eigenaar!, { id: p.id, naam: p.naam }, stap)
+  const contactId = taak && taak.contact != null ? p.contactIds[taak.contact] ?? null : null
+  // Zonder vinkje Maak een eerste taak aan (taak: null) komt er geen taak en draait de motor niet.
+  const t = taak === null ? null
+    : taak ? await eersteTaak(tx, org, eigenaar!, { id: p.id, naam: p.naam }, taak.type === 'belblok' ? 'belblok' : (eigenaar!.werkplek === 'buitendienst' ? 'bezoek' : 'bellen'), new Date(), { type: taak.type === 'belblok' ? null : taak.type, datum: taak.datum ?? null, contactId })
+      : await eersteTaak(tx, org, eigenaar!, { id: p.id, naam: p.naam }, b.eersteStap ?? (eigenaar!.werkplek === 'buitendienst' ? 'bezoek' : 'belblok'))
   await tx.update(schema.leads).set({ status: 'overgenomen', accountId: p.id, updatedAt: new Date().toISOString() }).where(eq(schema.leads.id, l!.id))
-  return { ...p, eersteTaak: taak, tekst: `${p.naam} staat nu bij ${eigenaar!.id === door.id ? 'je' : `de`} prospects${eigenaar!.id === door.id ? '' : ` van ${eigenaar!.naam}`}${p.klasse ? `, klasse ${p.klasse}` : ''}. ${taak.tekst}` }
+  return { ...p, eersteTaak: t, tekst: `${p.naam} staat nu bij ${eigenaar!.id === door.id ? 'je' : `de`} prospects${eigenaar!.id === door.id ? '' : ` van ${eigenaar!.naam}`}${p.klasse ? `, klasse ${p.klasse}` : ''}.${inReis ? '' : ' Nog niet in een prospectreis.'} ${t ? t.tekst : 'Zonder eerste taak.'}` }
 }
 
-export async function wijsAf(tx: Tx, door: string, leadId: string, reden: string) {
+export async function wijsAf(tx: Tx, door: string, leadId: string, reden: string, toelichting: string | null = null) {
   const [l] = await tx.select().from(schema.leads).where(eq(schema.leads.id, leadId))
   if (!l) fout(404, 'Lead onbekend')
   if (l!.status === 'overgenomen') fout(409, 'Deze lead is al overgenomen')
-  await tx.update(schema.leads).set({ status: 'afgewezen', data: { ...l!.data, afwijsreden: reden, afgewezenDoor: door }, updatedAt: new Date().toISOString() }).where(eq(schema.leads.id, l!.id))
+  const op = new Date().toISOString()
+  await tx.update(schema.leads).set({ status: 'afgewezen', data: { ...l!.data, afwijsreden: reden, afwijsToelichting: toelichting, afgewezenDoor: door, afgewezenOp: op }, updatedAt: op }).where(eq(schema.leads.id, l!.id))
   const [n] = await tx.select().from(schema.leads).where(eq(schema.leads.id, l!.id))
   return n!
 }

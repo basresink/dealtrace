@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { creditsStand } from '../../shared/credits'
 import {
   alleenEchteUrls, beoordeelLead, bijsturing, brancheUitSbi, controleerBewijs, controleerContacten, DAGGRENS_TEKST, dossierLabel, GRENZEN,
-  groepeerLead, klasseUitMedewerkers, leadSleutels, leidZoekopdrachtAf, magRonde, pastNaBijsturing, zoekopdrachtHash, zoeksjablonen,
+  ANDERE_REDEN, GROEP_LABEL, groepeerLead, klasseUitMedewerkers, leadAfwijsTekst, leadSleutels, leesLeadAfwijsReden, leidZoekopdrachtAf, magRonde, pastNaBijsturing, zoekopdrachtHash, zoeksjablonen,
   type Bewijs, type BrancheMapping, type LeadFeiten,
 } from '../../shared/leadGenerator'
 import { zoekDuplicaat } from '../../shared/ontdubbelen'
@@ -88,7 +88,7 @@ describe('groepen', () => {
     expect(groepeerLead({ bewijs: bewijs('ja', 'ja', 'ja', 'ja'), dossierOp: dagenTerug(30) }, nu)).toBe('passend')
     expect(groepeerLead({ bewijs: bewijs('ja', 'ja', 'ja', 'ja'), dossierOp: dagenTerug(31) }, nu)).toBe('verlopen')
   })
-  it('3 keer ja met 3 beoordeeld blijft "Nog niet te beoordelen"; 3 ja met 4 beoordeeld is passend', () => {
+  it('3 keer ja met 3 beoordeeld blijft "Nog te beoordelen"; 3 ja met 4 beoordeeld is passend', () => {
     expect(groepeerLead({ bewijs: bewijs('ja', 'ja', 'ja', 'onbekend', 'onbekend', 'onbekend') }, nu)).toBe('onbeoordeeld')
     expect(groepeerLead({ bewijs: bewijs('ja', 'ja', 'ja', 'ja', 'onbekend', 'onbekend') }, nu)).toBe('passend')
   })
@@ -186,5 +186,25 @@ describe('bewijsplicht van de Zoeker', () => {
       { naam: 'Jan Verzonnen', functie: 'inkoper', telefoon: '+31201112233', bron: 'web' },
     ], 'Peter Kok, eigenaar. Bel 038 123 4567.')
     expect(c).toEqual([{ naam: 'Peter Kok', functie: 'eigenaar', telefoon: '+31381234567', email: null, bron: 'web' }])
+  })
+})
+
+describe('Niet relevant met een eigen reden en de groep Nog te beoordelen', () => {
+  it('de groep heet Nog te beoordelen', () => {
+    expect(GROEP_LABEL.onbeoordeeld).toBe('Nog te beoordelen')
+  })
+  it('een vaste reden gaat zoals hij is; Andere reden vraagt minstens 3 tekens', () => {
+    expect(leesLeadAfwijsReden('Te klein')).toEqual({ ok: true, reden: 'Te klein', toelichting: null })
+    expect(leesLeadAfwijsReden(ANDERE_REDEN, '  zit  in een overname ')).toEqual({ ok: true, reden: ANDERE_REDEN, toelichting: 'zit in een overname' })
+    expect(leesLeadAfwijsReden(ANDERE_REDEN, 'ok')).toMatchObject({ ok: false })
+    expect(leesLeadAfwijsReden('Iets anders')).toMatchObject({ ok: false })
+    expect(leesLeadAfwijsReden(undefined)).toMatchObject({ ok: false })
+    // Het oude "Anders" telt als een andere reden.
+    expect(leesLeadAfwijsReden('Anders', 'eigen tekst')).toMatchObject({ ok: true, reden: ANDERE_REDEN })
+  })
+  it('de reden zoals een mens hem leest: de eigen tekst, anders de vaste reden', () => {
+    expect(leadAfwijsTekst({ afwijsreden: ANDERE_REDEN, afwijsToelichting: 'over een jaar opnieuw' })).toBe('over een jaar opnieuw')
+    expect(leadAfwijsTekst({ afwijsreden: 'Geen budget' })).toBe('Geen budget')
+    expect(leadAfwijsTekst({ afwijsreden: 'Anders' })).toBe(ANDERE_REDEN)
   })
 })

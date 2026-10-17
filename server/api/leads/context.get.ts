@@ -1,6 +1,7 @@
 // GET /api/leads/context: wat het tabblad Zoeken nodig heeft om een zoekopdracht samen te
 // stellen: doelgroepen, branches met SBI uit het verkoopverhaal, zoeksjablonen, "Lijkt op mijn
-// klanten" (alleen klanten), klassen, thuisbasis, bronnen met hun stand, team en reizen.
+// klanten" (alleen klanten), klassen, thuisbasis, bronnen met hun stand, team, reizen met fases en of
+// accountplannen aanstaan (het vinkje Maak accountplan aan in Voeg toe).
 import { actieveCrm } from '../../utils/crm'
 import { eq, ne } from 'drizzle-orm'
 import { AFWIJSREDENEN, leidZoekopdrachtAf, zoeksjablonen } from '../../../shared/leadGenerator'
@@ -11,6 +12,7 @@ import { dcStatus } from '../../utils/bronnen/datacollectief'
 import { metOrganisatie, schema } from '../../utils/db'
 import { klassenVan } from '../../utils/leads'
 import { verkoopverhaal } from '../../utils/reis'
+import { instapFase } from '../../../shared/reis'
 import { vereisOrganisatie, weigerFunctie } from '../../utils/sessie'
 
 export default defineEventHandler(async (event) => {
@@ -27,7 +29,10 @@ export default defineEventHandler(async (event) => {
     const credits = await creditsStandVoor(tx, ctx.organisatie!.id)
     const manager = ['salesmanager', 'beheerder', 'founder'].includes(ctx.gebruiker.rol)
     const team = manager ? (await tx.select({ id: schema.users.id, naam: schema.users.name, werkplek: schema.users.werkplek, rol: schema.users.role }).from(schema.users)).filter((u) => u.rol !== 'founder') : []
-    const reizen = (await tx.select({ id: schema.reistemplates.id, naam: schema.reistemplates.naam, status: schema.reistemplates.status, isStandaard: schema.reistemplates.isStandaard }).from(schema.reistemplates)).filter((r) => r.status === 'actief')
+    // Reizen met hun fases (zonder eindfases) voor "Voeg toe aan prospectreis" in de flyout Voeg toe.
+    const reizen = (await tx.select({ id: schema.reistemplates.id, naam: schema.reistemplates.naam, status: schema.reistemplates.status, isStandaard: schema.reistemplates.isStandaard, data: schema.reistemplates.data }).from(schema.reistemplates))
+      .filter((r) => r.status === 'actief')
+      .map((r) => ({ id: r.id, naam: r.naam, status: r.status, isStandaard: r.isStandaard, instapFaseId: instapFase(r.data, 'lead-overgenomen'), fases: [...(r.data?.fases ?? [])].filter((f) => !f.eind).sort((x, y) => x.volgorde - y.volgorde).map((f) => ({ id: f.id, label: f.label })) }))
     const aiAan = kan(ctx, 'leads.aiZoeker')
     const crmK = await actieveCrm(tx)
     return {
@@ -44,7 +49,7 @@ export default defineEventHandler(async (event) => {
       },
       meters: { credits: credits.over, kvk: { gebruikt: kvk.gebruikt, plafond: kvk.plafond }, dc: dc.pakketPlafond ? { gebruikt: dc.gebruikt, plafond: dc.plafond, gekoppeld: dc.gekoppeld } : null },
       team, reizen, afwijsredenen: AFWIJSREDENEN, werkplek: ctx.gebruiker.werkplek, ik: ctx.gebruiker.id,
-      kan: { ronde: kan(ctx, 'nav.leadgenerator'), overnemen: kan(ctx, 'leads.overnemen'), opslaan: kan(ctx, 'leads.opgeslagen'), automatisch: kan(ctx, 'leads.automatisch'), koppelen: kan(ctx, 'koppeling.kvk') },
+      kan: { ronde: kan(ctx, 'nav.leadgenerator'), overnemen: kan(ctx, 'leads.overnemen'), opslaan: kan(ctx, 'leads.opgeslagen'), automatisch: kan(ctx, 'leads.automatisch'), koppelen: kan(ctx, 'koppeling.kvk'), accountplan: kan(ctx, 'nav.accountplannen') },
     }
   })
 })

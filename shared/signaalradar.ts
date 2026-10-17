@@ -195,5 +195,6 @@ export function capaciteitTekst(c: { eigen: number; collegas: number; plekken: n
   if (!c.eigen) return { tekst: `Geen van deze accounts staat op jouw naam.${anderen} Een belronde zet de taken bij de eigenaars.`, past: 'nee' }
   if (!c.plekken) return { tekst: `Je hebt de komende twee weken geen belblok voor koude acquisitie. Zet er een bij Belblokken.${anderen}`, past: 'nee' }
   if (c.eigen <= vrij) return { tekst: `Past in je belblokken van de komende twee weken: ${vrij} van ${c.plekken} plekken vrij voor ${c.eigen} ${c.eigen === 1 ? 'account' : 'accounts'}.${anderen}`, past: 'ja' }
-  return { tekst: `Past deels: ${vrij} van ${c.eigen} accounts in je belblokken van de komende twee weken (${c.plekken} plekken, ${c.bezet} bezet).${anderen}`, past: vrij ? 'deels' : 'nee' }
+  if (!vrij) return { tekst: `Past niet: je belblokken van de komende twee weken zitten vol (${c.plekken} plekken, ${c.bezet} bezet). Zet in belblok hangt ze aan je volgende blok; wat niet past, schuift door.${anderen}`, past: 'nee' }
+  return { tekst: `Past deels: ${vrij} van ${c.eigen} accounts in je belblokken van de komende twee weken (${c.plekken} plekken, ${c.bezet} bezet).${anderen}`, past: 'deels' }
 }

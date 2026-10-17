@@ -6,7 +6,7 @@ import { apiLogin, ga, login } from './hulp'
 test.describe.configure({ mode: 'serial' })
 
 test.describe('Leadgenerator op de desktop', () => {
-  test('ronde starten: vijf groepen met bewijs en meters; Neem over maakt een prospect', async ({ page }) => {
+  test('ronde starten: vijf groepen met bewijs en meters; Voeg toe maakt een prospect', async ({ page }) => {
     await login(page, 'u-03')
     await ga(page, '/leadgenerator')
     await page.getByTestId('zoekopdracht-aanpassen').click()
@@ -22,10 +22,10 @@ test.describe('Leadgenerator op de desktop', () => {
     const kaart = page.locator('[data-groep="passend"] article, [data-groep="onbeoordeeld"] article').first()
     const naam = (await kaart.getAttribute('data-lead'))!
     await expect(kaart.locator('.bewijs')).toHaveCount(6)
-    await kaart.getByTestId('neem-over').click()
-    await expect(page.getByTestId('neem-over-flyout')).toBeVisible()
-    await page.getByTestId('no-bevestig').click()
-    await expect(page.getByText(new RegExp(`${naam.replace(/[.&]/g, '.')} staat nu bij je prospects`))).toBeVisible()
+    await kaart.getByTestId('voeg-toe').click()
+    await expect(page.getByTestId('voeg-toe-flyout')).toBeVisible()
+    await page.getByTestId('vt-opslaan').click()
+    await expect(page.getByTestId('toegevoegd-melding')).toContainText(`${naam} staat nu bij je prospects`)
     await expect(page.locator(`[data-groep="alBekend"] [data-lead="${naam}"]`)).toBeVisible()
   })
 
@@ -40,6 +40,116 @@ test.describe('Leadgenerator op de desktop', () => {
     await kaart.getByTestId('afwijzen-bevestig').click()
     await expect(page.getByText('Reden bewaard. Dit bedrijf komt niet terug.')).toBeVisible()
     await expect(page.locator(`[data-lead="${naam}"]`)).toHaveCount(0)
+  })
+
+  test('Zoekopdracht aanpassen heeft geen doelgroep meer; de groep heet Nog te beoordelen', async ({ page }) => {
+    await login(page, 'u-03')
+    await ga(page, '/leadgenerator')
+    await page.getByTestId('zoekopdracht-aanpassen').click()
+    await expect(page.getByTestId('zoekpaneel')).toBeVisible()
+    await expect(page.getByTestId('zp-doelgroep')).toHaveCount(0)
+    await expect(page.getByTestId('zoekpaneel')).not.toContainText('Doelgroep')
+    await expect(page.getByTestId('vakken')).not.toContainText('Doelgroep')
+    const groep = page.getByTestId('filter-onbeoordeeld')
+    if (await groep.count()) await expect(groep).toContainText('Nog te beoordelen')
+    await expect(page.getByText('Nog niet te beoordelen')).toHaveCount(0)
+  })
+
+  test('Niet relevant met een eigen reden: bewaard en terug te zien bij de filter Niet relevant', async ({ page }) => {
+    await login(page, 'u-03')
+    await ga(page, '/leadgenerator')
+    const kaart = page.locator('article[data-lead]').filter({ has: page.getByTestId('niet-relevant') }).first()
+    const naam = (await kaart.getAttribute('data-lead'))!
+    await kaart.getByTestId('niet-relevant').click()
+    await kaart.locator('[data-reden="Andere reden"]').click()
+    await expect(kaart.getByTestId('afwijzen-bevestig')).toBeDisabled()
+    await kaart.getByTestId('afwijs-eigen').fill('ok')
+    await expect(kaart.getByTestId('afwijzen-bevestig')).toBeDisabled()
+    const eigen = `Zit midden in een overname ${Date.now() % 10000}`
+    await kaart.getByTestId('afwijs-eigen').fill(eigen)
+    await kaart.getByTestId('afwijzen-bevestig').click()
+    await expect(page.getByText('Reden bewaard. Dit bedrijf komt niet terug.')).toBeVisible()
+    await expect(page.locator(`article[data-lead="${naam}"]`)).toHaveCount(0)
+    await page.getByTestId('filter-afgewezen').click()
+    const rij = page.locator(`[data-afgewezen="${naam}"]`)
+    await expect(rij).toContainText('Andere reden')
+    await expect(rij.getByTestId('afgewezen-eigen')).toHaveText(eigen)
+    // Te kort of onbekend: de server weigert.
+    const ander = (await (await page.request.get('/api/leads')).json()).leads.find((l: any) => l.status === 'nieuw')
+    if (ander) {
+      expect((await page.request.post(`/api/leads/${ander.id}/afwijzen`, { data: { reden: 'Andere reden', toelichting: 'x' } })).status()).toBe(422)
+      expect((await page.request.post(`/api/leads/${ander.id}/afwijzen`, { data: { reden: 'Bestaat niet' } })).status()).toBe(422)
+    }
+  })
+
+  test('Voeg toe: gegevens aanvullen, prospectreis met fase, eerste taak met contact en een accountplan', async ({ page }) => {
+    await login(page, 'u-07')
+    await ga(page, '/leadgenerator')
+    const kaart = page.locator('article[data-lead]').filter({ has: page.getByTestId('voeg-toe') }).first()
+    const naam = (await kaart.getAttribute('data-lead'))!
+    await kaart.getByTestId('voeg-toe').click()
+    const fo = page.getByTestId('voeg-toe-flyout')
+    await expect(fo).toBeVisible()
+    await expect(fo.getByTestId('vt-naam')).toHaveValue(naam)
+    await fo.getByTestId('vt-telefoon').fill('030 123 4567')
+    await fo.getByTestId('vt-contact-erbij').click()
+    const n = await fo.locator('fieldset[data-test^="vt-contact-"]').count()
+    await fo.getByTestId(`vt-contact-naam-${n - 1}`).fill('Testcontact Voegtoe')
+    // Keuze 1: prospectreis met reis en fase.
+    await expect(fo.getByTestId('vt-reis-aan')).toBeChecked()
+    await fo.getByTestId('vt-reis').selectOption({ index: 1 })
+    const fase = fo.getByTestId('vt-fase')
+    await expect(fase).toBeVisible()
+    await fase.selectOption({ index: 2 })
+    const faseLabel = (await fase.locator('option:checked').textContent())!.trim()
+    // Keuze 2: eerste taak met type, datum en contact.
+    await expect(fo.getByTestId('vt-taak-aan')).toBeChecked()
+    await fo.getByTestId('vt-taak-type').selectOption('mailen')
+    await expect(fo.getByTestId('vt-taak-datum')).toBeVisible()
+    await fo.getByTestId('vt-taak-contact').selectOption({ label: 'Testcontact Voegtoe' })
+    // Keuze 3: accountplan (Eva is Expert, accountplannen staan aan).
+    await fo.getByTestId('vt-accountplan').check()
+    await fo.getByTestId('vt-opslaan').click()
+    const melding = page.getByTestId('toegevoegd-melding')
+    await expect(melding).toContainText(`${naam} staat nu bij je prospects`)
+    await expect(melding).toContainText('accountplan')
+    const href = (await melding.getByTestId('toegevoegd-open').getAttribute('href'))!
+    expect(href).toMatch(/^\/accounts\/[0-9a-f-]{36}$/)
+    await expect(melding.getByTestId('toegevoegd-plan')).toBeVisible()
+    const id = href.split('/').pop()!
+    const acc = await (await page.request.get(`/api/accounts/${id}`)).json()
+    expect(acc.reis?.fase?.label).toBe(faseLabel)
+    const tab = await (await page.request.get(`/api/accounts/${id}/tabbladen`)).json()
+    const taak = (tab.taken ?? []).find((t: any) => t.actionType === 'mailen')
+    expect(taak).toBeTruthy()
+    expect(taak.contactNaam ?? '').toContain('Voegtoe')
+    const plannen = await (await page.request.get(`/api/accountplannen?accountId=${id}`)).json()
+    expect(JSON.stringify(plannen)).toContain(`Accountplan ${naam}`)
+    await melding.getByTestId('toegevoegd-open').click()
+    await page.waitForURL(new RegExp(`/accounts/${id}`))
+  })
+
+  test('Voeg toe zonder reis en zonder taak; zonder accountplannen geen vinkje (Gevorderd)', async ({ page }) => {
+    await login(page, 'u-03')
+    await ga(page, '/leadgenerator')
+    const kaart = page.locator('article[data-lead]').filter({ has: page.getByTestId('voeg-toe') }).first()
+    const naam = (await kaart.getAttribute('data-lead'))!
+    await kaart.getByTestId('voeg-toe').click()
+    const fo = page.getByTestId('voeg-toe-flyout')
+    await expect(fo.getByTestId('vt-accountplan')).toHaveCount(0)
+    await fo.getByTestId('vt-reis-aan').uncheck()
+    await expect(fo.getByTestId('vt-zonder-reis')).toBeVisible()
+    await fo.getByTestId('vt-taak-aan').uncheck()
+    await expect(fo.getByTestId('vt-taak-type')).toHaveCount(0)
+    await fo.getByTestId('vt-opslaan').click()
+    const melding = page.getByTestId('toegevoegd-melding')
+    await expect(melding).toContainText('Zonder eerste taak')
+    const id = (await melding.getByTestId('toegevoegd-open').getAttribute('href'))!.split('/').pop()!
+    const acc = await (await page.request.get(`/api/accounts/${id}`)).json()
+    expect(acc.reis).toBeNull()
+    const tab = await (await page.request.get(`/api/accounts/${id}/tabbladen`)).json()
+    expect((tab.taken ?? []).filter((t: any) => t.status === 'open')).toHaveLength(0)
+    expect(naam).toBeTruthy()
   })
 
   test('Toch uitzoeken maakt een dossier', async ({ page }) => {
@@ -115,6 +225,21 @@ test.describe('Op de telefoon', () => {
       await page.waitForURL(/\/accounts\//)
     })
   }
+  test('390 px: de flyout Voeg toe past, met tikdoelen van 44 px', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await login(page, 'u-07')
+    await ga(page, '/leadgenerator')
+    const knop = page.getByTestId('voeg-toe').first()
+    test.skip(!(await knop.count()), 'Geen lead om toe te voegen')
+    await knop.click()
+    const fo = page.getByTestId('voeg-toe-flyout')
+    await expect(fo).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+    for (const t of ['vt-opslaan', 'vt-reis-aan', 'vt-taak-type']) {
+      const el = t === 'vt-reis-aan' ? fo.locator('label', { has: page.getByTestId(t) }) : fo.getByTestId(t)
+      expect((await el.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+    }
+  })
   test('zonder verbinding zegt de groep KvK-register dat het alleen met verbinding kan', async ({ page, context }) => {
     await page.setViewportSize({ width: 390, height: 800 })
     await login(page, 'u-03')

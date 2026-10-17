@@ -199,10 +199,33 @@ export type LeadGroep = typeof GROEP_VOLGORDE[number]
 /** Volgorde op het scherm: wat je kunt doen eerst. */
 export const GROEP_WEERGAVE: LeadGroep[] = ['passend', 'onbeoordeeld', 'verlopen', 'valtAf', 'alBekend']
 export const GROEP_LABEL: Record<LeadGroep, string> = {
-  alBekend: 'Al in je bestand', valtAf: 'Valt af', verlopen: 'Verlopen', onbeoordeeld: 'Nog niet te beoordelen', passend: 'Passend',
+  alBekend: 'Al in je bestand', valtAf: 'Valt af', verlopen: 'Verlopen', onbeoordeeld: 'Nog te beoordelen', passend: 'Passend',
 }
 
-export const AFWIJSREDENEN = ['Te klein', 'Verkeerde branche', 'Heeft al een leverancier', 'Buiten gebied', 'Geen budget', 'Anders'] as const
+export const AFWIJSREDENEN = ['Te klein', 'Verkeerde branche', 'Heeft al een leverancier', 'Buiten gebied', 'Geen budget'] as const
+/** De keuze naast de vaste redenen: de gebruiker schrijft zelf op waarom (3 tot 200 tekens). */
+export const ANDERE_REDEN = 'Andere reden'
+export const ANDERE_REDEN_MIN = 3
+export const ANDERE_REDEN_MAX = 200
+
+/**
+ * Leest de reden van "Niet relevant". Een vaste reden gaat zoals hij is; "Andere reden" vraagt een eigen
+ * tekst. Het oude "Anders" (van voor de eigen reden) telt als een andere reden.
+ */
+export function leesLeadAfwijsReden(reden: unknown, toelichting?: unknown): { ok: true; reden: string; toelichting: string | null } | { ok: false; melding: string } {
+  if (typeof reden !== 'string' || !reden) return { ok: false, melding: 'Kies een reden' }
+  if ((AFWIJSREDENEN as readonly string[]).includes(reden)) return { ok: true, reden, toelichting: null }
+  if (reden !== ANDERE_REDEN && reden !== 'Anders') return { ok: false, melding: 'Kies een reden' }
+  const t = typeof toelichting === 'string' ? toelichting.trim().replace(/\s+/g, ' ') : ''
+  if (t.length < ANDERE_REDEN_MIN) return { ok: false, melding: 'Schrijf je andere reden op (minstens 3 tekens)' }
+  return { ok: true, reden: ANDERE_REDEN, toelichting: t.slice(0, ANDERE_REDEN_MAX) }
+}
+
+/** De reden zoals een mens hem leest: de eigen tekst als die er is, anders de vaste reden. */
+export function leadAfwijsTekst(d: { afwijsreden?: unknown; afwijsToelichting?: unknown } | null | undefined): string {
+  if (typeof d?.afwijsToelichting === 'string' && d.afwijsToelichting) return d.afwijsToelichting
+  return typeof d?.afwijsreden === 'string' && d.afwijsreden ? (d.afwijsreden === 'Anders' ? ANDERE_REDEN : d.afwijsreden) : 'Geen reden'
+}
 
 export type Oordeel = 'ja' | 'nee' | 'onbekend'
 export interface Bewijs { criterium: Criterium; oordeel: Oordeel; zin: string; bron: string; url?: string | null; datum?: string | null }

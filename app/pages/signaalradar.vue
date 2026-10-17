@@ -2,7 +2,7 @@
 // Signaalradar (F5, /signaalradar): een raster van branches uit het verkoopverhaal maal signaalsoorten
 // over de inzichten met bron van de laatste 30 dagen, vergeleken met normaal (het gemiddelde van de zes
 // perioden ervoor). Een golf (vanaf 1,5 keer normaal en minstens 5 accounts) wordt met één klik een
-// belronde of gaat in je volgende belblok. Mijn regio (of mijn team, mijn accounts) of de hele organisatie.
+// belronde of gaat in je volgende belblok. De gekozen cel staat onder het raster. Mijn regio (of mijn team, mijn accounts) of de hele organisatie.
 // De keuze en de gekozen cel staan in de URL (?reikwijdte=org&cel=br-01|vacatures).
 import { factorTekst, getal } from '~~/shared/signaalradar'
 
@@ -25,8 +25,8 @@ const isGekozen = (brancheId: string | null, soort: string) => gekozen.value?.br
 const detailRef = ref<HTMLElement | null>(null)
 function kies(brancheId: string | null, soort: string) {
   router.replace({ query: { ...route.query, cel: `${brancheId ?? 'zonder'}|${soort}` } })
-  // Op de telefoon staat het detail onder het raster.
-  if (import.meta.client && window.matchMedia('(max-width: 1023px)').matches) nextTick(() => detailRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  // Het detail staat onder het raster: scroll erheen als het niet in beeld is.
+  if (import.meta.client) nextTick(() => { const r = detailRef.value?.getBoundingClientRect(); if (r && r.top > window.innerHeight - 160) detailRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' }) })
 }
 function zetReikwijdte(r: 'mij' | 'org') { router.replace({ query: { ...route.query, reikwijdte: r === 'org' ? 'org' : undefined } }) }
 
@@ -114,13 +114,13 @@ useHead({ title: 'Signaalradar · Dealtrace' })
               <p class="sr-uitleg">Het getal is het aantal accounts met dat signaal in de laatste 30 dagen. Normaal is het gemiddelde van de zes perioden van 30 dagen daarvoor.</p>
             </div>
 
-            <aside ref="detailRef" class="sr-detail-kaart" aria-live="polite">
+            <section ref="detailRef" class="sr-detail-kaart" aria-live="polite" aria-label="Gekozen cel" data-test="sr-detail-kaart">
               <RadarDetail v-if="gekozen" :key="`${reikwijdte}-${gekozen.brancheId}-${gekozen.soort}`" :reikwijdte="reikwijdte" :branche-id="gekozen.brancheId" :soort="gekozen.soort" @gewijzigd="refresh" />
               <div v-else class="sr-geen-keuze" data-test="sr-geen-keuze">
                 <p class="sr-geen-keuze-titel">Geen golf op dit moment.</p>
                 <p class="sr-uitleg">Kies een cel om te zien welke accounts erin zitten en waarom het geen golf is. Een golf begint bij 1,5 keer normaal en minstens 5 accounts.</p>
               </div>
-            </aside>
+            </section>
           </div>
         </div>
       </section>
@@ -129,11 +129,11 @@ useHead({ title: 'Signaalradar · Dealtrace' })
 </template>
 
 <style scoped>
+/* Het raster bovenaan, de gekozen cel (de golf) eronder over de volle breedte. */
 .sr-indeling { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--kaart-gap); align-items: start; }
-@media (min-width: 1024px) { .sr-indeling { grid-template-columns: minmax(0, 1fr) minmax(320px, 380px); } }
 .sr-raster-kaart { overflow-x: auto; }
 .sr-raster-kaart, .sr-detail-kaart { min-width: 0; padding: 24px; background: var(--wit); border: 1px solid var(--border); }
-@media (min-width: 1024px) { .sr-detail-kaart { position: sticky; top: 16px; } }
+.sr-detail-kaart { scroll-margin-top: 16px; }
 .sr-raster { width: 100%; border-collapse: separate; border-spacing: 3px; table-layout: fixed; }
 .sr-verborgen { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .sr-hoek { width: 27%; text-align: left; font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); vertical-align: bottom; padding: 0 6px 6px 0; }

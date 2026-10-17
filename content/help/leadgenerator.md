@@ -2,7 +2,7 @@
 titel: Leadgenerator
 categorie: Prospects
 collectie: product
-samenvatting: Nieuwe prospects vinden met de AI-zoeker en KvK, beoordeeld met bewijs, en overnemen met een eerste taak.
+samenvatting: Nieuwe prospects vinden met de AI-zoeker en KvK, beoordeeld met bewijs, en toevoegen met een reis, een eerste taak en een accountplan.
 routes: /leadgenerator
 ---
 
@@ -13,9 +13,8 @@ De **Leadgenerator** zoekt bedrijven die passen bij je doelgroep. Elke bron (AI-
 ## Een ronde starten
 
 1. Klik **Zoekopdracht aanpassen**.
-2. Kies een doelgroep, **Lijkt op mijn klanten** of een zoeksjabloon uit het verkoopverhaal, zoals "Overstappers van Landelijke groothandelsketen".
-3. Kies klasse, branche, werkgebied (postcodegebieden of een straal rond je thuisbasis), een aanleiding en de bronnen.
-4. Klik **Nieuwe ronde**.
+2. Kies branche, klasse, werkgebied (postcodegebieden of een straal rond je thuisbasis), een aanleiding en de bronnen.
+3. Klik **Nieuwe ronde**.
 
 Een ronde levert hooguit 25 bedrijven. Dezelfde zoekopdracht binnen 24 uur geeft het bewaarde resultaat, zonder kosten. Je kunt 10 rondes per dag starten.
 
@@ -26,18 +25,24 @@ Elke lead krijgt een score van 0 tot 6: klasse of omvang, branche, werkgebied, a
 ## Vijf groepen
 
 - **Passend**: minstens 3 keer ja bij minstens 4 beoordeelde criteria.
-- **Nog niet te beoordelen**: minder dan 4 criteria uitgezocht. Klik **Toch uitzoeken**.
+- **Nog te beoordelen**: minder dan 4 criteria uitgezocht. Klik **Toch uitzoeken**.
 - **Verlopen**: het dossier is ouder dan 30 dagen. Klik **Opnieuw uitzoeken**.
 - **Valt af**: minstens één criterium is nee.
 - **Al in je bestand**: hetzelfde KvK-nummer, domein of naam met postcode als een account, of al klant of prospect in DealDrive.
 
 Pas je de zoekopdracht aan, dan schuiven de leads meteen naar de juiste groep.
 
-## Overnemen en afwijzen
+## Toevoegen en afwijzen
 
-**Neem over** maakt een prospect met de gegevens, de contactpersonen en het bewijs als notitie, in fase Gevonden. De klasse komt uit het aantal medewerkers en de klassen van je organisatie. De eerste taak volgt je werkplek: binnendienst de eerste belpoging in je eerstvolgende acquisitieblok, buitendienst een bezoek of eerst bellen. Een salesmanager kan de lead voor een teamlid klaarzetten.
+**Voeg toe** opent een venster met de gegevens van de lead: bedrijfsnaam, plaats, adres, website, KvK-nummer, medewerkers en de contactpersonen. Vul aan wat je weet. Daaronder kies je:
 
-**Niet relevant** vraagt een reden. Het bedrijf komt daarna niet meer terug, ook niet op een ander toestel, en de reden stuurt de volgende ronde bij.
+- **Voeg toe aan prospectreis**: de reis (of het voorstel van Dealtrace dat bij de doelgroep past) en de fase waarin het account start. Zonder vinkje komt het account bij je prospects zonder reis.
+- **Maak een eerste taak aan**: het type (bellen in je eerstvolgende acquisitieblok, bellen, mailen, bezoek, LinkedIn, bericht of te doen), de datum en de contactpersoon.
+- **Maak accountplan aan**: een leeg accountplan op jouw naam. Dit vinkje zie je als accountplannen voor jouw niveau aanstaan.
+
+Klik **Voeg toe**. Dealtrace maakt de prospect met het bewijs als notitie; de klasse komt uit het aantal medewerkers. Je krijgt een melding met een link naar de nieuwe accountkaart. Een salesmanager kan de lead voor een teamlid klaarzetten.
+
+**Niet relevant** vraagt een reden: kies een vaste reden of **Andere reden** en schrijf zelf op waarom. Het bedrijf komt daarna niet meer terug, ook niet op een ander toestel, en de reden stuurt de volgende ronde bij. Met de filter **Niet relevant** zie je de afgewezen bedrijven van de ronde met hun reden, ook je eigen tekst.
 
 ## Kosten
 
