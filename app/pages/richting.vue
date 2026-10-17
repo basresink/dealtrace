@@ -31,7 +31,7 @@ useHead({ title: 'Richting · Dealtrace' })
 
 <template>
   <div v-if="data">
-    <PaginaKop kicker="Richting · Verkoopverhaal" titel="Ons verhaal" helpartikel="ons-verhaal">
+    <PaginaKop kicker="Richting · Verkoopverhaal" titel="Ons verhaal" helpartikel="richting">
       <template #acties>
         <span class="pil pil--leeg vv-bron" data-test="vv-bron">{{ data.bron === 'salesdna' ? `Uit SalesDNA${data.bronBijgewerkt ? ` · bijgewerkt ${datum(data.bronBijgewerkt)}` : ''}` : 'Eigen inrichting' }}</span>
         <span v-if="data.kan.inrichten && st?.bron === 'salesdna'" class="meta vv-bron" data-test="wijzig-in-salesdna">Wijzigen doe je in SalesDNA</span>
