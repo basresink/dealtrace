@@ -281,7 +281,7 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
     ['geparkeerd', 'kl-d-prospects', 'geen-interesse', 'De eigenaar stopt volgend jaar met het bedrijf'],
   ]
   for (const [f, k, reden, toelichting] of deact) {
-    const a = accs.find((x) => x.fase === f && x.klasse === k && !x.gedeactiveerd && !x.ritme)
+    const a = accs.find((x) => x.fase === f && x.klasse === k && !x.gedeactiveerd && !x.ritme && x.branche !== 'br-01')
     if (a) a.gedeactiveerd = { reden, toelichting, dag: Math.min(-1, a.sinds + 1) }
   }
   const actief = (a: Acc) => !a.gedeactiveerd
@@ -387,10 +387,10 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
   }
   // Extra afspraken: terugbelafspraken, niet verschenen, geannuleerd, intern overleg en een webinar.
   const inGesprek = accs.filter((a) => a.fase === 'in-gesprek' && actief(a))
-  for (const [i, a] of inGesprek.slice(0, 5).entries()) {
+  for (const [i, a] of inGesprek.slice(0, 3).entries()) {
     wensen.push({ id: nieuwAp(), acc: a.id, dag: tussen(r, 1, 16), wens: wensMin(), slug: i % 2 ? 'terugbelafspraak' : 'belafspraak', vorm: 'telefoon', duur: i % 2 ? 10 : 15, status: 'gepland', contact: 0, data: { aanleiding: 'Terugbellen zoals afgesproken' } })
   }
-  for (const [i, a] of inGesprek.slice(5, 8).entries()) {
+  for (const [i, a] of inGesprek.slice(3, 6).entries()) {
     wensen.push({ id: nieuwAp(), acc: a.id, dag: Math.min(-1, (a as any).mijlpalen['in-gesprek'] + 2), wens: wensMin(), slug: 'belafspraak', vorm: 'telefoon', duur: 15, status: i === 2 ? 'niet_verschenen' : 'afgerond', uitkomst: i === 2 ? null : 'later', contact: 0, data: { aanleiding: 'Terugbellen over de planning' }, verslagSoort: 'telefoon', notulist: false })
   }
   const gepland = accs.filter((a) => a.fase === 'afspraak-gepland')
@@ -613,8 +613,8 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
     const start = nlTijdstip(s.dag, Math.floor(s.start / 60), s.start % 60)
     const eind = new Date(start.getTime() + s.minuten * 60_000)
     const laatste = gesprekken.length ? Date.parse(gesprekken.at(-1)!.op) + 6 * 60_000 : eind.getTime() - 5 * 60_000
-    return { id: s.id, organisation_id: orgId, gebruiker_id: EVA, vast_blok_id: s.vast, start_op: start.toISOString(), eind_op: eind.toISOString(), status: 'klaar', gestart_op: start.toISOString(), gestopt_op: new Date(Math.min(laatste, eind.getTime())).toISOString(),
-      data: { plek: s.plek, soort: s.soort, ...(s.soort === 'gemengd' ? { verhouding: 70 } : {}), scriptId: null, gesprekken, resultaat: blokResultaat(gesprekken as Gesprek[]), herkomst: 'seed' } }
+    return { id: s.id, organisation_id: orgId, gebruiker_id: EVA, vast_blok_id: null, start_op: start.toISOString(), eind_op: eind.toISOString(), status: 'klaar', gestart_op: start.toISOString(), gestopt_op: new Date(Math.min(laatste, eind.getTime())).toISOString(),
+      data: { plek: s.plek, soort: s.soort, ...(s.soort === 'gemengd' ? { verhouding: 70 } : {}), scriptId: null, gesprekken, handmatig: true, resultaat: blokResultaat(gesprekken as Gesprek[]), herkomst: 'seed' } }
   })
   const nSessies = await zet(client, 'belblok_sessies', sessieRijen)
   const bestaand = new Set((await client.query(`select id from belblok_sessies where gebruiker_id = $1 and id like 'eva-bb-k2%'`, [EVA])).rows.map((x: any) => x.id as string))
@@ -682,7 +682,8 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
   const blokOp = (n: number, soort: 'ochtend' | 'middag'): { id: string; due: string } | null => {
     const dag = wd(n)
     const w = weekdag(dag)
-    const b = w === 5 ? BLOK.vrijdag : soort === 'middag' && [1, 3, 4].includes(w) ? BLOK.middag : BLOK.ochtend
+    if (soort === 'middag' && ![1, 3, 4, 5].includes(w)) return null
+    const b = w === 5 ? BLOK.vrijdag : soort === 'middag' ? BLOK.middag : BLOK.ochtend
     const id = sessieOp.get(`${dag}|${b.vast}`)
     return id ? { id, due: om(dag, b.uur, b.minuut) } : null
   }
@@ -707,7 +708,7 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
   for (const a of metFase('gekwalificeerd')) taak(a, tussen(r, 0, 7), 9, 0, 'bellen', 'Bel: eerste poging uit het ritme', 'middel', { poging: { n: 1, van: 5, kanaal: 'bellen' } }, { blok: 'ochtend', herkomst: a.ritme ? 'ritme' : 'regel' })
   for (const [i, a] of metFase('benaderd').entries()) {
     const n = ((a as any).pogingen ?? 1) + 1
-    taak(a, i < 3 ? 0 : tussen(r, 1, 9), 9, 0, 'bellen', `Bel: poging ${n}${n >= 4 ? ', sluit af met een voorstel' : ', vraag naar de projectleider'}`, 'middel', { poging: { n, van: 5, kanaal: 'bellen', vorige: 'bellen' } }, { blok: i % 3 === 2 ? 'middag' : 'ochtend', herkomst: a.ritme ? 'ritme' : 'handmatig' })
+    taak(a, i < 3 ? 0 : tussen(r, 1, 9), 9, 0, 'bellen', `Bel: poging ${n}${n >= 4 ? ', sluit af met een voorstel' : ', vraag naar de projectleider'}`, 'middel', { poging: { n, van: 5, kanaal: 'bellen', vorige: 'bellen' } }, { blok: 'middag', herkomst: a.ritme ? 'ritme' : 'handmatig' })
     if (i % 3 === 0) taak(a, tussen(r, 2, 12), kies(r, [10, 11, 15]), 45, 'mailen', 'Mail: praktijkvoorbeeld uit dezelfde branche', 'laag', { concept: { onderwerp: 'Praktijkvoorbeeld uit jullie branche', tekst: vul(T_MAILS[2]![1], woorden(a)) } })
     if (i % 4 === 1) taak(a, tussen(r, 1, 10), 11, 30, 'linkedin', 'LinkedIn: connectieverzoek aan de beslisser', 'laag', {})
   }
@@ -730,7 +731,7 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
     const terug = accRijen.find((x) => x.id === a.id)!.terug_op as string
     let n = 0
     while (wd(n) < terug && n < 20) n++
-    taak(a, n, 9, 0, 'bellen', 'Bel: komt terug uit de wachtstand', 'hoog', { waarom: 'De terugkomdatum is bereikt; zoek een nieuwe aanleiding.' }, { blok: 'ochtend', herkomst: 'regel' })
+    taak(a, n, 9, 0, 'bellen', 'Bel: komt terug uit de wachtstand', 'hoog', { waarom: 'De terugkomdatum is bereikt; zoek een nieuwe aanleiding.' }, { blok: 'middag', herkomst: 'regel' })
   }
   for (const [i, k] of klanten.entries()) {
     taak(k, tussen(r, 1, 12), 11, 0, 'bellen', 'Bel: bestelling voor het voorjaar afstemmen', 'laag', {})
@@ -801,7 +802,9 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
     }
   }
   const sjablonen = Object.fromEntries((await client.query(`select id, sleutel from reekssjablonen where organisation_id = $1`, [orgId])).rows.map((x: any) => [x.sleutel, x.id as string]))
-  const zonderRitme = (f: Fase) => accs.filter((a) => a.fase === f && actief(a) && !a.ritme)
+  const zonderRitme = (f: Fase) => accs.filter((a) => a.fase === f && actief(a) && !a.ritme && !afspraken.some((w) => w.acc === a.id && w.status !== 'geannuleerd'))
+  const STOPPEND = new Set(['afspraak', 'later', 'gesproken', 'geen_interesse'])
+  const laatsteReactie = (a: Acc) => Math.max(-99, ...evs.filter((e) => e.acc === a.id && STOPPEND.has(e.uitkomst ?? '')).map((e) => e.dag))
   const kandidaten = { benaderd: zonderRitme('benaderd'), gesprek: zonderRitme('in-gesprek'), geparkeerd: zonderRitme('geparkeerd'), verloren: accs.filter((a) => a.fase === 'verloren'), gepland: accs.filter((a) => a.fase === 'afspraak-gepland') }
   const REEKSEN: [Acc | undefined, string, 'loopt' | 'gepauzeerd' | 'gestopt' | 'klaar', string | null, number, 'B' | 'C'][] = [
     [kandidaten.benaderd[0], 'na-voicemail', 'loopt', null, -5, 'C'],
@@ -827,7 +830,8 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
     gebruikt.add(a.id)
     const sj = STARTSJABLONEN.find((s) => s.sleutel === sleutel)!
     const id = `eva-reeks-${pad(++rn)}`
-    const start = new Date(om(wd(startDag), 10, 15))
+    const startNa = status === 'loopt' || status === 'gepauzeerd' ? Math.min(-1, Math.max(startDag, laatsteReactie(a) + 1)) : startDag
+    const start = new Date(om(wd(startNa), 10, 15))
     const stappen = planReeks({ stappen: sj.stappen, einde: sj.einde }, start, INST)
     const stopOp = status === 'gestopt' ? new Date(om(wd(Math.min(-1, startDag + tussen(r, 3, 6))), 11, 40)) : null
     const pauzeOp = status === 'gepauzeerd' ? new Date(om(wd(-1), 15, 0)) : null
