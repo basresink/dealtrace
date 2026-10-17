@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   return metOrganisatie(ctx.organisatie!.id, async (tx) => {
     const g = await gebruikerVan(tx, ctx.gebruiker.id)
     if (!g.email) throw createError({ statusCode: 422, statusMessage: 'Je account heeft geen e-mailadres' })
-    const mail = await maakDagritmeMail(tx, ctx.organisatie!.id, g.id, soort, new Date(), basis)
+    const mail = await maakDagritmeMail(tx, ctx.organisatie!.id, g.id, soort, new Date(), basis, (sleutel) => kan(ctx, sleutel))
     await stuurMeldingMail(g.email, mail.onderwerp, mail.tekst)
     return { aan: g.email, ...mail }
   })

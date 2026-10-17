@@ -2,10 +2,12 @@
 // context (geen tabel); eigen tekst staat per blok in briefing_teksten; een AI-versie is een concept
 // (tabel concepten; het logboek blijft agent_runs). De Pitstop schrijft per actiesoort een concept ter goedkeuring; de agent voert niets uit.
 import { sql } from 'drizzle-orm'
-import { combineer, kiesBriefingSoort, gewogenBezwaren, pitstopDrieRegels, SOORT_LABEL, vulBriefing, winpuntMetBewijs, type BriefingContext, type BriefingSoort } from '../../shared/briefing'
+import { combineer, kiesBriefingSoort, gewogenBezwaren, pitstopDrieRegels, SOORT_LABEL, soortReden, vulBriefing, winpuntMetBewijs, type BriefingContext, type BriefingSoort } from '../../shared/briefing'
 import { filterNamen } from '../../shared/verkoopverhaal'
 import { bouwPrompt, lengteBinnenGrens, mailtoLink, overname, stijlScore, whatsappLink, type SchrijfKanaal } from '../../shared/schrijver'
 import { STANDAARD_FASES } from '../../shared/reis'
+import { AFSPRAAK_TERUG_DAGEN, compleetheid, HORIZON_DAGEN, inPeriode, MAX_BRIEFINGS, telPerPeriode, type Periode } from '../../shared/briefingOverzicht'
+import { nlMoment, nlTijdstip, plusDagen } from '../../shared/datum'
 import { filterConcepten, sindsVan, type ConceptFilter } from '../../shared/concepten'
 import type { JsonSchema } from '../../shared/aiStap'
 import { logAgentRun, toets } from './agents/bewaker'
@@ -24,8 +26,31 @@ const GESPREK = ['gesproken', 'afspraak', 'later', 'nieuw_contact', 'geen_intere
 
 export type Onderwerp = { soort: 'afspraak' | 'taak' | 'account'; id: string }
 
+/**
+ * Gedeelde stukken binnen één verzoek (het overzicht berekent tientallen briefings): het verkoopverhaal, de
+ * klassen en per account wat voor elk gesprek met dat account gelijk is. Zonder cache rekent elke briefing alles zelf.
+ */
+export interface BriefingCache { stand?: Awaited<ReturnType<typeof leesStand>>; klassen?: any[]; accounts: Map<string, Awaited<ReturnType<typeof accountDeel>>> }
+export const nieuweBriefingCache = (): BriefingCache => ({ accounts: new Map() })
+
+/** Wat voor elk gesprek met hetzelfde account gelijk is. */
+async function accountDeel(tx: Tx, accountId: string, cache: BriefingCache) {
+  const [a] = await rijen(tx, sql`select a.*, r.data as reis_data from accounts a left join reistemplates r on r.id = a.reis_id where a.id = ${accountId}`)
+  if (!a) fout(404, 'Account niet gevonden')
+  const contacten = await rijen(tx, sql`select id, first_name, last_name, rol, data from contacts where account_id = ${accountId} and status <> 'vertrokken' order by rol, last_name`)
+  // Een import maakt geen contactmoment: alleen activiteiten met een gespreksuitkomst of een afspraak tellen.
+  const acts = await rijen(tx, sql`select ac.uitkomst, ac.soort, ac.op, ac.data->>'tekst' as tekst, c.rol from activiteiten ac left join contacts c on c.id = ac.contact_id where ac.account_id = ${accountId} and ac.soort <> 'import' order by ac.op desc limit 50`)
+  const [sig] = await rijen(tx, sql`select title, bron from signals where account_id = ${accountId} and status in ('nieuw', 'open', 'gelezen') order by relevance_score desc limit 1`)
+  const [vervolg] = await rijen(tx, sql`select data->>'vervolgstap' as v, data->'verslag'->>'tekst' as verslag from appointments where account_id = ${accountId} and status = 'afgerond' and coalesce((data->>'overdragen')::boolean, false) order by start_at desc limit 1`)
+  cache.stand ??= await leesStand(tx)
+  const gebruikt = (await rijen(tx, sql`select concept->>'winpuntId' as w from concepten where account_id = ${accountId} and status <> 'verworpen' and concept->>'winpuntId' is not null`)).map((r) => r.w)
+  cache.klassen ??= ((await rijen(tx, sql`select value from org_settings where key = 'klassen'`))[0]?.value ?? []) as any[]
+  const geschiedenis = (await rijen(tx, sql`select naar_fase_id, op from reisgeschiedenis where account_id = ${accountId} and naar_fase_id is not null order by op`)).map((g) => ({ fase: STANDAARD_FASES.find((f) => f.id === g.naar_fase_id)?.label ?? g.naar_fase_id, op: iso(g.op)! }))
+  return { a: a!, contacten, acts, sig, vervolg, gebruikt, geschiedenis }
+}
+
 /** Alles wat soortbepaling en blokken nodig hebben, voor elke ingang hetzelfde (gat 34). */
-async function context(tx: Tx, o: Onderwerp) {
+async function context(tx: Tx, o: Onderwerp, cache: BriefingCache = nieuweBriefingCache()) {
   let accountId: string | null = null
   let afspraak: Rij | undefined
   let taak: Rij | undefined
@@ -39,52 +64,141 @@ async function context(tx: Tx, o: Onderwerp) {
     accountId = taak!.account_id
   } else accountId = o.id
   if (!accountId) fout(404, 'Er hoort geen account bij; een briefing gaat over een account')
-  const [a] = await rijen(tx, sql`select a.*, r.data as reis_data from accounts a left join reistemplates r on r.id = a.reis_id where a.id = ${accountId}`)
-  if (!a) fout(404, 'Account niet gevonden')
-  const contacten = await rijen(tx, sql`select id, first_name, last_name, rol, data from contacts where account_id = ${accountId} and status <> 'vertrokken' order by rol, last_name`)
-  // Een import maakt geen contactmoment: alleen activiteiten met een gespreksuitkomst of een afspraak tellen.
-  const acts = await rijen(tx, sql`select ac.uitkomst, ac.soort, ac.op, ac.data->>'tekst' as tekst, c.rol from activiteiten ac left join contacts c on c.id = ac.contact_id where ac.account_id = ${accountId} and ac.soort <> 'import' order by ac.op desc limit 50`)
+  let deel = cache.accounts.get(accountId!)
+  if (!deel) { deel = await accountDeel(tx, accountId!, cache); cache.accounts.set(accountId!, deel) }
+  const { a, contacten, acts, sig, vervolg, gebruikt, geschiedenis } = deel
+  const stand = cache.stand!
   const gesprekken = acts.filter((x) => GESPREK.includes(x.uitkomst) || x.soort === 'afspraak').length
-  const [sig] = await rijen(tx, sql`select title, bron from signals where account_id = ${accountId} and status in ('nieuw', 'open', 'gelezen') order by relevance_score desc limit 1`)
-  const [vervolg] = await rijen(tx, sql`select data->>'vervolgstap' as v, data->'verslag'->>'tekst' as verslag from appointments where account_id = ${accountId} and status = 'afgerond' and coalesce((data->>'overdragen')::boolean, false) order by start_at desc limit 1`)
   const onderwerpSoort = o.soort === 'account' ? null : o.soort
   const eigen = onderwerpSoort ? await rijen(tx, sql`select blok, tekst from briefing_teksten where onderwerp = ${onderwerpSoort} and onderwerp_id = ${o.id}`) : []
-  const stand = await leesStand(tx)
-  const fase = (a!.reis_data?.fases ?? STANDAARD_FASES).find((f: any) => f.id === a!.fase_id)
-  const gebruikt = (await rijen(tx, sql`select concept->>'winpuntId' as w from concepten where account_id = ${accountId} and status <> 'verworpen' and concept->>'winpuntId' is not null`)).map((r) => r.w)
-  const brancheNaam = (stand.branches ?? []).find((b: any) => b.id === a!.vv_branche_id)?.naam ?? null
-  const [kl] = await rijen(tx, sql`select value from org_settings where key = 'klassen'`)
-  const klasse = ((kl?.value ?? []) as any[]).find((k) => k.id === a!.klasse)?.naam ?? null
+  const fase = (a.reis_data?.fases ?? STANDAARD_FASES).find((f: any) => f.id === a.fase_id)
+  const brancheNaam = (stand.branches ?? []).find((b: any) => b.id === a.vv_branche_id)?.naam ?? null
+  const klasse = (cache.klassen ?? []).find((k) => k.id === a.klasse)?.naam ?? null
   const ctx: BriefingContext = {
-    account: { naam: a!.name, branche: brancheNaam, plaats: a!.city, klasse, vvBrancheId: a!.vv_branche_id, huidigeLeverancierId: a!.huidige_leverancier_id, adres: a!.data?.adres ?? null, aanleiding: sig ? { tekst: sig.title, bron: sig.bron } : null, dossierFeiten: a!.data?.dossier?.kernfeiten ?? [], band: a!.data?.band ?? {} },
+    account: { naam: a.name, branche: brancheNaam, plaats: a.city, klasse, vvBrancheId: a.vv_branche_id, huidigeLeverancierId: a.huidige_leverancier_id, adres: a.data?.adres ?? null, aanleiding: sig ? { tekst: sig.title, bron: sig.bron } : null, dossierFeiten: a.data?.dossier?.kernfeiten ?? [], band: a.data?.band ?? {} },
     contacten: contacten.map((c) => ({ naam: `${c.first_name ?? ''} ${c.last_name}`.trim(), functie: c.data?.functie ?? null, rol: c.rol })),
     verslagen: acts.filter((x) => x.tekst).slice(0, 5).map((x) => ({ tekst: x.tekst, op: iso(x.op)! })),
-    faseId: a!.fase_id, faseAccent: fase?.accent ?? null,
+    faseId: a.fase_id, faseAccent: fase?.accent ?? null,
     afspraak: afspraak ? { soort: afspraak.soort_naam, vorm: afspraak.vorm, start: iso(afspraak.start_at)!, verslag: afspraak.data?.verslag?.tekst ?? vervolg?.verslag ?? null, vervolgstap: afspraak.data?.vervolgstap ?? vervolg?.v ?? null, locatie: afspraak.data?.locatie ?? null } : vervolg ? { soort: 'Eerste afspraak', start: new Date().toISOString(), verslag: vervolg.verslag, vervolgstap: vervolg.v } : null,
-    geschiedenis: (await rijen(tx, sql`select naar_fase_id, op from reisgeschiedenis where account_id = ${accountId} and naar_fase_id is not null order by op`)).map((g) => ({ fase: STANDAARD_FASES.find((f) => f.id === g.naar_fase_id)?.label ?? g.naar_fase_id, op: iso(g.op)! })),
+    geschiedenis,
     stand, eerderGebruikteWinpunten: gebruikt,
   }
-  const soort = kiesBriefingSoort({
+  const soortCtx = {
     vastgezet: (eigen.find((e) => e.blok === '_soort')?.tekst as BriefingSoort) ?? null,
-    meetingsoortVorm: afspraak?.vorm ?? null, eersteAfspraakGehoudenMetVervolg: !!vervolg && a!.nb_status !== 'nee',
-    faseId: a!.fase_id, gesprekken, beslisserGesproken: acts.some((x) => x.rol === 'beslisser' && (GESPREK.includes(x.uitkomst) || x.soort === 'afspraak')),
-  })
-  return { a: a!, afspraak, taak, contacten, ctx, soort, eigen, accountId: accountId!, stand }
+    meetingsoortVorm: afspraak?.vorm ?? null, eersteAfspraakGehoudenMetVervolg: !!vervolg && a.nb_status !== 'nee',
+    faseId: a.fase_id, gesprekken, beslisserGesproken: acts.some((x) => x.rol === 'beslisser' && (GESPREK.includes(x.uitkomst) || x.soort === 'afspraak')),
+  }
+  const soort = kiesBriefingSoort(soortCtx)
+  return { a, afspraak, taak, contacten, ctx, soort, soortCtx, eigen, accountId: accountId!, stand }
 }
 
-/** De briefing voor een afspraak, taak of account: soort, blokken met herkomst, drie regels. */
-export async function briefing(tx: Tx, o: Onderwerp) {
-  const c = await context(tx, o)
+/** De briefing voor een afspraak, taak of account: soort (met de reden), blokken met herkomst, drie regels. */
+export async function briefing(tx: Tx, o: Onderwerp, cache?: BriefingCache) {
+  const c = await context(tx, o, cache)
   const [ai] = await rijen(tx, sql`select concept from concepten where status in ('klaar', 'goedgekeurd') and concept->>'type' = 'briefing'
     and ${o.soort === 'afspraak' ? sql`appointment_id = ${o.id}` : o.soort === 'taak' ? sql`task_id = ${o.id}` : sql`account_id = ${o.id}`} order by op desc limit 1`)
   const blokken = combineer(vulBriefing(c.soort, c.ctx), ai?.concept?.blokken ?? {}, Object.fromEntries(c.eigen.filter((e) => e.blok !== '_soort').map((e) => [e.blok, e.tekst])))
   const { winpunt } = winpuntMetBewijs(c.ctx)
+  const rij = c.afspraak ?? c.taak
   return {
-    soort: c.soort, soortLabel: SOORT_LABEL[c.soort], vastgezet: c.eigen.some((e) => e.blok === '_soort'),
-    account: { id: c.accountId, naam: c.a.name }, wanneer: c.afspraak ? iso(c.afspraak.start_at) : c.taak ? iso(c.taak.due_date) : null,
+    soort: c.soort, soortLabel: SOORT_LABEL[c.soort], vastgezet: c.eigen.some((e) => e.blok === '_soort'), soortReden: soortReden(c.soortCtx), automatischeSoort: kiesBriefingSoort({ ...c.soortCtx, vastgezet: null }),
+    account: { id: c.accountId, naam: c.a.name, soort: (c.a.account_kind ?? 'prospect') as string }, wanneer: c.afspraak ? iso(c.afspraak.start_at) : c.taak ? iso(c.taak.due_date) : null,
     blokken, drieRegels: pitstopDrieRegels(blokken), winpuntId: winpunt?.id ?? null,
-    uitkomst: (c.afspraak?.data ?? c.taak?.data)?.briefingUitkomst ?? null,
+    uitkomst: rij?.data?.briefingUitkomst ?? null,
+    // Voor de kaart op /briefings: het gesprek in een regel, de actiesoort, het contact en of er een eerder verslag is.
+    titel: c.afspraak ? `${c.afspraak.soort_naam}${c.afspraak.vorm === 'bezoek' ? ' op locatie' : c.afspraak.vorm === 'online' ? ' online' : c.afspraak.vorm === 'telefoon' ? ' aan de telefoon' : ''}` : c.taak ? String(c.taak.title) : null,
+    actie: (c.afspraak ? c.afspraak.vorm : c.taak ? c.taak.action_type : null) as string | null,
+    contactId: (rij?.contact_id ?? null) as string | null,
+    eigenaarId: (rij?.owner_id ?? null) as string | null,
+    verslag: c.ctx.verslagen.length > 0 || !!c.afspraak?.data?.verslag?.tekst,
   }
+}
+
+/**
+ * Het overzicht op /briefings: je komende afspraken met een account (ook een geplande afspraak van de afgelopen
+ * week die nog niet is afgerond), je open beltaken en bezoektaken met een account (ook achterstallige), en je
+ * belblokken (de taken daarin staan als één kaart per belblok; de briefing per gesprek staat in de belmodus).
+ * Eerst een lichte lijst over de hele horizon voor de tellers per periode, daarna voluit de briefings in de
+ * gekozen periode (hooguit MAX_BRIEFINGS, de rest telt als `meer`). Met wie=team de salesmanager ook die van zijn teams.
+ */
+export async function briefingOverzicht(tx: Tx, g: { id: string; rol: string }, f: { periode: Periode; van?: string | null; tot?: string | null; team?: boolean }, nu = new Date()) {
+  const wie = f.team && ['salesmanager', 'beheerder'].includes(g.rol) ? await teamLeden(tx, g) : [g.id]
+  const wieLijst = wie.join(',')
+  const vandaag = nlMoment(nu).datum
+  const terug = nlTijdstip(plusDagen(vandaag, -AFSPRAAK_TERUG_DAGEN), 0).toISOString()
+  const verst = [plusDagen(vandaag, HORIZON_DAGEN), f.periode === 'vantot' && f.tot ? f.tot : ''].sort().at(-1)!
+  const grens = nlTijdstip(plusDagen(verst, 1), 0).toISOString()
+  const dagVan = (t: unknown) => (t == null ? null : nlMoment(new Date(iso(t)!)).datum)
+  const afs = await rijen(tx, sql`select id, start_at as wanneer from appointments where owner_id = any(string_to_array(${wieLijst}, ',')) and status = 'gepland' and account_id is not null and start_at >= ${terug} and start_at < ${grens}`)
+  const taken = await rijen(tx, sql`select t.id, t.due_date as wanneer, t.belblok_id from tasks t left join belblok_sessies b on b.id = t.belblok_id and b.status in ('gepland', 'bezig')
+    where t.owner_id = any(string_to_array(${wieLijst}, ',')) and t.status in ('open', 'bezig') and t.account_id is not null and t.action_type in ('bellen', 'bezoek')
+      and (t.due_date is null or t.due_date < ${grens}) and (t.belblok_id is null or b.id is null)`)
+  const blokken = await rijen(tx, sql`select b.id, b.start_op as wanneer, b.eind_op, b.status, b.gebruiker_id, count(t.id)::int as aantal, (array_agg(a.name order by t.due_date))[1:3] as namen
+    from belblok_sessies b join tasks t on t.belblok_id = b.id and t.status in ('open', 'bezig') left join accounts a on a.id = t.account_id
+    where b.gebruiker_id = any(string_to_array(${wieLijst}, ',')) and b.status in ('gepland', 'bezig') and b.start_op >= ${terug} and b.start_op < ${grens}
+    group by b.id order by b.start_op`)
+  type Licht = { onderwerp: 'afspraak' | 'taak' | 'belblok'; id: string; wanneer: string | null; dag: string | null; rij: Rij }
+  const licht: Licht[] = [
+    ...afs.map((r) => ({ onderwerp: 'afspraak' as const, id: r.id, wanneer: iso(r.wanneer), dag: dagVan(r.wanneer), rij: r })),
+    ...taken.map((r) => ({ onderwerp: 'taak' as const, id: r.id, wanneer: iso(r.wanneer), dag: dagVan(r.wanneer), rij: r })),
+    ...blokken.map((r) => ({ onderwerp: 'belblok' as const, id: r.id, wanneer: iso(r.wanneer), dag: dagVan(r.wanneer), rij: r })),
+  ].sort((a, b) => String(a.wanneer ?? '9').localeCompare(String(b.wanneer ?? '9')))
+  const tellers = telPerPeriode(licht.map((x) => x.dag), vandaag)
+  const inBereik = licht.filter((x) => inPeriode(x.dag, f.periode, vandaag, { van: f.van, tot: f.tot }))
+  const voluit = inBereik.slice(0, MAX_BRIEFINGS)
+  const cache = nieuweBriefingCache()
+  const gesprekken = voluit.filter((x) => x.onderwerp !== 'belblok')
+  // Pitstop: het nieuwste concept per gesprek (klaar, goedgekeurd of verstuurd); contacten en eigenaren in één keer.
+  const ids = gesprekken.map((x) => x.id).join(',')
+  const pit = ids ? await rijen(tx, sql`select distinct on (coalesce(task_id, appointment_id)) coalesce(task_id, appointment_id) as gesprek, status from concepten
+    where status in ('klaar', 'goedgekeurd', 'verstuurd') and (task_id = any(string_to_array(${ids}, ',')) or appointment_id = any(string_to_array(${ids}, ','))) order by coalesce(task_id, appointment_id), op desc`) : []
+  const pitVan = new Map(pit.map((p) => [p.gesprek as string, p.status as string]))
+  const namen = new Map((await rijen(tx, sql`select id, name from users where id = any(string_to_array(${wieLijst}, ','))`)).map((u) => [u.id as string, String(u.name ?? '').replace(/^Testgebruiker /, '')]))
+  const items: any[] = []
+  // Je volgende gesprek staat bovenaan, ook als het buiten de gekozen periode valt.
+  const grensNu = nu.getTime() - 15 * 60000
+  const eerstvolgend = licht.find((x) => x.onderwerp !== 'belblok' && x.wanneer && Date.parse(x.wanneer) >= grensNu)
+  const teBerekenen = eerstvolgend && !voluit.includes(eerstvolgend) ? [...voluit, eerstvolgend] : voluit
+  if (eerstvolgend && teBerekenen !== voluit) {
+    const p = await rijen(tx, sql`select status from concepten where status in ('klaar', 'goedgekeurd', 'verstuurd') and (task_id = ${eerstvolgend.id} or appointment_id = ${eerstvolgend.id}) order by op desc limit 1`)
+    if (p[0]) pitVan.set(eerstvolgend.id, p[0].status)
+  }
+  for (const x of teBerekenen) {
+    if (x.onderwerp === 'belblok') {
+      items.push({ onderwerp: 'belblok', id: x.id, wanneer: x.wanneer, eind: iso(x.rij.eind_op), aantal: x.rij.aantal, namen: (x.rij.namen ?? []).filter(Boolean), bezig: x.rij.status === 'bezig', eigenaar: wie.length > 1 ? { id: x.rij.gebruiker_id, naam: namen.get(x.rij.gebruiker_id) ?? '' } : null })
+      continue
+    }
+    const b = await briefing(tx, { soort: x.onderwerp, id: x.id }, cache)
+    const { blokken: bl, ...rest } = b
+    items.push({ onderwerp: x.onderwerp, id: x.id, ...rest, compleet: compleetheid(bl), pitstop: pitVan.get(x.id) ?? null, eigenaar: wie.length > 1 && b.eigenaarId ? { id: b.eigenaarId, naam: namen.get(b.eigenaarId) ?? '' } : null })
+  }
+  // Het contact van het gesprek, anders de beslisser van het account.
+  const accIds = [...new Set(items.filter((i) => i.onderwerp !== 'belblok').map((i) => i.account.id))].join(',')
+  const cts = accIds ? await rijen(tx, sql`select id, account_id, first_name, last_name, rol, data->>'functie' as functie from contacts where account_id = any(string_to_array(${accIds}, ',')) and status <> 'vertrokken'`) : []
+  const contactUit = (c: Rij | undefined) => (c ? { id: c.id as string, naam: `${c.first_name ?? ''} ${c.last_name}`.trim(), functie: (c.functie ?? null) as string | null } : null)
+  for (const i of items) {
+    if (i.onderwerp === 'belblok') continue
+    i.contact = contactUit(cts.find((c) => c.id === i.contactId) ?? cts.find((c) => c.account_id === i.account.id && c.rol === 'beslisser') ?? cts.find((c) => c.account_id === i.account.id))
+    delete i.contactId; delete i.eigenaarId
+  }
+  const volgend = eerstvolgend ? items.find((i) => i.id === eerstvolgend.id) ?? null : null
+  return { vandaag, items: items.filter((i) => voluit.some((x) => x.id === i.id)), volgend, meer: inBereik.length - voluit.length, tellers, team: wie.length > 1 }
+}
+
+/** Eén zoekveld op /briefings: prospects en klanten op naam, contactpersonen op naam of functie (hooguit 30). */
+export async function briefingZoek(tx: Tx, g: { id: string }, q: string) {
+  const z = q.trim().replace(/[%_]/g, '')
+  const patroon = `%${z}%`
+  const acc = await rijen(tx, sql`select id, name, city, account_kind from accounts where gedeactiveerd_op is null ${z ? sql`and name ilike ${patroon}` : sql``}
+    order by (owner_id = ${g.id}) desc nulls last, ${z ? sql`(name ilike ${`${z}%`}) desc,` : sql``} greatest(laatste_contact_op, updated_at) desc nulls last, name limit 20`)
+  const con = z ? await rijen(tx, sql`select c.id, c.first_name, c.last_name, c.data->>'functie' as functie, a.id as account_id, a.name as account_naam, a.account_kind from contacts c join accounts a on a.id = c.account_id
+    where a.gedeactiveerd_op is null and c.status <> 'vertrokken' and (concat_ws(' ', c.first_name, c.last_name) ilike ${patroon} or c.data->>'functie' ilike ${patroon})
+    order by (a.owner_id = ${g.id}) desc nulls last, (c.first_name ilike ${`${z}%`} or c.last_name ilike ${`${z}%`}) desc, c.last_name limit 20`) : []
+  // Met een zoekterm de contactpersonen ertussen: eerst de bedrijven, dan de personen (hooguit 30 samen).
+  return [
+    ...acc.map((a) => ({ id: `a:${a.id}`, soort: 'account' as const, accountId: a.id as string, naam: a.name as string, accountSoort: (a.account_kind ?? 'prospect') as string, plaats: (a.city ?? null) as string | null })),
+    ...con.map((c) => ({ id: `c:${c.id}`, soort: 'contact' as const, contactId: c.id as string, accountId: c.account_id as string, naam: `${c.first_name ?? ''} ${c.last_name}`.trim(), functie: (c.functie ?? null) as string | null, accountNaam: c.account_naam as string, accountSoort: (c.account_kind ?? 'prospect') as string })),
+  ].slice(0, 30)
 }
 
 /**

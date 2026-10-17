@@ -12,7 +12,7 @@ const zelf = ref<Set<string>>(new Set())
 const gekozen = computed(() => (top.value === 'zelf' ? data.value.bellijst.filter((k: any) => zelf.value.has(k.accountId)) : data.value.bellijst.slice(0, top.value)).filter((k: any) => !k.belblokId))
 async function gepland() { zelf.value = new Set(); await refresh() }
 
-// Kop: taak, afspraak en zoeken zoals op Vandaag.
+// Kop: + Taak (het venster Nieuwe taak met type Bellen), Start belblok en + Afspraak.
 const nieuweTaak = ref(false)
 const nieuweAfspraak = ref(false)
 
@@ -30,8 +30,7 @@ useHead({ title: 'Belblokken · Dealtrace' })
         <template #acties>
           <NuxtLink v-if="volgende" :to="`/belblokken/${volgende.id}`" class="dd-actie dd-actie--secundair" data-test="start-belblok" :title="`Volgende blok ${tijd(volgende.start)} · ${volgende.open} gesprekken`"><Icoon naam="Phone" class="dd-actie-icoon" />Start belblok</NuxtLink>
           <button type="button" class="dd-actie dd-actie--zwart" data-test="belblokken-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
-          <!-- Minder gebruikt: onder Meer, zodat de kop op 1280 px op één regel blijft. -->
-          <KopMeer :items="[{ label: 'Nieuwe taak', icoon: 'ListTodo', actie: () => { nieuweTaak = true }, test: 'belblokken-taak' }, { label: 'Belscripts', icoon: 'ScrollText', to: '/belscripts', test: 'naar-belscripts' }]" />
+          <button type="button" class="dd-actie dd-actie--primair" data-test="belblokken-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
         </template>
       </PaginaKop>
 

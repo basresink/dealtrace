@@ -1,8 +1,10 @@
 <script setup lang="ts">
-// Bezoeken (F10) in de opzet van DealDrive: kop met werkbalk (Zoeken, + Afspraak, Filters, Meer met Agenda en Bezoekanalyse),
+// Bezoeken (F10) in de opzet van DealDrive: kop met werkbalk (Zoeken, + Afspraak, Filters en Analyse naar de bezoekanalyse),
 // een uitklapbaar filterpaneel (periode en de kansfilters), je week met regiodagen, de kaart met
-// legenda naast de routelijst per dag en de zwarte statistiekstrook, dan de kansen langs de route,
-// de bellijst (Top 5 of Top 10) en de te plannen bezoeken. Op de telefoon door naar Onderweg (P30).
+// legenda naast de routelijst per dag (de datum is een link naar de agenda op die dag) en de zwarte statistiekstrook,
+// dan de kansen langs de route, de bellijst (Top 5 of Top 10) en de te plannen bezoeken als kaarten: een klik opent de
+// taak in het taakvenster. Dagkaarten, dagkop en bellijst delen Bezoeken en Meetings (app/components/dagplan).
+// Op de telefoon door naar Onderweg (P30).
 import { nlMoment, plusDagen } from '~~/shared/datum'
 import { duurLabel, kaartLink, OVERSLA_REDENEN, type Kaartapp } from '~~/shared/route'
 const route = useRoute()
@@ -54,6 +56,7 @@ const heeftFilters = computed(() => !!(data.value?.kan.periode || data.value?.ka
 
 // Je week: dag kiezen, week vooruit of terug, of de hele week.
 const weekdagen = computed(() => data.value?.weekdagen ?? [])
+const dagKaarten = computed(() => weekdagen.value.map((w: any) => ({ datum: w.datum, aantal: w.stat.bezoeken, sub: w.regio ?? 'geen regiodag' })))
 const naarWeek = (stap: number) => zet({ datum: plusDagen(maandagVan(data.value?.dag ?? vandaag), stap * 7), weergave: week.value ? 'week' : undefined })
 
 // Routelijst: één blok per dag (in de week alleen de dagen met bezoeken).
@@ -91,9 +94,8 @@ async function inloop(k: any) {
 }
 const bronnen = (k: any) => [...new Set<string>(k.bronnen.map((b: any) => b.label))]
 const opbouw = (k: any) => k.opbouw.map((o: any) => `${o.label} ${o.punten >= 0 ? '+' : ''}${o.punten}`).join(' · ')
-// Bellijst: Top 5 of Top 10, dezelfde rangorde als op Belblokken zonder wie je vandaag bezoekt.
-const belTop = ref<5 | 10>(5)
-const bellijst = computed(() => (data.value?.bellijst ?? []).slice(0, belTop.value))
+// Bellijst en te plannen bezoeken: een klik op een kaart opent de taak in het taakvenster.
+const taak = ref<string | null>(null)
 useHead({ title: 'Bezoeken · Dealtrace' })
 </script>
 
@@ -105,7 +107,7 @@ useHead({ title: 'Bezoeken · Dealtrace' })
         <button v-if="heeftFilters" type="button" class="dd-actie dd-actie--secundair" :class="{ 'bz-toggle--aan': filtersOpen || filterTeller }" :aria-expanded="filtersOpen" data-test="bz-filters" @click="filtersOpen = !filtersOpen">
           <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="filterTeller" class="pil-teller pil-teller--geel">{{ filterTeller }}</span><Icoon naam="ChevronDown" :grootte="14" class="bz-caret" :class="{ 'bz-caret--open': filtersOpen }" />
         </button>
-        <KopMeer :items="[{ label: 'Agenda', icoon: 'Calendar', to: '/agenda?weergave=dag', test: 'bz-agenda' }, ...(data?.kan.analyse ? [{ label: 'Bezoekanalyse', icoon: 'ChartLine', to: '/bezoek-analyse', test: 'bezoekanalyse-knop' }] : [])]" />
+        <NuxtLink v-if="data?.kan.analyse" to="/bezoek-analyse" class="dd-actie dd-actie--secundair" data-test="bezoekanalyse-knop"><Icoon naam="ChartLine" class="dd-actie-icoon" />Analyse</NuxtLink>
       </template>
     </PaginaKop>
 
@@ -138,15 +140,10 @@ useHead({ title: 'Bezoeken · Dealtrace' })
             <span v-if="data.schatting" class="pil pil--leeg">schatting</span>
             <label v-if="data.team.length">Route van <select class="invoer invoer--klein" :value="data.gebruiker.id" @change="zet({ gebruiker: ($event.target as HTMLSelectElement).value })"><option v-for="u in data.team" :key="u.id" :value="u.id">{{ u.naam.replace(/^Testgebruiker /, '') }}</option></select></label>
         </p>
-        <nav v-if="weekdagen.length" class="bz-dagen" aria-label="Je week" data-test="bz-week">
-          <button type="button" class="bz-pijl" aria-label="Vorige week" @click="naarWeek(-1)"><Icoon naam="ArrowLeft" /></button>
-          <NuxtLink v-for="w in weekdagen" :key="w.datum" :to="{ query: { ...route.query, datum: w.datum, weergave: undefined } }" class="bz-dag" :class="{ 'bz-dag--aan': !week && w.datum === data.dag, 'bz-dag--vandaag': w.datum === vandaag }" :data-test="`week-dag-${w.datum}`">
-            <span class="bz-dag-naam">{{ fmt(w.datum, { weekday: 'short', day: 'numeric' }) }}<span class="pil-teller">{{ w.stat.bezoeken }}</span></span>
-            <span class="bz-dag-regio">{{ w.regio ?? 'geen regiodag' }}</span>
-          </NuxtLink>
-          <button type="button" class="bz-dag bz-dag--week" :class="{ 'bz-dag--aan': week }" data-test="weergave-week" @click="zet({ weergave: week ? undefined : 'week' })"><span class="bz-dag-naam">Hele week</span><span class="bz-dag-regio">{{ weekStops.length }} bezoeken</span></button>
-          <button type="button" class="bz-pijl" aria-label="Volgende week" @click="naarWeek(1)"><Icoon naam="ArrowRight" /></button>
-        </nav>
+        <DagKaartenRij
+          v-if="weekdagen.length" :dagen="dagKaarten" :actief="data.dag" :week="week" :week-sub="`${weekStops.length} ${weekStops.length === 1 ? 'bezoek' : 'bezoeken'}`" :vandaag="vandaag"
+          @dag="zet({ datum: $event, weergave: undefined })" @week="zet({ weergave: week ? undefined : 'week' })" @stap="naarWeek"
+        />
 
         <div class="bz-grid">
           <div class="bz-kaartkant">
@@ -205,32 +202,7 @@ useHead({ title: 'Bezoeken · Dealtrace' })
 
     <section v-if="data" id="bellijst" class="section section--alt">
       <div class="container" data-test="bellijst-naast">
-        <header class="bz-blokkop">
-          <div>
-            <span class="kicker kicker--streep">Bellijst · vandaag</span>
-            <h2 class="bz-bloktitel">Bel-prioriteit naast je bezoeken</h2>
-            <p class="bz-subtitel">Dezelfde lijst als op Belblokken, zonder de accounts die je vandaag al bezoekt. Tijdens reistijd de top 5, voor een lege middag de top 10.</p>
-          </div>
-          <div v-if="data.kan.bellijst" class="keuzegroep keuzegroep--klein" role="group" aria-label="Aantal">
-            <button type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': belTop === 5 }" data-test="bel-top-5" @click="belTop = 5">Top 5</button>
-            <button type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': belTop === 10 }" data-test="bel-top-10" @click="belTop = 10">Top 10</button>
-          </div>
-        </header>
-        <NietAangezetKop v-if="!data.kan.bellijst" sleutel="bezoeken.bellijst" />
-        <ol v-else-if="bellijst.length" class="bz-bel">
-          <li v-for="(b, i) in bellijst" :key="b.accountId" class="bz-bel-rij">
-            <span class="bz-bel-rang tnum">{{ Number(i) + 1 }}</span>
-            <div class="bz-bel-info">
-              <NuxtLink :to="`/accounts/${b.accountId}`" class="bz-bel-naam">{{ b.accountNaam }}</NuxtLink>
-              <span class="bz-bel-reden">{{ b.reden }}</span>
-              <span v-if="b.contactNaam" class="bz-bel-contact">{{ b.contactNaam }}<template v-if="b.telefoon"> · <a :href="`tel:${b.telefoon}`" class="tnum">{{ b.telefoon }}</a></template></span>
-              <span class="bz-bel-pillen"><span class="pil pil--grijs">Score {{ b.score }}</span><span v-if="b.openTaken" class="pil pil--zwart">{{ b.openTaken }} open {{ b.openTaken === 1 ? 'taak' : 'taken' }}</span><span v-if="b.heet" class="pil pil--rood">Heet</span></span>
-            </div>
-            <a v-if="b.telefoon" class="dd-act" :href="`tel:${b.telefoon}`"><Icoon naam="Phone" />Bel</a>
-            <NuxtLink v-else class="dd-act" :to="`/accounts/${b.accountId}?bel=1`"><Icoon naam="Phone" />Bel</NuxtLink>
-          </li>
-        </ol>
-        <p v-else class="bz-leeg">Niemand om te bellen.</p>
+        <BelPrioriteit :lijst="data.bellijst ?? []" :kan="!!data.kan.bellijst" uitleg="Dezelfde lijst als op Belblokken, zonder de accounts die je vandaag al bezoekt. Tijdens reistijd de top 5, voor een lege middag de top 10." @taak="taak = $event" />
       </div>
     </section>
 
@@ -245,14 +217,12 @@ useHead({ title: 'Bezoeken · Dealtrace' })
         </header>
         <NietAangezetKop v-if="!data.kan.teplannen" sleutel="bezoeken.teplannen" />
         <ol v-else-if="data.teplannen.length" class="bz-plan">
-          <li v-for="t in data.teplannen" :key="t.id" class="bz-plan-rij">
-            <div class="bz-plan-info">
-              <NuxtLink v-if="t.accountId" :to="`/accounts/${t.accountId}`" class="bz-plan-naam">{{ t.accountNaam }}</NuxtLink>
-              <span class="bz-plan-taak">{{ t.titel }}</span>
-              <span class="bz-bel-pillen"><span class="pil pil--grijs">sinds {{ kortDatum(t.sinds) }}</span><span class="pil pil--groen">{{ t.herkomst === 'handmatig' ? 'handmatig' : 'motor' }}</span></span>
-            </div>
-            <button type="button" class="dd-act" :data-test="`plan-bezoek-${t.id}`" @click="planBezoek(t)"><Icoon naam="Plus" />Plan bezoek</button>
-          </li>
+          <DagKaart v-for="t in data.teplannen" :key="t.id" tag="li" class="bz-plan-kaart" :data-test="`plan-kaart-${t.id}`">
+            <div class="dp-kaart-kop"><button type="button" class="dp-kaart-titel" :data-test="`plan-open-${t.id}`" @click="taak = t.id">{{ t.accountNaam ?? t.titel }}</button></div>
+            <p v-if="t.accountNaam" class="dp-kaart-tekst">{{ t.titel }}</p>
+            <span class="dp-kaart-pillen"><span class="pil pil--grijs">sinds {{ kortDatum(t.sinds) }}</span><span class="pil pil--groen">{{ t.herkomst === 'handmatig' ? 'handmatig' : 'motor' }}</span></span>
+            <div class="dp-kaart-acties"><button type="button" class="dd-act" :data-test="`plan-bezoek-${t.id}`" @click="planBezoek(t)"><Icoon naam="Plus" />Plan bezoek</button></div>
+          </DagKaart>
         </ol>
         <p v-else class="bz-leeg">Geen open bezoektaken. Het bezoekritme is bij.</p>
       </div>
@@ -260,6 +230,7 @@ useHead({ title: 'Bezoeken · Dealtrace' })
 
     <PlanAfspraakFlyout :open="plan.open" :account="plan.account" :task-id="plan.taskId" :aanleiding="plan.aanleiding" :voorstel="plan.voorstel" @sluit="plan.open = false" @gepland="gepland" />
     <AfspraakFlyout :open="!!afspraak" :afspraak-id="afspraak" @sluit="afspraak = null" @gewijzigd="refresh()" />
+    <TaakFlyout :open="!!taak" :taak-id="taak" @sluit="taak = null" @klaar="taak = null; refresh()" @gewijzigd="refresh()" />
     <Teleport to="body">
       <div v-if="overslaan" class="fo-overlay" @click.self="overslaan = null">
         <form class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="os-titel" @submit.prevent="slaOver">
@@ -280,20 +251,6 @@ useHead({ title: 'Bezoeken · Dealtrace' })
 .bz-datum--aan { border-color: var(--ink); box-shadow: inset 0 -2px 0 var(--yellow); }
 
 .bz-route-van { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 0 0 12px; font-size: var(--fs-klein); color: var(--ink-soft); }
-
-/* Je week: dagknoppen zoals de dagwisselaar van DealDrive */
-.bz-dagen { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
-.bz-pijl { flex: 0 0 44px; min-height: 44px; display: grid; place-items: center; background: var(--wit); border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; color: var(--ink); }
-.bz-pijl:hover { border-color: var(--ink); }
-.bz-dag { flex: 1 1 0; min-width: 104px; min-height: 52px; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 6px 12px; background: var(--wit); color: var(--muted); border: 1px solid var(--border-strong); border-radius: var(--radius); text-decoration: none; font: inherit; text-align: left; cursor: pointer; transition: border-color var(--transition-fast); }
-.bz-dag:hover { border-color: var(--ink); color: var(--ink); }
-.bz-dag-naam { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: var(--fs-klein); font-weight: 700; color: var(--ink); text-transform: capitalize; }
-.bz-dag-regio { font-size: var(--fs-label); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bz-dag--vandaag { box-shadow: inset 0 3px 0 var(--yellow); }
-.bz-dag--aan { background: var(--ink); border-color: var(--ink); color: var(--wit-70); }
-.bz-dag--aan .bz-dag-naam { color: var(--yellow); }
-.bz-dag--aan .pil-teller { background: var(--yellow-teller); color: var(--yellow); }
-.bz-dag--week .bz-dag-naam { text-transform: none; }
 
 /* Kaart naast de routelijst */
 .bz-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
@@ -331,29 +288,7 @@ useHead({ title: 'Bezoeken · Dealtrace' })
   .bz-kn-acties .dd-act { min-height: 44px; }
 }
 
-/* Bellijst */
-.bz-bel, .bz-plan { list-style: none; margin: 0; padding: 0; }
-.bz-bel { background: var(--wit); border: 1px solid var(--border); }
-.bz-bel-rij { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); }
-.bz-bel-rij:last-child { border-bottom: 0; }
-.bz-bel-rang { font-family: var(--font-serif); font-size: 26px; font-weight: 700; text-align: center; line-height: 1; }
-.bz-bel-info, .bz-plan-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.bz-bel-naam, .bz-plan-naam { font-family: var(--font-serif); font-size: 16px; font-weight: 700; color: var(--ink); text-decoration: none; }
-.bz-bel-naam:hover, .bz-plan-naam:hover { text-decoration: underline; text-underline-offset: 3px; }
-.bz-bel-reden, .bz-plan-taak { font-size: var(--fs-meta); color: var(--ink-soft); }
-.bz-bel-contact { width: fit-content; padding: 4px 10px; background: var(--surface); border-left: 3px solid var(--ink); font-size: var(--fs-meta); font-weight: 700; }
-.bz-bel-contact a { color: var(--ink); }
-.bz-bel-pillen { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
-
-/* Te plannen bezoeken */
-.bz-plan { display: grid; gap: 8px; }
-.bz-plan-rij { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; background: var(--wit); border: 1px solid var(--border); border-left: 3px solid var(--green); }
-@media (max-width: 720px) { .keuzegroep-knop { min-height: 44px; } }
-@media (max-width: 600px) {
-  .bz-bel-rij { grid-template-columns: 32px minmax(0, 1fr); }
-  .bz-bel-rij > .dd-act { grid-column: 1 / -1; min-height: 44px; justify-content: center; }
-  .bz-bel-rang { font-size: 20px; }
-  .bz-plan-rij { flex-direction: column; align-items: stretch; }
-  .bz-plan-rij .dd-act { min-height: 44px; justify-content: center; }
-}
+/* Te plannen bezoeken: kaarten in een raster */
+.bz-plan { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: var(--kaart-gap, 16px); }
+.bz-plan-kaart { border-left: 3px solid var(--green); }
 </style>

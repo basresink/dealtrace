@@ -54,6 +54,14 @@ describe('zijbalk per niveau (6.1)', () => {
     expect(z.groepen.find((g) => g.naam === 'Beheer')?.items.map((i) => [i.sleutel, i.route])).toContainEqual(['nav.instellingen', '/instellingen'])
   })
 
+  it('Richting staat in Start direct onder Agenda, niet meer in Planning', () => {
+    for (const niveau of ['beginner', 'gevorderd'] as const) {
+      const z = zijbalkVoor(gebruiker({ niveau }), org, stand)
+      expect(z.groepen.find((g) => g.naam === 'Start')!.items.map((i) => i.sleutel)).toEqual(['nav.vandaag', 'nav.agenda', 'nav.richting'])
+      expect(z.groepen.find((g) => g.naam === 'Planning')!.items.some((i) => i.sleutel === 'nav.richting')).toBe(false)
+    }
+  })
+
   it('Beginner ziet de labels meedoen en lezen', () => {
     const items = zijbalkVoor(gebruiker(), org, stand).groepen.flatMap((g) => g.items)
     expect(items.find((i) => i.sleutel === 'nav.campagnes')?.label).toBe('meedoen')

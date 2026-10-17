@@ -1,16 +1,26 @@
 <script setup lang="ts">
 // Meetings (Plannen) in de opzet van DealDrive: het werkscherm voor gesprekken die niet op locatie
-// zijn (online meetings, belafspraken en intern overleg); bezoeken staan op /bezoeken. De komende
-// 30 dagen per week en per dag, met een uitklapbare filterstrook (soort en vorm, in de URL), en
+// zijn (online meetings, belafspraken en intern overleg); bezoeken staan op /bezoeken. Zelfde opzet als
+// Bezoeken: de rij dagkaarten (ma tot vr met het aantal meetings, Hele week, pijlen per week; ?datum= en
+// ?weergave=week), het blok van de gekozen dag met de meetings als kaarten (de datum is een link naar de
+// agenda op die dag, een klik opent het afspraakvenster) en daarnaast de belprioriteit (BelPrioriteit,
+// een klik opent de beltaak). Een uitklapbare filterstrook (soort en vorm, in de URL), en
 // daaronder de Meetinglijst "Wie is er aan de beurt?" (vanaf Gevorderd) met per account de reden,
 // een uitleg, het advies en een planknop die het afspraakvenster opent met account en vorm.
 import { nlMoment, plusDagen } from '~~/shared/datum'
+import { duurLabel } from '~~/shared/route'
 const { functie } = useMe()
 const route = useRoute()
 const router = useRouter()
 const vandaag = nlMoment(new Date()).datum
 const tot = plusDagen(vandaag, 30)
-const { data, refresh } = await useFetch<any>('/api/agenda', { query: { van: vandaag, tot }, default: () => ({ afspraken: [], meetingsoorten: [] }) })
+// De gekozen dag (?datum=) en de week; de agenda haalt de komende 30 dagen en de gekozen week op.
+const wd = (d: string) => (new Date(`${d}T12:00:00Z`).getUTCDay() + 6) % 7
+const datum = computed(() => (typeof route.query.datum === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(route.query.datum) ? route.query.datum : vandaag))
+const week = computed(() => route.query.weergave === 'week')
+const maandag = computed(() => plusDagen(datum.value, -wd(datum.value)))
+const venster = computed(() => ({ van: maandag.value < vandaag ? maandag.value : vandaag, tot: plusDagen(maandag.value, 7) > tot ? plusDagen(maandag.value, 7) : tot }))
+const { data, refresh } = await useFetch<any>('/api/agenda', { query: venster, default: () => ({ afspraken: [], meetingsoorten: [] }) })
 const soort = computed(() => (route.query.soort as string) || '')
 const vorm = computed(() => (route.query.vorm as string) || '')
 const zet = (k: string, v: string) => router.replace({ query: { ...route.query, [k]: v || undefined } })
@@ -26,34 +36,40 @@ const tijd = (iso: string) => new Date(iso).toLocaleTimeString('nl-NL', { hour: 
 const duur = (m: any) => { const n = Math.round((Date.parse(m.eind) - Date.parse(m.start)) / 60000); return n > 0 ? `${n} min` : '' }
 const naam = (n?: string | null) => (n ?? '').replace(/^Testgebruiker /, '')
 
-/** Alle geplande meetings vanaf vandaag, zonder bezoeken op locatie. */
+/** Alle geplande meetings in de komende 30 dagen, zonder bezoeken op locatie. */
 const alle = computed(() => data.value.afspraken
-  .filter((a: any) => a.status === 'gepland' && a.vorm !== 'bezoek' && dagVan(a.start) >= vandaag)
+  .filter((a: any) => a.status === 'gepland' && a.vorm !== 'bezoek' && dagVan(a.start) >= vandaag && dagVan(a.start) < tot)
   .sort((a: any, b: any) => a.start.localeCompare(b.start)))
 const soortPillen = computed(() => data.value.meetingsoorten.map((m: any) => ({ ...m, aantal: alle.value.filter((a: any) => a.soort.slug === m.slug && (!vorm.value || vormVan(a) === vorm.value)).length })).filter((m: any) => m.aantal || soort.value === m.slug))
 const vormPillen = computed(() => (Object.keys(VORM) as Vorm[]).map((k) => ({ id: k, label: VORM[k], aantal: alle.value.filter((a: any) => vormVan(a) === k && (!soort.value || a.soort.slug === soort.value)).length })))
-const meetings = computed(() => alle.value.filter((a: any) => (!soort.value || a.soort.slug === soort.value) && (!vorm.value || vormVan(a) === vorm.value)))
+const pastFilter = (a: any) => (!soort.value || a.soort.slug === soort.value) && (!vorm.value || vormVan(a) === vorm.value)
+const meetings = computed(() => alle.value.filter(pastFilter))
 const vandaagAantal = computed(() => alle.value.filter((a: any) => dagVan(a.start) === vandaag).length)
 
-// Per week (Deze week, Volgende week, Over 2 weken) en daarbinnen per dag (Vandaag, Morgen, wo 21 okt).
-const wd = (d: string) => (new Date(`${d}T12:00:00Z`).getUTCDay() + 6) % 7
-const dagTitel = (d: string) => (d === vandaag ? 'Vandaag' : d === plusDagen(vandaag, 1) ? 'Morgen' : new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${d}T12:00:00Z`)).replace(/\./g, ''))
-const weekLabel = (i: number) => (i === 0 ? 'Deze week' : i === 1 ? 'Volgende week' : `Over ${i} weken`)
-const weken = computed(() => {
-  const maandag = plusDagen(vandaag, -wd(vandaag))
-  const uit: { van: string; label: string; aantal: number; dagen: { iso: string; titel: string; items: any[] }[] }[] = []
-  for (const m of meetings.value) {
-    const d = dagVan(m.start)
-    const i = Math.floor((Date.parse(`${d}T12:00:00Z`) - Date.parse(`${maandag}T12:00:00Z`)) / (7 * 864e5))
-    const van = plusDagen(maandag, i * 7)
-    let w = uit.find((x) => x.van === van)
-    if (!w) { w = { van, label: weekLabel(i), aantal: 0, dagen: [] }; uit.push(w) }
-    let dag = w.dagen.find((x) => x.iso === d)
-    if (!dag) { dag = { iso: d, titel: dagTitel(d), items: [] }; w.dagen.push(dag) }
-    dag.items.push(m); w.aantal++
-  }
-  return uit
-})
+// De gekozen week: elke meeting die niet geannuleerd is (ook afgeronde), zonder bezoeken op locatie, binnen het filter.
+const inWeek = computed(() => data.value.afspraken
+  .filter((a: any) => a.status !== 'geannuleerd' && a.vorm !== 'bezoek' && dagVan(a.start) >= maandag.value && dagVan(a.start) < plusDagen(maandag.value, 7))
+  .sort((a: any, b: any) => a.start.localeCompare(b.start)))
+const weekMeetings = computed(() => inWeek.value.filter(pastFilter))
+const opDag = (d: string) => weekMeetings.value.filter((m: any) => dagVan(m.start) === d)
+const dagKaarten = computed(() => Array.from({ length: 5 }, (_, i) => {
+  const d = plusDagen(maandag.value, i); const items = opDag(d)
+  return { datum: d, aantal: items.length, sub: items.length ? `eerste ${tijd(items[0].start)}` : 'vrij' }
+}))
+const zetDag = (q: Record<string, string | undefined>) => router.replace({ query: { ...route.query, ...q } })
+const naarWeek = (stap: number) => zetDag({ datum: plusDagen(maandag.value, stap * 7), weergave: week.value ? 'week' : undefined })
+/** De dagblokken: de gekozen dag, of in de week elke dag met meetings. */
+const dagBlokken = computed(() => (week.value
+  ? Array.from({ length: 7 }, (_, i) => plusDagen(maandag.value, i)).map((d) => ({ iso: d, items: opDag(d) })).filter((d) => d.items.length)
+  : [{ iso: datum.value, items: opDag(datum.value) }]))
+const getoond = computed(() => dagBlokken.value.reduce((n, d) => n + d.items.length, 0))
+const zonderFilter = computed(() => inWeek.value.filter((m: any) => week.value || dagVan(m.start) === datum.value).length)
+const minuten = (m: any) => Math.max(0, Math.round((Date.parse(m.eind) - Date.parse(m.start)) / 60000))
+const dagMeta = (items: any[]) => `${items.length} ${items.length === 1 ? 'meeting' : 'meetings'} · ${duurLabel(items.reduce((s, m) => s + minuten(m), 0))}`
+
+// Belprioriteit naast de meetings: de bellijst van vandaag zonder wie je die dag al spreekt.
+const { data: bel } = await useFetch<any>('/api/meetings/bellijst', { query: computed(() => ({ datum: datum.value })), default: () => ({ kan: false, bellijst: [] }) })
+const taak = ref<string | null>(null)
 /** De eerstvolgende meeting krijgt de gele rand (na het laden, zodat server en browser gelijk tekenen). */
 const nu = ref<number | null>(null)
 onMounted(() => { nu.value = Date.now() })
@@ -117,41 +133,53 @@ useHead({ title: 'Meetings · Dealtrace' })
 
     <section class="section section--alt">
       <div class="container">
-        <div v-if="!meetings.length && alle.length" class="mt-leeg" data-test="meetings-leeg-filter">
-          <span class="mt-leeg-kicker">NIETS BINNEN DIT FILTER</span>
-          <h2 class="mt-leeg-titel">Geen meetings binnen dit filter.</h2>
-          <p class="mt-leeg-tekst">Er {{ alle.length === 1 ? 'staat' : 'staan' }} wel {{ alle.length }} {{ alle.length === 1 ? 'meeting' : 'meetings' }} in de planning, maar niet in de gekozen soort of vorm.</p>
-          <button type="button" class="dd-actie dd-actie--secundair" @click="wisFilters">Filters wissen</button>
-        </div>
-        <div v-else-if="!meetings.length" class="mt-leeg" data-test="meetings-leeg">
-          <span class="mt-leeg-kicker">NIETS GEPLAND</span>
-          <h2 class="mt-leeg-titel">Geen meetings in de planning.</h2>
-          <p class="mt-leeg-tekst">Plan een online meeting, belafspraak of intern overleg. Hij komt in je agenda en, als je agenda gekoppeld is, ook in Outlook of Google Agenda.</p>
-          <button type="button" class="dd-actie dd-actie--zwart" data-test="meetings-eerste" @click="plan()">+ Eerste meeting</button>
-        </div>
-        <template v-else>
-          <div v-for="w in weken" :key="w.van" class="mt-week" :data-test="`meetings-week-${w.van}`">
-            <div class="mt-week-kop"><span class="kicker">{{ w.label }}</span><span class="mt-week-n tnum">{{ w.aantal }} {{ w.aantal === 1 ? 'meeting' : 'meetings' }}</span></div>
-            <div v-for="d in w.dagen" :key="d.iso" class="mt-dag">
-              <div class="mt-dag-kop"><h2 class="mt-dag-titel">{{ d.titel }}</h2><span class="mt-dag-n tnum">{{ d.items.length }} {{ d.items.length === 1 ? 'meeting' : 'meetings' }}</span></div>
-              <div
-                v-for="m in d.items" :key="m.id" class="mt-kaart" :class="{ 'mt-kaart--nu': m.id === eerstvolgende, 'mt-kaart--voorbij': voorbij(m) }" role="button" tabindex="0" :data-test="`meeting-${m.id}`"
-                @click="zet('afspraak', m.id)" @keydown.enter.prevent="zet('afspraak', m.id)"
-              >
-                <div class="mt-tijd"><span class="tnum">{{ tijd(m.start) }}</span><span class="mt-duur tnum">{{ duur(m) }}</span></div>
-                <div class="mt-body">
-                  <div class="mt-regel1"><span class="mt-vorm" :class="`mt-vorm--${vormVan(m)}`">{{ VORM[vormVan(m)] }}</span><span class="mt-naam">{{ m.accountNaam ?? m.soort.naam }}</span><span v-if="voorbij(m)" class="pil pil--grijs" data-test="mt-afgelopen">Afgelopen</span></div>
-                  <span class="mt-sub">{{ m.soort.naam }}<template v-if="m.contactNaam"> · {{ m.contactNaam }}</template><template v-if="vormVan(m) === 'intern'"> · telt niet als contactmoment</template><template v-if="m.geplandDoor"> · gepland door {{ naam(m.geplandDoor) }}</template></span>
-                  <div v-if="m.meetinglink || m.accountId || voorbij(m)" class="mt-acties">
-                    <button v-if="voorbij(m)" type="button" class="mt-link" data-test="mt-verslag" @click.stop="zet('afspraak', m.id)">Verslag maken</button>
-                    <a v-if="m.meetinglink && !voorbij(m)" :href="m.meetinglink" target="_blank" rel="noopener noreferrer" class="mt-link" @click.stop>Deelnemen ↗</a>
-                    <NuxtLink v-if="m.accountId" :to="`/accounts/${m.accountId}`" class="mt-link mt-link--stil" @click.stop>Open kaart</NuxtLink>
+        <DagKaartenRij
+          :dagen="dagKaarten" :actief="datum" :week="week" :week-sub="`${weekMeetings.length} ${weekMeetings.length === 1 ? 'meeting' : 'meetings'}`" :vandaag="vandaag"
+          @dag="zetDag({ datum: $event === vandaag ? undefined : $event, weergave: undefined })" @week="zetDag({ weergave: week ? undefined : 'week' })" @stap="naarWeek"
+        />
+        <div class="mt-grid">
+          <div class="mt-dagkant" data-test="meetings-dag">
+            <div v-if="!getoond && (soort || vorm)" class="mt-leeg mt-blok" data-test="meetings-leeg-filter">
+              <span class="mt-leeg-kicker">NIETS BINNEN DIT FILTER</span>
+              <h2 class="mt-leeg-titel">Geen meetings binnen dit filter.</h2>
+              <p v-if="zonderFilter" class="mt-leeg-tekst">Er {{ zonderFilter === 1 ? 'staat' : 'staan' }} wel {{ zonderFilter }} {{ zonderFilter === 1 ? 'meeting' : 'meetings' }} op {{ week ? 'deze week' : 'deze dag' }}, maar niet in de gekozen soort of vorm.</p>
+              <p v-else class="mt-leeg-tekst">Ook zonder filter staat er niets op {{ week ? 'deze week' : 'deze dag' }}. Kies een andere dag of wis de filters.</p>
+              <button type="button" class="dd-actie dd-actie--secundair" @click="wisFilters">Filters wissen</button>
+            </div>
+            <div v-else-if="!getoond && !alle.length" class="mt-leeg mt-blok" data-test="meetings-leeg">
+              <span class="mt-leeg-kicker">NIETS GEPLAND</span>
+              <h2 class="mt-leeg-titel">Geen meetings in de planning.</h2>
+              <p class="mt-leeg-tekst">Plan een online meeting, belafspraak of intern overleg. Hij komt in je agenda en, als je agenda gekoppeld is, ook in Outlook of Google Agenda.</p>
+              <button type="button" class="dd-actie dd-actie--zwart" data-test="meetings-eerste" @click="plan()">+ Eerste meeting</button>
+            </div>
+            <div v-else-if="week && !dagBlokken.length" class="mt-blok mt-dag-leeg" data-test="meetings-week-leeg">Geen meetings gepland in deze week.</div>
+            <template v-else>
+            <div v-for="d in dagBlokken" :key="d.iso" class="mt-blok" :data-test="`meetings-dag-${d.iso}`">
+              <DagBlokKop :datum="d.iso" :meta="dagMeta(d.items)" />
+              <p v-if="!d.items.length" class="mt-dag-leeg" data-test="meetings-dag-leeg">Geen meetings op deze dag. Bel iemand uit je belprioriteit of plan een gesprek.</p>
+              <div v-else class="mt-kaarten">
+                <DagKaart
+                  v-for="m in d.items" :key="m.id" class="mt-kaart" :class="{ 'mt-kaart--nu': m.id === eerstvolgende, 'mt-kaart--voorbij': voorbij(m) }" :data-test="`meeting-${m.id}`"
+                >
+                  <div class="mt-tijd"><span class="tnum">{{ tijd(m.start) }}</span><span class="mt-duur tnum">{{ duur(m) }}</span></div>
+                  <div class="mt-body">
+                    <div class="mt-regel1"><span class="mt-vorm" :class="`mt-vorm--${vormVan(m)}`">{{ VORM[vormVan(m)] }}</span><button type="button" class="dp-kaart-titel mt-naam" :data-test="`meeting-open-${m.id}`" @click="zet('afspraak', m.id)">{{ m.accountNaam ?? m.soort.naam }}</button><span v-if="voorbij(m)" class="pil pil--grijs" data-test="mt-afgelopen">{{ m.status === 'afgerond' ? 'Afgerond' : 'Afgelopen' }}</span></div>
+                    <span class="mt-sub">{{ m.soort.naam }}<template v-if="m.contactNaam"> · {{ m.contactNaam }}</template><template v-if="vormVan(m) === 'intern'"> · telt niet als contactmoment</template><template v-if="m.geplandDoor"> · gepland door {{ naam(m.geplandDoor) }}</template></span>
+                    <div v-if="m.meetinglink || m.accountId || voorbij(m)" class="mt-acties dp-kaart-acties">
+                      <button v-if="voorbij(m) && m.status === 'gepland'" type="button" class="mt-link" data-test="mt-verslag" @click="zet('afspraak', m.id)">Verslag maken</button>
+                      <a v-if="m.meetinglink && !voorbij(m)" :href="m.meetinglink" target="_blank" rel="noopener noreferrer" class="mt-link">Deelnemen ↗</a>
+                      <NuxtLink v-if="m.accountId" :to="`/accounts/${m.accountId}`" class="mt-link mt-link--stil">Open kaart</NuxtLink>
+                    </div>
                   </div>
-                </div>
+                </DagKaart>
               </div>
             </div>
+            </template>
           </div>
-        </template>
+          <div class="mt-belkant" data-test="meetings-bellijst">
+            <BelPrioriteit :lijst="bel.bellijst" :kan="bel.kan" titel="Bel-prioriteit naast je meetings" uitleg="Dezelfde lijst als op Belblokken, zonder wie je die dag al spreekt." smal @taak="taak = $event" />
+          </div>
+        </div>
       </div>
     </section>
 
@@ -180,6 +208,7 @@ useHead({ title: 'Meetings · Dealtrace' })
     </section>
     <PlanAfspraakFlyout :open="planOpen" :account="planAccount" :voorstel="planVoorstel" :aanleiding="planAanleiding" @sluit="planOpen = false" @gepland="gepland" />
     <AfspraakFlyout :open="!!afspraakId" :afspraak-id="afspraakId" @sluit="zet('afspraak', '')" @gewijzigd="refresh()" />
+    <TaakFlyout :open="!!taak" :taak-id="taak" @sluit="taak = null" @klaar="taak = null" />
   </div>
 </template>
 
@@ -194,20 +223,18 @@ useHead({ title: 'Meetings · Dealtrace' })
 .mt-filtergroep { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .mt-filterlabel { font-size: var(--fs-label); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 
-.mt-leeg { display: grid; justify-items: start; gap: 10px; max-width: 560px; padding: 8px 0; }
+.mt-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 1000px) { .mt-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 32px; align-items: start; } }
+.mt-dagkant { display: grid; gap: 12px; min-width: 0; }
+.mt-blok { background: var(--wit); border: 1px solid var(--border); }
+.mt-leeg { display: grid; justify-items: start; gap: 10px; padding: 24px; }
 .mt-leeg-kicker { font-size: var(--fs-label); font-weight: 700; letter-spacing: .1em; color: var(--muted); }
 .mt-leeg-titel { margin: 0; font-family: var(--font-serif); font-size: 22px; font-weight: 700; }
 .mt-leeg-tekst { margin: 0; font-size: 14px; line-height: 1.6; color: var(--ink-soft); }
-
-.mt-week + .mt-week { margin-top: 28px; }
-.mt-week-kop { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
-.mt-week-n, .mt-dag-n { font-size: 12px; color: var(--muted); }
-.mt-dag { margin-bottom: 18px; }
-.mt-dag-kop { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
-.mt-dag-titel { margin: 0; font-family: var(--font-serif); font-size: 19px; font-weight: 700; }
-.mt-kaart { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; margin-bottom: 8px; padding: 13px 14px; background: var(--wit); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: background 120ms ease-out; }
+.mt-dag-leeg { margin: 0; padding: 32px 24px; text-align: center; font-size: var(--fs-body); font-style: italic; color: var(--muted); }
+.mt-kaarten { display: grid; gap: 8px; padding: 12px; }
+.mt-kaart { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; padding: 13px 14px; }
 .mt-kaart:hover { background: var(--surface); }
-.mt-kaart:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .mt-kaart--nu { border-color: var(--ink); border-left: 3px solid var(--yellow); }
 .mt-kaart--voorbij { background: var(--surface); }
 .mt-kaart--voorbij .mt-tijd, .mt-kaart--voorbij .mt-naam { color: var(--muted); }
@@ -220,7 +247,7 @@ button.mt-link { padding: 0; background: none; border: 0; cursor: pointer; font-
 .mt-vorm--online { background: var(--blue); color: var(--wit); }
 .mt-vorm--telefoon { background: var(--ink); color: var(--yellow); }
 .mt-vorm--intern { background: var(--surface); color: var(--ink-soft); border: 1px solid var(--border-strong); }
-.mt-naam { font-size: 14px; font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
+.mt-naam { font-family: var(--font-sans); font-size: 14px; font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
 .mt-sub { font-size: 12.5px; color: var(--muted); }
 .mt-acties { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
 .mt-link { display: inline-flex; align-items: center; min-height: 28px; font-size: 11.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
@@ -238,6 +265,7 @@ button.mt-link { padding: 0; background: none; border: 0; cursor: pointer; font-
 .mt-plan-knop { flex-shrink: 0; }
 @media (max-width: 719px) {
   .mt-kaart { grid-template-columns: 52px minmax(0, 1fr); gap: 10px; }
+  .mt-kaarten { padding: 8px; }
   .mt-link { min-height: 44px; }
   .mt-plan-rij { flex-direction: column; align-items: stretch; }
   .mt-plan-knop { min-height: 44px; justify-content: center; }

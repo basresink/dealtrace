@@ -22,11 +22,11 @@ test('Dag: kop, week met regiodagen, kaart, routelijst, statistiek, kansen, bell
   await expect(page.getByTestId('kansen')).toContainText('Kansen langs de route')
   await expect(page.getByTestId('te-plannen')).toContainText('Te plannen bezoeken')
   const bel = page.getByTestId('bellijst-naast')
-  const vijf = await bel.locator('.bz-bel-rij').count()
+  const vijf = await bel.locator('[data-test^="bel-kaart-"]').count()
   expect(vijf).toBeLessThanOrEqual(5)
   if (vijf === 5) {
     await page.getByTestId('bel-top-10').click()
-    expect(await bel.locator('.bz-bel-rij').count()).toBeGreaterThanOrEqual(5)
+    expect(await bel.locator('[data-test^="bel-kaart-"]').count()).toBeGreaterThanOrEqual(5)
   }
 })
 
@@ -51,4 +51,47 @@ test('Filters: periode Morgen zet de datum in de URL; de kansfilters staan in he
   await expect(page.getByTestId('periode-morgen')).toHaveClass(/filter-pil--aan/)
   await page.getByTestId('periode-deze-week').click()
   await expect(page).toHaveURL(/weergave=week/)
+})
+
+test('dagkop: de datum is een link naar de agenda op die dag; Analyse rechtsboven (geen Meer, geen Agenda)', async ({ page }) => {
+  await login(page, 'u-07')
+  await ga(page, `/bezoeken?datum=${maandag}`)
+  const kop = page.getByTestId('kop-knoppen')
+  await expect(kop.getByTestId('kop-meer')).toHaveCount(0)
+  await expect(kop.getByTestId('bz-agenda')).toHaveCount(0)
+  await expect(kop.getByTestId('bezoekanalyse-knop')).toHaveText('Analyse')
+  const link = page.getByTestId('routelijst').getByTestId('dagblok-datum')
+  await expect(link).toHaveAttribute('href', `/agenda?weergave=dag&datum=${maandag}`)
+  await link.click()
+  await expect(page).toHaveURL(new RegExp(`/agenda\\?weergave=dag&datum=${maandag}`))
+  await ga(page, '/bezoeken')
+  await page.getByTestId('kop-knoppen').getByTestId('bezoekanalyse-knop').click()
+  await expect(page).toHaveURL(/\/bezoek-analyse$/)
+})
+
+test('bellijst en te plannen bezoeken als kaarten; een klik opent het taakvenster met de link naar de prospect', async ({ page }) => {
+  for (const breedte of [1280, 900]) {
+    await page.setViewportSize({ width: breedte, height: 900 })
+    await login(page, 'u-07')
+    await ga(page, '/bezoeken')
+    const bel = page.getByTestId('bellijst-naast')
+    await expect(bel.locator('a', { hasText: /^Bel$/ })).toHaveCount(0)
+    const kaart = bel.locator('[data-test^="bel-kaart-"]').filter({ has: page.locator('button.dp-kaart-titel') }).first()
+    await expect(kaart).toBeVisible()
+    await kaart.scrollIntoViewIfNeeded()
+    // Klik op een lege plek in de kaart (niet op de titel): de hele kaart is klikbaar.
+    const box = (await kaart.boundingBox())!
+    await page.mouse.click(box.x + box.width - 12, box.y + box.height - 8)
+    const fo = page.getByTestId('taak-flyout')
+    await expect(fo).toBeVisible()
+    await expect(fo.getByTestId('tf-account')).toHaveAttribute('href', /\/accounts\//)
+    await expect(page).toHaveURL(/\/bezoeken/)
+    await page.keyboard.press('Escape')
+    await expect(fo).toHaveCount(0)
+    const plan = page.getByTestId('te-plannen').locator('[data-test^="plan-kaart-"]').first()
+    await expect(plan).toBeVisible()
+    await plan.locator('.dp-kaart-titel').click()
+    await expect(page.getByTestId('taak-flyout')).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(breedte)
+  }
 })

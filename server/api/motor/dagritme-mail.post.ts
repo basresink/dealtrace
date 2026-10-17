@@ -29,7 +29,12 @@ export default defineEventHandler(async (event) => {
         const ctx = { id: g.id, rol: g.rol as Rol, niveau: g.niveau as Niveau, werkplek: g.werkplek as Werkplek, teamId: g.teamId, verborgen: [] }
         return beschikbaar('dagritme.mail', ctx, organisatie, stand).ok && beschikbaar(FUNCTIE[soort], ctx, organisatie, stand).ok
       }
-      const t = await metOrganisatie(o.id, (tx) => verstuurDagritmeMails(tx, o.id, nu, basis, mag))
+      // De blokken in de mail (belblokken, campagnes, accountplannen) volgen dezelfde functies als het scherm.
+      const kanFunctie = (g: { id: string; rol: string; niveau: string; werkplek: string; teamId: string | null }, sleutel: string) => {
+        const ctx = { id: g.id, rol: g.rol as Rol, niveau: g.niveau as Niveau, werkplek: g.werkplek as Werkplek, teamId: g.teamId, verborgen: [] }
+        return beschikbaar(sleutel, ctx, organisatie, stand).ok
+      }
+      const t = await metOrganisatie(o.id, (tx) => verstuurDagritmeMails(tx, o.id, nu, basis, mag, kanFunctie))
       for (const [k, v] of Object.entries(t)) totaal[k] = (totaal[k] ?? 0) + v
     } catch (e: any) { console.error(`dagritme-mail ${o.id}: ${e?.message}`) }
   }

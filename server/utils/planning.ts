@@ -9,6 +9,7 @@ import {
   benaderdDitJaar, hercontactOpTijd, leesPlanning, planningStand, POGING_SOORTEN, potentieVan, spreidOverBlokken, statusVan, vensterVan, verkoopjaar, watKnelt,
   type BlokMoment, type IngedeeldAccount,
 } from '../../shared/planning'
+import { primairContact } from '../../shared/contactgegevens'
 import { klasseCode, type Klasse } from '../../shared/ritmematrix'
 import { terugkomDatum, terugkomTekst, type Redenmapping } from '../../shared/verkoopverhaal'
 import { schrijfAudit } from './audit'
@@ -31,6 +32,13 @@ export async function planInstelling(tx: Tx) {
 export interface PlanRij {
   id: string; naam: string; klasse: string | null; plaats: string | null; ownerId: string | null; potentie: string | null
   venster: { van: string; tot: string } | null; status: string; pogingen: number; telefoon: string | null; lat: number | null; lng: number | null
+  /** Het primaire contact (beslisser, champion, iemand met telefoon), voor de knop + Bel taak. */
+  contact: { id: string; naam: string; functie: string | null } | null
+}
+
+function primairVan(lijst: { id: string; naam: string; functie: string | null; rol: string; status: string; telefoon: string | null; mobiel: string | null }[]) {
+  const c = primairContact(lijst)
+  return c ? { id: c.id, naam: c.naam, functie: c.functie } : null
 }
 
 /** De jaarplanning voor een lijst eigenaren (scope mij of team). */
@@ -42,6 +50,9 @@ export async function jaarplanning(tx: Tx, eigenaren: string[] | null, nu = new 
   const ids = rijen.map((r) => r.id)
   const acts = ids.length ? (await tx.execute(sql`select account_id, soort, uitkomst, op from activiteiten where op >= ${jaar.start} and soort in ${[...POGING_SOORTEN]} and account_id in ${ids}`)).rows as any[] : []
   const per = new Map<string, any[]>()
+  const cs = ids.length ? await tx.select({ id: schema.contacts.id, accountId: schema.contacts.accountId, firstName: schema.contacts.firstName, lastName: schema.contacts.lastName, rol: schema.contacts.rol, status: schema.contacts.status, data: schema.contacts.data }).from(schema.contacts).where(inArray(schema.contacts.accountId, ids)) : []
+  const contactenPer = new Map<string, { id: string; naam: string; functie: string | null; rol: string; status: string; telefoon: string | null; mobiel: string | null }[]>()
+  for (const c of cs) (contactenPer.get(c.accountId) ?? contactenPer.set(c.accountId, []).get(c.accountId)!).push({ id: c.id, naam: [c.firstName, c.lastName].filter(Boolean).join(' '), functie: c.data?.functie ?? null, rol: c.rol, status: c.status, telefoon: c.data?.telefoon ?? null, mobiel: c.data?.mobiel ?? null })
   for (const r of acts) (per.get(r.account_id) ?? per.set(r.account_id, []).get(r.account_id)!).push({ soort: r.soort, uitkomst: r.uitkomst, op: new Date(r.op).toISOString() })
   const lijst: PlanRij[] = []
   const ingedeeld: IngedeeldAccount[] = []
@@ -53,7 +64,7 @@ export async function jaarplanning(tx: Tx, eigenaren: string[] | null, nu = new 
     const b = benaderdDitJaar(per.get(a.id) ?? [], jaar)
     const k = klassen.find((x) => x.id === a.klasse)
     ingedeeld.push({ id: a.id, potentie, benaderd: b.benaderd, venster })
-    lijst.push({ id: a.id, naam: a.name, klasse: k ? klasseCode(k) : a.klasse, plaats: a.city, ownerId: a.ownerId, potentie, venster, status: statusVan(b), pogingen: b.pogingen, telefoon: (a.data as any)?.telefoon ?? null, lat: a.lat, lng: a.lng })
+    lijst.push({ id: a.id, naam: a.name, klasse: k ? klasseCode(k) : a.klasse, plaats: a.city, ownerId: a.ownerId, potentie, venster, status: statusVan(b), pogingen: b.pogingen, telefoon: (a.data as any)?.telefoon ?? null, lat: a.lat, lng: a.lng, contact: primairVan(contactenPer.get(a.id) ?? []) })
   }
   const stand = planningStand(ingedeeld, jaar, nu)
   return { instelling: inst, jaar, stand, knelt: watKnelt(stand, nu, inst.vensters), accounts: lijst }

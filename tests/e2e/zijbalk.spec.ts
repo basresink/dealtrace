@@ -5,8 +5,8 @@ test.describe('zijbalk per niveau', () => {
   test('Beginner buitendienst: 14 items met Planning open, en Bezoeken voor Belblokken', async ({ page }) => {
     await login(page, 'u-02')
     const items = page.locator('.sb-nav .sb-groep:not(.sb-slotgroep) .sb-link')
-    // Planning is een uitklapmenu: dicht 9 items (met Opvolgreeksen), open 15 (Prospectplanning staat sinds 0064 voor iedereen aan).
-    await expect(items).toHaveCount(9)
+    // Planning is een uitklapmenu: dicht 10 items (met Opvolgreeksen en Richting in Start), open 15 (Prospectplanning staat sinds 0064 voor iedereen aan).
+    await expect(items).toHaveCount(10)
     await page.getByTestId('sb-planning').click()
     await expect(items).toHaveCount(15)
     const sleutels = await items.evaluateAll((els) => els.map((e) => e.getAttribute('data-sleutel')))
@@ -14,6 +14,15 @@ test.describe('zijbalk per niveau', () => {
     // Nog niet aangezet: Inzichten, Briefings, Accountplannen, Leadgenerator, Signaalradar en Prospectreizen.
     await expect(page.locator('.sb-slotgroep-teller')).toHaveText('6')
     await expect(page.getByTestId('gebruikersblok')).toHaveText('ACCOUNTMANAGER · BEGINNER')
+  })
+
+  test('Richting staat in Start direct onder Agenda, ook met Planning dicht', async ({ page }) => {
+    await login(page, 'u-07')
+    const start = page.locator('.sb-groep[data-groep="Start"] .sb-link')
+    expect(await start.evaluateAll((els) => els.map((e) => e.getAttribute('data-sleutel')))).toEqual(['nav.vandaag', 'nav.agenda', 'nav.richting'])
+    await expect(page.locator('.sb-groep[data-groep="Planning"] [data-sleutel="nav.richting"]')).toHaveCount(0)
+    await start.nth(2).click()
+    await expect(page).toHaveURL(/\/richting$/)
   })
 
   test('Rapportages met Mijn dashboard en Funnel; de gebruikerskaart opent geen menu', async ({ page }) => {

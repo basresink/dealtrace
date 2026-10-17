@@ -22,6 +22,8 @@ import { stuurMeldingMail } from './mailer'
 import { instellingVan } from './onderwegMeldingen'
 import { ruw } from './team'
 import { laadRitmeSteun } from './ritmeSteun'
+import { laadRitmeBlokken } from './ritmeBlokken'
+import { ritmeBlokkenMail } from '../../shared/ritmeBlokken'
 
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
 type Rij = Record<string, any>
@@ -284,7 +286,7 @@ export async function verzetReview(tx: Tx, org: string, gebruikerId: string, maa
 
 // ── Weekstart ──────────────────────────────────────────────────────────────
 
-export async function laadWeekstart(tx: Tx, gebruikerId: string, nu = new Date()) {
+export async function laadWeekstart(tx: Tx, gebruikerId: string, nu = new Date(), opties: { kan?: (sleutel: string) => boolean } = {}) {
   const g = await gebruikerVan(tx, gebruikerId)
   const w = await werkdagen(tx)
   const week = weekVan(nu)
@@ -316,7 +318,17 @@ export async function laadWeekstart(tx: Tx, gebruikerId: string, nu = new Date()
     eersteAfspraak: afs.some((a) => a.fase_id === 'afspraak-gepland' && Date.parse(iso(a.start_at)!) >= nu.getTime()), bezoeken: afs.filter((a) => a.vorm === 'bezoek').length,
     noShows: await noShowsVan(tx, g.id, new Date(nu.getTime() - 14 * 864e5)),
   }, week.van)
-  return { ...ws, reviewGedaan: !!vorige?.afgerondOp, steun }
+  // Blokken van deze week (alleen je eigen data): belblokken om te vullen, belprioriteit, kansen langs de
+  // route per dag met bezoeken, lopende campagnes en accountplannen. Zonder kan geen blokken (bijvoorbeeld een test).
+  const vandaag = nlMoment(nu).datum
+  const blokken = opties.kan ? await laadRitmeBlokken(tx, g, nu, {
+    periode: 'week', dagen: ws.dagen.filter((d) => d.werkdag && d.datum >= vandaag).map((d) => d.datum), tot: plusDagen(week.tot, 1), kan: opties.kan,
+    voorstelVoor: async (dag) => {
+      const b = await planBron(tx, g, dag, nu)
+      return b.plan.voorstellen.map((v) => ({ datum: dag, start: v.start, eind: v.eind, uitleg: b.plan.belUitleg ?? null }))
+    },
+  }) : null
+  return { ...ws, reviewGedaan: !!vorige?.afgerondOp, steun, blokken }
 }
 
 // ── Dagstart ───────────────────────────────────────────────────────────────
@@ -401,7 +413,7 @@ export async function planBron(tx: Tx, g: DagritmeGebruiker, dag: string, nu: Da
   return { modus, vast, vastStand, plan, bereik, doelBranche, doelgroep, branches, belTaken: bel.length, bezoeken: vast.filter((v) => v.soort === 'bezoek').length }
 }
 
-export async function laadDagstart(tx: Tx, gebruikerId: string, nu = new Date(), opties: { dag?: string | null; modus?: string | null; branche?: string | null; org?: string; bewaar?: boolean } = {}) {
+export async function laadDagstart(tx: Tx, gebruikerId: string, nu = new Date(), opties: { dag?: string | null; modus?: string | null; branche?: string | null; org?: string; bewaar?: boolean; kan?: (sleutel: string) => boolean } = {}) {
   const g = await gebruikerVan(tx, gebruikerId)
   const w = await werkdagen(tx)
   const vandaag = nlMoment(nu).datum
@@ -433,7 +445,13 @@ export async function laadDagstart(tx: Tx, gebruikerId: string, nu = new Date(),
     items: ((dp?.data?.items ?? []) as PlanItem[]).filter((i) => i.status === 'actief').map((i) => ({ sleutel: i.sleutel, soort: i.soort, start: i.start, eind: i.eind, titel: i.titel, sub: i.sub, agenda: SCHRIJFT_IN_AGENDA.includes(i.soort) })),
     wijzigingen: (dp?.data?.wijzigingen ?? []) as { op: string; aanleiding: string; regels: string[] }[],
   }
+  // Blokken van de dag (alleen je eigen data). Zonder belblok die dag het voorstel op het beste uur uit planBron.
+  const blokken = opties.kan ? await laadRitmeBlokken(tx, g, nu, {
+    periode: 'dag', dagen: isWerkdag(dag, w) && dag >= vandaag ? [dag] : [], tot: plusDagen(dag, 1), kan: opties.kan,
+    voorstelVoor: async (d) => (dp?.status === 'gepland' ? [] : plan.voorstellen.map((v) => ({ datum: d, start: v.start, eind: v.eind, uitleg: plan.belUitleg ?? null }))),
+  }) : null
   const basis = {
+    blokken,
     dag, vandaag: dag === vandaag, werkdag: isWerkdag(dag, w), werkplek: g.werkplek, kicker: `Planning · Dagstart · ${label}`,
     bereik: { uren: bereik.uren, pogingen: bereik.pogingen, genoeg: bereik.genoeg, bron: bereik.bron, doelgroep, brancheId: doelBranche },
     branches: branches.map((b) => ({ id: b.id as string, naam: b.naam as string })), belTaken: bron.belTaken, dagplanning, steun,
@@ -495,12 +513,15 @@ export async function zetBelblokken(tx: Tx, org: string, gebruikerId: string, st
 // ── Mail ───────────────────────────────────────────────────────────────────
 
 /** De inhoud van één mail, zoals de verzender en "Stuur een voorbeeld" hem maken. */
-export async function maakDagritmeMail(tx: Tx, org: string, gebruikerId: string, soort: DagritmeMail, nu: Date, basis: string) {
+export async function maakDagritmeMail(tx: Tx, org: string, gebruikerId: string, soort: DagritmeMail, nu: Date, basis: string, kan?: (sleutel: string) => boolean) {
   const link = `${basis.replace(/\/$/, '')}${DAGRITME_MAIL_ROUTE[soort]}`
   if (soort === 'weekreview') return weekreviewMail(await laadWeekreview(tx, gebruikerId, nu), link)
-  if (soort === 'weekstart') return weekstartMail(await laadWeekstart(tx, gebruikerId, nu), link)
-  const d = await laadDagstart(tx, gebruikerId, nu, { org })
-  return dagstartMail({ titel: d.titel, plan: d.plan, schoof: d.schoof, doelgroep: d.bereik.doelgroep }, link)
+  if (soort === 'weekstart') {
+    const w = await laadWeekstart(tx, gebruikerId, nu, { kan })
+    return weekstartMail(w, link, ritmeBlokkenMail(w.blokken))
+  }
+  const d = await laadDagstart(tx, gebruikerId, nu, { org, kan })
+  return dagstartMail({ titel: d.titel, plan: d.plan, schoof: d.schoof, doelgroep: d.bereik.doelgroep }, link, ritmeBlokkenMail(d.blokken))
 }
 
 /**
@@ -508,7 +529,7 @@ export async function maakDagritmeMail(tx: Tx, org: string, gebruikerId: string,
  * tijdstip en buiten de stille uren. Tijdens de rijmodus of een belblok wacht hij een ronde. Eén mail
  * per soort per dag (melding_log). `mag` controleert of de functie voor de gebruiker aanstaat.
  */
-export async function verstuurDagritmeMails(tx: Tx, org: string, nu: Date, basis: string, mag: (g: { id: string; rol: string; niveau: string; werkplek: string; teamId: string | null }, soort: DagritmeMail) => boolean) {
+export async function verstuurDagritmeMails(tx: Tx, org: string, nu: Date, basis: string, mag: (g: { id: string; rol: string; niveau: string; werkplek: string; teamId: string | null }, soort: DagritmeMail) => boolean, kanFunctie?: (g: { id: string; rol: string; niveau: string; werkplek: string; teamId: string | null }, sleutel: string) => boolean) {
   const tel = { verstuurd: 0, wacht: 0, overgeslagen: 0, fout: 0 }
   const w = await werkdagen(tx)
   const gebruikers = await rijen(tx, sql`select u.id, u.email, u.role, u.niveau, u.werkplek, u.team_id, u.data as udata, p.data->'dagritmeMail' as mail from users u join persoonlijke_instellingen p on p.id = u.id
@@ -531,7 +552,8 @@ export async function verstuurDagritmeMails(tx: Tx, org: string, nu: Date, basis
       }
       if (houdtVast(u.udata, nu)) { tel.wacht++; continue }
       try {
-        const mail = await maakDagritmeMail(tx, org, u.id, soort, nu, basis)
+        const wie = { id: u.id, rol: u.role, niveau: u.niveau, werkplek: u.werkplek, teamId: u.team_id }
+        const mail = await maakDagritmeMail(tx, org, u.id, soort, nu, basis, kanFunctie ? (sleutel) => kanFunctie(wie, sleutel) : undefined)
         await stuurMeldingMail(u.email, mail.onderwerp, mail.tekst)
         await tx.execute(sql`insert into melding_log (organisation_id, gebruiker_id, soort, sleutel, status, reden, op) values (${org}, ${u.id}, ${`mail-${soort}`}, ${sleutel}, 'verstuurd', null, ${nu.toISOString()}) on conflict (gebruiker_id, sleutel) do nothing`)
         tel.verstuurd++

@@ -5,12 +5,12 @@ import { ga, login } from './hulp'
 // Meetings, de doorverwijzing van /analyse/regio, cijfers, dekkingstabel met flyout, filters in de
 // URL, het teambeeld voor de salesmanager, Download en de pagina "Nog niet aangezet" voor Beginner.
 test.describe('bezoekanalyse', () => {
-  test('knop Bezoekanalyse rechtsboven op Bezoeken en terug', async ({ page }) => {
+  test('knop Analyse rechtsboven op Bezoeken en terug', async ({ page }) => {
     await login(page, 'u-01')
     await ga(page, '/bezoeken')
-    await page.getByTestId('kop-knoppen').getByTestId('kop-meer').click()
+    // Sinds W2 staat Analyse als eigen knop in de kop (geen Meer meer op Bezoeken).
     const knop = page.getByTestId('kop-knoppen').getByTestId('bezoekanalyse-knop')
-    await expect(knop).toHaveText('Bezoekanalyse')
+    await expect(knop).toHaveText('Analyse')
     await expect(page.getByTestId('regio-analyse')).toHaveCount(0)
     await knop.click()
     await expect(page).toHaveURL(/\/bezoek-analyse$/)

@@ -200,3 +200,91 @@ test.describe('Dagritme per mail', () => {
     expect((await request.post('/api/motor/dagritme-mail')).status()).toBe(401)
   })
 })
+
+// Blokken op Dagstart en Weekstart (shared/ritmeBlokken.ts): belblokken om te vullen, belprioriteit naast je
+// afspraken, kansen langs de route, lopende campagnes en accountplannen. Eva (u-07, Expert) heeft ze allemaal.
+const BLOKKEN = ['belblokken', 'belprioriteit', 'kansen', 'campagnes', 'accountplannen'] as const
+test.describe('Blokken op Dagstart en Weekstart', () => {
+  for (const breedte of [1280, 390]) {
+    test(`weekstart en dagstart tonen vijf blokken met uitleg, ${breedte} px`, async ({ page }) => {
+      await page.setViewportSize({ width: breedte, height: breedte < 500 ? 844 : 900 })
+      await login(page, 'u-07')
+      const dag = volgendeWerkdag()
+      for (const pad of ['/weekstart', `/dagstart?dag=${dag}`]) {
+        const api = await (await page.request.get(`/api${pad}`)).json()
+        for (const b of BLOKKEN) expect(api.blokken[b]).not.toBeNull()
+        await ga(page, pad)
+        for (const b of BLOKKEN) {
+          const kaart = page.getByTestId(`rb-${b}`)
+          await expect(kaart).toBeVisible()
+          await expect(kaart.getByTestId('rb-waarom')).not.toBeEmpty()
+          expect(await kaart.textContent()).not.toMatch(/[–—]/)
+        }
+        // Lopende campagnes en accountplannen linken naar hun pagina.
+        for (const c of api.blokken.campagnes.lopend) await expect(page.getByTestId(`rb-campagne-${c.id}`).locator(`a[href="/campagnes/${c.id}"]`).first()).toBeVisible()
+        for (const p of api.blokken.accountplannen.lopend) await expect(page.getByTestId(`rb-plan-${p.id}`).locator(`a[href="/accountplannen/${p.id}"]`).first()).toBeVisible()
+        if (!api.blokken.campagnes.lopend.length) await expect(page.getByTestId('rb-campagnes-leeg')).toBeVisible()
+        if (!api.blokken.kansen.dagen.length) await expect(page.getByTestId('rb-kansen-leeg')).toBeVisible()
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(breedte)
+        if (breedte < 500) {
+          for (const knop of await page.locator('[data-test^="rb-"] .dd-act').all()) {
+            if (await knop.isVisible()) expect((await knop.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+          }
+        }
+      }
+    })
+  }
+
+  test('een taak opent de taakflyout, een afspraak de afspraakflyout', async ({ page }) => {
+    await login(page, 'u-07')
+    const dag = volgendeWerkdag()
+    const api = await (await page.request.get(`/api/dagstart?dag=${dag}`)).json()
+    await ga(page, `/dagstart?dag=${dag}`)
+    const afspraak = api.blokken.belprioriteit.afspraken[0]
+    if (afspraak) {
+      await page.getByTestId(`rb-afspraak-${afspraak.id}`).click()
+      await expect(page.getByTestId('afspraak-flyout')).toBeVisible()
+      await page.keyboard.press('Escape')
+      await expect(page.getByTestId('afspraak-flyout')).toHaveCount(0)
+    }
+    const taak = api.blokken.belprioriteit.lijst.find((b: any) => b.taskId)
+    test.skip(!taak, 'Geen beltaak in de belprioriteit')
+    await page.getByTestId(`rb-bel-taak-${taak.taskId}`).click()
+    await expect(page.getByTestId('taak-flyout')).toBeVisible()
+    await expect(page).toHaveURL(/\/dagstart/)
+  })
+
+  test('Vul belblok hangt het voorstel aan het blok; de API weigert wat niet klopt', async ({ page }) => {
+    await login(page, 'u-07')
+    expect((await page.request.post('/api/belblokken/bestaat-niet/vul', { data: { accountIds: ['x'] } })).status()).toBe(404)
+    const api = await (await page.request.get('/api/weekstart')).json()
+    const blok = [...api.blokken.belblokken.blokken].reverse().find((b: any) => b.kanVullen)
+    test.skip(!blok, 'Geen belblok meer om te vullen')
+    expect((await page.request.post(`/api/belblokken/${blok.id}/vul`, { data: { accountIds: [] } })).status()).toBe(422)
+    await ga(page, '/weekstart')
+    const rij = page.getByTestId(`rb-blok-${blok.id}`)
+    await expect(rij.getByTestId('rb-voorstel')).toContainText(blok.voorstel[0].accountNaam)
+    await expect(rij.getByTestId(`rb-open-${blok.id}`)).toHaveAttribute('href', `/belblokken/${blok.id}`)
+    await rij.getByTestId(`rb-vul-${blok.id}`).click()
+    await expect(page.getByText(/in je belblok van/)).toBeVisible()
+    const na = await (await page.request.get('/api/weekstart')).json()
+    const lijst = await (await page.request.get('/api/belblokken')).json()
+    expect(lijst.gepland.find((s: any) => s.id === blok.id)?.gesprekken).toBe(blok.gesprekken + blok.voorstel.length)
+    expect(na.blokken.belblokken.blokken.find((b: any) => b.id === blok.id)?.gesprekken ?? Infinity).toBeGreaterThan(blok.gesprekken)
+    // Nog een keer met dezelfde accounts: die staan al in een blok.
+    expect((await page.request.post(`/api/belblokken/${blok.id}/vul`, { data: { accountIds: blok.voorstel.map((v: any) => v.accountId) } })).status()).toBe(409)
+  })
+
+  test('een blok staat er alleen als de functie voor je niveau aanstaat (Beginner)', async ({ page }) => {
+    await login(page, 'u-02')
+    const api = await (await page.request.get('/api/weekstart')).json()
+    await ga(page, '/weekstart')
+    for (const b of BLOKKEN) {
+      if (api.blokken[b] === null) await expect(page.getByTestId(`rb-${b}`)).toHaveCount(0)
+      else await expect(page.getByTestId(`rb-${b}`)).toBeVisible()
+    }
+    // Belprioriteit (Gevorderd) en Accountplannen (Expert) staan voor een beginner uit.
+    expect(api.blokken.belprioriteit).toBeNull()
+    expect(api.blokken.accountplannen).toBeNull()
+  })
+})

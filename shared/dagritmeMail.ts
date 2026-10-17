@@ -95,7 +95,8 @@ export function weekreviewMail(r: Weekreview, link: string): { onderwerp: string
 }
 
 /** De weekstart als mail: per dag de afspraken en belblokken, voornemens, wat openstaat, tempo en aanleidingen. */
-export function weekstartMail(w: Weekstart, link: string): { onderwerp: string; tekst: string } {
+/** Met `extra` de blokken van de week kort (shared/ritmeBlokken.ts ritmeBlokkenMail). */
+export function weekstartMail(w: Weekstart, link: string, extra: string[] = []): { onderwerp: string; tekst: string } {
   const dagen = w.dagen.filter((d) => d.items.length).flatMap((d) => [d.label, ...d.items.map((i) => `- ${i.tijd} ${i.titel}${i.sub ? ` (${i.sub})` : ''}`)])
   return {
     onderwerp: `Je week ${w.week.nummer}: ${w.samenvatting.replace(/\.$/, '')}`,
@@ -106,13 +107,14 @@ export function weekstartMail(w: Weekstart, link: string): { onderwerp: string; 
       'Wat openstaat', w.open.tekst, '',
       'Tempo', w.tempo.tekst,
       ...(w.aanleidingen.length ? ['', 'Belangrijkste aanleidingen', ...w.aanleidingen.map((a) => `- ${a.accountNaam ? `${a.accountNaam}: ` : ''}${a.titel}`)] : []),
+      ...extra,
       '', `Open je weekstart: ${link}`, '', voet('weekstart'),
     ]),
   }
 }
 
 /** De dagstart als mail: de indeling van de dag en waarom het belblok op dat uur ligt. */
-export function dagstartMail(d: { titel: string; plan: Dagplan; schoof: string[]; doelgroep: string | null }, link: string): { onderwerp: string; tekst: string } {
+export function dagstartMail(d: { titel: string; plan: Dagplan; schoof: string[]; doelgroep: string | null }, link: string, extra: string[] = []): { onderwerp: string; tekst: string } {
   const hh = (iso: string) => { const m = nlMoment(new Date(iso)); return `${String(m.uur).padStart(2, '0')}:${String(m.minuut).padStart(2, '0')}` }
   const blokken = d.plan.blokken.filter((b) => b.soort !== 'reis').map((b) => `- ${hh(b.start)} ${b.titel}${b.sub ? ` (${b.sub})` : ''}${b.voorstel ? ' · voorstel' : ''}`)
   return {
@@ -122,6 +124,7 @@ export function dagstartMail(d: { titel: string; plan: Dagplan; schoof: string[]
       ...(blokken.length ? blokken : ['Niets gepland. Een lege agenda is het beste moment om te prospecteren.']), '',
       d.doelgroep ? `Belmoment voor ${d.doelgroep}` : 'Belmoment', d.plan.belUitleg,
       ...(d.schoof.length ? ['', 'Wat schoof', ...d.schoof.map((s) => `- ${s}`)] : []),
+      ...extra,
       '', `Open je dagstart: ${link}`, '', voet('dagstart'),
     ]),
   }

@@ -1,12 +1,15 @@
 <script setup lang="ts">
 // Weekstart: op maandag het weekplan. Per dag de afspraken, bezoeken en belblokken; de voornemens uit de
 // weekreview van vrijdag met hun stand; wat er openstaat; het tempo tegen je doel; de belangrijkste
-// aanleidingen. Onderaan Tips en tricks en drie artikelen uit de academie bij je week (RitmeSteun).
+// aanleidingen. Daaronder de blokken van de week (RitmeBlokken: belblokken om te vullen, belprioriteit,
+// kansen langs de route per dag met bezoeken, lopende campagnes en accountplannen). Onderaan Tips en tricks en drie artikelen uit de academie bij je week (RitmeSteun).
 // Eén bron: GET /api/weekstart (shared/dagritme.ts bouwWeekstart, vorm 'weekstart'; steun uit shared/ritmeSteun.ts).
 const { functie } = useMe()
 const aan = !!functie('dagritme.weekstart')?.beschikbaar
 const reviewAan = !!functie('dagritme.weekreview')?.beschikbaar
-const { data: w } = await useFetch<any>('/api/weekstart', { immediate: aan, default: () => null })
+const { data: w, refresh } = await useFetch<any>('/api/weekstart', { immediate: aan, default: () => null })
+// Een afspraak in de week opent de afspraakflyout, een belblok het blok zelf.
+const afspraak = ref<string | null>(null)
 const ICOON: Record<string, string> = { afspraak: 'Handshake', bezoek: 'MapPin', belblok: 'Phone' }
 const ICOON_KLASSE: Record<string, string> = { belblok: 'item-icoon--call', bezoek: 'item-icoon--visit', afspraak: 'item-icoon--email' }
 const TEMPO_PIL: Record<string, string> = { 'op schema': 'pil--groen', achter: 'pil--rood', geen: 'pil--grijs' }
@@ -55,17 +58,26 @@ useHead({ title: 'Weekstart · Dealtrace' })
               <header class="ws-dag-kop"><b>{{ dag.label }}</b><span v-if="dag.vandaag" class="pil pil--geel">Vandaag</span><span v-else-if="!dag.werkdag" class="pil pil--grijs">Vrij</span></header>
               <ul v-if="dag.items.length" class="ws-items">
                 <li v-for="i in dag.items" :key="i.id">
-                  <NuxtLink :to="i.href" class="item-rij">
+                  <NuxtLink v-if="i.soort === 'belblok'" :to="`/belblokken/${i.id}`" class="item-rij">
                     <span class="item-tijd">{{ i.tijd }}</span>
                     <span class="item-icoon" :class="ICOON_KLASSE[i.soort]"><Icoon :naam="ICOON[i.soort] ?? 'Clock'" /></span>
                     <span class="item-body"><span class="item-naam">{{ i.titel }}</span><span v-if="i.sub" class="item-meta">{{ i.sub }}</span></span>
                   </NuxtLink>
+                  <button v-else type="button" class="item-rij" :data-test="`ws-afspraak-${i.id}`" @click="afspraak = i.id">
+                    <span class="item-tijd">{{ i.tijd }}</span>
+                    <span class="item-icoon" :class="ICOON_KLASSE[i.soort]"><Icoon :naam="ICOON[i.soort] ?? 'Clock'" /></span>
+                    <span class="item-body"><span class="item-naam">{{ i.titel }}</span><span v-if="i.sub" class="item-meta">{{ i.sub }}</span></span>
+                  </button>
                 </li>
               </ul>
               <p v-else class="meta ws-leeg">Nog niets gepland.</p>
             </article>
           </div>
         </div>
+      </section>
+
+      <section v-if="w.blokken" class="section">
+        <div class="container"><RitmeBlokken :blokken="w.blokken" moment="weekstart" @ververs="refresh()" /></div>
       </section>
 
       <section class="section">
@@ -89,6 +101,7 @@ useHead({ title: 'Weekstart · Dealtrace' })
       <section class="section section--laatste">
         <div class="container"><RitmeSteun :steun="w.steun" moment="weekstart" /></div>
       </section>
+      <AfspraakFlyout :open="!!afspraak" :afspraak-id="afspraak" @sluit="afspraak = null" @gewijzigd="refresh()" />
     </template>
   </div>
 </template>

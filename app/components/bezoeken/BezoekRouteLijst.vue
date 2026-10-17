@@ -1,22 +1,18 @@
 <script setup lang="ts">
 // Routelijst van één dag in de opzet van DealDrive (RouteList): een dagkop met het aantal stops en
-// de duur, per stop de tijd met duur en VOLGENDE, de titel, het account en het adres, en de acties
+// de duur (de datum is een link naar de agenda op die dag, DagBlokKop), per stop de tijd met duur en VOLGENDE, de titel, het account en het adres, en de acties
 // van Dealtrace (Navigeer, Open, Rond af). Tussen de stops de reistijd als die bekend is.
 import { duurLabel, kaartLink, type Kaartapp } from '~~/shared/route'
 const props = defineProps<{ datum: string; stops: any[]; app: Kaartapp; nummerVanaf?: number; leegTekst?: string }>()
 const emit = defineEmits<{ open: [id: string] }>()
 const tijd = (iso: string) => new Date(iso).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })
 const minuten = (s: any) => Math.max(0, Math.round((Date.parse(s.eind) - Date.parse(s.start)) / 60_000))
-const dagKop = computed(() => new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${props.datum}T12:00:00Z`)))
 const totaal = computed(() => duurLabel(props.stops.reduce((s, x) => s + minuten(x), 0)))
 </script>
 
 <template>
   <div class="rl" :data-test="`routedag-${datum}`">
-    <header class="rl-dag">
-      <strong>{{ dagKop }}</strong>
-      <span class="tnum">{{ stops.length }} {{ stops.length === 1 ? 'stop' : 'stops' }} · {{ totaal }}</span>
-    </header>
+    <DagBlokKop :datum="datum" :meta="`${stops.length} ${stops.length === 1 ? 'stop' : 'stops'} · ${totaal}`" />
     <p v-if="!stops.length" class="rl-leeg">{{ leegTekst ?? 'Geen bezoeken gepland op deze dag.' }}</p>
     <template v-for="(s, i) in stops" :key="s.id">
       <article class="rl-item" :class="{ 'rl-item--volgende': s.volgende }" :data-test="`stop-${s.id}`">
@@ -47,8 +43,6 @@ const totaal = computed(() => duurLabel(props.stops.reduce((s, x) => s + minuten
 
 <style scoped>
 .rl { background: var(--wit); border: 1px solid var(--border); }
-.rl-dag { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding: 16px 20px; border-bottom: 1px solid var(--border); font-size: var(--fs-label); font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-.rl-dag strong { color: var(--ink); }
 .rl-leeg { padding: 32px 24px; margin: 0; text-align: center; font-size: var(--fs-body); font-style: italic; color: var(--muted); }
 .rl-item { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
 .rl-item:last-of-type { border-bottom: 0; }

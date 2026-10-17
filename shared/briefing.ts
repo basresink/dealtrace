@@ -30,6 +30,19 @@ export function kiesBriefingSoort(c: SoortContext): BriefingSoort {
   return c.gesprekken >= 1 ? 'behoefte' : 'eerste-gesprek'
 }
 
+/** Waarom de soort zo staat, in woorden (dezelfde volgorde als kiesBriefingSoort), voor "Automatisch gekozen: ...". */
+export function soortReden(c: SoortContext): string {
+  const n = c.gesprekken
+  const gesprekken = n === 1 ? 'er is één gesprek geweest' : `er zijn ${n} gesprekken geweest`
+  if (c.vastgezet && BRIEFING_SOORTEN.includes(c.vastgezet)) return 'je hebt de soort vastgezet'
+  if (c.eersteAfspraakGehoudenMetVervolg) return 'de eerste afspraak is gehouden en er is een vervolg'
+  if (c.meetingsoortVorm === 'bezoek') return 'de afspraak is op locatie'
+  if (n >= 3) return gesprekken
+  if (c.faseId === 'in-gesprek') return 'de prospect staat in de fase In gesprek'
+  if (!c.beslisserGesproken) return 'je sprak nog geen beslisser'
+  return n >= 1 ? `je sprak de beslisser en ${gesprekken}` : 'er is nog geen gesprek geweest'
+}
+
 export type Herkomst = 'berekend' | 'ai' | 'eigen'
 export interface Blok { sleutel: string; titel: string; tekst: string; herkomst: Herkomst; bron?: string | null; gat?: string | null }
 
