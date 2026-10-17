@@ -624,7 +624,7 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
   await zet(client, 'activiteit_verslagen', verslagRijen)
 
   // ── 7. Afspraken met verslag, transcript en analyse van de Notulist ──
-  const ms = Object.fromEntries((await client.query(`select slug, id, data from meetingsoorten where organisation_id = $1`, [orgId])).rows.map((x: any) => [x.slug, { id: x.id as string, agenda: (x.data?.agenda ?? []) as { punt: string }[] }]))
+  const ms: Record<string, { id: string; agenda: { punt: string }[] }> = Object.fromEntries((await client.query(`select slug, id, data from meetingsoorten where organisation_id = $1`, [orgId])).rows.map((x: any) => [x.slug, { id: x.id as string, agenda: (x.data?.agenda ?? []) as { punt: string }[] }]))
   const apRijen: Record<string, unknown>[] = []
   const transcriptRijen: Record<string, unknown>[] = []
   for (const w of afspraken) {
