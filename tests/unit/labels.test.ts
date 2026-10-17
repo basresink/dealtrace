@@ -27,7 +27,7 @@ describe('register', () => {
   })
   it('gevuld is alleen rood en alleen voor urgentie, prioriteit urgent en achterstallig', () => {
     const vol = alle.filter((x) => x.def?.stijl === 'vol').map((x) => `${x.soort}.${x.waarde}`)
-    expect(vol.sort()).toEqual(['gezondheid.risico', 'prioriteit.urgent', 'urgentie.achterstallig', 'urgentie.bel-me-niet', 'urgentie.over-tijd', 'urgentie.risico'])
+    expect(vol.sort()).toEqual(['gezondheid.risico', 'melding.kritiek', 'prioriteit.urgent', 'urgentie.achterstallig', 'urgentie.bel-me-niet', 'urgentie.over-tijd', 'urgentie.risico'])
   })
   it('elk zacht label heeft een tint en een icoon', () => {
     for (const { soort, waarde, def } of alle) if (def?.stijl === 'zacht') { expect(def.tint, `${soort}.${waarde}`).toBeTruthy(); expect(def.icoon, `${soort}.${waarde}`).toBeTruthy() }

@@ -97,13 +97,9 @@ async function maak() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" aria-labelledby="np-titel" data-test="nieuwe-prospect-flyout" @submit.prevent="maak">
-        <header class="fo-head">
-          <div class="fo-head-tekst"><span class="fo-kicker">Nieuwe prospect</span><h2 id="np-titel" class="fo-titel">Wie ga je erbij zetten?</h2></div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+  <FlyoutShell v-if="open" open titel-id="np-titel" breedte="smal" data-test="nieuwe-prospect-flyout" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Nieuwe prospect</span><h2 id="np-titel" class="fo-titel">Wie ga je erbij zetten?</h2></template>
+        <form id="np-form" class="fs-form" @submit.prevent="maak">
         <div class="fo-body fo-body--formulier">
           <article class="fo-blok">
             <label class="veld"><span class="veld-label">Bedrijfsnaam <span class="veld-verplicht">*</span></span><input v-model="f.naam" class="invoer" required autofocus data-test="np-naam"></label>
@@ -169,14 +165,14 @@ async function maak() {
             </div>
           </article>
         </div>
-        <footer class="fo-foot dd-acties">
-          <button type="submit" class="dd-act dd-act--primair" :disabled="bezig || !f.naam.trim() || dubbel?.soort === 'zeker' || mistVerplicht" data-test="np-maak">Prospect aanmaken</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="np-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || !f.naam.trim() || dubbel?.soort === 'zeker' || mistVerplicht" data-test="np-maak"><Icoon naam="Check" :grootte="16" />Prospect aanmaken</button>
+          <span class="fo-foot-vul" />
         </footer>
-      </form>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
 </template>
 
 <style scoped>

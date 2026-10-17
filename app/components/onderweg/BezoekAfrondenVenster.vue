@@ -66,13 +66,9 @@ async function bewaar() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open && afspraak" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel fo-panel--schuif ba-venster" role="dialog" aria-modal="true" aria-labelledby="ba-titel" data-test="bezoek-afronden" @submit.prevent="bewaar">
-        <header class="fo-head">
-          <div class="fo-head-tekst"><span class="fo-kicker">Bezoek afronden</span><h2 id="ba-titel" class="fo-titel">{{ afspraak.accountNaam ?? 'Bezoek' }} · {{ tijd(afspraak.start) }} tot {{ tijd(afspraak.eind) }}</h2></div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+  <FlyoutShell v-if="open && afspraak" open titel-id="ba-titel" paneel-klasse="ba-venster" data-test="bezoek-afronden" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Bezoek afronden</span><h2 id="ba-titel" class="fo-titel">{{ afspraak.accountNaam ?? 'Bezoek' }} · {{ tijd(afspraak.start) }} tot {{ tijd(afspraak.eind) }}</h2></template>
+        <form id="ba-form" class="fs-form" @submit.prevent="bewaar">
         <div class="fo-body fo-body--formulier">
           <article class="fo-blok">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Uitkomst</h3></header>
@@ -119,11 +115,13 @@ async function bewaar() {
             <button v-if="afspraak.accountId && functie('contact.visitekaartje')?.beschikbaar" type="button" class="dd-act mt-8" data-test="ba-visitekaartje" @click="kaartje = true"><Icoon naam="Camera" />Scan visitekaartje</button>
           </details>
         </div>
-        <footer class="fo-foot ba-voet">
-          <button type="submit" class="dd-act dd-act--primair ba-bewaar" :disabled="ongeldig || bewaard" data-test="ba-bewaar">{{ bewaard ? 'Bewaard' : 'Bewaar bezoek' }}</button>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet ba-voet">
+          <button type="submit" form="ba-form" class="dd-actie dd-actie--zwart fs-hoofdactie ba-bewaar" :disabled="ongeldig || bewaard" data-test="ba-bewaar"><Icoon naam="Check" :grootte="16" />{{ bewaard ? 'Bewaard' : 'Bewaar bezoek' }}</button>
+          <span class="fo-foot-vul" />
         </footer>
-      </form>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
   <VisitekaartjeVenster :open="kaartje" :account="afspraak?.accountId ? { id: afspraak.accountId, naam: afspraak.accountNaam ?? '' } : null" @sluit="kaartje = false" />
 </template>

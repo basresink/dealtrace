@@ -70,7 +70,7 @@ useHead({ title: 'Audit · Instellingen · Dealtrace' })
             <tbody>
               <tr v-for="r in regels" :key="r.id">
                 <td class="tnum">{{ tijd(r.op) }}</td>
-                <td>{{ r.door }}<span v-if="r.leverancier" class="pil pil--geel">Dealtrace</span></td>
+                <td>{{ r.door }}<span v-if="r.leverancier" class="pil">Dealtrace</span></td>
                 <td>{{ ACTIES[r.actie] ?? r.actie }}</td>
                 <td>{{ r.reden ?? '' }}</td>
               </tr>

@@ -70,26 +70,36 @@ const datumLang = (d: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeri
       </div>
     </div>
 
-    <div v-if="aanpassen" class="fo-overlay" @click.self="aanpassen = null">
-      <form class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" data-test="datum-flyout" @submit.prevent="bewaarDatum">
-        <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Pas datum aan</span><h2 class="fo-titel">{{ aanpassen.naam }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="aanpassen = null"><Icoon naam="X" /></button></header>
+    <FlyoutShell v-if="aanpassen" open titel-id="fs-planningterugkom0" breedte="smal" data-test="datum-flyout" @sluit="aanpassen = null">
+      <template #kop><span class="fo-kicker">Pas datum aan</span><h2 id="fs-planningterugkom0" class="fo-titel">{{ aanpassen.naam }}</h2></template>
+        <form id="fs-form" class="fs-form" @submit.prevent="bewaarDatum">
         <div class="fo-body fo-body--formulier">
           <label class="veld"><span class="veld-label">Terugkomdatum</span><input v-model="datum" type="date" class="invoer" required data-test="nieuwe-datum"></label>
           <label class="veld"><span class="veld-label">Reden <span class="veld-verplicht">*</span></span><input v-model="reden" class="invoer" required data-test="datum-reden"></label>
           <p class="veld-uitleg">Een datum binnen de afkoelperiode schuift naar het einde ervan.</p>
         </div>
-        <footer class="fo-foot dd-acties"><button type="submit" class="dd-act dd-act--primair" :disabled="!datum || !reden.trim()" data-test="datum-bewaar">Bewaar</button><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="aanpassen = null">Annuleren</button></footer>
-      </form>
-    </div>
-    <div v-if="voorstel" class="fo-overlay" @click.self="voorstel = null">
-      <form class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" data-test="voorstel-flyout" @submit.prevent="stelVoor">
-        <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Stel wijziging voor</span><h2 class="fo-titel">{{ voorstel.reden }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="voorstel = null"><Icoon naam="X" /></button></header>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="fs-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!datum || !reden.trim()" data-test="datum-bewaar"><Icoon naam="Check" :grootte="16" />Bewaar</button>
+          <span class="fo-foot-vul" />
+        </footer>
+      </template>
+    </FlyoutShell>
+    <FlyoutShell v-if="voorstel" open titel-id="fs-planningterugkom1" breedte="smal" data-test="voorstel-flyout" @sluit="voorstel = null">
+      <template #kop><span class="fo-kicker">Stel wijziging voor</span><h2 id="fs-planningterugkom1" class="fo-titel">{{ voorstel.reden }}</h2></template>
+        <form id="fs-form" class="fs-form" @submit.prevent="stelVoor">
         <div class="fo-body fo-body--formulier">
           <label class="veld"><span class="veld-label">Koppel aan hercontactritme</span><select v-model="voorstelRitme" class="invoer"><option value="">Geen wijziging</option><option v-for="r in ritmes.ritmes" :key="r.id" :value="r.id">{{ r.naam }}</option></select></label>
           <label class="veld"><span class="veld-label">Toelichting</span><textarea v-model="voorstelTekst" class="invoer" rows="3" /></label>
         </div>
-        <footer class="fo-foot dd-acties"><button type="submit" class="dd-act dd-act--primair" :disabled="!voorstelRitme && !voorstelTekst.trim()">Stuur voorstel</button><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="voorstel = null">Annuleren</button></footer>
-      </form>
-    </div>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="fs-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!voorstelRitme && !voorstelTekst.trim()"><Icoon naam="Check" :grootte="16" />Stuur voorstel</button>
+          <span class="fo-foot-vul" />
+        </footer>
+      </template>
+    </FlyoutShell>
   </div>
 </template>

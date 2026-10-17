@@ -56,20 +56,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 
 <template>
   <Teleport to="body">
-    <div v-if="planId" class="fo-overlay fo-overlay--donker" @click.self="sluit">
-      <aside class="fo-panel fo-panel--breed" role="dialog" aria-modal="true" aria-labelledby="apf-titel" data-test="ap-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+    <FlyoutShell v-if="planId" open titel-id="apf-titel" breedte="breed" overlay-klasse="fo-overlay--donker" sluit-test="apf-sluit" data-test="ap-flyout" @sluit="sluit">
+      <template #kop>
             <span class="fo-kicker"><Icoon naam="ClipboardCheck" :grootte="12" /> Accountplan</span>
             <h2 id="apf-titel" class="fo-titel">{{ plan?.titel ?? 'Accountplan' }}</h2>
             <p v-if="plan" class="fo-meta apf-meta">
               <Label soort="plan" :waarde="plan.weergave" :tekst="WEERGAVE_LABEL[plan.weergave as 'actueel']" data-test="apf-status" />
               <NuxtLink v-if="plan.account" :to="`/accounts/${plan.account.id}`" class="fo-link" data-test="apf-account">{{ plan.account.naam }}</NuxtLink>
               <span class="tnum">{{ geldigheidLabel(plan) }}</span>
-            </p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+            </p></template>
 
         <div class="fo-body">
           <p v-if="laden && !plan" class="fo-leeg">Laden...</p>
@@ -116,23 +111,22 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
             </article>
           </template>
         </div>
-
-        <footer v-if="plan" class="fo-foot dd-acties apf-voet">
+      <template #voet>
+        <footer v-if="plan" class="fo-foot fs-voet apf-voet">
           <template v-if="bewerk">
-            <button type="button" class="dd-act" @click="bewerk = false">Annuleren</button>
-            <span class="dd-acties-vul fo-foot-vul" />
-            <button type="button" class="dd-act dd-act--geel" :disabled="bezig || concept.titel.trim().length < 3" data-test="apf-bewaar" @click="bewaar">Opslaan</button>
+            <button type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || concept.titel.trim().length < 3" data-test="apf-bewaar" @click="bewaar"><Icoon naam="Check" :grootte="16" />Opslaan</button>
+            <span class="fo-foot-vul" />
+            <button type="button" class="dd-actie dd-actie--secundair" @click="bewerk = false">Annuleren</button>
           </template>
           <template v-else>
-            <button v-if="plan.kan.bewerken" type="button" class="dd-act dd-act--gevaar" data-test="apf-verwijder" @click="vraagVerwijder = true">Verwijderen</button>
-            <span class="dd-acties-vul fo-foot-vul" />
-            <button v-if="plan.kan.bewerken" type="button" class="dd-act" data-test="apf-wijzig" @click="startBewerken">Wijzigen</button>
-            <NuxtLink :to="`/accountplannen/${plan.id}`" class="dd-act" data-test="apf-open">Open accountplan</NuxtLink>
-            <button type="button" class="dd-act dd-act--primair" data-test="apf-sluit" @click="emit('sluit')">Sluiten</button>
+            <NuxtLink :to="`/accountplannen/${plan.id}`" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="apf-open"><Icoon naam="ArrowRight" :grootte="16" />Open accountplan</NuxtLink>
+            <span class="fo-foot-vul" />
+            <button v-if="plan.kan.bewerken" type="button" class="fs-ibtn" title="Wijzigen" aria-label="Wijzigen" data-test="apf-wijzig" @click="startBewerken"><Icoon naam="Pencil" :grootte="18" /></button>
+            <button v-if="plan.kan.bewerken" type="button" class="fs-ibtn fs-ibtn--rood" title="Verwijderen" aria-label="Verwijderen" data-test="apf-verwijder" @click="vraagVerwijder = true"><Icoon naam="Trash2" :grootte="18" /></button>
           </template>
         </footer>
-      </aside>
-    </div>
+      </template>
+    </FlyoutShell>
     <BevestigVenster :open="vraagVerwijder" titel="Accountplan verwijderen?" :tekst="`${plan?.titel ?? 'Dit plan'} verdwijnt. De acties blijven als taak op het account staan.`" bevestig="Verwijderen" gevaar @bevestigd="verwijder" @geannuleerd="vraagVerwijder = false" />
   </Teleport>
 </template>

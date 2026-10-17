@@ -41,9 +41,9 @@ const BRON: Record<string, string> = { koud: 'Koud', warm: 'Warm', winback: 'Win
               </div>
             </article>
           </div>
-      <div v-if="bewerk" class="fo-overlay" @click.self="bewerk = null">
-        <form class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" data-test="ritme-flyout" @submit.prevent="bewaar">
-          <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Hercontactritme</span><h2 class="fo-titel">{{ bewerk.naam }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="bewerk = null"><Icoon naam="X" /></button></header>
+      <FlyoutShell v-if="bewerk" open titel-id="fs-planningritme0" breedte="smal" data-test="ritme-flyout" @sluit="bewerk = null">
+        <template #kop><span class="fo-kicker">Hercontactritme</span><h2 id="fs-planningritme0" class="fo-titel">{{ bewerk.naam }}</h2></template>
+        <form id="fs-form" class="fs-form" @submit.prevent="bewaar">
           <div class="fo-body fo-body--formulier">
             <article class="fo-blok">
               <div v-for="(s, i) in bewerk.stappen" :key="i" class="formulier-raster">
@@ -54,8 +54,13 @@ const BRON: Record<string, string> = { koud: 'Koud', warm: 'Warm', winback: 'Win
               <label class="veld mt-16"><span class="veld-label">Parkeren (dagen)</span><input v-model.number="bewerk.parkeerDagen" type="number" min="1" class="invoer"></label>
             </article>
           </div>
-          <footer class="fo-foot dd-acties"><button type="button" class="dd-act" @click="bewerk = null">Annuleren</button><span class="dd-acties-vul fo-foot-vul" /><button type="submit" class="dd-act dd-act--primair">Bewaren</button></footer>
         </form>
-      </div>
+        <template #voet>
+          <footer class="fo-foot fs-voet">
+          <button type="submit" form="fs-form" class="dd-actie dd-actie--zwart fs-hoofdactie"><Icoon naam="Check" :grootte="16" />Bewaren</button>
+          <span class="fo-foot-vul" />
+        </footer>
+        </template>
+      </FlyoutShell>
   </div>
 </template>

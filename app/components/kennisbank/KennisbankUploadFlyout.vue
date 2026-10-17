@@ -55,17 +55,12 @@ async function bewaar() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel fo-panel--breed" role="dialog" aria-modal="true" aria-labelledby="kbu-titel" data-test="kennisbank-upload" @submit.prevent="bewaar">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+  <FlyoutShell v-if="open" open titel-id="kbu-titel" breedte="breed" data-test="kennisbank-upload" @sluit="emit('sluit')">
+      <template #kop>
             <span class="fo-kicker"><Icoon naam="Upload" :grootte="12" /> Kennisbank · upload</span>
             <h2 id="kbu-titel" class="fo-titel">{{ contact ? contact.naam : account ? account.naam : 'Document toevoegen' }}</h2>
-            <p class="fo-meta">{{ vast ? 'Het document komt in de kennisbank en staat op het tabblad Documenten van deze kaart.' : 'Koppel het aan bedrijven of contacten: dan staat het ook op hun tabblad Documenten en blijft het in de kennisbank zoekbaar.' }}</p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+            <p class="fo-meta">{{ vast ? 'Het document komt in de kennisbank en staat op het tabblad Documenten van deze kaart.' : 'Koppel het aan bedrijven of contacten: dan staat het ook op hun tabblad Documenten en blijft het in de kennisbank zoekbaar.' }}</p></template>
+        <form id="kbu-form" class="fs-form" @submit.prevent="bewaar">
         <div class="fo-body fo-body--formulier">
           <label class="kbu-drop" :class="{ 'kbu-drop--over': sleep, 'kbu-drop--vol': bestand }" @dragover.prevent="sleep = true" @dragleave="sleep = false" @drop.prevent="sleep = false; kies($event.dataTransfer?.files?.[0])">
             <Icoon :naam="bestand ? 'FileText' : 'Upload'" :grootte="22" />
@@ -98,10 +93,14 @@ async function bewaar() {
           </template>
           <p v-else class="meta kbu-vast" data-test="kbu-vast"><Icoon naam="Link" :grootte="14" /> Gekoppeld aan {{ contact ? contact.naam : account!.naam }}</p>
         </div>
-        <footer class="fo-foot dd-acties"><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button><button type="submit" class="dd-act dd-act--geel" :disabled="bezig || !bestand" data-test="document-bewaar">Uploaden</button></footer>
-      </form>
-    </div>
-  </Teleport>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="kbu-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || !bestand" data-test="document-bewaar"><Icoon naam="Check" :grootte="16" />Uploaden</button>
+          <span class="fo-foot-vul" />
+        </footer>
+      </template>
+    </FlyoutShell>
 </template>
 
 <style scoped>

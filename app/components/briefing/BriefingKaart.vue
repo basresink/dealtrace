@@ -30,7 +30,7 @@ const contactRegel = computed(() => (props.item.contact ? [props.item.contact.na
   <!-- Belblok -->
   <article v-if="item.onderwerp === 'belblok'" class="bk bk--belblok" :class="{ 'bk--rij': weergave === 'lijst' }" :data-test="`briefing-belblok-${item.id}`">
     <NuxtLink :to="`/belblokken/${item.id}`" class="bk-knop">
-      <span class="bk-kop"><span class="bk-tijd tnum" :class="{ 'bk-tijd--laat': laat }">{{ tijd }}</span><span class="pil pil--geel">Belblok</span></span>
+      <span class="bk-kop"><span class="bk-tijd tnum" :class="{ 'bk-tijd--laat': laat }">{{ tijd }}</span><span class="pil">Belblok</span></span>
       <span class="bk-naam">{{ item.aantal }} {{ item.aantal === 1 ? 'gesprek' : 'gesprekken' }} in je belblok</span>
       <span class="bk-meta">{{ item.namen.join(', ') }}<template v-if="item.aantal > item.namen.length"> en {{ item.aantal - item.namen.length }} meer</template></span>
       <span class="bk-ctx"><Icoon naam="Phone" :grootte="14" />De briefing per gesprek staat in de belmodus</span>

@@ -3179,21 +3179,8 @@ input[type='time'].invoer { font-feature-settings: "tnum"; }
   text-transform: uppercase;
   white-space: nowrap;
 }
-.pil--grijs   { background: var(--surface); color: var(--muted); border-color: var(--border-strong); }
-.pil--geel    { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
-.pil--zwart   { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
-/* Zacht: de kleur op 12 procent (oranje 10), via de zachte tokens uit deel A. */
-.pil--rood    { background: var(--red-pil); color: var(--red); }
-.pil--oranje  { background: var(--orange-zacht); color: var(--orange-dark); }
-.pil--groen   { background: var(--green-zacht); color: var(--green); }
-.pil--blauw   { background: var(--blue-zacht); color: var(--blue); }
-.pil--paars   { background: var(--purple-zacht); color: var(--purple); }
-.pil--rood-vol   { background: var(--red); color: var(--wit); border-color: var(--red); }
-.pil--oranje-vol { background: var(--orange); color: var(--wit); border-color: var(--orange); }
-.pil--groen-vol  { background: var(--green); color: var(--wit); border-color: var(--green); }
-.pil--blauw-vol  { background: var(--blue); color: var(--wit); border-color: var(--blue); }
-.pil--paars-vol  { background: var(--purple); color: var(--wit); border-color: var(--purple); }
-.pil--leeg    { background: transparent; color: var(--muted); border: 1px dashed var(--border-strong); }
+/* De kleurvarianten van .pil staan in ui-standaard.css (sectie Tags, op het labelsysteem). */
+
 /* Klikbare pil (AccountfasePicker): helderder onder de muis, potlood verschijnt. */
 .pil--knop { cursor: pointer; font-family: inherit; transition: filter var(--transition-fast); }
 .pil--knop:hover { filter: brightness(1.08); }

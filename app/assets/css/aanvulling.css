@@ -424,9 +424,6 @@
 
 /* P05: reis op de kaart, reisgeschiedenis, Zet nee als schuifvenster op de telefoon */
 .reis-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
-.reis-pil-knop { cursor: pointer; border: 0; font-family: inherit; }
-.reis-pil-knop:disabled { cursor: default; }
-.reis-pil-knop { min-height: 32px; }
 .meta--oranje { color: var(--oranje, #c2410c); font-weight: 600; }
 .reis-terug { font-size: var(--fs-body); }
 .reis-historie { list-style: none; margin: 0; padding: 0; }
@@ -1096,9 +1093,6 @@ html.zonlicht body { color: #000; }
 .bf-blok { padding: 8px 0; border-top: 1px solid var(--border); }
 .bf-blok-kop { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
 .bf-blok-titel { margin: 0; font-size: var(--fs-meta); font-weight: 800; }
-.bf-herkomst { font-size: var(--fs-label); padding: 1px 6px; border: 1px solid var(--border); color: var(--muted); }
-.bf-herkomst--ai { border-color: var(--purple); color: var(--purple); }
-.bf-herkomst--eigen { border-color: var(--ink); color: var(--ink); }
 .bf-tekst { margin: 4px 0 0; white-space: pre-line; font-size: var(--fs-meta); }
 .bf-pitstop, .bf-doel { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
 .cn-lijst { display: flex; flex-direction: column; gap: var(--kaart-gap); }

@@ -23,13 +23,9 @@ async function bewaar() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="deactiveer-titel" data-test="deactiveer-venster" @submit.prevent="bewaar">
-        <header class="fo-head">
-          <div class="fo-head-tekst"><span class="fo-kicker">Deactiveren</span><h2 id="deactiveer-titel" class="fo-titel">{{ account.naam }}</h2></div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+  <FlyoutShell v-if="open" open titel-id="deactiveer-titel" breedte="smal" data-test="deactiveer-venster" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Deactiveren</span><h2 id="deactiveer-titel" class="fo-titel">{{ account.naam }}</h2></template>
+        <form id="deactiveer-form" class="fs-form" @submit.prevent="bewaar">
         <div class="fo-body fo-body--formulier">
           <article class="fo-blok">
             <fieldset class="nee-redenen">
@@ -52,14 +48,14 @@ async function bewaar() {
             </ul>
           </article>
         </div>
-        <footer class="fo-foot dd-acties">
-          <button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="submit" class="dd-act dd-act--primair" :disabled="bezig || ongeldig" data-test="deactiveer-bevestig">Deactiveren</button>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="deactiveer-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || ongeldig" data-test="deactiveer-bevestig"><Icoon naam="Check" :grootte="16" />Deactiveren</button>
+          <span class="fo-foot-vul" />
         </footer>
-      </form>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
 </template>
 
 <style scoped>

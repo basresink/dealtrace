@@ -75,16 +75,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 
 <template>
   <Teleport to="body">
-    <div v-if="open && accountId" class="fo-overlay fo-overlay--donker" @click.self="sluit">
-      <aside class="fo-panel fo-panel--vol" role="dialog" aria-modal="true" aria-labelledby="inv-titel" data-test="invloed-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+    <FlyoutShell v-if="open && accountId" open titel-id="inv-titel" breedte="vol" overlay-klasse="fo-overlay--donker" data-test="invloed-flyout" @sluit="sluit">
+      <template #kop>
             <span class="fo-kicker"><Icoon naam="Network" :grootte="12" /> Invloedskaart<template v-if="data"> · {{ data.account.naam }}</template></span>
             <h2 id="inv-titel" class="fo-titel" data-test="inv-titel">{{ data?.dekking.titel ?? 'Invloedskaart' }}</h2>
-            <p v-if="data" class="fo-meta">{{ personen.filter((p) => !p.onbekend).length }} {{ personen.filter((p) => !p.onbekend).length === 1 ? 'contact' : 'contacten' }}<template v-if="personen.some((p) => p.onbekend)"> · {{ personen.filter((p) => p.onbekend).length }} zonder naam</template> · {{ data.verslagen }} {{ data.verslagen === 1 ? 'verslag' : 'verslagen' }}</p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="sluit"><Icoon naam="X" /></button>
-        </header>
+            <p v-if="data" class="fo-meta">{{ personen.filter((p) => !p.onbekend).length }} {{ personen.filter((p) => !p.onbekend).length === 1 ? 'contact' : 'contacten' }}<template v-if="personen.some((p) => p.onbekend)"> · {{ personen.filter((p) => p.onbekend).length }} zonder naam</template> · {{ data.verslagen }} {{ data.verslagen === 1 ? 'verslag' : 'verslagen' }}</p></template>
 
         <div class="fo-body">
           <p v-if="laden && !data" class="fo-leeg">Laden...</p>
@@ -173,12 +168,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
             </div>
           </template>
         </div>
-        <footer class="fo-foot dd-acties">
+      <template #voet>
+        <footer class="fo-foot fs-voet">
           <span class="dd-acties-vul fo-foot-vul" />
           <button type="button" class="dd-act" data-test="inv-sluit" @click="sluit">Sluiten</button>
         </footer>
-      </aside>
-    </div>
+      </template>
+    </FlyoutShell>
     <InvloedPersoonFlyout
       :persoon="persoon" :personen="personen" :account-id="accountId" :kan="data?.kan ?? {}"
       @sluit="gekozen = null" @gewijzigd="gewijzigd" @taak="(t: { titel: string; contactId: string | null }) => maakTaak(t.titel, t.contactId, 'Invloedskaart')"

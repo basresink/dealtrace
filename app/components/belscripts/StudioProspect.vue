@@ -192,10 +192,8 @@ const rolTekst = (k: any) => [k.contactNaam, k.contactRol].filter(Boolean).join(
       </article>
     </div>
 
-    <Teleport to="body">
-      <div v-if="bron" class="fo-overlay" @click.self="bron = null">
-        <aside class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" aria-labelledby="sp-bron-titel" data-test="sp-bron-flyout">
-          <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Gebruikt gegeven</span><h2 id="sp-bron-titel" class="fo-titel">{{ bron.label }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="bron = null"><Icoon naam="X" /></button></header>
+    <FlyoutShell v-if="bron" open titel-id="sp-bron-titel" breedte="smal" data-test="sp-bron-flyout" @sluit="bron = null">
+        <template #kop><span class="fo-kicker">Gebruikt gegeven</span><h2 id="sp-bron-titel" class="fo-titel">{{ bron.label }}</h2></template>
           <div class="fo-body">
             <p class="fo-tekst"><strong>{{ bron.waarde ?? 'Onbekend' }}</strong></p>
             <p v-if="bron.toelichting" class="kaart kaart--vlak mt-8">{{ bron.toelichting }}</p>
@@ -205,12 +203,12 @@ const rolTekst = (k: any) => [k.contactNaam, k.contactRol].filter(Boolean).join(
               <div class="def-rij"><dt>Status</dt><dd>{{ bron.gebruikt ? 'meegestuurd naar de AI' : 'ontbreekt, de terugvalzin geldt' }}</dd></div>
             </dl>
           </div>
-          <footer class="fo-foot dd-acties"><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="bron = null">Sluiten</button></footer>
-        </aside>
-      </div>
-      <div v-if="waarom && p" class="fo-overlay" @click.self="waarom = false">
-        <aside class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" aria-labelledby="sp-waarom-titel" data-test="sp-waarom-flyout">
-          <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Voorselectie</span><h2 id="sp-waarom-titel" class="fo-titel">Waarom dit script</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="waarom = false"><Icoon naam="X" /></button></header>
+        <template #voet>
+          <footer class="fo-foot fs-voet"><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="bron = null">Sluiten</button></footer>
+        </template>
+      </FlyoutShell>
+      <FlyoutShell v-if="waarom && p" open titel-id="sp-waarom-titel" breedte="smal" data-test="sp-waarom-flyout" @sluit="waarom = false">
+        <template #kop><span class="fo-kicker">Voorselectie</span><h2 id="sp-waarom-titel" class="fo-titel">Waarom dit script</h2></template>
           <div class="fo-body">
             <p class="fo-tekst">Dealtrace kiest het script in deze volgorde: het script van de campagne, van het belblok, en anders het best passende op doel, reisfase, doelgroep en rol.</p>
             <dl class="defs mt-12">
@@ -219,10 +217,10 @@ const rolTekst = (k: any) => [k.contactNaam, k.contactRol].filter(Boolean).join(
               <div class="def-rij"><dt>AI-blokken</dt><dd>{{ p.aiBlokken }}</dd></div>
             </dl>
           </div>
-          <footer class="fo-foot dd-acties"><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="waarom = false">Sluiten</button></footer>
-        </aside>
-      </div>
-    </Teleport>
+        <template #voet>
+          <footer class="fo-foot fs-voet"><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="waarom = false">Sluiten</button></footer>
+        </template>
+      </FlyoutShell>
   </div>
 </template>
 

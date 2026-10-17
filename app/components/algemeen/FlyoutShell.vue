@@ -26,7 +26,7 @@ const props = withDefaults(defineProps<{
   paneelKlasse?: unknown
   sluitTest?: string
   bovenop?: boolean
-}>(), { kicker: '', titel: '', meta: null, titelId: '', breedte: 'normaal', opslag: null, ai: null, aiInVoet: false, overlayKlasse: null, paneelKlasse: null, sluitTest: undefined, bovenop: false })
+}>(), { kicker: '', titel: '', meta: null, titelId: '', breedte: 'normaal', opslag: null, ai: null, aiInVoet: false, sluitTest: undefined, bovenop: false })
 const emit = defineEmits<{ sluit: []; bewaar: [] }>()
 const slots = useSlots()
 const { functie } = useMe()
@@ -131,7 +131,7 @@ defineExpose({ vraagSluiten })
         ref="paneel" v-bind="$attrs" class="fo-panel fo-panel--schuif fs-paneel"
         :class="[{ 'fo-panel--smal': breedte === 'smal', 'fo-panel--breed': breedte === 'breed', 'fo-panel--analyse': breedte === 'analyse', 'fo-panel--vol': breedte === 'vol', 'fo-panel--hulp': breedte === 'hulp', 'fo-panel--editor': breedte === 'editor' }, paneelKlasse]"
         role="dialog" aria-modal="true" :aria-labelledby="kopId" tabindex="-1"
-        @pointerdown="opslag?.interactie()" @keydown="opslag?.interactie()" @input="opslag?.interactie()"
+        @pointerdown.capture="opslag?.interactie()" @keydown.capture="opslag?.interactie()" @input.capture="opslag?.interactie()"
       >
         <header class="fo-head fs-kop">
           <div class="fo-head-tekst fs-kop-tekst">
@@ -194,6 +194,9 @@ defineExpose({ vraagSluiten })
 .fs-ibtn--rood { color: var(--red); border-color: var(--red); }
 .fs-kop .fs-ai { color: var(--purple); border-color: var(--purple); }
 .fs-kop .fs-ai:hover { background: var(--purple-zacht, var(--surface)); }
+
+/* Een formulier om de inhoud: de inhoud blijft het deel dat scrolt. */
+.fs-form { display: contents; }
 
 /* Voet: hoofdactie links, icoonknoppen rechts. */
 .fs-voet { gap: 8px; }

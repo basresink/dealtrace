@@ -44,13 +44,9 @@ async function doeStart() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')" @keydown.esc="emit('sluit')">
-      <form class="fo-panel" role="dialog" aria-modal="true" aria-labelledby="sr-start-titel" data-test="reeks-start-flyout" @submit.prevent="doeStart">
-        <header class="fo-head">
-          <div class="fo-head-tekst"><span class="fo-kicker">Opvolgreeks</span><h2 id="sr-start-titel" class="fo-titel">Start reeks</h2><p class="fo-meta">Kies een prospect en een sjabloon. De reeks stopt vanzelf zodra de prospect reageert.</p></div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+  <FlyoutShell v-if="open" open titel-id="sr-start-titel" data-test="reeks-start-flyout" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Opvolgreeks</span><h2 id="sr-start-titel" class="fo-titel">Start reeks</h2><p class="fo-meta">Kies een prospect en een sjabloon. De reeks stopt vanzelf zodra de prospect reageert.</p></template>
+        <form id="sr-start-form" class="fs-form" @submit.prevent="doeStart">
         <div class="fo-body">
           <div class="veld">
             <span class="veld-label">Prospect</span>
@@ -87,10 +83,14 @@ async function doeStart() {
             </template>
           </template>
         </div>
-        <footer class="fo-foot dd-acties"><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button><button type="submit" class="dd-act dd-act--geel" :disabled="bezig || !gekozen || !v || !!lopend || !v.kan.wijzigen || !start.sjabloonId" data-test="rsf-start">Start reeks</button></footer>
-      </form>
-    </div>
-  </Teleport>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="sr-start-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || !gekozen || !v || !!lopend || !v.kan.wijzigen || !start.sjabloonId" data-test="rsf-start"><Icoon naam="Check" :grootte="16" />Start reeks</button>
+          <span class="fo-foot-vul" />
+        </footer>
+      </template>
+    </FlyoutShell>
 </template>
 
 <style scoped>

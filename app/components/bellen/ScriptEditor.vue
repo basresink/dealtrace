@@ -67,17 +67,15 @@ const STATUS: Record<string, string> = { concept: 'Concept', actief: 'Actief', g
 
 <template>
   <Teleport to="body">
-    <div v-if="scriptId" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--editor" role="dialog" aria-modal="true" aria-label="Belscript bewerken" data-test="script-editor">
-        <template v-if="s">
-          <header class="fo-head">
-            <div class="fo-head-tekst">
+    <FlyoutShell v-if="scriptId" open titel-id="se-titel" breedte="editor" data-test="script-editor" @sluit="emit('sluit')">
+      <template #kop>
+              <h2 id="se-titel" class="visueel-verborgen">Belscript bewerken</h2>
+              <template v-if="s">
               <span class="fo-kicker">Belscript · <span class="pil pil--leeg">{{ STATUS[s.status] }} · versie {{ s.versie }}</span><template v-if="s.controleren"> · <span class="pil pil--geel">Controleren</span></template></span>
               <input v-model="s.naam" class="invoer fo-titel-invoer" aria-label="Naam" :disabled="!kan.bewerken" data-test="script-naam">
-            </div>
-            <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-          </header>
-          <div class="fo-body editor-raster">
+              </template>
+      </template>
+          <div v-if="s" class="fo-body editor-raster">
             <div>
               <p v-if="s.isPersoonlijk && s.origineel && (s.data.basisVersie ?? 0) < s.origineel.versie" class="kaart kaart--geel" data-test="origineel-gewijzigd">Het origineel is gewijzigd (versie {{ s.origineel.versie }}). <button type="button" class="tekst-link" @click="neemOver">Neem over</button></p>
               <article class="fo-blok">
@@ -138,19 +136,16 @@ const STATUS: Record<string, string> = { concept: 'Concept', actief: 'Actief', g
               </div>
             </div>
           </div>
-          <footer class="fo-foot dd-acties">
-            <button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button>
-            <button v-if="kan.bewerken && !s.isPersoonlijk && s.status !== 'gearchiveerd'" type="button" class="dd-act dd-act--gevaar" @click="archiveerVraag = true">Archiveren</button>
-            <span class="dd-acties-vul fo-foot-vul" />
-            <template v-if="kan.bewerken">
-              <button type="button" class="dd-act" :disabled="bezig || !!v.fouten.length" data-test="opslaan-concept" @click="bewaar(false)">Opslaan als concept</button>
-              <button type="button" class="dd-act dd-act--primair" :disabled="bezig || !!v.fouten.length" data-test="activeer" @click="bewaar(true)">Activeer</button>
-            </template>
+          <div v-else class="fo-body"><p>Laden…</p></div>
+      <template #voet>
+          <footer v-if="s" class="fo-foot fs-voet">
+            <button v-if="kan.bewerken" type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || !!v.fouten.length" data-test="activeer" @click="bewaar(true)"><Icoon naam="Check" :grootte="16" />Activeer</button>
+            <span class="fo-foot-vul" />
+            <button v-if="kan.bewerken" type="button" class="dd-act" :disabled="bezig || !!v.fouten.length" data-test="opslaan-concept" @click="bewaar(false)">Opslaan als concept</button>
+            <button v-if="kan.bewerken && !s.isPersoonlijk && s.status !== 'gearchiveerd'" type="button" class="fs-ibtn fs-ibtn--rood" title="Archiveren" aria-label="Archiveren" @click="archiveerVraag = true"><Icoon naam="Archive" :grootte="18" /></button>
           </footer>
-        </template>
-        <div v-else class="fo-body"><p>Laden…</p></div>
-      </aside>
-    </div>
+      </template>
+    </FlyoutShell>
     <BevestigVenster :open="archiveerVraag" titel="Script archiveren?" tekst="Het script verdwijnt uit de keuze in het belpaneel. Het blijft in de rapportage." bevestig="Archiveren" gevaar @geannuleerd="archiveerVraag = false" @bevestigd="archiveer" />
   </Teleport>
 </template>

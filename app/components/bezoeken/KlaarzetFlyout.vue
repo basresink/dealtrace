@@ -32,10 +32,9 @@ async function zet() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open && account" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="kz-titel" data-test="klaarzetten" @submit.prevent="zet">
-        <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Klaarzetten voor buitendienst</span><h2 id="kz-titel" class="fo-titel">{{ account.naam }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button></header>
+  <FlyoutShell v-if="open && account" open titel-id="kz-titel" breedte="smal" data-test="klaarzetten" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Klaarzetten voor buitendienst</span><h2 id="kz-titel" class="fo-titel">{{ account.naam }}</h2></template>
+        <form id="kz-form" class="fs-form" @submit.prevent="zet">
         <div class="fo-body fo-body--formulier">
           <article class="fo-blok">
             <label class="veld"><span class="veld-label">Collega</span><select v-model="f.voorGebruiker" class="invoer" data-test="kz-collega"><option v-for="u in collegas" :key="u.id" :value="u.id">{{ u.naam.replace(/^Testgebruiker /, '') }}</option></select></label>
@@ -43,8 +42,12 @@ async function zet() {
             <label class="veld mt-16"><span class="veld-label">Reden</span><input v-model="f.reden" class="invoer" maxlength="300" placeholder="Bijvoorbeeld: wil een monteur langs" data-test="kz-reden"></label>
           </article>
         </div>
-        <footer class="fo-foot dd-acties"><button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button><span class="dd-acties-vul fo-foot-vul" /><button type="submit" class="dd-act dd-act--primair" :disabled="!f.voorGebruiker" data-test="kz-zet">Klaarzetten</button></footer>
-      </form>
-    </div>
-  </Teleport>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="kz-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!f.voorGebruiker" data-test="kz-zet"><Icoon naam="Check" :grootte="16" />Klaarzetten</button>
+          <span class="fo-foot-vul" />
+        </footer>
+      </template>
+    </FlyoutShell>
 </template>

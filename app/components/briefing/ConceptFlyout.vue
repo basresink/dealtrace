@@ -28,17 +28,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', toets))
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="c" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="cf-titel" data-test="concept-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+  <FlyoutShell v-if="c" open titel-id="cf-titel" :sluit-test="'concept-flyout-sluit'" data-test="concept-flyout" @sluit="emit('sluit')">
+      <template #kop>
             <span class="fo-kicker">{{ soortLabel(c.concept?.type) }} · {{ CONCEPT_STATUS[status] ?? status }} · {{ agentLabel(c.agent) }}</span>
             <h2 id="cf-titel" class="fo-titel">{{ titel }}</h2>
-            <p class="fo-meta">Klaargezet {{ datum(c.op) }}<template v-if="vanCollega && c.gebruiker"> · voor {{ String(c.gebruiker).replace(/^Testgebruiker /, '') }}</template><template v-if="c.beslotenOp && c.status !== 'klaar'"> · besloten {{ datum(c.beslotenOp) }}</template></p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" data-test="concept-flyout-sluit" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+            <p class="fo-meta">Klaargezet {{ datum(c.op) }}<template v-if="vanCollega && c.gebruiker"> · voor {{ String(c.gebruiker).replace(/^Testgebruiker /, '') }}</template><template v-if="c.beslotenOp && c.status !== 'klaar'"> · besloten {{ datum(c.beslotenOp) }}</template></p></template>
 
         <div class="fo-body cf-body">
           <article class="fo-blok cf-koppeling" data-test="concept-koppeling">
@@ -83,38 +77,36 @@ onBeforeUnmount(() => window.removeEventListener('keydown', toets))
           <p v-if="waGeenToestemming && wa" class="meta">Geen toestemming voor WhatsApp bij dit contact.</p>
           <p class="meta">De agent voert niets uit. Jij keurt goed en belt, mailt of bezoekt zelf.</p>
         </div>
-
-        <footer class="fo-foot dd-acties">
+      <template #voet>
+        <footer class="fo-foot fs-voet">
           <template v-if="c.status === 'klaar'">
             <template v-if="!aanpassen">
-              <button type="button" class="dd-act" data-test="concept-verwerpen" @click="keur('verwerpen')">Afwijzen</button>
-              <button v-if="c.concept?.tekst" type="button" class="dd-act" data-test="concept-aanpassen" @click="aanpassen = true"><Icoon naam="Pencil" :grootte="14" />Aanpassen</button>
-              <span class="dd-acties-vul fo-foot-vul" />
-              <button type="button" class="dd-act dd-act--primair" data-test="concept-goedkeuren" @click="keur('goedkeuren')">Goedkeuren</button>
+              <button type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="concept-goedkeuren" @click="keur('goedkeuren')"><Icoon naam="Check" :grootte="16" />Goedkeuren</button>
+              <span class="fo-foot-vul" />
+              <button v-if="c.concept?.tekst" type="button" class="fs-ibtn" title="Aanpassen" aria-label="Aanpassen" data-test="concept-aanpassen" @click="aanpassen = true"><Icoon naam="Pencil" :grootte="18" /></button>
+              <button type="button" class="fs-ibtn fs-ibtn--rood" title="Afwijzen" aria-label="Afwijzen" data-test="concept-verwerpen" @click="keur('verwerpen')"><Icoon naam="Ban" :grootte="18" /></button>
             </template>
             <template v-else>
-              <button type="button" class="dd-act" @click="aanpassen = false">Annuleren</button>
-              <span class="dd-acties-vul fo-foot-vul" />
-              <button type="button" class="dd-act dd-act--primair" data-test="concept-bewaar-goedkeur" @click="keur('goedkeuren', true)">Bewaar en keur goed</button>
+              <button type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="concept-bewaar-goedkeur" @click="keur('goedkeuren', true)"><Icoon naam="Check" :grootte="16" />Bewaar en keur goed</button>
+              <span class="fo-foot-vul" />
+              <button type="button" class="dd-actie dd-actie--secundair" @click="aanpassen = false">Annuleren</button>
             </template>
           </template>
           <template v-else-if="c.status === 'goedgekeurd'">
-            <button v-if="c.concept?.tekst" type="button" class="dd-act" @click="kopieer"><Icoon naam="Copy" :grootte="14" />Kopieer</button>
+            <button v-if="c.concept?.type === 'whatsapp' && waKan" type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig" data-test="concept-verstuur-wa" @click="verstuurWa"><Icoon naam="MessageCircle" :grootte="16" />Verstuur via WhatsApp</button>
+            <button v-else-if="c.concept?.type === 'mail'" type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig" data-test="concept-verstuur" @click="verstuur"><Icoon naam="Mail" :grootte="16" />Verstuur</button>
+            <span class="fo-foot-vul" />
             <a v-if="c.links?.mailto" :href="c.links.mailto" class="dd-act" data-test="concept-mailto">Verstuur via je mail</a>
             <a v-if="c.links?.whatsapp && !waGeenToestemming" :href="c.links.whatsapp" target="_blank" rel="noopener" class="dd-act" data-test="concept-wa-link">{{ c.concept?.type === 'whatsapp' ? 'Open in WhatsApp' : 'WhatsApp' }}</a>
-            <span class="dd-acties-vul fo-foot-vul" />
-            <button v-if="c.concept?.type === 'whatsapp' && waKan" type="button" class="dd-act dd-act--primair" :disabled="bezig" data-test="concept-verstuur-wa" @click="verstuurWa">Verstuur via WhatsApp</button>
-            <button v-if="c.concept?.type === 'mail'" type="button" class="dd-act dd-act--primair" :disabled="bezig" data-test="concept-verstuur" @click="verstuur">Verstuur</button>
+            <button v-if="c.concept?.tekst" type="button" class="fs-ibtn" title="Kopieer" aria-label="Kopieer" @click="kopieer"><Icoon naam="Copy" :grootte="18" /></button>
           </template>
           <template v-else>
-            <button v-if="c.concept?.tekst" type="button" class="dd-act" @click="kopieer"><Icoon naam="Copy" :grootte="14" />Kopieer</button>
-            <span class="dd-acties-vul fo-foot-vul" />
-            <button type="button" class="dd-act" @click="emit('sluit')">Sluiten</button>
+            <span class="fo-foot-vul" />
+            <button v-if="c.concept?.tekst" type="button" class="fs-ibtn" title="Kopieer" aria-label="Kopieer" @click="kopieer"><Icoon naam="Copy" :grootte="18" /></button>
           </template>
         </footer>
-      </aside>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
 </template>
 
 <style scoped>

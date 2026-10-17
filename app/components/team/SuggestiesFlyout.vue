@@ -50,17 +50,11 @@ const pil = (st: SuggestieStatus) => ({ concept: 'pil--leeg', vrijgegeven: 'pil-
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--schuif sg-panel" role="dialog" aria-modal="true" aria-labelledby="sg-titel" data-test="suggesties-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+  <FlyoutShell v-if="open" open titel-id="sg-titel" paneel-klasse="sg-panel" data-test="suggesties-flyout" @sluit="emit('sluit')">
+      <template #kop>
             <span class="fo-kicker">Suggesties naar SalesDNA · week {{ weeknummer || '' }}</span>
             <h2 id="sg-titel" class="fo-titel">{{ titel }}</h2>
-            <p class="fo-meta">Hooguit 10 per sublaag per week. Zonder namen van personen of prospects.</p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+            <p class="fo-meta">Hooguit 10 per sublaag per week. Zonder namen van personen of prospects.</p></template>
         <div v-if="data" class="fo-body">
           <p v-if="!data.gekoppeld" class="fo-blok meta" data-test="sg-zonder-koppeling">SalesDNA is niet gekoppeld. Wat je vrijgeeft, wordt een taak voor de beheerder om het verkoopverhaal in de eigen inrichting aan te vullen.</p>
           <LegeStaat v-if="!data.groepen.length" titel="Er zijn deze week geen suggesties." tekst="Dealtrace stelt pas iets voor als er genoeg bewijs is." />
@@ -94,13 +88,14 @@ const pil = (st: SuggestieStatus) => ({ concept: 'pil--leeg', vrijgegeven: 'pil-
             </div>
           </article>
         </div>
-        <footer v-if="wachtend.length" class="fo-foot dd-acties">
-          <button type="button" class="dd-act dd-act--geel" :disabled="!!bezig" data-test="sg-alles" @click="allesVrij">Geef alles vrij</button>
+      <template #voet>
+        <footer v-if="wachtend.length" class="fo-foot fs-voet">
+          <button type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!!bezig" data-test="sg-alles" @click="allesVrij"><Icoon naam="Check" :grootte="16" />Geef alles vrij</button>
+          <span class="fo-foot-vul" />
           <button type="button" class="dd-act" @click="emit('sluit')">Later</button>
         </footer>
-      </aside>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
 </template>
 
 <style scoped>

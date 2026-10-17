@@ -33,13 +33,9 @@ async function maak() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="nc-titel" data-test="nieuw-contact" @submit.prevent="maak">
-        <header class="fo-head">
-          <div class="fo-head-tekst"><span class="fo-kicker">Nieuw contact</span><h2 id="nc-titel" class="fo-titel">Wie ga je erbij zetten?</h2></div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+  <FlyoutShell v-if="open" open titel-id="nc-titel" breedte="smal" data-test="nieuw-contact" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Nieuw contact</span><h2 id="nc-titel" class="fo-titel">Wie ga je erbij zetten?</h2></template>
+        <form id="nc-form" class="fs-form" @submit.prevent="maak">
         <div class="fo-body fo-body--formulier">
           <article class="fo-blok">
             <div class="veld"><span class="veld-label">Bedrijf <span class="veld-verplicht">*</span></span>
@@ -62,12 +58,12 @@ async function maak() {
             <p v-if="dubbel" class="fo-tekst mt-16" role="alert" data-test="nc-dubbel">{{ dubbel.naam }} staat al in je bestand. <NuxtLink :to="`/contacten/${dubbel.id}`" class="tekst-link" @click="emit('sluit')">Open contact →</NuxtLink></p>
           </article>
         </div>
-        <footer class="fo-foot dd-acties">
-          <button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="submit" class="dd-act dd-act--primair" :disabled="bezig || !klant || !f.achternaam.trim()" data-test="nc-maak">Contact toevoegen</button>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="nc-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || !klant || !f.achternaam.trim()" data-test="nc-maak"><Icoon naam="Check" :grootte="16" />Contact toevoegen</button>
+          <span class="fo-foot-vul" />
         </footer>
-      </form>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
 </template>

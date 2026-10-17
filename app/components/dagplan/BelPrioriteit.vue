@@ -34,7 +34,7 @@ const zichtbaar = computed(() => props.lijst.slice(0, top.value))
         </div>
         <p class="dp-kaart-tekst">{{ b.reden }}</p>
         <p v-if="b.contactNaam" class="bp-contact">{{ b.contactNaam }}<template v-if="b.telefoon"> · <a :href="`tel:${b.telefoon}`" class="dp-kaart-link tnum">{{ b.telefoon }}</a></template></p>
-        <span class="dp-kaart-pillen"><span class="pil pil--grijs">Score {{ b.score }}</span><span v-if="b.openTaken" class="pil pil--zwart">{{ b.openTaken }} open {{ b.openTaken === 1 ? 'taak' : 'taken' }}</span><span v-if="b.heet" class="pil pil--rood">Heet</span><span v-if="!b.taskId" class="pil pil--grijs">Geen taak</span></span>
+        <span class="dp-kaart-pillen"><Label soort="score" :waarde="b.score" :tekst="`Score ${b.score}`" /><span v-if="b.openTaken" class="pil">{{ b.openTaken }} open {{ b.openTaken === 1 ? 'taak' : 'taken' }}</span><Label v-if="b.heet" soort="status" waarde="heet" /><span v-if="!b.taskId" class="pil pil--grijs">Geen taak</span></span>
       </DagKaart>
     </ol>
     <p v-else class="bp-leeg">Niemand om te bellen.</p>

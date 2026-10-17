@@ -21,17 +21,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="f" class="fo-overlay" @click.self="sluit">
-      <aside class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="na-titel" tabindex="-1" data-test="niet-aangezet-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+  <FlyoutShell v-if="f" open titel-id="na-titel" breedte="smal" data-test="niet-aangezet-flyout" @sluit="sluit">
+      <template #kop>
             <span class="fo-kicker">{{ niveau }} · nog niet aangezet</span>
             <h2 id="na-titel" class="fo-titel">{{ f.naam }}</h2>
-            <p class="fo-meta">Deze functie hoort bij {{ niveau }}.</p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="sluit"><Icoon naam="X" /></button>
-        </header>
+            <p class="fo-meta">Deze functie hoort bij {{ niveau }}.</p></template>
         <div class="fo-body">
           <article class="fo-blok">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Wat het doet</h3></header>
@@ -42,12 +36,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
             <p class="fo-tekst">{{ f.uitleg.totDieTijd }}</p>
           </article>
         </div>
-        <footer class="fo-foot dd-acties">
-          <NuxtLink class="dd-act dd-act--primair" :to="`/helpcenter/${f.helpartikel}`" @click="sluit"><Icoon naam="BookOpen" class="dd-act-icoon" />Lees hoe het werkt</NuxtLink>
-          <span class="dd-acties-vul fo-foot-vul" />
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <NuxtLink class="dd-actie dd-actie--zwart fs-hoofdactie" :to="`/helpcenter/${f.helpartikel}`" @click="sluit"><Icoon naam="BookOpen" class="dd-act-icoon" />Lees hoe het werkt</NuxtLink>
+          <span class="fo-foot-vul" />
           <button type="button" class="dd-act" @click="sluit">Sluiten</button>
         </footer>
-      </aside>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
 </template>

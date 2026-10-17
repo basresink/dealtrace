@@ -55,7 +55,7 @@ useHead({ title: 'Weekstart · Dealtrace' })
         <div class="container">
           <div class="ws-week" data-test="ws-week">
             <article v-for="dag in w.dagen" :key="dag.datum" class="kaart ws-dag" :class="{ 'ws-dag--vandaag': dag.vandaag }" :data-test="`ws-dag-${dag.datum}`">
-              <header class="ws-dag-kop"><b>{{ dag.label }}</b><span v-if="dag.vandaag" class="pil pil--geel">Vandaag</span><span v-else-if="!dag.werkdag" class="pil pil--grijs">Vrij</span></header>
+              <header class="ws-dag-kop"><b>{{ dag.label }}</b><span v-if="dag.vandaag" class="pil">Vandaag</span><span v-else-if="!dag.werkdag" class="pil pil--grijs">Vrij</span></header>
               <ul v-if="dag.items.length" class="ws-items">
                 <li v-for="i in dag.items" :key="i.id">
                   <NuxtLink v-if="i.soort === 'belblok'" :to="`/belblokken/${i.id}`" class="item-rij">

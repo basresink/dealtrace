@@ -33,17 +33,11 @@ const nummer = (c: any) => c.mobiel ?? c.telefoon ?? null
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" aria-labelledby="cf-titel" data-test="contacten-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+  <FlyoutShell v-if="open" open titel-id="cf-titel" breedte="smal" data-test="contacten-flyout" @sluit="emit('sluit')">
+      <template #kop>
             <span class="fo-kicker" data-test="cf-kicker">Contactpersonen · {{ contacten.length }}</span>
             <h2 id="cf-titel" class="fo-titel">{{ account.naam }}</h2>
-            <p class="fo-meta cf-uitleg">Alle contacten gekoppeld aan dit account. Klik een naam voor de contactpersoonkaart.</p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+            <p class="fo-meta cf-uitleg">Alle contacten gekoppeld aan dit account. Klik een naam voor de contactpersoonkaart.</p></template>
         <div class="fo-body cf-body">
           <p v-if="!contacten.length" class="cf-leeg">Nog geen contactpersonen aan dit account gekoppeld.</p>
           <ul v-else class="cf-lijst">
@@ -88,12 +82,12 @@ const nummer = (c: any) => c.mobiel ?? c.telefoon ?? null
             </form>
           </div>
         </div>
+      <template #voet>
         <footer class="fo-foot cf-voet">
           <NuxtLink to="/contacten/alle" class="dd-actie dd-actie--secundair cf-alle" data-test="cf-alle" @click="emit('sluit')">Alle contacten →</NuxtLink>
         </footer>
-      </aside>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
 </template>
 
 <style scoped>

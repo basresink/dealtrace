@@ -37,16 +37,10 @@ const zichtbaar = computed(() => {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="categorie" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--smal fo-panel--schuif dkf" role="dialog" aria-modal="true" aria-labelledby="dkf-titel" data-test="dk-flyout" :data-categorie="categorie.sleutel">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+  <FlyoutShell v-if="categorie" open titel-id="dkf-titel" breedte="smal" paneel-klasse="dkf" :sluit-test="'dk-flyout-sluit'" data-test="dk-flyout" :data-categorie="categorie.sleutel" @sluit="emit('sluit')">
+      <template #kop>
             <span class="fo-kicker">Datakwaliteit · {{ categorie.groep }}</span>
-            <h2 id="dkf-titel" class="fo-titel">{{ categorie.titel }}</h2>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" data-test="dk-flyout-sluit" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+            <h2 id="dkf-titel" class="fo-titel">{{ categorie.titel }}</h2></template>
         <div class="fo-body">
           <p class="dkf-uitleg">{{ categorie.uitleg }}</p>
           <p class="dkf-telling" data-test="dk-flyout-telling">
@@ -80,14 +74,14 @@ const zichtbaar = computed(() => {
             <p v-else-if="meer" class="meta dkf-meer" data-test="dk-flyout-meer">En nog {{ getal(meer) }}. Los eerst deze op<template v-if="categorie.link">, of open de hele lijst</template>.</p>
           </template>
         </div>
-        <footer class="fo-foot dd-acties">
+      <template #voet>
+        <footer class="fo-foot fs-voet">
           <NuxtLink v-if="categorie.link" :to="categorie.link" class="dd-act" data-test="dk-filter"><Icoon naam="Filter" :grootte="14" />Toon in lijst</NuxtLink>
           <span class="dd-acties-vul fo-foot-vul" />
           <button type="button" class="dd-act" @click="emit('sluit')">Sluiten</button>
         </footer>
-      </aside>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
 </template>
 
 <style scoped>

@@ -24,13 +24,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', toets))
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="vb-titel" data-test="vast-blok-flyout" @submit.prevent="bewaar">
-        <header class="fo-head">
-          <div class="fo-head-tekst"><span class="fo-kicker">Vaste belblokken</span><h2 id="vb-titel" class="fo-titel">{{ blok ? 'Vast blok wijzigen' : 'Vast blok plannen' }}</h2></div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+  <FlyoutShell v-if="open" open titel-id="vb-titel" breedte="smal" data-test="vast-blok-flyout" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Vaste belblokken</span><h2 id="vb-titel" class="fo-titel">{{ blok ? 'Vast blok wijzigen' : 'Vast blok plannen' }}</h2></template>
+        <form id="vb-form" class="fs-form" @submit.prevent="bewaar">
         <div class="fo-body fo-body--formulier">
           <article class="fo-blok">
             <span class="veld-label">Dagen</span>
@@ -48,14 +44,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', toets))
             <p v-if="fouten.length && f.dagen.length" class="vbf-fout" role="alert">{{ fouten[0] }}</p>
           </article>
         </div>
-        <footer class="fo-foot dd-acties">
-          <button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="submit" class="dd-act dd-act--primair" :disabled="!!fouten.length" data-test="vb-bewaar">{{ blok ? 'Opslaan' : 'Vast blok toevoegen' }}</button>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="vb-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!!fouten.length" data-test="vb-bewaar"><Icoon naam="Check" :grootte="16" />{{ blok ? 'Opslaan' : 'Vast blok toevoegen' }}</button>
+          <span class="fo-foot-vul" />
         </footer>
-      </form>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
 </template>
 
 <style scoped>

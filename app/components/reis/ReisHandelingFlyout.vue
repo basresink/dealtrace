@@ -42,13 +42,9 @@ async function bewaar() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="rh-titel" :data-test="`reis-${soort}`" @submit.prevent="bewaar">
-        <header class="fo-head">
-          <div class="fo-head-tekst"><span class="fo-kicker">{{ titel }}</span><h2 id="rh-titel" class="fo-titel">{{ account.naam }}</h2></div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+  <FlyoutShell v-if="open" open titel-id="rh-titel" breedte="smal" :data-test="`reis-${soort}`" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">{{ titel }}</span><h2 id="rh-titel" class="fo-titel">{{ account.naam }}</h2></template>
+        <form id="rh-form" class="fs-form" @submit.prevent="bewaar">
         <div class="fo-body fo-body--formulier">
           <article class="fo-blok">
             <template v-if="soort === 'fase'">
@@ -65,12 +61,12 @@ async function bewaar() {
             <label class="veld mt-16"><span class="veld-label">Reden <span v-if="soort !== 'pauzeer'" class="veld-verplicht">*</span></span><textarea v-model="reden" class="invoer" rows="2" data-test="reis-reden" /></label>
           </article>
         </div>
-        <footer class="fo-foot dd-acties">
-          <button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="submit" class="dd-act dd-act--primair" :disabled="bezig || ongeldig" data-test="reis-bewaar">{{ knop }}</button>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="rh-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || ongeldig" data-test="reis-bewaar"><Icoon naam="Check" :grootte="16" />{{ knop }}</button>
+          <span class="fo-foot-vul" />
         </footer>
-      </form>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
 </template>

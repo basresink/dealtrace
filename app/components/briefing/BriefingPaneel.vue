@@ -3,7 +3,7 @@
 // Eigen tekst), eigen tekst per blok (Gevorderd), soort vastzetten (Expert), "Bereid voor" (Pitstop,
 // concept ter goedkeuring) en na het gesprek "Doel gehaald?". Werkt zonder AI-credits. Op /briefings kan bij een
 // account een contactpersoon mee (contactId): zijn gegevens, laatste contactmomenten en open gesprekken staan erboven.
-import { BRIEFING_SOORTEN, HERKOMST_LABEL, SOORT_LABEL, type BriefingSoort } from '~~/shared/briefing'
+import { BRIEFING_SOORTEN, SOORT_LABEL, type BriefingSoort } from '~~/shared/briefing'
 const props = defineProps<{ onderwerp: 'afspraak' | 'taak' | 'account'; id: string; ingeklapt?: boolean; contactId?: string | null }>()
 const emit = defineEmits<{ geladen: [data: any]; gesprek: [g: { onderwerp: 'afspraak' | 'taak'; id: string; titel: string }] }>()
 const toast = useToast()
@@ -94,7 +94,7 @@ const { functie } = useMe()
       <div v-if="data.kan.vastzetten && gesprek" class="bf-soort"><label class="veld"><span class="veld-label">Soort</span>
         <select class="invoer" :value="data.vastgezet ? data.soort : ''" data-test="briefing-soortkiezer" @change="zetSoort(($event.target as HTMLSelectElement).value)"><option value="">Automatisch ({{ data.soortLabel }})</option><option v-for="s in BRIEFING_SOORTEN" :key="s" :value="s">{{ SOORT_LABEL[s as BriefingSoort] }}</option></select></label></div>
       <article v-for="b in data.blokken" :key="b.sleutel" class="bf-blok" :data-test="`blok-${b.sleutel}`">
-        <header class="bf-blok-kop"><h4 class="bf-blok-titel">{{ b.titel }}</h4><span class="bf-herkomst" :class="`bf-herkomst--${b.herkomst}`">{{ HERKOMST_LABEL[b.herkomst as 'berekend'] }}</span>
+        <header class="bf-blok-kop"><h4 class="bf-blok-titel">{{ b.titel }}</h4><Label soort="briefing" :waarde="b.herkomst" />
           <button v-if="data.kan.bewerken && gesprek && bewerk !== b.sleutel" type="button" class="dd-tekstknop" :data-test="`bewerk-${b.sleutel}`" @click="bewerk = b.sleutel; tekst = b.tekst">Bewerken</button></header>
         <template v-if="bewerk === b.sleutel">
           <textarea v-model="tekst" class="invoer" rows="3" :data-test="`tekst-${b.sleutel}`" />

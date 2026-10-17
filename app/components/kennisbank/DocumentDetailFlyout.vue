@@ -59,16 +59,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 
 <template>
   <Teleport to="body">
-    <div v-if="documentId" class="fo-overlay fo-overlay--donker" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--breed" role="dialog" aria-modal="true" aria-labelledby="ddf-titel" data-test="document-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+    <FlyoutShell v-if="documentId" open titel-id="ddf-titel" breedte="breed" overlay-klasse="fo-overlay--donker" data-test="document-flyout" @sluit="emit('sluit')">
+      <template #kop>
             <span class="fo-kicker" data-test="ddf-kicker"><Icoon naam="FileText" :grootte="12" /> Kennisbank · {{ typeLabel }}</span>
             <h2 id="ddf-titel" class="fo-titel" data-test="ddf-naam">{{ doc?.naam ?? 'Document' }}</h2>
-            <p v-if="doc?.beschrijving" class="fo-meta">{{ doc.beschrijving }}</p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+            <p v-if="doc?.beschrijving" class="fo-meta">{{ doc.beschrijving }}</p></template>
 
         <div class="fo-body">
           <p v-if="laden && !doc" class="fo-leeg">Laden...</p>
@@ -132,14 +127,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
             </article>
           </template>
         </div>
+      <template #voet>
 
-        <footer v-if="doc" class="fo-foot dd-acties ddf-voet">
+        <footer v-if="doc" class="fo-foot fs-voet ddf-voet">
           <button v-if="doc.magVerwijderen" type="button" class="dd-actie dd-actie--gevaar" data-test="ddf-verwijder" @click="vraagVerwijder = true"><Icoon naam="Trash2" :grootte="14" />Verwijderen</button>
           <span class="dd-acties-vul fo-foot-vul" />
           <a :href="bestandUrl" target="_blank" rel="noopener" class="dd-actie dd-actie--zwart" data-test="ddf-open"><Icoon naam="ExternalLink" :grootte="14" />Openen</a>
         </footer>
-      </aside>
-    </div>
+      </template>
+    </FlyoutShell>
     <BevestigVenster :open="vraagVerwijder" titel="Document verwijderen?" :tekst="`${doc?.naam ?? 'Dit document'} verdwijnt uit de kennisbank en van elke account- en contactkaart.`" bevestig="Verwijderen" gevaar @bevestigd="verwijder" @geannuleerd="vraagVerwijder = false" />
   </Teleport>
 </template>

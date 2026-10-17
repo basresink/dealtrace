@@ -37,10 +37,9 @@ async function bewaar() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open && account" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="vk-titel" data-test="visitekaartje" @submit.prevent="bewaar">
-        <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Visitekaartje</span><h2 id="vk-titel" class="fo-titel">{{ account.naam }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button></header>
+  <FlyoutShell v-if="open && account" open titel-id="vk-titel" breedte="smal" data-test="visitekaartje" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Visitekaartje</span><h2 id="vk-titel" class="fo-titel">{{ account.naam }}</h2></template>
+        <form id="vk-form" class="fs-form" @submit.prevent="bewaar">
         <div class="fo-body fo-body--formulier">
           <label v-if="!concept" class="ba-mic" :class="{ 'ba-mic--aan': lezen }"><Icoon naam="Camera" />{{ lezen ? 'Kaartje lezen…' : 'Maak een foto van het kaartje' }}<input type="file" accept="image/*" capture="environment" class="sr-only" data-test="vk-foto" :disabled="lezen" @change="foto"></label>
           <template v-else>
@@ -55,12 +54,13 @@ async function bewaar() {
             <p v-if="concept.contact.bedrijf && concept.contact.bedrijf !== account.naam" class="meta mt-8">Op het kaartje staat het bedrijf {{ concept.contact.bedrijf }}.</p>
           </template>
         </div>
-        <footer class="fo-foot dd-acties">
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="vk-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!concept || (concept.duplicaat && samenvoegen === null)" data-test="vk-bewaar"><Icoon naam="Check" :grootte="16" />Bewaar contact</button>
+          <span class="fo-foot-vul" />
           <button type="button" class="dd-act" :disabled="!concept" @click="concept = null">Aanpassen</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="submit" class="dd-act dd-act--primair" :disabled="!concept || (concept.duplicaat && samenvoegen === null)" data-test="vk-bewaar">Bewaar contact</button>
         </footer>
-      </form>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
 </template>

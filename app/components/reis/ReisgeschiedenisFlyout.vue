@@ -14,13 +14,8 @@ const datum = (t: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', 
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="rg-titel" data-test="reisgeschiedenis">
-        <header class="fo-head">
-          <div class="fo-head-tekst"><span class="fo-kicker">Reisgeschiedenis</span><h2 id="rg-titel" class="fo-titel">{{ naam }}</h2></div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+  <FlyoutShell v-if="open" open titel-id="rg-titel" breedte="smal" data-test="reisgeschiedenis" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Reisgeschiedenis</span><h2 id="rg-titel" class="fo-titel">{{ naam }}</h2></template>
         <div class="fo-body">
           <p v-if="laden" class="meta">Laden…</p>
           <LegeStaat v-else-if="!regels.length" titel="Nog geen geschiedenis." tekst="Elke fasewissel komt hier, met wie of wat hem meldde." />
@@ -33,7 +28,5 @@ const datum = (t: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', 
             </li>
           </ol>
         </div>
-      </aside>
-    </div>
-  </Teleport>
+    </FlyoutShell>
 </template>

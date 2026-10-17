@@ -14,17 +14,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', toets))
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--breed fo-panel--schuif aaf" role="dialog" aria-modal="true" aria-labelledby="aaf-titel" data-test="analyse-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+  <FlyoutShell v-if="open" open titel-id="aaf-titel" breedte="breed" paneel-klasse="aaf" :sluit-test="'analyse-flyout-sluit'" data-test="analyse-flyout" @sluit="emit('sluit')">
+      <template #kop>
             <span class="fo-kicker">{{ kicker }}</span>
             <h2 id="aaf-titel" class="fo-titel">{{ titel }}</h2>
-            <p class="aaf-sub">{{ accounts.length }} {{ accounts.length === 1 ? 'account' : 'accounts' }}, langst stil eerst. Klik een naam om de accountkaart te openen.</p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" data-test="analyse-flyout-sluit" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+            <p class="aaf-sub">{{ accounts.length }} {{ accounts.length === 1 ? 'account' : 'accounts' }}, langst stil eerst. Klik een naam om de accountkaart te openen.</p></template>
         <div class="fo-body">
           <LegeStaat v-if="!accounts.length" titel="Geen accounts in deze selectie." />
           <template v-else>
@@ -54,9 +48,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', toets))
             </ul>
           </template>
         </div>
-      </aside>
-    </div>
-  </Teleport>
+    </FlyoutShell>
 </template>
 
 <style scoped>

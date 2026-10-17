@@ -269,10 +269,8 @@ const code = (v: string) => '{' + v + '}'
     </div>
     <p v-else class="meta">Laden…</p>
 
-    <Teleport to="body">
-      <div v-if="alleVariabelen" class="fo-overlay" @click.self="alleVariabelen = false">
-        <aside class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" aria-labelledby="ss-var-titel" data-test="variabelen-flyout">
-          <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Hulp</span><h2 id="ss-var-titel" class="fo-titel">Variabelen</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="alleVariabelen = false"><Icoon naam="X" /></button></header>
+    <FlyoutShell v-if="alleVariabelen" open titel-id="ss-var-titel" breedte="smal" data-test="variabelen-flyout" @sluit="alleVariabelen = false">
+        <template #kop><span class="fo-kicker">Hulp</span><h2 id="ss-var-titel" class="fo-titel">Variabelen</h2></template>
           <div class="fo-body">
             <p class="fo-tekst">Een variabele tussen accolades wordt bij het bellen vervangen door het gegeven uit Dealtrace. Is het onbekend, dan hoort de prospect de terugvalzin. Klik om in te voegen.</p>
             <div class="tabel-schuif mt-12">
@@ -282,10 +280,10 @@ const code = (v: string) => '{' + v + '}'
               </table>
             </div>
           </div>
-          <footer class="fo-foot dd-acties"><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="alleVariabelen = false">Sluiten</button></footer>
-        </aside>
-      </div>
-    </Teleport>
+        <template #voet>
+          <footer class="fo-foot fs-voet"><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="alleVariabelen = false">Sluiten</button></footer>
+        </template>
+      </FlyoutShell>
   </div>
 </template>
 

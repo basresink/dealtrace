@@ -6,7 +6,7 @@
 // het concept en waar het op gebaseerd is, en na het gesprek "Doel gehaald?". De voet volgt de flyoutstandaard:
 // links de hoofdactie (Open afspraak, Open taak of Open accountkaart), rechts Vraag AI, Lees voor, alle blokken
 // bewerken, afdrukken (de volledige briefing als document) en de accountkaart.
-import { BRIEFING_SOORTEN, HERKOMST_LABEL, type BriefingSoort } from '~~/shared/briefing'
+import { BRIEFING_SOORTEN, type BriefingSoort } from '~~/shared/briefing'
 import { SOORT_KLEUR, SOORT_KORT } from '~~/shared/briefingOverzicht'
 const props = defineProps<{ onderwerp: 'afspraak' | 'taak' | 'account'; id: string; contactId?: string | null; tab?: 'drie' | 'hele'; pitstop?: boolean }>()
 const emit = defineEmits<{ sluit: []; gewijzigd: []; wisContact: []; gesprek: [g: { onderwerp: 'afspraak' | 'taak'; id: string }]; openItem: [g: { onderwerp: 'afspraak' | 'taak'; id: string }] }>()
@@ -212,7 +212,7 @@ onBeforeUnmount(() => { window.removeEventListener('keydown', opEscape); for (co
                 <header class="bfd-blok-kop">
                   <span class="bfd-nr tnum">{{ Number(i) + 1 }}</span>
                   <h3 class="bfd-blok-titel">{{ b.titel }}</h3>
-                  <span class="bf-herkomst" :class="`bf-herkomst--${b.herkomst}`">{{ HERKOMST_LABEL[b.herkomst as 'berekend'] }}</span>
+                  <Label soort="briefing" :waarde="b.herkomst" />
                   <button v-if="kanBewerken && !alles && bewerk !== b.sleutel" type="button" class="dd-act dd-act--icoon" :aria-label="`Bewerk ${b.titel}`" title="Bewerken" :data-test="`bewerk-${b.sleutel}`" @click="startBewerk(b)"><Icoon naam="Pencil" :grootte="14" /></button>
                 </header>
                 <template v-if="alles || bewerk === b.sleutel">

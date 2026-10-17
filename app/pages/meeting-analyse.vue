@@ -105,7 +105,7 @@ useHead({ title: 'Meetinganalyse · Dealtrace' })
                   <tbody>
                     <tr v-for="r in data.klassen" :key="r.code" :data-test="`klasse-rij-${r.code}`">
                       <td><strong>{{ r.label }}</strong><br><span class="ma-hint" :title="r.namen.join(' · ')">{{ r.ritme }}</span></td>
-                      <td><span v-if="r.interval" class="pil pil--geel">{{ r.perJaar }}× per jaar</span><span v-else class="pil pil--grijs">Geen</span></td>
+                      <td><span v-if="r.interval" class="pil">{{ r.perJaar }}× per jaar</span><span v-else class="pil pil--grijs">Geen</span></td>
                       <td class="cel-r">{{ r.prospects }}</td><td class="cel-r">{{ r.nietBenaderd }}</td>
                       <td><DekkingBalk v-if="r.interval" :gezien="r.opSchema" :stil="r.achter" :nooit="r.nooit" :titel="`${r.opSchema} op schema · ${r.achter} achter op ritme · ${r.nooit} nooit een meeting`" /><span v-else class="ma-hint">geen meetingdoel</span></td>
                       <td class="cel-r"><span v-if="!r.interval" class="ma-hint">—</span><span v-else :class="{ 'ma-rood': r.achter + r.nooit > 0 }">{{ r.achter + r.nooit }}</span></td>
@@ -155,7 +155,7 @@ useHead({ title: 'Meetinganalyse · Dealtrace' })
                 <tbody>
                   <tr v-for="r in data.regios" :key="r.regioId">
                     <td><strong>{{ r.naam }}</strong></td>
-                    <td><span class="pil" :class="r.regiodag ? 'pil--geel' : 'pil--grijs'">{{ r.regiodag ?? 'Geen' }}</span></td>
+                    <td><span class="pil" :class="r.regiodag ? '' : 'pil--leeg'">{{ r.regiodag ?? 'Geen' }}</span></td>
                     <td class="cel-r">{{ r.prospects }}</td>
                     <td><DekkingBalk :gezien="r.opSchema" :stil="r.achter" :nooit="r.nooit" /></td>
                     <td class="cel-r"><span :class="{ 'ma-rood': r.achter + r.nooit > 0 }">{{ r.achter + r.nooit }}</span></td>

@@ -18,10 +18,8 @@ watch(() => props.open, async (o) => {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="ik-titel" data-test="inloop-kiezer">
-        <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Inloopbezoek</span><h2 id="ik-titel" class="fo-titel">Waar ben je binnen?</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button></header>
+  <FlyoutShell v-if="open" open titel-id="ik-titel" breedte="smal" data-test="inloop-kiezer" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Inloopbezoek</span><h2 id="ik-titel" class="fo-titel">Waar ben je binnen?</h2></template>
         <div class="fo-body">
           <p v-if="bezig" class="meta">Je plek bepalen…</p>
           <p v-else-if="fout" class="kaart kaart--rood">{{ fout }}</p>
@@ -30,7 +28,5 @@ watch(() => props.open, async (o) => {
             <button v-for="a in lijst" :key="a.id" type="button" class="uitkomst-knop" :data-test="`inloop-${a.id}`" @click="emit('gekozen', { id: a.id, naam: a.naam })"><strong>{{ a.naam }}</strong><br><span class="meta">{{ a.km }} km · {{ a.plaats }}</span></button>
           </div>
         </div>
-      </aside>
-    </div>
-  </Teleport>
+    </FlyoutShell>
 </template>

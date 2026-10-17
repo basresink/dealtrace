@@ -79,16 +79,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 
 <template>
   <Teleport to="body">
-    <div v-if="id" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--breed" role="dialog" aria-modal="true" aria-labelledby="kf-titel" data-test="klant-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+    <FlyoutShell v-if="id" open titel-id="kf-titel" breedte="breed" data-test="klant-flyout" @sluit="emit('sluit')">
+      <template #kop>
             <span class="fo-kicker">Klant</span>
             <h2 id="kf-titel" class="fo-titel">{{ klant?.naam ?? 'Laden…' }}</h2>
-            <p v-if="klant" class="fo-meta">{{ PAKKET_LABEL[klant.pakket as Pakket] }} · {{ klant.gebruikers.length }} gebruikers</p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+            <p v-if="klant" class="fo-meta">{{ PAKKET_LABEL[klant.pakket as Pakket] }} · {{ klant.gebruikers.length }} gebruikers</p></template>
         <div v-if="klant" class="fo-body">
           <article class="fo-blok">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Gebruik en gezondheid</h3>
@@ -177,13 +172,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
             <ul v-else class="fo-tekst"><li v-for="a in klant.audit" :key="a.id">{{ datum(a.op) }} · {{ a.handeling }}<template v-if="a.reden"> · {{ a.reden }}</template></li></ul>
           </article>
         </div>
-        <footer class="fo-foot dd-acties">
-          <button v-if="klant" type="button" class="dd-act dd-act--primair" @click="emit('werkIn', { id: klant.id, naam: klant.naam })">Werk in deze organisatie</button>
-          <span class="dd-acties-vul fo-foot-vul" />
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button v-if="klant" type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" @click="emit('werkIn', { id: klant.id, naam: klant.naam })"><Icoon naam="Check" :grootte="16" />Werk in deze organisatie</button>
+          <span class="fo-foot-vul" />
           <button type="button" class="dd-act" @click="emit('sluit')">Sluiten</button>
         </footer>
-      </aside>
-    </div>
+      </template>
+    </FlyoutShell>
     <BevestigVenster
       :open="!!voorstel" :titel="voorstel ? `Pakket van ${klant?.naam} wijzigen naar ${PAKKET_LABEL[voorstel.naar]}?` : ''"
       :tekst="voorstelTekst" bevestig="Pakket wijzigen" @geannuleerd="voorstel = null" @bevestigd="bevestigPakket"

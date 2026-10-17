@@ -69,10 +69,8 @@ async function gebruik(t: ScriptTemplate) {
       <LegeStaat v-if="!zichtbaar.length" titel="Geen templates voor dit filter." tekst="Kies een ander filter." />
     </div>
 
-    <Teleport to="body">
-      <div v-if="bekijk" class="fo-overlay" @click.self="bekijk = null">
-        <aside class="fo-panel" role="dialog" aria-modal="true" aria-labelledby="st-titel" data-test="tpl-flyout">
-          <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Template</span><h2 id="st-titel" class="fo-titel">{{ bekijk.naam }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="bekijk = null"><Icoon naam="X" /></button></header>
+    <FlyoutShell v-if="bekijk" open titel-id="st-titel" data-test="tpl-flyout" @sluit="bekijk = null">
+        <template #kop><span class="fo-kicker">Template</span><h2 id="st-titel" class="fo-titel">{{ bekijk.naam }}</h2></template>
           <div class="fo-body">
             <dl class="defs">
               <div class="def-rij"><dt>Doel</dt><dd>{{ bekijk.doel }}</dd></div>
@@ -92,14 +90,14 @@ async function gebruik(t: ScriptTemplate) {
               <ul class="st-bezwaren"><li v-for="z in bekijk.bezwaren" :key="z.id"><strong>"{{ z.bezwaar }}"</strong> {{ z.antwoord }}</li></ul>
             </article>
           </div>
-          <footer class="fo-foot dd-acties">
-            <button type="button" class="dd-act" @click="bekijk = null">Sluiten</button>
-            <span class="dd-acties-vul fo-foot-vul" />
-            <button v-if="data.kan.gebruiken" type="button" class="dd-act dd-act--geel" :disabled="bezig" data-test="tpl-flyout-gebruik" @click="gebruik(bekijk)">Gebruik als basis</button>
-          </footer>
-        </aside>
-      </div>
-    </Teleport>
+        <template #voet>
+          <footer class="fo-foot fs-voet">
+          <button v-if="data.kan.gebruiken" type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig" data-test="tpl-flyout-gebruik" @click="gebruik(bekijk)"><Icoon naam="Check" :grootte="16" />Gebruik als basis</button>
+          <span class="fo-foot-vul" />
+          <button type="button" class="dd-act" @click="bekijk = null">Sluiten</button>
+        </footer>
+        </template>
+      </FlyoutShell>
   </div>
 </template>
 

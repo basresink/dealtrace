@@ -21,10 +21,8 @@ watch(alleenProspects, () => { if (props.open) void zoek() })
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="idb-titel" data-test="in-de-buurt">
-        <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Binnen 15 minuten</span><h2 id="idb-titel" class="fo-titel">In de buurt</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button></header>
+  <FlyoutShell v-if="open" open titel-id="idb-titel" data-test="in-de-buurt" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Binnen 15 minuten</span><h2 id="idb-titel" class="fo-titel">In de buurt</h2></template>
         <div class="fo-body">
           <p class="schakel-rij"><span>Alleen prospects</span><Schakelaar :aan="alleenProspects" label="Alleen prospects" @wissel="alleenProspects = $event" /></p>
           <p v-if="bezig" class="meta">Je plek bepalen…</p>
@@ -42,7 +40,5 @@ watch(alleenProspects, () => { if (props.open) void zoek() })
             </li>
           </ul>
         </div>
-      </aside>
-    </div>
-  </Teleport>
+    </FlyoutShell>
 </template>

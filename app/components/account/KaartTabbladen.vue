@@ -9,7 +9,7 @@
 // Accountplan levert de pagina (slot); zonder slot geen tabblad. Reis en kwalificatie staan onder Meer.
 import { ACTIE_LABEL, isDringend } from '~~/shared/taken'
 /** Status in de tijdlijn als label: klaar groen, open een rand, te laat gevuld rood. */
-const tlStatus = (soort: string, tekst: string) => (soort === 'klaar' ? { soort: 'status', waarde: 'afgerond', tekst } : soort === 'laat' ? { soort: 'urgentie', waarde: 'achterstallig', tekst } : { soort: 'status', waarde: 'nieuw', tekst })
+const tlStatus = (soort: string | undefined, tekst: string) => (soort === 'klaar' ? { soort: 'status', waarde: 'afgerond', tekst } : soort === 'laat' ? { soort: 'urgentie', waarde: 'achterstallig', tekst } : { soort: 'status', waarde: 'nieuw', tekst })
 
 const props = defineProps<{
   account: { id: string; naam: string; soort?: string | null }
@@ -195,7 +195,7 @@ const tabs = computed(() => [
               <li v-for="x in g.items" :key="x.id" class="tl-item">
                 <span class="tl-spoor" :class="isDringend(x.priority) ? 'tl-spoor--urgent' : 'tl-spoor--taak'" aria-hidden="true" />
                 <div class="tl-kaart tl-kaart--klik">
-                  <span class="tl-kop"><span class="tl-soort tl-soort--taak">{{ ACTIE_LABEL[x.actionType] ?? 'Taak' }}</span><Label soort="prioriteit" :waarde="x.priority" /><Label soort="herkomst" :waarde="x.herkomst ?? 'handmatig'" /><ItemMetaregel :contact="contactVan(x)" :door="x.gebruiker" :datum="wanneer(x.dueDate)" :datum-rood="x.achterstallig" /></span>
+                  <span class="tl-kop"><Label soort="actie" :waarde="x.actionType ?? 'taak'" /><Label soort="prioriteit" :waarde="x.priority" /><Label soort="herkomst" :waarde="x.herkomst ?? 'handmatig'" /><ItemMetaregel :contact="contactVan(x)" :door="x.gebruiker" :datum="wanneer(x.dueDate)" :datum-rood="x.achterstallig" /></span>
                   <button type="button" class="tl-titel tl-strek" :data-test="`ak-taak-${x.id}`" @click="taakId = x.id">{{ x.title }}</button>
                   <span v-if="x.aanleiding || x.poging" class="tl-tekst">{{ [x.aanleiding, x.poging ? `poging ${x.poging.n} van ${x.poging.van}` : null].filter(Boolean).join(' · ') }}</span>
                   <Label v-if="!['open', 'bezig'].includes(x.status)" class="tl-status" v-bind="tlStatus('klaar', `${x.status === 'geannuleerd' ? 'Geannuleerd' : 'Afgerond'}${x.uitkomst ? ` · ${x.uitkomst}` : ''}`)" />

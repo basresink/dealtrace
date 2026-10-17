@@ -35,12 +35,9 @@ async function draagOver(alsKans = false) {
 
 <template>
   <Teleport to="body">
-    <div v-if="open && accountId" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="ov-titel" data-test="overdracht-venster" @submit.prevent="mag && (bevestig = true)">
-        <header class="fo-head">
-          <div class="fo-head-tekst"><span class="fo-kicker">Overdragen?</span><h2 id="ov-titel" class="fo-titel">{{ accountNaam }}</h2></div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+    <FlyoutShell v-if="open && accountId" open titel-id="ov-titel" data-test="overdracht-venster" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Overdragen?</span><h2 id="ov-titel" class="fo-titel">{{ accountNaam }}</h2></template>
+        <form id="ov-form" class="fs-form" @submit.prevent="mag && (bevestig = true)">
         <div class="fo-body fo-body--formulier">
           <p v-if="data && !data.mag.ja && !data.alKlant" class="kaart kaart--geel" data-test="ov-niet">{{ data.mag.reden }}</p>
           <template v-else>
@@ -59,14 +56,15 @@ async function draagOver(alsKans = false) {
             </article>
           </template>
         </div>
-        <footer class="fo-foot">
-          <button type="button" class="dd-actie dd-actie--secundair" @click="emit('sluit')">Annuleren</button>
-          <button type="button" class="dd-actie dd-actie--secundair" data-test="ov-later" @click="toast.toon('De overdrachtstaak staat klaar voor morgen.'); emit('sluit')">Later</button>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="ov-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!mag || bezig || (data && !data.mag.ja && !data.alKlant)" data-test="draag-over"><Icoon naam="Check" :grootte="16" />Draag over</button>
           <span class="fo-foot-vul" />
-          <button type="submit" class="dd-actie dd-actie--primair" :disabled="!mag || bezig || (data && !data.mag.ja && !data.alKlant)" data-test="draag-over">Draag over</button>
+          <button type="button" class="dd-actie dd-actie--secundair" data-test="ov-later" @click="toast.toon('De overdrachtstaak staat klaar voor morgen.'); emit('sluit')">Later</button>
         </footer>
-      </form>
-    </div>
+      </template>
+    </FlyoutShell>
     <BevestigVenster :open="bevestig" :titel="`${accountNaam} overdragen?`" :tekst="keuze?.naar === 'collega' ? 'Je collega wordt eigenaar en krijgt een taak met de vervolgstap en de briefing. Het account verdwijnt uit je actieve reis.' : `Het account gaat naar ${naarTekst} en verdwijnt uit je actieve reis. De deal ontstaat in ${naarTekst}.`" bevestig="Draag over" @bevestigd="draagOver(false)" @geannuleerd="bevestig = false" />
     <BevestigVenster :open="alKlant" titel="Dit bedrijf is al klant in DealDrive." tekst="Overdragen als nieuwe kans bij een bestaande klant?" bevestig="Ja, draag over" @bevestigd="draagOver(true)" @geannuleerd="alKlant = false; emit('sluit')" />
   </Teleport>

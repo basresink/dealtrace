@@ -35,16 +35,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 </script>
 
 <template>
-  <div v-if="p" class="fo-overlay fo-overlay--boven" @click.self="emit('sluit')">
-    <aside class="fo-panel" role="dialog" aria-modal="true" aria-labelledby="ivp-titel" data-test="invloed-persoon">
-      <header class="fo-head">
-        <div class="fo-head-tekst">
+  <FlyoutShell v-if="p" open titel-id="ivp-titel" bovenop data-test="invloed-persoon" @sluit="emit('sluit')">
+    <template #kop>
           <span class="fo-kicker" data-test="ivp-kicker">{{ rolLabel(p.rol) }} · {{ zekerheidTekst }}</span>
           <h2 id="ivp-titel" class="fo-titel">{{ p.functie ?? p.naam }}</h2>
-          <p class="fo-meta"><NuxtLink v-if="!p.onbekend" :to="`/contacten/${p.id}`" class="fo-link" data-test="ivp-contact">{{ p.naam }}</NuxtLink><template v-else>Naam onbekend</template></p>
-        </div>
-        <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-      </header>
+          <p class="fo-meta"><NuxtLink v-if="!p.onbekend" :to="`/contacten/${p.id}`" class="fo-link" data-test="ivp-contact">{{ p.naam }}</NuxtLink><template v-else>Naam onbekend</template></p></template>
       <div class="fo-body">
         <article class="fo-blok">
           <dl class="ivp-defs">
@@ -100,13 +95,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
           </label>
         </article>
       </div>
-      <footer class="fo-foot dd-acties">
-        <button type="button" class="dd-act" data-test="ivp-sluit" @click="emit('sluit')">Sluiten</button>
-        <span class="dd-acties-vul fo-foot-vul" />
-        <button v-if="kanBewerken && !p.rolBevestigd" type="button" class="dd-act dd-act--primair" :disabled="bezig" data-test="ivp-bevestig-rol" @click="zet({ bevestigRol: true }, 'Rol bevestigd.')"><Icoon naam="Check" class="dd-act-icoon" />Bevestig rol</button>
-      </footer>
-    </aside>
-  </div>
+    <template #voet>
+      <footer class="fo-foot fs-voet">
+          <button v-if="kanBewerken && !p.rolBevestigd" type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig" data-test="ivp-bevestig-rol" @click="zet({ bevestigRol: true }, 'Rol bevestigd.')"><Icoon naam="Check" class="dd-act-icoon" />Bevestig rol</button>
+          <span class="fo-foot-vul" />
+          <button type="button" class="dd-act" data-test="ivp-sluit" @click="emit('sluit')">Sluiten</button>
+        </footer>
+    </template>
+  </FlyoutShell>
 </template>
 
 <style scoped>

@@ -20,6 +20,8 @@ const maandNaam = (m: number) => data.value?.stand.maanden.find((x: any) => x.ma
 const NOEMER: Record<Potentie, [string, string]> = { groot: ['grote prospect', 'grote prospects'], middel: ['middelgrote prospect', 'middelgrote prospects'], klein: ['kleine prospect', 'kleine prospects'] }
 const VOLGORDE: Record<string, number> = { 'Nog niet benaderd': 0, Benaderd: 1, Gesproken: 2, Afspraak: 3 }
 const benaderd = (a: any) => a.status !== 'Nog niet benaderd'
+/** Potentie als trap (zoals de klasse): groot drie streepjes, middel twee, klein een. */
+const TRAP: Record<Potentie, number> = { groot: 3, middel: 2, klein: 1 }
 const groepen = computed(() => POTENTIES.map((p) => {
   const rijen = (data.value?.accounts ?? []).filter((a: any) => a.potentie === p)
     .sort((a: any, b: any) => VOLGORDE[a.status]! - VOLGORDE[b.status]! || a.naam.localeCompare(b.naam, 'nl'))
@@ -160,7 +162,7 @@ const belTaak = ref<{ account: { id: string; naam: string }; contact: { id: stri
             <span class="pj-eyebrow">{{ weergave === 'maand' ? 'Eén maand · blader met de pijlen' : weergave === 'kwartaal' ? 'Drie maanden · klik een maand voor de prospects' : 'Twaalf maanden · klik een maand voor de prospects' }}</span>
             <h2 class="pj-titel" data-test="kalender-titel">{{ weergave === 'maand' ? `${hoofd(detail.naam)} ${data.jaar.jaar}` : weergave === 'kwartaal' ? `Kwartaal ${kwartaal} van ${data.jaar.jaar}` : `Jaarkalender ${data.jaar.jaar}` }}</h2>
             <ul class="pj-legenda">
-              <li v-for="g in groepen.filter((x) => x.totaal)" :key="g.potentie"><span class="groep-pil" :class="`groep-pil--${g.potentie}`">{{ g.label }}</span><span class="meta"><strong>{{ NOEMER[g.potentie][1] }}</strong> · {{ vensterTekst(g) }} <span class="tnum">({{ g.totaal }})</span></span></li>
+              <li v-for="g in groepen.filter((x) => x.totaal)" :key="g.potentie"><span class="lbl lbl--rand lbl-klasse groep-lbl">{{ g.label }}<span class="lbl-trap" :data-n="TRAP[g.potentie]" aria-hidden="true"><i /><i /><i /><i /></span></span><span class="meta"><strong>{{ NOEMER[g.potentie][1] }}</strong> · {{ vensterTekst(g) }} <span class="tnum">({{ g.totaal }})</span></span></li>
             </ul>
           </div>
           <div v-if="weergave === 'maand'" class="pj-maandnav" role="group" aria-label="Maand kiezen" data-test="maandnav">
@@ -179,7 +181,7 @@ const belTaak = ref<{ account: { id: string; naam: string }; contact: { id: stri
         <div class="pj-maanden" :class="{ 'pj-maanden--kwartaal': weergave === 'kwartaal', 'pj-maanden--maand': weergave === 'maand' }" data-test="kalender" :data-weergave="weergave">
           <button v-for="m in zichtbareMaanden" :key="m.nr" type="button" class="maandtegel pj-maand" :class="{ 'pj-maand--nu': m.isHuidig, 'pj-maand--aan': m.nr === gekozen, 'pj-maand--voorbij': m.voorbij }" :aria-pressed="m.nr === gekozen" :data-maand="m.nr" @click="maand = m.nr">
             <span class="pj-maand-top"><span class="pj-maand-nr tnum">{{ m.nr }}</span><span class="pj-maand-naam">{{ m.naam }}</span><span v-if="m.isHuidig" class="pj-nu">Nu</span></span>
-            <span class="pj-maand-pillen"><span v-for="g in m.actief" :key="g.potentie" class="groep-pil" :class="`groep-pil--${g.potentie}`">{{ g.label }}</span><span v-if="!m.actief.length" class="meta">Niets aan de beurt</span></span>
+            <span class="pj-maand-pillen"><span v-for="g in m.actief" :key="g.potentie" class="lbl lbl--rand lbl-klasse groep-lbl">{{ g.label }}<span class="lbl-trap" :data-n="TRAP[g.potentie as Potentie]" aria-hidden="true"><i /><i /><i /><i /></span></span><span v-if="!m.actief.length" class="meta">Niets aan de beurt</span></span>
             <span v-if="m.totaal" class="pj-maand-stat"><span class="tnum">{{ m.benaderd }}/{{ m.totaal }}</span> benaderd</span>
             <span v-if="m.achterstand" class="pj-laat tnum">{{ m.achterstand }} te laat</span>
             <span v-if="weergave === 'maand'" class="pj-maand-groepen">
@@ -197,7 +199,7 @@ const belTaak = ref<{ account: { id: string; naam: string }; contact: { id: stri
         <article v-for="b in detail.blokken" :id="`groep-${b.key}`" :key="b.key" class="pj-groep" :class="{ 'pj-groep--laat': b.teLaat }" :data-groep="b.groep.potentie">
           <header class="pj-groep-kop">
             <div class="pj-groep-intro">
-              <span v-if="b.teLaat" class="groep-pil groep-pil--laat">Te laat</span><span v-else class="groep-pil" :class="`groep-pil--${b.groep.potentie}`">{{ b.groep.label }}</span>
+              <Label v-if="b.teLaat" soort="urgentie" waarde="over-tijd" tekst="Te laat" /><span v-else class="lbl lbl--rand lbl-klasse groep-lbl">{{ b.groep.label }}<span class="lbl-trap" :data-n="TRAP[b.groep.potentie as Potentie]" aria-hidden="true"><i /><i /><i /><i /></span></span>
               <h3 class="pj-groep-titel">{{ hoofd(NOEMER[b.groep.potentie][1]) }}</h3>
               <p class="pj-groep-regel">{{ b.teLaat ? `Het venster (${vensterTekst(b.groep)}) is voorbij en ${b.groep.open} van de ${b.groep.totaal} ${b.groep.open === 1 ? 'is' : 'zijn'} nog niet benaderd.` : b.groep.doorlopend ? 'Doorlopend: plan er wekelijks een paar tussendoor.' : `Benaderen in ${vensterTekst(b.groep)}.` }}</p>
             </div>
@@ -206,7 +208,7 @@ const belTaak = ref<{ account: { id: string; naam: string }; contact: { id: stri
           <ul class="pj-rijen">
             <li v-for="a in zichtbaar(b.groep)" :key="a.id" class="pj-prospect plan-rij" :data-account="a.naam">
               <NuxtLink :to="`/accounts/${a.id}`" class="pj-naam">{{ a.naam }}<span class="pj-meta">{{ a.klasse ?? 'geen klasse' }} · {{ a.plaats ?? 'plaats onbekend' }}</span></NuxtLink>
-              <span class="pj-status" :class="benaderd(a) ? 'pj-status--ja' : 'pj-status--nee'">{{ a.status }}</span>
+              <Label v-if="benaderd(a)" soort="status" waarde="afgerond" :tekst="a.status" /><Label v-else soort="status" waarde="nieuw" :tekst="a.status" />
               <span class="pj-contact tnum">{{ a.pogingen }} {{ a.pogingen === 1 ? 'contactmoment' : 'contactmomenten' }}</span>
               <span class="pj-acties">
                 <button type="button" class="dd-act" data-test="bel-taak" :title="`Beltaak voor ${a.naam}${a.contact ? ` met ${a.contact.naam}` : ''}`" @click="belTaak = { account: { id: a.id, naam: a.naam }, contact: a.contact ?? null }"><Icoon naam="Plus" />Bel taak</button>
@@ -272,11 +274,7 @@ const belTaak = ref<{ account: { id: string; naam: string }; contact: { id: stri
 /* Legenda en groeppillen */
 .pj-legenda { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 4px; }
 .pj-legenda li { display: flex; align-items: baseline; gap: 8px; }
-.groep-pil { display: inline-block; padding: 2px 6px; background: var(--ink); color: var(--wit); font-size: var(--fs-label); font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.groep-pil--groot { background: var(--purple); }
-.groep-pil--middel { background: var(--blue); }
-.groep-pil--klein { background: var(--muted); }
-.groep-pil--laat { background: var(--red); }
+.groep-lbl { padding-left: 6px; }
 
 /* Kwartalen */
 .pj-kwartalen { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
@@ -332,9 +330,6 @@ const belTaak = ref<{ account: { id: string; naam: string }; contact: { id: stri
 .pj-naam { flex: 1 1 240px; display: flex; flex-direction: column; justify-content: center; min-height: var(--touch-target-min); font-size: var(--fs-body); font-weight: 700; color: var(--ink); text-decoration: none; }
 .pj-naam:hover { text-decoration: underline; text-underline-offset: 3px; }
 .pj-meta { margin-top: 2px; font-size: var(--fs-label); font-weight: 400; color: var(--muted); }
-.pj-status { padding: 3px 8px; border: 1px solid var(--border-strong); font-size: var(--fs-label); font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.pj-status--ja { background: var(--green); border-color: var(--green); color: var(--wit); }
-.pj-status--nee { background: var(--surface); color: var(--ink-soft); }
 .pj-contact { min-width: 120px; font-size: var(--fs-label); color: var(--muted); }
 .pj-acties { display: flex; gap: 6px; }
 .pj-alles, .pj-leeg { margin: 12px 0 0; font-size: var(--fs-meta); font-style: italic; color: var(--muted); }

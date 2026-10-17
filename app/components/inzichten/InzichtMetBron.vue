@@ -22,10 +22,9 @@ async function opslaan() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="imb-titel" data-test="inzicht-met-bron" @submit.prevent="opslaan">
-        <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Inzicht</span><h2 id="imb-titel" class="fo-titel">Nieuw inzicht</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button></header>
+  <FlyoutShell v-if="open" open titel-id="imb-titel" breedte="smal" data-test="inzicht-met-bron" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Inzicht</span><h2 id="imb-titel" class="fo-titel">Nieuw inzicht</h2></template>
+        <form id="imb-form" class="fs-form" @submit.prevent="opslaan">
         <div class="fo-body fo-body--formulier">
           <KlantContactKiezer v-model:klant="klant" v-model:contact="contact" prefix="imb" klant-label="Prospect" contact-label="Contact" />
           <p class="veld-uitleg imb-uitleg">Het contact is optioneel. Met een contact staat het inzicht ook op de contactkaart.</p>
@@ -34,10 +33,14 @@ async function opslaan() {
           <label class="veld"><span class="veld-label">URL</span><input v-model="f.url" class="invoer" type="url" placeholder="https://" data-test="imb-url"></label>
           <label class="veld"><span class="veld-label">Citaat</span><textarea v-model="f.citaat" class="invoer" rows="3" maxlength="600" required data-test="imb-citaat" /></label>
         </div>
-        <footer class="fo-foot dd-acties"><span class="dd-acties-vul fo-foot-vul" /><button type="submit" class="dd-act dd-act--primair" :disabled="!klaar || bezig" data-test="imb-opslaan">Opslaan</button></footer>
-      </form>
-    </div>
-  </Teleport>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="imb-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!klaar || bezig" data-test="imb-opslaan"><Icoon naam="Check" :grootte="16" />Opslaan</button>
+          <span class="fo-foot-vul" />
+        </footer>
+      </template>
+    </FlyoutShell>
 </template>
 
 <style scoped>

@@ -37,27 +37,21 @@ watch(() => route.fullPath, () => sluit())
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="sluit">
-      <aside class="fo-panel fo-panel--hulp fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="hulp-titel" data-test="hulp-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+  <FlyoutShell v-if="open" open titel-id="hulp-titel" breedte="hulp" data-test="hulp-flyout" @sluit="sluit">
+      <template #kop>
             <span class="fo-kicker">Hulp<template v-if="artikel"> · {{ artikel.categorie }}</template></span>
-            <h2 id="hulp-titel" class="fo-titel">{{ artikel?.titel ?? (fout ? 'Geen artikel gevonden' : 'Laden…') }}</h2>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="sluit"><Icoon naam="X" /></button>
-        </header>
+            <h2 id="hulp-titel" class="fo-titel">{{ artikel?.titel ?? (fout ? 'Geen artikel gevonden' : 'Laden…') }}</h2></template>
         <div ref="lijf" class="fo-body help-inhoud" @scroll.passive="controleerGelezen">
           <p v-if="fout" class="fo-tekst">Er is voor dit scherm nog geen artikel. Kijk in het helpcenter.</p>
           <!-- eslint-disable-next-line vue/no-v-html -->
           <div v-else-if="artikel" class="help-tekst" v-html="html" />
         </div>
-        <footer class="fo-foot dd-acties">
+      <template #voet>
+        <footer class="fo-foot fs-voet">
           <NuxtLink v-if="artikel" class="dd-act" :to="`/helpcenter/${artikel.slug}`" @click="sluit"><Icoon naam="BookOpen" class="dd-act-icoon" />Open in het helpcenter</NuxtLink>
           <span class="dd-acties-vul fo-foot-vul" />
           <button type="button" class="dd-act" @click="sluit">Sluiten</button>
         </footer>
-      </aside>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
 </template>

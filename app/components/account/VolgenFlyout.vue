@@ -74,16 +74,11 @@ const titelKicker = computed(() => (props.contactId ? `Volgen · ${props.contact
 
 <template>
   <Teleport to="body">
-    <div v-if="open && !taakId" class="fo-overlay" @click.self="sluit">
-      <aside class="fo-panel fo-panel--breed fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="vl-titel" data-test="volgen-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+    <FlyoutShell v-if="open && !taakId" open titel-id="vl-titel" breedte="breed" :sluit-test="'volgen-sluit'" data-test="volgen-flyout" @sluit="sluit">
+      <template #kop>
             <span class="fo-kicker">{{ titelKicker }}</span>
             <h2 id="vl-titel" class="fo-titel">Volgende beste stap</h2>
-            <p class="fo-meta">Gewogen uit taken, inzichten, ritme, fase en bereikbaarheid. De Bewaker toetst elke stap.</p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" data-test="volgen-sluit" @click="sluit">×</button>
-        </header>
+            <p class="fo-meta">Gewogen uit taken, inzichten, ritme, fase en bereikbaarheid. De Bewaker toetst elke stap.</p></template>
 
         <div class="fo-body">
           <p v-if="laden" class="fo-leeg">Laden…</p>
@@ -95,7 +90,7 @@ const titelKicker = computed(() => (props.contactId ? `Volgen · ${props.contact
               <h3 class="vl-stap-titel" data-test="vs-titel">{{ d.stap.titel }}</h3>
               <div class="vl-tags">
                 <span class="pil" :class="SOORT_PIL[d.stap.soort]" data-test="vs-soort">{{ STAP_SOORT_LABEL[d.stap.soort as keyof typeof STAP_SOORT_LABEL] }}</span>
-                <span class="pil pil--zwart tnum" data-test="vs-score">{{ d.stap.score }} punten</span>
+                <Label soort="score" :waarde="d.stap.score" :tekst="`${d.stap.score} punten`" data-test="vs-score" />
                 <NuxtLink v-if="d.stap.contactId && d.stap.contactId !== contactId" :to="`/contacten/${d.stap.contactId}`" class="tekst-link vl-contact" @click="sluit">{{ d.stap.contactNaam }}</NuxtLink>
               </div>
               <ul class="vl-factoren" data-test="vs-factoren" aria-label="Weging">
@@ -177,8 +172,7 @@ const titelKicker = computed(() => (props.contactId ? `Volgen · ${props.contact
             </section>
           </template>
         </div>
-      </aside>
-    </div>
+    </FlyoutShell>
     <TaakFlyout :open="!!taakId" :taak-id="taakId" @sluit="taakDicht" @klaar="taakDicht" @gewijzigd="emit('gewijzigd')" />
   </Teleport>
 </template>

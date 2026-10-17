@@ -2,15 +2,19 @@
 // Vandaag in drie kolommen (opzet uit DealDrive, VandaagPanel): Taken, Afspraken en Prio in één kaart,
 // met de datum en een knop naar de agenda. Een taak of afspraak opent zijn venster; een prio-regel
 // gaat naar het inzicht, de taak of de accountkaart.
-import { ACTIE_LABEL, PRIO_LABEL, isDringend } from '~~/shared/taken'
+import { isDringend } from '~~/shared/taken'
 const props = defineProps<{ taken: { lijst: any[]; meer: number; totaal: number }; afspraken: any[]; prio: any[]; dag?: string }>()
 const emit = defineEmits<{ open: [id: string] }>()
 const datum = computed(() => new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Amsterdam' }).format(props.dag ? new Date(`${props.dag}T12:00:00Z`) : new Date()))
 const tijd = (iso: string | null) => (iso ? new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(iso)) : '')
 const dagKort = (iso: string | null) => (iso ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date(iso)).replace('.', '') : '')
+/** Label in de kolom Prio: heet met vlam, risico gevuld, terug een rand. */
+const prioLabel = (p: any) => (p.labelSoort === 'hot' ? { soort: 'status', waarde: 'heet', tekst: p.label } : p.labelSoort === 'risico' ? { soort: 'urgentie', waarde: 'risico', tekst: p.label } : { soort: 'status', waarde: 'nieuw', tekst: p.label })
+/** Eén label per taak: hoog of urgent eerst, anders de actiesoort (rand) of het AI-concept (paars). */
 function label(t: any) {
-  if (isDringend(t.priority)) return { tekst: PRIO_LABEL[t.priority] ?? 'Urgent', soort: 'hot' }
-  return { tekst: ACTIE_LABEL[t.actionType] ?? 'Taak', soort: t.concept ? 'ai' : 'standaard' }
+  if (isDringend(t.priority)) return { soort: 'prioriteit', waarde: t.priority }
+  if (t.concept) return { soort: 'ai', waarde: 'concept' }
+  return { soort: 'actie', waarde: t.actionType ?? 'taak' }
 }
 </script>
 
@@ -30,7 +34,7 @@ function label(t: any) {
           <span class="vp-body">
             <span class="vp-naam">{{ t.account?.naam ?? t.title }}</span>
             <span class="vp-meta">{{ t.account ? t.title : t.waarom }}<template v-if="t.poging"> · poging {{ t.poging.n }} van {{ t.poging.van }}</template></span>
-            <span class="vp-tag" :class="`vp-tag--${label(t).soort}`">{{ label(t).tekst }}</span>
+            <Label class="vp-tag" v-bind="label(t)" />
           </span>
         </button>
         <NuxtLink v-if="taken.meer" to="/taken" class="vp-meer" data-test="nog-meer">nog {{ taken.meer }} meer →</NuxtLink>
@@ -43,7 +47,7 @@ function label(t: any) {
           <span class="vp-body">
             <span class="vp-naam">{{ a.accountNaam ?? a.titel }}</span>
             <span v-if="a.accountNaam && a.titel" class="vp-meta">{{ a.titel }}</span>
-            <span v-if="a.zonderVerslag" class="vp-tag vp-tag--risico">Verslag</span>
+            <Label v-if="a.zonderVerslag" class="vp-tag" soort="urgentie" waarde="risico" tekst="Verslag" />
           </span>
         </button>
       </div>
@@ -55,7 +59,7 @@ function label(t: any) {
           <span class="vp-body">
             <span class="vp-naam">{{ p.naam ?? p.tekst }}</span>
             <span v-if="p.reden && p.reden !== p.naam" class="vp-meta">{{ p.reden }}</span>
-            <span v-if="p.label" class="vp-tag" :class="`vp-tag--${p.labelSoort}`">{{ p.label }}</span>
+            <Label v-if="p.label" class="vp-tag" v-bind="prioLabel(p)" />
           </span>
         </NuxtLink>
       </div>
@@ -89,10 +93,6 @@ function label(t: any) {
 .vp-body { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
 .vp-naam { font-size: 14px; font-weight: 600; line-height: 1.3; color: var(--ink); transition: color var(--transition-fast); }
 .vp-meta { margin-top: 3px; font-size: 12px; line-height: 1.4; color: var(--muted); }
-.vp-tag { margin-top: 5px; padding: 1px 7px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: var(--surface); color: var(--muted); }
-.vp-tag--standaard { background: var(--blue); color: #fff; }
-.vp-tag--ai { background: #4c1d95; color: #fff; }
-.vp-tag--hot, .vp-tag--risico { background: var(--red); color: #fff; }
-.vp-tag--info { background: var(--surface); color: var(--ink); }
+.vp-tag { margin-top: 5px; }
 .vp-meer { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 700; color: var(--ink); border-bottom: 2px solid var(--yellow); text-decoration: none; }
 </style>

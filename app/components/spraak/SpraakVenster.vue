@@ -78,14 +78,9 @@ const datumLabel = (d: string | null) => (d ? new Date(`${d}T12:00:00Z`).toLocal
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="open = false">
-      <section class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="sp-titel" data-test="spraak-venster">
-        <header class="fo-head">
-          <div class="fo-head-tekst"><span class="fo-kicker">Inspreken</span><h2 id="sp-titel" class="fo-titel">Zeg wat er moet gebeuren</h2>
-            <p class="taak-meta"><span class="pil" :class="accountNaam ? 'pil--zwart' : 'pil--leeg'">{{ accountNaam ?? 'Geen account gekozen' }}</span></p></div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="open = false"><Icoon naam="X" /></button>
-        </header>
+  <FlyoutShell v-if="open" open titel-id="sp-titel" breedte="smal" data-test="spraak-venster" @sluit="open = false">
+      <template #kop><span class="fo-kicker">Inspreken</span><h2 id="sp-titel" class="fo-titel">Zeg wat er moet gebeuren</h2>
+            <p class="taak-meta"><span class="pil" :class="accountNaam ? 'pil--zwart' : 'pil--leeg'">{{ accountNaam ?? 'Geen account gekozen' }}</span></p></template>
         <div class="fo-body fo-body--formulier">
           <NietAangezetKop v-if="!functie('spraak.opdracht')?.beschikbaar" sleutel="spraak.opdracht" />
           <template v-else>
@@ -111,12 +106,12 @@ const datumLabel = (d: string | null) => (d ? new Date(`${d}T12:00:00Z`).toLocal
             <p v-else-if="uitkomst?.soort === 'fout'" class="kaart kaart--rood mt-16" data-test="sp-fout">{{ uitkomst.tekst }}</p>
           </template>
         </div>
-        <footer class="fo-foot dd-acties">
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="uitkomst?.soort !== 'concept'" data-test="sp-bewaar" @click="bewaar"><Icoon naam="Check" :grootte="16" />Bewaar</button>
+          <span class="fo-foot-vul" />
           <button type="button" class="dd-act" :disabled="!uitkomst" @click="uitkomst = null">Aanpassen</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="button" class="dd-act dd-act--primair" :disabled="uitkomst?.soort !== 'concept'" data-test="sp-bewaar" @click="bewaar">Bewaar</button>
         </footer>
-      </section>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
 </template>

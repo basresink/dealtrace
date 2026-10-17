@@ -122,7 +122,7 @@ useHead({ title: 'Bezoekanalyse · Dealtrace' })
                   <tbody>
                     <tr v-for="r in zichtbareRegios" :key="r.regioId ?? 'zonder'" :class="{ 'is-open': lijst.open && lijst.regioId === r.regioId, 'ba-rij--zonder': !r.regioId }" :data-test="`regio-rij-${r.regioId ?? 'zonder'}`">
                       <td><strong>{{ r.naam }}</strong><br><span class="ba-hint">{{ r.beschrijving || '—' }}</span></td>
-                      <td><span v-if="r.regioId" class="pil" :class="r.regiodag ? 'pil--geel' : 'pil--grijs'">{{ r.regiodag ?? 'Geen' }}</span><span v-else>—</span></td>
+                      <td><span v-if="r.regioId" class="pil" :class="r.regiodag ? '' : 'pil--leeg'">{{ r.regiodag ?? 'Geen' }}</span><span v-else>—</span></td>
                       <td class="cel-r">{{ r.klanten }}</td><td class="cel-r">{{ r.prospects }}</td><td class="cel-r">{{ r.nietBenaderd }}</td>
                       <td><DekkingBalk :gezien="r.gezien" :stil="r.stil" :nooit="r.nooit" :titel="`${r.gezien} ${data.venster.binnen} · ${r.stil} ${data.venster.buiten} · ${r.nooit} nooit bezocht`" /></td>
                       <td class="cel-r" :class="ernst(r)">{{ r.stil + r.nooit }}</td>
@@ -177,7 +177,7 @@ useHead({ title: 'Bezoekanalyse · Dealtrace' })
                   <tr v-for="d in routeDagen" :key="`${d.gebruikerId}-${d.datum}`">
                     <td>{{ datumLang(d.datum) }}</td>
                     <td v-if="data.bereik.scope === 'team'">{{ d.gebruiker }}</td>
-                    <td><span v-if="d.regioNaam" class="pil pil--geel">{{ d.regioNaam }}</span><span v-else class="ba-hint">geen regiodag</span></td>
+                    <td><span v-if="d.regioNaam" class="pil">{{ d.regioNaam }}</span><span v-else class="ba-hint">geen regiodag</span></td>
                     <td class="cel-r" :class="{ 'ba-rood': d.regioId && !d.bezoeken }">{{ d.bezoeken }}</td>
                     <td class="cel-r">{{ d.regioId ? d.inRegio : '—' }}</td>
                     <td class="cel-r">{{ d.bezoeken > 1 ? d.km : '—' }}</td>

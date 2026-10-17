@@ -34,13 +34,9 @@ async function maak() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')" @keydown.esc="emit('sluit')">
-      <form class="fo-panel" role="dialog" aria-modal="true" aria-labelledby="apn-titel" data-test="ap-nieuw-flyout" @submit.prevent="maak">
-        <header class="fo-head">
-          <div class="fo-head-tekst"><span class="fo-kicker">Accountplan</span><h2 id="apn-titel" class="fo-titel">Nieuw accountplan</h2><p class="fo-meta">Eén plan per topprospect en per periode. De blokken en acties vul je daarna op de pagina van het plan in.</p></div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+  <FlyoutShell v-if="open" open titel-id="apn-titel" data-test="ap-nieuw-flyout" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Accountplan</span><h2 id="apn-titel" class="fo-titel">Nieuw accountplan</h2><p class="fo-meta">Eén plan per topprospect en per periode. De blokken en acties vul je daarna op de pagina van het plan in.</p></template>
+        <form id="apn-form" class="fs-form" @submit.prevent="maak">
         <div class="fo-body">
           <div class="veld">
             <span class="veld-label">Prospect</span>
@@ -57,10 +53,14 @@ async function maak() {
           </div>
           <p class="meta mt-8">Na de einddatum staat het plan bij Verlopen. Dat is het moment om te evalueren en een nieuwe periode te openen.</p>
         </div>
-        <footer class="fo-foot dd-acties"><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button><button type="submit" class="dd-act dd-act--geel" :disabled="bezig || !gekozen || titel.trim().length < 3" data-test="apn-maak">Plan aanmaken</button></footer>
-      </form>
-    </div>
-  </Teleport>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="apn-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || !gekozen || titel.trim().length < 3" data-test="apn-maak"><Icoon naam="Check" :grootte="16" />Plan aanmaken</button>
+          <span class="fo-foot-vul" />
+        </footer>
+      </template>
+    </FlyoutShell>
 </template>
 
 <style scoped>

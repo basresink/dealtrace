@@ -27,13 +27,9 @@ async function maak() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel" role="dialog" aria-modal="true" aria-labelledby="nk-titel" data-test="nieuwe-klant" @submit.prevent="maak">
-        <header class="fo-head">
-          <div class="fo-head-tekst"><span class="fo-kicker">Platformbeheer</span><h2 id="nk-titel" class="fo-titel">Nieuwe klant</h2></div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+  <FlyoutShell v-if="open" open titel-id="nk-titel" data-test="nieuwe-klant" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Platformbeheer</span><h2 id="nk-titel" class="fo-titel">Nieuwe klant</h2></template>
+        <form id="nk-form" class="fs-form" @submit.prevent="maak">
         <div class="fo-body fo-body--formulier">
           <article class="fo-blok">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Organisatie</h3></header>
@@ -63,12 +59,12 @@ async function maak() {
             <p class="veld-uitleg">De uitnodiging met inlogcode volgt zodra inloggen met code er is (P27).</p>
           </article>
         </div>
-        <footer class="fo-foot dd-acties">
-          <button type="submit" class="dd-act dd-act--primair" :disabled="bezig" data-test="nk-maak">Klant aanmaken</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="nk-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig" data-test="nk-maak"><Icoon naam="Check" :grootte="16" />Klant aanmaken</button>
+          <span class="fo-foot-vul" />
         </footer>
-      </form>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
 </template>

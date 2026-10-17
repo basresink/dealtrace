@@ -124,7 +124,7 @@ const TEMPO: Record<string, string> = { 'Voor op schema': 'voor', 'Op schema': '
               <button v-if="b.taskId" type="button" class="item-naam rb-naam" :data-test="`rb-bel-taak-${b.taskId}`" @click="taak = b.taskId">{{ b.accountNaam }}</button>
               <NuxtLink v-else :to="`/accounts/${b.accountId}?bel=1`" class="item-naam rb-naam">{{ b.accountNaam }}</NuxtLink>
               <span class="item-meta">{{ b.reden }}<template v-if="b.contactNaam"> · {{ b.contactNaam }}</template></span>
-              <span class="pil-tags"><span class="pil pil--grijs">Score {{ b.score }}</span><span v-if="b.heet" class="pil pil--rood">Heet</span><span v-if="b.inBelblok" class="pil pil--geel">In belblok</span></span>
+              <span class="pil-tags"><Label soort="score" :waarde="b.score" :tekst="`Score ${b.score}`" /><Label v-if="b.heet" soort="status" waarde="heet" /><span v-if="b.inBelblok" class="pil">In belblok</span></span>
             </span>
             <span v-if="b.telefoon" class="item-acties"><a :href="`tel:${b.telefoon}`" class="dd-act" :aria-label="`Bel ${b.accountNaam}`"><Icoon naam="Phone" />Bel</a></span>
           </div>

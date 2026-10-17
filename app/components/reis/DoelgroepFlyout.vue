@@ -41,13 +41,9 @@ function wissel(lijstNaam: 'brancheIds' | 'klassen', id: string) {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="dg-titel" data-test="doelgroep-flyout" @submit.prevent="bewaar">
-        <header class="fo-head">
-          <div class="fo-head-tekst"><span class="fo-kicker">Doelgroep</span><h2 id="dg-titel" class="fo-titel">{{ doelgroep ? doelgroep.naam : 'Nieuwe doelgroep' }}</h2></div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+  <FlyoutShell v-if="open" open titel-id="dg-titel" data-test="doelgroep-flyout" @sluit="emit('sluit')">
+      <template #kop><span class="fo-kicker">Doelgroep</span><h2 id="dg-titel" class="fo-titel">{{ doelgroep ? doelgroep.naam : 'Nieuwe doelgroep' }}</h2></template>
+        <form id="dg-form" class="fs-form" @submit.prevent="bewaar">
         <div class="fo-body fo-body--formulier">
           <p v-if="telling" class="kaart kaart--geel" role="status" data-test="doelgroep-teller"><strong class="tnum">{{ telling.aantal }}</strong> accounts vallen in deze doelgroep, waarvan <strong class="tnum">{{ telling.inAndereReis }}</strong> al in een andere reis.</p>
           <article class="fo-blok">
@@ -82,12 +78,12 @@ function wissel(lijstNaam: 'brancheIds' | 'klassen', id: string) {
             </div>
           </article>
         </div>
-        <footer class="fo-foot dd-acties">
-          <button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="submit" class="dd-act dd-act--primair" :disabled="bezig || !f.naam.trim()" data-test="dg-bewaar">Bewaren</button>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="dg-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || !f.naam.trim()" data-test="dg-bewaar"><Icoon naam="Check" :grootte="16" />Bewaren</button>
+          <span class="fo-foot-vul" />
         </footer>
-      </form>
-    </div>
-  </Teleport>
+      </template>
+    </FlyoutShell>
 </template>

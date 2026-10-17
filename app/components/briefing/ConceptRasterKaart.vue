@@ -41,7 +41,7 @@ const ICOON: Record<string, string> = { mail: 'Mail', whatsapp: 'MessageCircle',
       <header class="ck-kop">
         <span class="ck-tag" :class="`ck-tag--${c.concept?.type ?? 'leeg'}`" data-test="concept-soort"><Icoon :naam="ICOON[c.concept?.type] ?? 'FileText'" :grootte="12" />{{ soortLabel(c.concept?.type) }}</span>
         <span class="ck-meta tnum"><strong>{{ agentLabel(c.agent) }}</strong><span class="ck-punt">·</span><time :datetime="c.op">{{ wanneer }}</time></span>
-        <span class="ck-status" :class="`ck-status--${status}`" data-test="concept-status">{{ CONCEPT_STATUS[status] ?? status }}</span>
+        <Label class="ck-status" soort="concept" :waarde="status" :tekst="CONCEPT_STATUS[status] ?? status" data-test="concept-status" />
       </header>
       <h3 class="ck-titel"><button type="button" class="ck-titel-knop" @click.stop="emit('open')">{{ titel }}</button></h3>
       <p v-if="regels" class="ck-tekst">{{ regels }}</p>
@@ -74,20 +74,12 @@ const ICOON: Record<string, string> = { mail: 'Mail', whatsapp: 'MessageCircle',
 .ck:hover .ck-vlak { border-color: var(--ink-soft); }
 .ck--verstuurd .ck-vlak, .ck--afgewezen .ck-vlak { background: var(--surface); }
 .ck-kop { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
-.ck-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 7px; border: 1px solid var(--ink); border-radius: 2px; background: var(--ink); color: var(--yellow); }
-.ck-tag--mail { background: var(--blue); border-color: var(--blue); color: var(--wit); }
-.ck-tag--whatsapp { background: var(--green); border-color: var(--green); color: var(--wit); }
-.ck-tag--linkedin { background: transparent; border-color: var(--blue); color: var(--blue); }
-.ck-tag--belscript { background: var(--yellow); border-color: var(--yellow); color: var(--ink); }
-.ck-tag--taak { background: var(--purple); border-color: var(--purple); color: var(--wit); }
+.ck-tag { display: inline-flex; align-items: center; gap: 4px; height: var(--lbl-h); padding: 0 6px; border: 1px solid var(--lbl-rand-lijn); border-radius: 2px; font-size: var(--lbl-fs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lbl-rand-tekst); }
 .ck-meta { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); min-width: 0; }
 .ck-meta strong { color: var(--ink); font-weight: 600; }
 .ck-punt { color: var(--muted-light); margin: 0 4px; }
 .ck-meta .ck-punt { margin: 0; }
-.ck-status { margin-left: auto; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; background: var(--yellow); color: var(--ink); }
-.ck-status--goedgekeurd { background: var(--green); color: var(--wit); }
-.ck-status--verstuurd { background: var(--surface); color: var(--ink); border: 1px solid var(--border); }
-.ck-status--afgewezen, .ck-status--mislukt { background: var(--surface); color: var(--red); border: 1px solid var(--border); }
+.ck-status { margin-left: auto; }
 .ck-titel { font-family: var(--font-serif); font-size: 20px; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 10px; color: var(--ink); overflow-wrap: anywhere; }
 .ck-titel-knop { all: unset; cursor: pointer; }
 .ck-titel-knop:focus-visible { outline: 2px solid var(--yellow-dark); outline-offset: 2px; }

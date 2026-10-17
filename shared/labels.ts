@@ -64,6 +64,7 @@ export const LABELS = {
     vertrokken: leeg('Vertrokken', 'UserX'),
     'geen-mail': leeg('Geen mail', 'MailX'),
     'te-lang-in-fase': zacht('Te lang in fase', 'oranje', 'Clock'),
+    heet: zacht('Heet', 'oranje', 'Flame'),
     actief: null,
   },
   /** Rol in het buying committee: zacht, elke rol een eigen icoon en tint. */
@@ -109,6 +110,12 @@ export const LABELS = {
     import: rand('Import', 'Upload'),
     agent: ai('Agent'),
   },
+  /** Herkomst van een briefingblok: AI is paars, eigen tekst en berekend zijn feiten. */
+  briefing: {
+    berekend: rand('Berekend', 'ChartColumn'),
+    ai: ai('Door AI geschreven'),
+    eigen: rand('Eigen tekst', 'Pencil'),
+  },
   /** Bron van een inzicht. */
   bron: {
     intern: rand('Intern', 'Building2'),
@@ -129,6 +136,7 @@ export const LABELS = {
     agenda: rand('Agenda', 'Calendar'),
     'campagne-achterstand': zacht('Campagne loopt achter', 'oranje', 'Clock'),
     'te-lang-in-fase': zacht('Te lang in fase', 'oranje', 'Clock'),
+    heet: zacht('Heet', 'oranje', 'Flame'),
     'regel-voorstel': rand('Regelvoorstel', 'Workflow'),
   },
   /** Gezondheid van een klantorganisatie (platformbeheer). */
@@ -158,6 +166,23 @@ export const LABELS = {
     actief: zacht('Actief', 'blauw', 'CirclePlay'),
     gepauzeerd: zacht('Gepauzeerd', 'grijs', 'CirclePause'),
     afgerond: zacht('Afgerond', 'groen', 'CircleCheck'),
+  },
+  /** Status van een concept van een agent: klaar is een AI-voorstel dat je nog bevestigt. */
+  concept: {
+    klaar: ai('Klaar', true),
+    goedgekeurd: zacht('Goedgekeurd', 'groen', 'CircleCheck'),
+    verstuurd: rand('Verstuurd', 'ArrowRight'),
+    afgewezen: leeg('Afgewezen', 'CircleX'),
+    mislukt: zacht('Mislukt', 'rood', 'TriangleAlert'),
+  },
+  /** Soort melding. */
+  melding: {
+    kritiek: vol('Kritiek', 'TriangleAlert'),
+    hot: zacht('Hete aanleiding', 'oranje', 'Flame'),
+    dagstart: rand('Dagstart', 'Sunrise'),
+    herinnering: rand('Herinnering', 'Bell'),
+    inzicht: rand('Inzicht', 'Lightbulb'),
+    systeem: rand('Dealtrace', 'Info'),
   },
   /** Overdracht naar DealDrive of het CRM. */
   overdracht: {
@@ -233,8 +258,8 @@ export function scoreDef(score: number | null | undefined): LabelDef | null {
 
 // ---------- Volgorde in een rij ----------
 
-/** Urgentie, status of fase, rol, soort of kanaal, herkomst, AI. */
-export const LABEL_VOLGORDE: string[] = ['urgentie', 'prioriteit', 'status', 'fase', 'klasse', 'rol', 'houding', 'actie', 'inzichtsoort', 'bron', 'account', 'herkomst', 'score', 'ai']
+/** Urgentie, fase of status, rol, soort of kanaal, herkomst, AI. */
+export const LABEL_VOLGORDE: string[] = ['urgentie', 'prioriteit', 'fase', 'status', 'klasse', 'rol', 'houding', 'actie', 'inzichtsoort', 'bron', 'account', 'herkomst', 'score', 'ai']
 export const MAX_LABELS_IN_RIJ = 4
 
 export interface RijLabel { soort: string; waarde: unknown; tekst?: string; [k: string]: unknown }

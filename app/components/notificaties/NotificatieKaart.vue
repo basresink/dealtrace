@@ -32,7 +32,7 @@ function klik(e: MouseEvent) {
   <li class="nkaart" :class="[`nkaart--${soort}`, { 'nkaart--ongelezen': !melding.gelezenOp, 'nkaart--link': !!melding.link }]" data-test="melding" @click="klik" @touchstart.passive="veegStart" @touchend="veegEind">
     <div class="nkaart-vlak">
       <div class="nkaart-meta">
-        <span class="nkaart-tag" :class="`nkaart-tag--${soort}`">{{ MELDING_SOORT_LABEL[soort] }}</span>
+        <Label class="nkaart-tag" soort="melding" :waarde="soort" :tekst="MELDING_SOORT_LABEL[soort]" />
         <time class="nkaart-tijd tnum" :datetime="melding.op">{{ tijd(melding.op) }}</time>
         <span v-if="!melding.gelezenOp" class="nkaart-stip" aria-label="Ongelezen" data-test="melding-ongelezen" />
       </div>
@@ -62,12 +62,6 @@ function klik(e: MouseEvent) {
 .nkaart--ongelezen .nkaart-vlak { background: var(--wit); }
 .nkaart:hover .nkaart-vlak { border-color: var(--ink-soft); }
 .nkaart-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
-.nkaart-tag { display: inline-block; padding: 2px 8px; font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; background: var(--ink); color: var(--yellow); border-radius: 2px; }
-.nkaart-tag--kritiek { background: var(--red); color: var(--wit); }
-.nkaart-tag--hot { background: var(--purple); color: var(--wit); }
-.nkaart-tag--dagstart { background: var(--blue); color: var(--wit); }
-.nkaart-tag--herinnering { background: var(--yellow); color: var(--ink); }
-.nkaart-tag--inzicht { background: var(--green); color: var(--wit); }
 .nkaart-tijd { font-size: 12px; color: var(--muted); }
 .nkaart-stip { margin-left: auto; width: 10px; height: 10px; background: var(--yellow); border: 1px solid var(--ink); flex-shrink: 0; }
 .nkaart-titel { font-family: var(--font-serif); font-size: 18px; font-weight: 700; line-height: 1.25; margin: 0 0 8px; color: var(--ink); overflow-wrap: anywhere; }
