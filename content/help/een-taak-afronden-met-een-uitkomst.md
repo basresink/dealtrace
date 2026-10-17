@@ -8,6 +8,8 @@ routes: /taken
 
 # Een taak afronden met een uitkomst
 
+## De pagina Taken
+
 ### Wat je op Taken ziet
 
 Op **Taken** staan je open taken op volgorde van vervaldatum. De kop zegt hoeveel taken er vandaag staan, en in rood hoeveel er over tijd zijn. Elke poging rond je af met een uitkomst; de uitkomst bepaalt de volgende stap.
@@ -27,6 +29,8 @@ Onder **Filters** kies je een periode (Vandaag, Morgen, Deze week, Volgende week
 ### Een taak of afspraak toevoegen
 
 Met **+ Taak** maak je zelf een taak. Met **+ Afspraak** plan je meteen een afspraak; daarna opent de agenda met die afspraak.
+
+## Afronden met een uitkomst
 
 ### Zo rond je een taak af
 
@@ -57,6 +61,8 @@ Een taak die geen contactpoging is, zoals Te doen, heeft geen uitkomst nodig. Je
 ### WhatsApp en SMS
 
 Een taak van het type WhatsApp of SMS rond je net zo af. Hij telt als poging via dat kanaal en staat op Mijn dashboard bij Activiteiten per dag onder WhatsApp of SMS.
+
+## Uitstellen en onderweg
 
 ### Uitstellen, annuleren en het contextmenu
 
