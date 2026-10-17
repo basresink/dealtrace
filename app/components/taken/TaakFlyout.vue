@@ -181,12 +181,16 @@ const kanPlannen = computed(() => !!functie('agenda.basis')?.beschikbaar && !!t.
 function gepland(id: string) { planOpen.value = false; emit('gewijzigd'); emit('sluit'); navigateTo(`/agenda?afspraak=${id}`) }
 const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0, 10))
 function toets(e: KeyboardEvent) {
-  if (e.key !== 'Escape' || !props.open || planOpen.value || verwijderVraag.value) return
-  if (uitstelOpen.value) { uitstelOpen.value = false; return }
+  if (e.key !== 'Escape' || !props.open || planOpen.value || e.defaultPrevented) return
   emit('sluit')
 }
-onMounted(() => { document.addEventListener('keydown', toets); document.addEventListener('click', buitenUitstel) })
-onBeforeUnmount(() => { document.removeEventListener('keydown', toets); document.removeEventListener('click', buitenUitstel) })
+// Escape sluit eerst het uitstelmenu of de bevestiging (vangfase, vóór de layout); preventDefault houdt het venster open.
+function toetsEerst(e: KeyboardEvent) {
+  if (e.key !== 'Escape' || !props.open || !(uitstelOpen.value || verwijderVraag.value)) return
+  e.preventDefault(); e.stopPropagation(); uitstelOpen.value = false; verwijderVraag.value = false
+}
+onMounted(() => { document.addEventListener('keydown', toetsEerst, true); document.addEventListener('keydown', toets); document.addEventListener('click', buitenUitstel) })
+onBeforeUnmount(() => { document.removeEventListener('keydown', toetsEerst, true); document.removeEventListener('keydown', toets); document.removeEventListener('click', buitenUitstel) })
 </script>
 
 <template>

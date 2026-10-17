@@ -40,7 +40,9 @@ test.describe('Vandaag', () => {
     await login(page, 'u-03')
     await ga(page, '/')
     await expect(page.getByTestId('werkblok')).toHaveCount(0)
-    await expect(page.getByTestId('agents')).toBeVisible()
+    // Door AI agents gedaan is vervangen door het blok Belscript.
+    await expect(page.getByTestId('agents')).toHaveCount(0)
+    await expect(page.getByTestId('belscript')).toBeVisible()
     await expect(page.getByTestId('week')).toHaveCount(0)
     await expect(page.getByTestId('datakwaliteit')).toHaveCount(0)
     await expect(page.getByTestId('team-vandaag')).toHaveCount(0)

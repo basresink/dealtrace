@@ -117,8 +117,8 @@ defineExpose({ focus: () => invoer.value?.focus() })
 .zk-kop { display: block; }
 .zk .zk-invoer { width: 100%; }
 .zk .zk-invoer:focus { border-color: var(--yellow); outline: 1px solid var(--yellow); outline-offset: -2px; }
-.zk .zk-lijst { max-height: calc(6 * var(--zk-rij) + 1px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); }
-.zk-item { display: block; min-height: var(--zk-rij); padding: 0 12px; overflow: hidden; color: var(--ink); font-size: var(--fs-klein); font-weight: 400; line-height: var(--zk-rij); text-overflow: ellipsis; white-space: nowrap; }
+.zk .zk-lijst { max-height: calc(6 * var(--zk-rij) + 1px); box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain; background: var(--surface); }
+.zk-item { display: block; box-sizing: border-box; height: var(--zk-rij); min-height: var(--zk-rij); padding: 0 12px; overflow: hidden; color: var(--ink); font-size: var(--fs-klein); font-weight: 400; line-height: calc(var(--zk-rij) - 1px); text-overflow: ellipsis; white-space: nowrap; }
 .zk-lijst li:last-child .zk-item { border-bottom: 0; }
 .zk .zk-item.zoeklijst-item--actief,
 .zk .zk-item:hover { background: var(--wit); }
