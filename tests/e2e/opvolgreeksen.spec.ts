@@ -131,7 +131,7 @@ test.describe('opvolgreeksen', () => {
     await expect(rij).toContainText('Gesproken, later')
     // Uitzetten: hij staat niet meer bij Start reeks.
     await rij.getByRole('switch').click()
-    await expect(rij).toContainText('uit')
+    await expect(rij).toContainText('Uit')
     const actief = await (await page.request.get('/api/reekssjablonen')).json()
     expect(actief.sjablonen.some((s: any) => s.naam === naam)).toBe(false)
   })
