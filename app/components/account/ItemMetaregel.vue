@@ -18,18 +18,19 @@ const delen = computed(() => [props.contact ? 'contact' : null, props.door ? 'do
 
 <template>
   <span v-if="delen.length" class="item-meta" :class="{ 'item-meta--los': los }" data-test="item-meta">
-    <template v-for="(d, i) in delen" :key="d">
+    <span v-for="(d, i) in delen" :key="d" class="item-meta-deel">
       <span v-if="i" class="item-meta-punt" aria-hidden="true">·</span>
       <NuxtLink v-if="d === 'contact'" :to="`/contacten/${contact!.id}`" class="item-meta-contact" data-test="tl-contact"><Icoon naam="CircleUser" :grootte="12" />{{ contact!.naam }}</NuxtLink>
       <span v-else-if="d === 'door'" class="item-meta-door" data-test="tl-door">door {{ door }}</span>
       <span v-else class="item-meta-datum tnum" :class="{ 'item-meta-datum--rood': datumRood }">{{ datum }}</span>
-    </template>
+    </span>
   </span>
 </template>
 
 <style scoped>
 .item-meta { position: relative; z-index: 1; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin-left: auto; font-size: 12px; color: var(--muted); }
 .item-meta--los { margin-left: 0; }
+.item-meta-deel { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .item-meta-punt { color: var(--muted-light, var(--muted)); }
 .item-meta-contact { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; font-weight: 700; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--yellow); }
 .item-meta-contact:hover { color: var(--ink-soft); border-bottom-color: var(--ink); }
@@ -39,6 +40,7 @@ const delen = computed(() => [props.contact ? 'contact' : null, props.door ? 'do
 
 @media (max-width: 719px) {
   .item-meta { margin-left: 0; width: 100%; }
-  .item-meta-contact { min-height: 44px; }
+  .item-meta { column-gap: 6px; row-gap: 0; }
+  .item-meta-contact { min-height: 44px; border-bottom: 0; text-decoration: underline; text-decoration-color: var(--yellow); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 }
 </style>
