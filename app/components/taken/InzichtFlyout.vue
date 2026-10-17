@@ -66,10 +66,10 @@ async function wijsAf() {
           </article>
         </div>
         <footer class="fo-foot dd-acties">
-          <button type="button" class="dd-act" data-test="markeer-gelezen" @click="gelezen">Markeer als gelezen</button>
+          <button v-if="!afgewezen" type="button" class="dd-act" data-test="markeer-gelezen" @click="gelezen">Markeer als gelezen</button>
           <button type="button" class="dd-act" data-test="vraag-ai" @click="vraagAi">Vraag AI</button>
           <span class="dd-acties-vul fo-foot-vul" />
-          <button type="button" class="dd-act dd-act--primair" data-test="maak-taak" @click="maakTaak">Maak taak</button>
+          <button v-if="!afgewezen" type="button" class="dd-act dd-act--primair" data-test="maak-taak" @click="maakTaak">Maak taak</button>
         </footer>
       </aside>
     </div>
