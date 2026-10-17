@@ -59,7 +59,18 @@ async function zoekNu() {
   laadt.value = false
   if (lijst.value) lijst.value.scrollTop = 0
 }
-watch(tekst, () => { clearTimeout(timer); if (import.meta.client && document.activeElement === invoer.value) actief.value = true; if (!genoeg.value) { nr++; treffers.value = []; gezocht.value = false; laadt.value = false; return } timer = setTimeout(zoekNu, 200) })
+// Typen filtert de lijst die er al staat meteen op naam (geen verouderde rijen om op te klikken); de bron
+// vult hem daarna aan, ook met treffers op functie.
+watch(tekst, (nieuw) => {
+  clearTimeout(timer)
+  if (import.meta.client && document.activeElement === invoer.value) actief.value = true
+  if (!genoeg.value) { nr++; treffers.value = []; gezocht.value = false; laadt.value = false; return }
+  const z = nieuw.trim().toLowerCase()
+  treffers.value = treffers.value.filter((t) => t.naam.toLowerCase().includes(z))
+  index.value = treffers.value.length ? 0 : -1
+  laadt.value = true
+  timer = setTimeout(zoekNu, 200)
+})
 watch(() => props.sleutel, () => { nr++; treffers.value = []; gezocht.value = false; if (actief.value) zoekNu() })
 function opFocus() { actief.value = true; if (genoeg.value && !gezocht.value && !laadt.value) zoekNu() }
 function opBlur() { actief.value = false }

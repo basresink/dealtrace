@@ -95,7 +95,7 @@ export async function verwijderFaseUitConcept(tx: Tx, g: Bewerker, id: string, f
   return { overgangen: voor, activiteiten: acts.length }
 }
 
-const accountsVoor = async (tx: Tx) => (await rijen(tx, sql`select a.id, a.reis_id, a.fase_id, a.owner_id, a.nb_status, a.klasse, a.postcode, a.gebied_id, a.nb_bron, a.vv_branche_id, a.data, u.werkplek
+const accountsVoor = async (tx: Tx) => (await rijen(tx, sql`select a.id, a.reis_id, a.fase_id, a.owner_id, a.nb_status, a.klasse, a.postcode, a.gebied_id, a.nb_bron, a.vv_branche_id, a.data, a.gedeactiveerd_op, u.werkplek
   from accounts a left join users u on u.id = a.owner_id where a.account_kind = 'prospect' and a.nb_status not in ('overgedragen', 'klant')`))
 
 /** Welke accounts horen bij publicatie in deze reis: die er nu al in zitten, plus die van de doelgroep. */
@@ -106,12 +106,14 @@ async function doelAccounts(tx: Tx, r: Rij) {
   const [d] = r.doelgroep_id ? await rijen(tx, sql`select * from doelgroepen where id = ${r.doelgroep_id}`) : []
   const andere = new Set((await rijen(tx, sql`select id from reistemplates where not is_standaard and status = 'actief' and id <> ${reisId}`)).map((x) => x.id as string))
   const lijst = alle.filter((a) => a.reis_id === reisId || (d && pastInDoelgroep(alsDoelgroepAccount({ klasse: a.klasse, postcode: a.postcode, gebiedId: a.gebied_id, nbBron: a.nb_bron, vvBrancheId: a.vv_branche_id, data: a.data } as any), d as any)))
-  return { reisId, andere, accounts: lijst.map((a): DroogAccount => ({ id: a.id, reisId: a.reis_id, faseId: a.fase_id, ownerId: a.owner_id, werkplek: a.werkplek, ritmeActief: !!a.data?.reis?.ritme?.actief, nbStatus: a.nb_status })) }
+  return { reisId, andere, gedeactiveerd: new Set(lijst.filter((a) => a.gedeactiveerd_op).map((a) => a.id as string)), accounts: lijst.map((a): DroogAccount => ({ id: a.id, reisId: a.reis_id, faseId: a.fase_id, ownerId: a.owner_id, werkplek: a.werkplek, ritmeActief: !!a.data?.reis?.ritme?.actief, nbStatus: a.nb_status })) }
 }
 
 export async function droogloopVoor(tx: Tx, id: string, mapping?: Record<string, string | null>) {
   const r = await laadReis(tx, id)
-  const { reisId, andere, accounts } = await doelAccounts(tx, r)
+  // De droogloop rekent zoals de motor: gedeactiveerde prospects doen niet mee.
+  const { reisId, andere, accounts: alle, gedeactiveerd } = await doelAccounts(tx, r)
+  const accounts = alle.filter((a) => !gedeactiveerd.has(a.id))
   const oud = r.data?.basisId ? (await laadReis(tx, reisId)).data : null
   const map = mapping ?? (oud ? faseMapping(oud, r.data) : faseMapping({ fases: (await rijen(tx, sql`select data from reistemplates where is_standaard`))[0]?.data?.fases ?? [] }, r.data))
   return droogloop(r.data, accounts, await activiteitenVan(tx, id), { reisId, mapping: map, andereReizen: andere })
