@@ -78,6 +78,8 @@ test('bellijst en te plannen bezoeken als kaarten; een klik opent het taakvenste
     await expect(bel.locator('a', { hasText: /^Bel$/ })).toHaveCount(0)
     const kaart = bel.locator('[data-test^="bel-kaart-"]').filter({ has: page.locator('button.dp-kaart-titel') }).first()
     await expect(kaart).toBeVisible()
+    await kaart.scrollIntoViewIfNeeded()
+    // Klik op een lege plek in de kaart (niet op de titel): de hele kaart is klikbaar.
     const box = (await kaart.boundingBox())!
     await page.mouse.click(box.x + box.width - 12, box.y + box.height - 8)
     const fo = page.getByTestId('taak-flyout')

@@ -186,7 +186,8 @@ async function belblok() {
 .rd-redenen { margin-top: -8px; }
 .rd-redenen .rd-meta { margin: 2px 0 0; }
 @media (max-width: 599px) {
-  .rd-rij { grid-template-columns: 36px minmax(0, 1fr); }
+  .rd-rij { grid-template-columns: 36px minmax(0, 1fr) auto; }
+  .rd-rij > .rd-rij-acties { grid-column: 3; grid-row: 2; flex-direction: column; align-items: flex-end; }
   .rd-ibtn { width: 44px; height: 44px; }
   .rd-acties .dd-actie { flex: 1 1 100%; justify-content: center; }
 }

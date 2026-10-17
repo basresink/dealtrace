@@ -4,7 +4,7 @@
 // zoekopdracht in vakken, de groepen met bewijs en de meters. De beoordeling rekent met
 // dezelfde functies als de server, zodat een aangepaste zoekopdracht direct doorwerkt.
 import {
-  BRON_LABEL, CRITERIUM_LABEL, GROEP_LABEL, GROEP_WEERGAVE, beoordeelLead, dossierLabel, groepeerLead,
+  ANDERE_REDEN, ANDERE_REDEN_MAX, ANDERE_REDEN_MIN, BRON_LABEL, CRITERIUM_LABEL, GROEP_LABEL, GROEP_WEERGAVE, beoordeelLead, dossierLabel, groepeerLead,
   type LeadGroep, type Zoekopdracht,
 } from '~~/shared/leadGenerator'
 import { CREDITS_OP_TEKST, creditsVoor } from '~~/shared/credits'
@@ -24,7 +24,7 @@ const tab = computed<Tab>(() => (tabs.value.find((t) => t.k === route.query.tab)
 const naarTab = (k: Tab) => router.replace({ query: { ...route.query, tab: k === 'zoeken' ? undefined : k } })
 
 const { data: context, refresh: verversContext } = toegang.value ? await useFetch<any>('/api/leads/context', { default: () => null }) : { data: ref<any>(null), refresh: async () => {} }
-const { data: lijst, refresh } = toegang.value ? await useFetch<any>('/api/leads', { query: computed(() => ({ ronde: route.query.ronde })), default: () => ({ ronde: null, zoekopdracht: null, leads: [] }) }) : { data: ref<any>({ leads: [] }), refresh: async () => {} }
+const { data: lijst, refresh } = toegang.value ? await useFetch<any>('/api/leads', { query: computed(() => ({ ronde: route.query.ronde })), default: () => ({ ronde: null, zoekopdracht: null, leads: [], afgewezen: [] }) }) : { data: ref<any>({ leads: [], afgewezen: [] }), refresh: async () => {} }
 
 // De zoekopdracht: uit de laatste ronde, anders leeg. Aanpassen werkt direct door in de groepen.
 const leeg = (): Zoekopdracht => ({ doelgroepId: null, doelgroepNaam: null, lijktOpKlanten: false, klassen: [], sbi: [], brancheId: null, werkgebied: { postcodes: [], straal: null }, aanleiding: '', concurrentId: null })
@@ -40,16 +40,6 @@ const paneel = ref(false)
 const postcodesTekst = computed({ get: () => (z.werkgebied?.postcodes ?? []).join(', '), set: (v: string) => { z.werkgebied = { ...z.werkgebied, postcodes: v.split(/[,\s]+/).filter(Boolean) } } })
 const straalAan = computed({ get: () => !!z.werkgebied?.straal, set: (v: boolean) => { const t = context.value?.thuisbasis; z.werkgebied = { ...z.werkgebied, straal: v && t ? { lat: t.lat, lng: t.lng, km: z.werkgebied?.straal?.km ?? 50 } : null } } })
 const straalKm = computed({ get: () => z.werkgebied?.straal?.km ?? 50, set: (v: number) => { if (z.werkgebied?.straal) z.werkgebied = { ...z.werkgebied, straal: { ...z.werkgebied.straal, km: Number(v) } } } })
-function kiesDoelgroep(id: string) {
-  const c = context.value
-  Object.assign(z, { doelgroepId: null, doelgroepNaam: null, lijktOpKlanten: false, concurrentId: null })
-  if (id === 'klanten') { Object.assign(z, { lijktOpKlanten: true, doelgroepNaam: 'Lijkt op mijn klanten', sbi: c.lijktOpKlanten.sbi.map((s: any) => s.code), werkgebied: { ...z.werkgebied, postcodes: c.lijktOpKlanten.postcodes } }); return }
-  const s = c.sjablonen.find((x: any) => x.id === id)
-  if (s) { Object.assign(z, { doelgroepNaam: s.naam, concurrentId: s.concurrentId, aanleiding: s.aanleiding }); return }
-  const d = c.doelgroepen.find((x: any) => x.id === id)
-  if (d) Object.assign(z, { doelgroepId: d.id, doelgroepNaam: d.naam, sbi: d.data.sbi ?? [], brancheId: d.data.brancheIds?.[0] ?? z.brancheId, klassen: (d.data.klassen ?? []).map((k: string) => codeVan(k)), werkgebied: { ...z.werkgebied, postcodes: d.data.postcodes ?? [] } })
-}
-const doelgroepKeuze = computed(() => (z.lijktOpKlanten ? 'klanten' : z.concurrentId ? `overstap-${z.concurrentId}` : z.doelgroepId ?? ''))
 function kiesBranche(id: string) {
   z.brancheId = id || null
   const b = context.value?.branches.find((x: any) => x.id === id)
@@ -66,8 +56,14 @@ const leads = computed(() => (lijst.value?.leads ?? []).map((l: any) => {
   const b = beoordeelLead(l.feiten, z, context.value?.klassen ?? [], nu)
   return { ...l, bewijs: b.bewijs, score: b.score, groep: groepeerLead({ alBekend: !!l.alBekend, bewijs: b.bewijs, dossierOp: l.dossierOp }, nu) as LeadGroep }
 }))
-const filter = ref<LeadGroep | null>(null)
-const groepen = computed(() => GROEP_WEERGAVE.map((g) => ({ g, leads: leads.value.filter((l: any) => l.groep === g) })).filter((x) => x.leads.length && (!filter.value || x.g === filter.value)))
+// Filter: een groep, of Niet relevant (de afgewezen leads van deze ronde met hun reden, ook een eigen reden).
+const filter = ref<LeadGroep | 'afgewezen' | null>(null)
+const groepen = computed(() => (filter.value === 'afgewezen' ? [] : GROEP_WEERGAVE.map((g) => ({ g, leads: leads.value.filter((l: any) => l.groep === g) })).filter((x) => x.leads.length && (!filter.value || x.g === filter.value))))
+const afgewezen = computed<any[]>(() => lijst.value?.afgewezen ?? [])
+const redenFilter = ref<string | null>(null)
+const redenTelling = computed(() => { const m = new Map<string, number>(); for (const a of afgewezen.value) m.set(a.reden, (m.get(a.reden) ?? 0) + 1); return [...m].map(([reden, n]) => ({ reden, n })) })
+const afgewezenZichtbaar = computed(() => afgewezen.value.filter((a) => !redenFilter.value || a.reden === redenFilter.value))
+watch(filter, () => { redenFilter.value = null })
 const telling = computed(() => Object.fromEntries(GROEP_WEERGAVE.map((g) => [g, leads.value.filter((l: any) => l.groep === g).length])))
 
 // Acties
@@ -96,17 +92,23 @@ async function dossier(l: any) {
 }
 const afwijzen = ref<any>(null)
 const reden = ref('')
+const eigenReden = ref('')
+const kanAfwijzen = computed(() => !!reden.value && (reden.value !== ANDERE_REDEN || eigenReden.value.trim().length >= ANDERE_REDEN_MIN))
+function openAfwijzen(l: any) { afwijzen.value = l; reden.value = ''; eigenReden.value = '' }
 async function wijsAf() {
   const l = afwijzen.value
+  if (!kanAfwijzen.value) return
   try {
-    await $fetch(`/api/leads/${l.id}/afwijzen`, { method: 'POST', body: { reden: reden.value } })
+    await $fetch(`/api/leads/${l.id}/afwijzen`, { method: 'POST', body: { reden: reden.value, ...(reden.value === ANDERE_REDEN ? { toelichting: eigenReden.value.trim() } : {}) } })
     toast.toon('Reden bewaard. Dit bedrijf komt niet terug.')
-    afwijzen.value = null; reden.value = ''
+    afwijzen.value = null; reden.value = ''; eigenReden.value = ''
     await refresh()
   } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
-const overnemen = ref<any>(null)
-async function overgenomen() { overnemen.value = null; await refresh() }
+// Voeg toe (voorheen Neem over): de flyout maakt het account; daarna een melding met een link naar de kaart.
+const toevoegen = ref<any>(null)
+const toegevoegd = ref<{ id: string; naam: string; tekst: string; accountplanId: string | null } | null>(null)
+async function isToegevoegd(r: { id: string; naam: string; tekst: string; accountplanId: string | null }) { toevoegen.value = null; toegevoegd.value = r; await refresh() }
 
 const opslaan = ref(false)
 const opslaanNaam = ref('')
@@ -124,7 +126,6 @@ const vakken = computed(() => {
   const c = context.value
   const wg = z.werkgebied
   return [
-    { label: 'Doelgroep', waarde: z.doelgroepNaam || 'Geen doelgroep', herkomst: z.lijktOpKlanten ? `Uit je ${c?.lijktOpKlanten.aantalKlanten ?? 0} klanten` : z.concurrentId ? 'Zoeksjabloon uit het verkoopverhaal' : z.doelgroepId ? 'Doelgroep' : 'Kies een doelgroep' },
     { label: 'Klasse of omvang', waarde: z.klassen?.length ? z.klassen.join(' en ') : 'Alle klassen', herkomst: z.doelgroepId ? 'uit de doelgroep' : 'jouw keuze' },
     { label: 'Branche', waarde: z.sbi?.length ? z.sbi.join(' en ') : 'Alle branches', herkomst: z.lijktOpKlanten ? `Uit je ${c?.lijktOpKlanten.aantalKlanten ?? 0} klanten in deze klassen` : branche.value?.naam ?? 'verkoopverhaal' },
     { label: 'Werkgebied', waarde: wg?.straal ? `${wg.straal.km} km rond ${c?.thuisbasis?.plaats ?? 'je thuisbasis'}` : wg?.postcodes?.length ? wg.postcodes.join(', ') : 'Overal', herkomst: wg?.straal ? 'straal rond je thuisbasis' : wg?.postcodes?.length ? 'postcodegebieden' : 'geen werkgebied' },
@@ -159,20 +160,20 @@ useHead({ title: 'Leadgenerator · Dealtrace' })
 
           <div v-if="tab === 'zoeken'" class="mt-16" data-test="tab-zoeken">
             <p v-if="aiOp" class="kaart kaart--geel" role="status" data-test="credits-op">{{ CREDITS_OP_TEKST }}</p>
-            <div class="stat-grid stat-grid--6" data-test="vakken">
+            <div v-if="toegevoegd" class="kaart lg-toegevoegd mb-16" role="status" data-test="toegevoegd-melding">
+              <p class="lg-toegevoegd-tekst">{{ toegevoegd.tekst }}</p>
+              <div class="rijtje">
+                <NuxtLink :to="`/accounts/${toegevoegd.id}`" class="dd-act dd-act--primair" data-test="toegevoegd-open">Open {{ toegevoegd.naam }}</NuxtLink>
+                <NuxtLink v-if="toegevoegd.accountplanId" :to="`/accountplannen/${toegevoegd.accountplanId}`" class="dd-act" data-test="toegevoegd-plan">Open accountplan</NuxtLink>
+                <button type="button" class="dd-act" aria-label="Melding sluiten" @click="toegevoegd = null"><Icoon naam="X" :grootte="14" /></button>
+              </div>
+            </div>
+            <div class="stat-grid lg-vakken" data-test="vakken">
               <div v-for="v in vakken" :key="v.label" class="stat-card"><span class="stat-label">{{ v.label }}</span><span class="stat-value-tekst">{{ v.waarde }}</span><span class="stat-foot">{{ v.herkomst }}</span></div>
             </div>
 
             <div v-if="paneel && context" class="kaart mt-16" data-test="zoekpaneel">
               <div class="formulier-raster">
-                <label class="veld"><span class="veld-label">Doelgroep</span>
-                  <select class="invoer" :value="doelgroepKeuze" data-test="zp-doelgroep" @change="kiesDoelgroep(($event.target as HTMLSelectElement).value)">
-                    <option value="">Geen doelgroep</option>
-                    <option value="klanten">Lijkt op mijn klanten</option>
-                    <optgroup v-if="context.doelgroepen.length" label="Doelgroepen"><option v-for="d in context.doelgroepen" :key="d.id" :value="d.id">{{ d.naam }}</option></optgroup>
-                    <optgroup v-if="context.sjablonen.length" label="Uit het verkoopverhaal"><option v-for="s in context.sjablonen" :key="s.id" :value="s.id">{{ s.naam }}</option></optgroup>
-                  </select>
-                </label>
                 <label class="veld"><span class="veld-label">Branche</span>
                   <select class="invoer" :value="z.brancheId ?? ''" data-test="zp-branche" @change="kiesBranche(($event.target as HTMLSelectElement).value)">
                     <option value="">Alle branches</option>
@@ -206,12 +207,30 @@ useHead({ title: 'Leadgenerator · Dealtrace' })
               </form>
             </div>
 
-            <LegeStaat v-if="!leads.length" class="mt-32" titel="Nog geen leads." tekst="Kies een doelgroep en start een ronde." />
+            <LegeStaat v-if="!leads.length && !afgewezen.length" class="mt-32" titel="Nog geen leads." tekst="Pas je zoekopdracht aan en start een ronde." />
             <template v-else>
               <div class="filter-groep mt-24" role="group" aria-label="Groepen">
                 <button v-for="g in GROEP_WEERGAVE.filter((x) => telling[x])" :key="g" type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter === g }" :data-test="`filter-${g}`" @click="filter = filter === g ? null : g">{{ GROEP_LABEL[g] }} <span class="pil-teller">{{ telling[g] }}</span></button>
+                <button v-if="afgewezen.length" type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter === 'afgewezen' }" data-test="filter-afgewezen" @click="filter = filter === 'afgewezen' ? null : 'afgewezen'">Niet relevant <span class="pil-teller">{{ afgewezen.length }}</span></button>
               </div>
-              <p v-if="!groepen.length" class="mt-16">Geen leads in deze groep. <button type="button" class="dd-tekstknop" @click="filter = null">Toon alles</button></p>
+              <div v-if="filter === 'afgewezen'" data-groep="afgewezen">
+                <h2 class="kop-blok mt-32">Niet relevant <span class="pil-teller">{{ afgewezen.length }}</span></h2>
+                <p class="meta mt-8">Deze bedrijven komen niet terug in een volgende ronde. Je reden stuurt de zoeker bij.</p>
+                <div v-if="redenTelling.length > 1" class="filter-groep mt-12" role="group" aria-label="Reden">
+                  <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': !redenFilter }" data-test="reden-alle" @click="redenFilter = null">Alle redenen</button>
+                  <button v-for="r in redenTelling" :key="r.reden" type="button" class="filter-pil" :class="{ 'filter-pil--aan': redenFilter === r.reden }" :data-reden-filter="r.reden" @click="redenFilter = redenFilter === r.reden ? null : r.reden">{{ r.reden }} <span class="pil-teller">{{ r.n }}</span></button>
+                </div>
+                <div class="lijst mt-12" data-test="afgewezen-lijst">
+                  <div v-for="a in afgewezenZichtbaar" :key="a.id" class="rij rij--compact" :data-afgewezen="a.naam">
+                    <div class="rij-info"><h3 class="rij-titel">{{ a.naam }}</h3><div class="rij-sub">{{ a.plaats ?? 'plaats onbekend' }} · afgewezen op {{ datumKort(a.op) }}</div></div>
+                    <div class="rij-rechts lg-reden">
+                      <span class="pil pil--grijs">{{ a.reden }}</span>
+                      <span v-if="a.toelichting" class="meta lg-reden-tekst" data-test="afgewezen-eigen">{{ a.toelichting }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p v-else-if="!groepen.length" class="mt-16">Geen leads in deze groep. <button type="button" class="dd-tekstknop" @click="filter = null">Toon alles</button></p>
               <div v-for="gr in groepen" :key="gr.g" :data-groep="gr.g">
                 <h2 class="kop-blok mt-32">{{ GROEP_LABEL[gr.g] }} <span class="pil-teller">{{ gr.leads.length }}</span></h2>
                 <div v-if="gr.g === 'alBekend'" class="lijst mt-12">
@@ -240,15 +259,19 @@ useHead({ title: 'Leadgenerator · Dealtrace' })
                       <span>{{ CRITERIUM_LABEL[b.criterium as 'klasse'] }}: {{ b.zin }} <span class="bewijs-bron"><template v-if="b.url"><a :href="b.url" target="_blank" rel="noopener">{{ b.bron }}</a></template><template v-else>{{ b.bron }}</template>{{ b.datum ? `, ${datumKort(b.datum)}` : '' }}</span></span>
                     </div>
                     <div v-if="kanOvernemen || kanRonde" class="rijtje mt-12">
-                      <button v-if="kanOvernemen && gr.g !== 'verlopen'" type="button" class="dd-act" :class="{ 'dd-act--primair': gr.g === 'passend' }" data-test="neem-over" @click="overnemen = l">Neem over</button>
+                      <button v-if="kanOvernemen && gr.g !== 'verlopen'" type="button" class="dd-act" :class="{ 'dd-act--primair': gr.g === 'passend' }" data-test="voeg-toe" @click="toevoegen = l"><Icoon naam="Plus" :grootte="14" />Voeg toe</button>
                       <button v-if="kanRonde && gr.g === 'verlopen'" type="button" class="dd-act dd-act--primair" :disabled="bezig === l.id" data-test="opnieuw-uitzoeken" @click="dossier(l)">Opnieuw uitzoeken · Kost 10 credits</button>
                       <button v-if="kanRonde && gr.g === 'onbeoordeeld'" type="button" class="dd-act" :disabled="bezig === l.id" data-test="toch-uitzoeken" @click="dossier(l)">Toch uitzoeken · 10 credits</button>
-                      <button v-if="kanOvernemen" type="button" class="dd-act" data-test="niet-relevant" @click="afwijzen = l; reden = ''">Niet relevant</button>
+                      <button v-if="kanOvernemen" type="button" class="dd-act" data-test="niet-relevant" @click="openAfwijzen(l)">Niet relevant</button>
                     </div>
                     <form v-if="afwijzen?.id === l.id" class="kaart kaart--vlak mt-12" data-test="afwijs-paneel" @submit.prevent="wijsAf">
                       <span class="veld-label">Waarom niet relevant?</span>
-                      <div class="keuzegroep keuzegroep--klein mt-8" role="radiogroup"><button v-for="r in context?.afwijsredenen ?? []" :key="r" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': reden === r }" :data-reden="r" @click="reden = r">{{ r }}</button></div>
-                      <div class="dd-acties mt-12"><button type="submit" class="dd-act dd-act--primair" :disabled="!reden" data-test="afwijzen-bevestig">Bewaar reden</button><button type="button" class="dd-act" @click="afwijzen = null">Annuleren</button></div>
+                      <div class="keuzegroep keuzegroep--klein mt-8" role="radiogroup" aria-label="Reden"><button v-for="r in [...(context?.afwijsredenen ?? []), ANDERE_REDEN]" :key="r" type="button" role="radio" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': reden === r }" :aria-checked="reden === r" :data-reden="r" @click="reden = r">{{ r }}</button></div>
+                      <label v-if="reden === ANDERE_REDEN" class="veld mt-12"><span class="veld-label">Andere reden</span>
+                        <input v-model="eigenReden" class="invoer" :maxlength="ANDERE_REDEN_MAX" placeholder="Bijvoorbeeld: zit in een overname, over een jaar opnieuw bekijken" data-test="afwijs-eigen">
+                        <span class="veld-uitleg">Minstens {{ ANDERE_REDEN_MIN }} tekens. Je ziet de reden terug bij Niet relevant.</span>
+                      </label>
+                      <div class="dd-acties mt-12"><button type="submit" class="dd-act dd-act--primair" :disabled="!kanAfwijzen" data-test="afwijzen-bevestig">Bewaar reden</button><button type="button" class="dd-act" @click="afwijzen = null">Annuleren</button></div>
                     </form>
                   </article>
                 </div>
@@ -267,7 +290,18 @@ useHead({ title: 'Leadgenerator · Dealtrace' })
           <LeadRondes v-else-if="tab === 'rondes'" class="mt-16" />
         </div>
       </section>
-      <NeemOverFlyout :lead="overnemen" :context="context" @sluit="overnemen = null" @klaar="overgenomen" />
+      <VoegToeFlyout :lead="toevoegen" :context="context" @sluit="toevoegen = null" @klaar="isToegevoegd" />
     </template>
   </div>
 </template>
+
+<style scoped>
+/* Vijf vakken (de doelgroep staat niet meer in de zoekopdracht). */
+@media (min-width: 720px) { .lg-vakken { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (max-width: 767px) { .lg-vakken { grid-template-columns: 1fr 1fr; } }
+.lg-toegevoegd { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border-left: 3px solid var(--green); }
+.lg-toegevoegd-tekst { flex: 1 1 320px; margin: 0; font-size: 14px; }
+.lg-reden { flex-wrap: wrap; justify-content: flex-end; gap: 6px 10px; max-width: 60%; }
+.lg-reden-tekst { overflow-wrap: anywhere; text-align: right; }
+@media (max-width: 599px) { .lg-reden { max-width: none; justify-content: flex-start; } .lg-reden-tekst { text-align: left; } }
+</style>

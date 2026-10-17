@@ -4,6 +4,8 @@
 // uit alle belpogingen), een voorbereidingsblok voor de eerste afspraak, en "Wat schoof" als er na de
 // eerste indeling iets veranderde. Je werkplek (binnendienst of buitendienst) bepaalt de indeling; er is
 // geen keuzeknop. Alles op deze pagina gaat over jezelf: de bereikbaarheid komt uit je eigen belpogingen.
+// Daaronder de blokken van de dag (RitmeBlokken): belblokken om te vullen, belprioriteit naast je afspraken,
+// kansen langs de route, lopende campagnes en accountplannen, elk alleen als de functie aanstaat.
 // Onderaan Tips en tricks en drie artikelen uit de academie bij je dag (RitmeSteun). Het
 // voorstel komt pas in je agenda na je akkoord. Eén bron: GET /api/dagstart (shared/dagritme.ts planDag).
 // Met "Plan mijn dag automatisch" deelt de Dagplanner de dag zelf in (volgens je werkplek): dan toont de
@@ -225,6 +227,10 @@ useHead({ title: 'Dagstart · Dealtrace' })
             </nav>
           </div>
         </div>
+      </section>
+
+      <section v-if="d.blokken" class="section">
+        <div class="container"><RitmeBlokken :blokken="d.blokken" moment="dagstart" :dag="d.dag" @ververs="refresh()" /></div>
       </section>
 
       <section class="section section--laatste">

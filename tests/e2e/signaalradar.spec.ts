@@ -38,6 +38,57 @@ test('raster met golven, wissel naar de hele organisatie en een cel zonder golf'
   await expect(page.getByTestId('sr-cel-br-01-nieuwe-vestiging')).toHaveClass(/sr-cel--(golf|sterk)/)
 })
 
+test('Golf nieuw staat onder de matrix over de volle breedte (1280 px); het lampje opent het inzicht', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await login(page, 'u-07')
+  await ga(page, '/signaalradar')
+  const raster = (await page.locator('.sr-raster-kaart').boundingBox())!
+  const detail = (await page.getByTestId('sr-detail-kaart').boundingBox())!
+  expect(detail.y).toBeGreaterThanOrEqual(raster.y + raster.height)
+  expect(Math.abs(detail.width - raster.width)).toBeLessThanOrEqual(2)
+  expect(Math.abs(detail.x - raster.x)).toBeLessThanOrEqual(2)
+  await expect(page.getByTestId('sr-detail-kicker')).toContainText('Golf')
+  // Een klik op een cel ververst het detail eronder.
+  await page.getByTestId('sr-cel-br-01-vacatures').click()
+  await expect(page.getByTestId('sr-detail')).toContainText('Installatiebedrijven woningbouw')
+  // Toon alle accounts als het er meer dan acht zijn.
+  const alle = page.getByTestId('sr-alle-accounts')
+  if (await alle.count()) { await alle.click(); expect(await page.getByTestId('sr-accounts').locator('li').count()).toBeGreaterThan(8) }
+  // Het lampje opent het eigen inzicht in de flyout van Inzichten; de naam opent de accountkaart.
+  const lampje = page.getByTestId('sr-accounts').locator('a[data-test^="sr-signaal-"][href^="/inzichten"]').first()
+  const href = (await lampje.getAttribute('href'))!
+  await lampje.click()
+  await page.waitForURL(/\/inzichten\?inzicht=/)
+  await expect(page.getByTestId('inzicht-flyout')).toBeVisible()
+  expect(page.url()).toContain(href.split('=')[1])
+  await page.goBack()
+  await page.waitForURL(/\/signaalradar/)
+  const naam = page.getByTestId('sr-accounts').locator('a[data-test^="sr-account-"]').first()
+  await naam.click()
+  await page.waitForURL(/\/accounts\/[0-9a-zA-Z-]+/)
+})
+
+test('een onbekende cel in de URL geeft uitleg in plaats van een leeg vak; de API weigert foute invoer', async ({ page }) => {
+  await login(page, 'u-07')
+  await ga(page, '/signaalradar?cel=bestaat-niet%7Cvacatures')
+  await expect(page.getByTestId('sr-detail-fout')).toBeVisible()
+  expect((await page.request.get('/api/signaalradar/cel?reikwijdte=mij&branche=br-01&soort=onzin')).status()).toBe(422)
+  expect((await page.request.get('/api/signaalradar/cel?reikwijdte=mij&branche=bestaat-niet&soort=vacatures')).status()).toBe(404)
+})
+
+test('Gevorderd (u-01): eigen regio en de hele organisatie werken; capaciteit telt alleen koude blokken', async ({ page }) => {
+  await apiLogin(page.request, 'u-01')
+  const mij = await (await page.request.get('/api/signaalradar')).json()
+  expect(mij.mijLabel).toBeTruthy()
+  expect(mij.rijen.length).toBeGreaterThan(0)
+  const org = await (await page.request.get('/api/signaalradar?reikwijdte=org')).json()
+  expect(org.signalen).toBeGreaterThanOrEqual(mij.signalen)
+  const g = org.golven[0]
+  const cel = await (await page.request.get(`/api/signaalradar/cel?reikwijdte=org&branche=${g.brancheId ?? 'zonder'}&soort=${g.soort}`)).json()
+  expect(cel.golf).toBe(true)
+  if (cel.capaciteit.past === 'deels') expect(cel.capaciteit.plekken).toBeGreaterThan(cel.capaciteit.bezet)
+})
+
 test('Start belronde maakt een campagneconcept met de accounts en het winpunt', async ({ page }) => {
   await login(page, 'u-07')
   await ga(page, '/signaalradar?cel=br-02%7Cnieuwbouw-vergunning')
@@ -81,4 +132,10 @@ test('telefoon: cellen als knoppen per branche, geen horizontale scroll', async 
   expect(breed).toBeLessThanOrEqual(0)
   await knop.click()
   await expect(page.getByTestId('sr-detail-kicker')).toContainText('Golf')
+  // Het detail staat onder de cellen; het lampje is een tikdoel van 44 px.
+  const mob = (await page.getByTestId('sr-mobiel').boundingBox())!
+  expect((await page.getByTestId('sr-detail-kaart').boundingBox())!.y).toBeGreaterThan(mob.y + mob.height)
+  const lampje = page.getByTestId('sr-accounts').locator('a[data-test^="sr-signaal-"]').first()
+  if (await lampje.count()) expect((await lampje.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
 })

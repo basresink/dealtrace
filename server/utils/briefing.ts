@@ -155,7 +155,15 @@ export async function briefingOverzicht(tx: Tx, g: { id: string; rol: string }, 
   const pitVan = new Map(pit.map((p) => [p.gesprek as string, p.status as string]))
   const namen = new Map((await rijen(tx, sql`select id, name from users where id = any(string_to_array(${wieLijst}, ','))`)).map((u) => [u.id as string, String(u.name ?? '').replace(/^Testgebruiker /, '')]))
   const items: any[] = []
-  for (const x of voluit) {
+  // Je volgende gesprek staat bovenaan, ook als het buiten de gekozen periode valt.
+  const grensNu = nu.getTime() - 15 * 60000
+  const eerstvolgend = licht.find((x) => x.onderwerp !== 'belblok' && x.wanneer && Date.parse(x.wanneer) >= grensNu)
+  const teBerekenen = eerstvolgend && !voluit.includes(eerstvolgend) ? [...voluit, eerstvolgend] : voluit
+  if (eerstvolgend && teBerekenen !== voluit) {
+    const p = await rijen(tx, sql`select status from concepten where status in ('klaar', 'goedgekeurd', 'verstuurd') and (task_id = ${eerstvolgend.id} or appointment_id = ${eerstvolgend.id}) order by op desc limit 1`)
+    if (p[0]) pitVan.set(eerstvolgend.id, p[0].status)
+  }
+  for (const x of teBerekenen) {
     if (x.onderwerp === 'belblok') {
       items.push({ onderwerp: 'belblok', id: x.id, wanneer: x.wanneer, eind: iso(x.rij.eind_op), aantal: x.rij.aantal, namen: (x.rij.namen ?? []).filter(Boolean), bezig: x.rij.status === 'bezig', eigenaar: wie.length > 1 ? { id: x.rij.gebruiker_id, naam: namen.get(x.rij.gebruiker_id) ?? '' } : null })
       continue
@@ -173,7 +181,8 @@ export async function briefingOverzicht(tx: Tx, g: { id: string; rol: string }, 
     i.contact = contactUit(cts.find((c) => c.id === i.contactId) ?? cts.find((c) => c.account_id === i.account.id && c.rol === 'beslisser') ?? cts.find((c) => c.account_id === i.account.id))
     delete i.contactId; delete i.eigenaarId
   }
-  return { vandaag, items, meer: inBereik.length - voluit.length, tellers, team: wie.length > 1 }
+  const volgend = eerstvolgend ? items.find((i) => i.id === eerstvolgend.id) ?? null : null
+  return { vandaag, items: items.filter((i) => voluit.some((x) => x.id === i.id)), volgend, meer: inBereik.length - voluit.length, tellers, team: wie.length > 1 }
 }
 
 /** Eén zoekveld op /briefings: prospects en klanten op naam, contactpersonen op naam of functie (hooguit 30). */

@@ -16,7 +16,7 @@ export const SOORT_KORT: Record<BriefingSoort, string> = { 'eerste-gesprek': 'Ee
 export const SOORT_KLEUR: Record<BriefingSoort, 'blauw' | 'zwart' | 'paars' | 'oranje' | 'groen'> = { 'eerste-gesprek': 'blauw', behoefte: 'zwart', verdieping: 'paars', overdracht: 'oranje', bezoek: 'groen' }
 /** Het verste punt dat het overzicht ophaalt (dagen na vandaag) en hoeveel briefings het voluit berekent. */
 export const HORIZON_DAGEN = 62
-export const MAX_BRIEFINGS = 60
+export const MAX_BRIEFINGS = 100
 /** Hoe ver terug een geplande maar niet afgeronde afspraak nog als achterstallig meetelt. */
 export const AFSPRAAK_TERUG_DAGEN = 7
 
@@ -49,11 +49,15 @@ export function telPerPeriode(dagen: (string | null)[], vandaag: string): Record
   return uit
 }
 
-/** "6 van 8 blokken bekend" en het eerste gat (wat je in het gesprek moet vragen). */
-export function compleetheid(blokken: Pick<Blok, 'titel' | 'tekst' | 'gat'>[]): { bekend: number; totaal: number; gat: string | null } {
+/**
+ * "6 van 8 blokken bekend" en het eerste gat: wat je in het gesprek moet vragen. Een leeg blok gaat voor; anders wie
+ * er in het buying committee nog ontbreekt. Een gat in het verkoopverhaal zelf staat alleen in de hele briefing.
+ */
+export function compleetheid(blokken: Pick<Blok, 'sleutel' | 'titel' | 'tekst'>[]): { bekend: number; totaal: number; gat: string | null } {
   const leeg = (b: Pick<Blok, 'tekst'>) => !b.tekst?.trim() || b.tekst.trim() === 'Nog niet bekend.'
   const eersteLeeg = blokken.find(leeg)
-  const gat = eersteLeeg ? `${eersteLeeg.titel} is nog niet bekend` : blokken.find((b) => b.gat)?.gat ?? null
+  const ontbreekt = blokken.find((b) => b.sleutel === 'ontbreekt' && /^Nog geen /.test(b.tekst))
+  const gat = eersteLeeg ? `${eersteLeeg.titel} is nog niet bekend` : ontbreekt ? `Wie ontbreekt: ${ontbreekt.tekst.replace(/^Nog geen /, '').replace(/\.$/, '')}` : null
   return { bekend: blokken.filter((b) => !leeg(b)).length, totaal: blokken.length, gat }
 }
 
