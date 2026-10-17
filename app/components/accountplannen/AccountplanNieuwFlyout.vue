@@ -25,7 +25,7 @@ async function maak() {
   if (!gekozen.value) return
   bezig.value = true
   try {
-    const p = await opslag.bewaar(() => $fetch<any>('/api/accountplannen', { method: 'POST', body: { accountId: gekozen.value.id, titel: titel.value, geldigVan: van.value || null, geldigTot: tot.value || null } }))
+    const p = await opslag.bewaar(() => $fetch<any>('/api/accountplannen', { method: 'POST', body: { accountId: gekozen.value!.id, titel: titel.value, geldigVan: van.value || null, geldigTot: tot.value || null } }))
     toast.toon('Accountplan aangemaakt. Vul nu de blokken en het actieplan in.')
     emit('sluit')
     await navigateTo(`/accountplannen/${p.id}`)

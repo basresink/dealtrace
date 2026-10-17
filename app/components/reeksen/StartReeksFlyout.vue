@@ -36,7 +36,7 @@ async function doeStart() {
   if (!gekozen.value || !start.sjabloonId) return
   bezig.value = true
   try {
-    const r = await opslag.bewaar(() => $fetch<any>(`/api/volgen/${gekozen.value.id}/reeks`, { method: 'POST', body: { sjabloonId: start.sjabloonId, contactId: start.contactId || null, mandaat: start.mandaat } }))
+    const r = await opslag.bewaar(() => $fetch<any>(`/api/volgen/${gekozen.value!.id}/reeks`, { method: 'POST', body: { sjabloonId: start.sjabloonId, contactId: start.contactId || null, mandaat: start.mandaat } }))
     toast.toon(`Reeks ${r?.naam ?? ''} gestart voor ${gekozen.value.naam}.`)
     emit('gestart', r.id)
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }

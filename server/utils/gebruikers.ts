@@ -56,7 +56,7 @@ const fout = (statusCode: number, statusMessage: string, data?: unknown): never 
 const rijen = async (tx: Tx, q: ReturnType<typeof sql>) => (await tx.execute(q)).rows as Record<string, any>[]
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
-export interface OverdrachtStand {
+export interface ArchiveerOverdracht {
   gebruiker: { id: string; naam: string }
   prospects: number
   taken: number
@@ -67,7 +67,7 @@ export interface OverdrachtStand {
 }
 
 /** Wat er bij archiveren verhuist en aan wie het kan. */
-export async function overdrachtStand(tx: Tx, doelId: string): Promise<OverdrachtStand> {
+export async function overdrachtStand(tx: Tx, doelId: string): Promise<ArchiveerOverdracht> {
   const [doel] = await tx.select().from(schema.users).where(eq(schema.users.id, doelId))
   if (!doel) fout(404, 'Gebruiker onbekend')
   const [t] = await rijen(tx, sql`select
@@ -113,7 +113,7 @@ export async function archiveerMetOverdracht(tx: Tx, org: string, actor: { id: s
 }
 
 /** Zet een gearchiveerde gebruiker terug, binnen de seats van het contract (anders 409 met aanvragen). */
-export async function heractiveer(tx: Tx, org: string, actor: { id: string }, doelId: string) {
+export async function heractiveerGebruiker(tx: Tx, org: string, actor: { id: string }, doelId: string) {
   const [doel] = await tx.select().from(schema.users).where(eq(schema.users.id, doelId))
   if (!doel) fout(404, 'Gebruiker onbekend')
   if (doel!.status !== 'gearchiveerd') fout(409, 'Deze gebruiker is niet gearchiveerd')

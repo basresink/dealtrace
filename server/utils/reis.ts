@@ -239,7 +239,7 @@ export async function meldGebeurtenis(tx: Tx, m: Melding): Promise<{ fase: strin
     data: Object.keys(data).length ? data : undefined, terugOp, terugRegelId: null,
   })
   // Hercontactritme (P07): Gekwalificeerd start het ritme; heropvolging start winback.
-  if (naar === 'gekwalificeerd') await startRitmeVoorAccount(tx, a.id, { winback: m.gebeurtenis === 'heropvolging', nu })
+  if (naar === 'gekwalificeerd') await startRitmeVoorAccount(tx, a.id, { winback: m.gebeurtenis === 'heropvolging', nu, regelId: m.gebeurtenis === 'heropvolging' ? a.terugRegelId : null })
   // Direct na de gebeurtenis: gebeurtenisregels en startactiviteiten voor dit ene account (motor, P06).
   if (!m.zonderMotor) await draaiMotor(tx, a.organisationId, { soort: 'gebeurtenis', door: m.door, accountIds: [a.id], nu })
   return { fase: naar ?? huidigeFase, status, gewisseld: true }
@@ -400,20 +400,26 @@ export type { ReisData }
 // ---------------------------------------------------------------------------
 
 export async function laadRitmes(tx: Tx): Promise<Ritme[]> {
-  return (await tx.select().from(schema.hercontactritmes)).map((r) => ({ id: r.id, naam: r.naam, bron: r.bron as Ritme['bron'], status: r.status, werkplek: r.data.werkplek ?? 'alle', stappen: r.data.stappen, parkeerDagen: r.data.parkeerDagen }))
+  // Op volgorde van aanmaken: een later gemaakt ritme (Terugkomen) verdringt nooit het standaardritme.
+  return (await tx.select().from(schema.hercontactritmes).orderBy(schema.hercontactritmes.createdAt)).map((r) => ({ id: r.id, naam: r.naam, bron: r.bron as Ritme['bron'], status: r.status, werkplek: r.data.werkplek ?? 'alle', stappen: r.data.stappen, parkeerDagen: r.data.parkeerDagen }))
 }
 
 const WARM = new Set(['referral', 'signaal', 'beurs'])
 
 /** Start een hercontactritme voor een account zonder lopend ritme (bij Gekwalificeerd). */
-export async function startRitmeVoorAccount(tx: Tx, accountId: string, opties: { winback?: boolean; nu?: Date } = {}): Promise<RitmeStand | null> {
+export async function startRitmeVoorAccount(tx: Tx, accountId: string, opties: { winback?: boolean; nu?: Date; regelId?: string | null } = {}): Promise<RitmeStand | null> {
   const [a] = await tx.select().from(schema.accounts).where(eq(schema.accounts.id, accountId))
   if (!a || a.accountKind !== 'prospect') return null
   const huidig = (a.data as any)?.reis?.ritme as RitmeStand | undefined
   if (huidig?.actief && !opties.winback) return huidig
   const [owner] = a.ownerId ? await tx.select({ werkplek: schema.users.werkplek }).from(schema.users).where(eq(schema.users.id, a.ownerId)) : []
   const bron = opties.winback ? 'winback' : WARM.has(a.nbBron ?? '') ? 'warm' : 'koud'
-  const ritme = kiesRitme(await laadRitmes(tx), bron, (owner?.werkplek as any) ?? 'binnendienst')
+  const ritmes = await laadRitmes(tx)
+  // Na een terugkomregel met een eigen hercontactritme (Instellingen, Terugkomen) volgt dat ritme.
+  const regelRitme = opties.winback && opties.regelId
+    ? ((await tx.execute(sql`select hercontactritme_id from vv_terugkomregels where extern_id = ${opties.regelId} and actief`)).rows[0] as any)?.hercontactritme_id
+    : null
+  const ritme = ritmes.find((r) => r.id === regelRitme && (r.status ?? 'actief') === 'actief') ?? kiesRitme(ritmes, bron, (owner?.werkplek as any) ?? 'binnendienst')
   if (!ritme) return null
   const stand = startRitme(ritme, opties.nu ?? new Date())
   await tx.update(schema.accounts).set({ data: { ...(a.data ?? {}), reis: { ...((a.data as any)?.reis ?? {}), ritme: stand } } }).where(eq(schema.accounts.id, accountId))

@@ -23,7 +23,7 @@ async function zet() {
       await voegToe({ tabel: 'klaargezet_voor', op: 'patch', recordId: props.account.id, patch: { soort: 'kans.klaarzetten', ...body } })
       toast.toon('Klaargezet. Wordt verstuurd zodra je weer verbinding hebt.')
     } else {
-      const r: any = await opslag.bewaar(() => $fetch(`/api/accounts/${props.account.id}/klaarzetten`, { method: 'POST', body }))
+      const r: any = await opslag.bewaar(() => $fetch(`/api/accounts/${props.account!.id}/klaarzetten`, { method: 'POST', body }))
       toast.toon(r.tekst)
     }
     emit('klaar'); emit('sluit')

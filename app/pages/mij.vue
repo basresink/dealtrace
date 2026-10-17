@@ -117,14 +117,11 @@ async function bewaarRoute(veld: 'thuisbasis' | 'kaartapp') {
   try { await $fetch('/api/mij/route', { method: 'PUT', body: veld === 'thuisbasis' ? { thuisbasis: thuisbasis.value } : { kaartapp: kaartapp.value } }); toast.toon(veld === 'thuisbasis' ? 'Thuisbasis bewaard.' : 'Kaartapp bewaard.') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 
-// Gekoppelde agenda (P13): Microsoft 365 of Google; de beheerder zet de koppeling aan.
+// Gekoppelde agenda (P13): Microsoft 365 of Google; de beheerder zet de koppeling aan bij Instellingen, Koppelingen, Agenda.
 const { data: agenda, refresh: herlaadAgenda } = await useFetch<any>('/api/koppelingen/agenda', { default: () => null })
 const route = useRoute()
 if (import.meta.client && route.query.agenda === 'gekoppeld') toast.toon('Agenda gekoppeld.')
 if (import.meta.client && route.query.agenda === 'fout') toast.toon('Koppelen is niet gelukt. Probeer het opnieuw.', 'fout')
-async function zetAgendaAan(aan: boolean) {
-  try { await $fetch('/api/koppelingen/agenda', { method: 'PUT', body: { aan } }); await herlaadAgenda() } catch (e) { toast.toon(foutTekst(e), 'fout') }
-}
 async function ontkoppelAgenda(p: string) {
   try { await $fetch(`/api/koppelingen/agenda/${p}`, { method: 'DELETE' }); toast.toon('Agenda ontkoppeld.'); await herlaadAgenda() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
@@ -215,7 +212,7 @@ useHead({ title: 'Account · Dealtrace' })
           <article v-if="agenda" id="agenda" class="kaart" data-test="gekoppelde-agenda">
             <header class="kaart-kop"><h2 class="kaart-titel">Gekoppelde agenda</h2></header>
             <p class="kaart-meta">Wat in je agenda staat, telt mee als bezet. Afspraken uit Dealtrace komen erin, met een Teams- of Meet-link bij online.</p>
-            <p v-if="agenda.beheerder" class="schakel-rij"><span>Agendakoppeling aan voor de organisatie</span><Schakelaar :aan="agenda.aanDoorBeheerder" label="Agendakoppeling aan voor de organisatie" @wissel="zetAgendaAan" /></p>
+            <p v-if="agenda.beheerder" class="meta" data-test="agenda-naar-instellingen">Voor de organisatie {{ agenda.aanDoorBeheerder ? 'aan' : 'uit' }}. <NuxtLink to="/instellingen/koppelingen/agenda">Wijzig in Instellingen</NuxtLink></p>
             <p v-if="!agenda.aanDoorBeheerder" class="meta">Je beheerder heeft de agendakoppeling nog niet aangezet.</p>
             <p v-else-if="!agenda.magKoppelen" class="meta">Agenda koppelen: nog niet aangezet voor jouw niveau.</p>
             <ul v-else class="schakel-lijst">

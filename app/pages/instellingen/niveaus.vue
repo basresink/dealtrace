@@ -1,15 +1,18 @@
 <script setup lang="ts">
 // Niveaus (6.1, B18). Welke functies bij welk niveau aanstaan, stelt de founder in
 // op /platform/features. De beheerder kiest hier alleen het standaardniveau en
-// "Iedereen ziet alles" (alles uit het pakket aan, nooit boven pakket of rol).
+// "Iedereen ziet alles" (alles uit het pakket aan, nooit boven pakket of rol). Daaronder twee
+// leesoverzichten: welke functie bij welk niveau hoort in deze organisatie, en wie mag wat per rol.
 import { NIVEAUS, NIVEAU_LABEL } from '~~/shared/types'
 const { me, laad } = useMe()
 if (me.value?.gebruiker.rol !== 'beheerder') throw createError({ statusCode: 403, statusMessage: 'Alleen de beheerder' })
 const { data: inst } = await useFetch<Record<string, any>>('/api/settings', { default: () => ({}) })
+const { data: overzicht, refresh: herlaadOverzicht } = await useFetch<any>('/api/instellingen/niveaus')
 const n = reactive({ iedereenAlles: false, standaardNiveauNieuweGebruiker: 'beginner', ...(inst.value.niveaus ?? {}) })
 const { status, wijzig } = useAutoBewaar(async (value) => {
   await $fetch('/api/settings/niveaus', { method: 'PUT', body: { value } })
   await laad()
+  await herlaadOverzicht()
 })
 watch(n, (v) => wijzig({ ...v }), { deep: true })
 useHead({ title: 'Niveaus · Instellingen · Dealtrace' })
@@ -31,8 +34,10 @@ useHead({ title: 'Niveaus · Instellingen · Dealtrace' })
               <button v-for="niv in NIVEAUS" :key="niv" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': n.standaardNiveauNieuweGebruiker === niv }" :aria-pressed="n.standaardNiveauNieuweGebruiker === niv" @click="n.standaardNiveauNieuweGebruiker = niv">{{ NIVEAU_LABEL[niv] }}</button>
             </div>
           </div>
-          <p class="veld-uitleg mt-16">Welke functies bij Beginner, Gevorderd en Expert horen, stelt Dealtrace in. Het niveau per persoon zet je bij Gebruikers.</p>
+          <p class="veld-uitleg mt-16">Welke functies bij Beginner, Gevorderd en Expert horen, stelt Dealtrace in; je ziet het hieronder. Het niveau per persoon zet je bij <NuxtLink to="/instellingen/gebruikers">Gebruikers</NuxtLink>.</p>
         </article>
+        <FunctiesPerNiveau v-if="overzicht" class="mt-16" :overzicht="overzicht" />
+        <WieMagWat v-if="overzicht" class="mt-16" :rechten="overzicht.rechten" />
       </div>
     </section>
   </div>

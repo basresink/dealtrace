@@ -21,7 +21,7 @@ async function maak() {
   if (!klant.value) return
   bezig.value = true; dubbel.value = null
   try {
-    const c = await opslag.bewaar(() => $fetch<{ id: string; naam: string }>('/api/contacten', { method: 'POST', body: { ...f, accountId: klant.value.id } }))
+    const c = await opslag.bewaar(() => $fetch<{ id: string; naam: string }>('/api/contacten', { method: 'POST', body: { ...f, accountId: klant.value!.id } }))
     toast.toon(`${c.naam} staat erbij.`)
     emit('aangemaakt', c.id)
   } catch (e: any) {

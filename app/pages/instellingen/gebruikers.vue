@@ -1,9 +1,11 @@
 <script setup lang="ts">
 // Gebruikers en teams (F22, 3.2, 6.1). De beheerder ziet iedereen; de salesmanager
 // alleen zijn teams en zet daar het niveau. Verlagen vraagt een reden.
+// Pakket B: wijzigen in een flyout (naam, e-mail, eigen portefeuille), archiveren met overdracht,
+// tabblad Gearchiveerd met Heractiveren, kolommen laatste inlog en status, teams beheren in TeamKaart.
 import { NIVEAUS, NIVEAU_LABEL, ROL_LABEL, WERKPLEKKEN, WERKPLEK_LABEL, type Niveau, type Rol, type Werkplek } from '~~/shared/types'
 
-interface Gebruiker { id: string; naam: string; email: string; rol: Rol; niveau: Niveau; teamId: string | null; werkplek: Werkplek; laatsteInlog: string | null; status: string }
+interface Gebruiker { id: string; naam: string; email: string; rol: Rol; niveau: Niveau; teamId: string | null; werkplek: Werkplek; laatsteInlog: string | null; status: string; eigenPortefeuille: boolean | null }
 interface Team { id: string; naam: string; managerIds: string[]; gekoppeldeTeams: string[] }
 
 const { me, functie, laad } = useMe()
@@ -17,9 +19,22 @@ const [{ data: gebruikers, refresh: herlaadGebruikers }, { data: teams, refresh:
   useFetch<Team[]>('/api/teams', { default: () => [] }),
 ])
 const route = useRoute()
-const tab = ref<'gebruikers' | 'teams'>('gebruikers')
+const tab = ref<'gebruikers' | 'gearchiveerd' | 'teams'>(route.query.tab === 'teams' ? 'teams' : route.query.tab === 'gearchiveerd' ? 'gearchiveerd' : 'gebruikers')
 const teamNaam = (id: string | null) => teams.value.find((t) => t.id === id)?.naam ?? 'Geen team'
 const actief = computed(() => gebruikers.value.filter((g) => g.status !== 'gearchiveerd'))
+const gearchiveerd = computed(() => beheerder.value ? gebruikers.value.filter((g) => g.status === 'gearchiveerd') : [])
+
+/** Laatste inlog in woorden: vandaag 14:58, gisteren, 3 dagen geleden, 12 sep, nog niet. */
+function inlog(t: string | null) {
+  if (!t) return 'Nog niet'
+  const d = new Date(t)
+  const dag = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
+  const verschil = Math.round((dag(new Date()) - dag(d)) / 864e5)
+  if (verschil <= 0) return `Vandaag ${d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}`
+  if (verschil === 1) return 'Gisteren'
+  if (verschil < 14) return `${verschil} dagen geleden`
+  return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' })
+}
 const gemarkeerd = computed(() => route.query.gebruiker as string | undefined)
 
 function fout(e: any) { toast.toon(e?.data?.statusMessage ?? e?.statusMessage ?? 'Opslaan mislukt', 'fout') }
@@ -49,10 +64,28 @@ async function wijzig(g: Gebruiker, veld: 'werkplek' | 'teamId' | 'rol', waarde:
     toast.toon('Opgeslagen.')
   } catch (e) { fout(e); await herlaadGebruikers() }
 }
+const bewerken = ref<Gebruiker | null>(null)
+async function opgeslagen() { bewerken.value = null; await herlaadGebruikers() }
+
+// Archiveren met overdracht en heractiveren (beheerder)
 const archiveren = ref<Gebruiker | null>(null)
-async function archiveer(g: Gebruiker) {
+async function gearchiveerdKlaar(o: { naar: string | null; prospects: number; taken: number; reeksen: number }) {
+  const g = archiveren.value
   archiveren.value = null
-  try { await $fetch(`/api/gebruikers/${g.id}/archiveer`, { method: 'POST' }); await herlaadGebruikers(); toast.toon(`${g.naam} is gearchiveerd.`) } catch (e) { fout(e) }
+  await Promise.all([herlaadGebruikers(), herlaadAbonnement()])
+  if (!g) return
+  toast.toon(o.naar && o.prospects + o.taken + o.reeksen > 0 ? `${g.naam} is gearchiveerd. Het werk staat nu bij ${naamVan(o.naar)}.` : `${g.naam} is gearchiveerd.`)
+}
+const heractiveerFout = ref<{ id: string; tekst: string; seats: boolean } | null>(null)
+async function heractiveer(g: Gebruiker) {
+  heractiveerFout.value = null
+  try {
+    await $fetch(`/api/gebruikers/${g.id}/heractiveer`, { method: 'POST' })
+    await Promise.all([herlaadGebruikers(), herlaadAbonnement()])
+    toast.toon(`${g.naam} is weer actief.`)
+  } catch (e: any) {
+    heractiveerFout.value = { id: g.id, tekst: e?.data?.statusMessage ?? 'Heractiveren mislukt', seats: !!e?.data?.data?.aanvragen }
+  }
 }
 
 // Toevoegen (beheerder)
@@ -86,13 +119,11 @@ async function voegToe() {
 // Teams (beheerder)
 const nieuwTeam = ref('')
 async function voegTeamToe() {
-  try { await $fetch('/api/teams', { method: 'POST', body: { naam: nieuwTeam.value } }); nieuwTeam.value = ''; await herlaadTeams() } catch (e) { fout(e) }
+  try { await $fetch('/api/teams', { method: 'POST', body: { naam: nieuwTeam.value } }); toast.toon(`${nieuwTeam.value.trim()} is toegevoegd.`); nieuwTeam.value = ''; await herlaadTeams() } catch (e) { fout(e) }
 }
 const salesmanagers = computed(() => actief.value.filter((g) => g.rol === 'salesmanager'))
-async function wisselManager(t: Team, id: string) {
-  const managerIds = t.managerIds.includes(id) ? t.managerIds.filter((m) => m !== id) : [...t.managerIds, id]
-  try { await $fetch(`/api/teams/${t.id}`, { method: 'PUT', body: { managerIds } }); await herlaadTeams() } catch (e) { fout(e) }
-}
+const ledenVan = (teamId: string) => actief.value.filter((g) => g.teamId === teamId).length
+async function teamGewijzigd() { await Promise.all([herlaadTeams(), herlaadGebruikers()]) }
 const naamVan = (id: string) => gebruikers.value.find((g) => g.id === id)?.naam ?? id
 useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
 </script>
@@ -107,8 +138,9 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
     <section class="section section--laatste">
       <div class="container">
         <nav class="tabbalk" aria-label="Gebruikers en teams">
-          <button type="button" class="tab" :class="{ 'tab--actief': tab === 'gebruikers' }" :aria-current="tab === 'gebruikers' ? 'page' : undefined" @click="tab = 'gebruikers'">Gebruikers <span class="tab-teller">{{ actief.length }}</span></button>
-          <button type="button" class="tab" :class="{ 'tab--actief': tab === 'teams' }" :aria-current="tab === 'teams' ? 'page' : undefined" @click="tab = 'teams'">Teams <span class="tab-teller">{{ teams.length }}</span></button>
+          <button type="button" class="tab" :class="{ 'tab--actief': tab === 'gebruikers' }" :aria-current="tab === 'gebruikers' ? 'page' : undefined" data-test="tab-gebruikers" @click="tab = 'gebruikers'">Gebruikers <span class="tab-teller">{{ actief.length }}</span></button>
+          <button v-if="beheerder" type="button" class="tab" :class="{ 'tab--actief': tab === 'gearchiveerd' }" :aria-current="tab === 'gearchiveerd' ? 'page' : undefined" data-test="tab-gearchiveerd" @click="tab = 'gearchiveerd'">Gearchiveerd <span class="tab-teller">{{ gearchiveerd.length }}</span></button>
+          <button type="button" class="tab" :class="{ 'tab--actief': tab === 'teams' }" :aria-current="tab === 'teams' ? 'page' : undefined" data-test="tab-teams" @click="tab = 'teams'">Teams <span class="tab-teller">{{ teams.length }}</span></button>
         </nav>
 
         <template v-if="tab === 'gebruikers'">
@@ -128,13 +160,13 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
             <ul class="schakel-lijst"><li v-for="a in openAanvragen" :key="a.id" class="schakel-rij"><span>{{ a.data.naam }} · {{ a.data.email }}</span><span class="pil pil--geel">open</span></li></ul>
           </div>
 
-          <LegeStaat v-if="!actief.length" titel="Nog geen gebruikers." tekst="Voeg je eerste collega toe." />
+          <LegeStaat v-if="!actief.length" :titel="beheerder ? 'Nog geen gebruikers.' : 'Nog niemand in je teams.'" :tekst="beheerder ? 'Voeg je eerste collega toe met Gebruiker toevoegen.' : 'De beheerder zet accountmanagers in jouw teams.'" />
           <div v-else class="tabel-wrap mt-16">
-            <table class="tabel tabel--kaarten" data-test="gebruikers-tabel">
-              <thead><tr><th>Naam</th><th>Rol</th><th>Niveau</th><th>Werkplek</th><th>Team</th><th v-if="beheerder"><span class="sr-only">Acties</span></th></tr></thead>
+            <table class="tabel tabel--kaarten gb-tabel" data-test="gebruikers-tabel">
+              <thead><tr><th>Naam</th><th>Rol</th><th>Niveau</th><th>Werkplek</th><th>Team</th><th>Laatste inlog</th><th>Status</th><th v-if="beheerder"><span class="sr-only">Acties</span></th></tr></thead>
               <tbody>
                 <tr v-for="g in actief" :key="g.id" :data-gebruiker="g.id" :class="{ 'tabel-rij--gemarkeerd': gemarkeerd === g.id }">
-                  <td><div class="gebruiker-cel"><strong>{{ g.naam }}</strong><small>{{ g.email }}</small><span v-if="g.status === 'uitgenodigd'" class="pil pil--geel">Uitgenodigd</span></div></td>
+                  <td><div class="gebruiker-cel"><strong>{{ g.naam }}</strong><small>{{ g.email }}</small><small v-if="g.rol === 'salesmanager' && g.eigenPortefeuille">Met eigen portefeuille</small></div></td>
                   <td>
                     <select v-if="beheerder" class="invoer invoer--klein" :value="g.rol" :aria-label="`Rol van ${g.naam}`" @change="wijzig(g, 'rol', ($event.target as HTMLSelectElement).value)">
                       <option value="accountmanager">Accountmanager</option><option value="salesmanager">Salesmanager</option><option value="beheerder">Beheerder</option>
@@ -161,27 +193,47 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
                     </select>
                     <template v-else>{{ teamNaam(g.teamId) }}</template>
                   </td>
-                  <td v-if="beheerder"><button v-if="g.id !== me?.gebruiker.id" type="button" class="dd-act" @click="archiveren = g">Archiveer</button></td>
+                  <td class="gb-inlog" :data-test="`inlog-${g.id}`"><span class="gb-mobiel-label">Laatste inlog: </span>{{ inlog(g.laatsteInlog) }}</td>
+                  <td :data-test="`status-${g.id}`">
+                    <Label v-if="g.status === 'uitgenodigd'" soort="status" waarde="wachtend" tekst="Uitgenodigd" />
+                    <span v-else class="gb-actief">Actief</span>
+                  </td>
+                  <td v-if="beheerder">
+                    <div class="gb-acties">
+                      <button type="button" class="dd-act" :data-test="`wijzig-${g.id}`" :aria-label="`${g.naam} wijzigen`" @click="bewerken = g"><Icoon naam="Pencil" :grootte="14" />Wijzig</button>
+                      <button v-if="g.id !== me?.gebruiker.id" type="button" class="dd-act" :data-test="`archiveer-${g.id}`" :aria-label="`${g.naam} archiveren`" @click="archiveren = g"><Icoon naam="Archive" :grootte="14" />Archiveer</button>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </template>
 
+        <template v-else-if="tab === 'gearchiveerd'">
+          <p class="veld-uitleg mt-16">Gearchiveerde gebruikers kunnen niet inloggen en tellen niet mee voor je seats. Hun geschiedenis blijft bewaard.<template v-if="abonnement?.seats"> Nu {{ abonnement.gebruikers }} van {{ abonnement.seats }} seats in gebruik.</template></p>
+          <LegeStaat v-if="!gearchiveerd.length" titel="Niemand gearchiveerd." tekst="Archiveer je iemand die vertrekt, dan staat hij hier en kun je hem later heractiveren." />
+          <ul v-else class="gb-archief mt-16" data-test="gearchiveerd-lijst">
+            <li v-for="g in gearchiveerd" :key="g.id" class="kaart gb-archief-rij" :data-gebruiker="g.id">
+              <div class="gebruiker-cel"><strong>{{ g.naam }}</strong><small>{{ g.email }}</small><small>{{ ROL_LABEL[g.rol] }} · {{ teamNaam(g.teamId) }} · laatste inlog {{ inlog(g.laatsteInlog).toLowerCase() }}</small></div>
+              <Label soort="status" waarde="gedeactiveerd" tekst="Gearchiveerd" />
+              <button type="button" class="dd-actie dd-actie--secundair gb-heractiveer" :data-test="`heractiveer-${g.id}`" @click="heractiveer(g)"><Icoon naam="Undo2" :grootte="16" />Heractiveren</button>
+              <p v-if="heractiveerFout?.id === g.id" class="gb-fout" role="alert" data-test="heractiveer-fout">
+                {{ heractiveerFout.tekst }}
+                <NuxtLink v-if="heractiveerFout.seats" to="/instellingen/abonnement">Naar Abonnement</NuxtLink>
+              </p>
+            </li>
+          </ul>
+        </template>
+
         <template v-else>
           <form v-if="beheerder" class="kaart mt-16 formulier-raster" @submit.prevent="voegTeamToe">
-            <label class="veld"><span class="veld-label">Nieuw team</span><input v-model="nieuwTeam" class="invoer" placeholder="Bijvoorbeeld Team Oost"></label>
-            <button type="submit" class="dd-actie dd-actie--primair" :disabled="!nieuwTeam.trim()">Team toevoegen</button>
+            <label class="veld"><span class="veld-label">Nieuw team</span><input v-model="nieuwTeam" class="invoer" placeholder="Bijvoorbeeld Team Oost" data-test="nieuw-team"></label>
+            <button type="submit" class="dd-actie dd-actie--primair" :disabled="!nieuwTeam.trim()" data-test="team-toevoegen">Team toevoegen</button>
           </form>
-          <LegeStaat v-if="!teams.length" titel="Nog geen teams." tekst="Een team bundelt accountmanagers onder een salesmanager." />
+          <LegeStaat v-if="!teams.length" :titel="beheerder ? 'Nog geen teams.' : 'Je leidt nog geen team.'" :tekst="beheerder ? 'Een team bundelt accountmanagers onder een salesmanager. Geef het team hierboven een naam.' : 'De beheerder koppelt je als salesmanager aan een team.'" />
           <div class="instellingen-raster mt-16">
-            <article v-for="t in teams" :key="t.id" class="kaart">
-              <header class="kaart-kop"><h2 class="kaart-titel">{{ t.naam }}</h2><span class="pil pil--grijs">{{ actief.filter((g) => g.teamId === t.id).length }} leden</span></header>
-              <p class="kaart-meta">Salesmanager: {{ t.managerIds.map(naamVan).join(', ') || 'nog niemand' }}</p>
-              <div v-if="beheerder && salesmanagers.length" class="keuzechips mt-16">
-                <button v-for="s in salesmanagers" :key="s.id" type="button" class="pil pil--knop" :class="t.managerIds.includes(s.id) ? 'pil--zwart' : 'pil--leeg'" :aria-pressed="t.managerIds.includes(s.id)" @click="wisselManager(t, s.id)">{{ s.naam }}</button>
-              </div>
-            </article>
+            <TeamKaart v-for="t in teams" :key="t.id" :team="t" :leden="ledenVan(t.id)" :beheerder="beheerder" :managers="salesmanagers" :teams="teams" :naam-van="naamVan" @gewijzigd="teamGewijzigd" />
           </div>
         </template>
       </div>
@@ -192,10 +244,26 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
       :tekst="verlaging ? `${verlaging.g.naam} gaat van ${NIVEAU_LABEL[verlaging.g.niveau]} naar ${NIVEAU_LABEL[verlaging.naar]}. Functies die daarbij horen gaan uit. Zijn gegevens blijven bewaard.` : ''"
       @geannuleerd="verlaging = null" @bevestigd="(r) => { const v = verlaging!; verlaging = null; zetNiveau(v.g, v.naar, r) }"
     />
-    <BevestigVenster
-      :open="!!archiveren" titel="Gebruiker archiveren" bevestig="Archiveer"
-      :tekst="archiveren ? `${archiveren.naam} kan niet meer inloggen. Zijn gegevens blijven bewaard.` : ''"
-      @geannuleerd="archiveren = null" @bevestigd="archiveer(archiveren!)"
-    />
+    <ArchiveerVenster :gebruiker="archiveren" @geannuleerd="archiveren = null" @gearchiveerd="gearchiveerdKlaar" />
+    <GebruikerFlyout v-if="beheerder" :gebruiker="bewerken" @sluit="bewerken = null" @opgeslagen="opgeslagen" />
   </div>
 </template>
+
+<style scoped>
+.gb-acties { display: flex; flex-wrap: wrap; gap: 6px; }
+.gb-acties .dd-act { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.gb-inlog { white-space: nowrap; color: var(--muted); font-size: 13px; }
+.gb-actief { font-size: 13px; color: var(--muted); }
+.gb-mobiel-label { display: none; }
+.gb-archief { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.gb-archief-rij { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.gb-archief-rij .gebruiker-cel { flex: 1 1 260px; min-width: 0; }
+.gb-heractiveer { min-height: var(--touch-target-min); }
+.gb-fout { flex-basis: 100%; margin: 0; color: var(--red); font-size: 13px; font-weight: 600; }
+.gb-fout a { margin-left: 6px; color: var(--ink); }
+@media (max-width: 767px) {
+  .gb-mobiel-label { display: inline; }
+  .gb-acties .dd-act { min-height: var(--touch-target-min); }
+  .gb-heractiveer { width: 100%; justify-content: center; }
+}
+</style>
