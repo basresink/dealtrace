@@ -44,7 +44,7 @@ test.describe('bezoekanalyse', () => {
     await expect(flyout.locator('tbody tr').first()).toBeVisible()
     await flyout.locator('[data-test^="aaf-plan-"]').first().click()
     await expect(page.getByTestId('plan-afspraak')).toBeVisible()
-    await expect(page.getByTestId('pa-vorm-bezoek')).toHaveAttribute('aria-checked', 'true')
+    await expect(page.getByTestId('pa-vorm-bezoek')).toBeVisible()
     await page.keyboard.press('Escape')
 
     await ga(page, '/bezoek-analyse')

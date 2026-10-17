@@ -84,14 +84,32 @@ export async function coachingKaart(tx: Tx, g: Kijker, gebruikerId: string, nu =
   }
 }
 
-/** Overzicht voor /coaching: teamleden met het laatste gesprek en open afspraken. */
-export async function coachingOverzicht(tx: Tx, teamIds: string[]) {
+/** Overzicht voor /coaching: teamleden met het laatste gesprek, het team, het tempo en de achterstand van
+ * de laatste twee weken (de coachingnorm) en de open afspraken uit eerdere gesprekken. */
+export async function coachingOverzicht(tx: Tx, teamIds: string[], teams: { id: string; naam: string }[] = [], nu = new Date()) {
   const leden = await ledenVan(tx, teamIds)
   if (!leden.length) return []
   const ids = leden.map((l) => l.id).join(',')
-  const laatst = await rijen(tx, sql`select gebruiker_id, max(datum) as datum from coaching_sessies where gebruiker_id = any(string_to_array(${ids}, ',')) group by 1`)
-  const open = await rijen(tx, sql`select gebruiker_id, count(*)::int as n from coaching_notities where soort = 'afspraak' and status = 'open' and gebruiker_id = any(string_to_array(${ids}, ',')) group by 1`)
-  return leden.map((l) => ({ id: l.id, naam: l.naam, niveau: l.niveau, werkplek: l.werkplek, laatsteGesprek: datum(laatst.find((x) => x.gebruiker_id === l.id)?.datum), openAfspraken: open.find((x) => x.gebruiker_id === l.id)?.n ?? 0 }))
+  const vandaag = nlMoment(nu).datum
+  const periode = { van: plusDagen(vandaag, -13), tot: vandaag }
+  const r = await ruw(tx, leden.map((l) => l.id as string), periode, nu)
+  const laatst = await rijen(tx, sql`select gebruiker_id, max(datum) as datum, count(*)::int as n from coaching_sessies where gebruiker_id = any(string_to_array(${ids}, ',')) group by 1`)
+  const open = await rijen(tx, sql`select id, gebruiker_id, tekst, termijn, op from coaching_notities where soort = 'afspraak' and status = 'open' and gebruiker_id = any(string_to_array(${ids}, ',')) order by termijn nulls last, op`)
+  return leden.map((l) => {
+    const k = kpi(l.id, periode, r.activiteiten)
+    const datumGesprek = datum(laatst.find((x) => x.gebruiker_id === l.id)?.datum)
+    const afspraken = open.filter((x) => x.gebruiker_id === l.id).map((x) => ({ id: x.id as string, tekst: x.tekst as string, termijn: datum(x.termijn), overTermijn: !!datum(x.termijn) && datum(x.termijn)! < vandaag }))
+    return {
+      id: l.id, naam: l.naam, niveau: l.niveau, werkplek: l.werkplek,
+      team: teams.find((t) => t.id === l.team_id) ?? null,
+      laatsteGesprek: datumGesprek,
+      dagenSindsGesprek: datumGesprek ? Math.round((Date.parse(`${vandaag}T12:00:00Z`) - Date.parse(`${datumGesprek}T12:00:00Z`)) / 864e5) : null,
+      gesprekken: laatst.find((x) => x.gebruiker_id === l.id)?.n ?? 0,
+      openAfspraken: afspraken.length, afspraken,
+      tempo: tempo(k, l.werkplek), pogingen: k.pogingen, gesprekkenGevoerd: k.gesprekken, afsprakenGemaakt: k.afspraken,
+      achterstallig: r.achterstallig.filter((t) => t.owner === l.id).length,
+    }
+  })
 }
 
 /** Mijn resultaten: eigen cijfers; vanaf Gevorderd trend en teamgemiddelde (zonder namen); afspraken en gedeelde punten. Nooit privé. */

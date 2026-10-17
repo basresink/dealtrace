@@ -1,10 +1,11 @@
 <script setup lang="ts">
 // Info-venster van de accountkaart in de opzet van DealDrive (InfoFlyout): kop "Bedrijfsgegevens" met naam,
-// branche en plaats; blokken Adres, Bereik en Stamgegevens met per veld inline bewerken (potlood, en
+// branche en plaats; blokken Adres, Bereik en Stamgegevens (met de status prospect) met per veld inline bewerken (potlood, en
 // "+ Voeg ... toe" als het leeg is). Eigen velden staan onder hun eigen kopje, of onder een vast kopje met
 // dezelfde naam. Daarna Extra bronnen (eigen webadressen die de agents volgen), en voor Expert de score en
 // de herkomst. Deactiveren (0064, verwijderen bestaat niet meer) staat onderaan de inhoud. Elke wijziging bewaart zichzelf.
 import { SCORE_DELEN } from '~/utils/accountWeergave'
+import { PROSPECT_STATUSSEN, PROSPECT_STATUS_LABEL } from '~~/shared/prospectStatus'
 const props = defineProps<{ open: boolean; account: any }>()
 const emit = defineEmits<{ sluit: []; gewijzigd: []; deactiveer: [] }>()
 const toast = useToast()
@@ -56,6 +57,11 @@ async function kopieer() {
 const klasseOpties = computed(() => [{ waarde: '', label: 'Geen klasse' }, ...(props.account?.klassen ?? []).map((k: any) => ({ waarde: k.id, label: k.naam }))])
 // De huidige leverancier (stond eerder onder de kop van de accountkaart): een concurrent uit Richting.
 const leverancierOpties = computed(() => [{ waarde: '', label: 'Onbekend' }, ...(props.account?.concurrenten ?? []).map((c: any) => ({ waarde: c.id, label: c.naam }))])
+// Status prospect (koud tot heet): eigen route met audit; eigenaar, zijn salesmanager of de beheerder.
+const statusOpties = [{ waarde: '', label: 'Geen status' }, ...PROSPECT_STATUSSEN.map((s) => ({ waarde: s, label: PROSPECT_STATUS_LABEL[s] }))]
+async function bewaarStatus(v: string) {
+  try { await opslag.bewaar(() => $fetch(`/api/accounts/${props.account.id}/prospect-status`, { method: 'PUT', body: { status: v || null } })); emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') }
+}
 const eigenaarOpties = computed(() => [{ waarde: '', label: 'Niemand' }, ...(props.account?.gebruikers ?? []).map((u: any) => ({ waarde: u.id, label: u.naam }))])
 const ondertitel = computed(() => [props.account?.officieleNaam && props.account.officieleNaam !== props.account.naam ? props.account.officieleNaam : null, props.account?.branche, props.account?.plaats].filter(Boolean).join(' · '))
 </script>
@@ -102,6 +108,7 @@ const ondertitel = computed(() => [props.account?.officieleNaam && props.account
             </div>
             <BewerkVeld label="Klasse" :waarde="account.klasse ?? ''" type="select" :opties="klasseOpties" :uit="!account.kan.klasse" leeg="+ Kies een klasse" test="if-klasse" @bewaar="bewaar({ klasse: $event || null })" />
             <BewerkVeld label="Eigenaar" :waarde="account.eigenaar?.id ?? ''" type="select" :opties="eigenaarOpties" :uit="!account.kan.eigenaar" test="eigenaar" @bewaar="bewaar({ eigenaarId: $event || null })" />
+            <BewerkVeld v-if="account.soort === 'prospect'" label="Status prospect" :waarde="account.prospectStatus ?? ''" type="select" :opties="statusOpties" :uit="!account.kan.prospectStatus" leeg="+ Kies koud, lauw, warm of heet" test="if-prospect-status" @bewaar="bewaarStatus" />
             <BewerkVeld label="Bedrijfsnaam" :waarde="account.naam" test="if-naam" @bewaar="bewaarNaam" />
             <template v-if="account.soort === 'prospect' && (account.concurrenten?.length || account.huidigeLeverancier)">
               <BewerkVeld label="Huidige leverancier" :waarde="account.huidigeLeverancier?.id ?? ''" type="select" :opties="leverancierOpties" :uit="!account.kanLeverancier" leeg="+ Kies de huidige leverancier" test="if-leverancier" @bewaar="bewaar({ huidigeLeverancierId: $event || null })" />

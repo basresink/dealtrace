@@ -1,5 +1,7 @@
 // POST /api/regels/excel-import (multipart: bestand, modus = samenvoegen|vervangen, proef?):
-// tot 5 MB en 2.000 rijen; per rij fouten en waarschuwingen. Alleen de beheerder.
+// tot 5 MB en 2.000 rijen; per rij fouten en waarschuwingen. Alleen de beheerder. Met proef=1 alleen
+// lezen en tellen (bruikbaar, overgeslagen, bestaande regels geraakt); daarna toepassen met alleen de
+// bruikbare rijen. Een rij met een fout wordt overgeslagen, nooit half bewaard.
 import ExcelJS from 'exceljs'
 import { eq } from 'drizzle-orm'
 import { MAX_BYTES, MAX_RIJEN, regelUitRij as rijNaarRegel } from '../../../shared/regelExcel'
@@ -26,9 +28,12 @@ export default defineEventHandler(async (event) => {
   const koppen = (rijen[0] ?? []).map((k) => k.trim())
   const rapport = rijen.slice(1).map((c, i) => ({ rij: i + 2, ...rijNaarRegel(koppen, c) }))
   const goed = rapport.filter((r) => !r.fouten.length)
-  if (proef || rapport.some((r) => r.fouten.length)) {
-    return { modus, toegepast: false, rijen: rapport.map((r) => ({ rij: r.rij, naam: r.regel.naam, fouten: r.fouten, waarschuwingen: r.waarschuwingen })) }
+  const rijenUit = rapport.map((r) => ({ rij: r.rij, naam: r.regel.naam, fouten: r.fouten, waarschuwingen: r.waarschuwingen }))
+  if (proef) {
+    const bestaand = await metOrganisatie(ctx.organisatie.id, async (tx) => new Set((await tx.select({ id: schema.activityRules.id }).from(schema.activityRules)).map((x) => x.id)))
+    return { modus, toegepast: false, bruikbaar: goed.length, overgeslagen: rapport.length - goed.length, geraakt: goed.filter((r) => r.regel.id && bestaand.has(r.regel.id)).length, rijen: rijenUit }
   }
+  if (!goed.length) return { modus, toegepast: false, bruikbaar: 0, overgeslagen: rapport.length, geraakt: 0, rijen: rijenUit }
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
     if (modus === 'vervangen') await tx.delete(schema.activityRules)
     let nieuw = 0
@@ -39,7 +44,7 @@ export default defineEventHandler(async (event) => {
       if (bestaand) { await tx.update(schema.activityRules).set({ ...s, versie: bestaand.versie + 1, updatedAt: new Date().toISOString() }).where(eq(schema.activityRules.id, bestaand.id)); bijgewerkt++ }
       else { await tx.insert(schema.activityRules).values({ ...s, ...(r.regel.id ? { id: r.regel.id } : {}), organisationId: ctx.organisatie.id }); nieuw++ }
     }
-    await schrijfAudit(tx, { organisationId: ctx.organisatie.id, actorId: ctx.gebruiker.id, action: 'regels.import', resourceType: 'activity_rules', changes: { modus, nieuw, bijgewerkt } })
-    return { modus, toegepast: true, nieuw, bijgewerkt, rijen: rapport.map((r) => ({ rij: r.rij, naam: r.regel.naam, fouten: r.fouten, waarschuwingen: r.waarschuwingen })) }
+    await schrijfAudit(tx, { organisationId: ctx.organisatie.id, actorId: ctx.gebruiker.id, action: 'regels.import', resourceType: 'activity_rules', changes: { modus, nieuw, bijgewerkt, overgeslagen: rapport.length - goed.length } })
+    return { modus, toegepast: true, nieuw, bijgewerkt, bruikbaar: goed.length, overgeslagen: rapport.length - goed.length, rijen: rijenUit }
   })
 })

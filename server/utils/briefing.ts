@@ -82,6 +82,8 @@ async function context(tx: Tx, o: Onderwerp, cache: BriefingCache = nieuweBriefi
     afspraak: afspraak ? { soort: afspraak.soort_naam, vorm: afspraak.vorm, start: iso(afspraak.start_at)!, verslag: afspraak.data?.verslag?.tekst ?? vervolg?.verslag ?? null, vervolgstap: afspraak.data?.vervolgstap ?? vervolg?.v ?? null, locatie: afspraak.data?.locatie ?? null } : vervolg ? { soort: 'Eerste afspraak', start: new Date().toISOString(), verslag: vervolg.verslag, vervolgstap: vervolg.v } : null,
     geschiedenis,
     stand, eerderGebruikteWinpunten: gebruikt,
+    // Dealtrace: de taak van een regel met een gekoppeld winpunt bepaalt het gespreksonderwerp.
+    vastWinpuntId: taak?.data?.winpunt?.id ?? null,
   }
   const soortCtx = {
     vastgezet: (eigen.find((e) => e.blok === '_soort')?.tekst as BriefingSoort) ?? null,

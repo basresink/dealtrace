@@ -6,7 +6,7 @@ import starterset from '../../seed/regels-starterset.json'
 import { bandScore } from '../../shared/bandKwalificatie'
 import { motorRun, type MotorGebruiker, type MotorUitvoer, type StartActiviteit } from '../../shared/motor'
 import { fase as zoekFase } from '../../shared/reis'
-import type { MotorAccount, Regel, RegelData } from '../../shared/regelPatronen'
+import type { MotorAccount, Regel, RegelData, RegelWinpunt } from '../../shared/regelPatronen'
 import { regiodagenVoor, type Regio } from '../../shared/gebieden'
 import { nlMoment } from '../../shared/datum'
 import { AFSPRAAKMATRIX_STANDAARD, BELMATRIX_STANDAARD, CAPACITEIT_STANDAARD, klasseCode, leesMatrix, type Klasse } from '../../shared/ritmematrix'
@@ -93,13 +93,13 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
     const owner = a.ownerId ? perGebruiker.get(a.ownerId) : undefined
     return {
       id: a.id, naam: a.name, type: a.accountKind as 'prospect' | 'klant', nbStatus: a.nbStatus, reisId: a.reisId, faseId: a.faseId, faseSinds: a.faseSinds,
-      verwachtVerblijfDagen: f?.eind ? null : f?.verwachtVerblijfDagen ?? null, doelgroepId: a.doelgroepId, campagneIds: (campagnes.get(a.id) ?? []).map((c) => c.id), campagnes: campagnes.get(a.id) ?? [], klasse: a.klasse,
+      verwachtVerblijfDagen: f?.eind ? null : f?.verwachtVerblijfDagen ?? null, hoofdfase: f?.hoofdfase ?? null, doelgroepId: a.doelgroepId, campagneIds: (campagnes.get(a.id) ?? []).map((c) => c.id), campagnes: campagnes.get(a.id) ?? [], klasse: a.klasse,
       afspraken: eersteAfs.filter((x) => x.account_id === a.id).map((x) => ({ id: x.id, eerste: true, status: x.status === 'afgerond' ? 'gehouden' as const : x.status === 'niet_verschenen' ? 'niet-verschenen' as const : x.status === 'geannuleerd' ? 'geannuleerd' as const : 'gepland' as const, op: new Date(x.start_at).toISOString(), overgedragen: !!x.overgedragen, uitkomst: x.overdragen ? null : x.uitkomst_code })),
       klasseCode: k ? klasseCode(k) : null, ownerId: a.ownerId, ownerTeamId: owner?.teamId ?? null, ownerWerkplek: owner?.werkplek ?? null, gebiedId: a.gebiedId,
       aangemaaktOp: a.createdAt, laatsteContactOp: a.laatsteContactOp, terugOp: a.terugOp, dossierOp: (a.data?.dossier as any)?.op ?? null,
       bandScore: bandScore(a.data?.band as any), belMeNiet: !!primair?.data?.belMeNiet, nee: a.data?.nee ?? null, wachtendTot: a.data?.wachtendTot ?? null,
       contactNaam: primair ? `${primair.first ?? ''} ${primair.last}`.trim() : null, contactId: primair?.id ?? null,
-      gebeurtenissen: gebeurtenissen.filter((g) => g.accountId === a.id && g.naarFaseId !== g.vanFaseId).map((g) => ({ id: g.id, gebeurtenis: g.gebeurtenis, naarFaseId: g.naarFaseId, op: g.op })),
+      gebeurtenissen: gebeurtenissen.filter((g) => g.accountId === a.id && g.naarFaseId !== g.vanFaseId).map((g) => ({ id: g.id, gebeurtenis: g.gebeurtenis, vanFaseId: g.vanFaseId, naarFaseId: g.naarFaseId, op: g.op })),
       ritme: (() => {
         const st = (a.data as any)?.reis?.ritme
         if (!st) return null
@@ -171,16 +171,28 @@ export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?
   if (capWaarde && capaciteit === CAPACITEIT_STANDAARD) waarschuwingen.push('Capaciteit ongeldig; de standaard geldt')
   const werkdagen = ((await instelling(tx, 'werkdagen')) as any) ?? {}
   const [org_] = await tx.select({ pakket: schema.organisations.pakket }).from(schema.organisations).where(eq(schema.organisations.id, org))
+  const winpunten = await laadRegelWinpunten(tx)
 
   return {
     invoer: {
       nu, regels, accounts, gebruikers, laatst, open, bezetting, bezettingStart, ritmeVan, belmatrix: bel.matrix, afspraakmatrix: afspraak.matrix, capaciteit, werkdagen, startactiviteiten: start, regelLog,
       regiodagen: regiodagenVoor(((await instelling(tx, 'gebieden')) as Regio[] | undefined) ?? [], nlMoment(nu).datum, 28, (werkdagen?.feestdagen as string[] | undefined) ?? []),
       beheerderId: gebruikers.find((g) => g.rol === 'beheerder' && g.status !== 'gearchiveerd')?.id ?? null,
-      accountIds, aiToegestaan: org_?.pakket === 'plus' || org_?.pakket === 'compleet',
+      accountIds, aiToegestaan: org_?.pakket === 'plus' || org_?.pakket === 'compleet', winpunten,
     },
     waarschuwingen,
   }
+}
+
+/**
+ * De bevestigde winpunten uit het verkoopverhaal (vv_winpunten), met de hoofdfase van de reis waar ze bij
+ * horen: de fase van het verkoopverhaal kent een reis_hoofdfase ("bewerken-op-ritme" hoort bij bewerken).
+ */
+export async function laadRegelWinpunten(tx: Tx): Promise<RegelWinpunt[]> {
+  const rows = (await tx.execute(sql`select w.extern_id, w.titel, w.omschrijving, w.actief, f.reis_hoofdfase from vv_winpunten w
+    left join vv_fasen f on f.organisation_id = w.organisation_id and f.extern_id = w.fase_id order by w.volgorde`)).rows as { extern_id: string; titel: string; omschrijving: string | null; actief: boolean; reis_hoofdfase: string | null }[]
+  const hoofd = (h: string | null) => (h ? ['vinden', 'bewerken', 'verbinden', 'overgedragen', 'verloren'].find((x) => h.startsWith(x)) ?? null : null)
+  return rows.filter((r) => r.extern_id).map((r) => ({ id: r.extern_id, titel: r.titel, omschrijving: r.omschrijving, actief: r.actief !== false, hoofdfase: hoofd(r.reis_hoofdfase) }))
 }
 
 /** Schrijft de uitkomst van motorRun weg. */
@@ -188,12 +200,14 @@ export async function schrijfMotorUitvoer(tx: Tx, org: string, u: MotorUitvoer, 
   const tijd = nu.toISOString()
   const taken = u.taken.map((t) => ({
     organisationId: org, ownerId: t.ownerId, accountId: t.accountId, contactId: t.contactId ?? null, ruleId: t.regelId, onderwerp: t.onderwerp, actionType: t.actionType, title: t.title,
-    priority: t.priority, dueDate: t.due, executor: 'mens', data: { waarom: t.waarom, bewijs: t.bewijs, herkomst: { bron: t.herkomst, regelId: t.regelId, actiesoort: t.actionType, uitvoerder: t.ownerId }, geschoven: t.geschoven || undefined, ...(t.poging ? { poging: { n: t.poging.n, van: t.poging.van, kanaal: t.poging.kanaal ?? undefined } } : {}) }, createdAt: tijd, updatedAt: tijd,
+    priority: t.priority, dueDate: t.due, executor: 'mens', data: { waarom: t.waarom, bewijs: t.bewijs, herkomst: { bron: t.herkomst, regelId: t.regelId, actiesoort: t.actionType, uitvoerder: t.ownerId }, geschoven: t.geschoven || undefined, ...(t.poging ? { poging: { n: t.poging.n, van: t.poging.van, kanaal: t.poging.kanaal ?? undefined } } : {}),
+      // Dealtrace: het winpunt van de regel is de aanleiding en het gespreksonderwerp van de taak (belscript en briefing lezen het).
+      ...(t.winpunt ? { winpunt: t.winpunt, aanleiding: `Gespreksonderwerp: ${t.winpunt.titel}` } : {}) }, createdAt: tijd, updatedAt: tijd,
   }))
   for (let i = 0; i < taken.length; i += 500) await tx.insert(schema.tasks).values(taken.slice(i, i + 500))
   const inzichten = u.inzichten.map((s) => ({
     organisationId: org, ownerId: s.ownerId, accountId: s.accountId, ruleId: s.regelId, onderwerp: s.onderwerp, type: s.type, title: s.title,
-    relevanceScore: s.relevantie, bron: s.bron, data: { waarom: s.waarom, bewijs: s.bewijs, voorstel: s.voorstel ?? null }, createdAt: tijd, updatedAt: tijd,
+    relevanceScore: s.relevantie, bron: s.bron, data: { waarom: s.waarom, bewijs: s.bewijs, voorstel: s.voorstel ?? null, ...(s.winpunt ? { winpunt: s.winpunt } : {}) }, createdAt: tijd, updatedAt: tijd,
   }))
   for (let i = 0; i < inzichten.length; i += 500) await tx.insert(schema.signals).values(inzichten.slice(i, i + 500))
   // Open inzichten bijwerken zonder terug naar ongelezen.

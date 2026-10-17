@@ -23,7 +23,9 @@ test.describe('afspraakvenster', () => {
     await page.getByTestId('pa-contact').fill('Pet')
     await page.getByTestId('pa-contact-eva-a06-c2').click()
     await expect(page.getByTestId('pa-contact-gekozen')).toContainText('Petra Testvathorst')
-    await page.getByTestId('pa-vorm-telefoon').click()
+    // De vorm volgt uit het type: een belafspraak is telefonisch.
+    await page.getByTestId('pa-soort').selectOption({ label: 'Belafspraak' })
+    await expect(page.getByTestId('pa-vorm-telefoon')).toBeVisible()
     await page.getByTestId('pa-titel').fill(titel)
     await page.getByTestId('pa-datum').fill(dagOver(70))
     await page.getByTestId('pa-start').fill('16:30')

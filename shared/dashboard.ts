@@ -175,6 +175,8 @@ const UITKOMST_GROEP: Record<string, { sleutel: string; label: string }> = {
   verkeerd_nummer: { sleutel: 'fout', label: 'Verkeerd nummer' },
 }
 const UITKOMST_VOLGORDE = ['afspraak', 'gesproken', 'later', 'nee', 'geen', 'voicemail', 'verzonden', 'fout', 'overig']
+/** De groep van een uitkomst (sleutel en label); onbekend of leeg is "Zonder uitkomst". */
+export const uitkomstGroep = (uitkomst: string | null | undefined): { sleutel: string; label: string } => UITKOMST_GROEP[uitkomst ?? ''] ?? { sleutel: 'overig', label: 'Zonder uitkomst' }
 /** Waar de pogingen op uitliepen, gegroepeerd en in vaste volgorde; lege groepen vallen weg. */
 export function uitkomsten(acts: KpiActiviteit[], p: Periode, gebruiker?: string): { sleutel: string; label: string; aantal: number }[] {
   const tel = new Map<string, { sleutel: string; label: string; aantal: number }>()
@@ -182,7 +184,7 @@ export function uitkomsten(acts: KpiActiviteit[], p: Periode, gebruiker?: string
     if (gebruiker && a.door !== gebruiker) continue
     const dag = a.op.slice(0, 10)
     if (dag < p.van || dag > p.tot || !isContact(a)) continue
-    const g = UITKOMST_GROEP[a.uitkomst ?? ''] ?? { sleutel: 'overig', label: 'Zonder uitkomst' }
+    const g = uitkomstGroep(a.uitkomst)
     const x = tel.get(g.sleutel) ?? { ...g, aantal: 0 }
     x.aantal++; tel.set(g.sleutel, x)
   }
@@ -204,6 +206,12 @@ export interface DekkingBak { sleutel: string; label: string; toon: string; aant
  * Actieve prospects per laatste contact, zoals de dekkingsblokken van DealDrive. Zonder contactmoment
  * valt een prospect in de koudste bak. Recent is contact korter dan 30 dagen geleden.
  */
+/** De dekkingsbak van één prospect: dagen sinds het laatste contact; zonder contact de koudste bak. */
+export function dekkingBak(laatsteContact: string | null | undefined, nu: Date): (typeof DEKKING_BAKKEN)[number] {
+  if (!laatsteContact) return DEKKING_BAKKEN[DEKKING_BAKKEN.length - 1]!
+  const dagen = (nu.getTime() - Date.parse(laatsteContact)) / 864e5
+  return DEKKING_BAKKEN.find((b) => dagen < b.tot) ?? DEKKING_BAKKEN[DEKKING_BAKKEN.length - 1]!
+}
 export function prospectDekking(laatsteContact: (string | null)[], nu: Date): { bakken: DekkingBak[]; recent: number; actief: number; zonderContact: number; procent: number } {
   const bakken: DekkingBak[] = DEKKING_BAKKEN.map((b) => ({ sleutel: b.sleutel, label: b.label, toon: b.toon, aantal: 0 }))
   let recent = 0; let zonder = 0

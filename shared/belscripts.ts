@@ -220,13 +220,16 @@ export function scriptWaarden(i: {
   verhaal?: VerkoopverhaalStand | null
   eigenVelden?: Record<string, unknown>
   eerderGebruikteWinpunten?: string[]
+  /** Het winpunt dat de regel van de taak meegaf (Dealtrace); gaat voor de eigen keuze. */
+  winpuntId?: string | null
 }): { waarden: Record<string, string | null>; meldingen: string[]; winpuntId: string | null; concurrentId: string | null } {
   const meldingen: string[] = []
   const v = i.verhaal
   const kern = v ? kernzinVoor(v, i.account.brancheId) : { tekst: null, terugval: true }
   const bel = v ? beloftVoor(v, i.account.brancheId) : { tekst: null, terugval: true }
   if (v && kern.terugval && 'melding' in kern && kern.melding) meldingen.push(kern.melding)
-  const wp = v?.winpunten ? kiesWinpunt(v.winpunten, { faseId: i.account.faseId ?? null, eerderGebruikt: i.eerderGebruikteWinpunten }) : null
+  const vast = i.winpuntId ? v?.winpunten?.find((w) => w.id === i.winpuntId && w.actief) : undefined
+  const wp = vast ?? (v?.winpunten ? kiesWinpunt(v.winpunten, { faseId: i.account.faseId ?? null, eerderGebruikt: i.eerderGebruikteWinpunten }) : null)
   const cc = v && i.account.huidigeLeverancierId ? v.concurrenten.find((c) => c.id === i.account.huidigeLeverancierId) ?? null : null
   const waarden: Record<string, string | null> = {
     'gebruiker.voornaam': i.gebruiker.naam.replace(/^Testgebruiker\s+/, '').split(/\s+/)[0] ?? null, 'gebruiker.telefoon': i.gebruiker.telefoon ?? null,

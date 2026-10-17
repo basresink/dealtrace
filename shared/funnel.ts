@@ -73,6 +73,26 @@ export function funnelStand(rijen: GeschRij[], periode: { van: string; tot: stri
   return FUNNEL_FASES.map((f) => stand.get(f)!)
 }
 
+/**
+ * Dagen per account in één funnelfase, voor de lijst achter "Doorlooptijd per fase": vanaf de eerste keer
+ * binnenkomen in de periode tot de volgende wissel (ook na de periode), of tot nu als het account er nog
+ * staat. Binnenkomen telt als in funnelStand (de eerste keer in de periode). Afgerond op hele dagen.
+ */
+export function dagenInFunnelFase(rijen: GeschRij[], periode: { van: string; tot: string }, fase: FunnelFase, nu: Date): Map<string, { dagen: number; nogInFase: boolean }> {
+  const uit = new Map<string, { dagen: number; nogInFase: boolean }>()
+  const per = new Map<string, GeschRij[]>()
+  for (const r of rijen) if (r.naarFaseId) per.set(r.accountId, [...(per.get(r.accountId) ?? []), r])
+  for (const [accountId, lijst] of per) {
+    const tl = [...lijst].filter((r) => r.op <= nu.toISOString()).sort((a, b) => a.op.localeCompare(b.op))
+    const i = tl.findIndex((r) => r.naarFaseId === fase && r.op >= periode.van && r.op <= periode.tot)
+    if (i < 0) continue
+    const volgende = tl.slice(i + 1).find((x) => x.naarFaseId !== fase)
+    const eind = volgende ? volgende.op : nu.toISOString()
+    uit.set(accountId, { dagen: Math.max(0, Math.round(dagenTussen(tl[i]!.op, eind))), nogInFase: !volgende })
+  }
+  return uit
+}
+
 /** Conversie in procent; zonder noemer null ("n.v.t."). */
 export const conversie = (van: number, naar: number): number | null => (van > 0 ? Math.round((naar / van) * 100) : null)
 /** Gemiddelde doorlooptijd in kalenderdagen van wie de fase verliet; wie er nog staat, telt niet mee. */

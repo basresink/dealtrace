@@ -43,12 +43,20 @@ test.describe('meetings', () => {
     await expect(lijst.getByTestId('meeting-analyse')).toHaveCount(0)
     const rij = lijst.locator('[data-test^="beurt-"]').filter({ has: page.locator('button') }).first()
     await expect(rij.locator('.pil')).toHaveText(/vandaag|deze week|Fysiek/i)
+    const knop = (await rij.locator('button').textContent())!.trim()
     await rij.locator('button').click()
-    const flyout = page.getByTestId('plan-afspraak')
-    await expect(flyout).toBeVisible()
     const naam = (await rij.locator('.mt-plan-naam').textContent())!.split(' · ')[0]!
-    await expect(flyout).toContainText(naam)
-    await expect(page.getByTestId('pa-vorm-telefoon')).toHaveAttribute('aria-checked', 'true')
+    if (knop === '+ Plan belafspraak') {
+      // Een belafspraak is een beltaak: de flyout + Taak met type Bellen en de prospect ingevuld.
+      const taak = page.getByTestId('nieuwe-taak')
+      await expect(taak).toBeVisible()
+      await expect(page.getByTestId('nt-type-bellen')).toHaveAttribute('aria-pressed', 'true')
+      await expect(page.getByTestId('nt-klant-keuze')).toContainText(naam)
+    } else {
+      const flyout = page.getByTestId('plan-afspraak')
+      await expect(flyout).toBeVisible()
+      await expect(flyout).toContainText(naam)
+    }
   })
 
   test('een meeting van vandaag die al voorbij is: Afgelopen en Verslag maken (B18)', async ({ page }) => {

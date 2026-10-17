@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
       organisationId: ctx.organisatie.id, ownerId: s.ownerId ?? ctx.gebruiker.id, accountId: s.accountId, contactId: s.contactId, signalId: s.id, ruleId: s.ruleId,
       onderwerp: s.onderwerp, title: String(patch?.title ?? v.title).slice(0, 200), priority: patch?.priority ?? v.priority, actionType: patch?.actionType ?? v.actionType,
       dueDate: patch?.dueDate ?? volgendWerkmoment(nu).toISOString(), executor: 'mens',
-      data: { herkomst: { bron: 'inzicht', inzichtId: s.id, regelId: s.ruleId, actiesoort: v.actionType, uitvoerder: s.ownerId }, waarom: s.data?.waarom, bewijs: s.data?.bewijs, aanleiding: s.title },
+      data: { herkomst: { bron: 'inzicht', inzichtId: s.id, regelId: s.ruleId, actiesoort: v.actionType, uitvoerder: s.ownerId }, waarom: s.data?.waarom, bewijs: s.data?.bewijs, aanleiding: s.title, ...((s.data as any)?.winpunt ? { winpunt: (s.data as any).winpunt } : {}) },
     }).returning()
     await tx.update(schema.signals).set({ status: 'omgezet', updatedAt: nu.toISOString() }).where(eq(schema.signals.id, id))
     return t

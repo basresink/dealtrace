@@ -95,7 +95,8 @@ for (const breedte of [1280, 390]) {
       await expect(page.locator('.toast-tekst').last()).toContainText('komt terug op')
       await expect(lr).toContainText('met de hand aangepast')
 
-      // Filters: status Gestart en een zoekterm zonder treffers.
+      // Filters (knop Filters rechtsboven opent het paneel): status Gestart en een zoekterm zonder treffers.
+      await page.getByTestId('tib-filterknop').click()
       await page.getByTestId('tib-status-gestart').click()
       await expect(page).toHaveURL(/status=gestart/)
       await expect(rij).toBeVisible()

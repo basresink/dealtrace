@@ -2,10 +2,11 @@
 // Prospect (standaardlabel) en contactpersoon als zoekvelden (opzet van DealDrive, NieuweTaakFlyout en TaakFlyout): typen zoekt,
 // klikken kiest, het kruisje wist. Met een klant toont het contactveld diens contacten (beslisser eerst);
 // zonder klant zoek je over alle contacten en neemt het gekozen contact zijn klant mee. Een andere klant
-// wist een contact dat er niet bij hoort.
+// wist een contact dat er niet bij hoort. Met `nieuwContact` kun je onder het contactveld direct een nieuw contact bij de
+// gekozen prospect maken (SnelContact); dat is daarna gekozen.
 export interface Klant { id: string; naam: string; plaats?: string | null; branche?: string | null }
 export interface Contact { id: string; naam: string; functie?: string | null; accountId?: string | null; accountNaam?: string | null }
-const props = withDefaults(defineProps<{ prefix?: string; klantLabel?: string; contactLabel?: string }>(), { prefix: 'nt', klantLabel: 'Prospect', contactLabel: 'Contactpersoon' })
+const props = withDefaults(defineProps<{ prefix?: string; klantLabel?: string; contactLabel?: string; nieuwContact?: boolean }>(), { prefix: 'nt', klantLabel: 'Prospect', contactLabel: 'Contactpersoon', nieuwContact: false })
 const klant = defineModel<Klant | null>('klant', { default: null })
 const contact = defineModel<Contact | null>('contact', { default: null })
 
@@ -18,6 +19,15 @@ function kiesContact(c: Contact) {
   contact.value = c
 }
 const t = (s: string) => `${props.prefix}-${s}`
+// Heeft de gekozen prospect nog geen contacten? Dan nodigt de knop uit om er een te maken.
+const aantalContacten = ref<number | null>(null)
+watch(() => klant.value?.id, async (id) => {
+  aantalContacten.value = null
+  if (!props.nieuwContact || !id) return
+  const lijst = await zoekContacten('', id)
+  if (klant.value?.id === id) aantalContacten.value = lijst.length
+}, { immediate: true })
+function nieuwGemaakt(c: Contact) { contact.value = c; aantalContacten.value = (aantalContacten.value ?? 0) + 1 }
 </script>
 
 <template>
@@ -37,4 +47,5 @@ const t = (s: string) => `${props.prefix}-${s}`
       @kies="kiesContact" @wis="contact = null"
     />
   </div>
+  <SnelContact v-if="nieuwContact" :account="klant ? { id: klant.id, naam: klant.naam } : null" :prefix="t('nc')" :geen-contacten="aantalContacten === 0" @gemaakt="nieuwGemaakt" />
 </template>

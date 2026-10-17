@@ -1,5 +1,6 @@
 // Gedeelde serverlogica voor accounts en contacten (P03). Rekenregels staan in
 // shared/ (score, laatste contact, primair contact, ontdubbelen); hier alleen laden en opslaan.
+import { prospectStatusUit } from '../../shared/prospectStatus'
 import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 import type { AccountRij } from '../../shared/accountFilters'
 import { primairContact, sorteerContacten, ontbrekendeRollen } from '../../shared/contactgegevens'
@@ -38,7 +39,7 @@ export async function accountRijen(tx: Tx, soort: 'prospect' | 'klant', zichtbar
     cf: zichtbareCustomFields(a.data?.customFields, zichtbareVelden),
     // extra velden voor de rij
     website: a.data?.website ?? null, linkedin: a.data?.linkedin ?? null, branche: a.data?.branche ?? null, domein: a.domein, kind: a.accountKind,
-    logoUrl: (a.data as any)?.logoUrl ?? null, logoUit: !!(a.data as any)?.logoUit,
+    logoUrl: (a.data as any)?.logoUrl ?? null, logoUit: !!(a.data as any)?.logoUit, prospectStatus: prospectStatusUit(a.data),
   } as AccountRij & Record<string, unknown>))
 }
 

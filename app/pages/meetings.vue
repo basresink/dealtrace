@@ -6,7 +6,8 @@
 // agenda op die dag, een klik opent het afspraakvenster), daaronder over de hele breedte de belprioriteit
 // (BelPrioriteit, een klik opent de beltaak of maakt die eerst). Een uitklapbare filterstrook (soort en vorm,
 // in de URL), en onderaan de Meetinglijst "Wie is er aan de beurt?" (vanaf Gevorderd) als kaarten met per
-// account de reden, een uitleg, het advies en een planknop die het afspraakvenster opent met account en vorm.
+// account de reden, een uitleg, het advies en een planknop die het afspraakvenster opent met account en vorm. Bij het
+// advies belafspraak opent "+ Plan belafspraak" de flyout + Taak met type Bellen, de prospect en zijn eerste contact.
 import { nlMoment, plusDagen } from '~~/shared/datum'
 import { duurLabel } from '~~/shared/route'
 const { functie } = useMe()
@@ -95,7 +96,18 @@ const PLAN: Record<string, { knop: string; vorm: string; soort: string }> = {
   online: { knop: '+ Plan meeting', vorm: 'online', soort: 'kennismaking' },
   fysiek: { knop: '+ Plan bezoek', vorm: 'bezoek', soort: 'inventarisatie' },
 }
-function planBeurt(v: any) { const p = PLAN[v.advies] ?? PLAN.belafspraak!; plan({ id: v.accountId, naam: v.naam }, { vorm: p.vorm, soort: p.soort }, v.reden) }
+// + Plan belafspraak: een beltaak (flyout + Taak, type Bellen) met de prospect en het eerste contact (beslisser eerst).
+const belTaak = ref<{ account: { id: string; naam: string }; contact: { id: string; naam: string; functie?: string | null; accountId: string; accountNaam: string } | null; aanleiding: string | null; titel: string } | null>(null)
+async function planBeurt(v: any) {
+  if ((v.advies ?? 'belafspraak') === 'belafspraak' || !PLAN[v.advies]) {
+    const c = (await zoekContacten('', v.accountId))[0] ?? null
+    belTaak.value = { account: { id: v.accountId, naam: v.naam }, contact: c ? { id: c.id, naam: c.naam, functie: c.functie ?? null, accountId: v.accountId, accountNaam: v.naam } : null, aanleiding: v.reden ?? null, titel: `Bel ${c ? `${c.naam} van ` : ''}${v.naam}` }
+    return
+  }
+  const p = PLAN[v.advies]!
+  plan({ id: v.accountId, naam: v.naam }, { vorm: p.vorm, soort: p.soort }, v.reden)
+}
+async function belTaakGemaakt() { belTaak.value = null; await Promise.all([beurtVernieuw(), belVernieuw()]) }
 // Rechtsboven Analyse naar de meetinganalyse (vanaf Gevorderd, functie agenda.meetingAnalyse).
 const analyseAan = computed(() => !!functie('agenda.meetingAnalyse')?.beschikbaar)
 useHead({ title: 'Meetings · Dealtrace' })
@@ -207,6 +219,7 @@ useHead({ title: 'Meetings · Dealtrace' })
         </ol>
       </div>
     </section>
+    <NieuweTaakFlyout :open="!!belTaak" :account="belTaak?.account ?? null" :contact="belTaak?.contact ?? null" actiesoort="bellen" :titel="belTaak?.titel" :aanleiding="belTaak?.aanleiding ?? undefined" @sluit="belTaak = null" @gemaakt="belTaakGemaakt" />
     <PlanAfspraakFlyout :open="planOpen" :account="planAccount" :voorstel="planVoorstel" :aanleiding="planAanleiding" @sluit="planOpen = false" @gepland="gepland" />
     <AfspraakFlyout :open="!!afspraakId" :afspraak-id="afspraakId" @sluit="zet('afspraak', '')" @gewijzigd="refresh()" />
     <TaakFlyout :open="!!taak" :taak-id="taak" @sluit="taak = null" @klaar="taak = null; belVernieuw()" @gewijzigd="belVernieuw()" />

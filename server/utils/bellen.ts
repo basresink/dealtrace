@@ -214,6 +214,9 @@ export async function belmodusItems(tx: Tx, ctx: { gebruiker: { id: string; naam
   const branches = new Map((vv.branches ?? []).map((b) => [b.id, b.naam]))
   const [u] = await tx.select({ data: schema.users.data }).from(schema.users).where(eq(schema.users.id, ctx.gebruiker.id))
   const prospectVersies = await laatsteProspectVersies(tx, ids, ctx.gebruiker.id)
+  // Dealtrace: het winpunt dat de regel aan de beltaak meegaf, is het gespreksonderwerp van het script.
+  const taakIds = kandidaten.map((k) => k.taskId).filter((x): x is string => !!x)
+  const taakWinpunt = new Map(taakIds.length ? (await tx.select({ id: schema.tasks.id, data: schema.tasks.data }).from(schema.tasks).where(inArray(schema.tasks.id, taakIds))).map((t) => [t.id, (t.data as any)?.winpunt?.id as string | undefined]) : [])
   return kandidaten.map((k) => {
     const a = accounts.find((x) => x.id === k.accountId)!
     const c = contacten.find((x) => x.id === k.contactId)
@@ -226,6 +229,7 @@ export async function belmodusItems(tx: Tx, ctx: { gebruiker: { id: string; naam
       contact: c ? { voornaam: c.firstName, achternaam: c.lastName, functie: c.data?.functie ?? null, rol: c.rol } : null,
       aanleiding: (a.data as any)?.aanleiding?.tekst ? { kort: (a.data as any).aanleiding.tekst, bron: (a.data as any).aanleiding.bron ?? null } : null,
       poging: k.poging ? { n: k.poging.n, van: k.poging.van, vorige: k.poging.vorige ?? null } : null, verhaal: vv, eigenVelden: (a.data as any)?.customFields ?? {},
+      winpuntId: k.taskId ? taakWinpunt.get(k.taskId) ?? null : null,
     })
     const script = opties.scripts.find((s) => s.id === voorstel?.scriptId)
     return {

@@ -8,7 +8,7 @@ import { AFSPRAAKMATRIX_STANDAARD, BELMATRIX_STANDAARD, geldendeCel, intervalDag
 export const PATROON_SLEUTELS = [
   'datum-drempel', 'inactiviteit', 'ritme', 'gebeurtenis', 'te-lang-in-fase', 'lead-verlopen', 'jaarplanning-venster',
   'afspraak-niet-overgedragen', 'afspraak-onvoldoende-gekwalificeerd', 'campagne-achterstand', 'hercontact-vervolg',
-  'geparkeerd-terug', 'trigger-heractivatie', 'tussendoel-gehaald', 'partner-te-laat',
+  'geparkeerd-terug', 'trigger-heractivatie', 'tussendoel-gehaald', 'partner-te-laat', 'reis-overgang',
 ] as const
 export type Patroon = typeof PATROON_SLEUTELS[number]
 
@@ -30,7 +30,37 @@ export const PATRONEN: Record<Patroon, PatroonInfo> = {
   'trigger-heractivatie': { label: 'Trigger-heractivatie', vuurtAls: 'er een nieuw extern signaal is bij een account op wachtend of nee, buiten de afkoelperiode', parameters: { signaalsoorten: ['jubileum', 'vacature', 'directiewissel', 'verhuizing', 'subsidie'], ookInReis: false } },
   'tussendoel-gehaald': { label: 'Tussendoel gehaald', vuurtAls: 'een tussendoel van een activiteit gehaald is', parameters: {} },
   'partner-te-laat': { label: 'Partner te laat', vuurtAls: 'een doorgezette lead niet op tijd bevestigd is', parameters: {} },
+  // Dealtrace: een overgang in de prospectreis als trigger (van fase, gebeurtenis, naar fase; leeg is elke).
+  'reis-overgang': { label: 'Overgang in de reis', vuurtAls: 'het account in de reis een overgang maakte', parameters: { vanFase: null, naarFase: null, gebeurtenis: null } },
 }
+
+/** Leesbare naam en uitleg per triggerparameter (de editor toont nooit een kale sleutel). */
+export const PARAM_INFO: Record<string, { label: string; uitleg: string; eenheid?: string }> = {
+  veld: { label: 'Datumveld', uitleg: 'Het veld van het account waarop de drempel rekent.' },
+  dagen: { label: 'Drempel', uitleg: 'Het aantal dagen van de drempel.', eenheid: 'dagen' },
+  ookZonderDatum: { label: 'Ook zonder datum', uitleg: 'Telt vanaf het aanmaken als het veld nog leeg is.' },
+  alleenZonderDatum: { label: 'Alleen zonder datum', uitleg: 'Vuurt alleen zolang het veld nog leeg is.' },
+  actiesoort: { label: 'Ritme van', uitleg: 'Bellen volgt de belmatrix, bezoek de rij Bezoek van de afspraakmatrix.' },
+  matrix: { label: 'Matrix als poort', uitleg: 'Neemt poort en interval uit de accountmatrix per klasse.' },
+  gebeurtenis: { label: 'Gebeurtenis', uitleg: 'Leeg is elke gebeurtenis.' },
+  fase: { label: 'Fase betreden', uitleg: 'Vuurt als het account deze fase betrad. Leeg is geen fase.' },
+  marge: { label: 'Marge', uitleg: 'Ruimte boven de norm voordat de regel vuurt.' },
+  werkdagen: { label: 'Na werkdagen', uitleg: 'Aantal werkdagen na de afspraak.', eenheid: 'werkdagen' },
+  dagenVooraf: { label: 'Dagen vooraf', uitleg: 'Zoveel dagen voor de eerste afspraak.', eenheid: 'dagen' },
+  signaalsoorten: { label: 'Signaalsoorten', uitleg: 'Welke externe signalen tellen.' },
+  ookInReis: { label: 'Ook in de reis', uitleg: 'Ook voor accounts die nu in de reis zitten, niet alleen wachtend of nee.' },
+  vanFase: { label: 'Van fase', uitleg: 'De fase waar het account vandaan kwam. Leeg is elke fase.' },
+  naarFase: { label: 'Naar fase', uitleg: 'De fase waar het account naartoe ging. Leeg is elke fase.' },
+}
+
+/** De datumvelden van een prospect waarop een datum- of inactiviteitsregel kan rekenen. */
+export const DATUM_VELDEN: { code: string; label: string; patronen: Patroon[] }[] = [
+  { code: 'laatsteContactOp', label: 'Laatste contact', patronen: ['inactiviteit', 'datum-drempel'] },
+  { code: 'terugOp', label: 'Terugkomdatum', patronen: ['datum-drempel'] },
+  { code: 'dossierOp', label: 'Dossier compleet', patronen: ['inactiviteit', 'datum-drempel'] },
+  { code: 'faseSinds', label: 'In de fase sinds', patronen: ['inactiviteit'] },
+  { code: 'aangemaaktOp', label: 'Aangemaakt', patronen: ['inactiviteit'] },
+]
 
 /** Cadans in dagen; 0 = Continu (elke run, alleen begrensd door ontdubbelen). */
 export const CADANSEN: { dagen: number; label: string }[] = [
@@ -45,7 +75,7 @@ export const UITVOERDERROLLEN = ['binnendienst', 'buitendienst', 'eigenaar', 'sa
 export const CATEGORIEEN = ['Vinden', 'Bewerken', 'Verbinden', 'Ritme', 'Signalen', 'Kwaliteit'] as const
 export const PRIORITEITEN = ['hoog', 'middel', 'laag'] as const
 export const TERMIJNEN = [{ werkdagen: 0, label: 'binnen 24 uur' }, { werkdagen: 1, label: 'binnen 1 werkdag' }, { werkdagen: 3, label: 'binnen 3 werkdagen' }, { werkdagen: 5, label: 'binnen 5 werkdagen' }, { werkdagen: 10, label: 'binnen 2 weken' }]
-export const SJABLOON_VARIABELEN = ['account', 'contact', 'afspraak'] as const
+export const SJABLOON_VARIABELEN = ['account', 'contact', 'afspraak', 'winpunt'] as const
 export const ONDERWERPEN = ['account'] as const
 
 const KANAAL_VAN_ACTIE: Record<string, Kanaal | null> = { bellen: 'bellen', mailen: 'mail', linkedin: 'linkedin', bezoek: 'bezoek', bericht: 'whatsapp', sms: 'whatsapp', geen: null }
@@ -69,6 +99,8 @@ export interface Gevolg {
   automatischVoorbereiden?: boolean
   signaaltype?: string | null
   verwachtResultaat?: string | null
+  /** Winpunten uit het verkoopverhaal die de taak als gespreksonderwerp meekrijgt (Dealtrace). */
+  winpuntIds?: string[]
 }
 
 export interface RegelData {
@@ -130,7 +162,9 @@ export interface MotorAccount {
   contactNaam?: string | null
   /** Het primaire contact (de beslisser, anders het eerste actieve contact): de motor geeft het mee als contact_id. */
   contactId?: string | null
-  gebeurtenissen?: { id: string; gebeurtenis: string; naarFaseId: string | null; op: string }[]
+  /** Hoofdfase van de huidige fase (vinden, bewerken, verbinden), voor de keuze van het winpunt. */
+  hoofdfase?: string | null
+  gebeurtenissen?: { id: string; gebeurtenis: string; vanFaseId?: string | null; naarFaseId: string | null; op: string }[]
   afspraken?: { id: string; eerste: boolean; status: 'gepland' | 'gehouden' | 'geannuleerd' | 'niet-verschenen'; op: string; overgedragen?: boolean; uitkomst?: string | null }[]
   campagnes?: { id: string; achterstand: number; naam?: string }[]
   ritme?: { actief: boolean; volgendePogingOp?: string | null; poging?: number; van?: number; kanaal?: string | null } | null
@@ -230,6 +264,12 @@ export function evaluateTrigger(regel: Pick<Regel, 'data'>, a: MotorAccount, nu:
       const l = (a.partnerLeads ?? []).find((x) => !x.bevestigd && Date.parse(x.deadline) < nu.getTime())
       return l ? { vuurt: true, reden: `De partner bevestigde de lead niet voor ${datumKort(l.deadline)}`, bewijs: [l.id], sleutel: `${a.id}:${l.id}` } : nee()
     }
+    case 'reis-overgang': {
+      // Eén keer per overgang (de regel in de reisgeschiedenis); de nieuwste telt.
+      const hit = [...(a.gebeurtenissen ?? [])].sort((x, y) => y.op.localeCompare(x.op)).find((g) => g.naarFaseId && g.naarFaseId !== g.vanFaseId
+        && (!p.vanFase || g.vanFaseId === p.vanFase) && (!p.naarFase || g.naarFaseId === p.naarFase) && (!p.gebeurtenis || g.gebeurtenis === p.gebeurtenis))
+      return hit ? { vuurt: true, reden: `Overgang in de reis op ${datumKort(hit.op)}`, bewijs: [`${hit.vanFaseId ?? 'instap'} > ${hit.naarFaseId} (${hit.gebeurtenis}) ${hit.op.slice(0, 10)}`], sleutel: `${a.id}:${hit.id}` } : nee()
+    }
   }
   return nee('onbekend patroon')
 }
@@ -271,9 +311,26 @@ export function sjabloonFouten(sjabloon: string): string[] {
   return [...sjabloon.matchAll(/\{([^}]*)\}/g)].map((m) => m[1]!).filter((v) => !(SJABLOON_VARIABELEN as readonly string[]).includes(v)).map((v) => `Onbekende variabele {${v}}`)
 }
 
-export function vulSjabloon(sjabloon: string, ctx: { account?: string | null; contact?: string | null; afspraak?: string | null }): string {
-  const leeg: Record<string, string> = { account: 'het account', contact: 'de contactpersoon', afspraak: 'de afspraak' }
-  return sjabloon.replace(/\{(account|contact|afspraak)\}/g, (_, k: string) => (ctx as any)[k] || leeg[k]!).trim()
+export function vulSjabloon(sjabloon: string, ctx: { account?: string | null; contact?: string | null; afspraak?: string | null; winpunt?: string | null }): string {
+  const leeg: Record<string, string> = { account: 'het account', contact: 'de contactpersoon', afspraak: 'de afspraak', winpunt: 'het winpunt' }
+  return sjabloon.replace(/\{(account|contact|afspraak|winpunt)\}/g, (_, k: string) => (ctx as any)[k] || leeg[k]!).trim()
+}
+
+/** Een winpunt zoals de motor het kent: met de hoofdfase van de reis waar het bij hoort (uit de fase van het verkoopverhaal). */
+export interface RegelWinpunt { id: string; titel: string; omschrijving?: string | null; hoofdfase?: string | null; actief?: boolean }
+
+/**
+ * Het winpunt dat de taak van deze regel voor dit account als gespreksonderwerp meekrijgt: van de gekoppelde
+ * winpunten (in de volgorde van de regel) het eerste dat bij de hoofdfase van het account past, anders het eerste.
+ * Zonder gekoppelde of nog actieve winpunten: null.
+ */
+export function winpuntVoorRegel(regel: Pick<Regel, 'data'>, a: Pick<MotorAccount, 'hoofdfase'>, winpunten: RegelWinpunt[]): RegelWinpunt | null {
+  const ids = regel.data.gevolg?.winpuntIds ?? []
+  if (!ids.length) return null
+  const per = new Map(winpunten.filter((w) => w.actief !== false).map((w) => [w.id, w]))
+  const gekoppeld = ids.map((id) => per.get(id)).filter((w): w is RegelWinpunt => !!w)
+  if (!gekoppeld.length) return null
+  return (a.hoofdfase && gekoppeld.find((w) => w.hoofdfase === a.hoofdfase)) || gekoppeld[0]!
 }
 
 const zinVan = (t: string) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()
@@ -308,6 +365,11 @@ export function valideerRegel(r: Partial<Regel>): string[] {
   if (r.cadansDagen !== undefined && !CADANSEN.some((c) => c.dagen === r.cadansDagen)) f.push('Onbekende cadans')
   if (r.motor === 'ai' && r.cadansDagen !== undefined && r.cadansDagen < 7) f.push('AI-regels draaien minimaal wekelijks')
   if (r.prioriteit && !(PRIORITEITEN as readonly string[]).includes(r.prioriteit)) f.push('Onbekende prioriteit')
+  if (r.data?.trigger?.patroon === 'reis-overgang') {
+    const p = r.data.trigger.parameters ?? {}
+    if (!p.vanFase && !p.naarFase && !p.gebeurtenis) f.push('Kies bij een overgang in de reis minstens een fase of gebeurtenis')
+  }
+  if ((r.data?.gevolg?.winpuntIds?.length ?? 0) > 5) f.push('Koppel hooguit vijf winpunten')
   return f
 }
 
@@ -353,7 +415,8 @@ export function regelPoort(regel: Regel, a: MotorAccount, nu: Date, ctx: PoortCo
   return { cadans }
 }
 
-export interface Droogloop { geraakt: number; taken: number; perPersoon: Record<string, number>; vraagtBevestiging: boolean }
+export interface DroogloopAccount { id: string; naam: string; ownerId: string | null; reden: string; maaktTaak: boolean; winpuntId: string | null }
+export interface Droogloop { geraakt: number; taken: number; perPersoon: Record<string, number>; vraagtBevestiging: boolean; accounts: DroogloopAccount[] }
 
 /** Wat de regel nu zou doen: hoeveel accounts hij raakt en hoeveel taken de volgende run maakt, met dezelfde poort als de motor. */
 export function droogloop(
@@ -361,10 +424,12 @@ export function droogloop(
   geschiedenis: { laatst: Map<string, string>; open: Set<string> } = { laatst: new Map(), open: new Set() },
   eigenaarVan: (a: MotorAccount) => string | null = (a) => a.ownerId ?? null,
   poort: PoortContext = {},
+  winpunten: RegelWinpunt[] = [],
 ): Droogloop {
   let geraakt = 0
   let taken = 0
   const perPersoon: Record<string, number> = {}
+  const lijst: DroogloopAccount[] = []
   for (const a of accounts) {
     const p = regelPoort(regel, a, nu, poort)
     if (!p) continue
@@ -372,12 +437,16 @@ export function droogloop(
     if (!u.vuurt) continue
     geraakt++
     const sleutel = u.sleutel ?? a.id
-    if (geschiedenis.open.has(`${regel.id}|${sleutel}`) || !cadansVerstreken(p.cadans, geschiedenis.laatst.get(`${regel.id}|${sleutel}`), nu)) continue
+    const maaktTaak = !(geschiedenis.open.has(`${regel.id}|${sleutel}`) || !cadansVerstreken(p.cadans, geschiedenis.laatst.get(`${regel.id}|${sleutel}`), nu))
+    lijst.push({ id: a.id, naam: a.naam, ownerId: eigenaarVan(a), reden: u.reden, maaktTaak, winpuntId: winpuntVoorRegel(regel, a, winpunten)?.id ?? null })
+    if (!maaktTaak) continue
     taken++
     const wie = eigenaarVan(a) ?? 'niemand'
     perPersoon[wie] = (perPersoon[wie] ?? 0) + 1
   }
-  return { geraakt, taken, perPersoon, vraagtBevestiging: Object.values(perPersoon).some((n) => n > 50) }
+  // Eerst wat de volgende run echt maakt, dan op naam.
+  lijst.sort((x, y) => Number(y.maaktTaak) - Number(x.maaktTaak) || x.naam.localeCompare(y.naam))
+  return { geraakt, taken, perPersoon, vraagtBevestiging: Object.values(perPersoon).some((n) => n > 50), accounts: lijst }
 }
 
 /** Leerlus: onder 20 procent acceptatie over 30 dagen (bij minstens 10 voorstellen) is ruis. */

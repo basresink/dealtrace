@@ -3,7 +3,8 @@
 // prioriteit, klant en contactpersoon als zoekvelden (het contact gefilterd op de klant; een contact
 // zonder klant neemt zijn klant mee), titel, prioriteit als vier knoppen, vervaldatum en tijd, type als
 // knoppen met icoon, toegewezen aan (alleen met teamleden), aanleiding, Taak herhalen en Herinnering
-// instellen (uitklapbaar). Beginner: klant, contactpersoon, titel, type en vervaldatum (F06).
+// instellen (uitklapbaar). Beginner: klant, contactpersoon, titel, type en vervaldatum (F06). Onder het contactveld
+// maak je zo nodig direct een nieuw contact bij de prospect (SnelContact).
 import { nlMoment, nlTijdstip, volgendWerkmoment } from '~~/shared/datum'
 import { HERHALING_LABEL, PRIORITEITEN, PRIO_LABEL, PRIO_STIP, TAAK_TYPES, herhalingAantal, taakTypesVoor } from '~~/shared/taken'
 import type { Contact, Klant } from './KlantContactKiezer.vue'
@@ -93,7 +94,7 @@ async function maak() {
             <h2 id="nt-titel-kop" class="fo-titel">Wat moet er gebeuren?</h2>
     </template>
         <form id="nt-form" class="fo-body fo-body--formulier" @submit.prevent="maak">
-          <KlantContactKiezer v-model:klant="klant" v-model:contact="contact" prefix="nt" />
+          <KlantContactKiezer v-model:klant="klant" v-model:contact="contact" prefix="nt" nieuw-contact />
 
           <label class="veld">
             <span class="veld-label">Titel <span class="veld-verplicht">*</span></span>

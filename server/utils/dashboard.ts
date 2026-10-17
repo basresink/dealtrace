@@ -3,18 +3,18 @@
 // de tellingen gebeuren in shared/team en shared/dashboard. Het teamgemiddelde is zonder namen en alleen
 // met resultaten.trend; dekking alleen met funnel.filters; de funnel alleen met funnel.eigen.
 import { sql } from 'drizzle-orm'
-import { activiteitReeks, dashboardPeriode, dashboardTitel, delta, prospectDekking, doelStand, normRegels, uitkomsten } from '../../shared/dashboard'
+import { activiteitReeks, dashboardPeriode, dashboardTitel, DEKKING_BAKKEN, dekkingBak, delta, KANAAL_LABEL, kanaalVan, prospectDekking, doelStand, normRegels, uitkomstGroep, uitkomsten } from '../../shared/dashboard'
+import { FUNNEL_FASES, FUNNEL_LABEL, type FunnelFase } from '../../shared/funnel'
+import { isProspectStatus, PROSPECT_STATUS_LABEL, prospectStatusUit, telPerStatus } from '../../shared/prospectStatus'
 import { nlMoment, nlTijdstip, plusDagen } from '../../shared/datum'
-import { kpi, teamGemiddelde, tempo, type Periode } from '../../shared/team'
-import { notitieUit } from './coaching'
+import { isContact, kpi, teamGemiddelde, tempo, type Periode } from '../../shared/team'
 import { gebruikDb } from './db'
-import { laadFunnel } from './funnel'
+import { faseLabels, funnelAccounts, laadFunnel } from './funnel'
 import { ledenVan, ruw } from './team'
 
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
 type Rij = Record<string, any>
 const rijen = async (tx: Tx, q: ReturnType<typeof sql>) => (await tx.execute(q)).rows as Rij[]
-const datum = (v: unknown) => (v == null ? null : v instanceof Date ? v.toISOString().slice(0, 10) : String(v).slice(0, 10))
 const dagVan = (iso: string) => nlMoment(new Date(iso)).datum
 const binnen = (iso: string, p: Periode) => { const d = dagVan(iso); return d >= p.van && d <= p.tot }
 const pct = (a: number, b: number) => (b ? Math.round((a / b) * 1000) / 1000 : 0)
@@ -83,9 +83,8 @@ export async function mijnDashboard(tx: Tx, gebruikerId: string, q: Record<strin
     funnel = { kop: fn.kop, aantalAccounts: fn.aantalAccounts, pogingen: fn.pogingen, eersteAfspraak: fn.eersteAfspraak, fases: fn.fases.map((x: any) => ({ faseId: x.faseId, label: x.label, hoofdfase: x.hoofdfase, aantal: x.aantal, conversie: x.conversie ?? null, norm: x.norm?.conversie ?? null, stok: x.stok })) }
   }
 
-  const afspraken = (await rijen(tx, sql`select * from coaching_notities where gebruiker_id = ${gebruikerId} and soort = 'afspraak' order by op desc limit 50`)).map(notitieUit)
-  const punten = (await rijen(tx, sql`select datum, data from coaching_sessies where gebruiker_id = ${gebruikerId} order by datum desc limit 6`))
-    .flatMap((x) => ((x.data?.punten ?? []) as any[]).filter((pt) => pt.gedeeld).map((pt) => ({ datum: datum(x.datum), tekst: pt.tekst, onderbouwing: pt.onderbouwing, artikelSleutel: pt.artikelSleutel })))
+  // Status prospect (koud tot heet) van je eigen, niet gedeactiveerde prospects.
+  const statussen = (await rijen(tx, sql`select data->>'prospectStatus' as s from accounts where owner_id = ${gebruikerId} and account_kind = 'prospect' and gedeactiveerd_op is null`)).map((x) => x.s as string | null)
 
   return {
     periode,
@@ -123,7 +122,93 @@ export async function mijnDashboard(tx: Tx, gebruikerId: string, q: Record<strin
     funnel,
     weken,
     team,
-    afspraken,
-    punten,
+    statusProspects: telPerStatus(statussen),
   }
+}
+
+// ── De lijst achter een cel, balk of getal (de vensters op Mijn dashboard) ──────────────────────────
+
+export const DASHBOARD_BLOKKEN = ['reis', 'uitkomst', 'dekking', 'status'] as const
+export type DashboardBlok = typeof DASHBOARD_BLOKKEN[number]
+export interface LijstItem { id: string; accountId: string | null; naam: string; fase: string | null; meta: string[]; prospectStatus: string | null; dagen: number | null; taak: { id: string; titel: string } | null; op: string | null }
+/** De drie snelle cijfers naast de dekkingsblokken: recent (< 30 dagen), koud (30 dagen of langer, of nooit) en zonder contact. */
+const DEKKING_STATS: Record<string, { titel: string; past: (l: string | null, nu: Date) => boolean }> = {
+  recent: { titel: 'Contact korter dan 30 dagen geleden', past: (l, nu) => !!l && (nu.getTime() - Date.parse(l)) / 864e5 < 30 },
+  koud: { titel: 'Langer dan 30 dagen geen contact', past: (l, nu) => !l || (nu.getTime() - Date.parse(l)) / 864e5 >= 30 },
+  zonder: { titel: 'Nog geen contactmoment', past: (l) => !l },
+}
+const dagKort = (iso: string) => new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' })
+const dagenSinds = (iso: string | null, nu: Date) => (iso ? Math.max(0, Math.floor((nu.getTime() - Date.parse(iso)) / 864e5)) : null)
+
+/**
+ * De prospects of pogingen achter een onderdeel van Mijn dashboard, met dezelfde periode en dezelfde telling
+ * als het blok: reis (funnelfase, via funnelAccounts), uitkomst (je contactpogingen met die uitkomst, met de
+ * taak erachter), dekking (actieve prospects in die bak) en status (prospects met die status; "geen" is
+ * zonder status). Alleen je eigen prospects en pogingen.
+ */
+export async function dashboardLijst(tx: Tx, gebruikerId: string, q: Record<string, unknown>, opties: DashboardOpties, nu = new Date()): Promise<{ titel: string; kicker: string; meta: string; items: LijstItem[] }> {
+  const blok = String(q.blok ?? '') as DashboardBlok
+  const sleutel = String(q.sleutel ?? '')
+  const periode = dashboardPeriode(q, nlMoment(nu).datum)
+  const van = nlTijdstip(periode.van, 0).toISOString()
+  const tot = nlTijdstip(plusDagen(periode.tot, 1), 0).toISOString()
+  const labels = await faseLabels(tx)
+  const faseVan = (id: string | null) => (id ? labels.get(id) ?? FUNNEL_LABEL[id as FunnelFase] ?? null : null)
+  const fout = (statusCode: number, statusMessage: string) => Object.assign(new Error(statusMessage), { statusCode, statusMessage })
+
+  if (blok === 'reis') {
+    if (!opties.funnel) throw fout(403, 'Je eigen funnel staat niet aan')
+    if (!FUNNEL_FASES.includes(sleutel as FunnelFase)) throw fout(400, 'Onbekende fase')
+    const rows = await funnelAccounts(tx, { van, tot: new Date(Date.parse(tot) - 1).toISOString(), gebruikerIds: [gebruikerId] }, sleutel as FunnelFase, null, nu)
+    return {
+      kicker: `Je reis per fase · ${periode.label}`, titel: FUNNEL_LABEL[sleutel as FunnelFase], meta: `${rows.length} ${rows.length === 1 ? 'prospect kwam' : 'prospects kwamen'} in deze fase`,
+      items: rows.map((r) => ({ id: r.id, accountId: r.id, naam: r.naam, fase: r.fase, prospectStatus: r.prospectStatus, dagen: r.dagenInFase, op: r.faseSinds, taak: null,
+        meta: [r.dagenInFase != null ? `${r.dagenInFase} ${r.dagenInFase === 1 ? 'dag' : 'dagen'} ${r.nogInFase ? 'nu in fase' : 'in fase'}` : null, r.volgendeStap ? `Volgende stap: ${r.volgendeStap}` : null, r.reden].filter(Boolean) as string[] })),
+    }
+  }
+
+  if (blok === 'uitkomst') {
+    const acts = await rijen(tx, sql`select a.id, a.op, a.soort, a.kanaal, a.uitkomst, a.account_id, acc.name as account, acc.fase_id, acc.data->>'prospectStatus' as prospect_status, a.task_id, t.title as taak,
+        trim(coalesce(c.first_name, '') || ' ' || coalesce(c.last_name, '')) as contact, coalesce(a.kanaal = 'intern', false) as intern
+      from activiteiten a left join accounts acc on acc.id = a.account_id left join tasks t on t.id = a.task_id left join contacts c on c.id = a.contact_id
+      where a.door = ${gebruikerId} and a.op >= ${van} and a.op < ${tot} order by a.op desc`)
+    const binnen = acts.filter((a) => isContact({ soort: a.soort, intern: !!a.intern }) && uitkomstGroep(a.uitkomst).sleutel === sleutel)
+    const label = uitkomstGroep(binnen[0]?.uitkomst ?? (sleutel === 'overig' ? null : sleutel)).label
+    return {
+      kicker: `Waar je pogingen op uitliepen · ${periode.label}`, titel: binnen.length ? label : 'Uitkomst', meta: `${binnen.length} ${binnen.length === 1 ? 'poging' : 'pogingen'} bij ${new Set(binnen.map((a) => a.account_id).filter(Boolean)).size} prospects`,
+      items: binnen.map((a) => {
+        const op = a.op instanceof Date ? a.op.toISOString() : new Date(String(a.op)).toISOString()
+        return { id: a.id, accountId: a.account_id ?? null, naam: a.account ?? 'Zonder prospect', fase: faseVan(a.fase_id), prospectStatus: isProspectStatus(a.prospect_status) ? a.prospect_status : null, dagen: null, op,
+          taak: a.task_id ? { id: a.task_id, titel: a.taak ?? 'Taak' } : null,
+          meta: [dagKort(op), KANAAL_LABEL[kanaalVan({ soort: a.soort, kanaal: a.kanaal })], a.contact || null].filter(Boolean) as string[] }
+      }),
+    }
+  }
+
+  if (blok === 'dekking' || blok === 'status') {
+    if (blok === 'dekking' && !opties.dekking) throw fout(403, 'Prospectdekking staat niet aan')
+    if (blok === 'dekking' && !DEKKING_BAKKEN.some((b) => b.sleutel === sleutel) && !DEKKING_STATS[sleutel]) throw fout(400, 'Onbekende bak')
+    if (blok === 'status' && sleutel !== 'geen' && !isProspectStatus(sleutel)) throw fout(400, 'Onbekende status')
+    const rows = await rijen(tx, sql`select a.id, a.name, a.fase_id, a.laatste_contact_op, a.data, a.nb_status,
+        (select t.id from tasks t where t.account_id = a.id and t.owner_id = ${gebruikerId} and t.status in ('open', 'bezig') order by t.due_date nulls last limit 1) as taak_id,
+        (select t.title from tasks t where t.account_id = a.id and t.owner_id = ${gebruikerId} and t.status in ('open', 'bezig') order by t.due_date nulls last limit 1) as taak
+      from accounts a where a.owner_id = ${gebruikerId} and a.account_kind = 'prospect' and a.gedeactiveerd_op is null
+      ${blok === 'dekking' ? sql`and a.nb_status in ('nieuw', 'in reis', 'gescoord')` : sql``} order by a.laatste_contact_op nulls first, a.name`)
+    const laatste = (r: Rij) => (r.laatste_contact_op ? new Date(r.laatste_contact_op).toISOString() : null)
+    const keuze = blok === 'dekking'
+      ? rows.filter((r) => (DEKKING_STATS[sleutel] ? DEKKING_STATS[sleutel]!.past(laatste(r), nu) : dekkingBak(laatste(r), nu).sleutel === sleutel))
+      : rows.filter((r) => (prospectStatusUit(r.data) ?? 'geen') === sleutel)
+    const bak = DEKKING_BAKKEN.find((b) => b.sleutel === sleutel)
+    return {
+      kicker: blok === 'dekking' ? 'Prospectdekking · momentopname' : 'Status prospect · momentopname',
+      titel: blok === 'dekking' ? (bak ? `Laatste contact ${bak.label}` : DEKKING_STATS[sleutel]!.titel) : sleutel === 'geen' ? 'Nog geen status' : PROSPECT_STATUS_LABEL[sleutel as keyof typeof PROSPECT_STATUS_LABEL],
+      meta: `${keuze.length} ${keuze.length === 1 ? 'prospect' : 'prospects'}`,
+      items: keuze.map((r) => {
+        const l = laatste(r); const d = dagenSinds(l, nu)
+        return { id: r.id, accountId: r.id, naam: r.name, fase: faseVan(r.fase_id), prospectStatus: prospectStatusUit(r.data), dagen: d, op: l, taak: r.taak_id ? { id: r.taak_id, titel: r.taak } : null,
+          meta: [l ? `Laatste contact ${dagKort(l)} (${d} ${d === 1 ? 'dag' : 'dagen'} geleden)` : 'Nog geen contactmoment'].filter(Boolean) as string[] }
+      }),
+    }
+  }
+  throw fout(400, 'Onbekend blok')
 }

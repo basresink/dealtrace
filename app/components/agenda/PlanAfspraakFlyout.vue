@@ -2,12 +2,12 @@
 // Plan een afspraak in de opzet van DealDrive (NieuweAfspraakFlyout): klant en contactpersoon als
 // zoekveld (het contact gefilterd op de klant; een contact kiezen zonder klant zet de klant), type
 // afspraak (meetingsoort in twee groepen: Afspraak op locatie en Meeting op afstand; vult duur en agenda),
-// de vorm die uit het type volgt (een bezoek, of online of telefonisch bij een meeting), titel (verplicht, voorgesteld uit soort en
+// de vorm volgt uit het type (een bezoek, online of telefonisch; geen eigen keuze meer), titel (verplicht, voorgesteld uit soort en
 // klant), datum, start, duur met de vrije momenten, herhaling, voor wie (Gevorderd), collega's
 // uitnodigen, locatie, herinnering, aanleiding of context en beschrijving. Op de telefoon een
 // schuifvenster van onderen. De afspraak krijgt account_id en contact_id en staat daarmee op de
-// accountkaart en de contactkaart.
-import { CATEGORIE_LABEL, HERHALINGEN, VORMEN_PER_CATEGORIE, categorieVan, herhalingsDatums, vormVoorSoort, type Categorie, type Herhaling } from '~~/shared/agenda'
+// accountkaart en de contactkaart. Heeft de prospect nog geen contact, dan maak je er hier direct een (SnelContact).
+import { CATEGORIE_LABEL, HERHALINGEN, categorieVan, herhalingsDatums, vormVoorSoort, type Categorie, type Herhaling } from '~~/shared/agenda'
 import { plusDagen } from '~~/shared/datum'
 const props = defineProps<{ open: boolean; account?: { id: string; naam: string } | null; taskId?: string | null; aanleiding?: string | null; voorWie?: string | null; voorstel?: { datum?: string; start?: string; duurMin?: number; vorm?: string; soort?: string } | null; contactId?: string | null }>()
 const emit = defineEmits<{ sluit: []; gepland: [id: string] }>()
@@ -37,9 +37,12 @@ const groepen = computed(() => (['bezoek', 'meeting'] as Categorie[]).map((c) =>
   categorie: c, label: CATEGORIE_LABEL[c],
   soorten: soorten.value.filter((s) => categorieVan(s) === c).sort((a, b) => plek(a.slug) - plek(b.slug) || a.naam.localeCompare(b.naam, 'nl')),
 })).filter((g) => g.soorten.length))
-const categorie = computed<Categorie>(() => (soort.value ? categorieVan(soort.value) : 'meeting'))
-const VORM_LABEL: Record<string, string> = { bezoek: 'Bezoek op locatie', online: 'Online', telefoon: 'Telefoon' }
-const vormen = computed(() => VORMEN_PER_CATEGORIE[categorie.value])
+/** De vorm die uit het type volgt, als actielabel (zelfde label als in Taken en op de accountkaart). */
+const VORM_ACTIE: Record<string, { waarde: string; tekst: string; uitleg: string }> = {
+  bezoek: { waarde: 'bezoek', tekst: 'Bezoek op locatie', uitleg: 'Een afspraak op locatie: komt op de route van die dag.' },
+  online: { waarde: 'online', tekst: 'Online', uitleg: 'Een meeting op afstand via een meetinglink.' },
+  telefoon: { waarde: 'bellen', tekst: 'Telefonisch', uitleg: 'Een meeting op afstand: je belt op het afgesproken moment.' },
+}
 const intern = computed(() => soort.value?.type === 'intern')
 const voorgesteldeTitel = computed(() => soort.value ? (klant.value ? `${soort.value.naam} · ${klant.value.naam}` : soort.value.naam) : '')
 
@@ -62,23 +65,23 @@ watch(() => props.open, async (o) => {
   soorten.value = (m.soorten ?? []).filter((s: any) => s.actief)
   voorWieLijst.value = (a?.gebruikers ?? []).filter((u: any) => u.id !== me.value?.gebruiker.id)
   collegas.value = c ?? []
-  // Een voorstel met een vorm kiest een soort uit de passende groep: een bezoek is een Gepland bezoek.
+  // Een voorstel met een vorm kiest een soort met die vorm: een bezoek is een Gepland bezoek, telefoon een Belafspraak.
   const v = props.voorstel
-  const pastBij = (s: any) => !v?.vorm || categorieVan(s) === (v.vorm === 'bezoek' ? 'bezoek' : 'meeting')
+  const pastBij = (s: any) => !v?.vorm || vormVoorSoort(s) === v.vorm
   const opSlug = (slug: string) => soorten.value.find((s) => s.slug === slug)
   let eerste = opSlug(v?.soort ?? 'kennismaking')
   if (!eerste || !pastBij(eerste)) eerste = opSlug(v?.vorm === 'bezoek' ? 'gepland-bezoek' : v?.vorm === 'telefoon' ? 'belafspraak' : 'online-meeting')
   if (!eerste || !pastBij(eerste)) eerste = soorten.value.find((s) => s.type === 'klant' && pastBij(s)) ?? soorten.value.find((s) => s.type === 'klant')
   if (eerste) f.meetingsoortId = eerste.id
   // Een voorstel (tussenstop, P14; klik in de agenda): datum, start in het gat, duur en vorm.
-  if (v) { await nextTick(); Object.assign(f, v.datum ? { datum: v.datum } : {}, v.start ? { start: v.start } : {}, v.duurMin ? { duurMin: v.duurMin } : {}); if (soort.value) f.vorm = vormVoorSoort(soort.value, v.vorm) }
+  if (v) { await nextTick(); Object.assign(f, v.datum ? { datum: v.datum } : {}, v.start ? { start: v.start } : {}, v.duurMin ? { duurMin: v.duurMin } : {}); if (soort.value) f.vorm = vormVoorSoort(soort.value) }
   await nextTick(); opslag.basis()
 }, { immediate: true })
 // Opslaan-status in de kop (FlyoutShell): Gewijzigd tot Plan afspraak opslaat; sluiten vraagt dan eerst.
 const opslag = useFlyoutOpslag()
 opslag.volg(() => [f, klant.value?.id ?? null, contact.value?.id ?? null])
 const ai = computed(() => ({ accountId: klant.value?.id ?? null, label: klant.value?.naam ?? 'Nieuwe afspraak', vraag: '', voorstellen: ['Stel een moment voor', 'Schrijf de uitnodiging', 'Wat is een goed doel voor dit gesprek?'] }))
-// De vorm volgt uit het type: een bezoek uit de groep Afspraak, online of telefonisch bij een Meeting.
+// De vorm volgt uit het type: een bezoek uit de groep Afspraak, online of telefonisch zoals de soort zegt.
 watch(soort, (s) => { if (s) { f.duurMin = s.duurMin; f.vorm = vormVoorSoort(s); f.herinneringMin = s.data?.herinneringMin ?? 15 } })
 watch(voorgesteldeTitel, (t) => { if (!titelHandmatig.value) f.titel = t }, { immediate: true })
 function typTitel(e: Event) { f.titel = (e.target as HTMLInputElement).value; titelHandmatig.value = !!f.titel.trim() }
@@ -104,6 +107,10 @@ async function zoekContact(q: string): Promise<Contact[]> {
   if (!klant.value) return (await zoekContacten(q)) as Contact[]
   const z = q.trim().toLowerCase()
   return klantContacten.value.filter((c) => !z || c.naam.toLowerCase().includes(z) || String(c.functie ?? '').toLowerCase().includes(z))
+}
+function nieuwContact(c: { id: string; naam: string; functie: string | null; rol: string | null; accountId: string; accountNaam: string }) {
+  klantContacten.value = [...klantContacten.value, c]
+  contact.value = c
 }
 function kiesContact(c: Contact) {
   contact.value = c
@@ -179,6 +186,7 @@ async function plan() {
               @kies="kiesContact"
             />
           </div>
+          <SnelContact :account="klant ? { id: klant.id, naam: klant.naam } : null" prefix="pa-nc" :geen-contacten="!klantContacten.length" @gemaakt="nieuwContact" />
 
           <label class="veld"><span class="veld-label">Type afspraak <span class="veld-verplicht">*</span></span>
             <select v-model="f.meetingsoortId" class="invoer" required data-test="pa-soort">
@@ -186,11 +194,9 @@ async function plan() {
             </select>
           </label>
           <p v-if="soort?.data?.doel" class="veld-uitleg pa-krap">{{ soort.data.doel }}</p>
-          <div class="pa-vorm" data-test="pa-vorm">
-            <div class="ag-keuzes" role="radiogroup" aria-label="Vorm">
-              <button v-for="v in vormen" :key="v" type="button" class="uitkomst" :class="{ 'uitkomst--aan': f.vorm === v }" role="radio" :aria-checked="f.vorm === v" :data-test="`pa-vorm-${v}`" @click="f.vorm = v">{{ VORM_LABEL[v] }}</button>
-            </div>
-            <p class="veld-uitleg" data-test="pa-vorm-uitleg">{{ categorie === 'bezoek' ? 'Een afspraak op locatie: komt op de route van die dag.' : 'Een meeting op afstand: kies online of telefonisch.' }}</p>
+          <div v-if="soort" class="pa-vorm" data-test="pa-vorm">
+            <Label soort="actie" :waarde="VORM_ACTIE[f.vorm]!.waarde" :tekst="VORM_ACTIE[f.vorm]!.tekst" :data-test="`pa-vorm-${f.vorm}`" />
+            <p class="veld-uitleg" data-test="pa-vorm-uitleg">{{ VORM_ACTIE[f.vorm]!.uitleg }} De vorm volgt uit het type.</p>
           </div>
 
           <label class="veld"><span class="veld-label">Titel <span class="veld-verplicht">*</span></span>
@@ -243,7 +249,7 @@ async function plan() {
 .pa-body { display: flex; flex-direction: column; gap: 16px; }
 .pa-body > .veld { margin: 0; }
 .pa-krap { margin-top: -8px; }
-.pa-vorm { margin-top: -8px; display: flex; flex-direction: column; gap: 6px; }
+.pa-vorm { margin-top: -8px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .pa-vorm .veld-uitleg { margin: 0; }
 .pa-keuze { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 4px 4px 4px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface); }
 .pa-keuze-tekst { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

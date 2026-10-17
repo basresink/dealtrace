@@ -11,9 +11,11 @@ De AI-assistent helpt je op het moment dat je hem nodig hebt. Hij legt uit, bere
 
 ## Waar je hem vindt
 
-- Op de laptop: de knop **Vraag AI** rechtsboven op elk scherm en op de accountkaart. De chat opent rechts en blijft open terwijl je doorwerkt.
-- Op je telefoon: het sterretje in de kop, of **Meer, AI-assistent**.
-- In het helpcenter: **Vraag AI** als je zoekopdracht niets oplevert.
+- Op de laptop: het icoon met de **sterretjes** rechtsboven in de kop van elk scherm, ook op de accountkaart en de contactkaart, en in de kop van elk venster (flyout). De chat opent rechts en blijft open terwijl je doorwerkt.
+- Op je telefoon: het sterretje in de kop, of **Meer**, **AI-assistent**.
+- In het helpcenter: **Vraag AI** onder je zoekresultaten, en **Vraag de AI-assistent** onder **Verder zoeken**.
+
+Je ziet de assistent alleen als hij voor je aanstaat.
 
 ## Wat hij weet
 
@@ -29,7 +31,7 @@ Staat er niets over in het helpcenter, dan zegt hij dat en stuurt hij je vraag d
 
 ## Voorstellen, geen acties
 
-Onder een antwoord staan knoppen zoals **Zet als taak klaar** en **Maak mailconcept**. Een taak opent voorgevuld; pas als je op Opslaan klikt, bestaat hij. Een mailconcept kopieer je; er wordt nooit iets verstuurd. Jij beslist.
+Onder een antwoord staan knoppen zoals **Zet als taak klaar** en **Maak mailconcept**. Een taak opent voorgevuld in **Nieuwe taak**; pas als je op **Maak taak** klikt, bestaat hij. Een mailconcept kopieer je; er wordt nooit iets verstuurd. Jij beslist.
 
 ## Credits
 

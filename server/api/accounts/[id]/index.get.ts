@@ -1,5 +1,6 @@
 // GET /api/accounts/:id: de accountkaart. Eigen velden alleen voor het eigen niveau
 // (ook niet in de respons, F19); de scoreopbouw alleen voor Expert.
+import { prospectStatusUit } from '../../../../shared/prospectStatus'
 import { desc, eq, inArray, sql } from 'drizzle-orm'
 import { ontbrekendeRollen, primairContact, sorteerContacten } from '../../../../shared/contactgegevens'
 import { telOpenTaken } from '../../../../shared/score'
@@ -31,6 +32,7 @@ export default defineEventHandler(async (event) => {
     const [klasseRij] = await tx.select().from(schema.orgSettings).where(eq(schema.orgSettings.key, 'klassen'))
     // 0064: niemand verwijdert een account; de eigenaar, zijn salesmanager en de beheerder deactiveren en heractiveren.
     const magDeactiveren = kan(ctx, 'prospects.deactiveren') && await magDitAccount(tx, ctx.gebruiker, a)
+    const magStatus = a.accountKind === 'prospect' && await magDitAccount(tx, ctx.gebruiker, a)
     const dg = a.gedeactiveerdOp ? a.data?.gedeactivering ?? null : null
     const gedeactiveerd = a.gedeactiveerdOp ? {
       op: a.gedeactiveerdOp, reden: dg?.reden ?? null, redenLabel: dg ? DEACTIVEER_REDEN_LABEL[dg.reden] ?? dg.reden : null, toelichting: dg?.toelichting ?? null,
@@ -93,6 +95,7 @@ export default defineEventHandler(async (event) => {
       // Logo, sociale kanalen en eigen bronnen (opzet uit DealDrive). Extra bronnen zijn de URL's onder volgBronnen.
       logoUrl: (a.data as any)?.logoUrl ?? null, logoUit: !!(a.data as any)?.logoUit, instagram: (a.data as any)?.instagram ?? null, facebook: (a.data as any)?.facebook ?? null, officieleNaam: (a.data as any)?.officieleNaam ?? null,
       extraBronnen: extraBronnenUit((a.data as any)?.volgBronnen),
+      prospectStatus: prospectStatusUit(a.data),
       aanleiding: a.data?.aanleiding ?? null, dossier: a.data?.dossier ?? null, band: a.data?.band ?? {},
       // P20: het extern id uit het CRM; de link alleen met een echte koppeling (de mock heeft geen portaal).
       crm: (a.data as any)?.extern?.hubspot?.id ? { label: 'HubSpot', id: (a.data as any).extern.hubspot.id, url: `https://app.hubspot.com/contacts/${process.env.HUBSPOT_PORTAAL ?? '0'}/company/${(a.data as any).extern.hubspot.id}` } : null,
@@ -119,6 +122,7 @@ export default defineEventHandler(async (event) => {
         klasse: kan(ctx, 'prospects.klasseZetten'), eigenaar: kan(ctx, 'prospects.eigenaarWijzigen'), deactiveren: magDeactiveren && !a.gedeactiveerdOp, heractiveren: magDeactiveren && !!a.gedeactiveerdOp,
         samenvoegen: kan(ctx, 'prospects.samenvoegen'), scoreOpbouw: kan(ctx, 'prospects.scoreOpbouw'), voorstellen: kan(ctx, 'eigenVelden.voorstellen'),
         verhuizen: kan(ctx, 'contacten.verhuizen'),
+        prospectStatus: magStatus,
         reis: kan(ctx, 'reis.zien') && a.accountKind === 'prospect',
         kwalificeer: kan(ctx, 'reis.kwalificeer') && a.nbStatus === 'nieuw' && ['gevonden', 'dossier-compleet'].includes(a.faseId ?? ''),
         faseCorrigeren: kan(ctx, 'reis.faseCorrigeren') && a.accountKind === 'prospect',

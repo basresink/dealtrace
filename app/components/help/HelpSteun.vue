@@ -48,19 +48,21 @@ const { openen: openAi } = useAssistent()
 
 <style scoped>
 .hs { border-top: 1px solid var(--border); }
+/* Verder zoeken: een licht grijs vlak met donkere tekst, zodat het blok zich onderscheidt van de witte
+   categorieblokken en de zwarte ingangen erboven. */
 .hs-titel { font-family: var(--font-serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 0 0 14px; }
 .hs-raster { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
 @media (min-width: 700px) { .hs-raster { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1200px) { .hs-raster { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.hs-kaart { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; padding: 18px 20px; background: var(--wit); border: 1px solid var(--border); border-left: 3px solid var(--yellow); color: var(--ink); text-decoration: none; text-align: left; font: inherit; cursor: pointer; transition: border-color var(--transition-fast); }
-.hs-kaart:hover { border-color: var(--ink); border-left-color: var(--yellow); }
+.hs-kaart { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; padding: 18px 20px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--yellow); color: var(--ink); text-decoration: none; text-align: left; font: inherit; cursor: pointer; transition: border-color var(--transition-fast); }
+.hs-kaart:hover { border-color: var(--ink); border-left-color: var(--yellow); background: var(--border); }
 .hs-kaart--rustig { border-left-color: var(--border-strong); cursor: default; }
-.hs-kaart--rustig:hover { border-color: var(--border); border-left-color: var(--border-strong); }
+.hs-kaart--rustig:hover { border-color: var(--border); border-left-color: var(--border-strong); background: var(--surface); }
 .hs-kaart-titel { font-family: var(--font-serif); font-size: 17px; font-weight: 700; margin: 0 0 6px; }
 .hs-kaart-tekst { margin: 0 0 10px; font-size: 13px; line-height: 1.55; color: var(--ink-soft); }
 .hs-cta { margin-top: auto; font-size: 12px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; border-bottom: 2px solid var(--yellow); padding-bottom: 1px; }
 .hs-cta::after { content: ' \2192'; }
-.hs-badge { margin-top: auto; display: inline-block; font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; background: var(--surface); color: var(--muted); border-radius: 2px; }
+.hs-badge { margin-top: auto; display: inline-block; font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; background: var(--wit); color: var(--ink-soft); border-radius: 2px; }
 .hs-mail { color: var(--ink); font-weight: 600; border-bottom: 2px solid var(--yellow); text-decoration: none; }
 .hs-mail:hover { color: var(--yellow-dark); }
 @media (max-width: 719px) { .hs-kaart { padding: 16px; } }

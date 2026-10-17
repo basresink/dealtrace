@@ -11,7 +11,7 @@ Onderweg typ je niet; je spreekt in. Dealtrace zet je opname om in tekst bij een
 
 ## Een opdracht inspreken
 
-1. Tik op de **microfoon** rechtsboven in de kop.
+1. Tik op je telefoon op de **microfoon** rechtsboven in de kop.
 2. Zeg wat er moet gebeuren, bijvoorbeeld "Bel Tamara volgende week dinsdag over de projectschouw" of "Noteer dat de DGA in september terug is".
 3. Tik **Stop**. Je ziet het concept: de soort (taak of notitie), het account, de persoon, de datum, en wat Dealtrace heeft gecontroleerd, zoals "Account gevonden" en "Datum gelezen als dinsdag 20 oktober".
 4. Tik **Bewaar**. De taak of notitie staat direct op de accountkaart, op je telefoon en je laptop.

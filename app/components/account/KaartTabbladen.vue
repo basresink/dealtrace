@@ -7,6 +7,8 @@
 // GET /api/contacten/:id/tabbladen. Op de accountkaart staat bij elk item de naam van het contact met een
 // link naar de contactkaart; op de contactkaart hoort alles bij dat ene contact en staat zijn naam dus niet in de
 // metaregel (wel wie het deed). Reis, kwalificatie, campagnes en accountplan staan onder Meer.
+// De soort activiteit (bellen, mail, LinkedIn, bezoek, online, taak) is overal hetzelfde actielabel als in Taken
+// (TaakKaart, HorizonPaneel): <Label soort="actie">, met data-test tl-actie.
 import { ACTIE_LABEL, berichtKanaalLabel, isDringend } from '~~/shared/taken'
 /** Status in de tijdlijn als label: klaar groen, open een rand, te laat gevuld rood. */
 const tlStatus = (soort: string | undefined, tekst: string) => (soort === 'klaar' ? { soort: 'status', waarde: 'afgerond', tekst } : soort === 'laat' ? { soort: 'urgentie', waarde: 'achterstallig', tekst } : { soort: 'status', waarde: 'nieuw', tekst })
@@ -33,6 +35,20 @@ const dit = computed(() => (opContact.value ? 'dit contact' : 'dit account'))
 const OV_NAAR: Record<string, string> = { dealdrive: 'DealDrive', crm: 'het CRM', collega: 'een collega' }
 const SOORT: Record<string, string> = { gebeld: 'Gebeld', mail: 'Mail', notitie: 'Notitie', bericht: 'Bericht', linkedin: 'LinkedIn', afspraak: 'Afspraak', bezoek: 'Bezoek', 'account verwijderd': 'Verwijderd', gedeactiveerd: 'Gedeactiveerd', geheractiveerd: 'Heractiveerd', reis: 'Reis', import: 'Import' }
 const VORM: Record<string, string> = { bezoek: 'Bezoek', online: 'Online', telefoon: 'Telefoon' }
+/** Vorm van een afspraak als actielabel, zoals in de horizon op Taken. */
+const VORM_ACTIE: Record<string, string> = { bezoek: 'bezoek', online: 'online', telefoon: 'bellen' }
+type Actie = { waarde: string; tekst?: string | null }
+const afspraakActie = (vorm: string): Actie => ({ waarde: VORM_ACTIE[vorm] ?? 'online', tekst: VORM[vorm] ?? vorm })
+/** Een contactmoment als actielabel: gebeld is Bellen, een bericht heet naar zijn kanaal. Notities en systeemmomenten hebben er geen. */
+function momentActie(soort: string, kanaal: string | null | undefined, tekst: string): Actie | null {
+  if (soort === 'gebeld') return { waarde: 'bellen', tekst: 'Gebeld' }
+  if (soort === 'mail') return { waarde: 'mailen' }
+  if (soort === 'linkedin') return { waarde: 'linkedin' }
+  if (soort === 'bezoek') return { waarde: 'bezoek' }
+  if (soort === 'afspraak') return { ...afspraakActie(kanaal ?? 'online'), tekst: 'Afspraak' }
+  if (soort === 'bericht') return { waarde: kanaal === 'sms' ? 'sms' : kanaal === 'linkedin' ? 'linkedin' : kanaal === 'whatsapp' ? 'whatsapp' : 'bericht', tekst }
+  return null
+}
 const AFSPRAAK_STATUS: Record<string, string> = { gepland: 'Gepland', afgerond: 'Gehouden', geannuleerd: 'Geannuleerd', 'no-show': 'Niet verschenen' }
 const DEAL_FASE: Record<string, string> = { overgedragen: 'Overgedragen', lopend: 'Loopt in DealDrive', gewonnen: 'Gewonnen', verloren: 'Verloren', klaar: 'Klaar', verstuurd: 'Verstuurd', bevestigd: 'Bevestigd', mislukt: 'Mislukt' }
 const datumLang = (d: string | null) => (d ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Amsterdam' }).format(new Date(d)).replace('.', '') : '–')
@@ -54,15 +70,15 @@ function kiesTab(x: Tab) { router.replace({ query: { ...route.query, tab: x === 
 
 // Tijdlijn: inzichten, taken, afspraken, deals en contactmomenten samen, nieuwste eerst.
 type TlSoort = 'inzicht' | 'taak' | 'afspraak' | 'deal' | 'contact'
-interface TlItem { key: string; soort: TlSoort; soortLabel: string; typeLabel: string; bron?: string | null; titel: string; tekst?: string | null; status?: string; statusSoort?: 'klaar' | 'laat' | 'open'; ms: number; contact: { id: string; naam: string } | null; door?: string | null; open?: () => void }
+interface TlItem { key: string; soort: TlSoort; soortLabel: string; typeLabel: string; actie?: Actie | null; bron?: string | null; titel: string; tekst?: string | null; status?: string; statusSoort?: 'klaar' | 'laat' | 'open'; ms: number; contact: { id: string; naam: string } | null; door?: string | null; open?: () => void }
 const tlAlles = computed<TlItem[]>(() => {
   const uit: TlItem[] = []
   for (const s of t.value.inzichten) uit.push({ key: `i-${s.id}`, soort: 'inzicht', soortLabel: 'Inzicht', typeLabel: s.agent ? s.agent : s.bron === 'extern' ? 'Extern' : 'Intern', bron: s.specifiekeBron, titel: s.title, tekst: s.waarom, ms: Date.parse(s.createdAt), contact: contactVan(s), door: s.gebruiker, open: () => { inzicht.value = s } })
   for (const x of t.value.taken) {
     const open = ['open', 'bezig'].includes(x.status)
-    uit.push({ key: `t-${x.id}`, soort: 'taak', soortLabel: 'Taak', typeLabel: ACTIE_LABEL[x.actionType] ?? 'Taak', titel: x.title, tekst: x.aanleiding, status: !open ? (x.status === 'geannuleerd' ? 'Geannuleerd' : 'Afgerond') : x.achterstallig ? 'Achterstallig' : 'Open', statusSoort: !open ? 'klaar' : x.achterstallig ? 'laat' : 'open', ms: Date.parse(x.afgerondOp ?? x.dueDate ?? '') || 0, contact: contactVan(x), door: x.gebruiker, open: () => { taakId.value = x.id } })
+    uit.push({ key: `t-${x.id}`, soort: 'taak', soortLabel: 'Taak', typeLabel: ACTIE_LABEL[x.actionType] ?? 'Taak', actie: { waarde: x.actionType ?? 'taak' }, titel: x.title, tekst: x.aanleiding, status: !open ? (x.status === 'geannuleerd' ? 'Geannuleerd' : 'Afgerond') : x.achterstallig ? 'Achterstallig' : 'Open', statusSoort: !open ? 'klaar' : x.achterstallig ? 'laat' : 'open', ms: Date.parse(x.afgerondOp ?? x.dueDate ?? '') || 0, contact: contactVan(x), door: x.gebruiker, open: () => { taakId.value = x.id } })
   }
-  for (const x of t.value.afspraken) uit.push({ key: `a-${x.id}`, soort: 'afspraak', soortLabel: 'Afspraak', typeLabel: VORM[x.vorm] ?? x.vorm, titel: x.titel ?? (x.soort + (x.contact ? ` met ${x.contact}` : '')), tekst: x.locatie, status: AFSPRAAK_STATUS[x.status] ?? x.status, statusSoort: x.status === 'afgerond' ? 'klaar' : x.status === 'gepland' ? 'open' : 'laat', ms: Date.parse(x.start), contact: contactVan(x), door: x.gebruiker, open: () => { afspraakId.value = x.id } })
+  for (const x of t.value.afspraken) uit.push({ key: `a-${x.id}`, soort: 'afspraak', soortLabel: 'Afspraak', typeLabel: VORM[x.vorm] ?? x.vorm, actie: afspraakActie(x.vorm), titel: x.titel ?? (x.soort + (x.contact ? ` met ${x.contact}` : '')), tekst: x.locatie, status: AFSPRAAK_STATUS[x.status] ?? x.status, statusSoort: x.status === 'afgerond' ? 'klaar' : x.status === 'gepland' ? 'open' : 'laat', ms: Date.parse(x.start), contact: contactVan(x), door: x.gebruiker, open: () => { afspraakId.value = x.id } })
   // Deals horen bij het account; op de contactkaart staan ze alleen in het tabblad Deals.
   if (!opContact.value) for (const d of t.value.deals) uit.push({ key: `d-${d.id}`, soort: 'deal', soortLabel: 'Deal', typeLabel: OV_NAAR[d.naar] ?? d.naar, titel: d.titel, tekst: d.eigenaar ? `Eigenaar in DealDrive: ${d.eigenaar}` : null, status: DEAL_FASE[d.fase] ?? d.fase, statusSoort: d.fase === 'gewonnen' ? 'klaar' : ['verloren', 'mislukt'].includes(d.fase) ? 'laat' : 'open', ms: Date.parse(d.op), contact: null, door: d.gebruiker })
   // Een belactiviteit van een afgeronde beltaak toont ook het gespreksverslag en opent het (met transcript).
@@ -70,7 +86,7 @@ const tlAlles = computed<TlItem[]>(() => {
     const v = x.verslag || x.transcript ? t.value.verslagen.find((r: any) => r.id === `bel-${x.id}`) : null
     // Een bericht heet naar zijn kanaal: WhatsApp, SMS of LinkedIn.
     const soortNaam = berichtKanaalLabel(x.soort, x.kanaal) ?? SOORT[x.soort] ?? x.soort
-    uit.push({ key: `c-${x.id}`, soort: 'contact', soortLabel: 'Contact', typeLabel: soortNaam, titel: [soortNaam, x.uitkomst ? String(x.uitkomst).replace(/_/g, ' ') : null].filter(Boolean).join(' · '), tekst: [x.tekst, x.verslag ? `Verslag: ${x.verslag}` : null, x.transcript ? 'Met transcript' : null].filter(Boolean).join(' · ') || null, ms: Date.parse(x.op), contact: contactVan(x), door: x.gebruiker, open: v ? () => { verslag.value = v } : undefined })
+    uit.push({ key: `c-${x.id}`, soort: 'contact', soortLabel: 'Contact', typeLabel: soortNaam, actie: momentActie(x.soort, x.kanaal, soortNaam), titel: [soortNaam, x.uitkomst ? String(x.uitkomst).replace(/_/g, ' ') : null].filter(Boolean).join(' · '), tekst: [x.tekst, x.verslag ? `Verslag: ${x.verslag}` : null, x.transcript ? 'Met transcript' : null].filter(Boolean).join(' · ') || null, ms: Date.parse(x.op), contact: contactVan(x), door: x.gebruiker, open: v ? () => { verslag.value = v } : undefined })
   }
   return uit.sort((p, q) => q.ms - p.ms)
 })
@@ -155,7 +171,7 @@ const tabs = computed(() => [
             <li v-for="i in tijdlijn" :key="i.key" class="tl-item">
               <span class="tl-spoor" :class="`tl-spoor--${i.soort}`" aria-hidden="true" />
               <div class="tl-kaart" :class="{ 'tl-kaart--klik': i.open }">
-                <span class="tl-kop"><span class="tl-soort" :class="`tl-soort--${i.soort}`">{{ i.soortLabel }}</span><span class="tl-type">{{ i.typeLabel }}</span><span v-if="i.bron" class="tl-bron">{{ i.bron }}</span><ItemMetaregel :contact="i.contact" :door="i.door" :datum="tlDatum(i.ms)" /></span>
+                <span class="tl-kop"><span class="tl-soort" :class="`tl-soort--${i.soort}`">{{ i.soortLabel }}</span><Label v-if="i.actie" soort="actie" :waarde="i.actie.waarde" :tekst="i.actie.tekst ?? null" data-test="tl-actie" /><span v-else class="tl-type">{{ i.typeLabel }}</span><span v-if="i.bron" class="tl-bron">{{ i.bron }}</span><ItemMetaregel :contact="i.contact" :door="i.door" :datum="tlDatum(i.ms)" /></span>
                 <button v-if="i.open" type="button" class="tl-titel tl-strek" @click="i.open()">{{ i.titel }}</button>
                 <span v-else class="tl-titel">{{ i.titel }}</span>
                 <span v-if="i.tekst" class="tl-tekst">{{ i.tekst }}</span>
@@ -192,7 +208,7 @@ const tabs = computed(() => [
               <li v-for="x in g.items" :key="x.id" class="tl-item">
                 <span class="tl-spoor" :class="isDringend(x.priority) ? 'tl-spoor--urgent' : 'tl-spoor--taak'" aria-hidden="true" />
                 <div class="tl-kaart tl-kaart--klik">
-                  <span class="tl-kop"><Label soort="actie" :waarde="x.actionType ?? 'taak'" /><Label soort="prioriteit" :waarde="x.priority" /><Label soort="herkomst" :waarde="x.herkomst ?? 'handmatig'" /><ItemMetaregel :contact="contactVan(x)" :door="x.gebruiker" :datum="wanneer(x.dueDate)" :datum-rood="x.achterstallig" /></span>
+                  <span class="tl-kop"><Label soort="actie" :waarde="x.actionType ?? 'taak'" data-test="tl-actie" /><Label soort="prioriteit" :waarde="x.priority" /><Label soort="herkomst" :waarde="x.herkomst ?? 'handmatig'" /><ItemMetaregel :contact="contactVan(x)" :door="x.gebruiker" :datum="wanneer(x.dueDate)" :datum-rood="x.achterstallig" /></span>
                   <button type="button" class="tl-titel tl-strek" :data-test="`ak-taak-${x.id}`" @click="taakId = x.id">{{ x.title }}</button>
                   <span v-if="x.aanleiding || x.poging" class="tl-tekst">{{ [x.aanleiding, x.poging ? `poging ${x.poging.n} van ${x.poging.van}` : null].filter(Boolean).join(' · ') }}</span>
                   <Label v-if="!['open', 'bezig'].includes(x.status)" class="tl-status" v-bind="tlStatus('klaar', `${x.status === 'geannuleerd' ? 'Geannuleerd' : 'Afgerond'}${x.uitkomst ? ` · ${x.uitkomst}` : ''}`)" />
@@ -220,7 +236,7 @@ const tabs = computed(() => [
             <li v-for="m in t.mails" :key="m.id" class="tl-item">
               <span class="tl-spoor" :class="m.concept ? 'tl-spoor--inzicht' : 'tl-spoor--mail'" aria-hidden="true" />
               <div class="tl-kaart" :class="{ 'tl-kaart--klik': m.concept }">
-                <span class="tl-kop"><span class="tl-soort" :class="m.concept ? 'tl-soort--inzicht' : 'tl-soort--mail'">{{ m.concept ? 'Concept' : 'Mail' }}</span><span class="tl-type">{{ m.status }}</span><ItemMetaregel :contact="contactVan(m)" :door="m.gebruiker" :datum="tlDatum(Date.parse(m.op))" /></span>
+                <span class="tl-kop"><span v-if="m.concept" class="tl-soort tl-soort--inzicht">Concept</span><Label v-else soort="actie" waarde="mailen" data-test="tl-actie" /><span class="tl-type">{{ m.status }}</span><ItemMetaregel :contact="contactVan(m)" :door="m.gebruiker" :datum="tlDatum(Date.parse(m.op))" /></span>
                 <FunctieLink als-tekst v-if="m.concept" to="/concepten" class="tl-titel tl-strek">{{ m.onderwerp }}</FunctieLink>
                 <span v-else class="tl-titel">{{ m.onderwerp }}</span>
                 <span v-if="m.tekst" class="tl-tekst">{{ m.tekst.length > 220 ? `${m.tekst.slice(0, 220)}...` : m.tekst }}</span>
@@ -237,7 +253,7 @@ const tabs = computed(() => [
             <li v-for="x in t.afspraken" :key="x.id" class="tl-item">
               <span class="tl-spoor tl-spoor--afspraak" aria-hidden="true" />
               <div class="tl-kaart tl-kaart--klik">
-                <span class="tl-kop"><span class="tl-soort tl-soort--afspraak">{{ x.soort }}</span><span class="tl-type">{{ VORM[x.vorm] ?? x.vorm }}</span><ItemMetaregel :contact="contactVan(x)" :door="x.gebruiker" :datum="wanneer(x.start)" /></span>
+                <span class="tl-kop"><span class="tl-soort tl-soort--afspraak">{{ x.soort }}</span><Label soort="actie" v-bind="afspraakActie(x.vorm)" data-test="tl-actie" /><ItemMetaregel :contact="contactVan(x)" :door="x.gebruiker" :datum="wanneer(x.start)" /></span>
                 <button type="button" class="tl-titel tl-strek" :data-test="`ak-afspraak-${x.id}`" @click="afspraakId = x.id"><template v-if="x.titel">{{ x.titel }}</template><template v-else>{{ x.soort }}<template v-if="x.contact"> met {{ x.contact }}</template></template></button>
                 <span v-if="x.locatie" class="tl-tekst">{{ x.locatie }}</span>
                 <Label class="tl-status" v-bind="tlStatus(x.status === 'afgerond' ? 'klaar' : x.status === 'gepland' ? 'open' : 'laat', `${AFSPRAAK_STATUS[x.status] ?? x.status}${x.heeftVerslag ? ' · verslag' : ''}`)" />
@@ -253,7 +269,8 @@ const tabs = computed(() => [
           <ul v-else class="ak-rijen">
             <li v-for="v in t.verslagen" :key="v.id" class="ak-rij">
               <span class="tl-soort" :class="v.bron === 'afspraak' ? 'tl-soort--afspraak' : 'tl-soort--taak'">{{ v.bronLabel }}</span>
-              <span class="tl-type">{{ v.typeLabel }}</span>
+              <Label v-if="v.bron === 'taak'" soort="actie" waarde="bellen" :tekst="v.typeLabel" data-test="tl-actie" />
+              <span v-else class="tl-type">{{ v.typeLabel }}</span>
               <span class="ak-rij-info">
                 <button type="button" class="ak-rij-titel tl-strek" :data-test="`ak-verslag-${v.id}`" @click="verslag = v">{{ v.titel }}</button>
                 <span class="ak-rij-meta"><ItemMetaregel los :contact="contactVan(v)" :door="v.gebruiker" :datum="datumLang(v.datum)" /><span class="meta tnum">{{ v.woorden }} woorden</span></span>

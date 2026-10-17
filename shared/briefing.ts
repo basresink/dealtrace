@@ -57,6 +57,8 @@ export interface BriefingContext {
   geschiedenis?: { fase: string; op: string }[]
   stand: Pick<VerkoopverhaalStand, 'teksten' | 'branches' | 'winpunten' | 'concurrenten'>
   eerderGebruikteWinpunten?: string[]
+  /** Het winpunt dat de regel van de taak als gespreksonderwerp meegaf; dat gaat voor de eigen keuze. */
+  vastWinpuntId?: string | null
 }
 
 const ROLLEN = ['beslisser', 'beinvloeder', 'champion', 'gebruiker'] as const
@@ -65,8 +67,9 @@ const zinnen = (t: string, n: number) => (t.match(/[^.!?]+[.!?]?/g) ?? [t]).map(
 const datum = (iso: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'long', timeZone: 'Europe/Amsterdam' }).format(new Date(iso))
 
 /** Het winpunt met één bewijs (de concurrentregel van de huidige leverancier of de omschrijving). */
-export function winpuntMetBewijs(c: Pick<BriefingContext, 'account' | 'faseId' | 'stand' | 'eerderGebruikteWinpunten'>): { winpunt: Winpunt | null; bewijs: string | null } {
-  const w = kiesWinpunt(c.stand.winpunten ?? [], { faseId: c.faseId, concurrentId: c.account.huidigeLeverancierId ?? null, eerderGebruikt: c.eerderGebruikteWinpunten })
+export function winpuntMetBewijs(c: Pick<BriefingContext, 'account' | 'faseId' | 'stand' | 'eerderGebruikteWinpunten' | 'vastWinpuntId'>): { winpunt: Winpunt | null; bewijs: string | null } {
+  const vast = c.vastWinpuntId ? (c.stand.winpunten ?? []).find((x) => x.id === c.vastWinpuntId && x.actief) : undefined
+  const w = vast ?? kiesWinpunt(c.stand.winpunten ?? [], { faseId: c.faseId, concurrentId: c.account.huidigeLeverancierId ?? null, eerderGebruikt: c.eerderGebruikteWinpunten })
   const conc = (c.stand.concurrenten ?? []).find((x) => x.id === c.account.huidigeLeverancierId)
   return { winpunt: w, bewijs: conc?.bewijs ?? conc?.onderscheid ?? w?.omschrijving ?? null }
 }

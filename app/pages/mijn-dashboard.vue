@@ -1,17 +1,17 @@
 <script setup lang="ts">
 // Mijn dashboard in de opzet van DealDrive /rapportage: kop met Filters en de periodestrook, het
 // pogingendoel met de normen (shared/team), het zwarte cijferblok, activiteiten per dag of week, de reis
-// per fase, uitkomsten, prospectdekking, de weektabel en de vergelijking met je team (vanaf Gevorderd,
-// zonder namen), en onderaan de afspraken uit je coachingsgesprek en "Wat kan ik deze week beter doen?"
-// (Expert). Eén databron: GET /api/resultaten/dashboard. De periode staat in de URL.
+// per fase, uitkomsten, prospectdekking, status prospect (koud tot heet), de weektabel en de vergelijking
+// met je team (vanaf Gevorderd, zonder namen). Balken, cellen en getallen in reis, uitkomsten, dekking en
+// status openen de prospects of pogingen erachter in een venster (DashboardLijstFlyout, zoals /funnel).
+// Eén databron: GET /api/resultaten/dashboard. De periode staat in de URL.
 import { DASHBOARD_PERIODE_OPTIES, EIGEN_PERIODE_LABEL, KANAAL_ALLEEN_GEVULD, KANAAL_LABEL } from '~~/shared/dashboard'
 
-const toast = useToast()
 const route = useRoute()
 const router = useRouter()
 const { functie } = useMe()
 const query = computed(() => ({ periode: route.query.periode || undefined, van: route.query.van || undefined, tot: route.query.tot || undefined }))
-const { data, refresh } = await useFetch<any>('/api/resultaten/dashboard', { query, default: () => null })
+const { data } = await useFetch<any>('/api/resultaten/dashboard', { query, default: () => null })
 const filtersOpen = ref(false)
 const filterAantal = computed(() => (data.value && data.value.periode.sleutel !== 'maand' ? 1 : 0))
 function zet(q: Record<string, string | undefined>) { router.replace({ query: { ...route.query, ...q } }) }
@@ -40,20 +40,19 @@ const ALLE_SERIES = [
   { sleutel: 'overig', label: KANAAL_LABEL.overig, kleur: 'grijs' },
 ] as const
 const SERIES = computed(() => ALLE_SERIES.filter((s) => !KANAAL_ALLEEN_GEVULD.includes(s.sleutel) || (data.value?.activiteit?.punten ?? []).some((p: any) => p.delen?.[s.sleutel])))
-const reisRijen = computed(() => (data.value?.funnel?.fases ?? []).map((f: any) => ({ sleutel: f.faseId, label: f.label, aantal: f.aantal, waarde: f.conversie != null ? `${f.conversie}% door` : null, sub: [f.norm != null ? `norm ${f.norm}%` : null, f.faseId === 'afspraak-gepland' && gemPoging.value ? `gem. poging ${gemPoging.value}` : null].filter(Boolean).join(' · ') || null, kleur: f.hoofdfase === 'Vinden' ? 'inkt' : f.hoofdfase === 'Bewerken' ? 'geel' : 'groen', markeer: f.stok })))
+const reisRijen = computed(() => (data.value?.funnel?.fases ?? []).map((f: any) => ({ sleutel: f.faseId, label: f.label, aantal: f.aantal, waarde: f.conversie != null ? `${f.conversie}% door` : null, sub: [f.norm != null ? `norm ${f.norm}%` : null, f.faseId === 'afspraak-gepland' && gemPoging.value ? `gem. poging ${gemPoging.value}` : null].filter(Boolean).join(' · ') || null, kleur: f.hoofdfase === 'Vinden' ? 'inkt' : f.hoofdfase === 'Bewerken' ? 'geel' : 'groen', markeer: f.stok, test: `reis-${f.faseId}` })))
 const UIT_KLEUR: Record<string, string> = { afspraak: 'groen', gesproken: 'blauw', later: 'geel', nee: 'rood', geen: 'inkt', voicemail: 'inkt', verzonden: 'paars', fout: 'oranje', overig: 'inkt' }
 const uitkomstRijen = computed(() => {
   const tot = (data.value?.uitkomsten ?? []).reduce((s: number, u: any) => s + u.aantal, 0)
-  return (data.value?.uitkomsten ?? []).map((u: any) => ({ sleutel: u.sleutel, label: u.label, aantal: u.aantal, waarde: tot ? `${Math.round((u.aantal / tot) * 100)}%` : null, sub: u.sleutel === 'afspraak' && gemPoging.value ? `eerste gem. bij poging ${gemPoging.value}` : null, kleur: UIT_KLEUR[u.sleutel] ?? 'inkt' }))
+  return (data.value?.uitkomsten ?? []).map((u: any) => ({ sleutel: u.sleutel, label: u.label, aantal: u.aantal, waarde: tot ? `${Math.round((u.aantal / tot) * 100)}%` : null, sub: u.sleutel === 'afspraak' && gemPoging.value ? `eerste gem. bij poging ${gemPoging.value}` : null, kleur: UIT_KLEUR[u.sleutel] ?? 'inkt', test: `uitkomst-${u.sleutel}` }))
 })
-const pogingPunten = computed(() => Object.entries(data.value?.funnel?.pogingen ?? {}).map(([k, n]) => ({ sleutel: k, label: k === 'later' ? '6+' : k, titel: k === 'later' ? 'Na poging 6 of later' : `Bij poging ${k}`, kern: true, totaal: Number(n), delen: { afspraken: Number(n) } })))
-const pogingTotaal = computed(() => pogingPunten.value.reduce((s, p) => s + p.totaal, 0))
 
-const reactie = reactive<Record<string, string>>({})
-async function reageer(id: string) { try { await $fetch(`/api/coaching/notities/${id}`, { method: 'PUT', body: { reactie: reactie[id] } }); reactie[id] = ''; toast.toon('Reactie verstuurd.'); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') } }
-const zelf = ref<any[] | null>(null)
-const bezig = ref(false)
-async function zelfanalyse() { bezig.value = true; try { zelf.value = (await $fetch<any>('/api/coaching/zelfanalyse', { method: 'POST' })).punten } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false } }
+// Het venster achter een balk, cel of getal: blok en sleutel, met de periode van het dashboard.
+const lijst = ref<{ blok: string; sleutel: string } | null>(null)
+function kies(blok: string, sleutel: string) { lijst.value = { blok, sleutel } }
+const lijstPeriode = computed(() => ({ periode: (route.query.periode as string) || undefined, van: (route.query.van as string) || undefined, tot: (route.query.tot as string) || undefined }))
+// Bij welke poging de eerste afspraak kwam staat in het venster van de afspraakfases en van de uitkomst Afspraak.
+const toonEersteAfspraak = computed(() => !!eersteAfspraak.value && !!lijst.value && ((lijst.value.blok === 'reis' && ['afspraak-gepland', 'afspraak-gehouden'].includes(lijst.value.sleutel)) || (lijst.value.blok === 'uitkomst' && lijst.value.sleutel === 'afspraak')))
 useHead({ title: 'Mijn dashboard · Dealtrace' })
 // Funnel staat niet meer in de zijbalk; je opent hem hier. Weekreview en Weekstart open je via Dagstart.
 const funnelAan = computed(() => !!functie('nav.funnel')?.beschikbaar)
@@ -118,7 +117,7 @@ const gemPoging = computed(() => (eersteAfspraak.value?.gemiddeld != null ? eers
           <div v-if="data.kan.funnel && data.funnel" class="md-blok" data-test="grafiek-reis">
             <header class="md-blok-kop"><h3 class="md-blok-titel">Je reis per fase</h3><FunctieLink :to="`/funnel${data.periode.sleutel === 'kwartaal' ? '?periode=kwartaal' : ''}`" class="md-blok-link">Open funnel →</FunctieLink></header>
             <p class="md-blok-meta">{{ data.funnel.kop.titel }}</p>
-            <BalkRijen v-if="data.funnel.aantalAccounts" :rijen="reisRijen" label="Accounts per reisfase" />
+            <BalkRijen v-if="data.funnel.aantalAccounts" :rijen="reisRijen" klikbaar label="Accounts per reisfase" @kies="(r) => kies('reis', r.sleutel)" />
             <p v-else class="md-leeg">Nog geen accounts in deze periode.</p>
             <EersteAfspraakPoging v-if="eersteAfspraak" class="md-eap" :data="eersteAfspraak" data-test="reis-eerste-afspraak" />
             <p v-if="data.funnel.kop.stok" class="md-voet">{{ data.funnel.kop.stok }}</p>
@@ -126,7 +125,7 @@ const gemPoging = computed(() => (eersteAfspraak.value?.gemiddeld != null ? eers
           <div class="md-blok" data-test="grafiek-uitkomsten">
             <header class="md-blok-kop"><h3 class="md-blok-titel">Waar je pogingen op uitliepen</h3></header>
             <p class="md-blok-meta">{{ data.periode.label }} · {{ data.kpi.pogingen }} pogingen</p>
-            <BalkRijen v-if="uitkomstRijen.length" :rijen="uitkomstRijen" label="Uitkomsten van je pogingen" />
+            <BalkRijen v-if="uitkomstRijen.length" :rijen="uitkomstRijen" klikbaar label="Uitkomsten van je pogingen" @kies="(r) => kies('uitkomst', r.sleutel)" />
             <p v-else class="md-leeg">Nog geen pogingen met een uitkomst.</p>
             <EersteAfspraakPoging v-if="eersteAfspraak" class="md-eap" vorm="regel" :data="eersteAfspraak" data-test="uitkomsten-eerste-afspraak" />
           </div>
@@ -138,13 +137,17 @@ const gemPoging = computed(() => (eersteAfspraak.value?.gemiddeld != null ? eers
           <div class="md-blok" data-test="grafiek-dekking">
             <header class="md-blok-kop"><h3 class="md-blok-titel">Prospectdekking</h3><span v-if="data.prospects.dekking" class="md-blok-meta">{{ data.prospects.dekking.actief }} actieve prospects · momentopname</span></header>
             <template v-if="data.prospects.dekking">
-              <DekkingRaster v-bind="data.prospects.dekking" />
+              <DekkingRaster v-bind="data.prospects.dekking" klikbaar @kies="(s) => kies('dekking', s)" />
               <p class="md-voet">Laatste contact per actieve prospect (nieuw, gescoord of in reis).<template v-if="data.prospects.dekking.zonderContact"> <strong>{{ data.prospects.dekking.zonderContact }}</strong> {{ data.prospects.dekking.zonderContact === 1 ? 'prospect heeft' : 'prospects hebben' }} nog geen contactmoment: kandidaten voor je volgende belblok.</template></p>
               <p v-if="eersteAfspraak?.accounts" class="md-voet" data-test="dekking-eerste-afspraak">Je eerste afspraak kwam gemiddeld bij poging <strong>{{ gemPoging }}</strong>: {{ eersteAfspraak.verdeling['1'] }} bij poging 1, {{ eersteAfspraak.verdeling['2'] }} bij poging 2, {{ eersteAfspraak.verdeling['3'] }} bij poging 3 en {{ eersteAfspraak.verdeling['4+'] }} bij poging 4 of later.</p>
             </template>
           </div>
 
-          <StaafGrafiek v-if="data.funnel?.pogingen" titel="Bij welke poging de eerste afspraak kwam" :meta="`${pogingTotaal} ${pogingTotaal === 1 ? 'afspraak' : 'afspraken'} · norm 4 tot 5 pogingen`" :punten="pogingPunten" :series="[{ sleutel: 'afspraken', label: 'Eerste afspraken', kleur: 'geel' }]" :hoogte="140" leeg="Nog geen eerste afspraken in deze periode." data-test="grafiek-pogingen" />
+          <div v-if="data.statusProspects" class="md-blok" data-test="grafiek-status">
+            <header class="md-blok-kop"><h3 class="md-blok-titel">Status prospect</h3><span class="md-blok-meta">{{ data.statusProspects.totaal }} prospects · momentopname</span></header>
+            <StatusKolommen v-bind="data.statusProspects" @kies="(s) => kies('status', s)" />
+            <p class="md-voet">De status kies je zelf in Info op de accountkaart: koud, lauw, warm of heet. Klik op een kolom voor de prospects.</p>
+          </div>
 
           <div v-if="data.weken" class="md-blok" data-test="mijn-trend">
             <header class="md-blok-kop"><h3 class="md-blok-titel">Per week</h3><span class="md-blok-meta">{{ data.periode.label }}</span></header>
@@ -176,32 +179,10 @@ const gemPoging = computed(() => (eersteAfspraak.value?.gemiddeld != null ? eers
         </div>
       </section>
 
-      <section class="section section--alt">
-        <div class="container md-duo">
-          <article class="kaart" data-test="mijn-afspraken">
-            <h2 class="kaart-titel">Afspraken uit je coachingsgesprek</h2>
-            <p v-if="!data.afspraken.length && !data.punten.length" class="kaart-meta">Nog geen afspraken.</p>
-            <ul class="schakel-lijst">
-              <li v-for="p in data.punten" :key="p.tekst" class="schakel-rij"><span><strong>Coachingpunt</strong>: {{ p.tekst }}<br><span class="meta">{{ (p.onderbouwing?.cijfers ?? []).join(' · ') }}<template v-if="p.artikelSleutel"> · <NuxtLink :to="`/helpcenter/${p.artikelSleutel}`">artikel</NuxtLink></template></span></span></li>
-              <li v-for="a in data.afspraken" :key="a.id" class="schakel-rij md-afspraak"><span>{{ a.tekst }}<br><span class="meta">{{ a.termijn ? `Termijn ${a.termijn}` : '' }} · {{ a.status === 'open' ? 'Open' : a.status === 'gehaald' ? 'Gehaald' : 'Niet gehaald' }}<template v-if="a.reactie"> · Je reageerde: {{ a.reactie.tekst }}</template></span></span>
-                <form class="md-reageer" @submit.prevent="reageer(a.id)"><input v-model="reactie[a.id]" class="invoer invoer--klein" placeholder="Hoe gaat het?" :aria-label="`Reactie op ${a.tekst}`"><button type="submit" class="dd-act" :disabled="!reactie[a.id]?.trim()">Reageer</button></form></li>
-            </ul>
-          </article>
-
-          <article v-if="data.kan.trend || data.kan.zelfanalyse" class="md-ai" data-test="zelfanalyse">
-            <span class="md-ai-kicker">Coach · deze week</span>
-            <h2 class="md-ai-titel">Wat kan ik deze week beter doen?</h2>
-            <template v-if="data.kan.zelfanalyse">
-              <p class="md-ai-tekst">De Coach kijkt naar je cijfers van deze periode en geeft hoogstens drie punten, elk met cijfers en een artikel. Kost 20 credits.</p>
-              <button type="button" class="dd-actie dd-actie--primair md-ai-knop" :disabled="bezig" data-test="zelfanalyse-knop" @click="zelfanalyse"><Icoon naam="Sparkles" class="dd-actie-icoon" />Vraag de Coach</button>
-              <ol v-if="zelf" class="md-ai-lijst">
-                <li v-for="(p, i) in zelf" :key="p.tekst" class="md-ai-tip"><span class="md-ai-num tnum">{{ i + 1 }}</span><span>{{ p.tekst }}<br><span class="md-ai-meta">{{ p.onderbouwing.cijfers.join(' · ') }} · <NuxtLink :to="`/helpcenter/${p.artikelSleutel}`">artikel</NuxtLink></span></span></li>
-              </ol>
-            </template>
-          </article>
-        </div>
-      </section>
     </template>
+    <DashboardLijstFlyout :keuze="lijst" :periode="lijstPeriode" @sluit="lijst = null">
+      <template v-if="toonEersteAfspraak" #boven><EersteAfspraakPoging :data="eersteAfspraak" vorm="regel" data-test="lijst-eerste-afspraak" /></template>
+    </DashboardLijstFlyout>
   </div>
 </template>
 
@@ -236,23 +217,8 @@ const gemPoging = computed(() => (eersteAfspraak.value?.gemiddeld != null ? eers
 .md-tabel tbody th { font-weight: 600; color: var(--ink); }
 .md-r { text-align: right !important; }
 
-.md-afspraak { flex-wrap: wrap; gap: 8px; }
-.md-reageer { display: flex; gap: 8px; }
 
-.md-ai { display: flex; flex-direction: column; gap: 12px; padding: var(--kaart-padding); background: var(--ink); color: var(--wit); border-radius: var(--radius); }
-.md-ai-kicker { font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--yellow); }
-.md-ai-titel { margin: 0; font-family: var(--font-serif); font-size: 20px; font-weight: 700; color: var(--wit); }
-.md-ai-tekst { margin: 0; font-size: 13px; line-height: 1.5; color: rgba(255, 255, 255, 0.78); }
-.md-ai-knop { align-self: flex-start; }
-.md-ai-slot { align-self: flex-start; background: var(--wit); }
-.md-ai-lijst { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.md-ai-tip { display: flex; gap: 14px; padding: 14px 16px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: var(--radius); font-size: 13px; line-height: 1.5; }
-.md-ai-tip a { color: var(--yellow); }
-.md-ai-num { flex: 0 0 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; background: var(--yellow); color: var(--ink); font-weight: 800; border-radius: 2px; }
-.md-ai-meta { font-size: 12px; color: rgba(255, 255, 255, 0.66); }
 @media (max-width: 720px) {
   .md-blok { padding: 16px; }
-  .md-reageer { width: 100%; }
-  .md-reageer .invoer { flex: 1; min-width: 0; }
 }
 </style>

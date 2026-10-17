@@ -1,20 +1,22 @@
 <script setup lang="ts">
 // Liggende balken zoals de conversietrechter van DealDrive: links een pil met het label, in het midden de
 // balk met het aantal, rechts een waarde (conversie, norm, dagen). Met `klikbaar` is elke rij een knop die
-// de lijst erachter opent; een rij zonder aantal is dan uitgeschakeld. Een rij met `markeer` (het
+// de lijst erachter opent; een rij zonder aantal (of met kan: false) is dan uitgeschakeld. Een rij met `markeer` (het
 // stokpunt) krijgt een gele rand. Op de telefoon schuift de waarde onder de balk.
-interface Rij { sleutel: string; label: string; aantal: number; waarde?: string | null; sub?: string | null; kleur?: 'geel' | 'groen' | 'blauw' | 'rood' | 'inkt' | 'oranje' | 'paars'; markeer?: boolean; test?: string; lijn?: number | null }
+interface Rij { sleutel: string; label: string; aantal: number; waarde?: string | null; sub?: string | null; kleur?: 'geel' | 'groen' | 'blauw' | 'rood' | 'inkt' | 'oranje' | 'paars'; markeer?: boolean; test?: string; lijn?: number | null; kan?: boolean }
 const props = defineProps<{ rijen: Rij[]; max?: number; klikbaar?: boolean; eenheid?: string; label?: string }>()
 const emit = defineEmits<{ kies: [rij: Rij] }>()
 const top = computed(() => props.max ?? Math.max(1, ...props.rijen.map((r) => r.aantal)))
 const breedte = (r: Rij) => `${r.aantal > 0 ? Math.max(4, Math.round((r.aantal / top.value) * 100)) : 0}%`
+// `kan` overschrijft de standaard (klikbaar als er een aantal is), bijvoorbeeld een doorlooptijd van 0 met wel accounts.
+const kanKlik = (r: Rij) => r.kan ?? r.aantal > 0
 const naam = (r: Rij) => `${r.label}: ${r.aantal}${props.eenheid ? ` ${props.eenheid}` : ''}${r.waarde ? `, ${r.waarde}` : ''}${r.sub ? `, ${r.sub}` : ''}`
 </script>
 
 <template>
   <ul class="br" :aria-label="label">
     <li v-for="r in rijen" :key="r.sleutel">
-      <component :is="klikbaar ? 'button' : 'div'" :type="klikbaar ? 'button' : undefined" class="br-rij" :class="{ 'br-rij--knop': klikbaar, 'br-rij--markeer': r.markeer }" :disabled="klikbaar && !r.aantal ? true : undefined" :aria-label="klikbaar ? `${naam(r)}, bekijk de lijst` : undefined" :data-test="r.test" @click="klikbaar && r.aantal && emit('kies', r)">
+      <component :is="klikbaar ? 'button' : 'div'" :type="klikbaar ? 'button' : undefined" class="br-rij" :class="{ 'br-rij--knop': klikbaar, 'br-rij--markeer': r.markeer }" :disabled="klikbaar && !kanKlik(r) ? true : undefined" :aria-label="klikbaar ? `${naam(r)}, bekijk de lijst` : undefined" :data-test="r.test" @click="klikbaar && kanKlik(r) && emit('kies', r)">
         <span class="br-pil">{{ r.label }}</span>
         <span class="br-balkvak" :aria-hidden="klikbaar ? 'true' : undefined">
           <span class="br-balk" :class="`br-balk--${r.kleur ?? 'geel'}`" :style="{ width: breedte(r) }" />

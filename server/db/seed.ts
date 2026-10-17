@@ -21,6 +21,7 @@ import { seedConcepten } from './seedConcepten'
 import { seedTeam } from './seedTeam'
 import { seedEva } from './seedEva'
 import { seedEvaUitgebreid } from './seedEvaUitgebreid'
+import { seedEvaStatus } from './seedEvaStatus'
 import { seedEvaTerug } from './seedEvaTerug'
 import { seedKennisbank } from './seedKennisbank'
 import { seedSignaalradar } from './seedSignaalradar'
@@ -190,6 +191,8 @@ export async function vulTestdataAan(client: pg.Client, orgId: string) {
   await seedEvaUitgebreid(client, orgId)
   // Vier verloren prospects van Eva die deze week terug in beeld komen (Terug in beeld).
   await seedEvaTerug(client, orgId)
+  // Status prospect (koud tot heet) voor een deel van Eva's prospects; alleen waar nog geen status staat.
+  await seedEvaStatus(client, orgId)
   // Kennisbank: vijf fictieve documenten, een paar gekoppeld aan prospects en een contact.
   await seedKennisbank(client, orgId)
   // Signaalradar (F5): fictieve inzichten over zeven perioden, zodat er golven te zien zijn.

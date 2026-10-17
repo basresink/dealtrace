@@ -18,23 +18,29 @@ Dealtrace heeft geen wachtwoord. Vul je e-mailadres in en tik **Stuur mij een co
 1. Open **Vandaag**. Daar staat wat je nu doet en waarom.
 2. Rond je taken af met een uitkomst. De volgende poging komt dan vanzelf.
 3. Open een prospect om de accountkaart te zien: fase, contactpersonen en wat er eerder gebeurde.
-4. Klik op **Hulp** in de kop van een scherm. Je krijgt dan het artikel over dat scherm.
+4. Klik op het **vraagteken** rechtsboven in de kop van een scherm. Je krijgt dan het artikel over dat scherm.
 
 ## De zijbalk
 
-- **Start**: Vandaag en je agenda.
-- **Werk**: je acties, belblokken of bezoeken en campagnes.
-- **Prospects**: je prospects, contacten en inzichten.
-- **Nog niet aangezet**: functies die later voor je aangaan. Klik erop voor uitleg.
+- **Start**: Vandaag, Agenda en daaronder Richting.
+- **Activiteiten**: Inzichten, Taken met daaronder Briefings, Opvolgreeksen en Concepten.
+- **Prospects**: je prospects en contacten.
+- **Rapportages**: Mijn dashboard. De funnel open je vanaf Mijn dashboard.
+- **Planning**: een uitklapmenu met onder meer Belblokken, Bezoeken, Meetings, Campagnes, de Leadgenerator, Prospectplanning met daaronder Terug in beeld.
+- Voor de salesmanager en de beheerder ook **Manager** (Team, Coaching, Analyse, Audit) en **Beheer** (Instellingen).
+
+Onderaan staat een rij iconen: **Account**, **Mijn instellingen**, het **Helpcenter**, **Meldingen** en **Uitloggen**.
+
+Een functie die voor jouw niveau nog niet aanstaat, zie je niet. Er staat dus nooit een knop of menu-item dat je nog niet kunt gebruiken.
 
 ## Op je telefoon
 
-Op de telefoon staat onderin de **onderbalk** met vijf tabs, afgestemd op je werk: voor de binnendienst Vandaag, Belblok, Taken en Prospects, voor de buitendienst Vandaag, Route, Bellen en Prospects. Onder **Meer** vind je de rest. Lees "Dealtrace op je telefoon en offline".
+Op de telefoon staat onderin de **onderbalk** met vijf tabs, afgestemd op je werk: voor de binnendienst Vandaag, Belblok, Taken en Prospects, voor de buitendienst Vandaag, Route, Bellen en Prospects, en als vijfde **Meer**. Onder **Meer** vind je de rest. Lees "Dealtrace op je telefoon en offline".
 
 ## Een wens indienen
 
-Mist er iets in Dealtrace? Open **Roadmap** in het menu onder je naam (op de telefoon onder **Meer**). Klik **Nieuwe wens**, beschrijf wat je wilt kunnen en klik **Dien in**. Met de ster stem je op een wens van een collega. Je ziet bij elke wens wat Dealtrace ermee doet: ingediend, gestart, in ontwikkeling, opgeleverd of niet gedaan.
+Mist er iets in Dealtrace? Open de **roadmap** via de link onderaan het helpcenter of een helpartikel (op de telefoon onder **Meer**, **Roadmap**). Klik **Nieuwe wens**, beschrijf wat je wilt kunnen en klik **Dien in**. Met de ster stem je op een wens van een collega. Je ziet bij elke wens wat Dealtrace ermee doet: ingediend, gestart, in ontwikkeling, opgeleverd of niet gedaan.
 
 ## Hulp nodig?
 
-Elk scherm heeft een knop **Hulp**. In het **Helpcenter** zoek je op een woord, bijvoorbeeld "poging" of "afkoeling".
+Elk scherm heeft rechtsboven een **vraagteken** dat het artikel van dat scherm opent. In het **Helpcenter** (het vraagteken in de rij iconen onderaan de zijbalk) zoek je op een woord, bijvoorbeeld "poging" of "afkoeling".

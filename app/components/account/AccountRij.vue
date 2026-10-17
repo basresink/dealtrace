@@ -32,10 +32,11 @@ const regel = computed<{ tekst: string; kleur: string } | null>(() => {
   if (r.nextActionDagenOver) return { tekst: `Next-action ${r.nextActionDagenOver} ${r.nextActionDagenOver === 1 ? 'dag' : 'dagen'} overschreden`, kleur: 'var(--orange)' }
   return null
 })
-/** Labels in vaste volgorde: fase met stappen en de status (alleen bij prospects); de reeks wacht op jou. */
+/** Labels in vaste volgorde: fase met stappen, de status en de status prospect (alleen bij prospects); de reeks wacht op jou. */
 const labels = computed(() => ordenLabels([
   props.rij.fase?.label ? { soort: 'fase', waarde: props.rij.fase.hoofdfase ?? null, tekst: props.rij.fase.label } : null,
   props.rij.kind === 'prospect' && props.rij.nbStatus ? { soort: 'status', waarde: props.rij.reeks?.wacht && props.rij.nbStatus === 'in reis' ? 'wacht op jou' : props.rij.nbStatus } : null,
+  props.rij.kind === 'prospect' && props.rij.prospectStatus ? { soort: 'prospectstatus', waarde: props.rij.prospectStatus } : null,
 ]))
 
 /** Primaire contactpersoon eerst, daarna de rest (de API levert er hoogstens drie). */

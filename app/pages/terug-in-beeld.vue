@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Terug in beeld (/terug-in-beeld, zijbalk Planning na Prospectplanning): verloren prospects komen hier terug zodra de
-// terugkomregel het toestaat. Tellers (deze week, deze maand, later, over tijd, gestart), zoeken en filters op regel,
-// kanaal en status (in de URL: ?regel=&kanaal=&status=&q=), groepen Deze week (met over tijd), Deze maand en Later.
+// terugkomregel het toestaat. Tellers (deze week, deze maand, later, over tijd, gestart); rechtsboven in de kop de knop
+// Filters met het filterpaneel (zoeken en filter-pillen op regel, kanaal en status, in de URL: ?regel=&kanaal=&status=&q=),
+// zoals op Meetings en Taken. Groepen Deze week (met over tijd), Deze maand en Later.
 // Per prospect verliesreden en bron, terugkomdatum, regel met wachttijd, kanaal, wie het oppakt, aanpak en status.
 // Start hercontact opent TerugStartFlyout; Later en Pas datum aan TerugDatumFlyout (nooit binnen de afkoeling).
 import { KANAAL_LABEL, type Kanaal } from '~~/shared/nbStatus'
@@ -32,6 +33,9 @@ const vandaag = computed(() => data.value?.vandaag ?? new Date().toISOString().s
 const alle = computed(() => data.value?.rijen ?? [])
 const filter = computed(() => ({ regel: q('regel'), kanaal: q('kanaal'), status: q('status'), zoek: q('q') }))
 const filtersActief = computed(() => !!(filter.value.regel || filter.value.kanaal || filter.value.status || filter.value.zoek))
+const filterAantal = computed(() => [filter.value.regel, filter.value.kanaal, filter.value.status, filter.value.zoek].filter(Boolean).length)
+// Het filterpaneel staat open als er al een filter in de URL staat.
+const filtersOpen = ref(filtersActief.value)
 const zicht = computed(() => alle.value.filter((r) => pastFilter(r, filter.value, vandaag.value)))
 const t = computed(() => telRijen(alle.value, vandaag.value))
 const perGroep = (g: TerugGroep) => zicht.value.filter((r) => groepVan(r.terugOp, vandaag.value) === g)
@@ -51,6 +55,8 @@ function telKlik(k: 'week' | 'maand' | 'later' | 'overtijd' | 'gestart') {
   document.getElementById(`tib-groep-${k}`)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' })
 }
 function wisFilters() { zoekTekst.value = ''; router.replace({ query: {} }) }
+// Een teller (Over tijd, Gestart) zet een statusfilter: dan staat het paneel open, zodat je ziet wat er filtert.
+watch(() => q('status'), (s) => { if (s) filtersOpen.value = true })
 
 const startRij = ref<TerugRij | null>(null)
 const datumRij = ref<TerugRij | null>(null)
@@ -69,6 +75,9 @@ useHead({ title: 'Terug in beeld · Dealtrace' })
       <PaginaKop kicker="Planning · Terug in beeld" titel="Terug in beeld" uitleg="Prospects die je verloor, komen hier terug zodra jullie terugkomregel het toestaat. Per prospect zie je waarom hij terugkomt, wanneer, via welk kanaal en met welke aanpak. Start het hercontact met één knop." helpartikel="wanneer-we-iemand-terugbellen">
         <template #acties>
           <FunctieLink to="/planning?tab=terugkom" class="dd-actie dd-actie--secundair" data-test="tib-regels">Terugkomregels<Icoon naam="ArrowRight" class="dd-actie-icoon" /></FunctieLink>
+          <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'tib-filterknop--aan': filtersOpen || filterAantal }" :aria-expanded="filtersOpen" aria-controls="tib-filterpaneel" data-test="tib-filterknop" @click="filtersOpen = !filtersOpen">
+            <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="filterAantal" class="tib-teller tnum" data-test="tib-filter-aantal">{{ filterAantal }}</span><Icoon naam="ChevronDown" class="tib-caret" :class="{ 'tib-caret--open': filtersOpen }" />
+          </button>
         </template>
       </PaginaKop>
 
@@ -80,9 +89,9 @@ useHead({ title: 'Terug in beeld · Dealtrace' })
             </button>
           </div>
 
-          <div class="filterpaneel mt-16" data-test="tib-filters">
+          <div v-if="filtersOpen" id="tib-filterpaneel" class="filterpaneel mt-16" data-test="tib-filters">
             <div class="filter-groep">
-              <label class="sr-only" for="tib-zoek">Zoek een prospect</label>
+              <label class="filter-label" for="tib-zoek">Zoeken</label>
               <input id="tib-zoek" v-model="zoekTekst" class="invoer invoer--klein tib-zoek" type="search" placeholder="Zoek op naam of plaats" data-test="tib-zoek">
             </div>
             <div class="filter-groep" role="group" aria-label="Regel">
@@ -166,6 +175,10 @@ useHead({ title: 'Terug in beeld · Dealtrace' })
 <style scoped>
 .tib-tellers { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 12px; }
 .tib-zoek { flex: 1 1 220px; max-width: 360px; min-width: 0; }
+.tib-filterknop--aan { border-color: var(--ink); }
+.tib-teller { padding: 0 6px; font-size: var(--fs-label); background: var(--yellow); border-radius: var(--radius); }
+.tib-caret { width: 14px; height: 14px; transition: transform 150ms ease-out; }
+.tib-caret--open { transform: rotate(180deg); }
 .tib-groep { margin-top: 28px; scroll-margin-top: 16px; }
 .tib-groep-kop { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
 .tib-groep-titel { margin: 0; font-family: var(--font-serif); font-size: 20px; }

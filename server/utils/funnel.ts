@@ -2,7 +2,7 @@
 // activiteiten; de rekenregels staan in shared/funnel.ts. nb_funnel_stand is de afgeleide stand per
 // dag (de motor bouwt hem op; de schermen rekenen live voor de gekozen periode).
 import { sql } from 'drizzle-orm'
-import { conversie, doorlooptijd, eersteAfspraakPoging, FUNNEL_FASES, FUNNEL_HOOFDFASE, FUNNEL_LABEL, funnelStand, kopTekst, leesNormen, pogingTotAfspraak, stokpunt, uitvalPerReden, type FunnelFase } from '../../shared/funnel'
+import { conversie, dagenInFunnelFase, doorlooptijd, eersteAfspraakPoging, FUNNEL_FASES, FUNNEL_HOOFDFASE, FUNNEL_LABEL, funnelStand, kopTekst, leesNormen, pogingTotAfspraak, stokpunt, uitvalPerReden, type FunnelFase } from '../../shared/funnel'
 import { nlMoment, nlTijdstip, plusDagen } from '../../shared/datum'
 import { POGING_SOORTEN } from '../../shared/planning'
 import { gebruikDb } from './db'
@@ -88,17 +88,34 @@ export async function laadFunnel(tx: Tx, f: FunnelFilters, opties: { details: bo
   }
 }
 
-/** De accounts achter een fase of uitvalreden, oudste "fase sinds" eerst. */
-export async function funnelAccounts(tx: Tx, f: FunnelFilters, fase: FunnelFase, reden: string | null) {
+/**
+ * De accounts achter een fase of uitvalreden, oudste "fase sinds" eerst. Elk account met de huidige fase
+ * (label uit de reis), de eigenaar en de dagen in de gekozen funnelfase (tot de volgende wissel of tot nu),
+ * voor de lijst achter "Doorlooptijd per fase" en de vensters op Mijn dashboard.
+ */
+export async function funnelAccounts(tx: Tx, f: FunnelFilters, fase: FunnelFase, reden: string | null, nu = new Date()) {
   const ids = await accountIds(tx, f)
   const stand = funnelStand(await geschiedenis(tx, ids, f.van, f.tot), { van: f.van, tot: f.tot }).find((s) => s.faseId === fase)
   if (!stand) return []
   const keuze = reden ? stand.accounts.uit.filter((u) => u.reden === reden).map((u) => u.accountId) : stand.accounts.binnen
   if (!keuze.length) return []
-  const rows = await rijen(tx, sql`select a.id, a.name, a.fase_id, a.fase_sinds, a.laatste_contact_op, a.nb_status,
+  const duur = dagenInFunnelFase(await geschiedenis(tx, keuze, f.van, nu.toISOString()), { van: f.van, tot: f.tot }, fase, nu)
+  const labels = await faseLabels(tx)
+  const rows = await rijen(tx, sql`select a.id, a.name, a.fase_id, a.fase_sinds, a.laatste_contact_op, a.nb_status, a.data->>'prospectStatus' as prospect_status, u.name as eigenaar,
       (select t.title from tasks t where t.account_id = a.id and t.status in ('open', 'bezig') order by t.due_date nulls last limit 1) as volgende_stap
-    from accounts a where a.id = any(string_to_array(${lijst(keuze)}, ',')) order by a.fase_sinds nulls last, a.name`)
-  return rows.map((r) => ({ id: r.id, naam: r.name, faseId: r.fase_id, faseSinds: iso(r.fase_sinds), laatstePoging: iso(r.laatste_contact_op), volgendeStap: r.volgende_stap, status: r.nb_status, reden: reden ?? stand.accounts.uit.find((u) => u.accountId === r.id)?.reden ?? null }))
+    from accounts a left join users u on u.id = a.owner_id where a.id = any(string_to_array(${lijst(keuze)}, ',')) order by a.fase_sinds nulls last, a.name`)
+  return rows.map((r) => ({
+    id: r.id, naam: r.name, faseId: r.fase_id, fase: labels.get(r.fase_id) ?? FUNNEL_LABEL[r.fase_id as FunnelFase] ?? null, faseSinds: iso(r.fase_sinds), laatstePoging: iso(r.laatste_contact_op), volgendeStap: r.volgende_stap,
+    status: r.nb_status, prospectStatus: r.prospect_status ?? null, eigenaar: r.eigenaar ?? null, dagenInFase: duur.get(r.id)?.dagen ?? null, nogInFase: duur.get(r.id)?.nogInFase ?? false,
+    reden: reden ?? stand.accounts.uit.find((u) => u.accountId === r.id)?.reden ?? null,
+  }))
+}
+
+/** Faselabels van alle reizen van de organisatie (id naar label); een maatwerkreis kan eigen fases hebben. */
+export async function faseLabels(tx: Tx): Promise<Map<string, string>> {
+  const m = new Map<string, string>()
+  for (const r of await rijen(tx, sql`select data from reistemplates`)) for (const x of (r.data?.fases ?? []) as { id: string; label: string }[]) if (!m.has(x.id)) m.set(x.id, x.label)
+  return m
 }
 
 /** CSV van precies wat op het scherm staat. */

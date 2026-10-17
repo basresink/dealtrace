@@ -6,10 +6,12 @@
 // gespreksverslag": een transcript uploaden of plakken, het verslag schrijven of inspreken en de
 // analyse van de Notulist (samenvatting, actiepunten als concepttaak, koopsignalen als inzicht). Na
 // afloop "Rond af" (uitkomst, per agendapunt besproken, vervolgstap; een eerste afspraak met vervolg
-// opent Overdragen). Verplaatsen, Niet verschenen en Annuleer in de voet. Op de telefoon een
+// opent Overdragen). Wijzigen (type, titel, datum, tijd, duur, contact, locatie en notitie; de vorm volgt uit
+// het type; PUT /api/afspraken/:id), Niet verschenen en Annuleer in de voet. Op de telefoon een
 // schuifvenster met de actiebalk Bellen, Mail, WhatsApp, Navigeer.
 import { NEE_REDENEN } from '~~/shared/nbStatus'
 import { spreekBriefing } from '~~/shared/spreek'
+import { CATEGORIE_LABEL, categorieVan, vormVoorSoort } from '~~/shared/agenda'
 const props = defineProps<{ open: boolean; afspraakId: string | null }>()
 const emit = defineEmits<{ sluit: []; gewijzigd: [] }>()
 const toast = useToast()
@@ -21,7 +23,8 @@ const afronden = ref(false)
 const verplaatsen = ref(false)
 const bezig = ref(false)
 const f = reactive({ uitkomst: '', laterOp: '', reden: '', toelichting: '', vervolgstap: '', punten: [] as { punt: string; besproken: boolean }[] })
-const vp = reactive({ datum: '', start: '', duurMin: 30, titel: '' })
+const vp = reactive({ soortId: '', datum: '', start: '', duurMin: 30, titel: '', contactId: '', locatie: '', beschrijving: '' })
+const soorten = ref<any[]>([])
 // Het gespreksverslag (blok Transcript en gespreksverslag); het gaat mee bij Rond af.
 const verslag = ref('')
 
@@ -93,11 +96,21 @@ async function zetStatus(status: 'niet_verschenen' | 'geannuleerd') {
   try { await $fetch(`/api/afspraken/${a.value.id}/status`, { method: 'POST', body: { status } }); toast.toon(status === 'geannuleerd' ? 'Afspraak geannuleerd.' : 'Vastgelegd: niet verschenen.'); emit('gewijzigd'); await laad() } catch (e) { toast.toon(tekstVan(e), 'fout') }
 }
 
-// Verplaatsen: datum, start, duur en titel; de server rekent in UTC.
-function startVerplaatsen() {
+// Wijzigen: type, titel, datum, start, duur, contact, locatie en notitie; de server rekent in UTC en zet de vorm uit het type.
+async function startVerplaatsen() {
   const d = new Date(a.value.start)
-  vp.datum = d.toLocaleDateString('sv-SE', { timeZone: TZ }); vp.start = tijd(a.value.start); vp.duurMin = duurMin.value; vp.titel = a.value.eigenTitel ? a.value.titel : ''
+  Object.assign(vp, { soortId: a.value.soort.id ?? '', datum: d.toLocaleDateString('sv-SE', { timeZone: TZ }), start: tijd(a.value.start), duurMin: duurMin.value, titel: a.value.eigenTitel ? a.value.titel : '', contactId: a.value.contact?.id ?? '', locatie: a.value.locatie ?? '', beschrijving: a.value.beschrijving ?? '' })
   afronden.value = false; verplaatsen.value = true
+  if (!soorten.value.length) { const m: any = await $fetch('/api/meetingsoorten').catch(() => ({ soorten: [] })); soorten.value = m.soorten ?? [] }
+}
+/** Types waaruit je kiest: de actieve, en het huidige type ook als het niet meer actief is; intern alleen zonder prospect. */
+const kiesbareSoorten = computed(() => soorten.value.filter((s) => (s.actief || s.id === a.value?.soort.id) && (a.value?.account || s.type === 'intern')).map((s) => ({ ...s, groep: categorieVan(s) })))
+const vpSoort = computed(() => soorten.value.find((s) => s.id === vp.soortId) ?? null)
+const vpVorm = computed(() => (vpSoort.value ? vormVoorSoort(vpSoort.value) : a.value?.vorm ?? 'online'))
+watch(() => vp.soortId, (id, oud) => { if (oud && id && id !== oud && vpSoort.value) vp.duurMin = vpSoort.value.duurMin })
+function nieuwContact(c: { id: string; naam: string; functie: string | null; rol: string | null }) {
+  a.value = { ...a.value, wieZitErbij: [...a.value.wieZitErbij, { id: c.id, naam: c.naam, rol: c.rol, functie: c.functie }] }
+  vp.contactId = c.id
 }
 function startIso(datum: string, start: string) {
   const proef = new Date(`${datum}T${start}:00Z`)
@@ -108,7 +121,7 @@ async function bewaarVerplaatsen() {
   if (!vp.datum || !vp.start) return
   bezig.value = true
   try {
-    const r: any = await opslag.bewaar(() => $fetch(`/api/afspraken/${a.value.id}/verplaats`, { method: 'POST', body: { start: startIso(vp.datum, vp.start), duurMin: vp.duurMin, titel: vp.titel } }))
+    const r: any = await opslag.bewaar(() => $fetch(`/api/afspraken/${a.value.id}`, { method: 'PUT', body: { meetingsoortId: vp.soortId || undefined, start: startIso(vp.datum, vp.start), duurMin: vp.duurMin, titel: vp.titel, contactId: vp.contactId || null, locatie: vp.locatie, beschrijving: vp.beschrijving } }))
     toast.toon(r.tekst); verplaatsen.value = false; emit('gewijzigd'); await laad()
   } catch (e) { toast.toon(tekstVan(e), 'fout') } finally { bezig.value = false }
 }
@@ -141,15 +154,29 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
     </template>
 
         <div v-if="a" class="fo-body fo-body--formulier">
-          <!-- Verplaatsen: nieuw moment, duur en titel. -->
-          <article v-if="verplaatsen" class="fo-blok fo-blok--accent" data-test="af-verplaats-blok">
-            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Verplaats de afspraak</h3></header>
+          <!-- Wijzigen: type, titel, moment, duur, contact, locatie en notitie. De vorm volgt uit het type. -->
+          <article v-if="verplaatsen" class="fo-blok fo-blok--accent af-wijzig" data-test="af-verplaats-blok">
+            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Wijzig de afspraak</h3></header>
+            <label class="veld"><span class="veld-label">Type afspraak</span>
+              <select v-model="vp.soortId" class="invoer" data-test="af-vp-soort">
+                <optgroup v-for="g in (['bezoek', 'meeting'] as const)" :key="g" :label="CATEGORIE_LABEL[g]"><option v-for="s in kiesbareSoorten.filter((x) => x.groep === g)" :key="s.id" :value="s.id" :data-test="`af-vp-soort-${s.slug}`">{{ s.naam }}</option></optgroup>
+              </select>
+            </label>
+            <p class="af-vorm" data-test="af-vp-vorm"><Label soort="actie" :waarde="vpVorm === 'telefoon' ? 'bellen' : vpVorm" :tekst="VORM[vpVorm]" /><span class="meta">De vorm volgt uit het type.</span></p>
             <label class="veld"><span class="veld-label">Titel</span><input v-model="vp.titel" class="invoer" :placeholder="a.titel" data-test="af-vp-titel"></label>
-            <div class="af-rij3 mt-16">
+            <div class="af-rij3">
               <label class="veld"><span class="veld-label">Datum <span class="veld-verplicht">*</span></span><input v-model="vp.datum" type="date" class="invoer" required data-test="af-vp-datum"></label>
               <label class="veld"><span class="veld-label">Start <span class="veld-verplicht">*</span></span><input v-model="vp.start" type="time" step="900" class="invoer" required data-test="af-vp-start"></label>
-              <label class="veld"><span class="veld-label">Duur</span><select v-model.number="vp.duurMin" class="invoer"><option v-for="d in [10, 15, 30, 45, 60, 90, 120, 180]" :key="d" :value="d">{{ d >= 60 ? `${d / 60} uur`.replace('.5', ',5') : `${d} min` }}</option><option v-if="![10, 15, 30, 45, 60, 90, 120, 180].includes(vp.duurMin)" :value="vp.duurMin">{{ vp.duurMin }} min</option></select></label>
+              <label class="veld"><span class="veld-label">Duur</span><select v-model.number="vp.duurMin" class="invoer" data-test="af-vp-duur"><option v-for="d in [10, 15, 30, 45, 60, 90, 120, 180]" :key="d" :value="d">{{ d >= 60 ? `${d / 60} uur`.replace('.5', ',5') : `${d} min` }}</option><option v-if="![10, 15, 30, 45, 60, 90, 120, 180].includes(vp.duurMin)" :value="vp.duurMin">{{ vp.duurMin }} min</option></select></label>
             </div>
+            <template v-if="a.account">
+              <label class="veld"><span class="veld-label">Contactpersoon</span>
+                <select v-model="vp.contactId" class="invoer" data-test="af-vp-contact"><option value="">Geen contactpersoon</option><option v-for="c in a.wieZitErbij" :key="c.id" :value="c.id">{{ c.naam }}<template v-if="c.functie || c.rol"> · {{ c.functie ?? c.rol }}</template></option></select>
+              </label>
+              <SnelContact :account="{ id: a.account.id, naam: a.account.naam }" prefix="af-nc" :geen-contacten="!a.wieZitErbij.length" @gemaakt="nieuwContact" />
+            </template>
+            <label class="veld"><span class="veld-label">{{ vpVorm === 'bezoek' ? 'Locatie' : 'Locatie of meetinglink' }}</span><input v-model="vp.locatie" class="invoer" :placeholder="vpVorm === 'bezoek' ? 'Leeg is het adres van de prospect' : ''" data-test="af-vp-locatie"></label>
+            <label class="veld"><span class="veld-label">Notitie</span><textarea v-model="vp.beschrijving" class="invoer" rows="3" placeholder="Doel, agendapunten of voorbereiding" data-test="af-vp-notitie" /></label>
           </article>
 
           <dl class="af-defs" data-test="af-defs">
@@ -242,7 +269,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
         <!-- Voet (flyoutstandaard): de hoofdactie links in zwart, rechts icoonknoppen van 44 px. -->
         <template #voet>
         <footer v-if="a && a.status === 'gepland' && verplaatsen" class="fo-foot fs-voet">
-          <button type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || !vp.datum || !vp.start" data-test="af-verplaats-bewaar" @click="bewaarVerplaatsen"><Icoon naam="Check" :grootte="16" />Bewaar nieuw moment</button>
+          <button type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || !vp.datum || !vp.start" data-test="af-verplaats-bewaar" @click="bewaarVerplaatsen"><Icoon naam="Check" :grootte="16" />Bewaar wijzigingen</button>
           <span class="fo-foot-vul" />
           <button type="button" class="dd-actie dd-actie--secundair" @click="verplaatsen = false">Terug</button>
         </footer>
@@ -252,7 +279,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
           <span class="fo-foot-vul" />
           <button v-if="afronden" type="button" class="dd-actie dd-actie--secundair" @click="afronden = false">Terug</button>
           <template v-else>
-            <button type="button" class="fs-ibtn" title="Verplaatsen" aria-label="Verplaatsen" data-test="af-verplaats" @click="startVerplaatsen"><Icoon naam="CalendarClock" :grootte="18" /></button>
+            <button type="button" class="fs-ibtn" title="Wijzigen" aria-label="Afspraak wijzigen" data-test="af-verplaats" @click="startVerplaatsen"><Icoon naam="Pencil" :grootte="18" /></button>
             <button type="button" class="fs-ibtn" title="Niet verschenen" aria-label="Niet verschenen" data-test="af-niet-verschenen" @click="zetStatus('niet_verschenen')"><Icoon naam="UserX" :grootte="18" /></button>
             <button type="button" class="fs-ibtn fs-ibtn--rood" title="Afspraak annuleren" aria-label="Afspraak annuleren" data-test="af-annuleer" @click="zetStatus('geannuleerd')"><Icoon naam="Ban" :grootte="18" /></button>
             <NuxtLink v-if="a.account && !opKlantkaart" :to="`/accounts/${a.account.id}`" class="fs-ibtn" title="Open accountkaart" aria-label="Open accountkaart" @click="emit('sluit')"><Icoon naam="ArrowRight" :grootte="18" /></NuxtLink>
@@ -281,6 +308,9 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
 .af-aanleiding { margin: 6px 0 0; font-size: var(--fs-klein); }
 .af-voorbereiding { padding-left: 18px; font-size: var(--fs-klein); color: var(--ink-soft); }
 .af-rij3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.af-wijzig { display: flex; flex-direction: column; gap: 14px; }
+.af-wijzig .veld { margin: 0; }
+.af-vorm { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: -6px 0 0; }
 @media (max-width: 720px) {
   .af-def { grid-template-columns: 1fr; gap: 2px; }
   .af-rij3 { grid-template-columns: 1fr 1fr; }

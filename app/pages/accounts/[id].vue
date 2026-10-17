@@ -200,6 +200,7 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
             <div class="ak-pillen">
               <Label v-if="a.reis?.fase" soort="fase" :waarde="a.reis.fase.hoofdfase" :tekst="a.reis.fase.label" knop :uit="!a.kan.geschiedenis" :titel="a.kan.geschiedenis ? `Fase ${a.reis.fase.label}. Open de reisgeschiedenis` : undefined" data-test="fasepil" @click="openFase" />
               <Label soort="status" :waarde="a.status" data-test="statuspil" />
+              <Label v-if="a.prospectStatus" soort="prospectstatus" :waarde="a.prospectStatus" titel="Status prospect, te wijzigen in Info" data-test="prospect-status-pil" />
               <Label v-if="a.dagenInFase !== null && a.reis && a.reis.fase?.overschreden" soort="status" waarde="te-lang-in-fase" :tekst="`${a.dagenInFase} d in fase`" titel="Langer in deze fase dan verwacht" data-test="dagen-in-fase" />
               <span v-else-if="a.dagenInFase !== null && a.reis" class="meta" data-test="dagen-in-fase">{{ a.dagenInFase }} dagen in fase</span>
               <span v-if="a.vvBranche" class="chip chip--branche" title="Branche (verkoopverhaal)" data-test="vv-branche">{{ a.vvBranche.naam }}</span><span v-if="a.vvBranche?.verwijderd" class="meta" data-test="branche-verwijderd">{{ a.vvBranche.verwijderd }}</span>

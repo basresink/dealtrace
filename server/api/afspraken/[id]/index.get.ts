@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     return {
       id: ap.id, status: ap.status, vorm: ap.vorm, start: new Date(ap.start_at).toISOString(), eind: new Date(ap.end_at).toISOString(), uitkomst: ap.uitkomst_code,
       eigenaar: { id: ap.owner_id, naam: ap.owner_naam }, geplandDoor: ap.gepland_door !== ap.owner_id ? ap.gepland_door_naam : null,
-      soort: { naam: ap.soort_naam, slug: ap.slug, type: ap.type, kleur: ap.soort_data?.kleur ?? null, doel: ap.soort_data?.doel, agenda: ap.data?.agenda ?? ap.soort_data?.agenda ?? [], voorbereiding: ap.soort_data?.voorbereiding ?? [], uitkomsten: ap.soort_data?.uitkomsten ?? [] },
+      soort: { id: ap.meetingsoort_id, naam: ap.soort_naam, slug: ap.slug, type: ap.type, kleur: ap.soort_data?.kleur ?? null, doel: ap.soort_data?.doel, agenda: ap.data?.agenda ?? ap.soort_data?.agenda ?? [], voorbereiding: ap.soort_data?.voorbereiding ?? [], uitkomsten: ap.soort_data?.uitkomsten ?? [] },
       titel: afspraakTitel(ap.data?.titel, ap.soort_naam, ap.account_naam), eigenTitel: !!ap.data?.titel, beschrijving: ap.data?.beschrijving ?? null,
       contact: gekoppeld ? { id: gekoppeld.id, naam: [gekoppeld.first_name, gekoppeld.last_name].filter(Boolean).join(' '), rol: gekoppeld.rol, functie: gekoppeld.data?.functie ?? null } : null,
       transcript: tr ? { id: tr.id, tekst: tr.tekst, bestandsnaam: ap.data?.transcriptBestand ?? null, bron: tr.dienst, op: new Date(tr.op).toISOString(), woorden: telWoorden(tr.tekst) } : null,

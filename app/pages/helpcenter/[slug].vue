@@ -2,7 +2,7 @@
 // Artikelpagina (F21, P25) in de opzet van een instructie in DealDrive: kruimel, kicker met collectie en
 // categorie, titel, samenvatting, "Probeer het" als zwarte knop, de inhoud in genummerde blokken (één
 // blok per kop), controlevragen, "Markeer als gelezen", "Was dit nuttig?", "Ook in deze categorie" en een
-// voet. Gelezen na scrollen tot het einde of met de knop, via de wachtrij (ook offline). Lezen is nergens
+// voet, en onderaan Verder zoeken (HelpSteun). Gelezen na scrollen tot het einde of met de knop, via de wachtrij (ook offline). Lezen is nergens
 // een voorwaarde.
 import { categorieLink, COLLECTIES, FEEDBACK_REDENEN, helpLink, isCollectie, isGelezen } from '~~/shared/help'
 import { markdownNaarHtml } from '~~/shared/markdown'
@@ -73,7 +73,7 @@ useHead({ title: () => `${a.value?.titel ?? 'Artikel'} · Helpcenter · Dealtrac
         </div>
       </div>
     </section>
-    <section v-else-if="a" class="section section--laatste">
+    <section v-else-if="a" class="section">
       <div class="container ha">
         <nav class="ha-kruimels" aria-label="Kruimelpad">
           <NuxtLink to="/helpcenter" class="ha-kruimel">Helpcenter</NuxtLink>
@@ -144,6 +144,7 @@ useHead({ title: () => `${a.value?.titel ?? 'Artikel'} · Helpcenter · Dealtrac
         <p class="ha-voet">Laatst bijgewerkt op {{ datum(a.bijgewerktOp) }}. Klopt er iets niet, of mis je een stap? Mail <a href="mailto:support@dealtrace.test" class="ha-inline">support@dealtrace.test</a> of dien een wens in op de <FunctieLink als-tekst to="/roadmap" class="ha-inline">roadmap</FunctieLink>.</p>
       </div>
     </section>
+    <HelpSteun v-if="a && !error" />
   </div>
 </template>
 

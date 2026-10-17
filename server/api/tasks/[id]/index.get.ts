@@ -34,6 +34,7 @@ export default defineEventHandler(async (event) => {
       id: t.id, title: t.title, status: t.status, actionType: t.actionType, priority: t.priority, dueDate: t.dueDate, uitkomst: t.uitkomst, ownerId: t.ownerId, eigenaar: eigenaar?.naam ?? null,
       herkomst: typeof d.herkomst === 'string' ? d.herkomst : d.herkomst?.bron ?? (t.signalId ? 'inzicht' : t.ruleId ? 'regel' : 'handmatig'),
       waarom: d.waarom ?? null, bewijs: d.bewijs ?? [], poging: d.poging ?? null, aanleiding: d.aanleiding ?? inzicht?.data?.waarom ?? null, beschrijving: d.beschrijving ?? null, concept: d.concept ?? null,
+      winpunt: d.winpunt?.titel ? { id: d.winpunt.id ?? null, titel: d.winpunt.titel, omschrijving: d.winpunt.omschrijving ?? null } : null,
       agent: d.agent ?? null, mandaat: d.mandaat ?? null, executorStatus: t.executorStatus ?? null,
       regel: regel ? { naam: regel.naam, code: regel.code } : null, inzicht: inzicht ? { id: inzicht.id, title: inzicht.title, bron: inzicht.bron } : null,
       account: a ? {

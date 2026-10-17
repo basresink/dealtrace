@@ -42,7 +42,7 @@ const groepPct = (n: number) => { const som = hoofdTelling.value.reduce((s, h) =
 const doorloopRijen = computed(() => data.value.fases.filter((f: any) => f.doorlooptijd != null || f.norm?.doorlooptijd != null).map((f: any) => {
   const norm = f.norm?.doorlooptijd ?? null
   const top = Math.max(1, ...data.value.fases.map((x: any) => Math.max(x.doorlooptijd ?? 0, x.norm?.doorlooptijd ?? 0)))
-  return { sleutel: f.faseId, label: f.label, aantal: f.doorlooptijd ?? 0, waarde: f.doorlooptijd != null ? `${f.doorlooptijd.toLocaleString('nl-NL')} dagen` : 'nog niemand door', sub: norm != null ? `norm ${norm} dagen` : null, kleur: (norm != null && f.doorlooptijd != null && f.doorlooptijd > norm ? 'rood' : 'groen') as 'rood' | 'groen', lijn: norm != null ? Math.round((norm / top) * 100) : null }
+  return { sleutel: f.faseId, test: `doorloop-${f.faseId}`, kan: f.aantal > 0, label: f.label, aantal: f.doorlooptijd ?? 0, waarde: f.doorlooptijd != null ? `${f.doorlooptijd.toLocaleString('nl-NL')} dagen` : 'nog niemand door', sub: norm != null ? `norm ${norm} dagen` : null, kleur: (norm != null && f.doorlooptijd != null && f.doorlooptijd > norm ? 'rood' : 'groen') as 'rood' | 'groen', lijn: norm != null ? Math.round((norm / top) * 100) : null }
 }))
 const doorloopMax = computed(() => Math.max(1, ...data.value.fases.map((x: any) => Math.max(x.doorlooptijd ?? 0, x.norm?.doorlooptijd ?? 0))))
 const uitvalRijen = computed(() => (data.value.uitvalTotaal ?? []).map((u: any) => ({ sleutel: u.reden, label: u.reden, aantal: u.aantal, waarde: data.value.tegels?.uitval ? `${Math.round((u.aantal / data.value.tegels.uitval) * 100)}%` : null, sub: u.fase ? `meest bij ${u.fase}` : null, kleur: 'rood' as const })))
@@ -50,10 +50,19 @@ const pogingPunten = computed(() => Object.entries(data.value.pogingen ?? {}).ma
 const pogingTotaal = computed(() => pogingPunten.value.reduce((s, p) => s + p.totaal, 0))
 
 // Lijst achter een fase of reden, als schuifvenster.
-const lijst = ref<{ fase: string; reden: string | null; titel: string } | null>(null)
+const lijst = ref<{ fase: string; reden: string | null; titel: string; doorloop?: { gem: number | null; norm: number | null } } | null>(null)
 const { data: accounts, execute: laadLijst, pending: laadt } = useFetch<any>('/api/funnel/accounts', { query: computed(() => ({ ...query.value, fase: lijst.value?.fase, reden: lijst.value?.reden ?? undefined })), immediate: false, watch: false, default: () => ({ accounts: [] }) })
 function open(f: any, reden: string | null = null) { if (!f) return; lijst.value = { fase: f.faseId, reden, titel: reden ? `${f.label}: ${reden}` : f.label }; laadLijst() }
 const openFase = (id: string, reden: string | null = null) => open(data.value.fases.find((f: any) => f.faseId === id), reden)
+// Doorlooptijd per fase: dezelfde lijst, met per prospect de dagen in deze fase (langste eerst) en de eigenaar.
+function openDoorloop(id: string) {
+  const f = data.value.fases.find((x: any) => x.faseId === id)
+  if (!f) return
+  lijst.value = { fase: f.faseId, reden: null, titel: `Doorlooptijd ${f.label}`, doorloop: { gem: f.doorlooptijd ?? null, norm: f.norm?.doorlooptijd ?? null } }
+  laadLijst()
+}
+const doorloopLijst = computed(() => [...(accounts.value?.accounts ?? [])].sort((a: any, b: any) => (b.dagenInFase ?? -1) - (a.dagenInFase ?? -1)))
+const dagenTekst = (n: number | null) => (n == null ? 'onbekend' : `${n} ${n === 1 ? 'dag' : 'dagen'}`)
 function openReden(reden: string) { const f = data.value.fases.find((x: any) => (x.uitval ?? []).some((u: any) => u.reden === reden)); open(f, reden) }
 const nieuweTaak = ref<{ id: string; naam: string } | null>(null)
 const csv = computed(() => `/api/funnel/export?${new URLSearchParams(query.value as Record<string, string>).toString()}`)
@@ -70,6 +79,7 @@ useHead({ title: 'Funnel · Dealtrace' })
     <template v-else>
       <RapportKop v-model:open="filtersOpen" :kicker="`Funnel · ${periodeLabel}`" :titel="data.kop?.titel ?? 'Funnel'" :subtitel="data.kop?.stok ?? 'Elke fase van de prospectreis: wie er binnenkwam, wie doorstroomde en waar het stokt.'" :filter-aantal="filterAantal" helpartikel="funnel">
         <template #acties>
+          <FunctieLink to="/mijn-dashboard" class="dd-actie dd-actie--secundair" data-test="funnel-terug"><Icoon naam="ArrowLeft" class="dd-actie-icoon" />Mijn dashboard</FunctieLink>
           <a v-if="data.kan?.export" :href="csv" class="dd-actie dd-actie--secundair" data-test="funnel-csv"><Icoon naam="Download" class="dd-actie-icoon" />Download CSV</a>
         </template>
       </RapportKop>
@@ -128,7 +138,7 @@ useHead({ title: 'Funnel · Dealtrace' })
             <div v-if="heeftDetails" class="fr-duo">
               <div class="chart-block" data-test="doorlooptijden">
                 <header class="chart-head"><h2 class="chart-title">Doorlooptijd per fase</h2><span class="chart-meta">gemiddeld in dagen · streep is de norm</span></header>
-                <BalkRijen :rijen="doorloopRijen" :max="doorloopMax" eenheid="dagen" label="Doorlooptijd per fase" />
+                <BalkRijen :rijen="doorloopRijen" :max="doorloopMax" eenheid="dagen" klikbaar label="Doorlooptijd per fase" @kies="(r) => openDoorloop(r.sleutel)" />
               </div>
               <div class="chart-block" data-test="uitval">
                 <header class="chart-head"><h2 class="chart-title">Uitval per reden</h2><span class="chart-meta">{{ data.tegels.uitval }} uitgevallen</span></header>
@@ -162,8 +172,21 @@ useHead({ title: 'Funnel · Dealtrace' })
       </section>
     </template>
     <FlyoutShell v-if="lijst" open titel-id="fn-lijst-titel" data-test="funnel-lijst" @sluit="lijst = null">
-        <template #kop><span class="fo-kicker">Funnel</span><h2 id="fn-lijst-titel" class="fo-titel">{{ lijst.titel }}</h2></template>
-          <div class="fo-body">
+        <template #kop><span class="fo-kicker">Funnel</span><h2 id="fn-lijst-titel" class="fo-titel">{{ lijst.titel }}</h2><p v-if="lijst.doorloop" class="fo-meta" data-test="doorloop-meta">{{ accounts.accounts.length }} {{ accounts.accounts.length === 1 ? 'prospect' : 'prospects' }}<template v-if="lijst.doorloop.gem != null"> · gemiddeld {{ dagenTekst(Math.round(lijst.doorloop.gem)) }}</template><template v-if="lijst.doorloop.norm != null"> · norm {{ dagenTekst(lijst.doorloop.norm) }}</template></p></template>
+          <div v-if="lijst.doorloop" class="fo-body" data-test="doorloop-lijst">
+            <p v-if="laadt" class="rij-sub">Laden…</p>
+            <p v-else-if="!accounts.accounts.length" class="rij-sub">Geen prospects in deze fase.</p>
+            <ul v-else class="fr-dl">
+              <li v-for="a in doorloopLijst" :key="a.id" class="fr-dl-rij" data-test="doorloop-rij">
+                <div class="fr-dl-info">
+                  <NuxtLink :to="`/accounts/${a.id}`" class="fr-dl-naam">{{ a.naam }}</NuxtLink>
+                  <span class="fr-dl-meta">{{ a.fase ?? 'Geen fase' }} · {{ a.eigenaar ?? 'Geen eigenaar' }}</span>
+                </div>
+                <span class="fr-dl-dagen tnum" :class="{ 'fr-dl-dagen--over': lijst.doorloop.norm != null && (a.dagenInFase ?? 0) > lijst.doorloop.norm }">{{ dagenTekst(a.dagenInFase) }}<span class="fr-dl-sub">{{ a.nogInFase ? 'nog in fase' : 'in fase' }}</span></span>
+              </li>
+            </ul>
+          </div>
+          <div v-else class="fo-body">
             <p v-if="laadt" class="rij-sub">Laden…</p>
             <p v-else-if="!accounts.accounts.length" class="rij-sub">Geen accounts.</p>
             <div v-for="a in accounts.accounts" :key="a.id" class="rij rij--compact">
@@ -208,6 +231,14 @@ useHead({ title: 'Funnel · Dealtrace' })
 .fr-duo { display: grid; grid-template-columns: 1fr; gap: 16px; }
 @media (min-width: 900px) { .fr-duo { grid-template-columns: 1fr 1fr; gap: 24px; } }
 .fr-leeg { margin: 0; font-size: 13px; color: var(--muted); }
+.fr-dl { list-style: none; margin: 0; padding: 0; }
+.fr-dl-rij { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.fr-dl-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fr-dl-naam { display: inline-flex; align-items: center; min-height: 32px; font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
+.fr-dl-meta { font-size: 12px; color: var(--muted); }
+.fr-dl-dagen { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; font-weight: 700; color: var(--ink); }
+.fr-dl-dagen--over { color: var(--red); }
+.fr-dl-sub { font-size: 11px; font-weight: 500; color: var(--muted); }
 
 .fr-tabelvak { overflow-x: auto; }
 .fr-tabel { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -220,7 +251,7 @@ useHead({ title: 'Funnel · Dealtrace' })
 .fr-redenen { display: flex; flex-wrap: wrap; gap: 4px; min-width: 220px; max-width: 360px; white-space: normal; }
 .fr-reden { cursor: pointer; border: 0; font: inherit; white-space: normal; text-align: left; max-width: 100%; }
 @media (max-width: 720px) {
-  .fr-tabel-knop, .fr-reden { min-height: var(--touch-target-min); }
+  .fr-tabel-knop, .fr-reden, .fr-dl-naam { min-height: var(--touch-target-min); }
   .chart-block { padding: 16px; }
   .fr-keuzes { width: 100%; min-width: 0; }
   .fr-keuze { width: 100%; min-width: 0; justify-content: space-between; }

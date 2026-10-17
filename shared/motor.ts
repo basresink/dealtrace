@@ -5,8 +5,8 @@
 // als lege stap in het verslag.
 import { nlMoment, nlTijdstip, voegWerkdagenToe, volgendWerkmoment, volgendeWerkdag, type WerkdagInstelling } from './datum'
 import {
-  ACTIESOORT_LABEL, cadansVerstreken, evaluateTrigger, regelLevertRuis, regelPoort, ruleTargetsAccount, vulSjabloon, waaromTekst,
-  type MotorAccount, type Regel,
+  ACTIESOORT_LABEL, cadansVerstreken, evaluateTrigger, regelLevertRuis, regelPoort, ruleTargetsAccount, vulSjabloon, waaromTekst, winpuntVoorRegel,
+  type MotorAccount, type Regel, type RegelWinpunt,
 } from './regelPatronen'
 import { bewaakTaken, type Tegengehouden } from './planner'
 import { CAPACITEIT_STANDAARD, STARTPLAFOND_STANDAARD, type Matrix } from './ritmematrix'
@@ -19,10 +19,13 @@ export interface NieuweTaak {
   contactId?: string | null
   due: string; waarom: string; bewijs: string[]; herkomst: 'regel' | 'ritme' | 'startactiviteit'; geschoven?: boolean
   poging?: { n: number; van: number; kanaal?: string | null }
+  /** Het winpunt uit het verkoopverhaal dat de regel als gespreksonderwerp meegeeft (Dealtrace). */
+  winpunt?: { id: string; titel: string; omschrijving?: string | null } | null
 }
 export interface NieuwInzicht {
   regelId: string | null; onderwerp: string; accountId: string | null; ownerId: string; title: string; type: string; relevantie: number
   bron: 'intern' | 'extern'; waarom: string; bewijs: string[]; voorstel?: { title: string; actionType: string; priority: string } | null
+  winpunt?: { id: string; titel: string; omschrijving?: string | null } | null
 }
 export interface InzichtUpdate { regelId: string; onderwerp: string; waarom: string; bewijs: string[] }
 
@@ -57,6 +60,8 @@ export interface MotorInvoer {
   /** Alleen deze accounts (gebeurtenisrun). */
   accountIds?: string[]
   aiToegestaan?: boolean
+  /** De winpunten uit het verkoopverhaal, voor regels met gekoppelde winpunten. */
+  winpunten?: RegelWinpunt[]
 }
 
 export interface MotorUitvoer {
@@ -189,7 +194,9 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
       if (RITME_PATRONEN.has(regel.data.trigger.patroon) && regel.data.activiteit === 'taak' && !ritmeNu.has(a.id)) ritmeNu.set(a.id, regel.id)
       const owner = eigenaarVoor(a, regel, inv.gebruikers, inv.beheerderId)
       if (!owner) { waarschuwingen.push(`Geen eigenaar voor ${a.naam}`); continue }
-      const titel = vulSjabloon(regel.data.gevolg.taaksjabloon || `${ACTIESOORT_LABEL[regel.data.gevolg.actiesoort] ?? 'Opvolgen'}: {account}`, { account: a.naam, contact: a.contactNaam })
+      const wp = winpuntVoorRegel(regel, a, inv.winpunten ?? [])
+      const winpunt = wp ? { id: wp.id, titel: wp.titel, omschrijving: wp.omschrijving ?? null } : null
+      const titel = vulSjabloon(regel.data.gevolg.taaksjabloon || `${ACTIESOORT_LABEL[regel.data.gevolg.actiesoort] ?? 'Opvolgen'}: {account}`, { account: a.naam, contact: a.contactNaam, winpunt: wp?.titel })
       const waarom = waaromTekst(regel, u)
       // Een Beginner krijgt motorvoorstellen als inzicht ter goedkeuring, behalve ritmepogingen (F06).
       const alsInzicht = regel.data.activiteit === 'inzicht' || (gebruiker.get(owner)?.niveau === 'beginner' && !RITME_PATRONEN.has(regel.data.trigger.patroon))
@@ -199,6 +206,7 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
           regelId: regel.id, onderwerp: sleutel, accountId: a.id, ownerId: owner, title: titel, type: regel.data.gevolg.signaaltype || regel.data.trigger.patroon,
           relevantie: RELEVANTIE[regel.prioriteit] ?? 60, bron: regel.data.bron, waarom, bewijs: u.bewijs,
           voorstel: regel.data.gevolg.actiesoort !== 'geen' ? { title: titel, actionType: regel.data.gevolg.actiesoort, priority: regel.prioriteit } : null,
+          winpunt,
         })
       } else {
         const g = gebruiker.get(owner)
@@ -211,6 +219,7 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
           due: landing.toISOString(), waarom, bewijs: u.bewijs,
           herkomst: RITME_PATRONEN.has(regel.data.trigger.patroon) ? 'ritme' : 'regel',
           ...(vervolg ? { poging: { n: a.ritme!.poging ?? 1, van: a.ritme!.van ?? 1, kanaal: a.ritme!.kanaal } } : {}),
+          winpunt,
         })
       }
     }

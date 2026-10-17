@@ -251,7 +251,8 @@ onBeforeUnmount(() => { document.removeEventListener('keydown', toetsEerst, true
           </dl>
           <article v-if="t.aanleiding || t.waarom" class="fo-blok aanleiding-blok" data-test="aanleiding">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Aanleiding</h3><Label soort="herkomst" :waarde="t.herkomst ?? 'handmatig'" /></header>
-            <p v-if="t.aanleiding">{{ t.aanleiding }}</p>
+            <p v-if="t.aanleiding && !(t.winpunt && t.aanleiding === `Gespreksonderwerp: ${t.winpunt.titel}`)">{{ t.aanleiding }}</p>
+            <p v-if="t.winpunt" class="mt-8" data-test="tf-winpunt"><strong>Winpunt om te bespreken:</strong> {{ t.winpunt.titel }}<template v-if="t.winpunt.omschrijving">. {{ t.winpunt.omschrijving }}</template></p>
             <p v-if="t.waarom" class="mt-8" data-test="waarom"><strong>Waarom krijg ik dit?</strong> {{ t.waarom }}<template v-if="t.regel"> <FunctieLink v-if="functie('regels.lezen')?.beschikbaar" :to="`/instellingen/regels`" class="tekst-link">Bekijk de regel</FunctieLink></template></p>
           </article>
           <article v-if="t.status !== 'klaar'" class="fo-blok fo-blok--accent" data-test="tf-volgende-stap">

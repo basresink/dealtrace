@@ -25,8 +25,9 @@ export function schoonRegel(b: any, basis?: Partial<Regel>): Omit<Regel, 'id'> {
     scope: (['organisatie', 'team', 'persoonlijk'] as const).find((s) => s === b?.scope) ?? basis?.scope ?? 'organisatie',
     teamId: b?.teamId ?? basis?.teamId ?? null,
     eigenaarId: b?.eigenaarId ?? basis?.eigenaarId ?? null,
-    reisId: b?.reisId ?? basis?.reisId ?? null,
-    faseId: b?.faseId ?? basis?.faseId ?? null,
+    // Leeg maken mag: null in de invoer wint van de oude waarde.
+    reisId: b && 'reisId' in b ? b.reisId || null : basis?.reisId ?? null,
+    faseId: b && 'faseId' in b ? b.faseId || null : basis?.faseId ?? null,
     cadansDagen: Number.isInteger(b?.cadansDagen) ? b.cadansDagen : basis?.cadansDagen ?? 7,
     prioriteit: (PRIORITEITEN as readonly string[]).includes(b?.prioriteit) ? b.prioriteit : basis?.prioriteit ?? 'middel',
     data: {
@@ -51,6 +52,7 @@ export function schoonRegel(b: any, basis?: Partial<Regel>): Omit<Regel, 'id'> {
         automatischVoorbereiden: !!gevolg.automatischVoorbereiden,
         signaaltype: gevolg.signaaltype ?? null,
         verwachtResultaat: gevolg.verwachtResultaat ?? null,
+        winpuntIds: lijst(gevolg.winpuntIds).slice(0, 5),
       },
       herkomst: d.herkomst ?? basis?.data?.herkomst ?? 'eigen',
     },

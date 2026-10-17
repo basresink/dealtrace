@@ -230,6 +230,25 @@ export const LABELS = {
     prospect: rand('Prospect'),
     klant: rand('Klant'),
   },
+  /** Richting: status van een onderdeel, focus en prioriteit van een branche, impact van een winpunt. */
+  richting: {
+    bevestigd: zacht('Bevestigd', 'groen', 'CircleCheck'),
+    concept: leeg('Concept', 'Pencil'),
+    controleren: zacht('Controleren', 'oranje', 'TriangleAlert'),
+    verouderd: zacht('Mogelijk verouderd in SalesDNA', 'oranje', 'Clock'),
+    primair: zacht('Primair', 'blauw', 'Target'),
+    secundair: rand('Secundair'),
+    horizon: rand('Horizon', 'CalendarClock'),
+    'prio-hoog': zacht('Prioriteit hoog', 'oranje', 'ArrowUp'),
+    'prio-midden': rand('Prioriteit midden'),
+    'prio-laag': rand('Prioriteit laag', 'ArrowDown'),
+    'impact-hoog': zacht('Impact hoog', 'blauw', 'ArrowUp'),
+    'impact-midden': rand('Impact midden'),
+    'impact-laag': rand('Impact laag', 'ArrowDown'),
+    'onder-norm': zacht('Onder de norm', 'oranje', 'TriangleAlert'),
+    algemeen: leeg('Algemeen'),
+    soort: rand('Soort'),
+  },
   /** AI: zacht paars met de vonk; een voorstel heeft een gestippelde rand. */
   ai: {
     ai: ai('AI'),
