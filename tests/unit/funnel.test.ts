@@ -5,7 +5,7 @@ import { parse } from 'yaml'
 import { describe, expect, it } from 'vitest'
 import {
   conversie, doorlooptijd, FUNNEL_FASES, funnelStand, kopTekst, leesNormen, magOverdragen, NORMEN_STANDAARD, overdrachtBriefing, overdrachtPakket,
-  pogingTotAfspraak, stokpunt, uitvalPerReden, volgendePoging, type GeschRij, type PakketContext,
+  eersteAfspraakPoging, pogingTotAfspraak, stokpunt, uitvalPerReden, volgendePoging, type GeschRij, type PakketContext,
 } from '../../shared/funnel'
 
 const periode = { van: '2026-10-01T00:00:00Z', tot: '2026-10-31T23:59:59Z' }
@@ -85,6 +85,20 @@ describe('pogingen en uitval', () => {
     const p = (a: string, dag: number, u: string | null = 'geen_reactie') => ({ accountId: a, op: `2026-10-${String(dag).padStart(2, '0')}T10:00:00Z`, uitkomst: u })
     expect(pogingTotAfspraak([p('a', 1, 'afspraak'), p('b', 1), p('b', 2), p('b', 3, 'afspraak'), ...[1, 2, 3, 4, 5, 6].map((d) => p('c', d)), p('c', 7, 'afspraak'), p('d', 1)]))
       .toEqual({ 1: 1, 2: 0, 3: 1, 4: 0, 5: 0, later: 1 })
+  })
+  it('eersteAfspraakPoging: gemiddelde en verdeling bij poging 1, 2, 3 of 4 en later', () => {
+    const p = (a: string, dag: number, u: string | null = 'geen_reactie') => ({ accountId: a, op: `2026-10-${String(dag).padStart(2, '0')}T10:00:00Z`, uitkomst: u })
+    const pog = [p('a', 1, 'afspraak'), p('b', 1), p('b', 2), p('b', 3, 'afspraak'), p('b', 4, 'afspraak'), ...[1, 2, 3, 4, 5].map((d) => p('c', d)), p('c', 6, 'afspraak'), p('d', 1), p('e', 2, 'afspraak'), p('f', 3), p('f', 1)]
+    const x = eersteAfspraakPoging(pog)
+    expect(x.accounts).toBe(4)
+    expect(x.verdeling).toEqual({ 1: 2, 2: 0, 3: 1, '4+': 1 })
+    expect(x.gemiddeld).toBe(2.8) // (1 + 3 + 6 + 1) / 4 = 2,75
+    expect(x.meest).toBe('1')
+    // Volgorde in de invoer maakt niet uit; alleen de eerste afspraak telt.
+    expect(eersteAfspraakPoging([p('g', 5, 'afspraak'), p('g', 2), p('g', 3)]).verdeling).toEqual({ 1: 0, 2: 0, 3: 1, '4+': 0 })
+    // Vanaf: alleen eerste afspraken vanaf die datum, de pogingen ervoor tellen wel.
+    expect(eersteAfspraakPoging(pog, '2026-10-02T00:00:00Z')).toMatchObject({ accounts: 3, verdeling: { 1: 1, 2: 0, 3: 1, '4+': 1 } })
+    expect(eersteAfspraakPoging([p('d', 1)])).toEqual({ accounts: 0, gemiddeld: null, verdeling: { 1: 0, 2: 0, 3: 0, '4+': 0 }, meest: null })
   })
   it('top drie redenen, meest eerst', () => {
     expect(uitvalPerReden({ uitval: { 'Geen budget': 6, 'Tevreden met huidige leverancier': 14, 'Verkeerd moment': 5, Anders: 1 } }).map((u) => u.reden)).toEqual(['Tevreden met huidige leverancier', 'Geen budget', 'Verkeerd moment'])

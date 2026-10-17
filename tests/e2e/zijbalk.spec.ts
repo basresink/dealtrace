@@ -2,11 +2,12 @@ import { expect, test } from '@playwright/test'
 import { ga, login } from './hulp'
 
 test.describe('zijbalk per niveau', () => {
-  test('Beginner buitendienst: 14 items met Planning open, en Bezoeken voor Belblokken', async ({ page }) => {
+  test('Beginner buitendienst: 15 items met Planning open, en Bezoeken voor Belblokken', async ({ page }) => {
     await login(page, 'u-02')
     const items = page.locator('.sb-nav .sb-groep:not(.sb-slotgroep) .sb-link')
-    // Planning is een uitklapmenu: dicht 10 items (met Opvolgreeksen en Richting in Start), open 15 (Prospectplanning staat sinds 0064 voor iedereen aan).
-    await expect(items).toHaveCount(10)
+    // Planning is een uitklapmenu: dicht 9 items (met Opvolgreeksen en Richting in Start; Funnel staat niet meer in het menu),
+    // open 15 (Prospectplanning staat sinds 0064 voor iedereen aan; Terug in beeld staat ook in Planning).
+    await expect(items).toHaveCount(9)
     await page.getByTestId('sb-planning').click()
     await expect(items).toHaveCount(15)
     const sleutels = await items.evaluateAll((els) => els.map((e) => e.getAttribute('data-sleutel')))
@@ -25,11 +26,12 @@ test.describe('zijbalk per niveau', () => {
     await expect(page).toHaveURL(/\/richting$/)
   })
 
-  test('Rapportages met Mijn dashboard en Funnel; de gebruikerskaart opent geen menu', async ({ page }) => {
+  test('Rapportages met alleen Mijn dashboard (Funnel via de knop op Mijn dashboard); de gebruikerskaart opent geen menu', async ({ page }) => {
     await login(page, 'u-01')
     const groep = page.locator('.sb-groep[data-groep="Rapportages"]')
     await expect(groep.locator('.sb-groep-kop')).toHaveText('Rapportages')
-    await expect(groep.locator('.sb-link')).toHaveText(['Mijn dashboard', 'Funnel'])
+    await expect(groep.locator('.sb-link')).toHaveText(['Mijn dashboard'])
+    await expect(page.locator('.sb-nav a[href="/funnel"]')).toHaveCount(0)
     await expect(page.locator('.sb-groep[data-groep="Resultaten"]')).toHaveCount(0)
     await groep.locator('.sb-link[data-sleutel="nav.resultaten"]').click()
     await expect(page).toHaveURL(/\/mijn-dashboard$/)

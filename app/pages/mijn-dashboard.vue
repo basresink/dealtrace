@@ -36,11 +36,11 @@ const SERIES = [
   { sleutel: 'linkedin', label: 'LinkedIn', kleur: 'paars' },
   { sleutel: 'bericht', label: 'Bericht', kleur: 'inkt' },
 ] as const
-const reisRijen = computed(() => (data.value?.funnel?.fases ?? []).map((f: any) => ({ sleutel: f.faseId, label: f.label, aantal: f.aantal, waarde: f.conversie != null ? `${f.conversie}% door` : null, sub: f.norm != null ? `norm ${f.norm}%` : null, kleur: f.hoofdfase === 'Vinden' ? 'inkt' : f.hoofdfase === 'Bewerken' ? 'geel' : 'groen', markeer: f.stok })))
+const reisRijen = computed(() => (data.value?.funnel?.fases ?? []).map((f: any) => ({ sleutel: f.faseId, label: f.label, aantal: f.aantal, waarde: f.conversie != null ? `${f.conversie}% door` : null, sub: [f.norm != null ? `norm ${f.norm}%` : null, f.faseId === 'afspraak-gepland' && gemPoging.value ? `gem. poging ${gemPoging.value}` : null].filter(Boolean).join(' · ') || null, kleur: f.hoofdfase === 'Vinden' ? 'inkt' : f.hoofdfase === 'Bewerken' ? 'geel' : 'groen', markeer: f.stok })))
 const UIT_KLEUR: Record<string, string> = { afspraak: 'groen', gesproken: 'blauw', later: 'geel', nee: 'rood', geen: 'inkt', voicemail: 'inkt', verzonden: 'paars', fout: 'oranje', overig: 'inkt' }
 const uitkomstRijen = computed(() => {
   const tot = (data.value?.uitkomsten ?? []).reduce((s: number, u: any) => s + u.aantal, 0)
-  return (data.value?.uitkomsten ?? []).map((u: any) => ({ sleutel: u.sleutel, label: u.label, aantal: u.aantal, waarde: tot ? `${Math.round((u.aantal / tot) * 100)}%` : null, kleur: UIT_KLEUR[u.sleutel] ?? 'inkt' }))
+  return (data.value?.uitkomsten ?? []).map((u: any) => ({ sleutel: u.sleutel, label: u.label, aantal: u.aantal, waarde: tot ? `${Math.round((u.aantal / tot) * 100)}%` : null, sub: u.sleutel === 'afspraak' && gemPoging.value ? `eerste gem. bij poging ${gemPoging.value}` : null, kleur: UIT_KLEUR[u.sleutel] ?? 'inkt' }))
 })
 const pogingPunten = computed(() => Object.entries(data.value?.funnel?.pogingen ?? {}).map(([k, n]) => ({ sleutel: k, label: k === 'later' ? '6+' : k, titel: k === 'later' ? 'Na poging 6 of later' : `Bij poging ${k}`, kern: true, totaal: Number(n), delen: { afspraken: Number(n) } })))
 const pogingTotaal = computed(() => pogingPunten.value.reduce((s, p) => s + p.totaal, 0))
@@ -51,11 +51,12 @@ const zelf = ref<any[] | null>(null)
 const bezig = ref(false)
 async function zelfanalyse() { bezig.value = true; try { zelf.value = (await $fetch<any>('/api/coaching/zelfanalyse', { method: 'POST' })).punten } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false } }
 useHead({ title: 'Mijn dashboard · Dealtrace' })
-// Weekreview en Weekstart onder Meer, zodat de knoppenrij op 1280 px op één regel blijft (B14).
-const meerItems = computed(() => [
-  ...(functie('dagritme.weekreview')?.beschikbaar ? [{ label: 'Weekreview', icoon: 'NotebookPen', to: '/weekreview', test: 'knop-weekreview' }] : []),
-  ...(functie('dagritme.weekstart')?.beschikbaar ? [{ label: 'Weekstart', icoon: 'CalendarRange', to: '/weekstart', test: 'knop-weekstart' }] : []),
-])
+// Funnel staat niet meer in de zijbalk; je opent hem hier. Weekreview en Weekstart open je via Dagstart.
+const funnelAan = computed(() => !!functie('nav.funnel')?.beschikbaar)
+const funnelLink = computed(() => `/funnel${data.value?.periode.sleutel === 'kwartaal' ? '?periode=kwartaal' : ''}`)
+// Bij welke poging de eerste afspraak kwam (activiteiten en afgeronde taken), voor de blokken hieronder.
+const eersteAfspraak = computed(() => data.value?.funnel?.eersteAfspraak ?? null)
+const gemPoging = computed(() => (eersteAfspraak.value?.gemiddeld != null ? eersteAfspraak.value.gemiddeld.toLocaleString('nl-NL') : null))
 </script>
 
 <template>
@@ -63,7 +64,7 @@ const meerItems = computed(() => [
     <RapportKop v-model:open="filtersOpen" :kicker="`Mijn dashboard · ${data?.periode.label ?? 'Deze maand'}`" titel="Waar sta jij?" subtitel="Jouw pogingen, gesprekken, afspraken en reis over de gekozen periode. Activiteit telt op wat jij deed; prospects en dekking op wat jij in beheer hebt." :filter-aantal="filterAantal" helpartikel="je-cijfers-lezen">
       <template #acties>
         <NuxtLink to="/data-kwaliteit" class="dd-actie dd-actie--secundair" data-test="knop-data" title="Datakwaliteit"><Icoon naam="Database" class="dd-actie-icoon" />Data</NuxtLink>
-        <KopMeer :items="meerItems" />
+        <NuxtLink v-if="funnelAan" :to="funnelLink" class="dd-actie dd-actie--secundair" data-test="knop-funnel"><Icoon naam="Filter" class="dd-actie-icoon" />Funnel</NuxtLink>
       </template>
     </RapportKop>
     <RapportPeriode v-if="filtersOpen && data" :opties="DASHBOARD_PERIODE_OPTIES" :waarde="data.periode.sleutel" :van="data.periode.van" :tot="data.periode.tot" :vandaag="vandaag" :eigen-label="EIGEN_PERIODE_LABEL" :reset="data.periode.sleutel !== 'maand'" @kies="kiesPeriode" @datum="(van, tot) => zet({ periode: 'eigen', van, tot })" @reset="kiesPeriode('maand')" />
@@ -115,6 +116,7 @@ const meerItems = computed(() => [
             <p class="md-blok-meta">{{ data.funnel.kop.titel }}</p>
             <BalkRijen v-if="data.funnel.aantalAccounts" :rijen="reisRijen" label="Accounts per reisfase" />
             <p v-else class="md-leeg">Nog geen accounts in deze periode.</p>
+            <EersteAfspraakPoging v-if="eersteAfspraak" class="md-eap" :data="eersteAfspraak" data-test="reis-eerste-afspraak" />
             <p v-if="data.funnel.kop.stok" class="md-voet">{{ data.funnel.kop.stok }}</p>
           </div>
           <div class="md-blok" data-test="grafiek-uitkomsten">
@@ -122,6 +124,7 @@ const meerItems = computed(() => [
             <p class="md-blok-meta">{{ data.periode.label }} · {{ data.kpi.pogingen }} pogingen</p>
             <BalkRijen v-if="uitkomstRijen.length" :rijen="uitkomstRijen" label="Uitkomsten van je pogingen" />
             <p v-else class="md-leeg">Nog geen pogingen met een uitkomst.</p>
+            <EersteAfspraakPoging v-if="eersteAfspraak" class="md-eap" vorm="regel" :data="eersteAfspraak" data-test="uitkomsten-eerste-afspraak" />
           </div>
         </div>
       </section>
@@ -133,6 +136,7 @@ const meerItems = computed(() => [
             <template v-if="data.prospects.dekking">
               <DekkingRaster v-bind="data.prospects.dekking" />
               <p class="md-voet">Laatste contact per actieve prospect (nieuw, gescoord of in reis).<template v-if="data.prospects.dekking.zonderContact"> <strong>{{ data.prospects.dekking.zonderContact }}</strong> {{ data.prospects.dekking.zonderContact === 1 ? 'prospect heeft' : 'prospects hebben' }} nog geen contactmoment: kandidaten voor je volgende belblok.</template></p>
+              <p v-if="eersteAfspraak?.accounts" class="md-voet" data-test="dekking-eerste-afspraak">Je eerste afspraak kwam gemiddeld bij poging <strong>{{ gemPoging }}</strong>: {{ eersteAfspraak.verdeling['1'] }} bij poging 1, {{ eersteAfspraak.verdeling['2'] }} bij poging 2, {{ eersteAfspraak.verdeling['3'] }} bij poging 3 en {{ eersteAfspraak.verdeling['4+'] }} bij poging 4 of later.</p>
             </template>
             <button v-else type="button" class="dd-act knop-slot" data-test="dekking-slot" @click="toonUitleg('funnel.filters')"><Icoon naam="Lock" :grootte="14" /> Prospectdekking komt vanaf Gevorderd</button>
           </div>
@@ -222,6 +226,7 @@ const meerItems = computed(() => [
 .md-leeg { margin: 0; font-size: 13px; color: var(--muted); }
 .md-voet { margin: 14px 0 0; font-size: 12px; line-height: 1.55; color: var(--muted); }
 .md-voet strong { color: var(--ink); }
+.md-eap { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
 
 .md-tabelvak { overflow-x: auto; }
 .md-tabel { width: 100%; border-collapse: collapse; font-size: 13px; }

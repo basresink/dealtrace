@@ -80,7 +80,7 @@ export async function mijnDashboard(tx: Tx, gebruikerId: string, q: Record<strin
   let funnel = null
   if (opties.funnel) {
     const fn = await laadFunnel(tx, { van: van, tot: new Date(Date.parse(tot) - 1).toISOString(), gebruikerIds: [gebruikerId] }, { details: opties.funnelDetails })
-    funnel = { kop: fn.kop, aantalAccounts: fn.aantalAccounts, pogingen: fn.pogingen, fases: fn.fases.map((x: any) => ({ faseId: x.faseId, label: x.label, hoofdfase: x.hoofdfase, aantal: x.aantal, conversie: x.conversie ?? null, norm: x.norm?.conversie ?? null, stok: x.stok })) }
+    funnel = { kop: fn.kop, aantalAccounts: fn.aantalAccounts, pogingen: fn.pogingen, eersteAfspraak: fn.eersteAfspraak, fases: fn.fases.map((x: any) => ({ faseId: x.faseId, label: x.label, hoofdfase: x.hoofdfase, aantal: x.aantal, conversie: x.conversie ?? null, norm: x.norm?.conversie ?? null, stok: x.stok })) }
   }
 
   const afspraken = (await rijen(tx, sql`select * from coaching_notities where gebruiker_id = ${gebruikerId} and soort = 'afspraak' order by op desc limit 50`)).map(notitieUit)

@@ -12,10 +12,10 @@ function gebruiker(overig: Partial<GebruikerContext> = {}): GebruikerContext {
 }
 
 describe('zijbalk per niveau (6.1)', () => {
-  it('Beginner 16, Gevorderd 20, Expert 22 items (met Concepten, Meetings, Briefings, Accountplannen, Signaalradar, Opvolgreeksen, Prospectplanning en Terug in beeld voor iedereen)', () => {
-    expect(telItems(zijbalkVoor(gebruiker(), org, stand))).toBe(16)
-    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'gevorderd' }), org, stand))).toBe(20)
-    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'expert' }), org, stand))).toBe(22)
+  it('Beginner 15, Gevorderd 19, Expert 21 items (met Concepten, Meetings, Briefings, Accountplannen, Signaalradar, Opvolgreeksen, Prospectplanning en Terug in beeld voor iedereen; Funnel niet meer in het menu)', () => {
+    expect(telItems(zijbalkVoor(gebruiker(), org, stand))).toBe(15)
+    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'gevorderd' }), org, stand))).toBe(19)
+    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'expert' }), org, stand))).toBe(21)
   })
 
   it('wat uit staat komt in "Nog niet aangezet" met het niveau waarvoor het aanstaat', () => {
@@ -70,7 +70,7 @@ describe('zijbalk per niveau (6.1)', () => {
 
   it('Toon minder haalt weg, nooit erbij', () => {
     const z = zijbalkVoor(gebruiker({ verborgen: ['nav.campagnes', 'nav.leadgenerator'] }), org, stand)
-    expect(telItems(z)).toBe(15)
+    expect(telItems(z)).toBe(14)
     expect(z.groepen.flatMap((g) => g.items).some((i) => i.sleutel === 'nav.leadgenerator')).toBe(false)
   })
 
@@ -81,11 +81,14 @@ describe('zijbalk per niveau (6.1)', () => {
     expect(sm.groepen.find((g) => g.naam === 'Manager')?.items).toHaveLength(4)
   })
 
-  it('Rapportages: Mijn dashboard op /mijn-dashboard en Funnel, na Prospects en voor Planning', () => {
+  it('Rapportages: alleen Mijn dashboard op /mijn-dashboard, na Prospects en voor Planning; Funnel blijft een functie zonder menu-item', () => {
     const z = zijbalkVoor(gebruiker(), org, stand)
     expect(z.groepen.map((g) => g.naam)).toEqual(['Start', 'Activiteiten', 'Prospects', 'Rapportages', 'Planning'])
     expect(z.groepen.some((g) => (g.naam as string) === 'Resultaten')).toBe(false)
-    expect(z.groepen.find((g) => g.naam === 'Rapportages')!.items.map((i) => [i.naam, i.route])).toEqual([['Mijn dashboard', '/mijn-dashboard'], ['Funnel', '/funnel']])
+    expect(z.groepen.find((g) => g.naam === 'Rapportages')!.items.map((i) => [i.naam, i.route])).toEqual([['Mijn dashboard', '/mijn-dashboard']])
+    expect(z.groepen.flatMap((g) => g.items).some((i) => i.route === '/funnel')).toBe(false)
+    expect(functie('nav.funnel')?.zijbalk).toBeUndefined()
+    expect(beschikbaar('nav.funnel', gebruiker(), org, stand).ok).toBe(true)
   })
 
   it('Datakwaliteit staat niet in de zijbalk en gaat aan vanaf Gevorderd', () => {
@@ -98,7 +101,7 @@ describe('zijbalk per niveau (6.1)', () => {
   it('Iedereen ziet alles: geen groep Nog niet aangezet', () => {
     const z = zijbalkVoor(gebruiker(), { ...org, iedereenAlles: true }, stand)
     expect(z.nietAangezet).toHaveLength(0)
-    expect(telItems(z)).toBe(22)
+    expect(telItems(z)).toBe(21)
   })
 })
 

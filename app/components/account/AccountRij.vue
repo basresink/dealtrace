@@ -2,7 +2,8 @@
 // Eén rij in de lijst van prospects en klanten, in de opzet van DealDrive: logovlak met het
 // logo (eigen logo-URL of favicon van de website) of anders de initialen, naam met klasselabel, kanalen en feiten, een regel met gekleurde streep
 // (aanleiding of achterstallige next-action), de labels fase en status, en rechts de contactpersonen.
-// De naam is de link; de streklink maakt de hele rij klikbaar zonder geneste links.
+// De naam is de link; de streklink maakt de hele rij klikbaar zonder geneste links. Bij prospects is elk
+// contacticoon een eigen link naar de contactpersoon (boven de streklink, op de telefoon 44 px).
 import { CONTACTROL_LABEL } from '~~/shared/contactgegevens'
 import { ordenLabels } from '~~/shared/labels'
 import { reeksStrip } from '~~/shared/opvolgreeks'
@@ -75,7 +76,12 @@ const rolLabel = (rol: string) => CONTACTROL_LABEL[rol as keyof typeof CONTACTRO
     </div>
     <div class="acc-contacten">
       <template v-if="contacten.length">
-        <span v-for="c in contacten" :key="c.id" class="acc-contact" :style="{ background: kleurUitNaam(c.id) }" :title="`${c.naam} · ${rolLabel(c.rol)}`"><img v-if="c.fotoUrl" :src="c.fotoUrl" alt="" class="acc-contact-foto" loading="lazy"><template v-else>{{ initialen(c.naam) }}</template><span class="sr-only">{{ c.naam }}</span></span>
+        <template v-if="rij.kind === 'prospect'">
+          <NuxtLink v-for="c in contacten" :key="c.id" :to="`/contacten/${c.id}`" class="acc-contact acc-contact--link" :style="{ background: kleurUitNaam(c.id) }" :title="`${c.naam} · ${rolLabel(c.rol)}`" :aria-label="`Open contactpersoon ${c.naam}`" data-test="rij-contact"><img v-if="c.fotoUrl" :src="c.fotoUrl" alt="" class="acc-contact-foto" loading="lazy"><template v-else>{{ initialen(c.naam) }}</template></NuxtLink>
+        </template>
+        <template v-else>
+          <span v-for="c in contacten" :key="c.id" class="acc-contact" :style="{ background: kleurUitNaam(c.id) }" :title="`${c.naam} · ${rolLabel(c.rol)}`"><img v-if="c.fotoUrl" :src="c.fotoUrl" alt="" class="acc-contact-foto" loading="lazy"><template v-else>{{ initialen(c.naam) }}</template><span class="sr-only">{{ c.naam }}</span></span>
+        </template>
         <span v-if="rest" class="acc-contact acc-contact--rest" :title="`Nog ${rest} ${rest === 1 ? 'contactpersoon' : 'contactpersonen'}`">+{{ rest }}</span>
       </template>
       <span v-else class="acc-geen-contact">Geen contactpersoon</span>
@@ -92,4 +98,11 @@ const rolLabel = (rol: string) => CONTACTROL_LABEL[rol as keyof typeof CONTACTRO
 .acc-contact { overflow: hidden; }
 .acc-labels { margin-top: 6px; }
 .acc-contact-foto { width: 100%; height: 100%; object-fit: cover; }
+.acc-contact--link { position: relative; z-index: 1; text-decoration: none; cursor: pointer; }
+.acc-contact--link:hover { z-index: 2; outline: 2px solid var(--ink); outline-offset: -2px; }
+.acc-contact--link:focus-visible { z-index: 2; outline: 2px solid var(--ink); outline-offset: 1px; }
+@media (max-width: 719px) {
+  .acc-contact--link { width: 44px; height: 44px; margin-left: 6px; font-size: 13px; }
+  .acc-contact--link:first-child { margin-left: 0; }
+}
 </style>

@@ -2,7 +2,7 @@
 // activiteiten; de rekenregels staan in shared/funnel.ts. nb_funnel_stand is de afgeleide stand per
 // dag (de motor bouwt hem op; de schermen rekenen live voor de gekozen periode).
 import { sql } from 'drizzle-orm'
-import { conversie, doorlooptijd, FUNNEL_FASES, FUNNEL_HOOFDFASE, FUNNEL_LABEL, funnelStand, kopTekst, leesNormen, pogingTotAfspraak, stokpunt, uitvalPerReden, type FunnelFase } from '../../shared/funnel'
+import { conversie, doorlooptijd, eersteAfspraakPoging, FUNNEL_FASES, FUNNEL_HOOFDFASE, FUNNEL_LABEL, funnelStand, kopTekst, leesNormen, pogingTotAfspraak, stokpunt, uitvalPerReden, type FunnelFase } from '../../shared/funnel'
 import { nlMoment, nlTijdstip, plusDagen } from '../../shared/datum'
 import { POGING_SOORTEN } from '../../shared/planning'
 import { gebruikDb } from './db'
@@ -13,6 +13,7 @@ type Rij = Record<string, any>
 const rijen = async (tx: Tx, q: ReturnType<typeof sql>) => (await tx.execute(q)).rows as Rij[]
 const iso = (v: unknown) => (v == null ? null : v instanceof Date ? v.toISOString() : new Date(String(v)).toISOString())
 const lijst = (xs: string[]) => xs.join(',')
+const TAAK_POGING = ['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht', 'whatsapp']
 
 export interface FunnelFilters { van: string; tot: string; gebruikerIds: string[] | null; reisId?: string | null; doelgroepId?: string | null; campagneId?: string | null; kanaal?: string | null }
 
@@ -54,6 +55,12 @@ export async function laadFunnel(tx: Tx, f: FunnelFilters, opties: { details: bo
   // Pogingen per account (Benaderd) en pogingen tot de eerste afspraak.
   const betrokken = [...new Set(stand.flatMap((s) => s.accounts.binnen))]
   const pogingen = betrokken.length && opties.details ? (await rijen(tx, sql`select account_id, op, uitkomst from activiteiten where soort = any(string_to_array(${POGING_SOORTEN.join(',')}, ',')) and op <= ${f.tot} and op >= ${new Date(Date.parse(f.van) - 365 * 864e5).toISOString()} and account_id = any(string_to_array(${lijst(betrokken)}, ','))`)).map((r) => ({ accountId: r.account_id, op: iso(r.op)!, uitkomst: r.uitkomst })) : []
+  // Afgeronde taken met een uitkomst zonder eigen activiteitregel (bijvoorbeeld van voor de koppeling) tellen
+  // ook als poging, zodat "bij welke poging de eerste afspraak kwam" rekent op activiteiten en taken samen.
+  const taakPogingen = betrokken.length && opties.details ? (await rijen(tx, sql`select t.account_id, coalesce(t.updated_at, t.due_date) as op, t.uitkomst from tasks t where t.status = 'klaar' and t.uitkomst is not null
+      and t.action_type = any(string_to_array(${TAAK_POGING.join(',')}, ',')) and coalesce(t.updated_at, t.due_date) <= ${f.tot}
+      and not exists (select 1 from activiteiten ac where ac.task_id = t.id) and t.account_id = any(string_to_array(${lijst(betrokken)}, ','))`)).map((r) => ({ accountId: r.account_id as string, op: iso(r.op)!, uitkomst: r.uitkomst as string })) : []
+  const allePogingen = [...pogingen, ...taakPogingen]
   const benaderd = fase('benaderd').accounts.binnen
   const gemPogingen = benaderd.length && pogingen.length ? Math.round((pogingen.filter((p) => benaderd.includes(p.accountId)).length / benaderd.length) * 10) / 10 : null
   const gesprek = fase('in-gesprek').accounts.binnen
@@ -76,7 +83,8 @@ export async function laadFunnel(tx: Tx, f: FunnelFilters, opties: { details: bo
           : s.faseId === 'overgedragen' ? (gew?.n ? `${gew.n} gewonnen na overdracht` : null) : null,
       } : {}),
     })),
-    pogingen: opties.details ? pogingTotAfspraak(pogingen) : null,
+    pogingen: opties.details ? pogingTotAfspraak(allePogingen) : null,
+    eersteAfspraak: opties.details ? eersteAfspraakPoging(allePogingen) : null,
   }
 }
 

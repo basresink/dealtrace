@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // De lijst voor prospects en klanten (F03), in de opzet van DealDrive: kop met kruimel,
-// werkbalk (zoeken, AI en hulp, nieuw, filters en Meer met taak, afspraak en export), een uitklapbare filterstrook
+// werkbalk (zoeken, AI en hulp, nieuw, filters; bij klanten ook Meer met taak, afspraak en export), een uitklapbare filterstrook
 // met het zoekveld, de weergave, de sortering en meerekenende tellers (in de URL) en één witte kaart met AccountRij-rijen.
 // Contextmenu en "Toon meer" blijven.
 import { BEREIK_LABEL, CONTACT_LABEL, STATUS_LABEL, telLink } from '~/utils/accountWeergave'
@@ -75,7 +75,8 @@ onBeforeUnmount(() => { window.removeEventListener('click', sluitMenus); window.
 const primair = (r: any) => r.contacten.find((c: any) => c.id === r.primairContact) ?? r.contacten.find((c: any) => c.rol === 'beslisser') ?? r.contacten[0]
 function taakVoor(r: any | null) { taakAccount.value = r ? { id: r.id, naam: r.name } : null; nieuweTaak.value = true }
 function afspraakVoor(r: any | null) { afspraakAccount.value = r ? { id: r.id, naam: r.name } : null; nieuweAfspraak.value = true }
-// Minder gebruikte acties staan onder Meer, zodat de kop op een laptop op één regel blijft.
+// Bij klanten staan minder gebruikte acties onder Meer. Bij prospects is Meer weg: taak en afspraak per
+// prospect via het contextmenu (of Taken en Agenda), exporteren onderaan het filterpaneel.
 const meerItems = computed(() => [
   { label: 'Nieuwe taak', icoon: 'ListTodo', actie: () => taakVoor(null), test: 'lijst-taak' },
   { label: 'Nieuwe afspraak', icoon: 'CalendarCheck', actie: () => afspraakVoor(null), test: 'lijst-afspraak' },
@@ -95,7 +96,7 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
       </template>
       <template #titel><h1 class="title title--groot">{{ soort === 'prospect' ? 'Alle prospects' : 'Bestaande klanten (uit DealDrive)' }}</h1></template>
       <template #uitleg>
-        <p v-if="soort === 'prospect'" class="subtitle subtitle--groot">Alle prospects van jouw organisatie, te filteren op accountklasse en functie. Klanten zie je bij <NuxtLink to="/klanten" class="tekst-link">Bestaande klanten →</NuxtLink></p>
+        <p v-if="soort === 'prospect'" class="subtitle subtitle--groot">Alle prospects van jouw organisatie, te filteren op accountklasse en functie.</p>
         <p v-else class="subtitle subtitle--groot">Klanten komen uit DealDrive of je CRM en zijn hier alleen te lezen: als bron voor kansen langs de route en warme introducties, en om klanten uit je prospectlijsten te houden. Dealtrace maakt zelf geen klant van een prospect.</p>
       </template>
       <template #acties>
@@ -103,7 +104,7 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
         <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'dd-actie--filters-aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="filters-knop" @click="wisselFilters">
           <Icoon naam="Filter" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="pil-teller pil-teller--zwart">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="keuzemenu-pijl" :class="{ 'keuzemenu-pijl--open': filtersOpen }" />
         </button>
-        <KopMeer :items="meerItems" />
+        <KopMeer v-if="soort !== 'prospect'" :items="meerItems" />
       </template>
       <template #na>
         <div v-show="filtersOpen" class="filterpaneel mt-16" data-test="filterpaneel">
@@ -137,7 +138,10 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
             <span class="filter-label">Sorteer op</span>
             <button v-for="o in SORTERINGEN" :key="o[0]" type="button" role="radio" class="filter-pil" :class="{ 'filter-pil--aan': sort === o[0] }" :aria-checked="sort === o[0]" :data-test="`sorteer-${o[0]}`" @click="kiesSortering(o[0])">{{ o[1] }}</button>
           </div>
-          <div class="filter-groep filter-groep--eind"><button type="button" class="dd-tekstknop" @click="router.replace({ query: {} })">Reset filters</button></div>
+          <div class="filter-groep filter-groep--eind">
+            <a v-if="soort === 'prospect' && data.kan?.export" :href="exportUrl" class="dd-act" data-test="exporteren"><Icoon naam="Download" :grootte="14" />Exporteer deze lijst</a>
+            <button type="button" class="dd-tekstknop" @click="router.replace({ query: {} })">Reset filters</button>
+          </div>
         </div>
       </template>
     </PaginaKop>

@@ -2,7 +2,8 @@
 // Funnel van de prospectreis (F17) in de opzet van DealDrive /rapportage: kop als zin met het stokpunt,
 // Filters met de periodestrook (en vanaf Gevorderd doelgroep, reis en campagne, voor de salesmanager
 // persoon of team), het zwarte cijferblok, de conversie per fase gegroepeerd in Vinden, Bewerken en
-// Verbinden, doorlooptijden tegen de norm, uitval per reden, pogingen tot afspraak en een tabel met alle
+// Verbinden (met bij welke poging de eerste afspraak kwam), doorlooptijden tegen de norm, uitval per reden,
+// pogingen tot afspraak en een tabel met alle
 // cijfers. Klik op een fase of reden voor de lijst als schuifvenster. Filters in de URL.
 import { EIGEN_PERIODE_LABEL } from '~~/shared/dashboard'
 
@@ -124,6 +125,7 @@ useHead({ title: 'Funnel · Dealtrace' })
                   <h3 class="fr-groep-kop">{{ g }}</h3>
                   <BalkRijen :rijen="rijenVoor(f2.fases, g)" :max="max" klikbaar :label="`Fases in ${g}`" @kies="(r) => openFase(r.sleutel)" />
                 </div>
+                <EersteAfspraakPoging v-if="n === 0 && data.eersteAfspraak" class="fr-eap" :data="data.eersteAfspraak" data-test="funnel-eerste-afspraak" />
               </div>
             </div>
 
@@ -139,7 +141,7 @@ useHead({ title: 'Funnel · Dealtrace' })
               </div>
             </div>
 
-            <StaafGrafiek v-if="data.pogingen" titel="Pogingen tot afspraak" :meta="`${pogingTotaal} eerste ${pogingTotaal === 1 ? 'afspraak' : 'afspraken'} · norm 4 tot 5 pogingen`" :punten="pogingPunten" :series="[{ sleutel: 'afspraken', label: 'Eerste afspraken', kleur: 'geel' }]" :hoogte="140" leeg="Nog geen eerste afspraken in deze periode." data-test="pogingen" />
+            <StaafGrafiek v-if="data.pogingen" titel="Pogingen tot afspraak" :meta="`${pogingTotaal} eerste ${pogingTotaal === 1 ? 'afspraak' : 'afspraken'}${data.eersteAfspraak?.gemiddeld != null ? ` · gemiddeld bij poging ${data.eersteAfspraak.gemiddeld.toLocaleString('nl-NL')}` : ''} · norm 4 tot 5 pogingen`" :punten="pogingPunten" :series="[{ sleutel: 'afspraken', label: 'Eerste afspraken', kleur: 'geel' }]" :hoogte="140" leeg="Nog geen eerste afspraken in deze periode." data-test="pogingen" />
 
             <div class="chart-block" data-test="funnel-tabel">
               <header class="chart-head"><h2 class="chart-title">Alle fases in cijfers</h2><span class="chart-meta">{{ periodeLabel }}</span></header>
@@ -205,6 +207,7 @@ useHead({ title: 'Funnel · Dealtrace' })
 .fr-bord { display: grid; grid-template-columns: 1fr; gap: 16px; }
 @media (min-width: 1000px) { .fr-bord--twee { grid-template-columns: 1fr 1fr; } }
 .fr-groep + .fr-groep { margin-top: 18px; }
+.fr-eap { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
 .fr-groep-kop { margin: 0 0 10px; font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .fr-duo { display: grid; grid-template-columns: 1fr; gap: 16px; }
 @media (min-width: 900px) { .fr-duo { grid-template-columns: 1fr 1fr; gap: 24px; } }

@@ -155,16 +155,20 @@ test.describe('Weekstart en dagstart', () => {
     })
   }
 
-  test('Vandaag en Mijn dashboard leiden naar het ritme', async ({ page }) => {
+  test('Vandaag en de Dagstart leiden naar het ritme; Mijn dashboard heeft geen Meer', async ({ page }) => {
     await login(page, 'u-07')
     await ga(page, '/')
     // Vandaag heeft geen dagritmeblok meer; de knop Dagstart in de kop leidt naar de dagstart.
     await expect(page.getByTestId('dagritme-strook')).toHaveCount(0)
     await expect(page.getByTestId('vandaag-dagstart')).toHaveAttribute('href', '/dagstart')
+    // Mijn dashboard heeft geen Meer meer (met Weekreview en Weekstart); die open je via de Dagstart.
     await ga(page, '/mijn-dashboard')
-    await page.getByTestId('kop-meer').click()
-    await expect(page.getByTestId('knop-weekreview')).toHaveAttribute('href', '/weekreview')
-    await expect(page.getByTestId('knop-weekstart')).toHaveAttribute('href', '/weekstart')
+    await expect(page.getByTestId('kop-meer')).toHaveCount(0)
+    await expect(page.getByTestId('knop-weekreview')).toHaveCount(0)
+    await ga(page, '/dagstart')
+    const ritme = page.getByRole('navigation', { name: 'Meer van je ritme' })
+    await expect(ritme.locator('a[href="/weekreview"]')).toBeVisible()
+    await expect(ritme.locator('a[href="/weekstart"]')).toBeVisible()
   })
 })
 

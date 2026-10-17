@@ -117,6 +117,30 @@ export function pogingTotAfspraak(pogingen: { accountId: string; op: string; uit
   return uit
 }
 
+export type EersteAfspraakBak = '1' | '2' | '3' | '4+'
+export interface EersteAfspraakPoging { accounts: number; gemiddeld: number | null; verdeling: Record<EersteAfspraakBak, number>; meest: EersteAfspraakBak | null }
+/**
+ * Bij welke poging de eerste afspraak kwam, per account: de pogingen (activiteiten en afgeronde taken)
+ * op volgorde tot en met de eerste met uitkomst afspraak. Gemiddelde op één decimaal en de verdeling
+ * bij poging 1, 2, 3 of 4 en later. Accounts zonder afspraak tellen niet mee. `vanaf` beperkt tot
+ * eerste afspraken vanaf dat moment (de pogingen ervoor tellen wel).
+ */
+export function eersteAfspraakPoging(pogingen: { accountId: string; op: string; uitkomst?: string | null }[], vanaf?: string): EersteAfspraakPoging {
+  const verdeling: Record<EersteAfspraakBak, number> = { 1: 0, 2: 0, 3: 0, '4+': 0 }
+  const per = new Map<string, typeof pogingen>()
+  for (const p of pogingen) per.set(p.accountId, [...(per.get(p.accountId) ?? []), p])
+  let som = 0; let n = 0
+  for (const lijst of per.values()) {
+    const tl = [...lijst].sort((a, b) => a.op.localeCompare(b.op))
+    const i = tl.findIndex((p) => p.uitkomst === 'afspraak')
+    if (i < 0 || (vanaf && tl[i]!.op < vanaf)) continue
+    som += i + 1; n++
+    verdeling[i + 1 >= 4 ? '4+' : (String(i + 1) as '1')]++
+  }
+  const top = (Object.entries(verdeling) as [EersteAfspraakBak, number][]).reduce<[EersteAfspraakBak, number] | null>((m, x) => (x[1] > (m?.[1] ?? 0) ? x : m), null)
+  return { accounts: n, gemiddeld: n ? Math.round((som / n) * 10) / 10 : null, verdeling, meest: top?.[0] ?? null }
+}
+
 /** De top drie uitvalredenen van een fase, meest eerst; gelijk aantal op naam. */
 export const uitvalPerReden = (s: Pick<FaseStand, 'uitval'>, n = 3) => Object.entries(s.uitval).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, n).map(([reden, aantal]) => ({ reden, aantal }))
 

@@ -157,8 +157,8 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Je eigen cijfers: pogingen, gesprekken, afspraken en overdrachten.', totDieTijd: 'Niets; Mijn dashboard staat altijd aan.' },
   },
   {
+    // Niet in de zijbalk: je opent de funnel met de knop Funnel op Mijn dashboard.
     sleutel: 'nav.funnel', naam: 'Funnel', pakket: 'starter', rollen: 'iedereen', helpartikel: 'funnel', startNiveau: 'beginner',
-    zijbalk: { groep: 'Rapportages', route: '/funnel', icoon: 'Filter' },
     uitleg: { watHetDoet: 'Hoeveel accounts per fase van de prospectreis staan, doorstromen en uitvallen, tot en met de eerste afspraak.', totDieTijd: 'Je salesmanager bespreekt de funnel met je.' },
   },
   {
