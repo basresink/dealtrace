@@ -43,7 +43,7 @@ Joost van Voltvast werkt één voordeel uit: monteurs hoeven niet te wachten.
 
 ## Zo doe je het in Dealtrace
 
-Op **Richting**, tabblad **Belofte**, staat onder "Als de klant doorvraagt" het waardestatement van jullie verkoopverhaal. Jouw eigen statements per situatie gebruik je in je belscript: vanaf Gevorderd maak je in **Mijn instellingen**, **Mijn scripts**, een eigen variant en zet je je statement in het blok winpunt. Zie [Een belscript kiezen](/helpcenter/een-belscript-kiezen) en [Onze belofte](/helpcenter/onze-belofte).
+Op **Richting**, tabblad **Belofte**, staat onder "Als de prospect doorvraagt" het waardestatement van jullie verkoopverhaal. Jouw eigen statements per situatie gebruik je in je belscript: vanaf Gevorderd maak je in **Mijn instellingen**, **Mijn scripts**, een eigen variant en zet je je statement in het blok winpunt. Zie [Een belscript kiezen](/helpcenter/een-belscript-kiezen) en [Onze belofte](/helpcenter/onze-belofte).
 
 ## Controlevragen
 

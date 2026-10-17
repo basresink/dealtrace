@@ -2,7 +2,7 @@
 titel: Je cijfers lezen
 categorie: Jezelf verbeteren
 collectie: newbusiness
-samenvatting: Wat Mijn dashboard laat zien, hoe je de vergelijking met het team leest en wat de Coach voorstelt.
+samenvatting: Wat Mijn dashboard laat zien en hoe je de vergelijking met het team leest.
 routes: /mijn-dashboard
 ---
 
@@ -48,11 +48,7 @@ Bij **Mijn dashboard** zie je je eigen cijfers. Ze komen allemaal uit wat je in 
 - **Beslisser bereikt**: welk deel van je gesprekken met een beslisser was. De norm is meer dan 20 procent.
 - **Pogingen tot afspraak**: gemiddeld 4 tot 5 is gezond. Stop je eerder, dan laat je afspraken liggen.
 
-Bij elk percentage staat waarop het rust. Vanaf Gevorderd zie je de trend over vier weken en het teamgemiddelde. Je ziet nooit de namen of de cijfers van een collega.
-
-Als Expert vraag je de Coach **Wat kan ik deze week beter doen?** Je krijgt hoogstens drie punten, elk met de cijfers waarop het rust en een artikel om verder te lezen. Een vraag kost 20 AI-credits.
-
-Onderaan staan de afspraken uit je coachingsgesprek. Met **Reageer** laat je weten hoe het gaat.
+Bij elk percentage staat waarop het rust. Vanaf Gevorderd zie je je cijfers **Per week** en **Jij tegenover je team**. Je ziet nooit de namen of de cijfers van een collega.
 
 ## Controlevragen
 
@@ -62,7 +58,7 @@ Onderaan staan de afspraken uit je coachingsgesprek. Met **Reageer** laat je wet
    - [ ] Meer dan 50 procent.
 2. Wat zie je vanaf Gevorderd niet bij het teamgemiddelde?
    - [x] De namen en cijfers van collega's.
-   - [ ] De trend over vier weken.
+   - [ ] Je cijfers per week.
    - [ ] Het teamgemiddelde zelf.
 3. Hoeveel pogingen tot afspraak zijn gezond?
    - [ ] 1 tot 2.

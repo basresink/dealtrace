@@ -35,7 +35,7 @@ Pieter van Testtechniek Kabelgoot zegt: "Bij de keten heb ik alles onder één d
 
 ## Zo doe je het in Dealtrace
 
-Onder **Concurrenten** op **Richting** staat per concurrent een kaart: de soort, wat ze sterk en zwak doen, het onderscheid, **Zo zeg je het**, **Als de klant zegt** met het antwoord, het bewijs en **Wanneer we verliezen**. Vanaf Gevorderd kies je op de accountkaart de **huidige leverancier**; je ziet dan meteen wat je zegt. Staat het account op gekwalificeerd, dan waarschuwt Dealtrace: "Let op: hier verliezen we vaak van ...". Op Gevorderd download je de concurrentiekaart als printbare pagina via **Afdrukken** en **Opslaan als PDF**.
+Onder **Concurrenten** op **Richting** staat per concurrent een kaart: de soort, wat ze sterk en zwak doen, het onderscheid, **Zo zeg je het**, **Als de prospect zegt** met het antwoord, het bewijs en **Hier verliezen we**. Vanaf Gevorderd kies je op de accountkaart in het venster **Info** de **huidige leverancier**; je ziet dan meteen wat je zegt. Staat het account op gekwalificeerd, dan waarschuwt Dealtrace: "Let op: hier verliezen we vaak van ...". Vanaf Gevorderd opent **Download concurrentiekaart** de kaarten als printbare pagina; in het afdrukvenster bewaar je ze als PDF.
 
 ## Controlevragen
 

@@ -22,7 +22,7 @@ routes: /mijn-dashboard
 1. Open **Mijn dashboard** onder Rapportages. De standaardperiode is deze maand; een andere kies je met **Filters**.
 2. Kijk eerst naar **Waar sta je tegenover je doel?**
 3. Kijk dan naar de tegel **Gesprek naar afspraak** (norm 15 procent) en naar **Waar je pogingen op uitliepen**.
-4. Kijk tot slot naar **Bij welke poging de eerste afspraak kwam**.
+4. Kijk tot slot bij **Je reis per fase** bij welke poging je eerste afspraak kwam.
 5. Kies één ding dat je deze week anders doet.
 
 ## Voorbeeld

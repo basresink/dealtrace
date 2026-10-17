@@ -43,9 +43,9 @@ Marloes van Voltvast belt Hilde van Testtechniek Kabelgoot.
 
 ## Zo doe je het in Dealtrace
 
-Op **Richting** staat onder **Concurrenten** een kaart per soort, ook voor "Niets doen" met wat de klant zegt: "We zijn tevreden met onze leverancier." Lees **Zo zeg je het**, het antwoord bij **Als de klant zegt** en **Wanneer we verliezen**.
+Op **Richting** staat onder **Concurrenten** een kaart per soort, ook voor "Niets doen" met wat de klant zegt: "We zijn tevreden met onze leverancier." Lees **Zo zeg je het**, het antwoord bij **Als de prospect zegt** en **Hier verliezen we**.
 
-Vanaf Gevorderd kies je op de accountkaart de **huidige leverancier**. Dan zie je meteen wat je zegt en welk bewijs je hebt. Staat het account in de fase gekwalificeerd, dan waarschuwt Dealtrace als je hier vaak van verliest.
+Vanaf Gevorderd kies je op de accountkaart in het venster **Info** de **huidige leverancier**. Dan zie je meteen wat je zegt en welk bewijs je hebt. Staat het account in de fase gekwalificeerd, dan waarschuwt Dealtrace als je hier vaak van verliest.
 
 Blijft het een nee, klik dan op de accountkaart bij **Meer**, **Reis** op **Zet nee**, kies "Tevreden met huidige leverancier" en daarna bij wie. Klik **Zet op nee**. De afkoelperiode per kanaal gaat in en het account komt op de terugkomdatum vanzelf terug.
 

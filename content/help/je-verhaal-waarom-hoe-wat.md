@@ -45,7 +45,7 @@ Bij jouw organisatie klinkt de belofte zo:
 
 ## Zo doe je het in Dealtrace
 
-Op **Richting** lees je het verkoopverhaal van je organisatie. Onder **Verhaal** staat de kernzin, ook per branche. Onder **Belofte** staat wat jullie beloven, en bij "Als de klant doorvraagt" het waardestatement. Onder **Winpunten** zie je per fase waarom klanten kiezen. De briefing en de Schrijver volgen dezelfde volgorde: waarom, hoe en één vraag. Tik in de **Pitstop** op **Bereid voor**, dan maakt de Schrijver een concept met precies één winpunt en één bewijs. Heeft de branche van het account nog geen eigen verhaal, dan zie je dat in oranje onder het blok.
+Op **Richting** lees je het verkoopverhaal van je organisatie. Onder **Verhaal** staat de kernzin, ook per branche. Onder **Belofte** staat wat jullie beloven, en bij "Als de prospect doorvraagt" het waardestatement. Onder **Winpunten** zie je per fase waarom klanten kiezen. De briefing en de Schrijver volgen dezelfde volgorde: waarom, hoe en één vraag. Tik in de **Pitstop** op **Bereid voor**, dan maakt de Schrijver een concept met precies één winpunt en één bewijs. Heeft de branche van het account nog geen eigen verhaal, dan zie je dat in oranje onder het blok.
 
 ## Controlevragen
 

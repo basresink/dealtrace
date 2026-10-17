@@ -49,7 +49,7 @@ Joost van Voltvast belt Marloes van Testbrontsma Installatietechniek.
 
 ## Zo doe je het in Dealtrace
 
-Op **Richting** staat onder **Concurrenten** per soort concurrent een kaart met **Zo zeg je het**, **Als de klant zegt** met het antwoord, het bewijs en **Wanneer we verliezen**. Vanaf Gevorderd kies je op de accountkaart de **huidige leverancier**; dan zie je meteen wat je zegt en welk bewijs je hebt.
+Op **Richting** staat onder **Concurrenten** per soort concurrent een kaart met **Zo zeg je het**, **Als de prospect zegt** met het antwoord, het bewijs en **Hier verliezen we**. Vanaf Gevorderd kies je op de accountkaart in het venster **Info** de **huidige leverancier**; dan zie je meteen wat je zegt en welk bewijs je hebt.
 
 In de **belmodus** staat links je belscript en in het midden de gesprekskaart. Wordt het toch een nee, kies dan **Geen interesse** en de reden, bijvoorbeeld "Tevreden met huidige leverancier", met bij wie.
 
@@ -66,4 +66,4 @@ In de **belmodus** staat links je belscript en in het midden de gesprekskaart. W
 3. Waar vind je in Dealtrace het antwoord op "Online is het goedkoper."?
    - [ ] Bij Concepten, onder de opvolgmails.
    - [ ] In Mijn instellingen, kaart Meldingen voor onderweg.
-   - [x] Op Richting, onder Concurrenten, bij Als de klant zegt.
+   - [x] Op Richting, onder Concurrenten, bij Als de prospect zegt.

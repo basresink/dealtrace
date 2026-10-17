@@ -41,9 +41,8 @@ useHead({ title: 'Belscripts · Instellingen · Dealtrace' })
           <FunctieLink v-if="!data.kan.beheer" to="/belscripts" class="dd-actie dd-actie--secundair" data-test="naar-studio"><Icoon naam="ScrollText" class="dd-actie-icoon" />Belscript Studio</FunctieLink>
           <template v-else>
           <button type="button" class="dd-actie dd-actie--primair" data-test="nieuw-script" @click="nieuw"><Icoon naam="Plus" class="dd-actie-icoon" />Nieuw script</button>
-          <button type="button" class="dd-actie dd-actie--secundair" data-test="ai-opzet" @click="opzet"><Icoon naam="Sparkles" class="dd-actie-icoon" />AI-opzet</button>
           <!-- Minder gebruikt: onder Meer, zodat de kop op 1280 px op één regel blijft. -->
-          <KopMeer :items="[{ label: 'Kopieer uit startset', icoon: 'Copy', actie: startset, test: 'kopieer-startset' }, { label: 'Belscript Studio', icoon: 'ScrollText', to: '/belscripts', test: 'naar-studio' }]" />
+          <KopMeer :items="[{ label: 'AI-opzet', icoon: 'Sparkles', actie: opzet, test: 'ai-opzet' }, { label: 'Kopieer uit startset', icoon: 'Copy', actie: startset, test: 'kopieer-startset' }, { label: 'Belscript Studio', icoon: 'ScrollText', to: '/belscripts', test: 'naar-studio' }]" />
           </template>
         </template>
         <template #filters>

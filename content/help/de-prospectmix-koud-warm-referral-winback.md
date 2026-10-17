@@ -40,7 +40,7 @@ Marloes van Voltvast plant haar week zo:
 
 ## Zo doe je het in Dealtrace
 
-Elke soort heeft een eigen **hercontactritme**: **Koud** met vijf pogingen, **Warm** met drie en **Winback** met twee. Zo krijgt een warm account minder pogingen dan een koud account. Bij **Campagnes** zie je per campagne de soort, zodat je een koude belcampagne, een referralcampagne en een winbackcampagne naast elkaar kunt draaien. Bij **Belblokken** krijgt een koud blok alleen nieuwe prospects, en opvolging verdringt nooit koude acquisitie. In de **Funnel** filter je vanaf Gevorderd op campagne en zie je welke bron de meeste afspraken oplevert.
+Elke soort heeft een eigen **hercontactritme**: **Koud** met vijf pogingen, **Warm** met drie en **Winback** met twee. Zo krijgt een warm account minder pogingen dan een koud account. Bij **Campagnes** zie je per campagne de soort, zodat je een koude belcampagne, een referralcampagne en een winbackcampagne naast elkaar kunt draaien. Bij **Belblokken** krijgt een koud blok alleen nieuwe prospects, en opvolging verdringt nooit koude acquisitie. In de **Funnel** (via **Mijn dashboard**) filter je vanaf Gevorderd op campagne en zie je welke bron de meeste afspraken oplevert.
 
 ## Controlevragen
 
