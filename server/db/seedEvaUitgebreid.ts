@@ -805,18 +805,21 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
   const zonderRitme = (f: Fase) => accs.filter((a) => a.fase === f && actief(a) && !a.ritme && !afspraken.some((w) => w.acc === a.id && w.status !== 'geannuleerd'))
   const STOPPEND = new Set(['afspraak', 'later', 'gesproken', 'geen_interesse'])
   const laatsteReactie = (a: Acc) => Math.max(-99, ...evs.filter((e) => e.acc === a.id && STOPPEND.has(e.uitkomst ?? '')).map((e) => e.dag))
-  const kandidaten = { benaderd: zonderRitme('benaderd'), gesprek: zonderRitme('in-gesprek'), geparkeerd: zonderRitme('geparkeerd'), verloren: accs.filter((a) => a.fase === 'verloren'), gepland: accs.filter((a) => a.fase === 'afspraak-gepland') }
+  const gekozen = new Set<string>()
+  /** Het eerste account uit de lijsten dat nog geen reeks heeft. */
+  const pak = (...lijsten: Acc[][]) => { for (const l of lijsten) for (const a of l) if (!gekozen.has(a.id)) { gekozen.add(a.id); return a } return undefined }
+  const nietRitme = (f: Fase) => accs.filter((a) => a.fase === f && actief(a) && !a.ritme)
   const REEKSEN: [Acc | undefined, string, 'loopt' | 'gepauzeerd' | 'gestopt' | 'klaar', string | null, number, 'B' | 'C'][] = [
-    [kandidaten.benaderd[0], 'na-voicemail', 'loopt', null, -5, 'C'],
-    [kandidaten.benaderd[1], 'na-voicemail', 'loopt', null, -2, 'B'],
-    [kandidaten.gesprek[0], 'na-informatie', 'loopt', null, -6, 'C'],
-    [kandidaten.gesprek[1], 'na-eerste-gesprek', 'loopt', null, -9, 'C'],
-    [kandidaten.benaderd[2], 'na-informatie', 'gepauzeerd', null, -4, 'C'],
-    [kandidaten.gepland[0], 'na-informatie', 'gestopt', 'afspraak', -12, 'C'],
-    [kandidaten.gesprek[2], 'na-voicemail', 'gestopt', 'reactie', -10, 'C'],
-    [kandidaten.verloren[0], 'na-eerste-gesprek', 'gestopt', 'nee', -18, 'C'],
-    [kandidaten.geparkeerd[0], 'na-voicemail', 'gestopt', 'handmatig', -14, 'C'],
-    [kandidaten.geparkeerd[1], 'na-voicemail', 'klaar', null, -26, 'C'],
+    [pak(zonderRitme('benaderd')), 'na-voicemail', 'loopt', null, -5, 'C'],
+    [pak(zonderRitme('benaderd')), 'na-voicemail', 'loopt', null, -2, 'B'],
+    [pak(zonderRitme('in-gesprek'), zonderRitme('benaderd')), 'na-informatie', 'loopt', null, -6, 'C'],
+    [pak(zonderRitme('in-gesprek'), zonderRitme('gekwalificeerd'), zonderRitme('benaderd')), 'na-eerste-gesprek', 'loopt', null, -9, 'C'],
+    [pak(zonderRitme('benaderd'), zonderRitme('gekwalificeerd')), 'na-informatie', 'gepauzeerd', null, -4, 'C'],
+    [pak(accs.filter((a) => a.fase === 'afspraak-gepland')), 'na-informatie', 'gestopt', 'afspraak', -12, 'C'],
+    [pak(nietRitme('in-gesprek')), 'na-voicemail', 'gestopt', 'reactie', -10, 'C'],
+    [pak(accs.filter((a) => a.fase === 'verloren')), 'na-eerste-gesprek', 'gestopt', 'nee', -18, 'C'],
+    [pak(zonderRitme('geparkeerd')), 'na-voicemail', 'gestopt', 'handmatig', -14, 'C'],
+    [pak(zonderRitme('geparkeerd'), nietRitme('geparkeerd')), 'na-voicemail', 'klaar', null, -26, 'C'],
   ]
   const reeksRijen: Record<string, unknown>[] = []
   const stapRijen: Record<string, unknown>[] = []
