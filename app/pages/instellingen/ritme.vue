@@ -54,7 +54,6 @@ function voegSegmentToe() {
 }
 function zetPlafond() { bewaarLater('frequentieplafond', () => data.value.frequentieplafond) }
 function zetCapaciteit() { bewaarLater('capaciteit', () => data.value.capaciteit) }
-function zetAfkoeling() { bewaarLater('afkoeling', () => Object.fromEntries(data.value.afkoeling.map((k: any) => [k.id, k.dagen]))) }
 const RIJ_LABEL: Record<string, string> = { prospect: 'Prospect', meeting: 'Meeting (online)', bezoek: 'Bezoek' }
 // Klassen op het tabblad Klanten (uit DealDrive of het CRM) staan niet in de accountmatrix: het onderhoudsritme
 // van klanten hoort in DealDrive. Ze blijven bewaard, zodat de lijst Bestaande klanten ze kan tonen.
@@ -138,8 +137,9 @@ useHead({ title: 'Accountmatrix · Instellingen · Dealtrace' })
         <span class="kicker kicker--streep mt-16">5 · Afkoelperiodes, consent en capaciteit</span>
         <div class="kaart mt-8">
           <div class="formulier-raster">
-            <label v-for="k in data.afkoeling" :key="k.id" class="veld"><span class="veld-label">{{ k.label }} (dagen na nee)</span><input v-model.number="k.dagen" type="number" min="0" max="730" class="invoer" :disabled="!beheer" @input="zetAfkoeling"></label>
+            <label v-for="k in data.afkoeling" :key="k.id" class="veld"><span class="veld-label">{{ k.label }} (dagen na nee)</span><input v-model.number="k.dagen" type="number" min="0" max="730" class="invoer" disabled></label>
           </div>
+          <p class="kaart-meta mt-8" data-test="afkoeling-lezen">De afkoeling pas je aan op <NuxtLink to="/instellingen/terugkomen?tab=afkoeling" class="tekst-link">Instellingen, Terugkomen</NuxtLink>; daar zie je ook wat er verschuift.</p>
           <div class="formulier-raster mt-16">
             <label class="veld"><span class="veld-label">Frequentieplafond: berichten per kanaal</span><input v-model.number="data.frequentieplafond.maxBerichten" type="number" min="0" class="invoer" :disabled="!beheer" @input="zetPlafond"></label>
             <label class="veld"><span class="veld-label">per aantal werkdagen (buiten het ritme)</span><input v-model.number="data.frequentieplafond.werkdagen" type="number" min="1" class="invoer" :disabled="!beheer" @input="zetPlafond"></label>

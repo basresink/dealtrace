@@ -68,7 +68,7 @@ async function bewaarEnSluit() {
   vraag.value = false
   if (o?.gepland) await o.flush()
   else if (o?.stand === 'fout') await o.opnieuw()
-  else { emit('bewaar'); await nextTick() }
+  else { emit('bewaar'); await new Promise((r) => setTimeout(r, 100)) }
   if (!o) { if (props.open) emit('sluit'); return }
   if (o.stand === 'bezig') await new Promise<void>((klaar) => { const stop = watch(() => o.stand, (s) => { if (s !== 'bezig') { stop(); klaar() } }) })
   if (!o.open && props.open) emit('sluit')

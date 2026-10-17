@@ -8,6 +8,8 @@ const props = defineProps<{ lijst: Verschuiving[] | null; bezig?: boolean; regel
 const MAX = 12
 const open = ref(false)
 const zicht = computed(() => (open.value ? props.lijst ?? [] : (props.lijst ?? []).slice(0, MAX)))
+const jaar = new Date().getFullYear().toString()
+const dag = (iso: string) => `${terugDagKort(iso)}${iso.slice(0, 4) !== jaar ? ` ${iso.slice(0, 4)}` : ''}`
 const regelNaam = (id: string | null) => (id ? props.regels?.find((r) => r.id === id)?.reden ?? id : 'geen regel')
 </script>
 
@@ -21,7 +23,7 @@ const regelNaam = (id: string | null) => (id ? props.regels?.find((r) => r.id ==
       <ul class="tv-lijst">
         <li v-for="v in zicht" :key="v.id" data-test="tk-verschuif-rij">
           <NuxtLink :to="`/accounts/${v.id}`" class="tv-naam">{{ v.naam }}</NuxtLink>
-          <span class="tv-datum"><span class="tnum">{{ terugDagKort(v.van) }}</span> <span class="meta">naar</span> <strong class="tnum">{{ terugDagKort(v.naar) }}</strong>
+          <span class="tv-datum"><span class="tnum">{{ dag(v.van) }}</span> <span class="meta">naar</span> <strong class="tnum">{{ dag(v.naar) }}</strong>
             <span v-if="v.kanaalVan !== v.kanaalNaar" class="meta"> · {{ KANAAL_LABEL[v.kanaalVan as Kanaal] }} naar {{ KANAAL_LABEL[v.kanaalNaar as Kanaal] }}</span>
             <span v-if="v.regelVan !== v.regelNaar" class="meta"> · regel {{ regelNaam(v.regelNaar) }}</span>
           </span>

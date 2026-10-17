@@ -6,7 +6,7 @@
 // bevestigde versie. Uit SalesDNA: alleen ritme en wie het oppakt.
 import { KANAAL_LABEL, type Kanaal } from '~~/shared/nbStatus'
 import {
-  BRON_LABEL, OPPAKKERS, OPPAKKER_LABEL, REGEL_KANALEN, korterDanAfkoeling, regelKanaalWaarde, terugDagKort, terugDagLang, valideerRegel, voorbeeld,
+  OPPAKKERS, OPPAKKER_LABEL, REGEL_KANALEN, korterDanAfkoeling, regelKanaalWaarde, terugDagKort, terugDagLang, valideerRegel, voorbeeld,
   type Oppakker, type Verschuiving,
 } from '~~/shared/terugkomBeheer'
 
@@ -23,11 +23,14 @@ const groepen = computed(() => [
 const gekozen = ref<string | null>(null)
 const concept = ref<Concept | null>(null)
 const keuze = ref<string[]>([])
+const lijst = ref<Verschuiving[] | null>(null)
+const rekent = ref(false)
 const sleutel = (x: { bronSoort: string; reden: string }) => `${x.bronSoort}|${x.reden}`
 const spiegel = computed(() => props.data.bron === 'salesdna')
 const magKern = computed(() => !!props.data.kan?.regels && !spiegel.value)
 const magAanvullen = computed(() => !!props.data.kan?.regels)
 const magRedenen = computed(() => !!props.data.kan?.redenen && !spiegel.value)
+const BRON_KORT: Record<string, string> = { deal_verloren: 'deal verloren', offerte_verloren: 'offerte verloren', slapend: 'slapend' }
 const ritmeNaam = (id: string | null) => props.data.ritmes?.find((r: any) => r.id === id)?.naam ?? 'Standaard winback'
 
 function kies(id: string) {
@@ -62,8 +65,6 @@ const vb = computed(() => (concept.value ? voorbeeld({ termijnDagen: Number(conc
 const letOp = computed(() => (concept.value ? korterDanAfkoeling({ termijnDagen: Number(concept.value.termijnDagen) || 0, kanaal: regelKanaalWaarde(concept.value.kanaal) }, props.data.afkoeling) : null))
 
 // Droogloop: wat verschuift, kort na elke wijziging.
-const lijst = ref<Verschuiving[] | null>(null)
-const rekent = ref(false)
 let timer: ReturnType<typeof setTimeout> | undefined
 let volgnr = 0
 watch([huidig, gekozen], () => {
@@ -143,7 +144,7 @@ const bijRegel = (id: string) => (props.data.redenen ?? []).filter((x: any) => x
             <div class="tr-vinkjes">
               <label v-for="x in redenOpties" :key="sleutel(x)" class="tr-vinkje" :class="{ 'tr-vinkje--elders': elders(x) }">
                 <input v-model="keuze" type="checkbox" :value="sleutel(x)" :disabled="!magRedenen" :data-test="`tk-reden-${x.reden}`">
-                <span>{{ x.reden }}<span v-if="x.bronSoort !== 'nee'" class="meta"> ({{ BRON_LABEL[x.bronSoort as keyof typeof BRON_LABEL] }})</span><span v-if="elders(x)" class="meta"> (nu {{ elders(x).reden }})</span></span>
+                <span>{{ x.reden }}<span v-if="x.bronSoort !== 'nee'" class="meta"> ({{ BRON_KORT[x.bronSoort] }})</span><span v-if="elders(x)" class="meta"> (nu {{ elders(x).reden }})</span></span>
               </label>
             </div>
             <span class="veld-uitleg">{{ magRedenen ? 'Een reden hoort bij één regel. Kies je een reden die al bij een andere regel hoort, dan verhuist hij hierheen.' : spiegel ? 'Koppel redenen op het tabblad Verliesredenen.' : 'Redenen koppelen doet de beheerder.' }}</span>
@@ -207,8 +208,8 @@ const bijRegel = (id: string) => (props.data.redenen ?? []).filter((x: any) => x
 .tr-breed { grid-column: 1 / -1; }
 @media (max-width: 599px) { .tr-velden { grid-template-columns: minmax(0, 1fr); } }
 .tr-redenen { border: 0; margin: 0; padding: 0; min-width: 0; }
-.tr-vinkjes { display: flex; flex-wrap: wrap; gap: 6px 16px; }
-.tr-vinkje { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; font-size: var(--fs-klein); }
+.tr-vinkjes { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px 16px; }
+.tr-vinkje { display: flex; align-items: center; gap: 8px; min-height: 32px; font-size: var(--fs-klein); }
 .tr-vinkje--elders { color: var(--ink-soft); }
 .tr-som { padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); }
 .tr-som .gegevens { margin-bottom: 8px; }

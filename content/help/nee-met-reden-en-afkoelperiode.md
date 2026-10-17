@@ -3,7 +3,7 @@ titel: Nee met reden en afkoelperiode
 categorie: Prospects
 collectie: product
 samenvatting: Een nee met reden, de afkoelperiode per kanaal en de terugkomdatum.
-routes: /instellingen/nee-redenen
+routes: /instellingen/nee-redenen, /instellingen/terugkomen
 ---
 
 # Nee met reden en afkoelperiode
@@ -16,7 +16,7 @@ Geen behoefte, Tevreden met huidige leverancier, Geen budget, Verkeerd moment, N
 
 ## Afkoelperiode per kanaal
 
-Na een nee benader je het account een tijd niet. Standaard: bellen 90 dagen, mail 60, LinkedIn 90, WhatsApp 180, bezoek 180 en kaart 365. Bij "Niet geschikt" is het 365 dagen voor elk kanaal. Je beheerder kan de dagen aanpassen.
+Na een nee benader je het account een tijd niet. Standaard: bellen 90 dagen, mail 60, LinkedIn 90, WhatsApp 180, bezoek 180 en kaart 365. Bij "Niet geschikt" is het 365 dagen voor elk kanaal. Je beheerder past de dagen aan bij **Instellingen**, **Terugkomen**, tabblad **Afkoeling**. Daar zie je ook welke prospects verschuiven voordat je bewaart.
 
 ## Terugkomdatum
 

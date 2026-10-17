@@ -69,7 +69,7 @@ const OBJECT: Record<string, string> = {
   accountplan: 'Accountplan', doelgroep: 'Doelgroep', regel: 'Regel', regels: 'Regels', team: 'Team', mailsjabloon: 'Mailsjabloon',
 }
 const WERKWOORD: Record<string, string> = {
-  aanmaken: 'aangemaakt', maken: 'gemaakt', gemaakt: 'gemaakt', wijzigen: 'gewijzigd', gewijzigd: 'gewijzigd', verwijderen: 'verwijderd',
+  aanmaken: 'aangemaakt', maken: 'gemaakt', toevoegen: 'toegevoegd', hernoemen: 'hernoemd', heractiveer: 'weer actief', gemaakt: 'gemaakt', wijzigen: 'gewijzigd', gewijzigd: 'gewijzigd', verwijderen: 'verwijderd',
   archiveren: 'gearchiveerd', archiveer: 'gearchiveerd', deactiveren: 'gedeactiveerd', heractiveren: 'weer actief', gestart: 'gestart',
   gestopt: 'gestopt', gepauzeerd: 'gepauzeerd', hervat: 'hervat', uploaden: 'geüpload', plannen: 'gepland', verplaatsen: 'verplaatst',
   geannuleerd: 'geannuleerd', activeren: 'actief gezet', inplannen: 'ingepland', bevestig: 'bevestigd', verslag: 'verslag vastgelegd',

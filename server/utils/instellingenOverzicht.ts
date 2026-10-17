@@ -88,7 +88,7 @@ export const KAARTEN: Record<string, Kaart> = {
       if (!isBeheerder(ctx)) {
         const teams = await zichtbareTeams(tx, { id: ctx.gebruiker.id, rol: ctx.gebruiker.rol })
         const leden = await ledenVan(tx, teams.map((t) => t.id))
-        return teams.length ? zin(aantal(leden.length, 'persoon', 'mensen'), `in ${aantal(teams.length, 'team', 'teams')}`) : 'Je hebt nog geen team'
+        return teams.length ? `${aantal(leden.length, 'persoon', 'mensen')} in ${aantal(teams.length, 'team', 'teams')}` : 'Je hebt nog geen team'
       }
       const t = await een<{ g: number; t: number }>(tx, sql`select (select count(*)::int from users where status = 'actief' and role <> 'founder') as g, (select count(*)::int from teams) as t`)
       return zin(aantal(t.g, 'actieve gebruiker', 'actieve gebruikers'), t.t ? `${aantal(t.t, 'team', 'teams')}` : 'nog geen teams')
@@ -104,8 +104,8 @@ export const KAARTEN: Record<string, Kaart> = {
   '/instellingen/regels': {
     mag: () => true,
     stand: async (tx) => {
-      const t = await een<{ n: number; motor: number }>(tx, sql`select count(*)::int as n, count(*) filter (where actief)::int as motor from activity_rules`)
-      return t.n ? zin(aantal(t.n, 'regel', 'regels'), `${t.motor} door de motor`) : 'Nog geen regels'
+      const t = await een<{ n: number; motor: number }>(tx, sql`select count(*)::int as n, count(*) filter (where actief)::int as motor from activity_rules where eigenaar_id is null`)
+      return t.n ? zin(aantal(t.n, 'regel', 'regels'), t.motor === t.n ? 'alle aan' : `${t.motor} aan`) : 'Nog geen regels'
     },
   },
   '/instellingen/ritme': {

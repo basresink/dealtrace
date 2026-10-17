@@ -9,7 +9,7 @@ const rol = computed(() => me.value?.gebruiker.rol)
 const beheerder = computed(() => rol.value === 'beheerder')
 const { data: overzicht } = useFetch<{ stand: Record<string, string>; groepen: Record<string, string> }>('/api/instellingen/overzicht', { lazy: true, default: () => ({ stand: {}, groepen: {} }) })
 
-type Kaart = { titel: string; tekst: string; link?: string; toon: boolean }
+type Kaart = { titel: string; tekst: string; link: string; toon: boolean }
 const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
   {
     naam: 'Organisatie',
@@ -35,7 +35,7 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
       { titel: 'Meetingsoorten en uitkomsten', tekst: 'Soorten afspraken met duur, agendapunten en uitkomsten met gevolg.', link: '/instellingen/meetingsoorten', toon: !!functie('instellingen.meetingsoorten')?.beschikbaar },
       { titel: 'Campagnesoorten', tekst: 'Welke campagnesoorten je verkopers kunnen kiezen.', link: '/instellingen/campagnesoorten', toon: !!functie('instellingen.campagnesoorten')?.beschikbaar },
       { titel: 'Normen per fase', tekst: 'Conversie- en doorlooptijdnormen voor de funnel.', link: '/instellingen/funnel-normen', toon: !!functie('instellingen.funnelNormen')?.beschikbaar },
-      { titel: 'Redenen voor nee en terugkomregels', tekst: 'Vaste redenen, afkoelperiode per kanaal en terugkomregels.', link: '/instellingen/nee-redenen', toon: beheerder.value },
+      { titel: 'Terugkomen', tekst: 'Terugkomregels, verliesredenen, afkoeling per kanaal en het hercontactritme daarna, met wat er verschuift.', link: '/instellingen/terugkomen', toon: ['verkoopverhaal.inrichten', 'verkoopverhaal.mappings', 'instellingen.afkoeling', 'ritme.beheer'].some((f) => !!functie(f)?.beschikbaar) },
     ],
   },
   {
@@ -81,12 +81,11 @@ useHead({ title: 'Instellingen · Dealtrace' })
         <div v-for="g in GROEPEN" :key="g.naam" class="instellingen-groep">
           <div class="inst-groepkop"><span class="kicker kicker--streep">{{ g.naam }}</span><span v-if="overzicht.groepen[g.naam]" class="meta" :data-test="`groepstand-${g.naam}`">{{ overzicht.groepen[g.naam] }}</span></div>
           <div class="instellingen-raster mt-16">
-            <component :is="k.link ? resolveComponent('NuxtLink') : 'article'" v-for="k in g.kaarten" :key="k.titel" :to="k.link" class="kaart" :class="{ 'kaart--klik': k.link, 'kaart--vlak': !k.link }" :data-test="`kaart-${k.titel}`">
+            <NuxtLink v-for="k in g.kaarten" :key="k.titel" :to="k.link" class="kaart kaart--klik" :data-test="`kaart-${k.titel}`">
               <header class="kaart-kop"><h2 class="kaart-titel">{{ k.titel }}</h2></header>
               <p class="kaart-meta">{{ k.tekst }}</p>
-              <p v-if="k.link && overzicht.stand[k.link]" class="inst-stand" data-test="kaart-stand">{{ overzicht.stand[k.link] }}</p>
-              <p v-if="!k.link" class="veld-uitleg">Komt in een volgende versie.</p>
-            </component>
+              <p v-if="overzicht.stand[k.link]" class="inst-stand" data-test="kaart-stand">{{ overzicht.stand[k.link] }}</p>
+            </NuxtLink>
           </div>
         </div>
       </div>

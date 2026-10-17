@@ -16,7 +16,8 @@ const opslag = useFlyoutOpslag()
 const body = ref<HTMLElement | null>(null)
 const shell = ref<{ vraagSluiten: () => Promise<void> } | null>(null)
 function typ(e: Event) { if ((e.target as HTMLElement | null)?.closest('.bv-bewerk')) opslag.gewijzigd() }
-function veldDicht() { nextTick(() => { if (opslag.stand === 'gewijzigd' && !body.value?.querySelector('.bv--bewerk')) opslag.basis() }) }
+// Na opslaan of annuleren van een veld (de klik komt vóór de submit): even later kijken of er nog een veld open staat.
+function veldDicht() { setTimeout(() => { if (opslag.stand === 'gewijzigd' && !body.value?.querySelector('.bv--bewerk')) opslag.basis() }, 60) }
 function bewaarOpen() { for (const f of body.value?.querySelectorAll<HTMLFormElement>('.bv-bewerk') ?? []) f.requestSubmit(); veldDicht() }
 const ai = computed(() => ({ accountId: props.contact?.accountId ?? null, label: props.contact?.naam, vraag: '', voorstellen: [`Wat weet ik over ${props.contact?.voornaam || props.contact?.naam || 'dit contact'}?`, 'Schrijf een korte introductiemail', 'Wie beïnvloedt dit contact?'] }))
 const telHref = computed(() => { const t = props.contact?.mobiel || props.contact?.telefoon; return t ? `tel:${String(t).replace(/[^\d+]/g, '')}` : null })
