@@ -65,7 +65,7 @@ useHead({ title: 'Meetinganalyse · Dealtrace' })
   <div>
     <NietAangezetKop v-if="!aan" sleutel="agenda.meetingAnalyse" />
     <template v-else>
-      <PaginaKop helpartikel="agenda">
+      <PaginaKop helpartikel="meetings">
         <template #kicker>
           <nav class="breadcrumb" aria-label="Kruimelpad"><FunctieLink to="/meetings" class="breadcrumb-link ma-terug" data-test="ma-terug">← Terug naar Meetings</FunctieLink></nav>
           <span class="kicker kicker--streep" data-test="ma-kicker">{{ kicker }}</span>

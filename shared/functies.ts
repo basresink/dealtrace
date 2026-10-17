@@ -84,7 +84,7 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Je route van de dag met kansen langs de route en bezoeken afronden.', totDieTijd: 'Je bezoeken staan in je agenda.' },
   },
   {
-    sleutel: 'nav.meetings', naam: 'Meetings', pakket: 'starter', rollen: 'iedereen', helpartikel: 'agenda', startNiveau: 'beginner',
+    sleutel: 'nav.meetings', naam: 'Meetings', pakket: 'starter', rollen: 'iedereen', helpartikel: 'meetings', startNiveau: 'beginner',
     zijbalk: { groep: 'Planning', route: '/meetings', icoon: 'Handshake' },
     uitleg: { watHetDoet: 'Je meetings van de komende weken per soort, met doel, briefing en verslag.', totDieTijd: 'Je meetings staan in je agenda.' },
   },
@@ -515,7 +515,7 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Hooguit acht voorstellen wie je nu moet spreken, met vormadvies.', totDieTijd: 'Je ziet je taken op Vandaag.' },
   },
   {
-    sleutel: 'agenda.meetingAnalyse', naam: 'Meetinganalyse', pakket: 'starter', rollen: 'iedereen', helpartikel: 'agenda', startNiveau: 'gevorderd',
+    sleutel: 'agenda.meetingAnalyse', naam: 'Meetinganalyse', pakket: 'starter', rollen: 'iedereen', helpartikel: 'meetings', startNiveau: 'gevorderd',
     uitleg: { watHetDoet: 'Haal je je meetingritme? Dekking per accountklasse, uitkomsten, verslagen en doorlooptijd naar vervolg. De salesmanager ziet ook zijn team.', totDieTijd: 'Je ziet je meetings op Meetings.' },
   },
   {

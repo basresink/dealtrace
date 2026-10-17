@@ -65,6 +65,8 @@ watch(tekst, (nieuw) => {
   clearTimeout(timer)
   if (import.meta.client && document.activeElement === invoer.value) actief.value = true
   if (!genoeg.value) { nr++; treffers.value = []; gezocht.value = false; laadt.value = false; return }
+  // Een zoekvraag die nog loopt (bijvoorbeeld de lijst bij focus) is verouderd: hij mag de gefilterde lijst niet overschrijven.
+  nr++
   const z = nieuw.trim().toLowerCase()
   treffers.value = treffers.value.filter((t) => t.naam.toLowerCase().includes(z))
   index.value = treffers.value.length ? 0 : -1

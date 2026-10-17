@@ -16,7 +16,8 @@ const toast = useToast()
 const kvkAan = computed(() => !!functie('onderweg.kvkOpzoeken')?.beschikbaar)
 const kvk = reactive({ gekoppeld: false, bezig: false, resultaten: [] as any[], fout: '' })
 let kvkTimer: ReturnType<typeof setTimeout> | undefined
-watch(q, (w) => {
+// Ook als de koppelstatus pas binnenkomt na het typen: dan zoekt hij alsnog.
+watch([q, () => kvk.gekoppeld], ([w]) => {
   if (kvkTimer) clearTimeout(kvkTimer)
   kvk.resultaten = []; kvk.fout = ''
   if (!kvkAan.value || !kvk.gekoppeld || w.trim().length < 3) return

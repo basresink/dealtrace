@@ -1,4 +1,4 @@
-// P07 op de telefoon: Taken zonder horizontale scroll, de taakflyout als schuifvenster,
+// P07 op de telefoon: Taken zonder horizontale scroll, de taakflyout schermvullend,
 // uitkomsttegels van minstens 44 px, en afronden offline: precies één keer na herstel.
 import { expect, test } from '@playwright/test'
 import { apiLogin, ga, login } from './hulp'
@@ -15,8 +15,11 @@ test('offline afronden met "Ongedaan maken"-strook, en na herstel precies één 
   await ga(page, `/taken?taak=${taak.id}`)
   const breed = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(breed).toBeLessThanOrEqual(0)
-  const kader = await page.getByTestId('taak-flyout').boundingBox()
-  expect(kader!.y).toBeGreaterThan(50)
+  // Op de telefoon is de flyout schermvullend (flyoutstandaard, FlyoutShell).
+  const kader = (await page.getByTestId('taak-flyout').boundingBox())!
+  const scherm = page.viewportSize()!
+  expect(kader.y).toBeLessThanOrEqual(1)
+  expect(Math.round(kader.width)).toBe(scherm.width)
   for (const k of await page.locator('.uitkomst-knop').all()) expect((await k.boundingBox())!.height).toBeGreaterThanOrEqual(44)
   await context.setOffline(true)
   await page.getByTestId('uitkomst-geen_reactie').click()
