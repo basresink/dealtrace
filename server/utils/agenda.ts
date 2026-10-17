@@ -233,7 +233,7 @@ export async function rondAfAfspraak(tx: Tx, org: string, afspraakId: string, do
   // Gat 32: de gekoppelde taak sluit.
   if (ap!.task_id) {
     const [t] = await rijen(tx, sql`select status, action_type from tasks where id = ${ap!.task_id}`)
-    if (t && t.status !== 'klaar') await rondAf(tx, ap!.task_id, { uitkomst: ['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht'].includes(t.action_type) ? 'afspraak' : 'gedaan', sleutel: `afspraak:${ap!.id}` }, door, nu).catch(() => null)
+    if (t && t.status !== 'klaar') await rondAf(tx, ap!.task_id, { uitkomst: ['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht', 'sms'].includes(t.action_type) ? 'afspraak' : 'gedaan', sleutel: `afspraak:${ap!.id}` }, door, nu).catch(() => null)
   }
   if (ap!.account_id && m.klantcontact) {
     await tx.execute(sql`insert into activiteiten (organisation_id, account_id, contact_id, soort, kanaal, uitkomst, door, op, data) values (${org}, ${ap!.account_id}, ${ap!.contact_id}, 'afspraak', ${ap!.vorm}, ${inv.uitkomst}, ${door}, ${nu.toISOString()}, ${JSON.stringify({ afspraakId: ap!.id, tekst: inv.verslag ?? null, soort: ap!.soort_naam })}::jsonb)`)

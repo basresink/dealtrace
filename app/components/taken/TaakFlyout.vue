@@ -12,7 +12,7 @@
 import { NEE_REDENEN } from '~~/shared/nbStatus'
 import { UITKOMST_CODES, UITKOMST_LABEL } from '~~/shared/hercontact'
 import { nlMoment, nlTijdstip } from '~~/shared/datum'
-import { CONTACT_ACTIES, HERHALING_LABEL, HERINNERING_KANAAL, PRIORITEITEN, PRIO_LABEL, PRIO_STIP, STATUS_LABEL, TAAK_TYPES, isAchterstallig, vervalLabel, volgendeStap } from '~~/shared/taken'
+import { CONTACT_ACTIES, HERHALING_LABEL, HERINNERING_KANAAL, PRIORITEITEN, PRIO_LABEL, PRIO_STIP, STATUS_LABEL, isAchterstallig, taakTypeVan, taakTypesVoor, vervalLabel, volgendeStap } from '~~/shared/taken'
 import { telLink } from '~/utils/accountWeergave'
 import { agentDef } from '~~/shared/mandaat'
 import type { Contact, Klant } from './KlantContactKiezer.vue'
@@ -88,7 +88,9 @@ async function stelUit(periode: 'werkdag' | 'week') {
 
 // Gegevens in de leesstand.
 const nu = new Date()
-const typeVan = (id: string) => TAAK_TYPES.find((x) => x.id === id) ?? TAAK_TYPES[0]!
+// WhatsApp heeft de waarde bericht; een bestaande bezoektaak toont als Bezoek en houdt die keuze in de bewerkstand.
+const typeVan = (id: string) => taakTypeVan(id)
+const typeKeuzes = computed(() => taakTypesVoor(t.value?.actionType))
 const overTijd = computed(() => !!t.value?.dueDate && t.value.status !== 'klaar' && isAchterstallig(t.value, nu))
 const vervalDatum = computed(() => (t.value?.dueDate ? new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(t.value.dueDate)) : null))
 const herinneringTekst = computed(() => {
@@ -221,7 +223,7 @@ onBeforeUnmount(() => { document.removeEventListener('keydown', toetsEerst, true
           <fieldset class="veld">
             <legend class="veld-label tf-legend">Type</legend>
             <div class="keuzeraster tf-typen" role="group" aria-label="Type">
-              <button v-for="x in TAAK_TYPES" :key="x.id" type="button" class="keuzeraster-knop" :class="{ 'keuzeraster-knop--aan': bewerk.actionType === x.id }" :aria-pressed="bewerk.actionType === x.id" :data-test="`tf-type-${x.id}`" @click="bewerk.actionType = x.id"><Icoon :naam="x.icoon" :grootte="16" /><span>{{ x.label }}</span></button>
+              <button v-for="x in typeKeuzes" :key="x.id" type="button" class="keuzeraster-knop" :class="{ 'keuzeraster-knop--aan': bewerk.actionType === x.id }" :aria-pressed="bewerk.actionType === x.id" :data-test="`tf-type-${x.id}`" @click="bewerk.actionType = x.id"><Icoon :naam="x.icoon" :grootte="16" /><span>{{ x.label }}</span></button>
             </div>
           </fieldset>
           <label v-if="gevorderd && teamleden?.length" class="veld"><span class="veld-label">Toegewezen aan</span><select v-model="bewerk.ownerId" class="invoer"><option :value="me?.gebruiker.id ?? ''">Mij</option><option v-for="u in teamleden" :key="u.id" :value="u.id">{{ u.naam }}</option></select></label>

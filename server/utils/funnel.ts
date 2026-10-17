@@ -13,7 +13,7 @@ type Rij = Record<string, any>
 const rijen = async (tx: Tx, q: ReturnType<typeof sql>) => (await tx.execute(q)).rows as Rij[]
 const iso = (v: unknown) => (v == null ? null : v instanceof Date ? v.toISOString() : new Date(String(v)).toISOString())
 const lijst = (xs: string[]) => xs.join(',')
-const TAAK_POGING = ['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht', 'whatsapp']
+const TAAK_POGING = ['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht', 'whatsapp', 'sms']
 
 export interface FunnelFilters { van: string; tot: string; gebruikerIds: string[] | null; reisId?: string | null; doelgroepId?: string | null; campagneId?: string | null; kanaal?: string | null }
 

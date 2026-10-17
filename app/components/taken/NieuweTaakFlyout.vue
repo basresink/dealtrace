@@ -5,7 +5,7 @@
 // knoppen met icoon, toegewezen aan (alleen met teamleden), aanleiding, Taak herhalen en Herinnering
 // instellen (uitklapbaar). Beginner: klant, contactpersoon, titel, type en vervaldatum (F06).
 import { nlMoment, nlTijdstip, volgendWerkmoment } from '~~/shared/datum'
-import { HERHALING_LABEL, PRIORITEITEN, PRIO_LABEL, PRIO_STIP, TAAK_TYPES, herhalingAantal } from '~~/shared/taken'
+import { HERHALING_LABEL, PRIORITEITEN, PRIO_LABEL, PRIO_STIP, TAAK_TYPES, herhalingAantal, taakTypesVoor } from '~~/shared/taken'
 import type { Contact, Klant } from './KlantContactKiezer.vue'
 const props = defineProps<{
   open: boolean
@@ -43,11 +43,14 @@ opslag.volg(() => [f, klant.value?.id ?? null, contact.value?.id ?? null])
 const ai = computed(() => ({ accountId: klant.value?.id ?? null, label: klant.value?.naam ?? 'Nieuwe taak', vraag: f.aanleiding.trim() ? `Maak een korte titel voor een taak met deze aanleiding: ${f.aanleiding.trim()}` : '', voorstellen: ['Maak een titel uit de aanleiding', 'Wanneer kan ik het beste bellen?', 'Welk type taak past hier?'] }))
 const bezig = ref(false)
 const fout = ref('')
+// De taakkiezer; komt er een voorgevuld bezoek binnen (oude koppeling), dan staat Bezoek er ook bij.
+const typeKeuzes = ref(TAAK_TYPES)
 
 watch(() => props.open, async (o) => {
   if (!o) return
   const v = props.voorgevuld
   Object.assign(f, leeg(), props.actiesoort ? { actionType: props.actiesoort } : {}, props.titel ? { title: props.titel } : {}, props.aanleiding ? { aanleiding: props.aanleiding } : {}, v?.titel ? { title: v.titel } : {}, v?.actiesoort ? { actionType: v.actiesoort } : {}, v?.aanleiding ? { aanleiding: v.aanleiding } : {})
+  typeKeuzes.value = taakTypesVoor(f.actionType)
   klant.value = props.account ? { ...props.account } : null
   contact.value = props.contact ? { accountId: props.account?.id ?? null, ...props.contact } : null
   fout.value = ''; bezig.value = false
@@ -112,8 +115,9 @@ async function maak() {
           <fieldset class="veld">
             <legend class="veld-label nt-legend">Type</legend>
             <div class="keuzeraster nt-typen" role="group" aria-label="Type">
-              <button v-for="t in TAAK_TYPES" :key="t.id" type="button" class="keuzeraster-knop" :class="{ 'keuzeraster-knop--aan': f.actionType === t.id }" :aria-pressed="f.actionType === t.id" :data-test="`nt-type-${t.id}`" @click="f.actionType = t.id"><Icoon :naam="t.icoon" :grootte="16" /><span>{{ t.label }}</span></button>
+              <button v-for="t in typeKeuzes" :key="t.id" type="button" class="keuzeraster-knop" :class="{ 'keuzeraster-knop--aan': f.actionType === t.id }" :aria-pressed="f.actionType === t.id" :data-test="`nt-type-${t.id}`" @click="f.actionType = t.id"><Icoon :naam="t.icoon" :grootte="16" /><span>{{ t.label }}</span></button>
             </div>
+            <span class="veld-uitleg" data-test="nt-type-uitleg">Een bezoek plan je met + Afspraak.</span>
           </fieldset>
 
           <template v-if="gevorderd">

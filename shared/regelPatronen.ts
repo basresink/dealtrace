@@ -38,8 +38,9 @@ export const CADANSEN: { dagen: number; label: string }[] = [
   { dagen: 7, label: 'Wekelijks' }, { dagen: 14, label: '2 weken' }, { dagen: 30, label: 'Maandelijks' }, { dagen: 61, label: '2 maanden' },
   { dagen: 91, label: 'Kwartaal' }, { dagen: 182, label: 'Half jaar' }, { dagen: 365, label: 'Jaarlijks' },
 ]
-export const ACTIESOORTEN = ['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht', 'geen'] as const
-export const ACTIESOORT_LABEL: Record<string, string> = { bellen: 'Bellen', mailen: 'Mailen', linkedin: 'LinkedIn', bezoek: 'Bezoek', bericht: 'Bericht', geen: 'Geen' }
+/** `bericht` is WhatsApp; `sms` is SMS. */
+export const ACTIESOORTEN = ['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht', 'sms', 'geen'] as const
+export const ACTIESOORT_LABEL: Record<string, string> = { bellen: 'Bellen', mailen: 'Mailen', linkedin: 'LinkedIn', bezoek: 'Bezoek', bericht: 'WhatsApp', sms: 'SMS', geen: 'Geen' }
 export const UITVOERDERROLLEN = ['binnendienst', 'buitendienst', 'eigenaar', 'salesmanager'] as const
 export const CATEGORIEEN = ['Vinden', 'Bewerken', 'Verbinden', 'Ritme', 'Signalen', 'Kwaliteit'] as const
 export const PRIORITEITEN = ['hoog', 'middel', 'laag'] as const
@@ -47,7 +48,7 @@ export const TERMIJNEN = [{ werkdagen: 0, label: 'binnen 24 uur' }, { werkdagen:
 export const SJABLOON_VARIABELEN = ['account', 'contact', 'afspraak'] as const
 export const ONDERWERPEN = ['account'] as const
 
-const KANAAL_VAN_ACTIE: Record<string, Kanaal | null> = { bellen: 'bellen', mailen: 'mail', linkedin: 'linkedin', bezoek: 'bezoek', bericht: 'whatsapp', geen: null }
+const KANAAL_VAN_ACTIE: Record<string, Kanaal | null> = { bellen: 'bellen', mailen: 'mail', linkedin: 'linkedin', bezoek: 'bezoek', bericht: 'whatsapp', sms: 'whatsapp', geen: null }
 
 export interface Afbakening {
   accounttypes?: ('prospect' | 'klant')[]
@@ -311,7 +312,7 @@ export function valideerRegel(r: Partial<Regel>): string[] {
 }
 
 const RITME_PATRONEN = new Set(['ritme', 'hercontact-vervolg'])
-const CONTACT_ACTIE = new Set(['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht'])
+const CONTACT_ACTIE = new Set(['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht', 'sms'])
 
 /** De matrices en lopende ritmes die de poort van een regel nodig heeft. */
 export interface PoortContext {

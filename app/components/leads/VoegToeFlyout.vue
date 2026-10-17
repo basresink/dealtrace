@@ -43,13 +43,14 @@ watch(() => props.lead, (l) => {
   eigenaar.value = props.context?.ik ?? ''
   inReis.value = true; reisId.value = ''; faseId.value = ''
   metTaak.value = true
-  taakType.value = werkplekVan(eigenaar.value) === 'buitendienst' ? 'bezoek' : 'belblok'
+  // Een bezoek plan je als afspraak; de buitendienst begint daarom met een belpoging.
+  taakType.value = werkplekVan(eigenaar.value) === 'buitendienst' ? 'bellen' : 'belblok'
   taakDatum.value = volgendeWerkdag()
   taakContact.value = contacten.value.length ? 0 : ''
   metPlan.value = false
   fout.value = ''
 }, { immediate: true })
-watch(eigenaar, () => { if (taakType.value === 'belblok' && buiten.value) taakType.value = 'bezoek' })
+watch(eigenaar, () => { if (taakType.value === 'belblok' && buiten.value) taakType.value = 'bellen' })
 watch(reisId, () => { faseId.value = '' })
 
 const reis = computed(() => (props.context?.reizen ?? []).find((r: any) => r.id === reisId.value) ?? null)

@@ -8,7 +8,8 @@ import type { Kanaal } from './nbStatus'
 import type { MotorAccount } from './regelPatronen'
 
 export const ACTIE_VAN_KANAAL: Record<string, string> = { bellen: 'bellen', mail: 'mailen', linkedin: 'linkedin', bezoek: 'bezoek', whatsapp: 'bericht' }
-export const KANAAL_VAN_ACTIE: Record<string, Kanaal> = { bellen: 'bellen', mailen: 'mail', linkedin: 'linkedin', bezoek: 'bezoek', bericht: 'whatsapp' }
+/** SMS heeft geen eigen afkoelperiode: het valt onder het berichtkanaal (WhatsApp). */
+export const KANAAL_VAN_ACTIE: Record<string, Kanaal> = { bellen: 'bellen', mailen: 'mail', linkedin: 'linkedin', bezoek: 'bezoek', bericht: 'whatsapp', sms: 'whatsapp' }
 
 export interface PogingVoorstel { n: number; van: number; kanaal: string; actionType: string; due: string }
 

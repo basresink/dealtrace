@@ -400,8 +400,9 @@ export async function maakProspect(tx: Tx, org: string, door: string, eigenaar: 
 const DAGNAAM = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', timeZone: 'Europe/Amsterdam' })
 const DATUM_LANG = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Amsterdam' })
 /** Taaktypes die je in Voeg toe kiest voor de eerste taak (naast het eerstvolgende belblok). */
-export const EERSTE_TAAK_TYPES = ['bellen', 'mailen', 'bezoek', 'linkedin', 'bericht', 'taak'] as const
-const TAAK_LABEL: Record<string, string> = { bellen: 'Bellen', mailen: 'Mail', bezoek: 'Bezoek', linkedin: 'LinkedIn', bericht: 'Bericht', taak: 'Taak' }
+/** Bezoek blijft geldig (motor, buitendienst), maar de kiezer biedt het niet meer aan: een bezoek plan je als afspraak. */
+export const EERSTE_TAAK_TYPES = ['bellen', 'mailen', 'bezoek', 'linkedin', 'bericht', 'sms', 'taak'] as const
+const TAAK_LABEL: Record<string, string> = { bellen: 'Bellen', mailen: 'Mail', bezoek: 'Bezoek', linkedin: 'LinkedIn', bericht: 'WhatsApp', sms: 'SMS', taak: 'Taak' }
 export interface EigenTaak { type?: typeof EERSTE_TAAK_TYPES[number] | null; datum?: string | null; contactId?: string | null }
 const TIJD = new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })
 

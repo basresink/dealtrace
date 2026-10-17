@@ -35,7 +35,7 @@ export const REGEL_KOLOMMEN: Kolom[] = [
   { kop: 'doelgroepen', uit: (r) => (r.data.afbakening.doelgroepIds ?? []).join(', '), in: (r, w) => zetData(r, ['afbakening', 'doelgroepIds'], lijst(w)), toelichting: 'Doelgroep-id\'s.' },
   { kop: 'campagnes', uit: (r) => (r.data.afbakening.campagneIds ?? []).join(', '), in: (r, w) => zetData(r, ['afbakening', 'campagneIds'], lijst(w)), toelichting: 'Campagne-id\'s.' },
   { kop: 'klassen', uit: (r) => (r.data.afbakening.klassen ?? []).join(', '), in: (r, w) => zetData(r, ['afbakening', 'klassen'], lijst(w)), toelichting: 'Klassecodes, bijvoorbeeld A, B.' },
-  { kop: 'actiesoort', uit: (r) => r.data.gevolg.actiesoort, in: (r, w) => zetData(r, ['gevolg', 'actiesoort'], w), keuzes: ACTIESOORTEN, toelichting: 'Bellen, mailen, LinkedIn, bezoek, bericht of geen.' },
+  { kop: 'actiesoort', uit: (r) => r.data.gevolg.actiesoort, in: (r, w) => zetData(r, ['gevolg', 'actiesoort'], w), keuzes: ACTIESOORTEN, toelichting: 'Bellen, mailen, LinkedIn, bezoek, bericht (WhatsApp), sms of geen.' },
   { kop: 'uitvoerderrol', uit: (r) => r.data.gevolg.uitvoerderrol, in: (r, w) => zetData(r, ['gevolg', 'uitvoerderrol'], w), keuzes: UITVOERDERROLLEN, toelichting: 'Wie de taak krijgt.' },
   { kop: 'termijn (werkdagen)', uit: (r) => r.data.gevolg.termijnWerkdagen, in: (r, w) => zetData(r, ['gevolg', 'termijnWerkdagen'], Number(w)), toelichting: '0 is binnen 24 uur.' },
   { kop: 'taaksjabloon', uit: (r) => r.data.gevolg.taaksjabloon, in: (r, w) => zetData(r, ['gevolg', 'taaksjabloon'], w), toelichting: 'Met {account}, {contact}, {afspraak}.' },

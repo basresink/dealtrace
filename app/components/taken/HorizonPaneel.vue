@@ -12,13 +12,15 @@ const { data: agenda } = await useFetch<any>('/api/agenda', { query: { van: vand
 
 type Soort = 'call' | 'visit' | 'email' | 'urgent' | 'note'
 const ICOON: Record<Soort, string> = { call: 'Phone', visit: 'MapPin', email: 'Mail', urgent: 'TriangleAlert', note: 'StickyNote' }
-interface Item { id: string; soort: Soort; titel: string; meta: string; tijd: string; ts: number; dag: string; afspraak: boolean; tag: string | null; taakId: string | null }
+interface Item { id: string; soort: Soort; icoon?: string; titel: string; meta: string; tijd: string; ts: number; dag: string; afspraak: boolean; tag: string | null; taakId: string | null }
 const dagVan = (iso: string) => nlMoment(new Date(iso)).datum
 const tijd = (iso: string) => new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(iso))
 function taakItem(t: any): Item {
   const soort: Soort = isDringend(t.priority) ? 'urgent' : t.actionType === 'bellen' ? 'call' : t.actionType === 'bezoek' ? 'visit' : t.actionType === 'mailen' ? 'email' : 'note'
   const d = t.dueDate ? dagVan(t.dueDate) : vandaag
-  return { id: `taak-${t.id}`, soort, titel: t.title, meta: [t.account?.naam, t.poging ? `poging ${t.poging.n} van ${t.poging.van}` : null].filter(Boolean).join(' · '), tijd: t.dueDate ? tijd(t.dueDate) : '', ts: t.dueDate ? Date.parse(t.dueDate) : 0, dag: d < vandaag ? vandaag : d, afspraak: false, tag: d < vandaag ? 'Over tijd' : null, taakId: t.id }
+  // WhatsApp en SMS houden de zwarte kleur van overig, maar met hun eigen icoon.
+  const icoon = soort === 'note' && t.actionType === 'bericht' ? 'MessageCircle' : soort === 'note' && t.actionType === 'sms' ? 'MessageSquare' : undefined
+  return { id: `taak-${t.id}`, soort, icoon, titel: t.title, meta: [t.account?.naam, t.poging ? `poging ${t.poging.n} van ${t.poging.van}` : null].filter(Boolean).join(' · '), tijd: t.dueDate ? tijd(t.dueDate) : '', ts: t.dueDate ? Date.parse(t.dueDate) : 0, dag: d < vandaag ? vandaag : d, afspraak: false, tag: d < vandaag ? 'Over tijd' : null, taakId: t.id }
 }
 const VORM: Record<string, string> = { bezoek: 'Bezoek', online: 'Online', telefoon: 'Telefoon' }
 /** Vorm van een afspraak als actielabel (rand met icoon). */
@@ -56,7 +58,7 @@ const totaal = computed(() => kolommen.value.reduce((s, k) => s + k.aantal, 0))
           <div class="hz-dag" :class="{ 'hz-dag--eerste': i === 0 }">{{ dagLabel(d.dag) }}</div>
           <button v-for="it in d.items" :key="it.id" type="button" class="hz-item item-rij" :data-test="it.id" @click="it.taakId && emit('open', it.taakId)">
             <span class="item-tijd" :class="{ 'item-tijd--rood': it.tag === 'Over tijd' }">{{ it.tijd || '·' }}</span>
-            <span class="item-icoon" :class="`item-icoon--${it.soort}`" aria-hidden="true"><Icoon :naam="ICOON[it.soort]" :grootte="16" /></span>
+            <span class="item-icoon" :class="`item-icoon--${it.soort}`" aria-hidden="true"><Icoon :naam="it.icoon ?? ICOON[it.soort]" :grootte="16" /></span>
             <span class="item-body"><span class="item-naam">{{ it.titel }}</span><span v-if="it.meta" class="item-meta">{{ it.meta }}</span><Label v-if="it.tag === 'Over tijd'" soort="urgentie" waarde="over-tijd" /><Label v-else-if="it.tag" soort="actie" :waarde="it.afspraak ? AFSPRAAK_ACTIE[it.tag] ?? 'bezoek' : 'taak'" :tekst="it.tag" /></span>
           </button>
         </template>

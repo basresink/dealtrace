@@ -72,7 +72,7 @@ export interface Bereik { contactId: string; uur: number; opgenomen: number; tot
 
 const DAG = 864e5
 const KANAAL_VAN: Partial<Record<StapSoort, Kanaal>> = { bellen: 'bellen', mail: 'mail', linkedin: 'linkedin', bezoek: 'bezoek' }
-const SOORT_VAN_ACTIE: Record<string, StapSoort> = { bellen: 'bellen', mailen: 'mail', linkedin: 'linkedin', bezoek: 'bezoek', bericht: 'mail' }
+const SOORT_VAN_ACTIE: Record<string, StapSoort> = { bellen: 'bellen', mailen: 'mail', linkedin: 'linkedin', bezoek: 'bezoek', bericht: 'mail', sms: 'mail' }
 const SOORT_VAN_KANAAL: Record<string, StapSoort> = { bellen: 'bellen', mail: 'mail', linkedin: 'linkedin', bezoek: 'bezoek', whatsapp: 'mail' }
 const PRIO_PUNTEN: Record<string, number> = { urgent: 20, hoog: 12, middel: 5, laag: 0 }
 const KLASSE_PUNTEN: Record<string, number> = { A: 10, B: 6, C: 3 }

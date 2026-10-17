@@ -3,9 +3,14 @@
 import { nlMoment, nlTijdstip, voegWerkdagenToe, volgendeWerkdag, type WerkdagInstelling } from './datum'
 import { UITKOMST_LABEL, verwerkUitkomst, type Ritme, type RitmeStand, type UitkomstCode, type UitkomstResultaat } from './hercontact'
 
-export const ACTIETYPES = ['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht', 'taak'] as const
-export const ACTIE_LABEL: Record<string, string> = { bellen: 'BEL', mailen: 'MAIL', linkedin: 'LINKEDIN', bezoek: 'BEZOEK', bericht: 'BERICHT', taak: 'TAAK', geen: 'TAAK' }
-export const CONTACT_ACTIES = new Set(['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht'])
+/**
+ * Geldige actietypes van een taak. `bericht` is WhatsApp (de waarde bleef, het label werd WhatsApp); `sms` is SMS.
+ * `bezoek` blijft geldig voor bestaande bezoektaken en de motor, maar staat niet meer in de taakkiezer: een
+ * bezoek plan je met + Afspraak.
+ */
+export const ACTIETYPES = ['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht', 'sms', 'taak'] as const
+export const ACTIE_LABEL: Record<string, string> = { bellen: 'BEL', mailen: 'MAIL', linkedin: 'LINKEDIN', bezoek: 'BEZOEK', bericht: 'WHATSAPP', sms: 'SMS', taak: 'TAAK', geen: 'TAAK' }
+export const CONTACT_ACTIES = new Set(['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht', 'sms'])
 export const HERKOMST_LABEL: Record<string, string> = { regel: 'Uit regel', inzicht: 'Uit inzicht', campagne: 'Campagne', ritme: 'Ritme', handmatig: 'Handmatig', startactiviteit: 'Uit regel', agent: 'Agent', reeks: 'Opvolgreeks', volgen: 'Volgende stap', dagplanner: 'Dagplanner' }
 export const AFWIJS_REDENEN = ['Niet relevant', 'Al bekend', 'Verkeerd account', 'Te oud'] as const
 export const PRIO_VOLGORDE: Record<string, number> = { urgent: 0, hoog: 1, middel: 2, laag: 3 }
@@ -18,19 +23,28 @@ export const PRIO_STIP: Record<string, string> = { laag: 'prio-stip--low', midde
 export const isPrioriteit = (p: unknown): p is Prioriteit => typeof p === 'string' && (PRIORITEITEN as readonly string[]).includes(p)
 /** Hoog en urgent krijgen in rijen het rode icoon en tellen als risico als ze over tijd zijn. */
 export const isDringend = (p: string | null | undefined) => p === 'hoog' || p === 'urgent'
-/** Type van een taak als knop met icoon, in de volgorde van DealDrive (Te doen, Bellen, Mailen, Bericht) plus wat Dealtrace kent. */
+/**
+ * Type van een taak als knop met icoon (de taakkiezer): Te doen, Bellen, Mailen, WhatsApp, SMS en LinkedIn.
+ * WhatsApp heeft de waarde `bericht`. Bezoek staat er niet in: een bezoek plan je met + Afspraak.
+ */
 export const TAAK_TYPES: { id: string; label: string; icoon: string }[] = [
   { id: 'taak', label: 'Te doen', icoon: 'ListTodo' }, { id: 'bellen', label: 'Bellen', icoon: 'Phone' }, { id: 'mailen', label: 'Mailen', icoon: 'Mail' },
-  { id: 'bericht', label: 'Bericht', icoon: 'MessageCircle' }, { id: 'bezoek', label: 'Bezoek', icoon: 'MapPin' }, { id: 'linkedin', label: 'LinkedIn', icoon: 'Linkedin' },
+  { id: 'bericht', label: 'WhatsApp', icoon: 'MessageCircle' }, { id: 'sms', label: 'SMS', icoon: 'MessageSquare' }, { id: 'linkedin', label: 'LinkedIn', icoon: 'Linkedin' },
 ]
+/** Bestaande bezoektaken (motor, /bezoeken, Onderweg) tonen nog als Bezoek. */
+export const BEZOEK_TYPE = { id: 'bezoek', label: 'Bezoek', icoon: 'MapPin' }
+/** Het type van een taak voor weergave; onbekend wordt Te doen. */
+export const taakTypeVan = (id: string | null | undefined) => (id === 'bezoek' ? BEZOEK_TYPE : TAAK_TYPES.find((x) => x.id === id) ?? TAAK_TYPES[0]!)
+/** De keuzes in een bewerkstand: de taakkiezer, plus Bezoek als de taak al een bezoektaak is (anders verdwijnt het type stil). */
+export const taakTypesVoor = (huidig: string | null | undefined) => (huidig === 'bezoek' ? [...TAAK_TYPES, BEZOEK_TYPE] : TAAK_TYPES)
 export const STATUS_LABEL: Record<string, string> = { open: 'Open', bezig: 'Bezig', klaar: 'Klaar', geannuleerd: 'Geannuleerd' }
 export const HERHALING_LABEL: Record<string, string> = { werkdag: 'Elke werkdag', wekelijks: 'Wekelijks', omdeweek: 'Om de week', maandelijks: 'Maandelijks' }
 export const HERINNERING_KANAAL: Record<string, string> = { 'in-app': 'In de app', email: 'E-mail', beide: 'In de app en e-mail' }
 const KANAAL_ACTIVITEIT: Record<string, { soort: string; kanaal: string }> = {
   bellen: { soort: 'gebeld', kanaal: 'telefoon' }, mailen: { soort: 'mail', kanaal: 'email' }, linkedin: { soort: 'bericht', kanaal: 'linkedin' },
-  bezoek: { soort: 'bezoek', kanaal: 'bezoek' }, bericht: { soort: 'bericht', kanaal: 'whatsapp' }, taak: { soort: 'taak', kanaal: 'intern' },
+  bezoek: { soort: 'bezoek', kanaal: 'bezoek' }, bericht: { soort: 'bericht', kanaal: 'whatsapp' }, sms: { soort: 'bericht', kanaal: 'sms' }, taak: { soort: 'taak', kanaal: 'intern' },
 }
-const ACTIE_VAN_KANAAL: Record<string, string> = { bellen: 'bellen', mail: 'mailen', linkedin: 'linkedin', bezoek: 'bezoek', whatsapp: 'bericht' }
+const ACTIE_VAN_KANAAL: Record<string, string> = { bellen: 'bellen', mail: 'mailen', linkedin: 'linkedin', bezoek: 'bezoek', whatsapp: 'bericht', sms: 'sms' }
 
 export interface Taak {
   id: string
