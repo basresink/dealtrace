@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Het venster van een document uit de kennisbank (opzet van DealDrive DocumentDetailFlyout): kicker
 // "Kennisbank · <type>", de naam en de beschrijving; Datavelden (type, versie, bestand, bijgewerkt, wie het
-// uploadde en de gekoppelde bedrijven en contacten als chips met link), die als context naar de AI gaan; de preview
+// uploadde en de gekoppelde bedrijven en contacten als gewone tekstlinks naar hun kaart), die als context naar de AI gaan; de preview
 // (afbeelding, pdf in een frame of de uitgelezen tekst, anders de melding dat er geen voorbeeld is); "Vraag de
 // AI over dit document" met drie voorgestelde vragen en een eigen vraag, beantwoord in het venster zelf. Voet:
 // Verwijderen (rood, met bevestiging, voor wie het uploadde en de beheerder) en Openen (zwart, het bestand).
@@ -82,10 +82,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
                 <div class="def-rij"><dt>Bijgewerkt</dt><dd class="tnum">{{ datum(doc.bijgewerktOp) }}</dd></div>
                 <div class="def-rij"><dt>Geüpload door</dt><dd>{{ doc.eigenaar?.naam ?? '–' }}</dd></div>
                 <div class="def-rij"><dt>Gekoppelde bedrijven</dt>
-                  <dd><template v-if="doc.accounts.length"><NuxtLink v-for="a in doc.accounts" :key="a.id" :to="`/accounts/${a.id}`" class="ddf-chip" data-test="ddf-klant" @click="emit('sluit')">{{ a.naam }}</NuxtLink></template><span v-else class="meta">Geen</span></dd>
+                  <dd><ul v-if="doc.accounts.length" class="ddf-links"><li v-for="a in doc.accounts" :key="a.id"><NuxtLink :to="`/accounts/${a.id}`" class="ddf-link" data-test="ddf-klant" @click="emit('sluit')">{{ a.naam }}</NuxtLink></li></ul><span v-else class="meta">Geen</span></dd>
                 </div>
                 <div class="def-rij"><dt>Gekoppelde contacten</dt>
-                  <dd><template v-if="doc.contacten.length"><NuxtLink v-for="c in doc.contacten" :key="c.id" :to="`/contacten/${c.id}`" class="ddf-chip" data-test="ddf-contact" @click="emit('sluit')">{{ c.naam }}</NuxtLink></template><span v-else class="meta">Geen</span></dd>
+                  <dd><ul v-if="doc.contacten.length" class="ddf-links"><li v-for="c in doc.contacten" :key="c.id"><NuxtLink :to="`/contacten/${c.id}`" class="ddf-link" data-test="ddf-contact" @click="emit('sluit')">{{ c.naam }}</NuxtLink></li></ul><span v-else class="meta">Geen</span></dd>
                 </div>
               </dl>
             </article>
@@ -149,8 +149,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 .ddf-bloktitel { margin: 0; font-family: var(--font-serif); font-size: 15px; font-weight: 700; color: var(--ink); }
 .ddf-bloksub { display: block; margin-top: 2px; font-size: 12px; line-height: 1.45; color: var(--muted); }
 .ddf-grijs { background: var(--surface); }
-.ddf-chip { display: inline-flex; align-items: center; min-height: 28px; padding: 2px 10px; margin: 0 6px 6px 0; background: var(--wit); border: 1px solid var(--border-strong); border-radius: 2px; font-size: 12px; font-weight: 700; color: var(--ink); text-decoration: none; }
-.ddf-chip:hover { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.ddf-links { display: inline; list-style: none; margin: 0; padding: 0; }
+.ddf-links li { display: inline; }
+.ddf-links li + li::before { content: ', '; color: var(--ink-soft); }
+.ddf-link { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+.ddf-link:hover { color: var(--blue); }
 .ddf-afbeelding { display: block; width: 100%; max-height: 360px; object-fit: contain; background: var(--wit); border: 1px solid var(--border); }
 .ddf-frame { display: block; width: 100%; height: 360px; background: var(--wit); border: 1px solid var(--border); }
 .ddf-tekst { margin: 0; max-height: 280px; overflow: auto; padding: 12px; background: var(--wit); border: 1px solid var(--border); font-family: inherit; font-size: 13px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink); }
@@ -171,7 +174,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 .ddf-bron { padding: 2px 8px; background: var(--surface); border-radius: 2px; font-size: 11px; font-weight: 600; color: var(--ink-soft); }
 .ddf-bron--stil { background: transparent; border: 1px solid var(--border); color: var(--muted); }
 @media (max-width: 719px) {
-  .ddf-chip { min-height: var(--touch-target-min); }
+  .ddf-links { display: flex; flex-direction: column; }
+  .ddf-links li + li::before { content: none; }
+  .ddf-link { display: inline-flex; align-items: center; min-height: var(--touch-target-min); }
   .ddf-frame { height: 280px; }
   .ddf-eigen { flex-direction: column; align-items: stretch; }
   .ddf-eigen .dd-act { min-height: var(--touch-target-min); }

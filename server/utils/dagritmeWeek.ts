@@ -21,6 +21,7 @@ import { gebruikDb } from './db'
 import { stuurMeldingMail } from './mailer'
 import { instellingVan } from './onderwegMeldingen'
 import { ruw } from './team'
+import { laadRitmeSteun } from './ritmeSteun'
 
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
 type Rij = Record<string, any>
@@ -58,6 +59,12 @@ async function managerVan(tx: Tx, g: DagritmeGebruiker): Promise<{ id: string; n
 async function collegasVan(tx: Tx, g: DagritmeGebruiker) {
   return (await rijen(tx, sql`select id, name from users where id <> ${g.id} and status = 'actief' and role in ('accountmanager', 'salesmanager') order by (team_id = ${g.teamId ?? ''}) desc, name limit 30`))
     .map((u) => ({ id: u.id as string, naam: String(u.name).replace(/^Testgebruiker /, '') }))
+}
+
+/** Afspraken van de gebruiker waar de prospect niet verscheen, sinds een tijdstip. */
+async function noShowsVan(tx: Tx, gebruikerId: string, vanaf: Date): Promise<number> {
+  const [r] = await rijen(tx, sql`select count(*)::int as n from appointments where owner_id = ${gebruikerId} and status = 'niet_verschenen' and start_at >= ${vanaf.toISOString()}`)
+  return r?.n ?? 0
 }
 
 /** Voornemens met hun stand uit de taken en belblokken die ze werden. */
@@ -133,7 +140,14 @@ export async function laadWeekreview(tx: Tx, gebruikerId: string, nu = new Date(
     ingepland: (await voornemensMetStand(tx, g.id, volgende, nu)),
     werkdagen: w,
   }, nu, { maandag })
-  return { ...review, manager: await managerVan(tx, g), collegas, verzet: !!m.verzet, afgerondOp: m.afgerondOp ?? null, deelStandaard: !!g.data?.weekreviewDelen }
+  const cijfer = (k: string) => review.bewoog.cijfers.find((c) => c.sleutel === k)
+  const pogingen = cijfer('pogingen')?.waarde ?? 0
+  const steun = await laadRitmeSteun(tx, g.id, 'weekreview', g.werkplek, {
+    pogingen, gesprekken: cijfer('gesprekken')?.waarde ?? 0, afspraken: cijfer('afspraken')?.waarde ?? 0, overdrachten: cijfer('overdrachten')?.waarde ?? 0,
+    bereik: pogingen >= 10 ? cijfer('bereik')?.waarde ?? null : null, tempoAchter: cijfer('pogingen')?.richting === 'lager',
+    blijvers: review.liggen.blijvers.filter((b) => !b.besluit).length, zonderVerslag: zv?.n ?? 0, noShows: await noShowsVan(tx, g.id, new Date(Date.parse(vanT) - 7 * 864e5)),
+  }, maandag)
+  return { ...review, manager: await managerVan(tx, g), collegas, verzet: !!m.verzet, afgerondOp: m.afgerondOp ?? null, deelStandaard: !!g.data?.weekreviewDelen, steun }
 }
 
 export interface BlijverInvoer { taakId: string; besluit: BlijverBesluit; datum?: string | null; naar?: string | null; reden?: string | null }
@@ -297,15 +311,23 @@ export async function laadWeekstart(tx: Tx, gebruikerId: string, nu = new Date()
     werkdagen: w,
   }, nu)
   const vorige = await moment(tx, g.id, 'weekreview', plusDagen(week.van, -7))
-  return { ...ws, reviewGedaan: !!vorige?.afgerondOp }
+  const steun = await laadRitmeSteun(tx, g.id, 'weekstart', g.werkplek, {
+    pogingen: p?.n ?? 0, tempoAchter: ws.tempo.stand === 'achter', achterstallig: o?.achter ?? 0, blijvers: o?.blijvers ?? 0,
+    eersteAfspraak: afs.some((a) => a.fase_id === 'afspraak-gepland' && Date.parse(iso(a.start_at)!) >= nu.getTime()), bezoeken: afs.filter((a) => a.vorm === 'bezoek').length,
+    noShows: await noShowsVan(tx, g.id, new Date(nu.getTime() - 14 * 864e5)),
+  }, week.van)
+  return { ...ws, reviewGedaan: !!vorige?.afgerondOp, steun }
 }
 
 // ── Dagstart ───────────────────────────────────────────────────────────────
 
-/** Belpogingen van de hele organisatie in de laatste 90 dagen, met de branche van het account. */
-async function belpogingen(tx: Tx, nu: Date): Promise<BereikPoging[]> {
+/**
+ * De eigen belpogingen van de gebruiker in de laatste 90 dagen, met de branche van het account. Dagstart
+ * toont alleen je eigen resultaten, geen cijfers van het team of van anderen.
+ */
+async function belpogingen(tx: Tx, gebruikerId: string, nu: Date): Promise<BereikPoging[]> {
   const r = await rijen(tx, sql`select a.op, a.uitkomst, a.soort, acc.vv_branche_id from activiteiten a left join accounts acc on acc.id = a.account_id
-    where a.soort = 'gebeld' and a.op >= ${new Date(nu.getTime() - 90 * 864e5).toISOString()} and coalesce(a.kanaal, '') <> 'intern'`)
+    where a.door = ${gebruikerId} and a.soort = 'gebeld' and a.op >= ${new Date(nu.getTime() - 90 * 864e5).toISOString()} and coalesce(a.kanaal, '') <> 'intern'`)
   return r.map((x) => ({ op: iso(x.op)!, brancheId: x.vv_branche_id ?? null, gesproken: isGesproken({ soort: x.soort, uitkomst: x.uitkomst }) }))
 }
 
@@ -358,7 +380,7 @@ export async function planBron(tx: Tx, g: DagritmeGebruiker, dag: string, nu: Da
   for (const t of bel) if (t.vv_branche_id) tel.set(t.vv_branche_id, (tel.get(t.vv_branche_id) ?? 0) + 1)
   const meest = [...tel].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? null
   const doelBranche = opties.branche && branches.some((b) => b.id === opties.branche) ? opties.branche : opties.branche === 'alle' ? null : meest
-  const bereik = bereikVoorDoelgroep(await belpogingen(tx, nu), doelBranche ? [doelBranche] : [])
+  const bereik = bereikVoorDoelgroep(await belpogingen(tx, g.id, nu), doelBranche ? [doelBranche] : [])
   const doelgroep = bereik.bron === 'doelgroep' ? branches.find((b) => b.id === doelBranche)?.naam ?? null : null
   // Kansen langs de route alleen in de buitendienststand en als er bezoeken zijn; nooit een gedeactiveerde prospect.
   let kansen: { id: string; naam: string; start: string | null; sub: string | null; accountId: string }[] = []
@@ -392,6 +414,16 @@ export async function laadDagstart(tx: Tx, gebruikerId: string, nu = new Date(),
   const voorkeur = dagplanningVoorkeur((await rijen(tx, sql`select data->'dagplanning' as d from persoonlijke_instellingen where id = ${g.id}`))[0]?.d)
   const bron = await planBron(tx, g, dag, nu, { modus: opties.modus, branche: opties.branche })
   const { plan, bereik, doelBranche, doelgroep, branches } = bron
+  // Tips en artikelen bij wat je vandaag doet en wat je de laatste twee weken zelf deed.
+  const twee = new Date(nu.getTime() - 14 * 864e5)
+  const eigen = await rijen(tx, sql`select soort, uitkomst from activiteiten where door = ${g.id} and soort = 'gebeld' and op >= ${twee.toISOString()} and coalesce(kanaal, '') <> 'intern'`)
+  const gesproken = eigen.filter((x) => isGesproken({ soort: x.soort, uitkomst: x.uitkomst })).length
+  const [zv] = await rijen(tx, sql`select count(*)::int as n from appointments where owner_id = ${g.id} and status = 'gepland' and end_at < ${nu.toISOString()} and end_at >= ${new Date(nu.getTime() - 7 * 864e5).toISOString()}`)
+  const steun = await laadRitmeSteun(tx, g.id, 'dagstart', g.werkplek, {
+    pogingen: eigen.length, gesprekken: gesproken, bereik: eigen.length >= 10 ? Math.round((gesproken / eigen.length) * 100) : null,
+    belTaken: bron.belTaken, bezoeken: bron.bezoeken, eersteAfspraak: bron.vast.some((v) => v.eerste && Date.parse(v.start) >= nu.getTime()),
+    zonderVerslag: zv?.n ?? 0, noShows: await noShowsVan(tx, g.id, twee),
+  }, dag)
   const dagplanning = {
     automatisch: voorkeur.automatisch, tijd: voorkeur.tijd, status: (dp?.status ?? 'geen') as 'geen' | 'gepland' | 'ongedaan' | 'voorstel',
     geplandOp: iso(dp?.gepland_op), herplandOp: iso(dp?.herpland_op),
@@ -401,7 +433,7 @@ export async function laadDagstart(tx: Tx, gebruikerId: string, nu = new Date(),
   const basis = {
     dag, vandaag: dag === vandaag, werkdag: isWerkdag(dag, w), werkplek: g.werkplek, kicker: `Planning · Dagstart · ${label}`,
     bereik: { uren: bereik.uren, pogingen: bereik.pogingen, genoeg: bereik.genoeg, bron: bereik.bron, doelgroep, brancheId: doelBranche },
-    branches: branches.map((b) => ({ id: b.id as string, naam: b.naam as string })), belTaken: bron.belTaken, dagplanning,
+    branches: branches.map((b) => ({ id: b.id as string, naam: b.naam as string })), belTaken: bron.belTaken, dagplanning, steun,
   }
   if (dp?.status === 'gepland' && !opties.modus && !opties.branche) {
     const items = (dp.data?.items ?? []) as PlanItem[]

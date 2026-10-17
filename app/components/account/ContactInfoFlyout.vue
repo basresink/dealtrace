@@ -4,6 +4,7 @@
 // "+ Voeg ... toe" als het leeg is). Daarna Extra bronnen, Toestemming en voorkeur met "Bel me niet",
 // Status (vertrokken in plaats van verwijderen) en voor Expert Verhuizen. Elke wijziging bewaart zichzelf.
 import { CONTACTROL_LABEL, ROLLEN_CONTACT } from '~~/shared/contactgegevens'
+import type { KiesAccount } from '~/utils/kiezers'
 const props = defineProps<{ open: boolean; contact: any }>()
 const emit = defineEmits<{ sluit: []; gewijzigd: [] }>()
 const toast = useToast()
@@ -35,15 +36,12 @@ const eigenGroepen = computed(() => {
 const veldUit = (v: any) => v.bewerkbaarDoor === 'beheerder' && !beheerder.value
 function bewaarCf(sleutel: string, w: unknown) { bewaar({ customFields: { [sleutel]: w === '' ? null : w } }) }
 
-// Verhuizen (Expert): de lijst met bedrijven pas laden als het venster open is.
-const verhuisNaar = ref('')
-const bedrijven = ref<any[]>([])
-watch(() => props.open, async (o) => {
-  if (!o || !props.contact?.kan?.verhuizen || bedrijven.value.length) return
-  try { const r = await $fetch<any>('/api/accounts', { query: { eigenaar: 'iedereen' } }); bedrijven.value = (r.rijen ?? []).filter((a: any) => a.id !== props.contact.accountId) } catch { bedrijven.value = [] }
-}, { immediate: true })
+// Verhuizen (Expert): het nieuwe bedrijf kies je met de gedeelde zoekkiezer (eigen recente prospects eerst).
+const verhuisNaar = ref<KiesAccount | null>(null)
+async function zoekBedrijf(q: string) { return (await zoekAccounts(q)).filter((a) => a.id !== props.contact?.accountId) }
 async function verhuis() {
-  try { await $fetch(`/api/contacten/${props.contact.id}/verhuis`, { method: 'POST', body: { accountId: verhuisNaar.value } }); toast.toon('Contact verhuisd.'); verhuisNaar.value = ''; emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') }
+  if (!verhuisNaar.value) return
+  try { await $fetch(`/api/contacten/${props.contact.id}/verhuis`, { method: 'POST', body: { accountId: verhuisNaar.value.id } }); toast.toon('Contact verhuisd.'); verhuisNaar.value = null; emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 </script>
 
@@ -119,7 +117,7 @@ async function verhuis() {
           <section v-if="contact.kan?.verhuizen" class="ci-sectie" data-test="verhuizen">
             <h3 class="ci-sectie-titel">Verhuizen</h3>
             <p class="ci-tekst">Naar een ander bedrijf. De historie blijft bewaard.</p>
-            <select v-model="verhuisNaar" class="invoer" aria-label="Nieuw bedrijf"><option value="">Kies een bedrijf</option><option v-for="b in bedrijven" :key="b.id" :value="b.id">{{ b.name }}</option></select>
+            <ZoekKiezer :zoek="zoekBedrijf" kop="Nieuw bedrijf" :gekozen="verhuisNaar" wis-label="Wis gekozen bedrijf" placeholder="Zoek een prospect of klant op naam" data-test="ci-verhuis-zoek" gekozen-test="ci-verhuis-keuze" :optie-test="() => 'ci-verhuis-optie'" :sub="accountSub" leeg="Geen bedrijf gevonden." @kies="(a) => (verhuisNaar = a)" @wis="verhuisNaar = null" />
             <button type="button" class="dd-act ci-knop" :disabled="!verhuisNaar" @click="verhuis">Verhuis</button>
           </section>
         </div>

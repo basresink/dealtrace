@@ -1,9 +1,9 @@
 <script setup lang="ts">
-// Klaargezet door AI (links) en Door AI agents gedaan (rechts), naast elkaar op dezelfde hoogte; op de
-// telefoon onder elkaar. Links de concepten die op goedkeuring wachten en taakvoorstellen met een concept,
-// met Bekijk en Goedkeuren (dezelfde besluitroute als /concepten). Rechts wat de agents sinds gisteren
-// deden als tijdlijn met tellers. Data uit /api/vandaag/dashboard.
-const props = defineProps<{ klaargezet: any | null; agents: any | null }>()
+// Klaargezet door AI (links) en Belscript (rechts), naast elkaar op dezelfde hoogte; op de telefoon onder
+// elkaar. Links de concepten die op goedkeuring wachten en taakvoorstellen met een concept, met Bekijk en
+// Goedkeuren (dezelfde besluitroute als /concepten). Rechts je actieve belscript met een korte uitleg en de
+// weg naar de Belscript Studio. Data uit /api/vandaag/dashboard.
+const props = defineProps<{ klaargezet: any | null; belscript: { script: { id: string; naam: string; doel: string; versie: number; eigen: boolean } | null; aantalActief: number; gesprekken30: number } | null }>()
 const emit = defineEmits<{ open: [taakId: string]; gewijzigd: [] }>()
 const toast = useToast()
 const { voegToe } = useSyncQueue()
@@ -12,16 +12,7 @@ const TYPE: Record<string, { label: string; icoon: string }> = {
   mail: { label: 'Mail', icoon: 'Mail' }, belscript: { label: 'Belscript', icoon: 'Phone' }, linkedin: { label: 'LinkedIn', icoon: 'Linkedin' },
   whatsapp: { label: 'WhatsApp', icoon: 'MessageCircle' }, briefing: { label: 'Briefing', icoon: 'FileText' }, taak: { label: 'Taakvoorstel', icoon: 'ListTodo' },
 }
-const SOORT: Record<string, { icoon: string; klasse: string }> = {
-  taak: { icoon: 'SquareCheck', klasse: 'blauw' }, inzicht: { icoon: 'Lightbulb', klasse: 'paars' }, concept: { icoon: 'Sparkles', klasse: 'paars' },
-  verrijkt: { icoon: 'Database', klasse: 'groen' }, geparkeerd: { icoon: 'Pause', klasse: 'grijs' }, tegengehouden: { icoon: 'ShieldCheck', klasse: 'rood' }, overig: { icoon: 'Sparkles', klasse: 'grijs' },
-}
-const tijd = (iso: string) => {
-  const d = new Date(iso)
-  const zelfdeDag = new Intl.DateTimeFormat('nl-NL', { dateStyle: 'short', timeZone: 'Europe/Amsterdam' })
-  const hm = new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(d)
-  return zelfdeDag.format(d) === zelfdeDag.format(new Date()) ? hm : `gisteren ${hm}`
-}
+const studio = computed(() => (props.belscript?.script ? `/belscripts?tab=standaard&script=${props.belscript.script.id}` : '/belscripts'))
 const weg = ref(new Set<string>())
 const zichtbaar = computed(() => (props.klaargezet?.lijst ?? []).filter((x: any) => !weg.value.has(x.id)))
 async function keurGoed(x: any) {
@@ -40,7 +31,7 @@ async function keurGoed(x: any) {
 </script>
 
 <template>
-  <div class="va" :class="{ 'va--een': !klaargezet || !agents }">
+  <div class="va" :class="{ 'va--een': !klaargezet || !belscript }">
     <section v-if="klaargezet" class="va-blok" data-test="concepten" aria-labelledby="va-klaar">
       <header class="va-kop">
         <span class="va-icoon va-icoon--paars"><Icoon naam="Sparkles" :grootte="18" /></span>
@@ -70,31 +61,24 @@ async function keurGoed(x: any) {
       <NuxtLink v-if="klaargezet.totaal > zichtbaar.length + weg.size" to="/concepten" class="va-meer">nog {{ klaargezet.totaal - zichtbaar.length - weg.size }} meer →</NuxtLink>
     </section>
 
-    <section v-if="agents" class="va-blok" data-test="agents" aria-labelledby="va-agents">
+    <section v-if="belscript" class="va-blok" data-test="belscript" aria-labelledby="va-belscript">
       <header class="va-kop">
-        <span class="va-icoon va-icoon--zwart"><Icoon naam="RefreshCw" :grootte="18" /></span>
+        <span class="va-icoon va-icoon--zwart"><Icoon naam="Phone" :grootte="18" /></span>
         <div class="va-kop-tekst">
-          <span class="kicker">Door AI agents gedaan · sinds gisteren</span>
-          <h2 id="va-agents" class="va-titel">{{ agents.totaal ? `${agents.totaal} ${agents.totaal === 1 ? 'handeling' : 'handelingen'} voor je uitgevoerd` : 'Nog niets gedaan sinds gisteren' }}</h2>
+          <span class="kicker">Belscript</span>
+          <h2 id="va-belscript" class="va-titel" data-test="belscript-naam">{{ belscript.script ? belscript.script.naam : 'Nog geen actief belscript' }}</h2>
         </div>
       </header>
-      <div class="va-tellers" data-test="agents-samenvatting">
-        <span v-for="t in agents.tellers" :key="t.soort" class="va-teller" :class="{ 'va-teller--rood': t.soort === 'tegengehouden' && t.aantal }">
-          <strong class="tnum">{{ t.aantal }}</strong><span>{{ t.label }}</span>
-        </span>
+      <p class="va-uitleg">Je belscript geeft elk gesprek houvast: een opening met een reden van bellen, je vragen, het winpunt en een antwoord op de bekende bezwaren. In de Belscript Studio lees je het script, zie je het voor een prospect ingevuld en oefen je het in de belmodus.</p>
+      <div v-if="belscript.script" class="va-tellers" data-test="belscript-samenvatting">
+        <span class="va-teller"><span>Doel</span><strong class="va-teller-tekst">{{ belscript.script.doel }}</strong></span>
+        <span class="va-teller"><span>Versie</span><strong class="tnum">{{ belscript.script.versie }}</strong></span>
+        <span class="va-teller"><strong class="tnum">{{ belscript.gesprekken30 }}</strong><span>{{ belscript.gesprekken30 === 1 ? 'gesprek' : 'gesprekken' }} met een script in 30 dagen</span></span>
       </div>
-      <p v-if="!agents.tijdlijn.length" class="va-leeg">De agents hebben sinds gisteren niets voor je gedaan. Zodra de motor taken klaarzet of de Waarnemer iets ziet, staat het hier.</p>
-      <ol v-else class="va-tijdlijn">
-        <li v-for="(g, i) in agents.tijdlijn" :key="i" class="va-stap" :data-test="`agent-stap-${g.soort}`">
-          <span class="va-punt" :class="`va-icoon--${SOORT[g.soort]?.klasse ?? 'grijs'}`"><Icoon :naam="SOORT[g.soort]?.icoon ?? 'Sparkles'" :grootte="14" /></span>
-          <span class="va-body">
-            <span class="va-meta"><strong class="va-agent">{{ g.agent }}</strong> · <span class="tnum">{{ tijd(g.op) }}</span></span>
-            <span class="va-regel">{{ g.actie }}</span>
-            <NuxtLink v-if="g.accountId && g.account" :to="`/accounts/${g.accountId}`" class="va-account va-account--los">{{ g.account }}</NuxtLink>
-          </span>
-        </li>
-      </ol>
-      <NuxtLink to="/instellingen/agents" class="va-meer">Agents en mandaten →</NuxtLink>
+      <p v-else class="va-leeg">Er staat nog geen belscript voor je klaar. In de Belscript Studio kies je een template als basis of vraag je je salesmanager er een te activeren.</p>
+      <p v-if="belscript.script?.eigen" class="va-meta">Dit is je eigen variant.</p>
+      <p v-else-if="belscript.aantalActief > 1" class="va-meta">Er {{ belscript.aantalActief - 1 === 1 ? 'staat nog 1 ander script' : `staan nog ${belscript.aantalActief - 1} andere scripts` }} voor je klaar.</p>
+      <NuxtLink :to="studio" class="dd-actie dd-actie--secundair va-studio" data-test="belscript-studio"><Icoon naam="Phone" class="dd-actie-icoon" />Open Belscript Studio</NuxtLink>
     </section>
   </div>
 </template>
@@ -125,19 +109,17 @@ async function keurGoed(x: any) {
 .va-soort { font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); }
 .va-account { color: var(--ink); font-weight: 600; text-decoration: none; }
 .va-account:hover { text-decoration: underline; }
-.va-account--los { font-size: 12px; }
 .va-regel { overflow: hidden; font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; }
 .va-knoppen { flex-shrink: 0; display: flex; gap: 6px; }
 .va-tellers { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 0 8px; }
 .va-teller { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 10px; background: var(--surface); font-size: 12px; color: var(--muted); }
 .va-teller strong { font-family: var(--font-serif); font-size: 18px; color: var(--ink); }
-.va-teller--rood strong { color: var(--red); }
-.va-tijdlijn { position: relative; list-style: none; margin: 8px 0 0; padding: 0; }
-.va-tijdlijn::before { content: ''; position: absolute; top: 14px; bottom: 14px; left: 13px; width: 2px; background: var(--border); }
-.va-stap { position: relative; display: flex; gap: 12px; padding: 8px 0; }
-.va-punt { position: relative; z-index: 1; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; box-shadow: 0 0 0 3px #fff; }
-.va-agent { color: var(--ink); }
-.va-stap .va-regel { white-space: normal; font-weight: 500; }
+.va-teller .va-teller-tekst { font-family: var(--font-sans, inherit); font-size: 13px; }
+.va-uitleg { margin: 16px 0 0; font-size: 14px; line-height: 1.55; color: var(--ink-soft); }
+.va-blok > .va-meta { margin: 4px 0 0; }
+.va-studio { align-self: flex-start; margin-top: auto; }
+.va-blok > .va-studio { margin-top: auto; }
+.va-blok > :nth-last-child(2) { margin-bottom: 16px; }
 @media (max-width: 767px) {
   .va { gap: 16px; }
   .va-blok { padding: 16px; }
@@ -146,5 +128,6 @@ async function keurGoed(x: any) {
   .va-knoppen > * { flex: 1; min-height: 44px; justify-content: center; }
   .va-link { display: none; }
   .va-meer, .va-account { display: inline-flex; align-items: center; min-height: 44px; }
+  .va-studio { align-self: stretch; justify-content: center; min-height: 44px; }
 }
 </style>

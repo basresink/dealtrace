@@ -93,12 +93,16 @@ export async function analyse(tx: Tx, g: Kijker, tab: Tabblad, f: AnalyseFilters
       from tasks t left join activity_rules r on r.id = t.rule_id where t.rule_id is not null and t.owner_id = any(string_to_array(${l}, ',')) and t.created_at >= ${van} and t.created_at <= ${tot} group by 1 order by 2 desc`)
     const s = await rijen(tx, sql`select coalesce(r.naam, s.rule_id) as regel, count(*)::int as inzichten, count(*) filter (where s.status = 'omgezet')::int as omgezet, count(*) filter (where s.status = 'afgewezen')::int as afgewezen
       from signals s left join activity_rules r on r.id = s.rule_id where s.rule_id is not null and s.owner_id = any(string_to_array(${l}, ',')) and s.created_at >= ${van} and s.created_at <= ${tot} group by 1 order by 2 desc`)
+    // Leerlus: waarom inzichten werden afgewezen; een eigen reden telt als "Eigen reden".
+    const ar = await rijen(tx, sql`select coalesce(s.data->>'afwijsReden', 'Zonder reden') as reden, count(*)::int as aantal, count(*) filter (where s.rule_id is not null)::int as uit_regel
+      from signals s where s.status = 'afgewezen' and s.owner_id = any(string_to_array(${l}, ',')) and s.created_at >= ${van} and s.created_at <= ${tot} group by 1 order by 2 desc`)
     const a = await rijen(tx, sql`select agent, count(*) filter (where uitkomst = 'uitgevoerd')::int as uitgevoerd, count(*) filter (where uitkomst = 'geblokkeerd')::int as geblokkeerd, coalesce(sum((kosten->>'credits')::int), 0)::int as credits
       from agent_runs where op >= ${van} and op <= ${tot} and (gebruiker_id is null or gebruiker_id = any(string_to_array(${l}, ','))) group by 1 order by 1`)
     const ov = await rijen(tx, sql`select agent, count(*) filter (where overname = 'ongewijzigd')::int as ongewijzigd, count(*) filter (where overname is not null)::int as beoordeeld from concepten where gebruiker_id = any(string_to_array(${l}, ',')) and op >= ${van} group by 1`)
     return { tabblad: tab, tabellen: [
       { titel: 'Regels: taken', kolommen: [K('regel', 'Regel', false), K('taken', 'Taken'), K('afgerond', 'Afgerond'), K('afspraken', 'Afspraken')], rijen: r },
       { titel: 'Regels: inzichten en acceptatie', kolommen: [K('regel', 'Regel', false), K('inzichten', 'Inzichten'), K('omgezet', 'Omgezet'), K('afgewezen', 'Afgewezen'), K('acceptatie', 'Acceptatie (procent)')], rijen: s.map((x) => ({ ...x, acceptatie: pct(x.omgezet, x.omgezet + x.afgewezen) ?? '' })) },
+      { titel: 'Inzichten: afwijsredenen', kolommen: [K('reden', 'Reden', false), K('aantal', 'Afgewezen'), K('uit_regel', 'Waarvan uit een regel')], rijen: ar },
       { titel: 'Agents', kolommen: [K('agent', 'Agent', false), K('uitgevoerd', 'Uitgevoerd'), K('geblokkeerd', 'Tegengehouden'), K('credits', 'Credits'), K('overname', 'Concept ongewijzigd (procent)')], rijen: a.map((x) => { const o = ov.find((y) => y.agent === x.agent); return { ...x, overname: o ? pct(o.ongewijzigd, o.beoordeeld) ?? '' : '' } }) },
     ] }
   }

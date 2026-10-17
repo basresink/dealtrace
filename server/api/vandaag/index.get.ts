@@ -5,6 +5,7 @@ import { and, eq, gte, inArray, sql } from 'drizzle-orm'
 import { nlMoment, plusDagen } from '../../../shared/datum'
 import { ordenTaken, isAchterstallig, isDringend } from '../../../shared/taken'
 import { groetVoor, kiesAanleidingVanDeDag, samenvattingsregel, vandaagKicker } from '../../../shared/vandaag'
+import { quoteVanDeDag } from '../../../shared/dagquotes'
 import { kan } from '../../utils/accounts'
 import { metOrganisatie, schema } from '../../utils/db'
 import { eigenTeams } from '../../utils/gebruikers'
@@ -88,6 +89,8 @@ export default defineEventHandler(async (event) => {
       kop: {
         groet: `${groetVoor(nu)}, ${ctx.gebruiker.naam.replace(/^Test(gebruiker|founder)\s+/, '').split(' ')[0]}.`,
         kicker: vandaagKicker(nu),
+        // De quote van de dag, gekozen op de echte dag (niet op de dag uit de dagkiezer).
+        quote: quoteVanDeDag(nlMoment(echtNu).datum),
         samenvatting: samenvattingsregel({ taken: vandaagEnEerder.length, uitCampagnes: vandaagEnEerder.filter((t) => t.campaignId).length, volgendeKoud: volgendeKoud ? `${String(nlMoment(new Date(volgendeKoud.dueDate!)).uur).padStart(2, '0')}:${String(nlMoment(new Date(volgendeKoud.dueDate!)).minuut).padStart(2, '0')}` : null }),
       },
       aanleiding: aanleiding ? { id: aanleiding.id, titel: aanleiding.title, bron: aanleiding.bron, bronNaam: (aanleiding.data as any)?.specifiekeBron ?? (aanleiding.agent ? aanleiding.agent[0]!.toUpperCase() + aanleiding.agent.slice(1) : aanleiding.bron === 'extern' ? 'Extern' : 'Intern'), op: aanleiding.createdAt, waarom: aanleiding.data?.waarom ?? null, bewijs: aanleiding.data?.bewijs ?? [], relevantie: aanleiding.relevanceScore, account: aanleidingAccount ? { id: aanleidingAccount.id, naam: aanleidingAccount.naam } : null } : null,

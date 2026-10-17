@@ -12,7 +12,7 @@ function gebruiker(overig: Partial<GebruikerContext> = {}): GebruikerContext {
 }
 
 describe('zijbalk per niveau (6.1)', () => {
-  it('Beginner 15, Gevorderd 19, Expert 21 items (met Concepten, Meetings, Kennisbank, Accountplannen, Signaalradar, Opvolgreeksen en Prospectplanning voor iedereen)', () => {
+  it('Beginner 15, Gevorderd 19, Expert 21 items (met Concepten, Meetings, Briefings, Accountplannen, Signaalradar, Opvolgreeksen en Prospectplanning voor iedereen)', () => {
     expect(telItems(zijbalkVoor(gebruiker(), org, stand))).toBe(15)
     expect(telItems(zijbalkVoor(gebruiker({ niveau: 'gevorderd' }), org, stand))).toBe(19)
     expect(telItems(zijbalkVoor(gebruiker({ niveau: 'expert' }), org, stand))).toBe(21)
@@ -20,9 +20,18 @@ describe('zijbalk per niveau (6.1)', () => {
 
   it('wat uit staat komt in "Nog niet aangezet" met het niveau waarvoor het aanstaat', () => {
     const z = zijbalkVoor(gebruiker(), org, stand)
-    expect(z.nietAangezet.map((i) => i.sleutel)).toEqual(['nav.inzichten', 'nav.kennisbank', 'nav.accountplannen', 'nav.leadgenerator', 'nav.signaalradar', 'nav.reizen'])
+    expect(z.nietAangezet.map((i) => i.sleutel)).toEqual(['nav.inzichten', 'briefing.bewerken', 'nav.accountplannen', 'nav.leadgenerator', 'nav.signaalradar', 'nav.reizen'])
     expect(z.nietAangezet.find((i) => i.sleutel === 'nav.leadgenerator')?.aanVanaf).toBe('gevorderd')
     expect(z.nietAangezet.find((i) => i.sleutel === 'nav.reizen')?.aanVanaf).toBe('expert')
+  })
+
+  it('Activiteiten: Inzichten voor Taken, Briefings direct onder Taken; Kennisbank niet in het menu', () => {
+    const z = zijbalkVoor(gebruiker({ niveau: 'expert' }), org, stand)
+    const act = z.groepen.find((g) => g.naam === 'Activiteiten')!.items
+    expect(act.map((i) => i.naam)).toEqual(['Inzichten', 'Taken', 'Briefings', 'Opvolgreeksen', 'Concepten'])
+    expect(act.find((i) => i.naam === 'Briefings')?.route).toBe('/briefings')
+    expect(z.groepen.flatMap((g) => g.items).some((i) => i.route === '/kennisbank')).toBe(false)
+    expect(functie('nav.kennisbank')).toBeTruthy()
   })
 
   it('volgorde in Werk volgt het werkplekprofiel', () => {

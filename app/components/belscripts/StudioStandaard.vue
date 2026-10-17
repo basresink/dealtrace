@@ -48,7 +48,13 @@ async function laadVoorbeeld() {
 watch(voorbeeldAccount, laadVoorbeeld)
 onMounted(laadVoorbeeld)
 const toonCodes = ref(false)
-const accountNaam = computed(() => voorbeeld.value.accounts.find((a: any) => a.id === voorbeeldAccount.value)?.naam ?? 'dit prospect')
+const voorbeeldNaam = ref('')
+const accountNaam = computed(() => voorbeeldNaam.value || voorbeeld.value.accounts.find((a: any) => a.id === voorbeeldAccount.value)?.naam || 'dit prospect')
+// Voorbeeld voor: de gedeelde zoekkiezer (eigen recente prospects eerst) in plaats van een keuzelijst.
+const voorbeeldWissen = ref(false)
+const voorbeeldGekozen = computed(() => (voorbeeldWissen.value || !voorbeeldAccount.value ? null : { id: voorbeeldAccount.value, naam: accountNaam.value }))
+const zoekVoorbeeld = (q: string) => zoekAccounts(q, 'prospect')
+function kiesVoorbeeld(a: { id: string; naam: string }) { voorbeeldNaam.value = a.naam; voorbeeldWissen.value = false; voorbeeldAccount.value = a.id }
 const onbekend = computed(() => (s.value ? onbekendVoor(s.value.data, voorbeeld.value.waarden) : []))
 
 // Validatie en lengte.
@@ -238,9 +244,7 @@ const code = (v: string) => '{' + v + '}'
       <aside class="ss-rechts-kolom" aria-label="Voorbeeld">
         <div class="ss-voorbeeld" :class="{ 'toon-codes': toonCodes }" data-test="studio-voorbeeld">
           <div class="ss-voorbeeld-kop">
-            <label class="veld"><span class="veld-label">Voorbeeld voor</span>
-              <select v-model="voorbeeldAccount" class="invoer" data-test="voorbeeld-prospect"><option v-for="a in voorbeeld.accounts" :key="a.id" :value="a.id">{{ a.naam }}</option></select>
-            </label>
+            <div class="veld ss-voorbeeld-kiezer"><ZoekKiezer :zoek="zoekVoorbeeld" kop="Voorbeeld voor" :gekozen="voorbeeldGekozen" wis-label="Kies een andere prospect voor het voorbeeld" placeholder="Zoek een prospect op naam" data-test="voorbeeld-prospect" :sub="accountSub" leeg="Geen prospect gevonden." @kies="kiesVoorbeeld" @wis="voorbeeldWissen = true" /></div>
             <button type="button" class="dd-act" :aria-pressed="toonCodes" @click="toonCodes = !toonCodes">{ } {{ toonCodes ? 'Toon tekst' : 'Toon variabelen' }}</button>
           </div>
           <p v-if="onbekend.length" class="ss-onbekend" data-test="voorbeeld-onbekend"><Icoon naam="TriangleAlert" :grootte="14" /> {{ onbekend.length === 1 ? 'Eén variabele is' : `${onbekend.length} variabelen zijn` }} onbekend voor {{ accountNaam }}: <code v-for="x in onbekend" :key="x">{{ code(x) }} </code>. De accountmanager ziet de terugvalzin.</p>

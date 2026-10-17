@@ -25,6 +25,12 @@ watch(() => props.scriptId, async (id) => {
 }, { immediate: true })
 async function laadVoorbeeld() { voorbeeld.value = await $fetch<any>('/api/belscripts/voorbeeld', { query: { accountId: voorbeeldAccount.value || undefined } }).catch(() => voorbeeld.value); voorbeeldAccount.value ||= voorbeeld.value.accountId ?? '' }
 watch(voorbeeldAccount, laadVoorbeeld)
+// Voorbeeld voor: de gedeelde zoekkiezer (eigen recente prospects eerst) in plaats van een keuzelijst.
+const voorbeeldNaam = ref('')
+const voorbeeldWissen = ref(false)
+const voorbeeldGekozen = computed(() => (voorbeeldWissen.value || !voorbeeldAccount.value ? null : { id: voorbeeldAccount.value, naam: voorbeeldNaam.value || (voorbeeld.value.accounts ?? []).find((a: any) => a.id === voorbeeldAccount.value)?.naam || 'Prospect' }))
+const zoekVoorbeeld = (q: string) => zoekAccounts(q, 'prospect')
+function kiesVoorbeeld(a: { id: string; naam: string }) { voorbeeldNaam.value = a.naam; voorbeeldWissen.value = false; voorbeeldAccount.value = a.id }
 onMounted(laadVoorbeeld)
 
 const v = computed(() => (s.value ? valideerScript(s.value, { concurrentIds: voorbeeld.value.concurrenten.map((c: any) => c.id) }) : { fouten: [], waarschuwingen: [], woorden: 0 }))
@@ -120,7 +126,7 @@ const STATUS: Record<string, string> = { concept: 'Concept', actief: 'Actief', g
               <p v-for="w in v.waarschuwingen" :key="w" class="kaart kaart--geel mt-8">{{ w }}</p>
             </div>
             <div class="editor-voorbeeld" data-test="script-voorbeeld">
-              <label class="veld"><span class="veld-label">Voorbeeld voor</span><select v-model="voorbeeldAccount" class="invoer"><option v-for="a in voorbeeld.accounts" :key="a.id" :value="a.id">{{ a.naam }}</option></select></label>
+              <div class="veld"><ZoekKiezer :zoek="zoekVoorbeeld" kop="Voorbeeld voor" :gekozen="voorbeeldGekozen" wis-label="Kies een andere prospect voor het voorbeeld" placeholder="Zoek een prospect op naam" data-test="voorbeeld-prospect" :sub="accountSub" leeg="Geen prospect gevonden." @kies="kiesVoorbeeld" @wis="voorbeeldWissen = true" /></div>
               <p v-for="m in voorbeeld.meldingen" :key="m" class="meta mt-8">{{ m }}</p>
               <div v-if="ingevuld">
                 <div v-for="b in ingevuld.blokken.filter((x) => x.soort !== 'opvolgmail')" :key="b.id" class="scriptblok">

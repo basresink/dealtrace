@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Weekstart: op maandag het weekplan. Per dag de afspraken, bezoeken en belblokken; de voornemens uit de
 // weekreview van vrijdag met hun stand; wat er openstaat; het tempo tegen je doel; de belangrijkste
-// aanleidingen. Eén bron: GET /api/weekstart (shared/dagritme.ts bouwWeekstart, vorm 'weekstart').
+// aanleidingen. Onderaan Tips en tricks en drie artikelen uit de academie bij je week (RitmeSteun).
+// Eén bron: GET /api/weekstart (shared/dagritme.ts bouwWeekstart, vorm 'weekstart'; steun uit shared/ritmeSteun.ts).
 const { functie } = useMe()
 const aan = !!functie('dagritme.weekstart')?.beschikbaar
 const reviewAan = !!functie('dagritme.weekreview')?.beschikbaar
@@ -67,7 +68,7 @@ useHead({ title: 'Weekstart · Dealtrace' })
         </div>
       </section>
 
-      <section class="section section--laatste">
+      <section class="section">
         <div class="container">
           <article class="kaart" data-test="ws-aanleidingen">
             <header class="kaart-kop"><h2 class="kaart-titel">Belangrijkste aanleidingen</h2></header>
@@ -83,6 +84,10 @@ useHead({ title: 'Weekstart · Dealtrace' })
             <p v-else class="meta">Geen open aanleidingen bij je eigen prospects. Nieuwe inzichten zie je op Vandaag.</p>
           </article>
         </div>
+      </section>
+
+      <section class="section section--laatste">
+        <div class="container"><RitmeSteun :steun="w.steun" moment="weekstart" /></div>
       </section>
     </template>
   </div>

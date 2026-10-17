@@ -5,14 +5,14 @@ import { expect, test } from '@playwright/test'
 import { ga, login } from './hulp'
 
 test.describe('zoekkiezer', () => {
-  test('/inzichten: geen knop Klanten; + Inzicht met prospect en contact komt op de contactkaart', async ({ page }) => {
+  test('/inzichten: geen keuzeknop Prospects; + Inzicht links van Filters, met prospect en contact op de contactkaart', async ({ page }) => {
     await login(page, 'u-07')
     await ga(page, '/inzichten')
-    await expect(page.getByTestId('filter-soort').locator('button')).toHaveText(['Prospects', 'Ook klanten'])
-    // Standaard Prospects: klanten blijven buiten beeld.
-    await expect(page.getByTestId('filter-soort').getByRole('button', { name: 'Prospects' })).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByTestId('filter-soort')).toHaveCount(0)
     const knop = page.getByTestId('inzicht-met-bron-knop')
     await expect(knop).toHaveText('Inzicht')
+    // "+ Inzicht" staat links van Filters.
+    expect((await knop.boundingBox())!.x).toBeLessThan((await page.getByTestId('inzicht-filters').boundingBox())!.x)
     await knop.click()
     const v = page.getByTestId('inzicht-met-bron')
     await expect(v).toBeVisible()

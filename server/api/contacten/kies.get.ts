@@ -1,6 +1,7 @@
-// GET /api/contacten/kies?q=&accountId=: snelle keuze van een contactpersoon (Nieuwe taak en Bewerken in het
-// taakvenster). Met een account alleen diens contacten, beslisser eerst en daarna op naam, ook zonder
-// zoekterm; zonder account vanaf twee tekens over alle contacten. Tien treffers, vertrokken contacten niet.
+// GET /api/contacten/kies?q=&accountId=: snelle keuze van een contactpersoon (ZoekKiezer: Nieuwe taak, taakvenster,
+// Plan een afspraak, kennisbank en meer). Met een account alleen diens contacten, beslisser eerst en daarna op naam.
+// Zonder account over alle contacten: contacten bij je eigen prospects eerst, dan het meest recent actief, dan op
+// naam. Ook zonder zoekterm (de lijst bij focus). Hooguit dertig treffers, vertrokken contacten niet.
 import { and, asc, eq, ilike, ne, or, sql } from 'drizzle-orm'
 import { metOrganisatie, schema } from '../../utils/db'
 import { vereisFunctie } from '../../utils/sessie'
@@ -10,14 +11,17 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const q = String(query.q ?? '').trim().replace(/[%_]/g, '')
   const accountId = query.accountId ? String(query.accountId) : null
-  if (!accountId && q.length < 2) return []
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
     const c = schema.contacts
+    const a = schema.accounts
     const zoek = q ? or(ilike(c.firstName, `%${q}%`), ilike(c.lastName, `%${q}%`), sql`concat_ws(' ', ${c.firstName}, ${c.lastName}) ilike ${`%${q}%`}`, sql`${c.data}->>'functie' ilike ${`%${q}%`}`) : undefined
-    const rijen = await tx.select({ id: c.id, voornaam: c.firstName, achternaam: c.lastName, rol: c.rol, data: c.data, accountId: c.accountId, accountNaam: schema.accounts.name })
-      .from(c).leftJoin(schema.accounts, eq(schema.accounts.id, c.accountId))
-      .where(and(ne(c.status, 'vertrokken'), accountId ? eq(c.accountId, accountId) : undefined, zoek))
-      .orderBy(sql`(${c.rol} = 'beslisser') desc`, asc(c.lastName), asc(c.id)).limit(10)
+    const volgorde = accountId
+      ? [sql`(${c.rol} = 'beslisser') desc`, asc(c.lastName), asc(c.id)]
+      : [sql`(${a.ownerId} = ${ctx.gebruiker.id}) desc nulls last`, sql`greatest(${a.laatsteContactOp}, ${c.updatedAt}) desc nulls last`, asc(c.lastName), asc(c.id)]
+    const rijen = await tx.select({ id: c.id, voornaam: c.firstName, achternaam: c.lastName, rol: c.rol, data: c.data, accountId: c.accountId, accountNaam: a.name })
+      .from(c).leftJoin(a, eq(a.id, c.accountId))
+      .where(and(ne(c.status, 'vertrokken'), accountId ? eq(c.accountId, accountId) : sql`${a.gedeactiveerdOp} is null`, zoek))
+      .orderBy(...volgorde).limit(30)
     return rijen.map((r) => ({ id: r.id, naam: `${r.voornaam ?? ''} ${r.achternaam}`.trim(), functie: r.data?.functie ?? null, rol: r.rol, accountId: r.accountId, accountNaam: r.accountNaam }))
   })
 })

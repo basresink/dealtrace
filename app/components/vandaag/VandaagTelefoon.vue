@@ -1,11 +1,11 @@
 <script setup lang="ts">
-// Vandaag op de telefoon (P32, 8.5.1): groet en "Lees voor", focuskaart, signaal, tip, telstrip en
+// Vandaag op de telefoon (P32, 8.5.1): groet en "Lees voor", de quote van de dag, signaal, tip, telstrip en
 // stapels met de handeling in de regel; na 16:00 de recap bovenaan. Alles komt uit dezelfde
 // rekenkern als de laptop (shared/dag, dagritme, signalen, recap); hier wordt niets berekend
 // behalve de voorleestekst uit diezelfde uitkomst.
 import { plusDagen, volgendeWerkdag } from '~~/shared/datum'
 import { spreekDag } from '~~/shared/spreek'
-const props = defineProps<{ t: any; kan: { voorlezen?: boolean; week?: boolean } }>()
+const props = defineProps<{ t: any; kan: { voorlezen?: boolean; week?: boolean }; quote?: string | null }>()
 const emit = defineEmits<{ open: [taakId: string]; ververs: [] }>()
 const route = useRoute()
 const router = useRouter()
@@ -71,11 +71,6 @@ async function afgehandeld(r: any) {
   if (await rondAf(r.taakId, { uitkomst: 'gedaan' }, { mobiel: true })) emit('ververs')
 }
 async function bevestig(r: any) { if (r.taakId && await rondAf(r.taakId, { uitkomst: 'gedaan' }, { mobiel: true })) emit('ververs') }
-function focusKnop() {
-  const f = props.t.focus
-  if (f.knop.soort === 'verslag' && f.verslagVan) emit('open', f.verslagVan)
-  else if (f.knop.href?.startsWith('/')) navigateTo(f.knop.href)
-}
 function springNaar(stapel: string | null) {
   if (!stapel) return
   document.getElementById(`stapel-${stapel}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -89,6 +84,7 @@ const stapels = computed(() => d.value.volgorde.filter((k: string) => d.value.st
       <p class="vt-groet-tekst"><strong>{{ d.isVandaag ? t.groet : `${datumKort(d.dag)}` }}</strong><span v-if="d.isVandaag" class="meta"> · {{ datumKort(d.dag) }}</span></p>
       <button v-if="kan.voorlezen && d.isVandaag" type="button" class="vt-icoonknop" :aria-pressed="spreekt" :aria-label="spreekt ? 'Stop voorlezen' : 'Lees voor'" data-test="vt-lees-voor" @click="leesVoor"><Icoon :naam="spreekt ? 'VolumeX' : 'Volume2'" /></button>
     </header>
+    <p v-if="quote && d.isVandaag" class="vt-quote" data-test="vt-quote">{{ quote }}</p>
     <nav class="vt-dagkiezer" aria-label="Dag kiezen" data-test="vt-dagkiezer">
       <button v-if="!d.isVandaag" type="button" class="vt-chip" @click="naarDag(null)">Vandaag</button>
       <button v-if="d.dag !== morgen" type="button" class="vt-chip" data-test="vt-morgen" @click="naarDag(morgen)">Morgen</button>
@@ -100,13 +96,6 @@ const stapels = computed(() => d.value.volgorde.filter((k: string) => d.value.st
       <ul class="vt-recap-lijst"><li v-for="r in t.recap.regels" :key="r">{{ r }}</li><li v-for="r in t.recap.risicos" :key="r" class="tekst-rood">{{ r }}</li><li v-if="t.recap.week">{{ t.recap.week }}</li></ul>
     </details>
 
-    <article v-if="t.focus" class="kaart vt-focus" data-test="vt-focus">
-      <span class="kicker">Je eerste zet</span>
-      <h2 class="vt-focus-wat">{{ t.focus.wat }}</h2>
-      <p class="vt-focus-waarom">{{ t.focus.waarom }}</p>
-      <a v-if="t.focus.knop.href && !t.focus.knop.href.startsWith('/')" :href="t.focus.knop.href" class="dd-act dd-act--primair vt-knop" data-test="vt-focus-knop" :target="t.focus.knop.soort === 'navigeer' ? '_blank' : undefined" rel="noopener">{{ t.focus.knop.tekst }}</a>
-      <button v-else type="button" class="dd-act dd-act--primair vt-knop" data-test="vt-focus-knop" @click="focusKnop">{{ t.focus.knop.tekst }}</button>
-    </article>
     <div class="vt-telstrip" role="list" data-test="vt-telstrip">
       <button v-for="s in d.telstrip" :key="s.sleutel" type="button" role="listitem" class="vt-tegel" :class="{ 'vt-tegel--rood': s.achterstand }" :disabled="!s.stapel || !s.aantal" :data-test="`vt-tel-${s.sleutel}`" @click="springNaar(s.stapel)">
         <strong class="tnum">{{ s.aantal }}</strong><span>{{ s.label }}</span>
@@ -160,3 +149,7 @@ const stapels = computed(() => d.value.volgorde.filter((k: string) => d.value.st
     <p v-if="!stapels.length && !d.isVandaag" class="meta mt-16">Niets gepland op deze dag.</p>
   </div>
 </template>
+
+<style scoped>
+.vt-quote { margin: 0; padding-left: 10px; border-left: 3px solid var(--yellow); font-family: var(--font-serif); font-size: 16px; font-style: italic; line-height: 1.45; color: var(--ink-soft); }
+</style>

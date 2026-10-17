@@ -180,9 +180,18 @@ describe('Vandaag', () => {
   const i = (id: string, relevanceScore: number, uren: number, accountId = 'a1', status = 'nieuw') => ({ id, relevanceScore, status, accountId, ownerId: 'u1', createdAt: new Date(NU.getTime() - uren * 3600_000).toISOString() })
   it('aanleiding van de dag: 85 tegen 84, 48 uur, alleen eigen accounts', () => {
     expect(kiesAanleidingVanDeDag([i('a', 84, 1), i('b', 85, 2)], 'u1', new Set(['a1']), NU)?.id).toBe('b')
-    expect(kiesAanleidingVanDeDag([i('a', 90, 49)], 'u1', new Set(['a1']), NU)).toBeNull()
+    expect(kiesAanleidingVanDeDag([i('a', 90, 49), i('b', 65, 1)], 'u1', new Set(['a1']), NU)?.id).toBe('a')
     expect(kiesAanleidingVanDeDag([i('a', 90, 1, 'a2')], 'u1', new Set(['a1']), NU)).toBeNull()
     expect(kiesAanleidingVanDeDag([i('a', 90, 1, 'a1', 'gelezen')], 'u1', new Set(['a1']), NU)).toBeNull()
+  })
+  it('aanleiding van de dag: terugval op 60 of hoger binnen zeven dagen, ook voor een Beginner', () => {
+    // Een Beginner krijgt motorvoorstellen als inzicht met relevantie 65; die worden de aanleiding als er geen 85+ is.
+    expect(kiesAanleidingVanDeDag([i('a', 65, 30), i('b', 45, 1)], 'u1', new Set(['a1']), NU)?.id).toBe('a')
+    expect(kiesAanleidingVanDeDag([i('a', 59, 1)], 'u1', new Set(['a1']), NU)).toBeNull()
+    expect(kiesAanleidingVanDeDag([i('a', 90, 7 * 24 + 1)], 'u1', new Set(['a1']), NU)).toBeNull()
+    expect(kiesAanleidingVanDeDag([i('a', 65, 1, 'a2')], 'u1', new Set(['a1']), NU)).toBeNull()
+    // Een 85+ van de laatste 48 uur gaat altijd voor.
+    expect(kiesAanleidingVanDeDag([i('a', 80, 1), i('b', 85, 40)], 'u1', new Set(['a1']), NU)?.id).toBe('b')
   })
   it('samenvattingsregel en kicker', () => {
     expect(samenvattingsregel({ taken: 0, uitCampagnes: 0 })).toBe('Niets te doen. De motor zet nieuwe pogingen klaar zodra ze aan de beurt zijn.')

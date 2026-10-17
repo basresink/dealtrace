@@ -3,6 +3,7 @@
 // prospect met een lopende reeks, op nee, overgedragen of gedeactiveerd krijgt geen nieuwe reeks; de server zegt
 // waarom. Na het starten opent de reeks in de detailkolom.
 import { REEKS_KANAAL_LABEL, REEKS_MANDAAT_LABEL } from '~~/shared/opvolgreeks'
+import { CONTACTROL_LABEL, type ContactRol } from '~~/shared/contactgegevens'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ sluit: []; gestart: [id: string] }>()
@@ -23,6 +24,10 @@ async function kies(a: { id: string; naam: string }) {
     start.contactId = v.value.contacten.find((c: any) => c.rol === 'beslisser')?.id ?? v.value.contacten[0]?.id ?? ''
   } catch (e) { toast.toon(foutTekst(e), 'fout'); gekozen.value = null } finally { laadt.value = false }
 }
+// Contactpersoon: de gedeelde zoekkiezer over de contacten van deze prospect (beslisser voorgekozen).
+const gekozenContact = computed(() => (v.value?.contacten ?? []).find((c: any) => c.id === start.contactId) ?? null)
+function zoekContact(q: string) { const z = q.trim().toLowerCase(); return (v.value?.contacten ?? []).filter((c: any) => !z || c.naam.toLowerCase().includes(z)) as { id: string; naam: string; rol?: string; email?: boolean }[] }
+function contactRegel(c: { rol?: string; email?: boolean }) { return [c.rol && c.rol !== 'onbekend' ? CONTACTROL_LABEL[c.rol as ContactRol] ?? null : null, c.email ? null : 'geen e-mailadres'].filter(Boolean).join(' · ') || null }
 const lopend = computed(() => v.value?.reeks && ['loopt', 'gepauzeerd'].includes(v.value.reeks.status) ? v.value.reeks : null)
 function stappenTekst(s: { stappen: { dag: number; kanaal: string }[]; einde: { dag: number } }) {
   return `${s.stappen.map((x) => `Dag ${x.dag} ${(REEKS_KANAAL_LABEL[x.kanaal as keyof typeof REEKS_KANAAL_LABEL] ?? x.kanaal).toLowerCase()}`).join(' · ')} · dag ${s.einde.dag} terug naar het ritme`
@@ -53,7 +58,7 @@ async function doeStart() {
               <span>{{ gekozen.naam }}</span>
               <button type="button" class="dd-act dd-act--icoon" aria-label="Andere prospect kiezen" @click="gekozen = null; v = null"><Icoon naam="X" :grootte="14" /></button>
             </div>
-            <ZoekKiezer v-else :zoek="zoek" placeholder="Zoek een prospect op naam" label="Zoek een prospect" data-test="rsf-zoek" :optie-test="(t) => `rsf-kies-${t.id}`" :sub="(t) => t.plaats" leeg="Geen prospect gevonden." @kies="kies" />
+            <ZoekKiezer v-else :zoek="zoek" placeholder="Zoek een prospect op naam" label="Zoek een prospect" data-test="rsf-zoek" :optie-test="(t) => `rsf-kies-${t.id}`" :sub="accountSub" leeg="Geen prospect gevonden." @kies="kies" />
           </div>
           <p v-if="laadt" class="meta mt-16">Laden…</p>
           <template v-else-if="v">
@@ -67,9 +72,12 @@ async function doeStart() {
                   <span><b>{{ s.naam }}</b><span v-if="s.na" class="item-meta"> · na "{{ s.na }}"</span><span class="rsf-stappen">{{ stappenTekst(s) }}</span></span>
                 </label>
               </fieldset>
-              <label class="veld mt-16"><span class="veld-label">Contactpersoon</span>
-                <select v-model="start.contactId" class="invoer" data-test="rsf-contact"><option v-for="c in v.contacten" :key="c.id" :value="c.id">{{ c.naam }}{{ c.email ? '' : ' (geen e-mailadres)' }}</option></select>
-              </label>
+              <div class="veld mt-16">
+                <ZoekKiezer
+                  :zoek="zoekContact" kop="Contactpersoon" :gekozen="gekozenContact" wis-label="Wis gekozen contactpersoon" placeholder="Kies of zoek een contactpersoon…"
+                  data-test="rsf-contact" gekozen-test="rsf-contact-keuze" :optie-test="(c) => `rsf-contact-${c.id}`" :sub="contactRegel" leeg="Geen contactpersoon gevonden." @kies="(c) => (start.contactId = c.id)" @wis="start.contactId = ''"
+                />
+              </div>
               <div class="veld mt-16"><span class="veld-label">Mandaat</span>
                 <div class="keuzegroep keuzegroep--klein" role="group" aria-label="Mandaat">
                   <button v-for="m in (['C', 'B'] as const)" :key="m" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': start.mandaat === m }" :aria-pressed="start.mandaat === m" :disabled="!v.mandaten.includes(m)" :data-test="`rsf-mandaat-${m}`" @click="start.mandaat = m">{{ REEKS_MANDAAT_LABEL[m] }}</button>

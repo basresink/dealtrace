@@ -1,12 +1,20 @@
 // Vandaag (F01): de aanleiding van de dag en de samenvattingsregel. Puur.
 export interface InzichtKort { id: string; accountId: string | null; status: string; relevanceScore: number; createdAt: string; ownerId: string | null }
 
-/** Ongelezen, relevantie 85 of hoger, jonger dan 48 uur, op een eigen account: de hoogste (en dan de nieuwste) wint. */
+/**
+ * Ongelezen, relevantie 85 of hoger, jonger dan 48 uur, op een eigen account: de hoogste (en dan de nieuwste) wint.
+ * Is er zo geen, dan het beste ongelezen inzicht van de laatste zeven dagen met relevantie 60 of hoger op een eigen
+ * account. Zonder die terugval zag een Beginner nooit een aanleiding: de motor zet zijn voorstellen als inzicht
+ * met relevantie 65 klaar en de Waarnemer levert lang niet elke dag iets van 85 of hoger.
+ */
 export function kiesAanleidingVanDeDag<T extends InzichtKort>(inzichten: T[], gebruikerId: string, eigenAccounts: Set<string>, nu: Date): T | null {
-  const grens = nu.getTime() - 48 * 3600_000
-  return inzichten
-    .filter((i) => i.status === 'nieuw' && i.relevanceScore >= 85 && Date.parse(i.createdAt) >= grens && i.accountId && eigenAccounts.has(i.accountId) && (i.ownerId === gebruikerId || !i.ownerId))
-    .sort((a, b) => b.relevanceScore - a.relevanceScore || b.createdAt.localeCompare(a.createdAt))[0] ?? null
+  const kies = (minimum: number, uren: number) => {
+    const grens = nu.getTime() - uren * 3600_000
+    return inzichten
+      .filter((i) => i.status === 'nieuw' && i.relevanceScore >= minimum && Date.parse(i.createdAt) >= grens && i.accountId && eigenAccounts.has(i.accountId) && (i.ownerId === gebruikerId || !i.ownerId))
+      .sort((a, b) => b.relevanceScore - a.relevanceScore || b.createdAt.localeCompare(a.createdAt))[0] ?? null
+  }
+  return kies(85, 48) ?? kies(60, 7 * 24)
 }
 
 /** "6 taken · 3 uit campagnes · volgende koude actie 10:00". */

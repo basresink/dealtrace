@@ -9,7 +9,7 @@ function weg(id: string) { gekozen.value = gekozen.value.filter((x) => x.id !== 
 
 <template>
   <div class="cp-kiezer">
-    <ZoekKiezer :zoek="zoek" placeholder="Zoek een account op naam" label="Zoek een account" data-test="account-zoek" :optie-test="(t) => `kies-${t.id}`" :sub="(t) => t.plaats" leeg="Geen account gevonden." @kies="kies" />
+    <ZoekKiezer :zoek="zoek" kop="Prospect" placeholder="Zoek een prospect op naam" data-test="account-zoek" :optie-test="(t) => `kies-${t.id}`" :sub="accountSub" leeg="Geen account gevonden." @kies="kies" />
     <div v-if="gekozen.length" class="chips">
       <span v-for="g in gekozen" :key="g.id" class="chip">{{ g.naam }}<button type="button" class="chip-weg" :aria-label="`${g.naam} weghalen`" @click="weg(g.id)"><Icoon naam="X" :grootte="12" /></button></span>
     </div>

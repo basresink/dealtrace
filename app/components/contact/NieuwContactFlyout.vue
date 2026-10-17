@@ -45,7 +45,7 @@ async function maak() {
             <div class="veld"><span class="veld-label">Bedrijf <span class="veld-verplicht">*</span></span>
               <p v-if="klant" class="schakel-rij"><strong data-test="nc-gekozen">{{ klant.naam }}</strong><button type="button" class="dd-act" @click="klant = null">Wijzig</button></p>
               <template v-else>
-                <ZoekKiezer :zoek="zoekBedrijf" placeholder="Zoek een bedrijf" label="Zoek een bedrijf" data-test="nc-account" :optie-test="(a) => `nc-kies-${a.id}`" :sub="(a) => a.plaats" leeg="Geen bedrijf gevonden." @kies="(a) => (klant = { id: a.id, naam: a.naam })" />
+                <ZoekKiezer :zoek="zoekBedrijf" placeholder="Zoek een bedrijf" label="Zoek een bedrijf" data-test="nc-account" :optie-test="(a) => `nc-kies-${a.id}`" :sub="accountSub" leeg="Geen bedrijf gevonden." @kies="(a) => (klant = { id: a.id, naam: a.naam })" />
                 <span class="veld-uitleg">Een contact hoort altijd bij een bedrijf.</span>
               </template>
             </div>

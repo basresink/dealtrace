@@ -1,23 +1,21 @@
 // GET /api/vandaag/dashboard: het dashboard onder het Vandaag-paneel ("Jouw resultaten · deze maand") en de
-// twee AI-blokken eronder (Klaargezet door AI, Door AI agents gedaan). Apart van /api/vandaag zodat de dag
-// zelf niet op deze cijfers wacht. Vier databasevragen: activiteiten, één telvraag, concepten en de tijdlijn.
+// twee blokken eronder (Klaargezet door AI en Belscript). Apart van /api/vandaag zodat de dag
+// zelf niet op deze cijfers wacht. Databasevragen: activiteiten, één telvraag, concepten en het belscript.
 // Cijfers volgen Mijn resultaten (shared/team: kpi en tempo); de prospectdekking volgt de funnelfilters.
-import { sql } from 'drizzle-orm'
+import { and, eq, or, sql } from 'drizzle-orm'
+import { DOEL_LABEL, zichtbareScripts } from '../../../shared/belscripts'
 import { nlMoment, nlTijdstip, plusDagen } from '../../../shared/datum'
 import { kpi, NORMEN, periodeVoor, tempo, type KpiActiviteit } from '../../../shared/team'
-import { agentTellers, dashboardKop, type AgentGebeurtenis } from '../../../shared/vandaag'
+import { dashboardKop } from '../../../shared/vandaag'
 import { kan } from '../../utils/accounts'
-import { metOrganisatie } from '../../utils/db'
+import { naarScript } from '../../utils/belscripts'
+import { metOrganisatie, schema } from '../../utils/db'
 import { vereisFunctie } from '../../utils/sessie'
 
 type Rij = Record<string, any>
 const iso = (v: unknown) => (v instanceof Date ? v.toISOString() : new Date(String(v)).toISOString())
 const AGENT: Record<string, string> = { waarnemer: 'Waarnemer', verrijker: 'Verrijker', zoeker: 'Zoeker', schrijver: 'Schrijver', planner: 'Planner', notulist: 'Notulist', verzender: 'Verzender', profielbouwer: 'Profielbouwer', motor: 'Motor', bewaker: 'Bewaker' }
 const agentNaam = (a: string | null | undefined) => (a ? AGENT[a] ?? a[0]!.toUpperCase() + a.slice(1) : 'Motor')
-const HANDELING: Record<string, string> = {
-  'taken.landen': 'Zette taken in je agenda', 'ai:concept': 'Schreef een concept', 'pitstop:mail': 'Schreef een opvolgmail', 'ai:belscript': 'Schreef een belscript',
-  'ai:dossier': 'Ververste het dossier', 'ai:zoekronde': 'Draaide een zoekronde', 'bellen plannen': 'bellen plannen', 'bezoek plannen': 'een bezoek plannen',
-}
 
 export default defineEventHandler(async (event) => {
   const ctx = await vereisFunctie(event, 'nav.vandaag')
@@ -29,14 +27,12 @@ export default defineEventHandler(async (event) => {
   const vanTijd = nlTijdstip(van, 0).toISOString()
   const maandTijd = nlTijdstip(maand.van, 0).toISOString()
   const zeven = new Date(nu.getTime() - 7 * 864e5).toISOString()
-  const gisteren = new Date(nu.getTime() - 24 * 3600_000).toISOString()
   const dertig = new Date(nu.getTime() - 30 * 864e5).toISOString()
   const mijn = ctx.gebruiker.id
   const magCijfers = kan(ctx, 'nav.resultaten')
   const magDekking = kan(ctx, 'funnel.filters')
   const magConcepten = kan(ctx, 'concepten.inbox')
-  const gevorderd = ctx.gebruiker.niveau !== 'beginner' || ctx.organisatie.iedereenAlles
-  const magAgents = gevorderd && kan(ctx, 'vandaag.agentsGedaan')
+  const magBelscript = kan(ctx, 'belscript.kiezen')
 
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
     const rijen = async (q: ReturnType<typeof sql>) => (await tx.execute(q)).rows as Rij[]
@@ -105,39 +101,21 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Door AI agents gedaan sinds gisteren: logboek van de agents, taken van de motor, inzichten en geparkeerde accounts.
-    let agents = null
-    if (magAgents) {
-      const l = await rijen(sql`select * from (select u.*, count(*) over (partition by u.soort) as n, row_number() over (order by u.op desc) as r, row_number() over (partition by u.soort order by u.op desc) as rs from (
-          select case when r.uitkomst = 'geblokkeerd' then 'tegengehouden' when r.agent = 'verrijker' or r.handeling = 'ai:dossier' then 'verrijkt' when r.agent = 'schrijver' then 'concept' when r.uitkomst = 'als_taak' then 'taak' else 'overig' end as soort,
-            r.agent, r.handeling, r.uitkomst, r.reden, null as titel, a.name as account, r.account_id, r.op
-          from agent_runs r left join accounts a on a.id = r.account_id
-          where r.op >= ${gisteren} and r.uitkomst <> 'fout' and not (r.agent = 'waarnemer' and r.handeling like 'inzicht%') and (a.owner_id = ${mijn} or r.gebruiker_id = ${mijn})
-          union all
-          select 'taak', 'motor', null, null, null, t.title, a.name, t.account_id, t.created_at from tasks t left join accounts a on a.id = t.account_id
-          where t.owner_id = ${mijn} and t.rule_id is not null and t.created_at >= ${gisteren}
-          union all
-          select 'inzicht', coalesce(s.agent, case when s.bron = 'extern' then 'waarnemer' else 'motor' end), null, null, null, s.title, a.name, s.account_id, s.created_at from signals s left join accounts a on a.id = s.account_id
-          where s.owner_id = ${mijn} and s.created_at >= ${gisteren}
-          union all
-          select 'geparkeerd', case when g.door = 'motor' then 'motor' else 'jij' end, null, null, g.reden, null, a.name, g.account_id, g.op from reisgeschiedenis g join accounts a on a.id = g.account_id
-          where a.owner_id = ${mijn} and g.gebeurtenis = 'geparkeerd' and g.op >= ${gisteren}
-        ) u) x where r <= 6 or rs = 1 order by op desc`)
-      const actie = (x: Rij): string => {
-        if (x.soort === 'tegengehouden') return `Hield ${HANDELING[x.handeling] ?? x.handeling} van de ${agentNaam(x.agent)} tegen${x.reden ? `: ${x.reden}` : ''}`
-        if (x.soort === 'taak' && x.titel) return `Zette een taak klaar: ${x.titel}`
-        if (x.soort === 'inzicht') return `Nieuw inzicht: ${x.titel}`
-        if (x.soort === 'geparkeerd') return `Parkeerde het account${x.reden ? `: ${x.reden}` : ''}`
-        return HANDELING[x.handeling] ?? String(x.handeling ?? 'Voerde een handeling uit')
+    // Belscript: je actieve script (je eigen variant als je die hebt, anders het script van je team) met
+    // je gesprekken van 30 dagen, en de weg naar de Belscript Studio. Vervangt het blok Door AI agents gedaan.
+    let belscript = null
+    if (magBelscript) {
+      const scripts = (await tx.select().from(schema.belscripts).where(or(eq(schema.belscripts.isPersoonlijk, false), and(eq(schema.belscripts.isPersoonlijk, true), eq(schema.belscripts.gebruikerId, mijn))))).map(naarScript)
+      const zicht = zichtbareScripts(scripts, { id: mijn, niveau: ctx.gebruiker.niveau, teamId: ctx.gebruiker.teamId })
+      const [gebruik] = await rijen(sql`select data->'script'->>'scriptId' as id, count(*)::int as n from activiteiten where door = ${mijn} and data ? 'script' and op >= ${dertig} group by 1 order by 2 desc limit 1`)
+      const actief = zicht.find((x) => x.isPersoonlijk) ?? zicht.find((x) => x.id === gebruik?.id) ?? zicht[0] ?? null
+      const [n] = await rijen(sql`select count(*)::int as n from activiteiten where door = ${mijn} and data ? 'script' and op >= ${dertig}`)
+      belscript = {
+        script: actief ? { id: actief.id, naam: actief.naam, doel: DOEL_LABEL[actief.doel] ?? actief.doel, versie: actief.versie, eigen: actief.isPersoonlijk } : null,
+        aantalActief: zicht.length, gesprekken30: Number(n?.n ?? 0),
       }
-      const tellers: Record<string, number> = {}
-      for (const x of l) tellers[x.soort] = Number(x.n)
-      const tijdlijn: AgentGebeurtenis[] = l.filter((x) => Number(x.r) <= 6).map((x) => ({
-        soort: x.soort, agent: x.soort === 'tegengehouden' ? 'Bewaker' : x.agent === 'jij' ? 'Jij' : agentNaam(x.agent), actie: actie(x), account: x.account ?? null, accountId: x.account_id ?? null, op: iso(x.op),
-      }))
-      agents = { tellers: agentTellers(tellers), tijdlijn, totaal: Object.values(tellers).reduce((a, b) => a + b, 0) }
     }
 
-    return { cijfers, klaargezet, agents, sinds: plusDagen(vandaag, -1) }
+    return { cijfers, klaargezet, belscript, sinds: plusDagen(vandaag, -1) }
   })
 })

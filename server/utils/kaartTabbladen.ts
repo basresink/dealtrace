@@ -7,6 +7,8 @@ import { sql } from 'drizzle-orm'
 import { isAchterstallig } from '../../shared/taken'
 import { documentenVoorKaart } from './kennisbank'
 import { geldendVerslag } from './belverslag'
+import { winpuntTekst } from '../../shared/inzichten'
+import { winpuntTitels } from './winpuntTitels'
 
 const iso = (d: unknown) => (d ? new Date(d as string).toISOString() : null)
 const kaal = (n: unknown) => String(n ?? '').replace(/^Testgebruiker /, '')
@@ -42,11 +44,12 @@ export async function kaartTabbladen(tx: any, b: KaartBereik) {
     }
   })
 
+  const titels = await winpuntTitels(tx)
   const inzichten = (await rijen(sql`select s.*, c.first_name as c_voornaam, c.last_name as c_achternaam from signals s left join contacts c on c.id = s.contact_id
     where ${op('s')} and s.status in ('nieuw', 'gelezen', 'omgezet') order by s.created_at desc limit 100`)).map((s) => ({
     id: s.id, title: s.title, type: s.type, status: s.status, bron: s.bron, relevantie: s.relevance_score, createdAt: iso(s.created_at), ruleId: s.rule_id,
     agent: s.agent ?? s.data?.agent ?? null, evidence: s.data?.evidence ?? [], zekerheid: s.data?.zekerheid ?? (s.confidence != null ? Math.round(Number(s.confidence) * 100) : null),
-    winpuntVoorstel: s.data?.winpuntVoorstel ?? null, bronUrl: s.data?.bron?.url ?? null, bronDatum: s.data?.bron?.datum ?? null, specifiekeBron: s.data?.bron?.naam ?? null,
+    winpuntVoorstel: s.data?.winpuntVoorstel ?? null, winpuntTitel: winpuntTekst(s.data?.winpuntVoorstel, titels), bronUrl: s.data?.bron?.url ?? null, bronDatum: s.data?.bron?.datum ?? null, specifiekeBron: s.data?.bron?.naam ?? null,
     waarom: s.data?.waarom ?? null, bewijs: s.data?.bewijs ?? [], voorstel: s.data?.voorstel ?? null, account: { id, naam: accNaam }, ...metContact(s),
   }))
 

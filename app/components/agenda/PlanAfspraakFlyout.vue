@@ -91,7 +91,7 @@ async function laadContacten(k: { id: string } | null) {
   if (!contact.value) contact.value = lijst.find((c) => c.id === props.contactId) ?? lijst[0] ?? null
 }
 watch(klant, (k) => laadContacten(k))
-function kiesKlant(a: { id: string; naam: string; plaats?: string | null }) { klant.value = a }
+function kiesKlant(a: { id: string; naam: string; plaats?: string | null; branche?: string | null }) { klant.value = a }
 function wisKlant() { klant.value = null; contact.value = null }
 
 // Contact: met klant filteren we de contacten van die klant, zonder klant zoeken we overal.
@@ -162,7 +162,7 @@ async function plan() {
               <span class="pa-keuze-tekst"><strong>{{ klant.naam }}</strong><span v-if="klant.plaats" class="meta"> · {{ klant.plaats }}</span></span>
               <button v-if="!account" type="button" class="pa-wis" aria-label="Wis gekozen prospect" data-test="pa-klant-wis" @click="wisKlant"><Icoon naam="X" :grootte="16" /></button>
             </div>
-            <ZoekKiezer v-else :zoek="zoekKlant" placeholder="Zoek op prospectnaam" labelledby="pa-klant-label" data-test="pa-klant" :optie-test="(x) => `pa-klant-${x.id}`" :sub="(x) => x.plaats" leeg="Geen klant gevonden." @kies="kiesKlant" />
+            <ZoekKiezer v-else :zoek="zoekKlant" placeholder="Zoek op prospectnaam" labelledby="pa-klant-label" data-test="pa-klant" :optie-test="(x) => `pa-klant-${x.id}`" :sub="accountSub" leeg="Geen prospect gevonden." @kies="kiesKlant" />
           </div>
 
           <div class="veld">
@@ -172,7 +172,7 @@ async function plan() {
               <button type="button" class="pa-wis" aria-label="Wis gekozen contactpersoon" data-test="pa-contact-wis" @click="contact = null"><Icoon naam="X" :grootte="16" /></button>
             </div>
             <ZoekKiezer
-              v-else :zoek="zoekContact" :min="klant ? 0 : 2" :sleutel="`${klant?.id ?? ''}:${klantContacten.length}`"
+              v-else :zoek="zoekContact" :sleutel="`${klant?.id ?? ''}:${klantContacten.length}`"
               :placeholder="klant ? `Zoek een contact bij ${klant.naam}` : 'Zoek op contactnaam'" labelledby="pa-contact-label" data-test="pa-contact"
               :optie-test="(c) => `pa-contact-${c.id}`" :sub="(c) => [c.functie ?? c.rol, klant ? null : c.accountNaam].filter(Boolean).join(' · ')"
               :leeg="klant ? (klantContacten.length ? 'Geen contactpersoon gevonden.' : 'Deze prospect heeft nog geen contactpersonen.') : 'Geen contactpersoon gevonden.'"

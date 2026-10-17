@@ -2,7 +2,9 @@
 // Dagstart (F3 Dagplanner): de dag in het kort. Afspraken staan vast, bezoeken op route met de reistijd
 // ervoor, belblokken in het uur waarop je doelgroep het vaakst opneemt (bereikbaarheid per branche en uur
 // uit alle belpogingen), een voorbereidingsblok voor de eerste afspraak, en "Wat schoof" als er na de
-// eerste indeling iets veranderde. Buitendienst of binnendienst wissel je in de kop (?modus=). Het
+// eerste indeling iets veranderde. Je werkplek (binnendienst of buitendienst) bepaalt de indeling; er is
+// geen keuzeknop. Alles op deze pagina gaat over jezelf: de bereikbaarheid komt uit je eigen belpogingen.
+// Onderaan Tips en tricks en drie artikelen uit de academie bij je dag (RitmeSteun). Het
 // voorstel komt pas in je agenda na je akkoord. Eén bron: GET /api/dagstart (shared/dagritme.ts planDag).
 // Met "Plan mijn dag automatisch" deelt de Dagplanner de dag zelf in (volgens je werkplek): dan toont de
 // pagina wat hij in je agenda zette, met Ongedaan maken per blok of voor de hele dag, Loopt uit voor de
@@ -12,7 +14,7 @@ const aan = !!functie('dagritme.dagstart')?.beschikbaar
 const toast = useToast()
 const route = useRoute()
 const router = useRouter()
-const query = computed(() => ({ dag: route.query.dag || undefined, modus: route.query.modus || undefined, branche: route.query.branche || undefined }))
+const query = computed(() => ({ dag: route.query.dag || undefined, branche: route.query.branche || undefined }))
 const { data: d, refresh } = await useFetch<any>('/api/dagstart', { query, immediate: aan, default: () => null })
 function zet(q: Record<string, string | undefined>) { router.replace({ query: { ...route.query, ...q } }) }
 
@@ -114,16 +116,12 @@ useHead({ title: 'Dagstart · Dealtrace' })
         <template #titel><h1 class="title title--groot" data-test="ds-titel">{{ d.titel }}</h1></template>
         <template #uitleg><p class="subtitle subtitle--groot" data-test="ds-lede">{{ d.lede }}</p></template>
         <template #acties>
-          <span v-if="gepland" class="pil pil--grijs ds-werkplek" data-test="ds-werkplek">{{ d.modus === 'buiten' ? 'Buitendienst' : 'Binnendienst' }} · je werkplek</span>
-          <div v-else class="keuzegroep" role="group" aria-label="Werkplek voor de indeling">
-            <button type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': d.modus === 'buiten' }" :aria-pressed="d.modus === 'buiten'" data-test="ds-modus-buiten" @click="zet({ modus: 'buiten' })">Buitendienst</button>
-            <button type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': d.modus === 'binnen' }" :aria-pressed="d.modus === 'binnen'" data-test="ds-modus-binnen" @click="zet({ modus: 'binnen' })">Binnendienst</button>
-          </div>
+          <span class="pil pil--grijs ds-werkplek" data-test="ds-werkplek">{{ d.modus === 'buiten' ? 'Buitendienst' : 'Binnendienst' }} · je werkplek</span>
           <NuxtLink to="/agenda" class="dd-actie dd-actie--secundair"><Icoon naam="Calendar" class="dd-actie-icoon" />Agenda</NuxtLink>
         </template>
       </PaginaKop>
 
-      <section class="section section--laatste">
+      <section class="section">
         <div class="container ds">
           <article class="kaart ds-dag" data-test="ds-dag">
             <header class="kaart-kop"><h2 class="kaart-titel">Je dag</h2><span class="meta">{{ d.plan.samenvatting }}</span></header>
@@ -153,7 +151,7 @@ useHead({ title: 'Dagstart · Dealtrace' })
           <div class="ds-zij">
             <article class="kaart" data-test="ds-bereik">
               <header class="kaart-kop"><h2 class="kaart-titel">Wanneer neemt jouw doelgroep op?</h2></header>
-              <p class="meta ds-meta">{{ d.bereik.doelgroep ?? 'Alle branches' }} · {{ d.bereik.pogingen }} belpogingen · laatste 90 dagen</p>
+              <p class="meta ds-meta" data-test="ds-bereik-meta">{{ d.bereik.doelgroep ?? 'Alle branches' }} · {{ d.bereik.pogingen === 1 ? '1 eigen belpoging' : `${d.bereik.pogingen} eigen belpogingen` }} · laatste 90 dagen</p>
               <label class="ds-branche"><span class="sr-only">Doelgroep</span>
                 <select data-test="ds-branche" @change="zet({ branche: ($event.target as HTMLSelectElement).value || undefined })">
                   <option value="" :selected="!route.query.branche">Doelgroep van je belacties</option>
@@ -228,6 +226,10 @@ useHead({ title: 'Dagstart · Dealtrace' })
           </div>
         </div>
       </section>
+
+      <section class="section section--laatste">
+        <div class="container"><RitmeSteun :steun="d.steun" moment="dagstart" /></div>
+      </section>
     </template>
   </div>
 </template>
@@ -281,6 +283,5 @@ useHead({ title: 'Dagstart · Dealtrace' })
 @media (max-width: 719px) {
   .ds-rooster { display: none; }
   .ds-lijst { display: block; }
-  .keuzegroep-knop { min-height: 44px; }
 }
 </style>

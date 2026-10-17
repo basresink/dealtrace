@@ -88,12 +88,12 @@ async function bewaar() {
             <div class="veld">
               <span class="veld-label">Koppel aan een bedrijf</span>
               <div v-if="accounts.length" class="kbu-chips"><span v-for="a in accounts" :key="a.id" class="chip" data-test="kbu-account-chip">{{ a.naam }}<button type="button" class="chip-weg" :aria-label="`${a.naam} ontkoppelen`" @click="accounts = accounts.filter((x) => x.id !== a.id)">×</button></span></div>
-              <ZoekKiezer :zoek="zoekAccounts" placeholder="Zoek op naam van de prospect of klant…" label="Zoek een bedrijf" data-test="kbu-account" :optie-test="() => 'kbu-account-optie'" :sub="(a) => a.plaats" leeg="Geen bedrijf gevonden." @kies="voegAccountToe" />
+              <ZoekKiezer :zoek="zoekAccounts" placeholder="Zoek op naam van de prospect of klant…" label="Zoek een bedrijf" data-test="kbu-account" :optie-test="() => 'kbu-account-optie'" :sub="accountSub" leeg="Geen bedrijf gevonden." @kies="voegAccountToe" />
             </div>
             <div class="veld">
               <span class="veld-label">Koppel aan contact</span>
               <div v-if="contacten.length" class="kbu-chips"><span v-for="c in contacten" :key="c.id" class="chip" data-test="kbu-contact-chip">{{ c.naam }}<button type="button" class="chip-weg" :aria-label="`${c.naam} ontkoppelen`" @click="contacten = contacten.filter((x) => x.id !== c.id)">×</button></span></div>
-              <ZoekKiezer :zoek="(q: string) => zoekContacten(q)" placeholder="Zoek op contactnaam…" label="Zoek een contact" data-test="kbu-contact" :optie-test="() => 'kbu-contact-optie'" :sub="(c) => [c.functie, c.accountNaam].filter(Boolean).join(' · ')" leeg="Geen contact gevonden." @kies="voegContactToe" />
+              <ZoekKiezer :zoek="(q: string) => zoekContacten(q)" placeholder="Zoek op contactnaam…" label="Zoek een contact" data-test="kbu-contact" :optie-test="() => 'kbu-contact-optie'" :sub="(c) => contactSub(c)" leeg="Geen contact gevonden." @kies="voegContactToe" />
             </div>
           </template>
           <p v-else class="meta kbu-vast" data-test="kbu-vast"><Icoon naam="Link" :grootte="14" /> Gekoppeld aan {{ contact ? contact.naam : account!.naam }}</p>

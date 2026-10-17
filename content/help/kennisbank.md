@@ -8,7 +8,7 @@ routes: /kennisbank
 
 # Kennisbank
 
-De kennisbank is de bibliotheek van je organisatie: cases, offertes, presentaties, productinfo, prijslijsten en contracten. Wat een collega uploadt, kun jij ook vinden en gebruiken. De kennisbank staat aan vanaf Gevorderd, onder **Activiteiten, Kennisbank**.
+De kennisbank is de bibliotheek van je organisatie: cases, offertes, presentaties, productinfo, prijslijsten en contracten. Wat een collega uploadt, kun jij ook vinden en gebruiken. De kennisbank staat aan vanaf Gevorderd. Je opent hem in het **Helpcenter**, met de kaart **Kennisbank**.
 
 ## Zoeken en filteren
 

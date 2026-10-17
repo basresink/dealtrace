@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// Vandaag op de laptop (F01), in de opzet van DealDrive: kop, de aanleiding van de dag groot, één
-// kaart met drie kolommen (taken, afspraken, prio), het dashboard "Jouw resultaten · deze maand",
-// Klaargezet door AI naast Door AI agents gedaan (vanaf Gevorderd), de inzichten bij je prospects van
-// de laatste 48 uur en voor de salesmanager "Team vandaag". Het belblokvak onderaan is weg. Dashboard en AI-blokken
+// Vandaag op de laptop (F01), in de opzet van DealDrive: kop met de quote van de dag en de knop Dagstart,
+// de aanleiding van de dag groot (ook voor een Beginner), één kaart met drie kolommen (taken, afspraken,
+// prio), het dashboard "Jouw resultaten · deze maand", Klaargezet door AI naast Belscript, de inzichten bij
+// je prospects van de laatste 48 uur en voor de salesmanager "Team vandaag". Dashboard en de twee blokken
 // staan ook op de telefoon, onder de dagweergave.
 const toast = useToast()
 const { versie } = useAfronden()
@@ -16,7 +16,6 @@ const open = ref<string | null>(null)
 // P13: een afspraak op de dag opent in de agenda, met de afspraakflyout.
 function openTaak(id: string | null) { if (id?.startsWith('afspraak:')) navigateTo(`/agenda?weergave=dag&afspraak=${id.slice(9)}`); else open.value = id }
 const nieuweTaak = ref(false)
-const nieuweProspect = ref(false)
 const nieuweAfspraak = ref(false)
 async function maakTaak(id: string) {
   try { await $fetch(`/api/signals/${id}/omzetten`, { method: 'POST', body: {} }); toast.toon('Taak gemaakt uit het inzicht.'); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
@@ -27,21 +26,22 @@ useHead({ title: 'Vandaag · Dealtrace' })
 <template>
   <div v-if="v">
     <AankomstKaart deel="kaart" class="vt-alleen-telefoon" style="padding: 0 16px" />
-    <VandaagTelefoon class="vt-alleen-telefoon" :t="v.telefoon" :kan="v.kan" @open="openTaak" @ververs="refresh()" />
+    <VandaagTelefoon class="vt-alleen-telefoon" :t="v.telefoon" :kan="v.kan" :quote="v.kop.quote" @open="openTaak" @ververs="refresh()" />
     <AankomstKaart deel="inloop" class="vt-alleen-telefoon" style="padding: 0 16px 16px" />
-    <DagritmeStrook :vorm="v.telefoon?.vorm" class="vt-alleen-telefoon dr-telefoon" />
     <div class="vt-alleen-groot">
     <PaginaKop helpartikel="vandaag">
       <template #kicker><span class="kicker kicker--streep" data-test="vandaag-kicker">{{ v.kop.kicker }}</span></template>
       <template #titel><h1 class="title title--groot">{{ v.kop.groet }}</h1></template>
-      <template #uitleg><p class="subtitle subtitle--groot" data-test="samenvatting">{{ v.kop.samenvatting }}</p></template>
+      <template #uitleg>
+        <p v-if="v.kop.quote" class="vd-quote" data-test="quote-van-de-dag">{{ v.kop.quote }}</p>
+        <p class="subtitle subtitle--groot" data-test="samenvatting">{{ v.kop.samenvatting }}</p>
+      </template>
       <template #acties>
         <button type="button" class="dd-actie dd-actie--primair" data-test="vandaag-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
         <button type="button" class="dd-actie dd-actie--zwart" data-test="vandaag-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
-        <button v-if="v.kan.nieuwProspect" type="button" class="dd-actie dd-actie--secundair" data-test="vandaag-prospect" @click="nieuweProspect = true"><Icoon naam="UserPlus" class="dd-actie-icoon" />Prospect</button>
+        <NuxtLink to="/dagstart" class="dd-actie dd-actie--secundair" data-test="vandaag-dagstart"><Icoon naam="Sunrise" class="dd-actie-icoon" />Dagstart</NuxtLink>
       </template>
     </PaginaKop>
-    <DagritmeStrook :vorm="v.telefoon?.vorm" />
     <section v-if="v.aanleiding" class="section vd-hero">
       <div class="container">
         <AanleidingHero :a="v.aanleiding" @maak-taak="maakTaak" />
@@ -49,15 +49,14 @@ useHead({ title: 'Vandaag · Dealtrace' })
     </section>
     <section class="section section--alt">
       <div class="container">
-        <p v-if="v.telefoon.focus" class="kaart vt-focusregel mb-16" data-test="focusregel"><span class="kicker">Je eerste zet</span> {{ v.telefoon.focus.wat }} · <span class="meta">{{ v.telefoon.focus.waarom }}</span></p>
         <VandaagPaneel :taken="v.taken" :afspraken="v.telefoon.dag.stapels.afspraken" :prio="v.prio" :dag="route.query.dag as string | undefined" @open="openTaak" />
       </div>
     </section>
     </div>
-    <section v-if="dash?.cijfers || dash?.klaargezet || dash?.agents" class="section vd-dash">
+    <section v-if="dash?.cijfers || dash?.klaargezet || dash?.belscript" class="section vd-dash">
       <div class="container">
         <VandaagDashboard v-if="dash.cijfers" :c="dash.cijfers" />
-        <VandaagAi v-if="dash.klaargezet || dash.agents" :klaargezet="dash.klaargezet" :agents="dash.agents" :class="{ 'mt-24': dash.cijfers }" @open="openTaak" @gewijzigd="verversDash()" />
+        <VandaagAi v-if="dash.klaargezet || dash.belscript" :klaargezet="dash.klaargezet" :belscript="dash.belscript" :class="{ 'mt-24': dash.cijfers }" @open="openTaak" @gewijzigd="verversDash()" />
       </div>
     </section>
     <div class="vt-alleen-groot">
@@ -79,7 +78,12 @@ useHead({ title: 'Vandaag · Dealtrace' })
     </div>
     <TaakFlyout :open="!!open" :taak-id="open" @sluit="open = null" @klaar="refresh()" @gewijzigd="refresh()" />
     <NieuweTaakFlyout :open="nieuweTaak" @sluit="nieuweTaak = false" @gemaakt="nieuweTaak = false; refresh()" />
-    <NieuweProspectFlyout :open="nieuweProspect" @sluit="nieuweProspect = false" @aangemaakt="(id) => navigateTo(`/accounts/${id}`)" @bestaand="(id) => navigateTo(`/accounts/${id}`)" />
     <PlanAfspraakFlyout :open="nieuweAfspraak" @sluit="nieuweAfspraak = false" @gepland="(id: string) => { nieuweAfspraak = false; navigateTo(`/agenda?weergave=dag&afspraak=${id}`) }" />
   </div>
 </template>
+
+<style scoped>
+/* De quote van de dag direct onder de groet: rustig, cursief, met een gele streep ervoor. */
+.vd-quote { margin: 6px 0 10px; padding-left: 12px; border-left: 3px solid var(--yellow); font-family: var(--font-serif); font-size: 18px; font-style: italic; line-height: 1.45; color: var(--ink-soft); max-width: 60ch; }
+@media (max-width: 767px) { .vd-quote { font-size: 16px; } }
+</style>

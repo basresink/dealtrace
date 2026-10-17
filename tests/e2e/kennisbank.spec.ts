@@ -30,7 +30,9 @@ test.describe('kennisbank', () => {
     await expect(page.getByTestId('ddf-velden')).toContainText('v2')
     await expect(page.getByTestId('ddf-velden')).toContainText('Markdown')
     await expect(page.getByTestId('ddf-klant')).toContainText('Gevelpunt')
-    await expect(page.getByTestId('ddf-preview-tekst')).toContainText('veertig procent')
+    // Gekoppelde bedrijven zijn gewone tekstlinks naar de accountkaart, geen knoppen.
+    await expect(page.getByTestId('ddf-klant')).toHaveAttribute('href', /^\/accounts\//)
+    await expect(page.getByTestId('ddf-klant')).not.toHaveClass(/chip/)
     await expect(page.getByTestId('ddf-ai-inhoud')).toBeVisible()
     await expect(page.getByTestId('ddf-vraag')).toHaveCount(3)
     await page.getByTestId('ddf-eigen').click()
@@ -40,6 +42,10 @@ test.describe('kennisbank', () => {
     await page.keyboard.press('Escape')
     await expect(fly).toHaveCount(0)
 
+    // Geen zoekbalk op de pagina: Filters staat rechts van "+ Document" en het zoekveld zit in het paneel.
+    await expect(page.getByTestId('kb-zoek')).toHaveCount(0)
+    expect((await page.getByTestId('kb-filters').boundingBox())!.x).toBeGreaterThan((await page.getByTestId('kb-nieuw').boundingBox())!.x)
+    await page.getByTestId('kb-filters').click()
     // Zoeken op inhoud en filteren op type.
     await page.getByTestId('kb-zoek').fill(z)
     await expect(page).toHaveURL(new RegExp(`zoek=${z}`))
@@ -48,13 +54,15 @@ test.describe('kennisbank', () => {
     await expect(page).toHaveURL(/type=case/)
     await expect(page.locator('[data-test^=kb-kaart-]')).toHaveCount(1)
     await page.getByTestId('kb-zoek').fill('')
-    await page.getByTestId('kb-filters').click()
+    await expect(page).not.toHaveURL(/zoek=/)
     await page.getByTestId('kb-koppeling-zonder').click()
     await expect(page.locator('[data-test^=kb-kaart-]', { hasText: `Case Testzon ${z}` })).toHaveCount(0)
     await page.getByTestId('kb-reset').click()
 
+    // Een zoekterm in de URL opent het paneel met het zoekveld gevuld.
+    await ga(page, `/kennisbank?zoek=${z}`)
+    await expect(page.getByTestId('kb-zoek')).toHaveValue(z)
     // Verwijderen met bevestiging.
-    await page.getByTestId('kb-zoek').fill(z)
     await expect(page.getByTestId('kb-aantal')).toHaveText('1 document')
     await page.locator('[data-test^=kb-kaart-]', { hasText: `Case Testzon ${z}` }).click()
     await page.getByTestId('ddf-verwijder').click()

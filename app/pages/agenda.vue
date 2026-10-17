@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// Agenda (F09) in de opzet van DealDrive: de kop vat de dag samen, rechts zoeken, AI, hulp, "+ Taak"
-// en "+ Afspraak". Daaronder de navigatie met het weeknummer en Filters; in het filterpaneel staat
+// Agenda (F09) in de opzet van DealDrive: de kop vat de dag samen, rechts zoeken, AI, hulp, "+ Afspraak"
+// en daarnaast Weekstart en Weekreview (je weekritme). Daaronder de navigatie met het weeknummer en Filters; in het filterpaneel staat
 // ook de weergave (Werkweek, Week, Maand; in de URL). Dan het weekrooster (AgendaRooster) of de maand (AgendaMaand).
 // Afspraken in de kleur van de meetingsoort, belblokken en taken op hun tijd, bezet uit de
 // gekoppelde agenda gearceerd, conflicten met een rode rand en "Gepland door" bij afspraken die een
@@ -10,6 +10,9 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const klasse = useSchermklasse()
+const { functie } = useMe()
+const weekstartAan = !!functie('dagritme.weekstart')?.beschikbaar
+const weekreviewAan = !!functie('dagritme.weekreview')?.beschikbaar
 const vandaag = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Amsterdam' })
 type Weergave = 'werkweek' | 'week' | 'maand' | 'dag'
 // "Wie is er aan de beurt?" staat sinds de nieuwe zijbalk op /meetings; oude links gaan daarheen.
@@ -92,7 +95,6 @@ const planVoorstel = ref<{ datum?: string; start?: string } | null>(null)
 function plan(voorstel: { datum: string; start: string } | null = null) { planVoorstel.value = voorstel; planOpen.value = true }
 const afspraakId = computed(() => (typeof route.query.afspraak === 'string' ? route.query.afspraak : null))
 async function gepland(id: string) { planOpen.value = false; await refresh(); zet({ afspraak: id }) }
-const nieuweTaak = ref(false)
 const taakId = ref<string | null>(null)
 const filtersOpen = ref(false)
 const filterAantal = computed(() => Number(!!filterSoort.value) + Number(!!filterVorm.value) + Number(!!gebruiker.value))
@@ -105,8 +107,9 @@ if (import.meta.client && route.query.melding === 'gekoppeld') toast.toon('Agend
   <div>
     <PaginaKop kicker="Planning · Agenda" :titel="titel" helpartikel="agenda">
       <template #acties>
-        <button type="button" class="dd-actie dd-actie--primair" data-test="agenda-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
         <button type="button" class="dd-actie dd-actie--zwart" data-test="plan-afspraak-knop" @click="plan()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+        <NuxtLink v-if="weekstartAan" to="/weekstart" class="dd-actie dd-actie--secundair" data-test="agenda-weekstart"><Icoon naam="CalendarRange" class="dd-actie-icoon" />Weekstart</NuxtLink>
+        <NuxtLink v-if="weekreviewAan" to="/weekreview" class="dd-actie dd-actie--secundair" data-test="agenda-weekreview"><Icoon naam="NotebookPen" class="dd-actie-icoon" />Weekreview</NuxtLink>
       </template>
     </PaginaKop>
     <section class="section section--laatste ag-sectie">
@@ -153,7 +156,6 @@ if (import.meta.client && route.query.melding === 'gekoppeld') toast.toon('Agend
     </section>
     <PlanAfspraakFlyout :open="planOpen" :voorstel="planVoorstel" @sluit="planOpen = false" @gepland="gepland" />
     <AfspraakFlyout :open="!!afspraakId" :afspraak-id="afspraakId" @sluit="zet({ afspraak: undefined })" @gewijzigd="refresh()" />
-    <NieuweTaakFlyout :open="nieuweTaak" @sluit="nieuweTaak = false" @gemaakt="nieuweTaak = false; refresh()" />
     <TaakFlyout :open="!!taakId" :taak-id="taakId" @sluit="taakId = null" @klaar="taakId = null; refresh()" @gewijzigd="refresh()" />
   </div>
 </template>

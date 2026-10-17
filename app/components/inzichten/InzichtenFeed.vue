@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Inzichtenfeed in de opzet van DealDrive (pagina /inzichten en het tabblad Inzichten van Acties):
-// werkbalk met Prospects (standaard: klanten blijven buiten beeld) en Ook klanten, Filters (gelezen, bron, agent, periode, fase, tegengehouden),
-// statkaarten die ook filteren, "+ Inzicht" (met prospect en optioneel een contact), "Waarom niet?" (Expert), een kopregel met het aantal en een raster van
+// werkbalk met "+ Inzicht" (met prospect en optioneel een contact) links van Filters (status: ongelezen, gelezen of afgewezen; bron, agent,
+// periode met snelkeuzes en Van en Tot voor heden en verleden, fase, tegengehouden), statkaarten die ook filteren,
+// "Waarom niet?" (Expert), een kopregel met het aantal en een raster van
 // InzichtKaart (3 per rij, 2 op een tablet, 1 op de telefoon). Alle filters staan in de URL.
 // Een klik op een kaart opent de InzichtFlyout; ?inzicht=<id> opent er meteen een.
 const props = defineProps<{ metKop?: boolean }>()
@@ -14,10 +15,10 @@ const magAfwijzen = computed(() => !!functie('inzichten.afwijzen')?.beschikbaar)
 const magWaaromNiet = computed(() => !!functie('agents.waaromNiet')?.beschikbaar)
 const magMetBron = computed(() => !!functie('inzichten.handmatig')?.beschikbaar)
 
-const SLEUTELS = ['gelezen', 'soort', 'bron', 'agent', 'sinds', 'fase', 'teller'] as const
+const SLEUTELS = ['gelezen', 'bron', 'agent', 'sinds', 'van', 'tot', 'fase', 'teller'] as const
 const q = (k: string) => (typeof route.query[k] === 'string' ? (route.query[k] as string) : '')
-// Standaard alleen prospects; ?soort=alle toont ook de inzichten bij klanten.
-const query = computed(() => Object.fromEntries([...SLEUTELS, 'inzicht'].map((k) => [k, k === 'soort' ? (q(k) === 'alle' ? undefined : q(k) || 'prospect') : q(k) || undefined])))
+// Inzichten bij prospects en klanten samen; de filters staan in de URL.
+const query = computed(() => Object.fromEntries([...SLEUTELS, 'inzicht'].map((k) => [k, q(k) || undefined])))
 const { data, refresh } = await useFetch<any>('/api/signals', { query, default: () => ({ inzichten: [], tellers: {}, fases: [], uitgelicht: null }) })
 const versie = useState('motorVersie', () => 0)
 watch(versie, () => refresh())
@@ -28,11 +29,15 @@ function zet(p: Record<string, string | undefined>) {
   router.replace({ query: n })
 }
 const filtersOpen = ref(false)
-const actieveFilters = computed(() => ['gelezen', 'bron', 'agent', 'sinds', 'fase'].filter((k) => q(k)).length)
+const actieveFilters = computed(() => ['gelezen', 'bron', 'agent', 'fase'].filter((k) => q(k)).length + (q('sinds') || q('van') || q('tot') ? 1 : 0))
+// Periode: een snelkeuze of Van en Tot (hele dagen, ook ver terug). Het een wist het ander.
+const isDag = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v)
+function zetDatum(k: 'van' | 'tot', v: string) { zet({ [k]: isDag(v) ? v : undefined, sinds: undefined }) }
+function zetSinds(k: string) { zet({ sinds: k || undefined, van: undefined, tot: undefined }) }
+const vandaag = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Amsterdam' })
 function resetFilters() { zet(Object.fromEntries(SLEUTELS.map((k) => [k, undefined]))); toonTegengehouden(false) }
 
-const SOORTEN = [['', 'Prospects'], ['alle', 'Ook klanten']] as const
-const GELEZEN = [['', 'Ongelezen'], ['gelezen', 'Gelezen'], ['alle', 'Beide']] as const
+const GELEZEN = [['', 'Ongelezen'], ['gelezen', 'Gelezen'], ['alle', 'Beide'], ['afgewezen', 'Afgewezen']] as const
 const BRONNEN = [['', 'Alle'], ['extern', 'Extern'], ['intern', 'Intern']] as const
 const PERIODES = [['', 'Alles'], ['vandaag', 'Vandaag'], ['week', 'Afgelopen week'], ['maand', 'Afgelopen maand'], ['kwartaal', 'Afgelopen kwartaal']] as const
 const AGENT_NAAM: Record<string, string> = { waarnemer: 'Waarnemer', verrijker: 'Verrijker', profielbouwer: 'Profielbouwer', notulist: 'Notulist', handmatig: 'Handmatig' }
@@ -57,7 +62,7 @@ async function maakTaak(i: any) {
 async function markeer(i: any) {
   try { await $fetch(`/api/signals/${i.id}/gelezen`, { method: 'POST' }); await bijgewerkt() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
-const gefilterd = computed(() => actieveFilters.value > 0 || !!q('soort') || !!q('teller'))
+const gefilterd = computed(() => actieveFilters.value > 0 || !!q('teller'))
 defineExpose({ refresh })
 </script>
 
@@ -67,26 +72,20 @@ defineExpose({ refresh })
     <PaginaKop v-if="props.metKop" kicker="Accounts · Inzichten" uitleg="Interne en externe inzichten uit je CRM, nieuws, vacatures, KvK en bedrijfssites, gefilterd op je accounts. Elk inzicht heeft een AI-context en directe acties." helpartikel="inzichten">
       <template #titel><h1 class="title title--groot" data-test="inzichten-titel">Wat speelt er bij je accounts?</h1></template>
       <template #acties>
-        <div class="keuzegroep" role="radiogroup" aria-label="Soort account" data-test="filter-soort">
-          <button v-for="[k, l] in SOORTEN" :key="k" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': q('soort') === k }" :aria-pressed="q('soort') === k" @click="zet({ soort: k || undefined })">{{ l }}</button>
-        </div>
+        <button v-if="magMetBron" type="button" class="dd-actie dd-actie--secundair" data-test="inzicht-met-bron-knop" @click="metBron = true"><Icoon naam="Plus" class="dd-actie-icoon" />Inzicht</button>
         <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'if-filters--aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="inzicht-filters" @click="filtersOpen = !filtersOpen">
           <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="if-teller">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="if-pijl" :class="{ 'if-pijl--open': filtersOpen }" />
         </button>
-        <button v-if="magMetBron" type="button" class="dd-actie dd-actie--secundair" data-test="inzicht-met-bron-knop" @click="metBron = true"><Icoon naam="Plus" class="dd-actie-icoon" />Inzicht</button>
       </template>
     </PaginaKop>
     <section v-else class="if-werkbalk-sectie">
       <div class="container">
         <div class="if-werkbalk">
           <div class="toolbar-buttons if-knoppen">
-            <div class="keuzegroep" role="radiogroup" aria-label="Soort account" data-test="filter-soort">
-              <button v-for="[k, l] in SOORTEN" :key="k" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': q('soort') === k }" :aria-pressed="q('soort') === k" @click="zet({ soort: k || undefined })">{{ l }}</button>
-            </div>
+            <button v-if="magMetBron" type="button" class="dd-actie dd-actie--secundair" data-test="inzicht-met-bron-knop" @click="metBron = true"><Icoon naam="Plus" class="dd-actie-icoon" />Inzicht</button>
             <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'if-filters--aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="inzicht-filters" @click="filtersOpen = !filtersOpen">
               <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="if-teller">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="if-pijl" :class="{ 'if-pijl--open': filtersOpen }" />
             </button>
-            <button v-if="magMetBron" type="button" class="dd-actie dd-actie--secundair" data-test="inzicht-met-bron-knop" @click="metBron = true"><Icoon naam="Plus" class="dd-actie-icoon" />Inzicht</button>
           </div>
         </div>
       </div>
@@ -95,7 +94,7 @@ defineExpose({ refresh })
     <section v-if="filtersOpen" class="if-filter-sectie">
       <div class="container">
         <div class="if-paneel" data-test="inzicht-filterpaneel">
-          <div class="if-groep"><span class="filter-label">Gelezen</span>
+          <div class="if-groep"><span class="filter-label">Status</span>
             <button v-for="[k, l] in GELEZEN" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('gelezen') === k }" :aria-pressed="q('gelezen') === k" :data-test="`gelezen-${k || 'ongelezen'}`" @click="zet({ gelezen: k || undefined })">{{ l }}</button>
           </div>
           <div class="if-groep"><span class="filter-label">Bronnen</span>
@@ -104,8 +103,12 @@ defineExpose({ refresh })
           <div v-if="magAfwijzen" class="if-groep" data-test="filter-agent"><span class="filter-label">Agent</span>
             <button v-for="[k, l] in AGENTS" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('agent') === k }" :aria-pressed="q('agent') === k" :data-test="`agent-${k || 'alle'}`" @click="zet({ agent: k || undefined })">{{ l }}</button>
           </div>
-          <div class="if-groep"><span class="filter-label">Periode</span>
-            <button v-for="[k, l] in PERIODES" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('sinds') === k }" :aria-pressed="q('sinds') === k" :data-test="`sinds-${k || 'alles'}`" @click="zet({ sinds: k || undefined })">{{ l }}</button>
+          <div class="if-groep" data-test="filter-periode"><span class="filter-label">Periode</span>
+            <button v-for="[k, l] in PERIODES" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('sinds') === k && (k || (!q('van') && !q('tot'))) }" :aria-pressed="q('sinds') === k && !!(k || (!q('van') && !q('tot')))" :data-test="`sinds-${k || 'alles'}`" @click="zetSinds(k)">{{ l }}</button>
+            <span class="if-datums">
+              <label class="if-datum"><span class="if-datum-label">Van</span><input type="date" class="invoer invoer--klein" :value="q('van')" :max="q('tot') || vandaag" aria-label="Periode van" data-test="filter-van" @change="zetDatum('van', ($event.target as HTMLInputElement).value)"></label>
+              <label class="if-datum"><span class="if-datum-label">Tot</span><input type="date" class="invoer invoer--klein" :value="q('tot')" :min="q('van') || undefined" aria-label="Periode tot en met" data-test="filter-tot" @change="zetDatum('tot', ($event.target as HTMLInputElement).value)"></label>
+            </span>
           </div>
           <div class="if-groep if-groep--onder">
             <label v-if="data.fases.length || q('fase')" class="if-fase"><span class="filter-label">Fase</span>
@@ -144,7 +147,7 @@ defineExpose({ refresh })
           <span class="if-feedmeta">Klik op een kaart voor de volledige context</span>
         </div>
         <LegeStaat v-if="!data.inzichten.length" kicker="Niets gevonden" :titel="gefilterd ? 'Geen inzichten in dit filter.' : 'Geen nieuwe inzichten.'" :tekst="gefilterd ? 'Probeer een breder filter of een andere periode.' : 'De agents hebben sinds gisteren niets gevonden bij je accounts.'">
-          <button v-if="gefilterd" type="button" class="dd-act mt-8" @click="zet({ soort: undefined, teller: undefined }); resetFilters()">Toon alles</button>
+          <button v-if="gefilterd" type="button" class="dd-act mt-8" @click="zet({ teller: undefined }); resetFilters()">Toon alles</button>
         </LegeStaat>
         <div v-else class="if-raster" data-test="inzichten">
           <InzichtKaart v-for="i in data.inzichten" :key="i.id" :inzicht="i" @open="open = i" @taak="maakTaak(i)" @gelezen="markeer(i)" />
@@ -183,6 +186,9 @@ defineExpose({ refresh })
 .if-groep .filter-label { min-width: 72px; }
 .if-groep--onder { gap: 12px; }
 .if-fase { display: inline-flex; align-items: center; gap: 8px; }
+.if-datums { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: 6px; }
+.if-datum { display: inline-flex; align-items: center; gap: 6px; }
+.if-datum-label { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
 .if-stats { padding: 16px 0 0; }
 .if-feedkop { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
 .if-feedtitel { font-family: var(--font-serif); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 0; color: var(--ink); }
@@ -195,5 +201,9 @@ defineExpose({ refresh })
   .if-werkbalk { justify-content: stretch; }
   .if-knoppen { width: 100%; }
   .if-groep .filter-label { width: 100%; }
+  .if-groep .filter-pil { min-height: var(--touch-target-min); }
+  .if-datums { width: 100%; margin-left: 0; }
+  .if-datum { flex: 1 1 140px; }
+  .if-datum .invoer { flex: 1; min-width: 0; min-height: var(--touch-target-min); }
 }
 </style>

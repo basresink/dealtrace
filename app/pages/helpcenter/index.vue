@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Helpcenter (F21, P25) in de opzet van DealDrive: kop met rechtsboven een zoekicoon dat een zoekveld onder
 // de kop uitklapt (?zoek= in de URL), "Voor jou" en "Nieuw en bijgewerkt", de ingangen (Hoe werkt Dealtrace,
-// de academie met Nieuwe klanten werven, Tips & Tricks) als kaarten met een gele rand, en de categorieën.
+// de academie met Nieuwe klanten werven, Tips & Tricks en de Kennisbank) als kaarten met een gele rand, en de categorieën.
 // Een categorie opent /helpcenter/categorie/<naam>, een artikel /helpcenter/<slug>.
 // Geen voortgang, geen teller, geen leerpaden (B19).
 import { CATEGORIE_UITLEG, CATEGORIEEN_NEWBUSINESS, CATEGORIEEN_PRODUCT, CATEGORIEEN_TIPS, CATEGORIEEN_WERVEN, COLLECTIES, type HelpCollectie, categorieLink, helpLink } from '~~/shared/help'
@@ -18,6 +18,8 @@ const { data } = await useFetch<any>('/api/help', { query: computed(() => ({ zoe
 const { functie } = useMe()
 const aiAan = computed(() => !!functie('assistent.chat')?.beschikbaar)
 const beheerAan = computed(() => !!functie('help.eigenArtikelen')?.beschikbaar)
+// De kennisbank staat niet meer in het hoofdmenu; hier is de ingang (de pagina legt uit wanneer hij nog niet aanstaat).
+const kennisbankAan = computed(() => !!functie('nav.kennisbank')?.beschikbaar)
 const { openen: openAi } = useAssistent()
 let timer: ReturnType<typeof setTimeout> | undefined
 watch(zoek, (z) => { clearTimeout(timer); timer = setTimeout(() => router.replace({ query: { ...route.query, zoek: z.trim() || undefined } }), 300) })
@@ -104,6 +106,12 @@ useHead({ title: 'Helpcenter · Dealtrace' })
               <p class="hc-ingang-tekst">Van het DealDrive-team: korte tips die je direct tijd schelen, van je dag starten tot offline werken.</p>
               <span class="hc-cta">Open de tips</span>
             </NuxtLink>
+            <NuxtLink to="/kennisbank" class="hc-ingang" data-test="ingang-kennisbank">
+              <span class="hc-ingang-label">{{ kennisbankAan ? 'Documenten' : 'Vanaf Gevorderd' }}</span>
+              <h2 class="hc-ingang-titel">Kennisbank</h2>
+              <p class="hc-ingang-tekst">De documenten van je organisatie: cases, offertes, presentaties, productinfo en contracten. Zoek, koppel aan een account en stel de AI een vraag.</p>
+              <span class="hc-cta">Open de kennisbank</span>
+            </NuxtLink>
           </div>
 
           <HelpGroep titel="Hoe werkt Dealtrace" uitleg="Per onderwerp de uitleg over de schermen." link="/helpcenter/instructies" link-tekst="Alle instructies" class="mt-32">
@@ -174,7 +182,6 @@ useHead({ title: 'Helpcenter · Dealtrace' })
 
 .hc-ingangen { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-top: 24px; }
 @media (min-width: 700px) { .hc-ingangen { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1100px) { .hc-ingangen { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .hc-ingang { display: flex; flex-direction: column; align-items: flex-start; padding: 22px 24px; background: var(--ink); color: var(--wit); text-decoration: none; border-left: 3px solid var(--yellow); transition: background var(--transition-fast); }
 .hc-ingang:hover { background: var(--ink-soft); }
 .hc-ingang-label { font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--yellow); }

@@ -38,4 +38,4 @@ De agent voert niets uit. Jij keurt goed en belt, mailt of bezoekt zelf. Een Pit
 
 Kies onderaan **Doel gehaald?**: Ja, Deels of Nee, en eventueel de volgende stap.
 
-Op de telefoon staat de Pitstop ingeklapt op de accountkaart, met **Lees voor**. Vanaf Gevorderd zie je al je briefings bij **Taken**, **Briefings**: de briefings van je komende gesprekken, en bovenaan kies je zelf een prospect en eventueel een contactpersoon. Bij een contact zie je ook zijn gegevens, de laatste contactmomenten en zijn komende gesprekken.
+Op de telefoon staat de Pitstop ingeklapt op de accountkaart, met **Lees voor**. Vanaf Gevorderd zie je al je briefings bij **Briefings**, in het menu direct onder Taken: de briefings van je komende gesprekken, en bovenaan kies je zelf een prospect en eventueel een contactpersoon. Bij een contact zie je ook zijn gegevens, de laatste contactmomenten en zijn komende gesprekken.

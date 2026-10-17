@@ -48,7 +48,7 @@ async function maak() {
               <span>{{ gekozen.naam }}</span>
               <button v-if="!account" type="button" class="dd-act dd-act--icoon" aria-label="Andere prospect kiezen" @click="gekozen = null"><Icoon naam="X" :grootte="14" /></button>
             </div>
-            <ZoekKiezer v-else :zoek="zoek" placeholder="Zoek een prospect op naam" label="Zoek een prospect" data-test="apn-zoek" :optie-test="(t) => `apn-kies-${t.id}`" :sub="(t) => t.plaats" leeg="Geen prospect gevonden." @kies="kies" />
+            <ZoekKiezer v-else :zoek="zoek" placeholder="Zoek een prospect op naam" label="Zoek een prospect" data-test="apn-zoek" :optie-test="(t) => `apn-kies-${t.id}`" :sub="accountSub" leeg="Geen prospect gevonden." @kies="kies" />
           </div>
           <label class="veld mt-16"><span class="veld-label">Titel</span><input v-model="titel" class="invoer" maxlength="160" required data-test="apn-titel"><span class="veld-uitleg">Zet de periode in de titel, dan zie je in elke lijst voor welk jaar het plan geldt.</span></label>
           <div class="apn-rij mt-16">

@@ -4,7 +4,8 @@
 // winpunt dat raakte, alleen bij genoeg gesprekken. 3 Wat bleef liggen: taken die drie keer of vaker
 // doorschoven, elk met Plan in, Draag over of Laat los met een reden. 4 Volgende week: hooguit drie
 // voornemens die meteen een belblok, taak of regiodag worden, optioneel gedeeld met je manager.
-// Eén bron: GET /api/weekreview (pure kern shared/weekreview.ts).
+// Onder de kaarten Tips en tricks en drie artikelen uit de academie om van je week te leren (RitmeSteun).
+// Eén bron: GET /api/weekreview (pure kern shared/weekreview.ts; steun uit shared/ritmeSteun.ts).
 const { functie } = useMe()
 const aan = !!functie('dagritme.weekreview')?.beschikbaar
 const toast = useToast()
@@ -110,7 +111,7 @@ useHead({ title: 'Weekreview · Dealtrace' })
         </template>
       </PaginaKop>
 
-      <section class="section section--laatste">
+      <section class="section">
         <div class="container wr">
           <aside v-if="r.lopend.length" class="kaart wr-lopend" data-test="wr-lopend">
             <span class="kicker">Vorige week beloofd</span>
@@ -218,6 +219,10 @@ useHead({ title: 'Weekreview · Dealtrace' })
             <button type="button" class="dd-act" :disabled="nu === 3" data-test="wr-volgende" @click="ga(nu + 1)">Volgende<Icoon naam="ChevronRight" /></button>
           </div>
         </div>
+      </section>
+
+      <section class="section section--laatste">
+        <div class="container"><RitmeSteun :steun="r.steun" moment="weekreview" /></div>
       </section>
     </template>
   </div>

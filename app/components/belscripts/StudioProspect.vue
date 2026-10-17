@@ -91,7 +91,7 @@ const rolTekst = (k: any) => [k.contactNaam, k.contactRol].filter(Boolean).join(
   <div class="sp-raster">
     <div class="sp-kies">
       <div class="kaart-kop"><h2 class="kaart-titel">Kies een prospect</h2><span class="meta">{{ keuze.bron === 'belblok' ? 'uit je belblok van vandaag' : 'uit je bellijst' }}</span></div>
-      <ZoekKiezer :zoek="zoek" placeholder="Zoek een prospect op naam" label="Zoek een prospect" data-test="sp-zoek" :optie-test="(t) => `sp-kies-${t.id}`" :sub="(t) => t.plaats" leeg="Geen prospect gevonden." @kies="kiesGezocht" />
+      <ZoekKiezer :zoek="zoek" kop="Prospect" placeholder="Zoek een prospect op naam" data-test="sp-zoek" :optie-test="(t) => `sp-kies-${t.id}`" :sub="accountSub" leeg="Geen prospect gevonden." @kies="kiesGezocht" />
       <div class="sp-lijst mt-12" data-test="sp-prospecten">
         <button v-for="k in lijst" :key="k.accountId" type="button" class="sp-prospect" :aria-pressed="k.accountId === accountId" :data-test="`sp-prospect-${k.accountId}`" @click="emit('kies', k.accountId)">
           <Icoon naam="Building2" :grootte="18" />

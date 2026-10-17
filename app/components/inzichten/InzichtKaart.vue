@@ -13,6 +13,7 @@ const KLEUR: Record<string, string> = {
 }
 const kleur = computed(() => KLEUR[props.inzicht.type] ?? (props.inzicht.bron === 'extern' ? 'var(--blue)' : 'var(--ink)'))
 const gelezen = computed(() => props.inzicht.status === 'gelezen')
+const afgewezen = computed(() => props.inzicht.status === 'afgewezen')
 const TAG: Record<string, string> = { intern: 'Intern', extern: 'Extern', agenda: 'Agenda' }
 
 // Dagen in Amsterdamse tijd, zodat server en browser dezelfde tekst tonen.
@@ -42,7 +43,10 @@ const wanneer = computed(() => {
       <h3 class="ik-titel"><button type="button" class="ik-titel-knop" @click.stop="emit('open')">{{ inzicht.title }}</button></h3>
       <p v-if="inzicht.waarom" class="ik-tekst">{{ inzicht.waarom }}</p>
       <div v-if="inzicht.context" class="ik-context" data-test="ai-context"><span class="ik-context-kop">AI-context</span>{{ inzicht.context }}</div>
-      <footer class="ik-voet">
+      <footer v-if="afgewezen" class="ik-voet" data-test="kaart-afgewezen">
+        <span class="ik-afgewezen"><Icoon naam="X" :grootte="14" />Afgewezen<template v-if="inzicht.afwijsReden">: {{ inzicht.afwijsReden }}</template></span>
+      </footer>
+      <footer v-else class="ik-voet">
         <button type="button" class="ik-taak" @click.stop="emit('taak')">+ Maak taak</button>
         <button v-if="!gelezen" type="button" class="ik-gelezen" data-test="kaart-gelezen" @click.stop="emit('gelezen')">Markeer als gelezen</button>
         <span v-else class="ik-gelezen-pil"><Icoon naam="CircleCheck" :grootte="14" />Gelezen</span>
@@ -84,6 +88,7 @@ const wanneer = computed(() => {
 .ik-taak:hover { background: var(--ink-soft); }
 .ik-gelezen { margin-left: auto; min-height: 36px; padding: 0 10px; background: transparent; color: var(--muted); border: 1px solid transparent; border-radius: 2px; font-size: 12px; font-weight: 600; cursor: pointer; }
 .ik-gelezen:hover { color: var(--ink); border-color: var(--border); }
+.ik-afgewezen { display: inline-flex; align-items: center; gap: 4px; min-width: 0; font-size: 12px; font-weight: 600; color: var(--muted); overflow-wrap: anywhere; }
 .ik-gelezen-pil { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--green); }
 @media (max-width: 719px) {
   .ik-vlak { padding: 16px; }

@@ -73,9 +73,9 @@ describe('kennisbank: regels', () => {
     expect(zoekTermGeldig(' case ')).toBe('case')
   })
 
-  it('Kennisbank staat in de zijbalk onder Activiteiten, vanaf Gevorderd, met een helpartikel', () => {
+  it('Kennisbank staat niet meer in de zijbalk (ingang via /helpcenter), vanaf Gevorderd, met een helpartikel', () => {
     const f = FUNCTIES.find((x) => x.sleutel === 'nav.kennisbank')!
-    expect(f.zijbalk).toMatchObject({ groep: 'Activiteiten', route: '/kennisbank' })
+    expect(f.zijbalk).toBeUndefined()
     expect(f.helpartikel).toBe('kennisbank')
     expect(startindeling().filter((r) => r.functie === 'nav.kennisbank').map((r) => [r.niveau, r.aan])).toEqual([['beginner', false], ['gevorderd', true], ['expert', true]])
   })

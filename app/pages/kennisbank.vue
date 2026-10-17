@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Kennisbank in de opzet van DealDrive (/kennisbank): de documenten van de organisatie (cases, offertes,
-// presentaties, productinfo, contracten, prijslijsten) met zoeken op woord, een strook met het type en tellers,
-// achter Filters je eigen uploads en wel of geen koppeling, en een raster van kaarten (3 per rij, 2 op een
+// presentaties, productinfo, contracten, prijslijsten) met een strook met het type en tellers en achter Filters
+// (rechts van "+ Document") zoeken op woord, je eigen uploads en wel of geen koppeling, en een raster van kaarten (3 per rij, 2 op een
 // tablet, 1 op de telefoon). "+ Document" opent de upload met koppeling aan bedrijven en contacten; een kaart
 // opent het venster met de datavelden, de preview en de AI-vragen. Filters en het open document staan in de URL
 // (zoek, type, eigen, koppeling, document). Vanaf Gevorderd.
@@ -25,8 +25,9 @@ let wacht: ReturnType<typeof setTimeout> | undefined
 watch(zoekTekst, (z) => { clearTimeout(wacht); wacht = setTimeout(() => zet({ zoek: z.trim().length >= 2 ? z.trim() : undefined }), 250) })
 watch(() => route.query.zoek, (z) => { if (typeof z === 'string' && z && z !== zoekTekst.value.trim()) zoekTekst.value = z })
 
-const filtersOpen = ref(false)
-const actieveFilters = computed(() => (q('eigen') ? 1 : 0) + (q('koppeling') ? 1 : 0))
+// Een zoekterm in de URL opent het paneel meteen, zodat je ziet waarop gefilterd is.
+const filtersOpen = ref(!!q('zoek'))
+const actieveFilters = computed(() => (q('zoek') ? 1 : 0) + (q('eigen') ? 1 : 0) + (q('koppeling') ? 1 : 0))
 function resetFilters() { zoekTekst.value = ''; zet({ zoek: undefined, type: undefined, eigen: undefined, koppeling: undefined }) }
 const typePillen = computed(() => DOCUMENT_TYPES.filter((t) => (data.value.tellers?.[t] ?? 0) > 0 || q('type') === t))
 
@@ -54,22 +55,22 @@ useHead({ title: 'Kennisbank · Dealtrace' })
       <PaginaKop :kicker="`Kennisbank · ${data.totaalOrg} ${data.totaalOrg === 1 ? 'document' : 'documenten'}`" titel="Wat heb je nodig?" uitleg="Cases, offertes, presentaties, productinfo en contracten van je organisatie. Zoek op woord; een vraag over de inhoud stel je op het document zelf." helpartikel="kennisbank">
         <template #acties>
           <button type="button" class="dd-actie dd-actie--primair" data-test="kb-nieuw" @click="uploadOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Document</button>
+          <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'kb-filters--aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" aria-controls="kb-filterpaneel" data-test="kb-filters" @click="filtersOpen = !filtersOpen">
+            <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="kb-teller">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="kb-pijl" :class="{ 'kb-pijl--open': filtersOpen }" />
+          </button>
         </template>
       </PaginaKop>
 
       <section class="kb-werkbalk-sectie">
         <div class="container">
-          <div class="kb-werkbalk">
-            <label class="zoekveld kb-zoek"><span class="sr-only">Zoek in de kennisbank</span><Icoon naam="Search" :grootte="18" class="kb-zoek-icoon" /><input v-model="zoekTekst" type="search" class="zoekinvoer" placeholder="Zoek in naam, beschrijving, inhoud of bedrijf (minstens 2 tekens)" data-test="kb-zoek"></label>
-            <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'kb-filters--aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="kb-filters" @click="filtersOpen = !filtersOpen">
-              <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="kb-teller">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="kb-pijl" :class="{ 'kb-pijl--open': filtersOpen }" />
-            </button>
-          </div>
           <div class="kb-groep" role="group" aria-label="Type" data-test="kb-filter-type"><span class="filter-label">Type</span>
             <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': !q('type') }" :aria-pressed="!q('type')" data-test="kb-type-alle" @click="zet({ type: undefined })">Alles<span class="pil-teller tnum">{{ data.alle }}</span></button>
             <button v-for="t in typePillen" :key="t" type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('type') === t }" :aria-pressed="q('type') === t" :data-test="`kb-type-${t}`" @click="zet({ type: t })">{{ TYPE_MEERVOUD[t] }}<span class="pil-teller tnum">{{ data.tellers?.[t] ?? 0 }}</span></button>
           </div>
-          <div v-if="filtersOpen" class="kb-paneel" data-test="kb-filterpaneel">
+          <div v-if="filtersOpen" id="kb-filterpaneel" class="kb-paneel" data-test="kb-filterpaneel">
+            <div class="kb-groep"><label class="filter-label" for="kb-zoek-invoer">Zoeken</label>
+              <span class="kb-zoek"><Icoon naam="Search" :grootte="16" class="kb-zoek-icoon" /><input id="kb-zoek-invoer" v-model="zoekTekst" type="search" class="invoer" placeholder="Naam, beschrijving, inhoud of bedrijf (minstens 2 tekens)" data-test="kb-zoek"></span>
+            </div>
             <div class="kb-groep" role="group" aria-label="Van wie"><span class="filter-label">Van wie</span>
               <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': !q('eigen') }" :aria-pressed="!q('eigen')" @click="zet({ eigen: undefined })">Iedereen</button>
               <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('eigen') === '1' }" :aria-pressed="q('eigen') === '1'" data-test="kb-eigen" @click="zet({ eigen: '1' })">Mijn uploads</button>
@@ -123,10 +124,9 @@ useHead({ title: 'Kennisbank · Dealtrace' })
 
 <style scoped>
 .kb-werkbalk-sectie { padding: 0 0 8px; }
-.kb-werkbalk { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-.kb-zoek { position: relative; flex: 1 1 320px; max-width: 720px; display: flex; align-items: center; }
-.kb-zoek .zoekinvoer { width: 100%; min-height: 48px; padding-left: 40px; font-size: 15px; border: 2px solid var(--ink); }
-.kb-zoek-icoon { position: absolute; left: 12px; color: var(--ink-soft); pointer-events: none; }
+.kb-zoek { position: relative; flex: 1 1 320px; max-width: 560px; display: flex; align-items: center; }
+.kb-zoek .invoer { width: 100%; padding-left: 34px; }
+.kb-zoek-icoon { position: absolute; left: 10px; color: var(--ink-soft); pointer-events: none; }
 .kb-filters--aan { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
 .kb-teller { display: inline-flex; align-items: center; height: 18px; padding: 0 7px; margin-left: 2px; background: var(--yellow); color: var(--ink); font-size: 11px; font-weight: 800; border-radius: 2px; }
 .kb-pijl { transition: transform var(--transition-fast); }
@@ -163,7 +163,7 @@ useHead({ title: 'Kennisbank · Dealtrace' })
 .kb-meta { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); }
 @media (max-width: 719px) {
   .kb-zoek { max-width: none; flex-basis: 100%; }
-  .kb-werkbalk > .dd-actie { flex: 1 1 auto; }
+  .kb-zoek .invoer { min-height: var(--touch-target-min); }
   .kb-groep .filter-label { width: 100%; }
   .kb-groep .filter-pil { min-height: var(--touch-target-min); }
   .kb-thumb { height: 88px; }

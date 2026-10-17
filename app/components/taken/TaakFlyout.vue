@@ -4,8 +4,11 @@
 // herinnering, herhaling, beschrijving), de aanleiding met "Waarom krijg ik dit?", Volgende stap, belscript,
 // agent, Briefing en Pitstop, concept, bij een beltaak het blok Transcript en gespreksverslag (gedeeld met het
 // afspraakvenster), klant in context, het uitkomstraster uit 7.3 en de voet. Bewerken
-// vervangt de inhoud door het formulier van Nieuwe taak. Op de telefoon een schuifvenster met de knoppen
-// onderaan en "Afronden" rechts. Offline gaat afronden via de wachtrij.
+// vervangt de inhoud door het formulier van Nieuwe taak. Offline gaat afronden via de wachtrij.
+// De voet is in elk taakvenster gelijk (opzet van DealDrive): links "Afronden" (zwart met gele tekst), rechts
+// icoonknoppen van 44 px: Vraag AI (de assistent met de taak als context), Uitstellen (keuzemenu met een
+// werkdag, een week, Plan een afspraak en Annuleer met reden), Bewerken, Verwijderen (met bevestiging) en
+// Volgende (de volgende taak uit `lijst`; zonder lijst de volgende van je eigen open taken).
 import { NEE_REDENEN } from '~~/shared/nbStatus'
 import { UITKOMST_CODES, UITKOMST_LABEL } from '~~/shared/hercontact'
 import { nlMoment, nlTijdstip } from '~~/shared/datum'
@@ -13,9 +16,10 @@ import { CONTACT_ACTIES, HERHALING_LABEL, HERINNERING_KANAAL, HERKOMST_LABEL, PR
 import { fasePil, telLink } from '~/utils/accountWeergave'
 import { agentDef } from '~~/shared/mandaat'
 import type { Contact, Klant } from './KlantContactKiezer.vue'
-const props = defineProps<{ open: boolean; taakId: string | null; basis?: any; volgende?: boolean; teamleden?: { id: string; naam: string }[] }>()
+const props = defineProps<{ open: boolean; taakId: string | null; basis?: any; volgende?: boolean; teamleden?: { id: string; naam: string }[]; lijst?: string[] }>()
 const emit = defineEmits<{ sluit: []; klaar: [volgende: boolean, id: string]; gewijzigd: [] }>()
 const { functie, me } = useMe()
+const { openen: openAi } = useAssistent()
 const EXECUTOR_LABEL: Record<string, string> = { 'concept-klaar': 'concept wacht op je goedkeuring', goedgekeurd: 'goedgekeurd, wordt verstuurd', uitgevoerd: 'uitgevoerd', tegengehouden: 'tegengehouden door de Bewaker' }
 async function keurGoed() {
   try { const r: any = await $fetch(`/api/tasks/${t.value.id}/goedkeuren`, { method: 'POST', body: {} }); toast.toon(r.executorStatus === 'uitgevoerd' ? 'Goedgekeurd en verstuurd.' : `Goedgekeurd. ${r.reden ?? 'Hij gaat later de deur uit.'}`); emit('gewijzigd'); t.value = await $fetch(`/api/tasks/${t.value.id}`) } catch (e) { toast.toon(foutTekst(e), 'fout') }
@@ -42,11 +46,15 @@ const gevorderd = computed(() => !!functie('taken.herhaling')?.beschikbaar)
 const belVerslag = ref('')
 const isBeltaak = computed(() => t.value?.actionType === 'bellen')
 async function herlaadTaak() { if (t.value) t.value = await $fetch(`/api/tasks/${t.value.id}`) }
-watch(() => [props.open, props.taakId], async ([o]) => {
-  if (!o || !props.taakId) return
-  uitkomst.value = ''; laterOp.value = ''; reden.value = ''; toelichting.value = ''; reeksSjabloon.value = ''; bewerken.value = false; annuleren.value = false; belpaneel.value = null
+// De taak in beeld: begint bij taakId van de ouder; Volgende schuift door zonder dat de ouder iets hoeft.
+const huidig = ref<string | null>(props.taakId)
+watch(() => [props.open, props.taakId], () => { huidig.value = props.taakId })
+watch(() => [props.open, huidig.value], async ([o]) => {
+  if (!o || !huidig.value) return
+  const id = huidig.value
+  uitkomst.value = ''; laterOp.value = ''; reden.value = ''; toelichting.value = ''; reeksSjabloon.value = ''; bewerken.value = false; annuleren.value = false; belpaneel.value = null; uitstelOpen.value = false; verwijderVraag.value = false
   laden.value = true
-  try { t.value = await $fetch(`/api/tasks/${props.taakId}`) } catch { t.value = props.basis ? { ...props.basis, kan: { afronden: true }, account: props.basis.account ?? null } : null } finally { laden.value = false }
+  try { t.value = await $fetch(`/api/tasks/${id}`) } catch { t.value = props.basis && props.basis.id === id ? { ...props.basis, kan: { afronden: true }, account: props.basis.account ?? null } : null } finally { laden.value = false }
   belVerslag.value = t.value?.verslag?.tekst ?? ''
 }, { immediate: true })
 const contact = computed(() => t.value && CONTACT_ACTIES.has(t.value.actionType))
@@ -69,6 +77,7 @@ async function doeAfronden(volgende: boolean) {
   if (ok) emit('klaar', volgende, id)
 }
 async function stelUit(periode: 'werkdag' | 'week') {
+  uitstelOpen.value = false
   try { await $fetch(`/api/tasks/${t.value.id}/uitstellen`, { method: 'POST', body: { periode } }); toast.toon(periode === 'week' ? 'Uitgesteld met een week.' : 'Uitgesteld met een werkdag.'); emit('gewijzigd'); emit('sluit') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 
@@ -123,16 +132,58 @@ async function doeAnnuleren() {
   try { await $fetch(`/api/tasks/${t.value.id}/annuleren`, { method: 'POST', body: { reden: annuleerReden.value } }); toast.toon('Taak geannuleerd.'); emit('gewijzigd'); emit('sluit') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 async function verwijder() {
+  verwijderVraag.value = false
   try { await $fetch(`/api/tasks/${t.value.id}`, { method: 'DELETE' }); toast.toon('Taak verwijderd.'); emit('gewijzigd'); emit('sluit') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
+
+// Voet: Vraag AI, het uitstelmenu, verwijderen met bevestiging en Volgende.
+const aiAan = computed(() => !!functie('assistent.chat')?.beschikbaar)
+function vraagAi() {
+  if (!t.value) return
+  const x = t.value
+  const wanneer = vervalDatum.value ? `, vervalt ${vervalDatum.value}` : ''
+  const bij = x.account ? ` bij ${x.account.naam}` : ''
+  const met = x.contact ? ` met ${x.contact.naam}` : ''
+  openAi({ accountId: x.account?.id ?? null, label: x.account?.naam ?? `taak ${x.title}`, vraag: `Help me met mijn taak "${x.title}" (${typeVan(x.actionType).label.toLowerCase()}${bij}${met}${wanneer})${x.aanleiding ? `. Aanleiding: ${x.aanleiding}` : ''}. Wat is de beste aanpak?` })
+  emit('sluit')
+}
+const uitstelOpen = ref(false)
+const uitstelHouder = ref<HTMLElement | null>(null)
+function kiesAnnuleren() { uitstelOpen.value = false; annuleren.value = true; nextTick(() => document.querySelector<HTMLElement>('[data-test="annuleer-reden"]')?.focus()) }
+function kiesAfspraak() { uitstelOpen.value = false; planOpen.value = true }
+function buitenUitstel(e: MouseEvent) { if (uitstelOpen.value && uitstelHouder.value && !uitstelHouder.value.contains(e.target as Node)) uitstelOpen.value = false }
+const verwijderVraag = ref(false)
+const eigenLijst = ref<string[] | null>(null)
+const volgendeId = computed(() => {
+  if (!props.lijst) return null
+  const i = props.lijst.indexOf(huidig.value ?? '')
+  return (i >= 0 ? props.lijst[i + 1] : props.lijst.find((x) => x !== huidig.value)) ?? null
+})
+const geenVolgende = computed(() => !!props.lijst && !volgendeId.value)
+async function naarVolgende() {
+  let v = volgendeId.value
+  if (!props.lijst) {
+    if (!eigenLijst.value) eigenLijst.value = await $fetch<any>('/api/tasks', { query: { eigenaar: 'mij' } }).then((r) => (r.groepen ?? []).flatMap((g: any) => g.taken.map((x: any) => x.id as string))).catch(() => [])
+    const l = eigenLijst.value ?? []
+    const i = l.indexOf(huidig.value ?? '')
+    v = (i >= 0 ? l[i + 1] : l.find((x) => x !== huidig.value)) ?? null
+  }
+  if (v) huidig.value = v
+  else toast.toon('Er is geen volgende taak.')
+}
+watch(() => props.open, (o) => { if (!o) eigenLijst.value = null })
 // P13: plannen vanuit de taak; de taak wordt aan de afspraak gekoppeld en sluit bij afronden (gat 32).
 const planOpen = ref(false)
 const kanPlannen = computed(() => !!functie('agenda.basis')?.beschikbaar && !!t.value?.account)
 function gepland(id: string) { planOpen.value = false; emit('gewijzigd'); emit('sluit'); navigateTo(`/agenda?afspraak=${id}`) }
 const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0, 10))
-function toets(e: KeyboardEvent) { if (e.key === 'Escape' && props.open && !planOpen.value) emit('sluit') }
-onMounted(() => document.addEventListener('keydown', toets))
-onBeforeUnmount(() => document.removeEventListener('keydown', toets))
+function toets(e: KeyboardEvent) {
+  if (e.key !== 'Escape' || !props.open || planOpen.value || verwijderVraag.value) return
+  if (uitstelOpen.value) { uitstelOpen.value = false; return }
+  emit('sluit')
+}
+onMounted(() => { document.addEventListener('keydown', toets); document.addEventListener('click', buitenUitstel) })
+onBeforeUnmount(() => { document.removeEventListener('keydown', toets); document.removeEventListener('click', buitenUitstel) })
 </script>
 
 <template>
@@ -247,10 +298,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
               <label class="veld mt-16"><span class="veld-label">Reden <span class="veld-verplicht">*</span></span><select v-model="reden" class="invoer" data-test="uitkomst-reden"><option value="" disabled>Kies een reden</option><option v-for="r in NEE_REDENEN.filter((x) => x !== 'Niet geschikt')" :key="r" :value="r">{{ r }}</option></select></label>
               <label v-if="reden === 'Anders'" class="veld mt-8"><span class="veld-label">Toelichting <span class="veld-verplicht">*</span></span><textarea v-model="toelichting" class="invoer" rows="2" /></label>
             </template>
+            <button v-if="volgende && functie('taken.horizon')?.beschikbaar" type="button" class="dd-act mt-16" :disabled="bezig || ongeldig" data-test="afronden-volgende" @click="doeAfronden(true)"><Icoon naam="Check" :grootte="14" />Afronden en volgende</button>
           </article>
-          <article v-if="annuleren" class="fo-blok fo-blok--gevaar">
+          <article v-if="annuleren" class="fo-blok fo-blok--gevaar" data-test="tf-annuleer-blok">
             <label class="veld"><span class="veld-label">Waarom annuleer je deze taak?</span><input v-model="annuleerReden" class="invoer" data-test="annuleer-reden"></label>
-            <button type="button" class="dd-act mt-8" :disabled="!annuleerReden.trim()" @click="doeAnnuleren">Annuleer taak</button>
+            <div class="tf-annuleer-knoppen mt-8">
+              <button type="button" class="dd-act" @click="annuleren = false">Terug</button>
+              <button type="button" class="dd-act dd-act--gevaar" :disabled="!annuleerReden.trim()" data-test="annuleer-bevestig" @click="doeAnnuleren">Annuleer taak</button>
+            </div>
           </article>
         </div>
         <p v-else-if="laden" class="fo-body meta">Laden…</p>
@@ -260,23 +315,29 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
           <span class="dd-acties-vul fo-foot-vul" />
           <button type="submit" form="tf-bewerk" class="dd-act dd-act--primair" :disabled="!kanBewaren" data-test="tf-opslaan">{{ bezig ? 'Opslaan…' : '✓ Opslaan' }}</button>
         </footer>
-        <footer v-else-if="t && t.status !== 'klaar' && t.kan?.afronden" class="fo-foot dd-acties tf-voet">
-          <button type="button" class="dd-act dd-act--icoon" title="Uitstellen 1 werkdag" aria-label="Uitstellen 1 werkdag" data-test="uitstellen" @click="stelUit('werkdag')"><Icoon naam="Clock" /></button>
-          <button type="button" class="dd-act dd-act--icoon" title="Bewerken" aria-label="Bewerken" data-test="tf-bewerk" @click="startBewerken"><Icoon naam="Pencil" /></button>
-          <button type="button" class="dd-act dd-act--icoon" title="Annuleren" aria-label="Annuleren" @click="annuleren = !annuleren"><Icoon naam="Ban" /></button>
-          <button v-if="t.kan?.verwijderen" type="button" class="dd-act dd-act--icoon dd-act--gevaar" title="Verwijderen" aria-label="Verwijderen" @click="verwijder"><Icoon naam="Trash2" /></button>
-          <button v-if="kanPlannen" type="button" class="dd-act" data-test="taak-afspraak" @click="planOpen = true"><Icoon naam="Plus" />Afspraak</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button v-if="volgende && functie('taken.horizon')?.beschikbaar" type="button" class="dd-act" :disabled="bezig || ongeldig" data-test="afronden-volgende" @click="doeAfronden(true)">Afronden en volgende</button>
-          <button type="button" class="dd-act dd-act--primair" :disabled="bezig || ongeldig" data-test="afronden" @click="doeAfronden(false)">Afronden</button>
-        </footer>
-        <footer v-else-if="t?.account" class="fo-foot dd-acties">
-          <span class="dd-acties-vul fo-foot-vul" />
-          <NuxtLink :to="`/accounts/${t.account.id}`" class="dd-act" @click="emit('sluit')">Open kaart <Icoon naam="ArrowRight" /></NuxtLink>
+        <footer v-else-if="t" class="fo-foot tf-voet" data-test="tf-voet">
+          <button v-if="open && t.status !== 'klaar' && t.kan?.afronden" type="button" class="dd-actie dd-actie--zwart tf-afronden" :disabled="bezig || ongeldig" data-test="afronden" @click="doeAfronden(false)"><Icoon naam="Check" :grootte="16" />Afronden</button>
+          <span class="fo-foot-vul" />
+          <div class="tf-iconen">
+            <button v-if="aiAan" type="button" class="dd-actie dd-actie--icoon tf-ibtn" title="Vraag AI" aria-label="Vraag AI" data-test="tf-vraag-ai" @click="vraagAi"><Icoon naam="Sparkles" :grootte="18" /></button>
+            <div v-if="t.status !== 'klaar' && t.kan?.afronden" ref="uitstelHouder" class="keuzemenu-houder">
+              <button type="button" class="dd-actie dd-actie--icoon tf-ibtn" title="Uitstellen" aria-label="Uitstellen" aria-haspopup="menu" :aria-expanded="uitstelOpen" data-test="uitstellen" @click.stop="uitstelOpen = !uitstelOpen"><Icoon naam="Clock" :grootte="18" /></button>
+              <ul v-if="uitstelOpen" class="keuzemenu tf-uitstel" role="menu" data-test="tf-uitstel-menu">
+                <li role="none"><button type="button" role="menuitem" class="keuzemenu-item" data-test="uitstellen-werkdag" @click="stelUit('werkdag')"><Icoon naam="Clock" :grootte="16" />Een werkdag later</button></li>
+                <li role="none"><button type="button" role="menuitem" class="keuzemenu-item" data-test="uitstellen-week" @click="stelUit('week')"><Icoon naam="CalendarClock" :grootte="16" />Een week later</button></li>
+                <li v-if="kanPlannen" role="none"><button type="button" role="menuitem" class="keuzemenu-item" data-test="taak-afspraak" @click="kiesAfspraak"><Icoon naam="Plus" :grootte="16" />Plan een afspraak</button></li>
+                <li role="none"><button type="button" role="menuitem" class="keuzemenu-item" data-test="tf-annuleren" @click="kiesAnnuleren"><Icoon naam="Ban" :grootte="16" />Annuleer met reden</button></li>
+              </ul>
+            </div>
+            <button v-if="t.status !== 'klaar' && t.kan?.afronden" type="button" class="dd-actie dd-actie--icoon tf-ibtn" title="Bewerken" aria-label="Bewerken" data-test="tf-bewerk" @click="startBewerken"><Icoon naam="Pencil" :grootte="18" /></button>
+            <button v-if="t.kan?.verwijderen" type="button" class="dd-actie dd-actie--icoon tf-ibtn tf-weg" title="Verwijderen" aria-label="Verwijderen" data-test="tf-verwijder" @click="verwijderVraag = true"><Icoon naam="Trash2" :grootte="18" /></button>
+            <button type="button" class="dd-actie dd-actie--icoon tf-ibtn" title="Volgende taak" aria-label="Volgende taak" data-test="tf-volgende" :disabled="geenVolgende" @click="naarVolgende"><Icoon naam="ArrowRight" :grootte="18" /></button>
+          </div>
         </footer>
       </aside>
     </div>
   </Teleport>
+  <BevestigVenster :open="verwijderVraag" titel="Taak verwijderen?" :tekst="`${t?.title ?? 'Deze taak'} verdwijnt helemaal, ook uit de historie van de prospect. Wil je hem alleen niet meer doen? Annuleer hem dan met een reden.`" bevestig="Verwijderen" gevaar @bevestigd="verwijder" @geannuleerd="verwijderVraag = false" />
   <PlanAfspraakFlyout v-if="t?.account" :open="planOpen" :account="{ id: t.account.id, naam: t.account.naam }" :task-id="t.id" :aanleiding="t.title" @sluit="planOpen = false" @gepland="gepland" />
 </template>
 
@@ -286,8 +347,20 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
 /* Tekstlinks houden hun opmaak; het tikvlak loopt boven en onder door tot 44 px. */
 .tf-tik { position: relative; }
 .tf-tik::after { content: ''; position: absolute; inset: -14px 0; }
-/* De voet loopt door naar een tweede regel als hij te vol wordt; Afronden blijft rechts. */
-.tf-voet { flex-wrap: wrap; row-gap: 8px; }
+/* De voet (opzet van DealDrive): Afronden links, icoonknoppen van 44 px rechts; het uitstelmenu opent omhoog. */
+.tf-voet { gap: 8px; }
+.tf-afronden { flex-shrink: 0; }
+.tf-iconen { display: flex; align-items: center; gap: 8px; }
+.tf-ibtn { width: var(--touch-target-min); height: var(--touch-target-min); min-height: var(--touch-target-min); flex-shrink: 0; }
+.tf-ibtn.tf-weg { color: var(--red); }
+.tf-ibtn:disabled { opacity: 0.4; cursor: default; }
+.tf-uitstel { top: auto; bottom: calc(100% + 4px); min-width: 230px; }
+.tf-annuleer-knoppen { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 767px) {
+  .tf-voet { padding-left: 12px; padding-right: 12px; gap: 6px; }
+  .tf-iconen { gap: 4px; }
+  .tf-afronden { padding: 0 12px; }
+}
 .tf-delta { font-size: var(--fs-label); color: var(--muted); }
 .tf-type-pil { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--ink); color: var(--yellow); border-radius: var(--radius); font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
 .tf-klant { display: flex; gap: 12px; align-items: flex-start; }
