@@ -67,6 +67,13 @@ export const LABELS = {
     heet: zacht('Heet', 'oranje', 'Flame'),
     actief: null,
   },
+  /** Status prospect (shared/prospectStatus.ts): hoe warm de prospect is, met de hand gekozen. Zacht met icoon. */
+  prospectstatus: {
+    koud: zacht('Koud', 'cyaan', 'Snowflake'),
+    lauw: zacht('Lauw', 'grijs', 'Thermometer'),
+    warm: zacht('Warm', 'oranje', 'Sun'),
+    heet: zacht('Heet', 'rood', 'Flame'),
+  },
   /** Rol in het buying committee: zacht, elke rol een eigen icoon en tint. */
   rol: {
     beslisser: zacht('Beslisser', 'blauw', 'Crown'),
@@ -285,7 +292,7 @@ export function scoreDef(score: number | null | undefined): LabelDef | null {
 // ---------- Volgorde in een rij ----------
 
 /** Urgentie, fase of status, rol, soort of kanaal, herkomst, AI. */
-export const LABEL_VOLGORDE: string[] = ['urgentie', 'prioriteit', 'fase', 'status', 'klasse', 'rol', 'houding', 'actie', 'inzichtsoort', 'bron', 'account', 'herkomst', 'score', 'ai']
+export const LABEL_VOLGORDE: string[] = ['urgentie', 'prioriteit', 'fase', 'status', 'prospectstatus', 'klasse', 'rol', 'houding', 'actie', 'inzichtsoort', 'bron', 'account', 'herkomst', 'score', 'ai']
 export const MAX_LABELS_IN_RIJ = 4
 
 export interface RijLabel { soort: string; waarde: unknown; tekst?: string; [k: string]: unknown }

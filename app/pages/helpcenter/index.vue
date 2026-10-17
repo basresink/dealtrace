@@ -1,10 +1,11 @@
 <script setup lang="ts">
 // Helpcenter (F21, P25) in de opzet van DealDrive: kop met rechtsboven een zoekicoon dat een zoekveld onder
 // de kop uitklapt (?zoek= in de URL), "Voor jou" en "Nieuw en bijgewerkt", de ingangen (Hoe werkt Dealtrace,
-// de academie met Nieuwe klanten werven, Tips & Tricks en de Kennisbank) als kaarten met een gele rand, en de categorieën.
+// de academie met Nieuwe klanten werven, Tips & Tricks en de Kennisbank) en de categorieën als blokken met
+// hun eerste zes artikelen (HelpCategorieBlok, met Toon alle als er meer zijn).
 // Een categorie opent /helpcenter/categorie/<naam>, een artikel /helpcenter/<slug>.
 // Geen voortgang, geen teller, geen leerpaden (B19).
-import { CATEGORIE_UITLEG, CATEGORIEEN_NEWBUSINESS, CATEGORIEEN_PRODUCT, CATEGORIEEN_TIPS, CATEGORIEEN_WERVEN, COLLECTIES, type HelpCollectie, categorieLink, helpLink } from '~~/shared/help'
+import { CATEGORIEEN_NEWBUSINESS, CATEGORIEEN_PRODUCT, CATEGORIEEN_TIPS, CATEGORIEEN_WERVEN, COLLECTIES, type HelpCollectie, helpLink } from '~~/shared/help'
 const route = useRoute()
 const router = useRouter()
 const zoek = ref(typeof route.query.zoek === 'string' ? route.query.zoek : '')
@@ -115,21 +116,12 @@ useHead({ title: 'Helpcenter · Dealtrace' })
           </div>
 
           <HelpGroep titel="Hoe werkt Dealtrace" uitleg="Per onderwerp de uitleg over de schermen." link="/helpcenter/instructies" link-tekst="Alle instructies" class="mt-32">
-            <NuxtLink v-for="c in product" :key="c.naam" :to="categorieLink(c.naam)" class="hc-categorie" :data-test="`categorie-${c.naam}`">
-              <h3 class="hc-categorie-titel">{{ c.naam }}</h3>
-              <p class="hc-categorie-tekst">{{ CATEGORIE_UITLEG[c.naam] }}</p>
-              <span class="hc-categorie-voet"><span class="hc-cta">Bekijk de artikelen</span><span class="hc-aantal tnum">{{ c.artikelen.length }}</span></span>
-            </NuxtLink>
+            <HelpCategorieBlok v-for="c in product" :key="c.naam" :naam="c.naam" :artikelen="c.artikelen" />
           </HelpGroep>
 
           <HelpGroep titel="New business" uitleg="De academie: het vak, los van de schermen, en nieuwe klanten werven uit eigen vakliteratuur." link="/helpcenter/academie" link-tekst="Hele academie" class="mt-32" data-test="groep-academie">
             <template v-for="c in newbusiness" :key="c.naam">
-              <NuxtLink v-if="c.artikelen.length" :to="categorieLink(c.naam)" class="hc-categorie" :data-test="`categorie-${c.naam}`">
-                <span v-if="isWerven(c.naam)" class="hc-categorie-kicker">Nieuwe klanten werven</span>
-                <h3 class="hc-categorie-titel">{{ c.naam }}</h3>
-                <p class="hc-categorie-tekst">{{ CATEGORIE_UITLEG[c.naam] }}</p>
-                <span class="hc-categorie-voet"><span class="hc-cta">Bekijk de artikelen</span><span class="hc-aantal tnum">{{ c.artikelen.length }}</span></span>
-              </NuxtLink>
+              <HelpCategorieBlok v-if="c.artikelen.length" :naam="c.naam" :artikelen="c.artikelen" :kicker="isWerven(c.naam) ? 'Nieuwe klanten werven' : undefined" />
               <div v-else class="hc-categorie hc-categorie--leeg" :data-test="`categorie-${c.naam}`">
                 <span v-if="isWerven(c.naam)" class="hc-categorie-kicker">Nieuwe klanten werven</span>
                 <h3 class="hc-categorie-titel">{{ c.naam }}</h3>
@@ -139,11 +131,7 @@ useHead({ title: 'Helpcenter · Dealtrace' })
           </HelpGroep>
 
           <HelpGroep v-if="tips.length" titel="Tips &amp; Tricks" uitleg="Van het DealDrive-team: slim werken in Dealtrace, per tip een concreet voordeel." link="/helpcenter/tips" link-tekst="Alle tips" class="mt-32" data-test="groep-tips">
-            <NuxtLink v-for="c in tips" :key="c.naam" :to="categorieLink(c.naam)" class="hc-categorie" :data-test="`categorie-${c.naam}`">
-              <h3 class="hc-categorie-titel">{{ c.naam }}</h3>
-              <p class="hc-categorie-tekst">{{ CATEGORIE_UITLEG[c.naam] }}</p>
-              <span class="hc-categorie-voet"><span class="hc-cta">Bekijk de tips</span><span class="hc-aantal tnum">{{ c.artikelen.length }}</span></span>
-            </NuxtLink>
+            <HelpCategorieBlok v-for="c in tips" :key="c.naam" :naam="c.naam" :artikelen="c.artikelen" soort="tips" />
           </HelpGroep>
         </template>
       </div>
@@ -189,14 +177,11 @@ useHead({ title: 'Helpcenter · Dealtrace' })
 .hc-ingang-tekst { margin: 0 0 14px; font-size: 13px; line-height: 1.55; color: var(--wit-78); }
 .hc-ingang .hc-cta { color: var(--wit); }
 
-.hc-categorie { display: flex; flex-direction: column; min-width: 0; padding: 18px 20px; background: var(--wit); border: 1px solid var(--border); border-left: 3px solid var(--yellow); color: var(--ink); text-decoration: none; transition: border-color var(--transition-fast); }
-a.hc-categorie:hover { border-color: var(--ink); border-left-color: var(--yellow); }
+.hc-categorie { display: flex; flex-direction: column; min-width: 0; padding: 18px 20px; background: var(--wit); border: 1px solid var(--border); border-left: 3px solid var(--yellow); color: var(--ink); text-decoration: none; }
 .hc-categorie--leeg { border-left-color: var(--border-strong); background: var(--surface); }
 .hc-categorie-kicker { font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
 .hc-categorie-titel { font-family: var(--font-serif); font-size: 17px; font-weight: 700; margin: 0 0 6px; }
 .hc-categorie-tekst { margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: var(--ink-soft); }
-.hc-categorie-voet { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.hc-aantal { font-size: 12px; font-weight: 700; color: var(--muted); }
 .hc-cta { font-size: 12px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; border-bottom: 2px solid var(--yellow); padding-bottom: 1px; }
 .hc-cta::after { content: ' \2192'; }
 @media (max-width: 719px) {

@@ -306,6 +306,51 @@ export async function verplaatsAfspraak(tx: Tx, org: string, afspraakId: string,
   return { id: ap!.id, start: start.toISOString(), eind: eind.toISOString(), tekst: `Verplaatst naar ${new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(start)}.` }
 }
 
+/** Wijzigen (afspraakvenster, PUT /api/afspraken/:id): type, titel, moment, duur, contact, locatie en notitie. De vorm volgt uit het type. */
+export interface WijzigInvoer { meetingsoortId?: string; titel?: string | null; start?: string; duurMin?: number; contactId?: string | null; locatie?: string | null; beschrijving?: string | null }
+export async function wijzigAfspraak(tx: Tx, org: string, afspraakId: string, door: string, w: WijzigInvoer, nu = new Date()) {
+  const [ap] = await rijen(tx, sql`select ap.*, a.name as account_naam, a.city, a.data as account_data from appointments ap left join accounts a on a.id = ap.account_id where ap.id = ${afspraakId}`)
+  if (!ap) fout(404, 'Afspraak niet gevonden')
+  if (ap!.status !== 'gepland') fout(409, 'Alleen een geplande afspraak kun je wijzigen')
+  const [soort] = await rijen(tx, sql`select * from meetingsoorten where id = ${w.meetingsoortId ?? ap!.meetingsoort_id}`)
+  if (!soort || (w.meetingsoortId && w.meetingsoortId !== ap!.meetingsoort_id && !soort.actief)) fout(422, 'Kies een type afspraak')
+  if (!ap!.account_id && soort!.type === 'klant') fout(422, 'Een klantafspraak hoort bij een prospect')
+  const vorm: Vorm = vormVoorSoort(soort!)
+  const oudStart = new Date(ap!.start_at)
+  const start = w.start ? new Date(w.start) : oudStart
+  if (Number.isNaN(start.getTime())) fout(422, 'Kies een datum en starttijd')
+  const oudeDuur = Math.round((new Date(ap!.end_at).getTime() - oudStart.getTime()) / 60_000)
+  const duur = Math.max(5, Math.min(480, Number(w.duurMin) || oudeDuur))
+  const eind = new Date(start.getTime() + duur * 60_000)
+  // Contact: hoort bij de prospect van de afspraak; null koppelt bewust geen contact.
+  let contactId: string | null = ap!.contact_id ?? null
+  if (w.contactId !== undefined) {
+    if (w.contactId === null || w.contactId === '') contactId = null
+    else {
+      const [ct] = ap!.account_id ? await rijen(tx, sql`select id from contacts where id = ${w.contactId} and account_id = ${ap!.account_id}`) : []
+      if (!ct) fout(422, 'Dit contact hoort niet bij de prospect van de afspraak')
+      contactId = ct!.id
+    }
+  }
+  const titel = w.titel === undefined ? ap!.data?.titel ?? null : (String(w.titel ?? '').trim().slice(0, 140) || null)
+  const adres = [ap!.account_data?.adres, ap!.city].filter(Boolean).join(', ') || null
+  const locatie = w.locatie === undefined ? ap!.data?.locatie ?? null : (String(w.locatie ?? '').trim().slice(0, 300) || (vorm === 'bezoek' ? adres : null))
+  const beschrijving = w.beschrijving === undefined ? ap!.data?.beschrijving ?? null : (String(w.beschrijving ?? '').trim().slice(0, 4000) || null)
+  const soortAnders = soort!.id !== ap!.meetingsoort_id
+  const data: Record<string, any> = { ...(ap!.data ?? {}), titel, locatie, beschrijving, ...(soortAnders ? { agenda: soort!.data?.agenda ?? [] } : {}), ...(start.getTime() !== oudStart.getTime() ? { verplaatst: { van: oudStart.toISOString(), door, op: nu.toISOString() } } : {}) }
+  if (vorm !== 'online') delete data.meetinglink
+  // De gekoppelde agenda krijgt het nieuwe moment, de titel en zo nodig een meetinglink (de mock overschrijft op hetzelfde id).
+  for (const k of await koppelingenVan(tx, ap!.owner_id)) {
+    const r = await provider(k.provider).schrijfAfspraak(k, { id: ap!.id, start: start.toISOString(), eind: eind.toISOString(), titel: afspraakTitel(titel, soort!.naam, ap!.account_naam), meetinglink: vorm === 'online' && !data.meetinglink })
+    data.externalIds = { ...(data.externalIds ?? {}), [k.provider]: r.externId }
+    if (vorm === 'online' && r.meetinglink && !data.meetinglink) data.meetinglink = r.meetinglink
+  }
+  await tx.execute(sql`update appointments set meetingsoort_id = ${soort!.id}, vorm = ${vorm}, contact_id = ${contactId}, start_at = ${start.toISOString()}, end_at = ${eind.toISOString()}, data = ${JSON.stringify(data)}::jsonb, updated_at = now(), versie = versie + 1 where id = ${ap!.id}`)
+  if (start.getTime() !== oudStart.getTime() || duur !== oudeDuur) await (await import('./agents/dagplanner')).herplanBijWijziging(tx, org, ap!.owner_id, nu, start.getTime() === oudStart.getTime() ? 'uitloop' : 'verzet')
+  await schrijfAudit(tx, { organisationId: org, actorId: door, action: 'afspraak.wijzigen', resourceType: 'appointments', resourceId: ap!.id, changes: { soort: soortAnders ? soort!.slug : undefined, vorm, van: oudStart.toISOString(), naar: start.toISOString(), duur, contact: contactId } })
+  return { id: ap!.id, vorm, start: start.toISOString(), eind: eind.toISOString(), tekst: 'Afspraak bijgewerkt.' }
+}
+
 // ── Lezen ────────────────────────────────────────────────────────────────────
 
 export async function agendaVoor(tx: Tx, gebruikers: string[], van: Date, tot: Date) {

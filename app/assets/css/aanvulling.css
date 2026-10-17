@@ -519,6 +519,11 @@
 .help-tekst { line-height: 1.6; overflow-wrap: anywhere; }
 .help-tekst h2 { font-size: 22px; margin: 0 0 12px; }
 .help-tekst h3 { font-size: 17px; margin: 20px 0 8px; }
+/* Tussenkoppen in een helpartikel (hulpflyout en helpcenter): vet en in de koppenletter, zodat ze als kop lezen.
+   De basisstijl zet font-weight van h1 tot h6 op inherit. */
+.help-tekst h2, .help-tekst h3, .help-tekst h4 { font-family: var(--font-serif); font-weight: 700; line-height: 1.35; color: var(--ink); }
+.help-tekst h4 { font-size: 15px; margin: 16px 0 6px; }
+.help-tekst > h3:first-child, .help-tekst > h4:first-child { margin-top: 0; }
 .help-tekst p, .help-tekst ul, .help-tekst ol { margin: 0 0 12px; }
 .help-tekst ul, .help-tekst ol { padding-left: 20px; }
 .help-tekst table { width: 100%; border-collapse: collapse; margin: 0 0 12px; display: block; overflow-x: auto; }

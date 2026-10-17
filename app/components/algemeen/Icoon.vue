@@ -10,7 +10,7 @@ import {
   List, ArrowUpDown, Star, Ban, Link, Linkedin, Info, Save, UserX, Bookmark, PhoneOff, Briefcase, Clock, StickyNote, Pause, CircleX, CircleDot, Mic, Volume2, VolumeX, Camera, Square, LocateFixed, Inbox, TriangleAlert, Handshake, CircleUser, ChevronUp, Upload, FileText, Image, File, SlidersHorizontal, ExternalLink, Database, ShieldCheck, Copy, ListTodo, ClipboardCheck,
   Check, Instagram, Facebook, Package, Euro, MessageSquare, Network, Radar, Play,
   Sunrise, NotebookPen, Utensils, Car, ChevronLeft, ChevronRight, Target, CalendarCheck, Repeat, Undo2, CalendarClock,
-  Crown, Trophy, Shield, User, CirclePlay, Hourglass, CirclePause, ArrowUp, ArrowDown, Video, Flame, ThumbsUp, Minus, MailX, Newspaper, Workflow,
+  Crown, Trophy, Shield, User, CirclePlay, Hourglass, CirclePause, ArrowUp, ArrowDown, Video, Flame, Snowflake, Thermometer, Sun, ThumbsUp, Minus, MailX, Newspaper, Workflow,
 } from 'lucide-vue-next'
 
 const ICONEN = {
@@ -22,7 +22,7 @@ const ICONEN = {
   List, ArrowUpDown, Star, Ban, Link, Linkedin, Info, Save, UserX, Bookmark, PhoneOff, Briefcase, Clock, StickyNote, Pause, CircleX, CircleDot, Mic, Volume2, VolumeX, Camera, Square, LocateFixed, Inbox, TriangleAlert, Handshake, CircleUser, ChevronUp, Upload, FileText, Image, File, SlidersHorizontal, ExternalLink, Database, ShieldCheck, Copy, ListTodo, ClipboardCheck,
   Check, Instagram, Facebook, Package, Euro, MessageSquare, Network, Radar, Play,
   Sunrise, NotebookPen, Utensils, Car, ChevronLeft, ChevronRight, Target, CalendarCheck, Repeat, Undo2, CalendarClock,
-  Crown, Trophy, Shield, User, CirclePlay, Hourglass, CirclePause, ArrowUp, ArrowDown, Video, Flame, ThumbsUp, Minus, MailX, Newspaper, Workflow,
+  Crown, Trophy, Shield, User, CirclePlay, Hourglass, CirclePause, ArrowUp, ArrowDown, Video, Flame, Snowflake, Thermometer, Sun, ThumbsUp, Minus, MailX, Newspaper, Workflow,
 } as const
 
 const props = defineProps<{ naam: string; grootte?: number }>()
