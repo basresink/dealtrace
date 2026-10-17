@@ -93,9 +93,11 @@ for (const breedte of [1280, 390]) {
       const naam = `E2E Team ${breedte} ${Date.now()}`
       await page.getByTestId('nieuw-team').fill(naam)
       await page.getByTestId('team-toevoegen').click()
-      const kaart = page.getByTestId('team-kaart').filter({ hasText: naam })
+      // Andere kaarten noemen het nieuwe team bij Gekoppelde teams: zoek op de titel en daarna op het id.
+      const titel = page.getByTestId('team-kaart').filter({ has: page.locator('.kaart-titel', { hasText: naam }) })
       try {
-        await verwacht(kaart).toBeVisible({ timeout: 20000 })
+        await verwacht(titel).toHaveCount(1)
+        const kaart = page.locator(`[data-team="${await titel.getAttribute('data-team')}"]`)
         await kaart.getByTestId('team-hernoem').click()
         await kaart.getByTestId('team-naam-invoer').fill(`${naam} Hernoemd`)
         await kaart.getByTestId('team-naam-bewaar').click()
@@ -117,7 +119,7 @@ for (const breedte of [1280, 390]) {
 
         await kaart.getByTestId('team-verwijder').click()
         await page.getByTestId('bevestig').click()
-        await verwacht(page.getByTestId('team-kaart').filter({ hasText: naam })).toHaveCount(0)
+        await verwacht(kaart).toHaveCount(0)
       } finally {
         const teams = await (await page.request.get('/api/teams')).json()
         for (const t of teams.filter((x: any) => x.naam.startsWith(naam))) await page.request.delete(`/api/teams/${t.id}`)
