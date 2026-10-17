@@ -1,15 +1,14 @@
 <script setup lang="ts">
 // Eén rij in de contactlijst (/contacten/alle), in de opzet van DealDrive en gelijk aan
-// AccountRij: avatar met initialen, naam met rol-pil, functie en account (link), de
-// contactgegevens (LinkedIn, e-mail, telefoon) en inzichten en laatste activiteit van het
-// account. "Bel me niet" en "geen mailtoestemming" staan als pil; het nummer is dan geen link.
+// AccountRij: avatar met initialen, naam met labels (Bel me niet gevuld vooraan, dan de rol met
+// eigen icoon, Vertrokken en Geen mail gestippeld), functie en account (link), de contactgegevens
+// (LinkedIn, e-mail, telefoon) en inzichten en laatste activiteit van het account. Bij Bel me niet of
+// zonder mailtoestemming is het nummer of adres geen link.
 // De naam is de link; de streklink maakt de hele rij klikbaar zonder geneste links.
-import { CONTACTROL_LABEL } from '~~/shared/contactgegevens'
 import { datumActiviteit, initialen, kleurUitNaam, telLink, toonTelefoon } from '~/utils/accountWeergave'
 
 const props = defineProps<{ contact: any; weergave?: 'lijst' | 'compact' | 'kaarten' }>()
 const c = computed(() => props.contact)
-const rolLabel = computed(() => CONTACTROL_LABEL[c.value.rol as keyof typeof CONTACTROL_LABEL] ?? c.value.rol)
 const geenMail = computed(() => c.value.consent?.email?.status === 'nee')
 const vertrokken = computed(() => c.value.status === 'vertrokken')
 const linkedin = computed(() => {
@@ -25,10 +24,10 @@ const nummers = computed(() => [c.value.mobiel, c.value.telefoon].filter((n, i, 
     <div class="ct-info">
       <div class="ct-regel1">
         <h3 class="ct-naam"><NuxtLink :to="`/contacten/${c.id}`" class="ct-link">{{ c.naam }}</NuxtLink></h3>
-        <span class="ct-rol" :class="`ct-rol--${c.rol}`" data-test="rol-pil">{{ rolLabel }}</span>
-        <span v-if="vertrokken" class="pil pil--grijs">Vertrokken</span>
-        <span v-if="c.belMeNiet" class="pil pil--rood" data-test="bel-me-niet-pil">Bel me niet</span>
-        <span v-if="geenMail" class="pil pil--grijs" title="Geen toestemming voor e-mail">Geen mail</span>
+        <Label v-if="c.belMeNiet" soort="urgentie" waarde="bel-me-niet" data-test="bel-me-niet-pil" />
+        <Label soort="rol" :waarde="c.rol || 'onbekend'" data-test="rol-pil" />
+        <Label v-if="vertrokken" soort="status" waarde="vertrokken" />
+        <Label v-if="geenMail" soort="status" waarde="geen-mail" titel="Geen toestemming voor e-mail" />
       </div>
       <div class="ct-regel2">
         <span class="ct-functie">{{ c.functie || 'Functie onbekend' }}</span>
@@ -74,13 +73,6 @@ const nummers = computed(() => [c.value.mobiel, c.value.telefoon].filter((n, i, 
 .ct-link::after { content: ''; position: absolute; inset: 0; }
 .ct-link:focus-visible { outline: none; }
 .ct-link:focus-visible::after { outline: 2px solid var(--yellow); outline-offset: -2px; }
-.ct-rol { padding: 2px 8px; border-radius: 2px; background: var(--ink); color: var(--yellow); font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
-.ct-rol--champion { background: var(--green); color: var(--wit); }
-.ct-rol--beinvloeder { background: var(--yellow); color: var(--ink); }
-.ct-rol--gebruiker { background: var(--blue); color: var(--wit); }
-.ct-rol--blokkeerder { background: var(--red); color: var(--wit); }
-.ct-rol--poortwachter { background: var(--purple); color: var(--wit); }
-.ct-rol--onbekend { background: var(--muted); color: var(--wit); }
 .ct-regel2 { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 13px; color: var(--ink-soft); }
 .ct-functie { color: var(--ink); font-weight: 500; }
 .ct-sep { color: var(--border-strong); }
