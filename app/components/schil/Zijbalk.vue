@@ -3,19 +3,17 @@
 // Prospects, Rapportages en Planning (uitklapmenu), daarna Manager en Beheer (met Instellingen van de
 // organisatie). Onderaan een rij iconen van 22 px op knoppen van 44 px (account, mijn instellingen,
 // helpcenter, notificaties, uitloggen) en de gebruikerskaart, zonder menu.
-// Wat voor het niveau uit staat, staat in de ingeklapte groep "Nog niet aangezet".
+// Wat uit staat, staat nergens in het menu; wat er nog komt, zie je bij Instellingen, Niveaus.
 import { NIVEAU_LABEL, ROL_LABEL, type Niveau, type Rol } from '~~/shared/types'
 
 const props = defineProps<{ ingeklapt: boolean }>()
 const emit = defineEmits<{ inklap: [] }>()
 
 const { me } = useMe()
-const { toon: toonNietAangezet } = useNietAangezet()
 const { open: zoekenOpen } = useZoeken()
 const { online } = useSyncQueue()
 const route = useRoute()
 
-const slotOpen = useCookie<boolean>('dt_slotgroep', { default: () => false, maxAge: 60 * 60 * 24 * 365 })
 // Planning is een uitklapmenu; het gaat vanzelf open als je op een van zijn pagina's staat.
 // De cookie heet nog dt_plannen, zodat wie hem open had, hem open houdt.
 const UITKLAP = 'Planning'
@@ -95,24 +93,6 @@ async function uitloggen() {
             <span v-else-if="me?.nieuw.includes(item.sleutel)" class="sb-link-pil">nieuw</span>
           </NuxtLink>
         </template>
-      </div>
-
-      <div v-if="zijbalk.nietAangezet.length" class="sb-groep sb-slotgroep" :class="{ 'sb-slotgroep--open': slotOpen }" data-groep="niet-aangezet">
-        <button type="button" class="sb-slotgroep-kop" :aria-expanded="slotOpen" @click="slotOpen = !slotOpen">
-          <span class="sb-slotgroep-tekst">Nog niet aangezet</span>
-          <span class="sb-slotgroep-teller">{{ zijbalk.nietAangezet.length }}</span>
-          <Icoon naam="ChevronDown" :grootte="14" class="icoon--14 sb-slotgroep-pijl" />
-        </button>
-        <div v-show="slotOpen" class="sb-slotgroep-lijst">
-          <a
-            v-for="item in zijbalk.nietAangezet" :key="item.sleutel" class="sb-link sb-link--slot" :href="item.route"
-            aria-disabled="true" :title="item.naam" :data-sleutel="item.sleutel" @click.prevent="toonNietAangezet(item.sleutel)"
-          >
-            <Icoon :naam="item.icoon" class="sb-link-icoon" />
-            <span class="sb-link-tekst">{{ item.naam }}</span>
-            <Icoon naam="Lock" :grootte="14" class="sb-slot-icoon" />
-          </a>
-        </div>
       </div>
     </nav>
 

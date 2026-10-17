@@ -1,10 +1,12 @@
 // De zijbalk per gebruiker (bouwplan 6.1). Eén pure functie voor server en client.
 //
 // Een lager niveau laat items weg maar verandert nooit de plek of vorm van wat
-// blijft. Wat voor het niveau uit staat, komt in de groep "Nog niet aangezet".
+// blijft. Wat uit staat, toont het menu niet (wens opdrachtgever); de lijst
+// nietAangezet blijft als gegeven voor wie wil weten wat er nog komt.
 // "Toon minder" haalt items weg, nooit erbij.
 
 import { FUNCTIES, aanVanaf, beschikbaar, type Functie, type ZijbalkGroep } from './functies'
+import { magNaarPad } from './functieRoutes'
 import type { FunctieRegel, GebruikerContext, Niveau, OrganisatieContext } from './types'
 
 export interface ZijbalkItem {
@@ -61,6 +63,7 @@ export function zijbalkVoor(
 ): Zijbalk {
   const groepen: Zijbalk['groepen'] = []
   const nietAangezet: ZijbalkItem[] = []
+  const aan = (s: string) => beschikbaar(s, gebruiker, organisatie, stand).ok
 
   for (const groep of GROEPEN) {
     const kandidaten = werkVolgorde(
@@ -71,6 +74,8 @@ export function zijbalkVoor(
     for (const f of kandidaten) {
       if (gebruiker.verborgen.includes(f.sleutel)) continue
       const b = beschikbaar(f.sleutel, gebruiker, organisatie, stand)
+      // Het scherm achter het item kan een eigen functie hebben (Belblokken: de belmodus).
+      if (b.ok && !magNaarPad(f.zijbalk!.route, aan)) continue
       if (b.ok) {
         const label = gebruiker.niveau === 'beginner' && !organisatie.iedereenAlles ? f.zijbalk!.beginnerLabel : undefined
         items.push(naarItem(f, label))

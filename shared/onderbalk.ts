@@ -14,11 +14,15 @@ const PROFIELEN: Record<'buitendienst' | 'binnendienst' | 'hybride' | 'manager',
   manager: [t('team', 'Team', 'UsersRound', '/team'), t('coaching', 'Coaching', 'MessagesSquare', '/coaching'), t('taken', 'Taken', 'SquareCheck', '/taken'), t('prospects', 'Prospects', 'Building2', '/prospects'), MEER],
 }
 
-/** Vijf tabs; een onbekend profiel valt terug op binnendienst. Op elk niveau gelijk. */
-export function tabsVoor(werkplek: Werkplek | string | null | undefined, rol: Rol | string, eigenPortefeuille = true): Tab[] {
-  if (rol === 'salesmanager' && !eigenPortefeuille) return PROFIELEN.manager
-  if (werkplek === 'buitendienst' || werkplek === 'hybride') return PROFIELEN[werkplek]
-  return PROFIELEN.binnendienst
+/**
+ * Vijf tabs; een onbekend profiel valt terug op binnendienst. Op elk niveau gelijk, behalve
+ * een tab naar een scherm waarvan de functie uit staat: die valt weg (`mag`, useFunctie().magNaar).
+ */
+export function tabsVoor(werkplek: Werkplek | string | null | undefined, rol: Rol | string, eigenPortefeuille = true, mag: (route: string) => boolean = () => true): Tab[] {
+  const profiel = rol === 'salesmanager' && !eigenPortefeuille ? PROFIELEN.manager
+    : werkplek === 'buitendienst' || werkplek === 'hybride' ? PROFIELEN[werkplek]
+      : PROFIELEN.binnendienst
+  return profiel.filter((x) => !x.route || mag(x.route))
 }
 
 /** Subpagina's die bij een tab horen; al het andere hoort bij "Meer". */
