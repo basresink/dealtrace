@@ -33,7 +33,7 @@ const nummer = (c: any) => c.mobiel ?? c.telefoon ?? null
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="cf-titel" breedte="smal" data-test="contacten-flyout" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open" open titel-id="cf-titel" breedte="smal" data-test="contacten-flyout" :ai="{ accountId: account.id, label: account.naam, voorstellen: ['Wie is de beslisser?', 'Welke rol ontbreekt er nog?', 'Wie benader ik als eerste?'] }" @sluit="emit('sluit')">
       <template #kop>
             <span class="fo-kicker" data-test="cf-kicker">Contactpersonen · {{ contacten.length }}</span>
             <h2 id="cf-titel" class="fo-titel">{{ account.naam }}</h2>

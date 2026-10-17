@@ -12,10 +12,10 @@ watch(() => props.open, (o) => { if (o) Object.assign(f, leeg()) })
 async function maak() {
   bezig.value = true
   try {
-    const res = await $fetch<{ id: string; naam: string }>('/api/platform/klanten', {
+    const res = await opslag.bewaar(() => $fetch<{ id: string; naam: string }>('/api/platform/klanten', {
       method: 'POST',
       body: { naam: f.naam, pakket: f.pakket, proefTot: f.proef ? f.proefTot : null, seats: f.seats, contact: f.contact, beheerder: f.beheerder },
-    })
+    }))
     toast.toon(`${res.naam} is aangemaakt. De eerste beheerder staat klaar als uitgenodigd.`)
     emit('aangemaakt', res.id)
   } catch (e) {
@@ -24,10 +24,13 @@ async function maak() {
     bezig.value = false
   }
 }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [f])
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="nk-titel" data-test="nieuwe-klant" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open" open titel-id="nk-titel" data-test="nieuwe-klant" :opslag="opslag" @sluit="emit('sluit')" @bewaar="maak">
       <template #kop><span class="fo-kicker">Platformbeheer</span><h2 id="nk-titel" class="fo-titel">Nieuwe klant</h2></template>
         <form id="nk-form" class="fs-form" @submit.prevent="maak">
         <div class="fo-body fo-body--formulier">

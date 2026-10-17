@@ -1,20 +1,7 @@
-// GET /api/instellingen/audit?leverancier=1: auditlog van de eigen organisatie,
-// inclusief wat de leverancier deed (F23).
-import { desc, like } from 'drizzle-orm'
+// GET /api/instellingen/audit?persoon=&soort=&van=&tot=&voor=&leverancier=1&formaat=csv: het auditlog van
+// de eigen organisatie voor de beheerder, inclusief wat de leverancier deed (F23). Een pagina van 50
+// regels met `volgende` als cursor; met formaat=csv de hele selectie als download.
 import { vereisBeheerder } from '../../utils/beheerder'
-import { metOrganisatie, schema } from '../../utils/db'
+import { auditAntwoord } from '../../utils/auditLijst'
 
-export default defineEventHandler(async (event) => {
-  const { organisatie } = await vereisBeheerder(event, 'instellingen.audit')
-  const alleenLeverancier = getQuery(event).leverancier === '1'
-  return metOrganisatie(organisatie.id, async (tx) => {
-    const q = tx.select().from(schema.auditEvents)
-    const rijen = await (alleenLeverancier ? q.where(like(schema.auditEvents.action, 'leverancier.%')) : q).orderBy(desc(schema.auditEvents.occurredAt)).limit(200)
-    const namen = new Map((await tx.select({ id: schema.users.id, naam: schema.users.name }).from(schema.users)).map((u) => [u.id, u.naam]))
-    return rijen.map((r) => ({
-      id: r.id, op: r.occurredAt, actie: r.action, object: r.resourceType, objectId: r.resourceId, wijziging: r.changes,
-      door: namen.get(r.actorId) ?? (r.metadata as any)?.door ?? r.actorId,
-      leverancier: r.action.startsWith('leverancier.'), reden: (r.metadata as any)?.reden ?? null,
-    }))
-  })
-})
+export default defineEventHandler(async (event) => auditAntwoord(event, await vereisBeheerder(event, 'instellingen.audit')))

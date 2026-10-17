@@ -71,7 +71,7 @@ const titelKicker = computed(() => (props.contactId ? `Volgen · ${props.contact
 
 <template>
   <Teleport to="body">
-    <FlyoutShell v-if="open && !taakId" open titel-id="vl-titel" breedte="breed" :sluit-test="'volgen-sluit'" data-test="volgen-flyout" @sluit="sluit">
+    <FlyoutShell v-if="open && !taakId" open titel-id="vl-titel" breedte="breed" :sluit-test="'volgen-sluit'" data-test="volgen-flyout" :ai="{ accountId, label: naam, voorstellen: ['Waarom deze stap?', 'Stel een andere stap voor', 'Schrijf het belscript'] }" @sluit="sluit">
       <template #kop>
             <span class="fo-kicker">{{ titelKicker }}</span>
             <h2 id="vl-titel" class="fo-titel">Volgende beste stap</h2>

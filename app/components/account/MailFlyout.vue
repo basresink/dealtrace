@@ -21,7 +21,7 @@ opslag.volg(() => [onderwerp.value, tekst.value])
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="mf-titel" data-test="mail-flyout" :opslag="opslag" @sluit="emit('sluit')" @bewaar="verstuur">
+  <FlyoutShell v-if="open" open titel-id="mf-titel" data-test="mail-flyout" :opslag="opslag" :ai="{ accountId: account.id, label: account.naam, vraag: onderwerp ? `Schrijf een korte mail over: ${onderwerp}` : '', voorstellen: ['Schrijf een korte opvolgmail', 'Maak een sterkere onderwerpregel', 'Maak de tekst korter'] }" @sluit="emit('sluit')" @bewaar="verstuur">
       <template #kop><span class="fo-kicker">Nieuwe mail</span><h2 id="mf-titel" class="fo-titel">{{ account.naam }}</h2><p class="fo-meta">Aan {{ aan ?? 'de beslisser of de eerste contactpersoon met een e-mailadres' }}</p></template>
         <form id="mf-form" class="fs-form" @submit.prevent="verstuur">
         <div class="fo-body">

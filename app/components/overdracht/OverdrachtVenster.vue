@@ -35,7 +35,7 @@ async function draagOver(alsKans = false) {
 
 <template>
   <Teleport to="body">
-    <FlyoutShell v-if="open && accountId" open titel-id="ov-titel" data-test="overdracht-venster" @sluit="emit('sluit')">
+    <FlyoutShell v-if="open && accountId" open titel-id="ov-titel" data-test="overdracht-venster" :ai="{ accountId, label: accountNaam, voorstellen: ['Wat moet de buitendienst weten?', 'Schrijf een korte overdracht', 'Is dit account klaar voor overdracht?'] }" @sluit="emit('sluit')">
       <template #kop><span class="fo-kicker">Overdragen?</span><h2 id="ov-titel" class="fo-titel">{{ accountNaam }}</h2></template>
         <form id="ov-form" class="fs-form" @submit.prevent="mag && (bevestig = true)">
         <div class="fo-body fo-body--formulier">

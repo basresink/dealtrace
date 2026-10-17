@@ -39,7 +39,7 @@ const ICOON: Record<string, string> = { mail: 'Mail', whatsapp: 'MessageCircle',
     </div>
     <div class="ck-vlak">
       <header class="ck-kop">
-        <span class="ck-tag" :class="`ck-tag--${c.concept?.type ?? 'leeg'}`" data-test="concept-soort"><Icoon :naam="ICOON[c.concept?.type] ?? 'FileText'" :grootte="12" />{{ soortLabel(c.concept?.type) }}</span>
+        <span class="ck-tag" data-test="concept-soort"><Icoon :naam="ICOON[c.concept?.type] ?? 'FileText'" :grootte="12" />{{ soortLabel(c.concept?.type) }}</span>
         <span class="ck-meta tnum"><strong>{{ agentLabel(c.agent) }}</strong><span class="ck-punt">·</span><time :datetime="c.op">{{ wanneer }}</time></span>
         <Label class="ck-status" soort="concept" :waarde="status" :tekst="CONCEPT_STATUS[status] ?? status" data-test="concept-status" />
       </header>

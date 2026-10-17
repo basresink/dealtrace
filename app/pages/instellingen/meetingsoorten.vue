@@ -27,6 +27,9 @@ async function bewaar() {
   } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 useHead({ title: 'Meetingsoorten · Dealtrace' })
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [bewerk.value])
 </script>
 
 <template>
@@ -56,7 +59,7 @@ useHead({ title: 'Meetingsoorten · Dealtrace' })
         </div>
       </section>
     </template>
-    <FlyoutShell v-if="bewerk" open titel-id="ms-titel" data-test="ms-flyout" @sluit="bewerk = null">
+    <FlyoutShell v-if="bewerk" open titel-id="ms-titel" data-test="ms-flyout" :opslag="opslag" @sluit="bewerk = null" @bewaar="bewaar">
         <template #kop><span class="fo-kicker">Meetingsoort</span><h2 id="ms-titel" class="fo-titel">{{ bewerk.naam || 'Nieuwe meetingsoort' }}</h2></template>
         <form id="ms-form" class="fs-form" @submit.prevent="bewaar">
           <div class="fo-body fo-body--formulier">

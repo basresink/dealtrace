@@ -72,7 +72,7 @@ function sluit() { gekozen.value = null; emit('sluit') }
 
 <template>
   <Teleport to="body">
-    <FlyoutShell v-if="open && accountId" open titel-id="inv-titel" breedte="vol" overlay-klasse="fo-overlay--donker" data-test="invloed-flyout" @sluit="sluit">
+    <FlyoutShell v-if="open && accountId" open titel-id="inv-titel" breedte="vol" overlay-klasse="fo-overlay--donker" data-test="invloed-flyout" :ai="{ accountId, label: data?.account?.naam, voorstellen: ['Wie ontbreekt er?', 'Hoe bereik ik de beslisser?', 'Wie is de blokkeerder?'] }" @sluit="sluit">
       <template #kop>
             <span class="fo-kicker"><Icoon naam="Network" :grootte="12" /> Invloedskaart<template v-if="data"> · {{ data.account.naam }}</template></span>
             <h2 id="inv-titel" class="fo-titel" data-test="inv-titel">{{ data?.dekking.titel ?? 'Invloedskaart' }}</h2>

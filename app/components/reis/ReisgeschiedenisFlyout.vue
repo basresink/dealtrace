@@ -14,7 +14,7 @@ const datum = (t: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', 
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="rg-titel" breedte="smal" data-test="reisgeschiedenis" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open" open titel-id="rg-titel" breedte="smal" data-test="reisgeschiedenis" :ai="{ accountId, label: naam, voorstellen: ['Vat de reis samen', 'Waar liep het vast?', 'Wat is de volgende fase?'] }" @sluit="emit('sluit')">
       <template #kop><span class="fo-kicker">Reisgeschiedenis</span><h2 id="rg-titel" class="fo-titel">{{ naam }}</h2></template>
         <div class="fo-body">
           <p v-if="laden" class="meta">Laden…</p>

@@ -38,10 +38,13 @@ function wissel(lijstNaam: 'brancheIds' | 'klassen', id: string) {
   const l = f.value.data[lijstNaam]
   f.value.data[lijstNaam] = l.includes(id) ? l.filter((x: string) => x !== id) : [...l, id]
 }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [f.value, sbiTekst.value, pcTekst.value])
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="dg-titel" data-test="doelgroep-flyout" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open" open titel-id="dg-titel" data-test="doelgroep-flyout" :opslag="opslag" @sluit="emit('sluit')" @bewaar="bewaar">
       <template #kop><span class="fo-kicker">Doelgroep</span><h2 id="dg-titel" class="fo-titel">{{ doelgroep ? doelgroep.naam : 'Nieuwe doelgroep' }}</h2></template>
         <form id="dg-form" class="fs-form" @submit.prevent="bewaar">
         <div class="fo-body fo-body--formulier">

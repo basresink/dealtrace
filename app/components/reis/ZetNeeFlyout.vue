@@ -36,14 +36,17 @@ async function bewaar() {
       emit('klaar', `${props.account.naam} gaat op nee zodra je weer online bent (terug op ${langeDatum(terugOp.value)}).`)
       return
     }
-    const r = await $fetch<any>(`/api/accounts/${props.account.id}/nee`, { method: 'POST', body })
+    const r = await opslag.bewaar(() => $fetch<any>(`/api/accounts/${props.account.id}/nee`, { method: 'POST', body }))
     emit('klaar', `${props.account.naam} staat op nee tot ${langeDatum(r.terugOp)}.`)
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [reden.value, toelichting.value, verlorenAan.value, terugOp.value])
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="nee-titel" breedte="smal" data-test="zet-nee" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open" open titel-id="nee-titel" breedte="smal" data-test="zet-nee" :opslag="opslag" :ai="{ accountId: account.id, label: account.naam, voorstellen: ['Is nee nu de juiste keuze?', 'Wanneer probeer ik het opnieuw?', 'Wat leer ik hiervan?'] }" @sluit="emit('sluit')" @bewaar="bewaar">
       <template #kop><span class="fo-kicker">Zet nee</span><h2 id="nee-titel" class="fo-titel">{{ account.naam }}</h2></template>
         <form id="nee-form" class="fs-form" @submit.prevent="bewaar">
         <div class="fo-body fo-body--formulier">

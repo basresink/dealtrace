@@ -39,10 +39,13 @@ async function bewaar() {
     }
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [keuze.value, reden.value, datum.value])
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="rh-titel" breedte="smal" :data-test="`reis-${soort}`" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open" open titel-id="rh-titel" breedte="smal" :data-test="`reis-${soort}`" :opslag="opslag" :ai="{ accountId: account.id, label: account.naam, voorstellen: ['Welke fase past nu bij dit account?', 'Wat is de reden voor deze wissel?', 'Wat is de volgende stap?'] }" @sluit="emit('sluit')" @bewaar="bewaar">
       <template #kop><span class="fo-kicker">{{ titel }}</span><h2 id="rh-titel" class="fo-titel">{{ account.naam }}</h2></template>
         <form id="rh-form" class="fs-form" @submit.prevent="bewaar">
         <div class="fo-body fo-body--formulier">

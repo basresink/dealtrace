@@ -10,13 +10,16 @@ const { data, refresh } = await useFetch<any>('/api/ritmes', { immediate: aan, d
 const bewerk = ref<any>(null)
 function start(r: any) { bewerk.value = JSON.parse(JSON.stringify({ id: r.id, naam: r.naam, stappen: r.stappen, parkeerDagen: r.parkeerDagen })) }
 async function bewaar() {
-  try { await $fetch(`/api/ritmes/${bewerk.value.id}`, { method: 'PUT', body: bewerk.value }); toast.toon('Ritme bewaard.'); bewerk.value = null; await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+  try { await opslag.bewaar(() => $fetch(`/api/ritmes/${bewerk.value.id}`, { method: 'PUT', body: bewerk.value })); toast.toon('Ritme bewaard.'); bewerk.value = null; await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 const voorstel = reactive<Record<string, string>>({})
 async function stelVoor(id: string) {
   try { await $fetch(`/api/ritmes/${id}/voorstel`, { method: 'POST', body: { tekst: voorstel[id] } }); voorstel[id] = ''; toast.toon('Je voorstel staat bij je salesmanager.') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 const BRON: Record<string, string> = { koud: 'Koud', warm: 'Warm', winback: 'Winback' }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [bewerk.value])
 </script>
 
 <template>
@@ -41,7 +44,7 @@ const BRON: Record<string, string> = { koud: 'Koud', warm: 'Warm', winback: 'Win
               </div>
             </article>
           </div>
-      <FlyoutShell v-if="bewerk" open titel-id="fs-planningritme0" breedte="smal" data-test="ritme-flyout" @sluit="bewerk = null">
+      <FlyoutShell v-if="bewerk" open titel-id="fs-planningritme0" breedte="smal" data-test="ritme-flyout" :opslag="opslag" @sluit="bewerk = null" @bewaar="bewaar">
         <template #kop><span class="fo-kicker">Hercontactritme</span><h2 id="fs-planningritme0" class="fo-titel">{{ bewerk.naam }}</h2></template>
         <form id="pr-form" class="fs-form" @submit.prevent="bewaar">
           <div class="fo-body fo-body--formulier">

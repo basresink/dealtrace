@@ -33,7 +33,7 @@ function startBewerken() {
 async function bewaar() {
   bezig.value = true
   try {
-    await $fetch(`/api/accountplannen/${props.planId}`, { method: 'PUT', body: { titel: concept.titel, geldigVan: concept.geldigVan || null, geldigTot: concept.geldigTot || null, secties: concept.secties } })
+    await opslag.bewaar(() => $fetch(`/api/accountplannen/${props.planId}`, { method: 'PUT', body: { titel: concept.titel, geldigVan: concept.geldigVan || null, geldigTot: concept.geldigTot || null, secties: concept.secties } }))
     toast.toon('Accountplan bewaard.'); bewerk.value = false; await laad(); emit('gewijzigd')
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }
@@ -49,11 +49,16 @@ async function verwijder() {
   try { await $fetch(`/api/accountplannen/${props.planId}`, { method: 'DELETE' }); toast.toon('Accountplan verwijderd. De acties staan nog als taak op het account.'); emit('verwijderd') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 function sluit() { if (bewerk.value) { bewerk.value = false; return } emit('sluit') }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd in de bewerkstand tot Opslaan; Vraag AI met dit plan.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => (bewerk.value ? concept : null))
+watch(bewerk, () => opslag.basis(), { flush: 'sync' })
+const ai = computed(() => (plan.value ? { accountId: plan.value.account?.id ?? plan.value.accountId ?? null, label: plan.value.titel, vraag: '', voorstellen: ['Wat ontbreekt er nog in dit plan?', 'Welke actie heeft nu de meeste impact?', 'Vat dit accountplan samen'] } : null))
 </script>
 
 <template>
   <Teleport to="body">
-    <FlyoutShell v-if="planId" open titel-id="apf-titel" breedte="breed" overlay-klasse="fo-overlay--donker" sluit-test="apf-sluit" data-test="ap-flyout" @sluit="sluit">
+    <FlyoutShell v-if="planId" open titel-id="apf-titel" breedte="breed" overlay-klasse="fo-overlay--donker" sluit-test="apf-sluit" :opslag="opslag" :ai="ai" data-test="ap-flyout" @sluit="sluit" @bewaar="bewaar">
       <template #kop>
             <span class="fo-kicker"><Icoon naam="ClipboardCheck" :grootte="12" /> Accountplan</span>
             <h2 id="apf-titel" class="fo-titel">{{ plan?.titel ?? 'Accountplan' }}</h2>

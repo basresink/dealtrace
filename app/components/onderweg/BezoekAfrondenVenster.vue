@@ -63,10 +63,13 @@ async function bewaar() {
   emit('bewaard', a.id)
   setTimeout(() => emit('sluit'), 1200)
 }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [f])
 </script>
 
 <template>
-  <FlyoutShell v-if="open && afspraak" open titel-id="ba-titel" paneel-klasse="ba-venster" data-test="bezoek-afronden" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open && afspraak" open titel-id="ba-titel" paneel-klasse="ba-venster" data-test="bezoek-afronden" :opslag="opslag" @sluit="emit('sluit')" @bewaar="bewaar">
       <template #kop><span class="fo-kicker">Bezoek afronden</span><h2 id="ba-titel" class="fo-titel">{{ afspraak.accountNaam ?? 'Bezoek' }} · {{ tijd(afspraak.start) }} tot {{ tijd(afspraak.eind) }}</h2></template>
         <form id="ba-form" class="fs-form" @submit.prevent="bewaar">
         <div class="fo-body fo-body--formulier">

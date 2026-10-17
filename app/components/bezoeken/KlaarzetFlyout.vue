@@ -35,7 +35,7 @@ opslag.volg(() => [f])
 </script>
 
 <template>
-  <FlyoutShell v-if="open && account" open titel-id="kz-titel" breedte="smal" data-test="klaarzetten" :opslag="opslag" @sluit="emit('sluit')" @bewaar="zet">
+  <FlyoutShell v-if="open && account" open titel-id="kz-titel" breedte="smal" data-test="klaarzetten" :opslag="opslag" :ai="{ accountId: account.id, label: account.naam, voorstellen: ['Wat moet mijn collega weten?', 'Schrijf een korte overdracht', 'Wat is de aanleiding voor het bezoek?'] }" @sluit="emit('sluit')" @bewaar="zet">
       <template #kop><span class="fo-kicker">Klaarzetten voor buitendienst</span><h2 id="kz-titel" class="fo-titel">{{ account.naam }}</h2></template>
         <form id="kz-form" class="fs-form" @submit.prevent="zet">
         <div class="fo-body fo-body--formulier">

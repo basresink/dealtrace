@@ -32,7 +32,7 @@ async function zet(body: Record<string, unknown>, melding: string) {
 </script>
 
 <template>
-  <FlyoutShell v-if="p" open titel-id="ivp-titel" bovenop sluit-test="ivp-sluit" data-test="invloed-persoon" @sluit="emit('sluit')">
+  <FlyoutShell v-if="p" open titel-id="ivp-titel" bovenop sluit-test="ivp-sluit" data-test="invloed-persoon" :ai="{ accountId, label: p.naam, voorstellen: [`Hoe overtuig ik ${p.naam}?`, 'Welke rol heeft deze persoon in het besluit?', 'Wie beïnvloedt deze persoon?'] }" @sluit="emit('sluit')">
     <template #kop>
           <span class="fo-kicker" data-test="ivp-kicker">{{ rolLabel(p.rol) }} · {{ zekerheidTekst }}</span>
           <h2 id="ivp-titel" class="fo-titel">{{ p.functie ?? p.naam }}</h2>

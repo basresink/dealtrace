@@ -52,11 +52,16 @@ async function verwijder() {
   if (!id) return
   try { await $fetch(`/api/documenten/${id}`, { method: 'DELETE' }); toast.toon('Document verwijderd.'); emit('verwijderd', id) } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
+// Vraag AI in de kop (FlyoutShell): dit document heeft zijn eigen AI-vak; de knop opent daar de eigen vraag.
+function vraagDocument() {
+  eigenOpen.value = true
+  nextTick(() => { const el = document.getElementById('ddf-eigen-invoer'); el?.scrollIntoView({ block: 'center' }); el?.focus() })
+}
 </script>
 
 <template>
   <Teleport to="body">
-    <FlyoutShell v-if="documentId" open titel-id="ddf-titel" breedte="breed" overlay-klasse="fo-overlay--donker" data-test="document-flyout" @sluit="emit('sluit')">
+    <FlyoutShell v-if="documentId" open titel-id="ddf-titel" breedte="breed" overlay-klasse="fo-overlay--donker" data-test="document-flyout" :ai="{ label: doc?.naam }" @vraag-ai="vraagDocument" @sluit="emit('sluit')">
       <template #kop>
             <span class="fo-kicker" data-test="ddf-kicker"><Icoon naam="FileText" :grootte="12" /> Kennisbank · {{ typeLabel }}</span>
             <h2 id="ddf-titel" class="fo-titel" data-test="ddf-naam">{{ doc?.naam ?? 'Document' }}</h2>

@@ -43,6 +43,9 @@ async function zetActief(s: any, actief: boolean) {
 const ICOON: Record<string, string> = { mail: 'Mail', linkedin: 'Linkedin', bellen: 'Phone' }
 const stappenTekst = (s: any) => `${s.stappen.map((x: any) => `dag ${x.dag} ${(REEKS_KANAAL_LABEL[x.kanaal as keyof typeof REEKS_KANAAL_LABEL] ?? x.kanaal).toLowerCase()}`).join(' · ')} · dag ${s.einde.dag} terug naar het ritme`
 useHead({ title: 'Sjablonen voor opvolgreeksen · Dealtrace' })
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [bewerk.value])
 </script>
 
 <template>
@@ -73,7 +76,7 @@ useHead({ title: 'Sjablonen voor opvolgreeksen · Dealtrace' })
         </div>
       </section>
     </template>
-    <FlyoutShell v-if="bewerk" open titel-id="rsj-titel" breedte="breed" data-test="rsj-flyout" @sluit="bewerk = null">
+    <FlyoutShell v-if="bewerk" open titel-id="rsj-titel" breedte="breed" data-test="rsj-flyout" :opslag="opslag" @sluit="bewerk = null" @bewaar="bewaar">
         <template #kop><span class="fo-kicker">Sjabloon voor opvolgreeksen</span><h2 id="rsj-titel" class="fo-titel">{{ bewerk.naam || 'Nieuw sjabloon' }}</h2><p class="fo-meta">Lopende reeksen houden hun stappen; nieuwe reeksen krijgen dit sjabloon.</p></template>
         <form id="rsj-form" class="fs-form" @submit.prevent="bewaar">
           <div class="fo-body fo-body--formulier">

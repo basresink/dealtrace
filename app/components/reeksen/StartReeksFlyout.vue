@@ -36,15 +36,18 @@ async function doeStart() {
   if (!gekozen.value || !start.sjabloonId) return
   bezig.value = true
   try {
-    const r = await $fetch<any>(`/api/volgen/${gekozen.value.id}/reeks`, { method: 'POST', body: { sjabloonId: start.sjabloonId, contactId: start.contactId || null, mandaat: start.mandaat } })
+    const r = await opslag.bewaar(() => $fetch<any>(`/api/volgen/${gekozen.value.id}/reeks`, { method: 'POST', body: { sjabloonId: start.sjabloonId, contactId: start.contactId || null, mandaat: start.mandaat } }))
     toast.toon(`Reeks ${r?.naam ?? ''} gestart voor ${gekozen.value.naam}.`)
     emit('gestart', r.id)
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [gekozen.value?.id ?? null, start])
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="sr-start-titel" data-test="reeks-start-flyout" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open" open titel-id="sr-start-titel" data-test="reeks-start-flyout" :opslag="opslag" :ai="{ accountId: gekozen?.id ?? null, label: gekozen?.naam ?? 'Opvolgreeks', voorstellen: ['Welk sjabloon past bij deze prospect?', 'Met wie start ik de reeks?', 'Wanneer stop ik de reeks?'] }" @sluit="emit('sluit')" @bewaar="doeStart">
       <template #kop><span class="fo-kicker">Opvolgreeks</span><h2 id="sr-start-titel" class="fo-titel">Start reeks</h2><p class="fo-meta">Kies een prospect en een sjabloon. De reeks stopt vanzelf zodra de prospect reageert.</p></template>
         <form id="sr-start-form" class="fs-form" @submit.prevent="doeStart">
         <div class="fo-body">

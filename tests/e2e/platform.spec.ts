@@ -53,7 +53,7 @@ test.describe('platform API', () => {
 
     // Audit bij de klant en een melding voor de beheerder.
     await apiLogin(request, 'u-06')
-    const audit = await (await request.get('/api/instellingen/audit?leverancier=1')).json()
+    const audit = (await (await request.get('/api/instellingen/audit?leverancier=1')).json()).regels
     const acties = audit.slice(0, 10).map((r: any) => r.actie)
     expect(acties).toEqual(expect.arrayContaining(['leverancier.werkin.start', 'leverancier.werkin.modus', 'leverancier.werkin.einde']))
     const meldingen = await (await request.get('/api/notificaties')).json()

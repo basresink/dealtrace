@@ -28,7 +28,7 @@ const props = withDefaults(defineProps<{
   statusTest?: string
   bovenop?: boolean
 }>(), { statusTest: 'fs-status', kicker: '', titel: '', meta: null, titelId: '', breedte: 'normaal', opslag: null, ai: null, aiInVoet: false, sluitTest: undefined, bovenop: false })
-const emit = defineEmits<{ sluit: []; bewaar: [] }>()
+const emit = defineEmits<{ sluit: []; bewaar: []; vraagAi: [] }>()
 const slots = useSlots()
 const { functie } = useMe()
 const { openen: openAi } = useAssistent()
@@ -45,7 +45,9 @@ const stand = computed(() => props.opslag?.stand ?? 'leeg')
 const inst = getCurrentInstance()
 const kanBewaren = computed(() => !!inst?.vnode.props?.onBewaar || !!props.opslag?.gepland)
 
+// Een flyout met een eigen AI-vak (zoals het document) vangt vraagAi zelf op; anders opent de assistent.
 function vraagAi() {
+  if (inst?.vnode.props?.onVraagAi) { emit('vraagAi'); return }
   if (!props.ai) return
   openAi({ accountId: props.ai.accountId ?? null, label: props.ai.label, vraag: props.ai.vraag, voorstellen: props.ai.voorstellen })
 }

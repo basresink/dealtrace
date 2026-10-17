@@ -36,7 +36,7 @@ opslag.volg(() => [f, klant.value?.id ?? null])
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="nc-titel" breedte="smal" data-test="nieuw-contact" :opslag="opslag" @sluit="emit('sluit')" @bewaar="maak">
+  <FlyoutShell v-if="open" open titel-id="nc-titel" breedte="smal" data-test="nieuw-contact" :opslag="opslag" :ai="{ accountId: klant?.id ?? null, label: klant?.naam ?? 'Nieuw contact', voorstellen: ['Welke rol heeft deze persoon waarschijnlijk?', 'Wie zoek ik nog bij dit bedrijf?', 'Schrijf een korte introductiemail'] }" @sluit="emit('sluit')" @bewaar="maak">
       <template #kop><span class="fo-kicker">Nieuw contact</span><h2 id="nc-titel" class="fo-titel">Wie ga je erbij zetten?</h2></template>
         <form id="nc-form" class="fs-form" @submit.prevent="maak">
         <div class="fo-body fo-body--formulier">

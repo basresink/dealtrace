@@ -34,6 +34,9 @@ async function doeArchiveer() {
 }
 function overnemen(vs: any) { open(); veld.value.naam = vs.data.naam; veld.value.type = vs.data.type }
 useHead({ title: 'Eigen velden · Instellingen · Dealtrace' })
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [veld.value])
 </script>
 
 <template>
@@ -71,7 +74,7 @@ useHead({ title: 'Eigen velden · Instellingen · Dealtrace' })
       </div>
     </section>
 
-    <FlyoutShell v-if="veld" open titel-id="ev-titel" breedte="smal" data-test="veld-flyout" @sluit="veld = null">
+    <FlyoutShell v-if="veld" open titel-id="ev-titel" breedte="smal" data-test="veld-flyout" :opslag="opslag" @sluit="veld = null" @bewaar="bewaar">
         <template #kop><span class="fo-kicker">{{ OBJECT_LABEL[object] }}</span><h2 id="ev-titel" class="fo-titel">{{ veld.id ? veld.naam : 'Nieuw veld' }}</h2></template>
         <form id="ev-form" class="fs-form" @submit.prevent="bewaar">
           <div class="fo-body fo-body--formulier"><article class="fo-blok">

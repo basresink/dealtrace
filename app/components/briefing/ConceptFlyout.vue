@@ -25,7 +25,7 @@ const ROL: Record<string, string> = { beslisser: 'Beslisser', champion: 'Champio
 </script>
 
 <template>
-  <FlyoutShell v-if="c" open titel-id="cf-titel" :sluit-test="'concept-flyout-sluit'" data-test="concept-flyout" @sluit="emit('sluit')">
+  <FlyoutShell v-if="c" open titel-id="cf-titel" :sluit-test="'concept-flyout-sluit'" data-test="concept-flyout" :ai="{ accountId: c.account?.id ?? null, label: c.account?.naam ?? titel, voorstellen: ['Maak dit concept korter', 'Maak de toon persoonlijker', 'Wat ontbreekt er nog?'] }" @sluit="emit('sluit')">
       <template #kop>
             <span class="fo-kicker">{{ soortLabel(c.concept?.type) }} · {{ CONCEPT_STATUS[status] ?? status }} · {{ agentLabel(c.agent) }}</span>
             <h2 id="cf-titel" class="fo-titel">{{ titel }}</h2>

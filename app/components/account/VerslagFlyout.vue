@@ -6,7 +6,7 @@ const emit = defineEmits<{ sluit: []; afspraak: [id: string] }>()
 </script>
 
 <template>
-  <FlyoutShell v-if="open && verslag" open titel-id="vf-titel" data-test="verslag-flyout" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open && verslag" open titel-id="vf-titel" data-test="verslag-flyout" :ai="{ accountId: verslag.accountId ?? null, label: verslag.titel, vraag: '', voorstellen: ['Vat dit verslag samen', 'Wat is de volgende stap?', 'Welke koopsignalen zie je?'] }" @sluit="emit('sluit')">
       <template #kop><span class="fo-kicker">{{ verslag.bronLabel }} · {{ verslag.typeLabel }}</span><h2 id="vf-titel" class="fo-titel">{{ verslag.titel }}</h2><p class="fo-meta">{{ new Date(verslag.datum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Amsterdam' }) }}<template v-if="verslag.contact"> · {{ verslag.contact }}</template> · {{ verslag.woorden }} woorden</p></template>
         <div class="fo-body">
           <article class="fo-blok" data-test="vf-verslag">

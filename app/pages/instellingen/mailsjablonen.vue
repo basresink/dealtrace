@@ -9,6 +9,17 @@ const bewerk = ref<any>(null)
 async function bewaar() {
   try { await $fetch('/api/mailsjablonen', { method: 'PUT', body: bewerk.value }); toast.toon('Sjabloon bewaard.'); bewerk.value = null; await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
+// Aan of uit: een sjabloon dat uit staat, blijft bewaard maar is niet te kiezen.
+async function wissel(s: any, actief: boolean) {
+  const oud = s.actief
+  s.actief = actief
+  try { await $fetch(`/api/mailsjablonen/${s.id}/actief`, { method: 'PUT', body: { actief } }); toast.toon(actief ? `${s.naam} staat aan.` : `${s.naam} staat uit.`) } catch (e) { s.actief = oud; toast.toon(foutTekst(e), 'fout') }
+}
+const telling = computed(() => {
+  const n = data.value.sjablonen.length
+  const a = data.value.sjablonen.filter((s: any) => s.actief).length
+  return `${a} van ${n} ${n === 1 ? 'sjabloon' : 'sjablonen'} aan`
+})
 useHead({ title: 'Mailsjablonen · Dealtrace' })
 </script>
 
@@ -21,13 +32,19 @@ useHead({ title: 'Mailsjablonen · Dealtrace' })
       </PaginaKop>
       <section class="section">
         <div class="container container--smal">
-          <LegeStaat v-if="!data.sjablonen.length" titel="Nog geen sjablonen." />
-          <div v-else class="lijst" data-test="sj-lijst">
-            <div v-for="s in data.sjablonen" :key="s.id" class="rij rij--compact" :class="{ 'rij--uit': !s.actief }">
-              <div class="rij-info"><h3 class="rij-titel">{{ s.naam }} <span class="pil pil--leeg">{{ s.kanaal }}</span></h3><div class="rij-sub">{{ s.data.onderwerp }} · versie {{ s.versie }} · {{ (s.data.variabelen ?? []).join(' ') }}</div></div>
-              <button type="button" class="dd-act" @click="bewerk = JSON.parse(JSON.stringify(s))">Bewerk</button>
+          <LegeStaat v-if="!data.sjablonen.length" titel="Nog geen sjablonen." tekst="Een sjabloon is een vaste opzet per kanaal met variabelen, zodat een concept sneller klaarstaat." />
+          <template v-else>
+            <p class="meta" data-test="sj-telling">{{ telling }}</p>
+            <div class="lijst mt-8" data-test="sj-lijst">
+              <div v-for="s in data.sjablonen" :key="s.id" class="rij rij--compact" :class="{ 'rij--uit': !s.actief }" data-test="sj-rij" :data-naam="s.naam">
+                <div class="rij-info"><h3 class="rij-titel">{{ s.naam }} <span class="pil pil--leeg">{{ s.kanaal }}</span> <span v-if="!s.actief" class="pil pil--grijs">Uit</span></h3><div class="rij-sub">{{ s.data.onderwerp }} · versie {{ s.versie }} · {{ (s.data.variabelen ?? []).join(' ') }}</div></div>
+                <div class="sj-acties">
+                  <Schakelaar :aan="s.actief" :label="`${s.naam} aan`" data-test="sj-actief" @wissel="wissel(s, $event)" />
+                  <button type="button" class="dd-act" @click="bewerk = JSON.parse(JSON.stringify(s))">Bewerk</button>
+                </div>
+              </div>
             </div>
-          </div>
+          </template>
           <form v-if="bewerk" class="kaart mt-16" data-test="sj-form" @submit.prevent="bewaar">
             <div class="formulier-raster">
               <label class="veld"><span class="veld-label">Naam</span><input v-model="bewerk.naam" class="invoer" required minlength="2"></label>
@@ -42,3 +59,8 @@ useHead({ title: 'Mailsjablonen · Dealtrace' })
     </template>
   </div>
 </template>
+
+<style scoped>
+.sj-acties { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.rij--uit .rij-info { color: var(--muted); }
+</style>
