@@ -2,23 +2,33 @@
 // Accountplannen in de opzet van DealDrive (/accountplannen): kop met het aantal actuele plannen, Zoeken en
 // "+ Accountplan"; daaronder twee groepen, Actueel en Verlopen en afgerond, met een kaart per plan (soort en
 // status als pil, eigenaar, naam, account, geldigheid en de voortgang van het actieplan). Een klik op de kaart
-// opent het plan in een venster; "Open accountplan" gaat naar de volledige pagina. Alleen voor Expert.
-import { geldigheidLabel, WEERGAVE_LABEL } from '~~/shared/accountplannen'
+// opent het plan in een venster; "Open accountplan" gaat naar de volledige pagina. Filters (in de URL): status
+// (Alle, Actueel, Verlopen, Afgerond) en Alleen mijn plannen. Een nieuw plan opent na aanmaken in het venster.
+// Alleen voor Expert.
+import { PLAN_FILTERS, filterPlannen, geldigheidLabel, WEERGAVE_LABEL, type PlanFilter } from '~~/shared/accountplannen'
 const { functie } = useMe()
 const aan = !!functie('nav.accountplannen')?.beschikbaar
 const route = useRoute()
 const router = useRouter()
-const { data, refresh } = await useFetch<any>('/api/accountplannen', { immediate: aan, default: () => ({ plannen: [], actueel: 0 }) })
-const actueel = computed(() => data.value.plannen.filter((p: any) => p.weergave === 'actueel'))
-const historie = computed(() => data.value.plannen.filter((p: any) => p.weergave !== 'actueel'))
+const status = computed<PlanFilter>(() => (PLAN_FILTERS.some((f) => f.id === route.query.status) ? route.query.status as PlanFilter : 'alle'))
+const alleenMijn = computed(() => route.query.van === 'mij')
+const { data, refresh } = await useFetch<any>('/api/accountplannen', { query: computed(() => (alleenMijn.value ? { van: 'mij' } : {})), immediate: aan, default: () => ({ plannen: [], actueel: 0 }) })
+const zichtbaar = computed<any[]>(() => filterPlannen<any>(data.value.plannen, status.value))
+const actueel = computed(() => zichtbaar.value.filter((p: any) => p.weergave === 'actueel'))
+const historie = computed(() => zichtbaar.value.filter((p: any) => p.weergave !== 'actueel'))
+const filtersOpen = ref(false)
+const filterTeller = computed(() => (status.value !== 'alle' ? 1 : 0) + (alleenMijn.value ? 1 : 0))
+const telVoor = (f: PlanFilter) => filterPlannen(data.value.plannen, f).length
+function zet(q: Record<string, string | undefined>) { router.replace({ query: { ...route.query, ...q } }) }
 const GROEPEN = computed(() => [
-  { id: 'actueel', titel: 'Actueel', uitleg: 'Plannen die nu lopen. Hier stuur je op.', leeg: 'Geen lopend accountplan.', items: actueel.value },
-  { id: 'historie', titel: 'Verlopen en afgerond', uitleg: 'De geldigheid is voorbij of het plan is afgesloten. Evalueer het en open een nieuwe periode.', leeg: 'Nog niets afgerond of verlopen.', items: historie.value },
-])
+  { id: 'actueel', titel: 'Actueel', uitleg: 'Plannen die nu lopen. Hier stuur je op.', leeg: status.value === 'alle' ? 'Geen lopend accountplan.' : 'Geen lopend accountplan binnen dit filter.', items: actueel.value },
+  { id: 'historie', titel: 'Verlopen en afgerond', uitleg: 'De geldigheid is voorbij of het plan is afgesloten. Evalueer het en open een nieuwe periode.', leeg: status.value === 'alle' ? 'Nog niets afgerond of verlopen.' : 'Niets verlopen of afgerond binnen dit filter.', items: historie.value },
+].filter((g) => status.value === 'alle' || g.items.length || (status.value === 'actueel' ? g.id === 'actueel' : g.id === 'historie')))
 // Het venster van een plan staat in de URL (?plan=), zodat terug en vernieuwen werken.
 const planId = computed(() => (typeof route.query.plan === 'string' ? route.query.plan : null))
 function openPlan(id: string | null) { router.replace({ query: { ...route.query, plan: id ?? undefined } }) }
 const nieuwOpen = ref(false)
+async function aangemaakt(id: string) { nieuwOpen.value = false; await refresh(); openPlan(id) }
 useHead({ title: 'Accountplannen · Dealtrace' })
 </script>
 
@@ -29,8 +39,23 @@ useHead({ title: 'Accountplannen · Dealtrace' })
       <PaginaKop :kicker="`Accountplannen · ${data.actueel} actueel`" titel="Eén plan per topprospect, elke stap aanwijsbaar." uitleg="Een topprospect win je niet met losse acties. Met een plan weet je bij elke stap waarom je hem zet. Plannen voor klanten horen in DealDrive." helpartikel="accountplannen">
         <template #acties>
           <button type="button" class="dd-actie dd-actie--primair" data-test="ap-nieuw" @click="nieuwOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Accountplan</button>
+          <button type="button" class="dd-actie dd-actie--secundair" :aria-expanded="filtersOpen" data-test="ap-filters" @click="filtersOpen = !filtersOpen">
+            <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="filterTeller" class="pil-teller pil-teller--geel">{{ filterTeller }}</span>
+          </button>
         </template>
       </PaginaKop>
+
+      <section v-if="filtersOpen" class="section section--filter" data-test="ap-filterpaneel">
+        <div class="container filters">
+          <div class="filter-groep" role="radiogroup" aria-label="Status">
+            <span class="filter-label">Status</span>
+            <button v-for="f in PLAN_FILTERS" :key="f.id" type="button" role="radio" class="filter-pil" :class="{ 'filter-pil--aan': status === f.id }" :aria-checked="status === f.id" :data-test="`ap-filter-${f.id}`" @click="zet({ status: f.id === 'alle' ? undefined : f.id })">{{ f.label }} <span class="tnum">{{ telVoor(f.id) }}</span></button>
+          </div>
+          <div class="filter-groep">
+            <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': alleenMijn }" :aria-pressed="alleenMijn" data-test="ap-filter-mij" @click="zet({ van: alleenMijn ? undefined : 'mij' })">Alleen mijn plannen</button>
+          </div>
+        </div>
+      </section>
 
       <section class="section section--laatste">
         <div class="container">
@@ -73,7 +98,7 @@ useHead({ title: 'Accountplannen · Dealtrace' })
       </section>
 
       <AccountplanFlyout :plan-id="planId" @sluit="openPlan(null)" @gewijzigd="refresh" @verwijderd="openPlan(null); refresh()" />
-      <AccountplanNieuwFlyout :open="nieuwOpen" @sluit="nieuwOpen = false" />
+      <AccountplanNieuwFlyout :open="nieuwOpen" @sluit="nieuwOpen = false" @aangemaakt="aangemaakt" />
     </template>
   </div>
 </template>

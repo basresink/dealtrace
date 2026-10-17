@@ -70,6 +70,9 @@ export interface TerugRij {
   teruggekomen: boolean
 }
 
+/** "ma 2 nov", met het jaar erbij als dat niet het jaar van vandaag is ("di 5 okt 2027"). */
+export const dagKort = (d: string, vandaag: string) => `${terugDagKort(d)}${d.slice(0, 4) !== vandaag.slice(0, 4) ? ` ${d.slice(0, 4)}` : ''}`
+
 const dagNr = (d: string) => Math.round(Date.parse(`${d.slice(0, 10)}T12:00:00Z`) / 864e5)
 /** Dagen van a naar b (b - a). */
 export const dagenTussen = (a: string, b: string) => dagNr(b) - dagNr(a)
@@ -155,20 +158,21 @@ export const opTijdTot = (terugOp: string, inst: WerkdagInstelling = {}) => voeg
 
 /** De uitleg onder de knoppen. */
 export function uitlegVan(r: TerugRij, vandaag: string): string {
+  const K = (d: string) => dagKort(d, vandaag)
   const s = statusVan(r, vandaag)
   const g = r.gestart
   if (s === 'gestart' && g) {
     if (g.elders === 'reeks') return 'Er loopt een opvolgreeks op deze prospect.'
     if (g.elders === 'poging') return 'Na de terugkomdatum is hij al benaderd.'
-    const op = g.eersteOp ? terugDagKort(g.eersteOp) : null
+    const op = g.eersteOp ? K(g.eersteOp) : null
     if (g.soort === 'reeks') return `Reeks ${g.ritmeNaam ?? ''} loopt${op ? `, stap 1 op ${op}` : ''}.`.replace('Reeks  ', 'Reeks ')
     if (g.soort === 'belblok') return `Ingepland in het belblok van ${g.blokLabel ?? op ?? 'de eerstvolgende dag'}.`
     return op ? `Taak staat op ${op} in Taken.` : 'Taak staat in Taken.'
   }
   if (s === 'afkoeling') return magStarten(r, vandaag).reden!
-  if (s === 'gepland') return `Staat op ${terugDagKort(r.terugOp)} vanzelf in Vandaag.`
-  if (s === 'overtijd') return `Sinds ${terugDagKort(r.terugOp)} terug in beeld. Start vandaag, dan telt hij nog als op tijd tot ${terugDagKort(opTijdTot(r.terugOp))}.`
-  return r.terugOp > vandaag ? `Terugkomdatum ${terugDagKort(r.terugOp)}; de afkoeling is voorbij, dus je mag nu al.` : 'Vandaag terug in beeld.'
+  if (s === 'gepland') return `Staat op ${K(r.terugOp)} vanzelf in Vandaag.`
+  if (s === 'overtijd') return `Sinds ${K(r.terugOp)} terug in beeld. Start vandaag, dan telt hij nog als op tijd tot ${K(opTijdTot(r.terugOp))}.`
+  return r.terugOp > vandaag ? `Terugkomdatum ${K(r.terugOp)}; de afkoeling is voorbij, dus je mag nu al.` : 'Vandaag terug in beeld.'
 }
 
 /** De toast na het starten. */

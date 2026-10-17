@@ -257,7 +257,7 @@ export function schoonVoorzet(v: PlanVoorzet, doel: VoorzetDoel): PlanVoorzet {
   const zonder = (t: string) => t.replace(/\s*[\u2013\u2014]\s*/g, ': ').trim()
   return {
     tekst: doel === 'actieplan' ? '' : zonder(String(v.tekst ?? '')).slice(0, 2000),
-    acties: doel === 'actieplan' ? (v.acties ?? []).filter((a) => String(a.titel ?? '').trim().length >= 3).slice(0, 5).map((a) => ({ titel: zonder(a.titel).slice(0, 200), dagen: Math.min(365, Math.max(1, Math.round(Number(a.dagen) || 7))) })) : [],
+    acties: doel === 'actieplan' ? (v.acties ?? []).filter((a) => String(a.titel ?? '').trim().length >= 3).slice(0, 5).map((a) => ({ titel: zonder(a.titel).slice(0, 200), dagen: Math.min(365, Math.max(1, Math.round(Number.isFinite(Number(a.dagen)) ? Number(a.dagen) : 7))) })) : [],
     vragen: (v.vragen ?? []).map((q) => zonder(String(q))).filter(Boolean).slice(0, 3),
   }
 }

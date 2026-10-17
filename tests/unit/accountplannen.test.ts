@@ -1,7 +1,8 @@
 // Accountplannen: weergavestatus (verlopen wordt afgeleid), voortgang, geldigheidslabel, groepering,
 // sortering, de controle van de invoer en de functie in de zijbalk (alleen Expert, groep Planning).
 import { describe, expect, it } from 'vitest'
-import { ACCOUNTPLAN_SECTIES, controleerPlan, dagKort, geldigheidLabel, groepeer, isLeegPlan, sorteerPlannen, voortgang, weergaveStatus } from '../../shared/accountplannen'
+import { ACCOUNTPLAN_SECTIES, INHOUD_BLOKKEN, PLAN_FILTERS, SECTIE_SLEUTELS, VOORZET_DOELEN, afrondVraag, bestaandPlanWaarschuwing, controleerActie, controleerNotitie, controleerPlan, dagKort, filterPlannen, geldigheidLabel, groepeer, isLeegPlan, metHoofdletter, schoonVoorzet, sorteerPlannen, voortgang, weergaveStatus } from '../../shared/accountplannen'
+import { VELD_OBJECTEN } from '../../shared/eigenVelden'
 import { beschikbaar, functie, startindeling } from '../../shared/functies'
 import { zijbalkVoor } from '../../shared/zijbalk'
 import type { FunctieRegel, GebruikerContext, OrganisatieContext } from '../../shared/types'
@@ -62,6 +63,56 @@ describe('controleerPlan', () => {
     expect(controleerPlan({ secties: { swot: 'x' } }, false).fouten).toEqual(['Onbekend blok: swot'])
     expect(controleerPlan({ contactIds: ['a', 'a', 'b'] }, false).patch.contactIds).toEqual(['a', 'b'])
     expect(controleerPlan({ titel: '  Accountplan 2027  ', secties: { evaluatie: null } }, true).patch).toEqual({ titel: 'Accountplan 2027', secties: { evaluatie: '' } })
+  })
+})
+
+describe('aanmaken in één keer (opzet DealDrive)', () => {
+  it('zes stappen dekken elk blok precies één keer; stap 5 is het actieplan', () => {
+    expect(INHOUD_BLOKKEN.map((b) => b.nr)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(INHOUD_BLOKKEN.flatMap((b) => b.velden).sort()).toEqual([...SECTIE_SLEUTELS].sort())
+    expect(INHOUD_BLOKKEN.find((b) => b.nr === 5)!.velden).toEqual([])
+    expect(INHOUD_BLOKKEN.find((b) => b.nr === 3)!.velden).toEqual(['kansen', 'bedreigingen'])
+    expect(ACCOUNTPLAN_SECTIES.map((s) => s.titel).slice(0, 2)).toEqual(['Klantinformatie', 'Doelstellingen (SMART)'])
+    for (const b of INHOUD_BLOKKEN) expect(/[\u2013\u2014]/.test(`${b.titel} ${b.toelichting}`)).toBe(false)
+  })
+  it('acties, eigenaar en eigen velden in de invoer; acties alleen bij aanmaken', () => {
+    expect(controleerActie({ titel: '  Bel de directeur  ', datum: '2027-01-12', contactId: 'c1' })).toEqual({ actie: { titel: 'Bel de directeur', datum: '2027-01-12', contactId: 'c1' }, fout: null })
+    expect(controleerActie({ titel: 'Bel', datum: '' }).actie).toEqual({ titel: 'Bel', datum: null, contactId: null })
+    expect(controleerActie({ titel: 'x' }).fout).toBe('Geef elke actie een titel van minstens 3 tekens')
+    expect(controleerActie({ titel: 'Bellen', datum: '12-01-2027' }).fout).toContain('ongeldig')
+    const c = controleerPlan({ titel: 'Plan 2027', eigenaarId: 'u-07', velden: { budget: 10 }, acties: [{ titel: 'Eerste gesprek' }] }, true)
+    expect(c.fouten).toEqual([])
+    expect(c.patch).toMatchObject({ eigenaarId: 'u-07', velden: { budget: 10 }, acties: [{ titel: 'Eerste gesprek', datum: null, contactId: null }] })
+    expect(controleerPlan({ acties: [] }, false).fouten).toEqual(['Acties voeg je los toe aan een bestaand plan'])
+    expect(controleerPlan({ velden: [] }, false).fouten).toEqual(['Eigen velden zijn ongeldig'])
+    expect(controleerPlan({ eigenaarId: '' }, false).patch).toEqual({})
+  })
+  it('notities, afronden zonder evaluatie, een tweede actueel plan en het label met hoofdletter', () => {
+    expect(controleerNotitie('  Let op de budgetronde  ')).toEqual({ tekst: 'Let op de budgetronde', fout: null })
+    expect(controleerNotitie('  ').fout).toBe('Schrijf eerst een notitie')
+    expect(afrondVraag({ status: 'actueel', secties: {} })).toContain('evaluatie is nog leeg')
+    expect(afrondVraag({ status: 'actueel', secties: { evaluatie: 'Doel gehaald' } })).toBeNull()
+    expect(afrondVraag({ status: 'afgerond', secties: {} })).toBeNull()
+    expect(bestaandPlanWaarschuwing('Testvloer Houten', 0)).toBeNull()
+    expect(bestaandPlanWaarschuwing('Testvloer Houten', 1)).toContain('Testvloer Houten heeft al een actueel accountplan')
+    expect(metHoofdletter(geldigheidLabel({}))).toBe('Geen periode vastgelegd')
+  })
+  it('statusfilter op het overzicht', () => {
+    const lijst = [{ id: 'a', weergave: 'actueel' }, { id: 'b', weergave: 'verlopen' }, { id: 'c', weergave: 'afgerond' }]
+    expect(PLAN_FILTERS.map((f) => f.id)).toEqual(['alle', 'actueel', 'verlopen', 'afgerond'])
+    expect(filterPlannen(lijst, 'alle')).toHaveLength(3)
+    expect(filterPlannen(lijst, 'verlopen').map((p) => p.id)).toEqual(['b'])
+  })
+  it('AI-voorzet: geen gedachtestreepjes, acties alleen voor het actieplan, begrensd', () => {
+    expect(VOORZET_DOELEN).toContain('actieplan')
+    expect(schoonVoorzet({ tekst: 'Groei \u2014 nieuwbouw', acties: [{ titel: 'Bel', dagen: 3 }], vragen: [] }, 'kansen')).toEqual({ tekst: 'Groei: nieuwbouw', acties: [], vragen: [] })
+    const a = schoonVoorzet({ tekst: 'x', acties: [{ titel: 'Plan het gesprek', dagen: 0 }, { titel: 'ab', dagen: 4 }, { titel: 'Stuur samenvatting', dagen: 900 }], vragen: ['Wie beslist?', '', 'a', 'b', 'c'] }, 'actieplan')
+    expect(a.tekst).toBe('')
+    expect(a.acties).toEqual([{ titel: 'Plan het gesprek', dagen: 1 }, { titel: 'Stuur samenvatting', dagen: 365 }])
+    expect(a.vragen).toHaveLength(3)
+  })
+  it('eigen velden kennen het object accountplan', () => {
+    expect(VELD_OBJECTEN).toContain('accountplan')
   })
 })
 

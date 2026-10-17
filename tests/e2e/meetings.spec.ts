@@ -109,7 +109,7 @@ test.describe('meetings', () => {
     await expect(page).toHaveURL(/\/agenda\?weergave=dag&datum=\d{4}-\d{2}-\d{2}/)
   })
 
-  test('belprioriteit als kaarten naast de meetings; een klik opent de beltaak (1280 en 390)', async ({ page }) => {
+  test('belprioriteit als kaarten onder de meetings; een klik opent de beltaak (1280 en 390)', async ({ page }) => {
     for (const breedte of [1280, 390]) {
       await page.setViewportSize({ width: breedte, height: breedte < 500 ? 844 : 900 })
       await login(page, 'u-07')

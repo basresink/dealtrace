@@ -2,7 +2,7 @@
 titel: Abonnement, verbruik en AI-credits
 categorie: Inrichten
 collectie: product
-samenvatting: Je pakket, facturen, de pot met AI-credits, wat een handeling kost, plafonds, extra credits en eigen prompts.
+samenvatting: Je pakket, factuurgegevens, facturen, de pot met AI-credits, wat een handeling kost, plafonds, extra credits en eigen prompts.
 routes: /instellingen/abonnement,/instellingen/verbruik,/instellingen/prompts
 ---
 
@@ -12,7 +12,9 @@ routes: /instellingen/abonnement,/instellingen/verbruik,/instellingen/prompts
 
 Onder **Instellingen, Abonnement** zie je je pakket in gewone woorden, hoeveel seats in gebruik zijn, je AI-credits per gebruiker per maand en je contract. Met **Upgrade aanvragen** vraag je een hoger pakket aan; Dealtrace neemt contact met je op.
 
-Bij **Facturen** staan je facturen met hun status. Een open factuur betaal je met **Betaal**; een betaalde download je als pdf. Staat een factuur te lang open, dan pauzeert Dealtrace de AI: je ziet **AI gepauzeerd**. Al het andere werk gaat gewoon door. Zodra de factuur betaald is, werkt de AI weer.
+Bij **Factuurgegevens** vul je in op welke naam en welk adres Dealtrace factureert: naam, straat en huisnummer, postcode en plaats, KvK-nummer, btw-nummer en het e-mailadres waar de facturen heen gaan. Dealtrace controleert elk veld; klopt er iets niet, dan staat onder het veld wat er mis is. Pas met **Bewaar factuurgegevens** worden ze bewaard.
+
+Bij **Facturen** staan je facturen met datum, bedrag en status. Elke factuur download je met **Pdf**. Betalen gaat via de betaallink in de mail van Dealtrace; een betaalknop in Dealtrace zelf komt later. Staat een factuur te lang open, dan pauzeert Dealtrace de AI: je ziet **AI gepauzeerd**. Al het andere werk gaat gewoon door. Zodra de factuur betaald is, werkt de AI weer.
 
 Alle AI in Dealtrace rekent in AI-credits: de AI-assistent, belscripts, de leadgenerator, dossiers en de agents. Je organisatie heeft één pot per maand. De pot is het aantal credits per gebruiker van jullie pakket maal het aantal actieve gebruikers (Starter 200, Plus 600, Compleet 1.500). Komt er in de maand iemand bij, dan groeit de pot mee. Credits die over zijn, vervallen aan het eind van de maand.
 
