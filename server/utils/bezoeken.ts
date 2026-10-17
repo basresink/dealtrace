@@ -86,11 +86,11 @@ export async function laadKandidaten(tx: Tx, ik: string, dag: string, regioVanDa
   const klaar = await rijen(tx, sql`select k.account_id, k.reden, k.datum, k.regio_id, u.name as van_naam, u.werkplek from klaargezet_voor k join users u on u.id = k.van_gebruiker where k.voor_gebruiker = ${ik} and k.status = 'open'`)
   const signalen = await rijen(tx, sql`select account_id, title, relevance_score, created_at from signals where account_id is not null and status in ('nieuw', 'gelezen') and created_at > ${new Date(nu.getTime() - 30 * 864e5).toISOString()} and relevance_score >= 60`)
   const bezoeken = await rijen(tx, sql`select account_id, max(op) as op from activiteiten where (soort in ('afspraak', 'bezoek') and kanaal = 'bezoek') or soort = 'bezoek' group by 1`)
-  const contacten = await rijen(tx, sql`select distinct on (account_id) account_id, first_name, last_name, rol from contacts where status <> 'vertrokken' order by account_id, (rol = 'beslisser') desc, (rol = 'champion') desc, last_name`)
+  const contacten = await rijen(tx, sql`select distinct on (account_id) id, account_id, first_name, last_name, rol from contacts where status <> 'vertrokken' order by account_id, (rol = 'beslisser') desc, (rol = 'champion') desc, last_name`)
   const klassen = (await instelling<Klasse[]>(tx, 'klassen')) ?? []
   const matrix = leesMatrix(await instelling(tx, 'afspraakmatrix'), AFSPRAAKMATRIX_STANDAARD).matrix
   const laatsteBezoek = new Map(bezoeken.map((b) => [b.account_id, Date.parse(iso(b.op)!)]))
-  const contact = new Map(contacten.map((c) => [c.account_id, { naam: [c.first_name, c.last_name].filter(Boolean).join(' '), rol: c.rol }]))
+  const contact = new Map(contacten.map((c) => [c.account_id, { id: c.id as string, naam: [c.first_name, c.last_name].filter(Boolean).join(' '), rol: c.rol }]))
   const per = new Map<string, KansBron[]>()
   const voeg = (id: string, b: KansBron) => per.set(id, [...(per.get(id) ?? []), b])
   const taakVan = new Map<string, string>()

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Bezoeken (F10) in de opzet van DealDrive: kop met werkbalk (Zoeken, + Afspraak, Filters en Analyse naar de bezoekanalyse),
+// Bezoeken (F10) in de opzet van DealDrive: kop met werkbalk (Zoeken, + Afspraak, Analyse naar de bezoekanalyse en Filters),
 // een uitklapbaar filterpaneel (periode en de kansfilters), je week met regiodagen, de kaart met
 // legenda naast de routelijst per dag (de datum is een link naar de agenda op die dag) en de zwarte statistiekstrook,
 // dan de kansen langs de route, de bellijst (Top 5 of Top 10) en de te plannen bezoeken als kaarten: een klik opent de
@@ -75,13 +75,13 @@ const stat = computed(() => {
 })
 
 // Flyouts
-const plan = reactive({ open: false, account: null as null | { id: string; naam: string }, taskId: null as string | null, aanleiding: '', voorstel: null as any })
-function nieuweAfspraak() { Object.assign(plan, { open: true, account: null, taskId: null, aanleiding: '', voorstel: { vorm: 'bezoek', datum: data.value?.dag } }) }
+const plan = reactive({ open: false, account: null as null | { id: string; naam: string }, taskId: null as string | null, contactId: null as string | null, aanleiding: '', voorstel: null as any })
+function nieuweAfspraak() { Object.assign(plan, { open: true, account: null, taskId: null, contactId: null, aanleiding: '', voorstel: { vorm: 'bezoek', datum: data.value?.dag } }) }
 function tussenstop(k: any) {
   const start = k.momentStart ? tijd(k.momentStart).replace(/:(\d)\d$/, (_m: string, t: string) => `:${Number(t) >= 3 ? '30' : '00'}`) : undefined
-  Object.assign(plan, { open: true, account: { id: k.id, naam: k.naam }, taskId: k.taakId ?? null, aanleiding: k.bronnen[0]?.label ?? '', voorstel: { datum: data.value.dag, start, duurMin: 30, vorm: 'bezoek', soort: 'kennismaking' } })
+  Object.assign(plan, { open: true, account: { id: k.id, naam: k.naam }, taskId: k.taakId ?? null, contactId: k.contact?.id ?? null, aanleiding: k.bronnen[0]?.label ?? '', voorstel: { datum: data.value.dag, start, duurMin: 30, vorm: 'bezoek', soort: 'kennismaking' } })
 }
-function planBezoek(t: any) { Object.assign(plan, { open: true, account: t.accountId ? { id: t.accountId, naam: t.accountNaam } : null, taskId: t.id, aanleiding: t.titel, voorstel: { vorm: 'bezoek', soort: 'inventarisatie' } }) }
+function planBezoek(t: any) { Object.assign(plan, { open: true, account: t.accountId ? { id: t.accountId, naam: t.accountNaam } : null, taskId: t.id, contactId: null, aanleiding: t.titel, voorstel: { vorm: 'bezoek', soort: 'inventarisatie' } }) }
 async function gepland() { plan.open = false; await refresh() }
 const afspraak = ref<string | null>(null)
 const overslaan = ref<any>(null)
@@ -89,8 +89,18 @@ const reden = ref('')
 async function slaOver() {
   try { await $fetch(`/api/kansen/${overslaan.value.id}/overslaan`, { method: 'POST', body: { reden: reden.value } }); toast.toon(`${overslaan.value.naam} komt 7 dagen niet terug.`); overslaan.value = null; reden.value = ''; await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
-async function inloop(k: any) {
-  try { const r: any = await $fetch('/api/afspraken/inloop', { method: 'POST', body: { accountId: k.id } }); toast.toon(r.tekst); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+// Inloopbezoek: + Afspraak met de prospect, de dag en het moment langs de route, als ongepland bezoek.
+function inloop(k: any) {
+  const start = k.momentStart ? tijd(k.momentStart).replace(/:(\d)\d$/, (_m: string, t: string) => `:${Number(t) >= 3 ? '30' : '00'}`) : undefined
+  Object.assign(plan, { open: true, account: { id: k.id, naam: k.naam }, taskId: k.taakId ?? null, contactId: k.contact?.id ?? null, aanleiding: `Inloopbezoek langs de route${k.bronnen[0]?.label ? `: ${k.bronnen[0].label}` : ''}`, voorstel: { datum: data.value.dag, start, duurMin: 30, vorm: 'bezoek', soort: 'ongepland-bezoek' } })
+}
+// Eerst bellen: + Taak van het type Bellen met de prospect en het hoofdcontact al ingevuld.
+const belTaak = ref<null | { account: { id: string; naam: string }; contact: { id: string; naam: string } | null; titel: string; aanleiding: string }>(null)
+function eerstBellen(k: any) {
+  belTaak.value = {
+    account: { id: k.id, naam: k.naam }, contact: k.contact?.id ? { id: k.contact.id, naam: k.contact.naam } : null,
+    titel: `Bellen voor bezoek · ${k.naam}`, aanleiding: `Kans langs de route${k.bronnen[0]?.label ? `: ${k.bronnen[0].label}` : ''}`,
+  }
 }
 const bronnen = (k: any) => [...new Set<string>(k.bronnen.map((b: any) => b.label))]
 const opbouw = (k: any) => k.opbouw.map((o: any) => `${o.label} ${o.punten >= 0 ? '+' : ''}${o.punten}`).join(' · ')
@@ -104,10 +114,10 @@ useHead({ title: 'Bezoeken · Dealtrace' })
     <PaginaKop :kicker="kicker" :titel="titel" uitleg="Bezoeken op de kaart en op tijd gesorteerd. Het volgende bezoek pulseert rood; kansen langs je route neem je onderweg mee." helpartikel="bezoeken-en-kansen-langs-de-route">
       <template #acties>
         <button type="button" class="dd-actie dd-actie--zwart" data-test="plus-bezoek" @click="nieuweAfspraak"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+        <NuxtLink v-if="data?.kan.analyse" to="/bezoek-analyse" class="dd-actie dd-actie--secundair" data-test="bezoekanalyse-knop"><Icoon naam="ChartLine" class="dd-actie-icoon" />Analyse</NuxtLink>
         <button v-if="heeftFilters" type="button" class="dd-actie dd-actie--secundair" :class="{ 'bz-toggle--aan': filtersOpen || filterTeller }" :aria-expanded="filtersOpen" data-test="bz-filters" @click="filtersOpen = !filtersOpen">
           <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="filterTeller" class="pil-teller pil-teller--geel">{{ filterTeller }}</span><Icoon naam="ChevronDown" :grootte="14" class="bz-caret" :class="{ 'bz-caret--open': filtersOpen }" />
         </button>
-        <NuxtLink v-if="data?.kan.analyse" to="/bezoek-analyse" class="dd-actie dd-actie--secundair" data-test="bezoekanalyse-knop"><Icoon naam="ChartLine" class="dd-actie-icoon" />Analyse</NuxtLink>
       </template>
     </PaginaKop>
 
@@ -190,7 +200,7 @@ useHead({ title: 'Bezoeken · Dealtrace' })
             </div>
             <div class="bz-kn-acties">
               <button type="button" class="dd-act dd-act--primair" :data-test="`tussenstop-${k.id}`" @click="tussenstop(k)"><Icoon naam="Plus" />Tussenstop</button>
-              <NuxtLink v-if="data.kan.kansenAlle" class="dd-act" :to="`/accounts/${k.id}?bel=1`"><Icoon naam="Phone" />Eerst bellen</NuxtLink>
+              <button v-if="data.kan.kansenAlle" type="button" class="dd-act" :data-test="`eerst-bellen-${k.id}`" @click="eerstBellen(k)"><Icoon naam="Phone" />Eerst bellen</button>
               <button v-if="data.kan.inloop" type="button" class="dd-act" :data-test="`inloop-${k.id}`" @click="inloop(k)">Inloopbezoek</button>
               <a class="dd-act" :href="kaartLink({ punt: k.punt }, app) ?? undefined" target="_blank" rel="noopener"><Icoon naam="Navigation" />Navigeer</a>
               <button type="button" class="dd-act" :data-test="`overslaan-${k.id}`" @click="overslaan = k">Overslaan</button>
@@ -228,7 +238,8 @@ useHead({ title: 'Bezoeken · Dealtrace' })
       </div>
     </section>
 
-    <PlanAfspraakFlyout :open="plan.open" :account="plan.account" :task-id="plan.taskId" :aanleiding="plan.aanleiding" :voorstel="plan.voorstel" @sluit="plan.open = false" @gepland="gepland" />
+    <PlanAfspraakFlyout :open="plan.open" :account="plan.account" :task-id="plan.taskId" :contact-id="plan.contactId" :aanleiding="plan.aanleiding" :voorstel="plan.voorstel" @sluit="plan.open = false" @gepland="gepland" />
+    <NieuweTaakFlyout :open="!!belTaak" :account="belTaak?.account ?? null" :contact="belTaak?.contact ?? null" actiesoort="bellen" :titel="belTaak?.titel" :aanleiding="belTaak?.aanleiding" @sluit="belTaak = null" @gemaakt="belTaak = null; refresh()" />
     <AfspraakFlyout :open="!!afspraak" :afspraak-id="afspraak" @sluit="afspraak = null" @gewijzigd="refresh()" />
     <TaakFlyout :open="!!taak" :taak-id="taak" @sluit="taak = null" @klaar="taak = null; refresh()" @gewijzigd="refresh()" />
     <FlyoutShell v-if="overslaan" open titel-id="os-titel" breedte="smal" @sluit="overslaan = null">

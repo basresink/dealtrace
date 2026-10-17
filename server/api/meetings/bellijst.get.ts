@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
     const lijst = bellijstNaastBezoeken(bouwBellijst(await laadBelKandidaten(tx, ctx.gebruiker.id), new Date(), { top: 30 }), new Set(rijen.map((r) => r.account_id)), 10)
     return {
       kan: true,
-      bellijst: lijst.map((k) => ({ accountId: k.accountId, accountNaam: k.accountNaam, contactNaam: k.contactNaam ?? null, telefoon: k.telefoon ?? null, taskId: k.taskId ?? null, reden: k.reden, score: k.score, openTaken: k.openTaken ?? 0, heet: !!k.heet })),
+      bellijst: lijst.map((k) => ({ accountId: k.accountId, accountNaam: k.accountNaam, contactId: k.contactId ?? null, contactNaam: k.contactNaam ?? null, telefoon: k.telefoon ?? null, taskId: k.taskId ?? null, reden: k.reden, score: k.score, openTaken: k.openTaken ?? 0, heet: !!k.heet })),
     }
   })
 })

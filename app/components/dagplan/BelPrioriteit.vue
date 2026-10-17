@@ -1,12 +1,25 @@
 <script setup lang="ts">
 // Belprioriteit op Bezoeken en Meetings: de bellijst van vandaag (zelfde rangorde als Belblokken, zonder wie
 // je die dag al bezoekt of spreekt) als kaarten in een raster, Top 5 of Top 10. Een klik op een kaart opent de
-// beltaak in het taakvenster; een kandidaat zonder open taak opent de accountkaart. Geen belknop per kaart:
-// het nummer staat als link op de kaart.
+// beltaak in het taakvenster; een kandidaat zonder open beltaak krijgt eerst een beltaak (POST /api/tasks,
+// eigenaar jij, aanleiding de bellijst) en die opent dan. Geen belknop per kaart: het nummer staat als link op de kaart.
 const props = withDefaults(defineProps<{ lijst: any[]; kan: boolean; sleutel?: string; titel?: string; uitleg?: string; smal?: boolean }>(), {
   sleutel: 'bezoeken.bellijst', titel: 'Bel-prioriteit naast je bezoeken', uitleg: '', smal: false,
 })
-const emit = defineEmits<{ taak: [id: string] }>()
+const emit = defineEmits<{ taak: [id: string]; gemaakt: [] }>()
+const toast = useToast()
+const bezig = ref<string | null>(null)
+async function open(b: any) {
+  if (b.taskId) { emit('taak', b.taskId); return }
+  if (bezig.value) return
+  bezig.value = b.accountId
+  try {
+    const t = await $fetch<{ id: string }>('/api/tasks', { method: 'POST', body: { title: `Bellen: ${b.accountNaam}`, actionType: 'bellen', accountId: b.accountId, contactId: b.contactId ?? undefined, aanleiding: `Uit de bellijst van vandaag: ${b.reden}` } })
+    b.taskId = t.id
+    emit('gemaakt')
+    emit('taak', t.id)
+  } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = null }
+}
 const top = ref<5 | 10>(5)
 const zichtbaar = computed(() => props.lijst.slice(0, top.value))
 </script>
@@ -29,8 +42,7 @@ const zichtbaar = computed(() => props.lijst.slice(0, top.value))
       <DagKaart v-for="(b, i) in zichtbaar" :key="b.accountId" tag="li" :data-test="`bel-kaart-${b.accountId}`">
         <div class="dp-kaart-kop">
           <span class="bp-rang tnum">{{ Number(i) + 1 }}</span>
-          <button v-if="b.taskId" type="button" class="dp-kaart-titel" :data-test="`bel-open-${b.accountId}`" @click="emit('taak', b.taskId)">{{ b.accountNaam }}</button>
-          <NuxtLink v-else :to="`/accounts/${b.accountId}`" class="dp-kaart-titel" :data-test="`bel-open-${b.accountId}`">{{ b.accountNaam }}</NuxtLink>
+          <button type="button" class="dp-kaart-titel" :disabled="bezig === b.accountId" :data-test="`bel-open-${b.accountId}`" @click="open(b)">{{ b.accountNaam }}</button>
         </div>
         <p class="dp-kaart-tekst">{{ b.reden }}</p>
         <p v-if="b.contactNaam" class="bp-contact">{{ b.contactNaam }}<template v-if="b.telefoon"> · <a :href="`tel:${b.telefoon}`" class="dp-kaart-link tnum">{{ b.telefoon }}</a></template></p>

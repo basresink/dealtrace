@@ -106,6 +106,22 @@ function toets(e: KeyboardEvent) {
   else if (!e.shiftKey && actief === laatste) { e.preventDefault(); eerste.focus() }
 }
 
+// Vangnet voor de focus: komt de focus toch buiten de bovenste flyout (een veld dat de Tab-lijst mist,
+// de adresbalk), dan gaat hij terug naar het venster.
+function focusBinnen(e: FocusEvent) {
+  if (!props.open || !paneel.value || !overlay.value || bovenste() !== overlay.value) return
+  const doel = e.target as Node | null
+  if (doel && !overlay.value.contains(doel)) paneel.value.focus()
+}
+
+// Verdwijnt het veld met de focus (een keuzelijst die sluit), dan blijft de focus in het venster.
+function focusWeg() {
+  setTimeout(() => {
+    if (!props.open || !paneel.value || !overlay.value || bovenste() !== overlay.value) return
+    if (!document.activeElement || document.activeElement === document.body) paneel.value.focus()
+  }, 0)
+}
+
 watch(() => props.open, async (o) => {
   if (!import.meta.client) return
   if (o) {
@@ -123,8 +139,8 @@ function herstelFocus() {
   terug = null
   if (t && t.isConnected && typeof t.focus === 'function') nextTick(() => { if (!document.querySelector('.fo-overlay [role="dialog"]:focus-within')) t.focus() })
 }
-onMounted(() => document.addEventListener('keydown', toets))
-onBeforeUnmount(() => { document.removeEventListener('keydown', toets); if (props.open) herstelFocus() })
+onMounted(() => { document.addEventListener('keydown', toets); document.addEventListener('focusin', focusBinnen) })
+onBeforeUnmount(() => { document.removeEventListener('keydown', toets); document.removeEventListener('focusin', focusBinnen); if (props.open) herstelFocus() })
 defineExpose({ vraagSluiten })
 </script>
 
@@ -135,7 +151,7 @@ defineExpose({ vraagSluiten })
         ref="paneel" v-bind="$attrs" class="fo-panel fo-panel--schuif fs-paneel"
         :class="[{ 'fo-panel--smal': breedte === 'smal', 'fo-panel--breed': breedte === 'breed', 'fo-panel--analyse': breedte === 'analyse', 'fo-panel--vol': breedte === 'vol', 'fo-panel--hulp': breedte === 'hulp', 'fo-panel--editor': breedte === 'editor' }, paneelKlasse]"
         role="dialog" aria-modal="true" :aria-labelledby="kopId" tabindex="-1"
-        @pointerdown.capture="opslag?.interactie()" @keydown.capture="opslag?.interactie()" @input.capture="opslag?.interactie()"
+        @focusout="focusWeg" @pointerdown.capture="opslag?.interactie()" @keydown.capture="opslag?.interactie()" @input.capture="opslag?.interactie()"
       >
         <header class="fo-head fs-kop">
           <div class="fo-head-tekst fs-kop-tekst">

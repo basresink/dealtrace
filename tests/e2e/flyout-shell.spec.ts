@@ -68,8 +68,10 @@ test.describe('flyoutstandaard', () => {
     await expect(fly).toBeVisible()
     await expect(page.getByRole('dialog', { name: 'Wat moet er gebeuren?' })).toBeVisible()
     await expect.poll(() => fly.evaluate((el) => el.contains(document.activeElement))).toBe(true)
-    for (let i = 0; i < 40; i++) await page.keyboard.press('Tab')
-    expect(await fly.evaluate((el) => el.contains(document.activeElement))).toBe(true)
+    for (let i = 0; i < 40; i++) {
+      await page.keyboard.press('Tab')
+      await expect.poll(() => fly.evaluate((el) => el.contains(document.activeElement))).toBe(true)
+    }
     await page.keyboard.press('Escape')
     await expect(fly).toHaveCount(0)
     await expect(knop).toBeFocused()

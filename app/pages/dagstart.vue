@@ -118,8 +118,8 @@ useHead({ title: 'Dagstart · Dealtrace' })
         <template #titel><h1 class="title title--groot" data-test="ds-titel">{{ d.titel }}</h1></template>
         <template #uitleg><p class="subtitle subtitle--groot" data-test="ds-lede">{{ d.lede }}</p></template>
         <template #acties>
-          <span class="pil pil--grijs ds-werkplek" data-test="ds-werkplek">{{ d.modus === 'buiten' ? 'Buitendienst' : 'Binnendienst' }} · je werkplek</span>
           <NuxtLink to="/agenda" class="dd-actie dd-actie--secundair"><Icoon naam="Calendar" class="dd-actie-icoon" />Agenda</NuxtLink>
+          <span class="ds-werkplek-rij"><span class="pil pil--grijs ds-werkplek" data-test="ds-werkplek">{{ d.modus === 'buiten' ? 'Buitendienst' : 'Binnendienst' }} · je werkplek</span></span>
         </template>
       </PaginaKop>
 
@@ -277,7 +277,9 @@ useHead({ title: 'Dagstart · Dealtrace' })
 .ds-wijziging-kop { margin: 0 0 2px; font-size: 12px; font-weight: 700; color: var(--muted); font-feature-settings: 'tnum'; }
 .ds-links { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
 .ds-links a { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; }
-.ds-werkplek { align-self: center; }
+/* De werkplek staat op een eigen regel onder de knoppen in de kop (rechts uitgelijnd, op de telefoon links). */
+.ds-werkplek-rij { flex-basis: 100%; display: flex; justify-content: flex-start; }
+@media (min-width: 720px) { .ds-werkplek-rij { justify-content: flex-end; } }
 .ds-items { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
 .ds-item { align-items: start; grid-template-columns: auto auto minmax(0, 1fr); }
 .ds-item .item-body { min-width: 0; }

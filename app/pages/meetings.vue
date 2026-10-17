@@ -3,10 +3,10 @@
 // zijn (online meetings, belafspraken en intern overleg); bezoeken staan op /bezoeken. Zelfde opzet als
 // Bezoeken: de rij dagkaarten (ma tot vr met het aantal meetings, Hele week, pijlen per week; ?datum= en
 // ?weergave=week), het blok van de gekozen dag met de meetings als kaarten (de datum is een link naar de
-// agenda op die dag, een klik opent het afspraakvenster) en daarnaast de belprioriteit (BelPrioriteit,
-// een klik opent de beltaak). Een uitklapbare filterstrook (soort en vorm, in de URL), en
-// daaronder de Meetinglijst "Wie is er aan de beurt?" (vanaf Gevorderd) met per account de reden,
-// een uitleg, het advies en een planknop die het afspraakvenster opent met account en vorm.
+// agenda op die dag, een klik opent het afspraakvenster), daaronder over de hele breedte de belprioriteit
+// (BelPrioriteit, een klik opent de beltaak of maakt die eerst). Een uitklapbare filterstrook (soort en vorm,
+// in de URL), en onderaan de Meetinglijst "Wie is er aan de beurt?" (vanaf Gevorderd) als kaarten met per
+// account de reden, een uitleg, het advies en een planknop die het afspraakvenster opent met account en vorm.
 import { nlMoment, plusDagen } from '~~/shared/datum'
 import { duurLabel } from '~~/shared/route'
 const { functie } = useMe()
@@ -67,8 +67,8 @@ const zonderFilter = computed(() => inWeek.value.filter((m: any) => week.value |
 const minuten = (m: any) => Math.max(0, Math.round((Date.parse(m.eind) - Date.parse(m.start)) / 60000))
 const dagMeta = (items: any[]) => `${items.length} ${items.length === 1 ? 'meeting' : 'meetings'} · ${duurLabel(items.reduce((s, m) => s + minuten(m), 0))}`
 
-// Belprioriteit naast de meetings: de bellijst van vandaag zonder wie je die dag al spreekt.
-const { data: bel } = await useFetch<any>('/api/meetings/bellijst', { query: computed(() => ({ datum: datum.value })), default: () => ({ kan: false, bellijst: [] }) })
+// Belprioriteit onder de meetings: de bellijst van vandaag zonder wie je die dag al spreekt.
+const { data: bel, refresh: belVernieuw } = await useFetch<any>('/api/meetings/bellijst', { query: computed(() => ({ datum: datum.value })), default: () => ({ kan: false, bellijst: [] }) })
 const taak = ref<string | null>(null)
 /** De eerstvolgende meeting krijgt de gele rand (na het laden, zodat server en browser gelijk tekenen). */
 const nu = ref<number | null>(null)
@@ -109,10 +109,10 @@ useHead({ title: 'Meetings · Dealtrace' })
       <template #uitleg><p class="subtitle subtitle--groot">Online meetings, belafspraken en intern overleg rond je prospects. Voor bezoeken op locatie is er <NuxtLink to="/bezoeken" class="mt-sublink" data-test="meetings-bezoeken">Bezoeken</NuxtLink>.</p></template>
       <template #acties>
         <button type="button" class="dd-actie dd-actie--zwart" data-test="meetings-afspraak" @click="plan()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+        <NuxtLink v-if="analyseAan" to="/meeting-analyse" class="dd-actie dd-actie--secundair" data-test="meetings-analyse"><Icoon naam="ChartLine" class="dd-actie-icoon" />Analyse</NuxtLink>
         <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'mt-filterknop--aan': filtersOpen || filterAantal }" :aria-expanded="filtersOpen" data-test="meetings-filterknop" @click="filtersOpen = !filtersOpen">
           <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="filterAantal" class="mt-teller">{{ filterAantal }}</span><Icoon naam="ChevronDown" class="mt-caret" :class="{ 'mt-caret--open': filtersOpen }" />
         </button>
-        <NuxtLink v-if="analyseAan" to="/meeting-analyse" class="dd-actie dd-actie--secundair" data-test="meetings-analyse"><Icoon naam="ChartLine" class="dd-actie-icoon" />Analyse</NuxtLink>
       </template>
     </PaginaKop>
 
@@ -137,8 +137,7 @@ useHead({ title: 'Meetings · Dealtrace' })
           :dagen="dagKaarten" :actief="datum" :week="week" :week-sub="`${weekMeetings.length} ${weekMeetings.length === 1 ? 'meeting' : 'meetings'}`" :vandaag="vandaag"
           @dag="zetDag({ datum: $event === vandaag ? undefined : $event, weergave: undefined })" @week="zetDag({ weergave: week ? undefined : 'week' })" @stap="naarWeek"
         />
-        <div class="mt-grid">
-          <div class="mt-dagkant" data-test="meetings-dag">
+        <div class="mt-dagkant" data-test="meetings-dag">
             <div v-if="!getoond && (soort || vorm)" class="mt-leeg mt-blok" data-test="meetings-leeg-filter">
               <span class="mt-leeg-kicker">NIETS BINNEN DIT FILTER</span>
               <h2 class="mt-leeg-titel">Geen meetings binnen dit filter.</h2>
@@ -175,15 +174,17 @@ useHead({ title: 'Meetings · Dealtrace' })
               </div>
             </div>
             </template>
-          </div>
-          <div class="mt-belkant" data-test="meetings-bellijst">
-            <BelPrioriteit :lijst="bel.bellijst" :kan="bel.kan" titel="Bel-prioriteit naast je meetings" uitleg="Dezelfde lijst als op Belblokken, zonder wie je die dag al spreekt." smal @taak="taak = $event" />
-          </div>
         </div>
       </div>
     </section>
 
-    <section v-if="aanDeBeurtAan" class="section section--laatste" data-test="aan-de-beurt">
+    <section class="section">
+      <div class="container" data-test="meetings-bellijst">
+        <BelPrioriteit :lijst="bel.bellijst" :kan="bel.kan" titel="Bel-prioriteit naast je meetings" uitleg="Dezelfde lijst als op Belblokken, zonder wie je die dag al spreekt. Een klik opent de beltaak; is die er nog niet, dan maakt Dealtrace hem eerst." @taak="taak = $event" />
+      </div>
+    </section>
+
+    <section v-if="aanDeBeurtAan" class="section section--alt section--laatste" data-test="aan-de-beurt">
       <div class="container">
         <header class="mt-plan-kop">
           <div>
@@ -194,21 +195,21 @@ useHead({ title: 'Meetings · Dealtrace' })
         </header>
         <p v-if="beurt && !beurt.voorstellen.length" class="mt-leeg-tekst" data-test="beurt-leeg">Niemand loopt achter op zijn ritme en er wacht geen vervolg op een gesprek. Zo hoort het.</p>
         <ol v-else-if="beurt" class="mt-plan-lijst">
-          <li v-for="v in beurt.voorstellen" :key="v.accountId" class="mt-plan-rij" :data-test="`beurt-${v.accountId}`">
-            <div class="mt-plan-info">
-              <NuxtLink :to="`/accounts/${v.accountId}`" class="mt-plan-naam">{{ v.naam }} · {{ v.reden }}</NuxtLink>
-              <p class="mt-plan-reden">{{ v.uitleg }}</p>
-              <div><span class="pil pil--geel" :data-test="`beurt-advies-${v.accountId}`">{{ v.adviesLabel }}</span></div>
+          <DagKaart v-for="v in beurt.voorstellen" :key="v.accountId" tag="li" class="mt-plan-kaart" :data-test="`beurt-${v.accountId}`">
+            <div class="dp-kaart-kop"><NuxtLink :to="`/accounts/${v.accountId}`" class="dp-kaart-titel mt-plan-naam">{{ v.naam }} · {{ v.reden }}</NuxtLink></div>
+            <p class="dp-kaart-tekst">{{ v.uitleg }}</p>
+            <span class="dp-kaart-pillen"><span class="pil pil--geel" :data-test="`beurt-advies-${v.accountId}`">{{ v.adviesLabel }}</span></span>
+            <div class="dp-kaart-acties">
+              <NuxtLink v-if="v.advies === 'belblok'" to="/belblokken" class="dd-act" :data-test="`beurt-plan-${v.accountId}`">Naar belblok</NuxtLink>
+              <button v-else type="button" class="dd-act" :data-test="`beurt-plan-${v.accountId}`" @click="planBeurt(v)">{{ (PLAN[v.advies] ?? PLAN.belafspraak!).knop }}</button>
             </div>
-            <NuxtLink v-if="v.advies === 'belblok'" to="/belblokken" class="dd-act mt-plan-knop" :data-test="`beurt-plan-${v.accountId}`">Naar belblok</NuxtLink>
-            <button v-else type="button" class="dd-act mt-plan-knop" :data-test="`beurt-plan-${v.accountId}`" @click="planBeurt(v)">{{ (PLAN[v.advies] ?? PLAN.belafspraak!).knop }}</button>
-          </li>
+          </DagKaart>
         </ol>
       </div>
     </section>
     <PlanAfspraakFlyout :open="planOpen" :account="planAccount" :voorstel="planVoorstel" :aanleiding="planAanleiding" @sluit="planOpen = false" @gepland="gepland" />
     <AfspraakFlyout :open="!!afspraakId" :afspraak-id="afspraakId" @sluit="zet('afspraak', '')" @gewijzigd="refresh()" />
-    <TaakFlyout :open="!!taak" :taak-id="taak" @sluit="taak = null" @klaar="taak = null" />
+    <TaakFlyout :open="!!taak" :taak-id="taak" @sluit="taak = null" @klaar="taak = null; belVernieuw()" @gewijzigd="belVernieuw()" />
   </div>
 </template>
 
@@ -223,8 +224,6 @@ useHead({ title: 'Meetings · Dealtrace' })
 .mt-filtergroep { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .mt-filterlabel { font-size: var(--fs-label); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 
-.mt-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
-@media (min-width: 1000px) { .mt-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 32px; align-items: start; } }
 .mt-dagkant { display: grid; gap: 12px; min-width: 0; }
 .mt-blok { background: var(--wit); border: 1px solid var(--border); }
 .mt-leeg { display: grid; justify-items: start; gap: 10px; padding: 24px; }
@@ -232,7 +231,7 @@ useHead({ title: 'Meetings · Dealtrace' })
 .mt-leeg-titel { margin: 0; font-family: var(--font-serif); font-size: 22px; font-weight: 700; }
 .mt-leeg-tekst { margin: 0; font-size: 14px; line-height: 1.6; color: var(--ink-soft); }
 .mt-dag-leeg { margin: 0; padding: 32px 24px; text-align: center; font-size: var(--fs-body); font-style: italic; color: var(--muted); }
-.mt-kaarten { display: grid; gap: 8px; padding: 12px; }
+.mt-kaarten { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 8px; padding: 12px; }
 .mt-kaart { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; padding: 13px 14px; }
 .mt-kaart:hover { background: var(--surface); }
 .mt-kaart--nu { border-color: var(--ink); border-left: 3px solid var(--yellow); }
@@ -256,18 +255,12 @@ button.mt-link { padding: 0; background: none; border: 0; cursor: pointer; font-
 .mt-plan-kop { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px 24px; margin-bottom: 16px; }
 .mt-plan-titel { margin: 4px 0 0; font-family: var(--font-serif); font-size: 22px; font-weight: 700; }
 .mt-plan-sub { margin: 6px 0 0; max-width: 620px; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
-.mt-plan-lijst { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.mt-plan-rij { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; background: var(--wit); border: 1px solid var(--border); border-left: 3px solid var(--green); }
-.mt-plan-info { display: grid; gap: 4px; min-width: 0; }
-.mt-plan-naam { font-family: var(--font-serif); font-size: 15px; font-weight: 700; color: var(--ink); text-decoration: none; overflow-wrap: anywhere; }
-.mt-plan-naam:hover { text-decoration: underline; text-underline-offset: 3px; }
-.mt-plan-reden { margin: 0; font-size: 12px; line-height: 1.5; color: var(--ink-soft); }
-.mt-plan-knop { flex-shrink: 0; }
+/* Meetinglijst: kaarten in een raster, zoals Te plannen bezoeken op Bezoeken. */
+.mt-plan-lijst { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: var(--kaart-gap, 16px); margin: 0; padding: 0; list-style: none; }
+.mt-plan-kaart { border-left: 3px solid var(--green); }
 @media (max-width: 719px) {
   .mt-kaart { grid-template-columns: 52px minmax(0, 1fr); gap: 10px; }
   .mt-kaarten { padding: 8px; }
   .mt-link { min-height: 44px; }
-  .mt-plan-rij { flex-direction: column; align-items: stretch; }
-  .mt-plan-knop { min-height: 44px; justify-content: center; }
 }
 </style>
