@@ -36,29 +36,9 @@ useHead({ title: 'Abonnement · Instellingen · Dealtrace' })
             <dl class="gegevens">
               <dt>Status</dt><dd>{{ STATUS[a.contract.status] ?? 'Actief' }}</dd>
               <template v-if="a.contract.proefTot"><dt>Proef tot</dt><dd>{{ datum(a.contract.proefTot) }}</dd></template>
-
-<style scoped>
-.abonnement-raster { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: var(--kaart-gap); align-items: start; }
-.factuur-tekst { display: flex; flex-direction: column; min-width: 0; }
-</style>
               <template v-if="a.contract.start"><dt>Start</dt><dd>{{ datum(a.contract.start) }}</dd></template>
-
-<style scoped>
-.abonnement-raster { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: var(--kaart-gap); align-items: start; }
-.factuur-tekst { display: flex; flex-direction: column; min-width: 0; }
-</style>
               <template v-if="a.contract.looptijdMaanden"><dt>Looptijd</dt><dd>{{ a.contract.looptijdMaanden }} maanden</dd></template>
-
-<style scoped>
-.abonnement-raster { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: var(--kaart-gap); align-items: start; }
-.factuur-tekst { display: flex; flex-direction: column; min-width: 0; }
-</style>
               <template v-if="a.contract.opzegtermijnMaanden"><dt>Opzegtermijn</dt><dd>{{ a.contract.opzegtermijnMaanden }} maand</dd></template>
-
-<style scoped>
-.abonnement-raster { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: var(--kaart-gap); align-items: start; }
-.factuur-tekst { display: flex; flex-direction: column; min-width: 0; }
-</style>
             </dl>
             <p v-if="a.aiCreditsPerMaand" class="veld-uitleg">AI-credits: {{ a.aiCreditsPerMaand }} per gebruiker per maand, samen in één pot.</p>
           </article>
