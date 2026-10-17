@@ -48,13 +48,16 @@ const isBeltaak = computed(() => t.value?.actionType === 'bellen')
 async function herlaadTaak() { if (t.value) t.value = await $fetch(`/api/tasks/${t.value.id}`) }
 // De taak in beeld: begint bij taakId van de ouder; Volgende schuift door zonder dat de ouder iets hoeft.
 const huidig = ref<string | null>(props.taakId)
-watch(() => [props.open, props.taakId], () => { huidig.value = props.taakId })
+watch(() => [props.open, props.taakId], () => { huidig.value = props.taakId }, { flush: 'sync' })
 watch(() => [props.open, huidig.value], async ([o]) => {
   if (!o || !huidig.value) return
   const id = huidig.value
   uitkomst.value = ''; laterOp.value = ''; reden.value = ''; toelichting.value = ''; reeksSjabloon.value = ''; bewerken.value = false; annuleren.value = false; belpaneel.value = null; uitstelOpen.value = false; verwijderVraag.value = false
   laden.value = true
-  try { t.value = await $fetch(`/api/tasks/${id}`) } catch { t.value = props.basis && props.basis.id === id ? { ...props.basis, kan: { afronden: true }, account: props.basis.account ?? null } : null } finally { laden.value = false }
+  let taak: any = null
+  try { taak = await $fetch(`/api/tasks/${id}`) } catch { taak = props.basis && props.basis.id === id ? { ...props.basis, kan: { afronden: true }, account: props.basis.account ?? null } : null }
+  if (id !== huidig.value) return
+  t.value = taak; laden.value = false
   belVerslag.value = t.value?.verslag?.tekst ?? ''
 }, { immediate: true })
 const contact = computed(() => t.value && CONTACT_ACTIES.has(t.value.actionType))
@@ -316,7 +319,7 @@ onBeforeUnmount(() => { document.removeEventListener('keydown', toets); document
           <button type="submit" form="tf-bewerk" class="dd-act dd-act--primair" :disabled="!kanBewaren" data-test="tf-opslaan">{{ bezig ? 'Opslaan…' : '✓ Opslaan' }}</button>
         </footer>
         <footer v-else-if="t" class="fo-foot tf-voet" data-test="tf-voet">
-          <button v-if="open && t.status !== 'klaar' && t.kan?.afronden" type="button" class="dd-actie dd-actie--zwart tf-afronden" :disabled="bezig || ongeldig" data-test="afronden" @click="doeAfronden(false)"><Icoon naam="Check" :grootte="16" />Afronden</button>
+          <button v-if="t.status !== 'klaar' && t.kan?.afronden" type="button" class="dd-actie dd-actie--zwart tf-afronden" :disabled="bezig || ongeldig" data-test="afronden" @click="doeAfronden(false)"><Icoon naam="Check" :grootte="16" />Afronden</button>
           <span class="fo-foot-vul" />
           <div class="tf-iconen">
             <button v-if="aiAan" type="button" class="dd-actie dd-actie--icoon tf-ibtn" title="Vraag AI" aria-label="Vraag AI" data-test="tf-vraag-ai" @click="vraagAi"><Icoon naam="Sparkles" :grootte="18" /></button>

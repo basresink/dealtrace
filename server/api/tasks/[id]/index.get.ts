@@ -48,7 +48,7 @@ export default defineEventHandler(async (event) => {
       herhaling: d.herhaling ?? null,
       verslag: bel ? d.verslag ?? null : null, transcript, analyse: bel ? analyseVan(d.notulist) : null,
       ritme: ritme && stand ? { naam: ritme.naam, stand, def: ritme } : null,
-      kan: { afronden: await magTaak(tx, ctx, t.ownerId) || t.ownerId === null, verwijderen: ctx.gebruiker.rol === 'beheerder' },
+      kan: { afronden: await magTaak(tx, ctx, t.ownerId) || t.ownerId === null, verwijderen: ctx.gebruiker.rol === 'beheerder' || (!!t.ownerId && await magTaak(tx, ctx, t.ownerId)) },
     }
   })
 })

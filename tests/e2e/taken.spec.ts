@@ -128,8 +128,10 @@ test.describe('inzichten', () => {
     await kaart.getByRole('button', { name: '+ Maak taak' }).click()
     await expect(page.locator('.toast').last()).toContainText('Taak gemaakt uit het inzicht')
     const taken = (await (await page.request.get('/api/tasks?eigenaar=mij')).json()).groepen.flatMap((g: any) => g.taken)
-    expect(taken.some((t: any) => t.herkomst === 'inzicht')).toBe(true)
-    await ga(page, '/taken?herkomst=inzicht')
+    const uitInzicht = taken.find((t: any) => t.herkomst === 'inzicht')
+    expect(uitInzicht).toBeTruthy()
+    // De filtergroep Herkomst is weg; het label staat nog op de rij.
+    await ga(page, `/taken?weergave=lijst&q=${encodeURIComponent(uitInzicht.title)}`)
     await expect(page.locator('.taak-kaart').first()).toContainText('Uit inzicht')
   })
 
@@ -185,6 +187,8 @@ test.describe('niveaus', () => {
   test('Beginner: lijst zonder horizon of bulk, minimale velden, /inzichten en /planning nog niet aangezet', async ({ page }) => {
     await login(page, 'u-02')
     await ga(page, '/taken')
+    // Zonder de functie horizon blijft de lijst de standaard.
+    await expect(page.getByTestId('horizon')).toHaveCount(0)
     await page.getByTestId('filters-knop').click()
     await expect(page.getByTestId('taak-filters')).toBeVisible()
     await expect(page.getByTestId('weergave')).toHaveCount(0)
@@ -203,16 +207,23 @@ test.describe('niveaus', () => {
     await ga(page, '/planning?tab=ritme')
     await expect(page.getByTestId('niet-aangezet-pagina')).toBeVisible()
   })
-  test('Gevorderd: horizon met achterstallig bovenaan in Vandaag, bulk uitstellen, en het tabblad Hercontactritme', async ({ page }) => {
+  test('Gevorderd: horizon als standaard met achterstallig bovenaan in Vandaag, rijen zonder vinkje of afrondknop, en het tabblad Hercontactritme', async ({ page }) => {
     await apiLogin(page.request, 'u-03')
     await page.request.post('/api/tasks', { data: { title: `Oud ${uniek()}`, actionType: 'taak', dueDate: new Date(Date.now() - 3 * 864e5).toISOString() } })
     await login(page, 'u-03')
     await ga(page, '/taken?weergave=horizon')
     await expect(page.getByTestId('horizon-vandaag').locator('.hz-item').first()).toContainText('Over tijd')
     await ga(page, '/taken')
-    await page.locator('.taak-kaart input[type=checkbox]').first().check()
-    await page.getByTestId('bulk-week').click()
-    await expect(page.locator('.toast').last()).toContainText('1 taak bijgewerkt')
+    await expect(page.getByTestId('horizon-vandaag').locator('.hz-item').first()).toContainText('Over tijd')
+    await ga(page, '/taken?weergave=lijst')
+    await expect(page.locator('.taak-kaart').first()).toBeVisible()
+    await expect(page.locator('.taak-kaart input[type=checkbox]')).toHaveCount(0)
+    await expect(page.locator('.taak-kaart [data-test=vink]')).toHaveCount(0)
+    await expect(page.getByTestId('bulkbalk')).toHaveCount(0)
+    // Afronden gaat via het taakvenster.
+    await page.locator('.taak-kaart').first().getByTestId('taak-titel').click()
+    await expect(page.getByTestId('taak-flyout')).toBeVisible()
+    await expect(page.getByTestId('afronden')).toBeVisible()
     await ga(page, '/planning?tab=ritme')
     await expect(page.getByTestId('ritme-Koud')).toContainText('dag 21')
     await expect(page.getByTestId('ritme-Koud')).toContainText('180 dagen')
@@ -349,7 +360,7 @@ test.describe('Taken: portie per groep, titel en kop (B09, B14, B17)', () => {
 
   test('/taken: standaard paginakop met zoeken, AI en hulp; Toon meer haalt de volgende portie op', async ({ page }) => {
     await login(page, 'u-07')
-    await ga(page, '/taken')
+    await ga(page, '/taken?weergave=lijst')
     const knoppen = page.getByTestId('kop-knoppen')
     await expect(knoppen.getByTestId('kop-zoeken')).toBeVisible()
     await expect(knoppen.getByTestId('hulp-knop')).toBeVisible()
@@ -381,30 +392,81 @@ test.describe('Taken: nieuwe URL, horizon in het filter en Briefings', () => {
     await expect(page.locator('a[href="/taken"]').first()).toBeVisible()
   })
 
-  test('horizon is een keuze onder Filters, Weergave; geen losse knop meer', async ({ page }) => {
+  test('horizon is de standaard; Lijst is een keuze onder Filters, Weergave; de kop heeft Filters zonder teller en geen Briefings', async ({ page }) => {
     await login(page, 'u-03')
     await ga(page, '/taken')
-    await expect(page.getByTestId('weergave')).toHaveCount(0)
-    await page.getByTestId('filters-knop').click()
-    await expect(page.getByTestId('weergave-lijst')).toHaveAttribute('aria-checked', 'true')
-    await page.getByTestId('weergave-horizon').click()
-    await expect(page).toHaveURL(/weergave=horizon/)
     await expect(page.getByTestId('horizon-vandaag')).toBeVisible()
-    await expect(page.getByTestId('filters-teller')).toHaveText('1')
-    // Met een filter in de URL staat het paneel open.
-    await ga(page, '/taken?weergave=horizon')
+    await expect(page.getByTestId('weergave')).toHaveCount(0)
+    await expect(page.getByTestId('briefings-knop')).toHaveCount(0)
+    await expect(page.getByTestId('filters-knop')).toHaveText('Filters')
+    await page.getByTestId('filters-knop').click()
     await expect(page.getByTestId('weergave-horizon')).toHaveAttribute('aria-checked', 'true')
     await page.getByTestId('weergave-lijst').click()
-    await expect(page).not.toHaveURL(/weergave=/)
+    await expect(page).toHaveURL(/weergave=lijst/)
     await expect(page.getByTestId('horizon-vandaag')).toHaveCount(0)
+    await expect(page.getByTestId('filters-teller')).toHaveCount(0)
+    // Met een keuze in de URL staat het paneel open; Horizon haalt de keuze weer weg.
+    await ga(page, '/taken?weergave=lijst')
+    await expect(page.getByTestId('weergave-lijst')).toHaveAttribute('aria-checked', 'true')
+    await page.getByTestId('weergave-horizon').click()
+    await expect(page).not.toHaveURL(/weergave=/)
+    await expect(page.getByTestId('horizon-vandaag')).toBeVisible()
+    // Een oude link met weergave=horizon werkt nog.
+    await ga(page, '/taken?weergave=horizon')
+    await expect(page.getByTestId('horizon-vandaag')).toBeVisible()
   })
 
-  test('de knop Briefings opent /briefings; daar kies je een prospect en een contactpersoon', async ({ page }) => {
+  test('filtergroep Periode: Morgen en een eigen periode in het verleden met afgeronde taken; geen Herkomst', async ({ page }) => {
+    test.setTimeout(90_000)
+    await apiLogin(page.request, 'u-03')
+    const dag = (n: number) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10)
+    const morgen = await (await page.request.post('/api/tasks', { data: { title: `Morgen ${uniek()}`, actionType: 'taak', dueDate: `${dag(1)}T10:00:00.000Z` } })).json()
+    const oud = await (await page.request.post('/api/tasks', { data: { title: `Terugkijken ${uniek()}`, actionType: 'taak', dueDate: `${dag(-20)}T10:00:00.000Z` } })).json()
+    expect((await page.request.post(`/api/tasks/${oud.id}/afronden`, { data: { uitkomst: 'gedaan', idempotentieSleutel: uniek() } })).ok()).toBe(true)
+    // API: zonder eigen periode geen afgeronde taken, met eigen periode wel (en niet als achterstallig).
+    const zonder = (await (await page.request.get('/api/tasks')).json()).groepen.flatMap((g: any) => g.taken)
+    expect(zonder.some((t: any) => t.id === oud.id)).toBe(false)
+    const met = await (await page.request.get(`/api/tasks?van=${dag(-25)}&tot=${dag(-15)}`)).json()
+    expect(met.periode).toMatchObject({ van: dag(-25), tot: dag(-15), eigen: true })
+    const afgerond = met.groepen.find((g: any) => g.naam === 'Afgerond')
+    expect(afgerond.taken.map((t: any) => t.id)).toContain(oud.id)
+    expect(met.groepen.flatMap((g: any) => g.taken).every((t: any) => t.dag >= dag(-25) && t.dag <= dag(-15))).toBe(true)
+    const viaMorgen = (await (await page.request.get('/api/tasks?periode=morgen')).json()).groepen.flatMap((g: any) => g.taken)
+    expect(viaMorgen.map((t: any) => t.id)).toContain(morgen.id)
+    expect(viaMorgen.every((t: any) => t.dag === dag(1))).toBe(true)
+
+    await login(page, 'u-03')
+    await ga(page, '/taken?weergave=lijst')
+    await page.getByTestId('filters-knop').click()
+    const paneel = page.getByTestId('taak-filters')
+    await expect(paneel.getByRole('combobox', { name: 'Herkomst' })).toHaveCount(0)
+    await page.getByTestId('periode-morgen').click()
+    await expect(page).toHaveURL(/periode=morgen/)
+    await expect(page.getByTestId('periode-morgen')).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByTestId(`taak-${morgen.id}`)).toBeVisible()
+    // Eigen periode in het verleden: de vaste keuze gaat uit, de afgeronde taak staat erbij als lijst.
+    await page.getByTestId('periode-van').fill(dag(-25))
+    await page.getByTestId('periode-van').dispatchEvent('change')
+    await expect(page).toHaveURL(new RegExp(`van=${dag(-25)}`))
+    await expect(page).not.toHaveURL(/periode=/)
+    await page.getByTestId('periode-tot').fill(dag(-15))
+    await page.getByTestId('periode-tot').dispatchEvent('change')
+    await expect(page).toHaveURL(new RegExp(`tot=${dag(-15)}`))
+    await expect(page.getByTestId('periode-uitleg')).toContainText('ook afgerond en verlopen')
+    await expect(page.getByTestId(`taak-${oud.id}`).getByTestId('taak-afgerond')).toHaveText('Afgerond')
+    await expect(page.getByTestId('groep-Afgerond')).toBeVisible()
+    // Ook zonder weergave=lijst is een eigen periode een lijst.
+    await ga(page, `/taken?van=${dag(-25)}&tot=${dag(-15)}`)
+    await expect(page.getByTestId('horizon')).toHaveCount(0)
+    await expect(page.getByTestId(`taak-${oud.id}`)).toBeVisible()
+  })
+
+  test('Briefings in het menu onder Taken opent /briefings; daar kies je een prospect en een contactpersoon', async ({ page }) => {
     test.setTimeout(60_000)
     const x = await metContacten(page.request, 'u-03')
     await login(page, 'u-03')
     await ga(page, '/taken')
-    await page.getByTestId('briefings-knop').click()
+    await page.locator('.sb-link[data-sleutel="briefing.bewerken"]').click()
     await expect(page).toHaveURL(/\/briefings$/)
     await expect(page.getByTestId('briefing-zoeken')).toBeVisible()
     // Het overzicht van komende gesprekken blijft.
