@@ -1,5 +1,5 @@
-// Accountkaart in de opzet van DealDrive: kop met Info, Contacten en Briefing, statstrook, de tabbladen
-// met het tabblad in de URL, de tijdlijnfilter, een document uploaden en verwijderen, en de kwalificatie.
+// Accountkaart in de opzet van DealDrive: kop met Zoeken, Vraag AI, Contacten en Meer, statstrook, de tabbladen
+// met het tabblad in de URL, de tijdlijnfilter, een document uploaden en verwijderen, en de kwalificatie onder Meer.
 import { expect, test } from '@playwright/test'
 import { ga, login } from './hulp'
 
@@ -9,8 +9,9 @@ test.describe('accountkaart', () => {
     await ga(page, '/accounts/pr-06')
     await expect(page.getByTestId('account-naam')).toContainText('Testtechniek Gevelpunt')
     await expect(page.getByTestId('statstrook')).toContainText('Open acties')
-    for (const t of ['tijdlijn', 'inzichten', 'taken', 'notities', 'mails', 'afspraken', 'verslagen', 'campagnes', 'documenten', 'kwalificatie']) await expect(page.getByTestId(`tab-${t}`)).toBeVisible()
-    for (const t of ['deals', 'eigenvelden']) await expect(page.getByTestId(`tab-${t}`)).toHaveCount(0)
+    for (const t of ['tijdlijn', 'inzichten', 'taken', 'notities', 'mails', 'afspraken', 'verslagen', 'campagnes', 'documenten']) await expect(page.getByTestId(`tab-${t}`)).toBeVisible()
+    // Reis en kwalificatie staan onder Meer; Accountplan alleen met de functie (Expert).
+    for (const t of ['deals', 'eigenvelden', 'kwalificatie', 'reis', 'accountplan']) await expect(page.getByTestId(`tab-${t}`)).toHaveCount(0)
     // Geen knop Bel in de kop en geen fase met dagen in de stuurstrip.
     await expect(page.locator('.ak-acties').getByText('Bel', { exact: true })).toHaveCount(0)
     await expect(page.getByTestId('stuurstrip')).not.toContainText('Fase')
@@ -22,40 +23,44 @@ test.describe('accountkaart', () => {
     await page.locator('[data-test^=ak-verslag-]').first().click()
     await expect(page.getByTestId('verslag-flyout')).toBeVisible()
     await page.keyboard.press('Escape')
+    // Een oude link naar het tabblad Reis en kwalificatie opent het venster Kwalificatie.
     await ga(page, '/accounts/pr-06?tab=kwalificatie')
-    await expect(page.getByTestId('band')).toBeVisible()
-    // Met Overdragen in de rij staat Briefing onder Meer.
-    if (!(await page.getByTestId('briefing-knop').isVisible())) await page.getByTestId('kop-meer').click()
-    await page.getByTestId('briefing-knop').click()
+    await expect(page.getByTestId('kwalificatie-flyout').getByTestId('band')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await page.getByTestId('kop-meer').click()
+    await page.getByTestId('meer-flyout').getByTestId('briefing-knop').click()
     await expect(page.getByTestId('briefing-flyout')).toBeVisible()
   })
 
-  test('kop op één regel op 1280 en 390 met Volgen en Invloed; één gele knop in de tijdlijn; aanleiding met spaties', async ({ page }) => {
+  test('kop op één regel op 1280 en 390: Zoeken, Vraag AI, Contacten en Meer; geen hulp, Waarom nu of leverancier onder de kop', async ({ page }) => {
     await login(page, 'u-07')
     await page.setViewportSize({ width: 1280, height: 900 })
     await ga(page, '/accounts/eva-a04')
-    // Laptop: alle knoppen in de kop op één regel; Briefing, Volgen en Invloed zichtbaar, Info en Contacten onder Meer.
-    const tops = await page.locator('.ak-acties > button, .ak-acties > a, .ak-acties > div').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)))
-    expect(new Set(tops).size).toBe(1)
-    for (const id of ['briefing-knop', 'knop-volgen', 'knop-invloed']) await expect(page.locator('.ak-acties').getByTestId(id)).toBeVisible()
-    await page.getByTestId('kop-meer').click()
-    for (const id of ['info-knop', 'contacten-knop']) await expect(page.getByTestId('kop-meer-menu').getByTestId(id)).toBeVisible()
-    await expect(page.getByTestId('kop-meer-menu').getByTestId('knop-invloed')).toHaveCount(0)
-    await expect(page.getByTestId('kop-meer-menu').getByTestId('scan-visitekaartje')).toHaveCount(0)
+    // Laptop: vier knoppen op één regel, in deze volgorde; de rest staat onder Meer.
+    const kop = await page.locator('.ak-acties [data-test]:visible').evaluateAll((els) => els.map((e) => ({ id: e.getAttribute('data-test'), top: Math.round(e.getBoundingClientRect().top), h: Math.round(e.getBoundingClientRect().height) })))
+    expect(kop.map((k) => k.id)).toEqual(['kop-zoeken', 'vraag-ai', 'contacten-knop', 'kop-meer'])
+    expect(new Set(kop.map((k) => k.top)).size).toBe(1)
+    expect(kop.every((k) => k.h >= 44)).toBe(true)
+    await expect(page.getByTestId('hulp-knop')).toHaveCount(0)
+    await expect(page.getByTestId('aanleiding')).toHaveCount(0)
+    await expect(page.getByTestId('leverancier')).toHaveCount(0)
+    await expect(page.getByText('Waarom nu:')).toHaveCount(0)
+    await page.getByTestId('contacten-knop').click()
+    await expect(page.locator('[role=dialog]').filter({ hasText: 'Contactpersonen' })).toBeVisible()
     await page.keyboard.press('Escape')
-    // Aanleiding met spaties; in de tijdlijn alleen + Taak geel, + Mail met rand.
-    await expect(page.getByTestId('aanleiding')).toHaveText(/^Waarom nu: Won een .+ · web · /)
+    // In de tijdlijn alleen + Taak geel, + Mail met rand.
     await expect(page.getByTestId('tl-taak')).toHaveClass(/dd-actie--primair/)
     if (await page.getByTestId('tl-mail').count()) await expect(page.getByTestId('tl-mail')).toHaveClass(/dd-actie--secundair/)
-    // Telefoon: hulp, Volgen, Invloed en Meer op één regel; Briefing en de rest onder Meer.
+    // Telefoon: Contacten en Meer op één regel met tikdoelen van 44 px; zoeken en AI staan in de mobiele kop.
     await page.setViewportSize({ width: 390, height: 844 })
     await ga(page, '/accounts/eva-a04')
-    await expect(page.getByTestId('knop-volgen')).toBeVisible()
-    const rij = await page.locator('.ak-acties > button, .ak-acties > div, .ak-acties .kop-iconen > button').evaluateAll((els) => els.filter((e) => (e as HTMLElement).offsetParent).map((e) => Math.round(e.getBoundingClientRect().top)))
-    expect(new Set(rij).size).toBe(1)
-    await expect(page.getByTestId('knop-invloed')).toBeVisible()
+    const rij = await page.locator('.ak-acties [data-test]:visible').evaluateAll((els) => els.map((e) => ({ id: e.getAttribute('data-test'), top: Math.round(e.getBoundingClientRect().top), h: Math.round(e.getBoundingClientRect().height) })))
+    expect(rij.map((k) => k.id)).toEqual(['contacten-knop', 'kop-meer'])
+    expect(new Set(rij.map((k) => k.top)).size).toBe(1)
+    expect(rij.every((k) => k.h >= 44)).toBe(true)
     await page.getByTestId('kop-meer').click()
-    for (const id of ['briefing-knop', 'info-knop']) await expect(page.getByTestId('kop-meer-menu').getByTestId(id)).toBeVisible()
+    for (const id of ['briefing-knop', 'info-knop']) await expect(page.getByTestId('meer-flyout').getByTestId(id)).toBeVisible()
+    for (const h of await page.locator('[data-test=meer-flyout] .mf-kader').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) expect(h).toBeGreaterThanOrEqual(44)
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
   })
 
