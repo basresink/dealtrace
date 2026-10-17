@@ -10,10 +10,18 @@ const emit = defineEmits<{ sluit: []; gewijzigd: [] }>()
 const toast = useToast()
 const { me } = useMe()
 const beheerder = computed(() => me.value?.gebruiker.rol === 'beheerder')
-const status = ref('')
+// Opslaan-status in de kop (FlyoutShell): typen in een veld is Gewijzigd, bewaren Opslaan… en dan
+// Opgeslagen om HH:MM. Sluiten met een open veld vraagt of je het wilt bewaren.
+const opslag = useFlyoutOpslag()
+const body = ref<HTMLElement | null>(null)
+const shell = ref<{ vraagSluiten: () => Promise<void> } | null>(null)
+function typ(e: Event) { if ((e.target as HTMLElement | null)?.closest('.bv-bewerk')) opslag.gewijzigd() }
+function veldDicht() { nextTick(() => { if (opslag.stand === 'gewijzigd' && !body.value?.querySelector('.bv--bewerk')) opslag.basis() }) }
+function bewaarOpen() { for (const f of body.value?.querySelectorAll<HTMLFormElement>('.bv-bewerk') ?? []) f.requestSubmit(); veldDicht() }
+const ai = computed(() => ({ accountId: props.contact?.accountId ?? null, label: props.contact?.naam, vraag: '', voorstellen: [`Wat weet ik over ${props.contact?.voornaam || props.contact?.naam || 'dit contact'}?`, 'Schrijf een korte introductiemail', 'Wie beïnvloedt dit contact?'] }))
+const telHref = computed(() => { const t = props.contact?.mobiel || props.contact?.telefoon; return t ? `tel:${String(t).replace(/[^\d+]/g, '')}` : null })
 async function bewaar(patch: Record<string, unknown>) {
-  status.value = 'Opslaan…'
-  try { await $fetch(`/api/contacten/${props.contact.id}`, { method: 'PUT', body: patch }); status.value = 'Opgeslagen'; emit('gewijzigd') } catch (e) { status.value = 'Opslaan mislukt'; toast.toon(foutTekst(e), 'fout') }
+  try { await opslag.bewaar(() => $fetch(`/api/contacten/${props.contact.id}`, { method: 'PUT', body: patch })); emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 const veld = (k: string) => (v: string) => bewaar({ [k]: v || null })
 function bewaarAchternaam(v: string) { if (v.trim()) bewaar({ achternaam: v.trim() }) }
@@ -46,19 +54,8 @@ async function verhuis() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open && contact" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" aria-labelledby="ci-titel" data-test="contact-info-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
-            <span class="fo-kicker">Contactgegevens</span>
-            <h2 id="ci-titel" class="fo-titel">{{ contact.naam }}</h2>
-            <p v-if="contact.functie || contact.account" class="fo-meta">{{ [contact.functie, contact.account?.naam].filter(Boolean).join(' · ') }}</p>
-            <p class="fo-meta ci-status" aria-live="polite">{{ status }}</p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
-        <div class="fo-body ci-body">
+  <FlyoutShell ref="shell" :open="open && !!contact" kicker="Contactgegevens" :titel="contact?.naam" :meta="[contact?.functie, contact?.account?.naam].filter(Boolean).join(' · ') || null" titel-id="ci-titel" breedte="smal" :opslag="opslag" :ai="ai" data-test="contact-info-flyout" @sluit="emit('sluit')" @bewaar="bewaarOpen">
+        <div ref="body" class="fo-body ci-body" @input="typ" @click="veldDicht" @keyup.esc="veldDicht">
           <section class="ci-sectie" data-test="ci-persoon">
             <h3 class="ci-sectie-titel">Persoon</h3>
             <div class="ci-vast">
@@ -121,13 +118,18 @@ async function verhuis() {
             <button type="button" class="dd-act ci-knop" :disabled="!verhuisNaar" @click="verhuis">Verhuis</button>
           </section>
         </div>
-      </aside>
-    </div>
-  </Teleport>
+    <template #voet>
+      <footer class="fo-foot fs-voet">
+        <button type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="ci-klaar" @click="shell?.vraagSluiten()"><Icoon naam="Check" :grootte="16" />Klaar</button>
+        <span class="fo-foot-vul" />
+        <a v-if="telHref" :href="telHref" class="fs-ibtn" title="Bellen" aria-label="Bellen" data-test="ci-bel"><Icoon naam="Phone" :grootte="18" /></a>
+        <a v-if="contact?.email" :href="`mailto:${contact.email}`" class="fs-ibtn" title="Mailen" aria-label="Mailen" data-test="ci-mail"><Icoon naam="Mail" :grootte="18" /></a>
+      </footer>
+    </template>
+  </FlyoutShell>
 </template>
 
 <style scoped>
-.ci-status:empty { display: none; }
 .ci-body { display: flex; flex-direction: column; gap: 16px; }
 .ci-sectie { padding: 4px 16px 12px; background: var(--wit); border: 1px solid var(--border); }
 .ci-sectie-titel { margin: 12px 0 4px; padding-bottom: 6px; border-bottom: 1px solid var(--border); font-family: var(--font-serif); font-size: 14px; font-weight: 700; color: var(--ink); }

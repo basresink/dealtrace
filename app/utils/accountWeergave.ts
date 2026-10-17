@@ -1,9 +1,6 @@
-// Labels en pillen voor accounts en contacten (één plek voor alle schermen).
+// Teksten voor accounts en contacten (één plek voor alle schermen). Labels staan in shared/labels.ts.
 export const STATUS_LABEL: Record<string, string> = {
   nieuw: 'Nieuw', 'in reis': 'In reis', wachtend: 'Wachtend', nee: 'Nee', gescoord: 'Gescoord', klant: 'Klant', overgedragen: 'Overgedragen',
-}
-export const STATUS_PIL: Record<string, string> = {
-  nieuw: 'pil--blauw', 'in reis': 'pil--paars', wachtend: 'pil--geel', nee: 'pil--grijs', gescoord: 'pil--groen', klant: 'pil--blauw-vol', overgedragen: 'pil--groen-vol',
 }
 export const BEREIK_LABEL: Record<string, string> = { zonderTelefoon: 'Zonder telefoon', zonderEmail: 'Zonder e-mail', zonderBeslisser: 'Zonder beslisser' }
 export const CONTACT_LABEL: Record<string, string> = { nooit: 'Nog nooit', 30: 'Ouder dan 30 dagen', 90: 'Ouder dan 90 dagen' }
@@ -37,21 +34,11 @@ export function toonTelefoon(n: string | null | undefined): string {
   return m ? `+31 ${m[1]} ${m[2]} ${m[3]}` : n
 }
 
-/** Pil in de kleur van de reisfase (tokens via de pilvarianten). */
-export const fasePil = (kleur: string | null | undefined) => `pil--${kleur || 'grijs'}`
-
-/** Klasselabel voor een pil: "A · Corporate" zonder de toelichting tussen haakjes. */
+/** Klassenaam voor het klasselabel: "A · Corporate" zonder de toelichting tussen haakjes. */
 export function klasseLabel(id: string | null | undefined, klassen: { id: string; naam: string }[]): string {
   if (!id) return ''
   const k = klassen.find((x) => x.id === id)
   return k ? k.naam.replace(/\s*\([^)]*\)\s*$/, '').trim() : id
-}
-
-/** Kleurvariant van de klassepil op de letter: a zwart, b blauw, c oranje, d grijs. */
-export function klasseKleur(id: string | null | undefined, klassen: { id: string; naam: string }[]): string {
-  if (!id) return 'geen'
-  const letter = klasseKort(id, klassen).toLowerCase()
-  return ['a', 'b', 'c', 'd'].includes(letter) ? letter : 'overig'
 }
 
 const NAAM_KLEUREN = ['var(--blue)', 'var(--green)', 'var(--purple)', 'var(--orange)', 'var(--red)', 'var(--ink)']

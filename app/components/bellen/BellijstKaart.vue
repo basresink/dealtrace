@@ -33,7 +33,8 @@ const inTop = (i: number) => top.value !== 'zelf' && i < top.value
 const gekozen = (k: BelRij, i: number) => (top.value === 'zelf' ? zelf.value.has(k.accountId) : inTop(i))
 function kies(id: string) { const n = new Set(zelf.value); n.has(id) ? n.delete(id) : n.add(id); zelf.value = n }
 function kiesTop(n: number) { props.topOpties.includes(n) ? (top.value = n) : toonUitleg('belblok.plannen') }
-const pilKlasse = (p: string) => (p === 'Urgent' ? 'pil--rood' : p === 'Kans' ? 'pil--oranje' : 'pil--grijs')
+/** Reden in de bellijst als label: urgent gevuld, een kans zacht oranje, de rest een rand. */
+const belLabel = (p: string) => (p === 'Urgent' ? { soort: 'prioriteit', waarde: 'urgent', tekst: p } : p === 'Kans' ? { soort: 'prioriteit', waarde: 'hoog', tekst: p } : { soort: 'actie', waarde: 'bellen', tekst: p })
 </script>
 
 <template>
@@ -64,7 +65,7 @@ const pilKlasse = (p: string) => (p === 'Urgent' ? 'pil--rood' : p === 'Kans' ? 
             </div>
           </div>
           <div class="bl-labels">
-            <span class="pil" :class="pilKlasse(k.pil)">{{ k.pil }}</span>
+            <Label v-bind="belLabel(k.pil)" />
             <span v-if="k.belblokId" class="pil pil--leeg">in een blok</span>
           </div>
         </li>

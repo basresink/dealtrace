@@ -27,9 +27,11 @@ const TELLERS = [['actief', 'Actief', 'lopen nu'], ['concept', 'Concept', 'nog n
 const soort = (s: string) => ctx.value.soorten.find((x: any) => x.sleutel === s)
 const soortNaam = (s: string) => soort(s)?.naam ?? s
 // Kleur van de soortpil naar het kanaal van de eerste stap (zoals DealDrive: bel geel, bezoek zwart, mail blauw).
+/** Kanaal van de campagnesoort als actielabel (rand met icoon); meerdere kanalen is een taak. */
+const KANAAL_ACTIE: Record<string, string> = { bellen: 'bellen', bezoek: 'bezoek', mail: 'mailen', linkedin: 'linkedin', mix: 'taak' }
 const soortKleur = (s: string) => { const k = soort(s)?.kanalen ?? []; return k.length > 1 ? 'mix' : (k[0] ?? 'bellen') }
 const TEMPO: Record<string, string> = { 'Voor op schema': 'voor', 'Op schema': 'op', 'Achter op schema': 'achter' }
-const pilKlas = (p: string) => TEMPO[p] ?? (p.startsWith('Achter') ? 'achter' : 'op')
+const tempoSleutel = (p: string) => TEMPO[p] ?? (p.startsWith('Achter') ? 'achter' : 'op')
 const doelNodig = (c: any) => (c.doel ? (c.doel.type === 'procent' ? Math.ceil((c.accounts * c.doel.waarde) / 100) : c.doel.waarde) : null)
 const doelTekst = (c: any) => (c.doel ? (c.doel.type === 'afspraken' ? `${c.doel.waarde} ${c.doel.waarde === 1 ? 'afspraak' : 'afspraken'}` : `${c.doel.waarde}% afspraken`) : 'Geen doel')
 const voortgang = (c: any) => c.tempo?.voortgang ?? (c.accounts ? Math.round((c.klaar / c.accounts) * 100) : 0)
@@ -94,8 +96,8 @@ useHead({ title: 'Campagnes · Dealtrace' })
               <NuxtLink :to="`/campagnes/${c.id}`" class="co-link" :data-test="`campagne-${c.id}`">
                 <header class="co-kop">
                   <div class="co-pillen">
-                    <span class="co-soort" :class="`co-soort--${soortKleur(c.soort)}`">{{ soortNaam(c.soort) }}</span>
-                    <span class="co-status" :class="`co-status--${c.status}`">{{ STATUS[c.status] }}</span>
+                    <Label soort="actie" :waarde="KANAAL_ACTIE[soortKleur(c.soort)] ?? 'taak'" :tekst="soortNaam(c.soort)" />
+                    <Label class="co-status" soort="campagne" :waarde="c.status" :tekst="STATUS[c.status]" />
                   </div>
                   <span class="co-eigenaar">{{ c.eigenaar ?? 'Geen eigenaar' }}</span>
                 </header>
@@ -114,7 +116,7 @@ useHead({ title: 'Campagnes · Dealtrace' })
                     <div v-if="c.tempo" class="co-verwacht" :style="{ left: `${c.tempo.verwacht}%` }" title="Verwachte stand" />
                   </div>
                   <div v-if="c.tempo || c.doel || c.dagenOver !== null" class="co-tempo-rij">
-                    <span v-if="c.tempo" class="co-tempo" :class="`co-tempo--${pilKlas(c.tempo.pil)}`" data-test="tempopil">{{ c.tempo.pil }}</span>
+                    <Label v-if="c.tempo" soort="tempo" :waarde="tempoSleutel(c.tempo.pil)" :tekst="c.tempo.pil" data-test="tempopil" />
                     <span v-if="c.doel" class="co-doel-stand tnum">{{ c.gehaald }} van {{ doelNodig(c) }} gehaald{{ c.gehaald >= (doelNodig(c) ?? Infinity) ? ', behaald' : '' }}</span>
                     <span v-if="c.dagenOver !== null" class="co-dagen tnum">nog {{ c.dagenOver }} {{ c.dagenOver === 1 ? 'dag' : 'dagen' }}</span>
                   </div>
@@ -162,17 +164,6 @@ useHead({ title: 'Campagnes · Dealtrace' })
 .co-link:hover { background: var(--surface); }
 .co-kop { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
 .co-pillen { display: flex; flex-wrap: wrap; gap: 6px; }
-.co-soort, .co-status { font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 2px 6px; border-radius: 2px; }
-.co-soort--bellen { background: var(--yellow); color: var(--ink); }
-.co-soort--bezoek { background: var(--ink); color: var(--yellow); }
-.co-soort--mail { background: var(--blue); color: var(--wit); }
-.co-soort--linkedin { background: var(--blue); color: var(--wit); }
-.co-soort--mix { background: var(--purple); color: var(--wit); }
-.co-status { border: 1px solid var(--border-strong); color: var(--muted); }
-.co-status--actief { color: var(--green); border-color: var(--green); }
-.co-status--concept { color: var(--orange-dark); border-color: var(--orange); }
-.co-status--wacht { color: var(--orange-dark); border-color: var(--orange); }
-.co-status--afgerond { color: var(--blue); border-color: var(--blue); }
 .co-eigenaar { font-size: 11px; font-weight: 600; color: var(--muted); text-align: right; }
 .co-naam { font-family: var(--font-serif); font-size: 18px; font-weight: 700; margin: 4px 0 0; overflow-wrap: anywhere; }
 .co-tekst { margin: 6px 0 0; font-size: 13px; color: var(--ink-soft); line-height: 1.45; }
@@ -186,10 +177,6 @@ useHead({ title: 'Campagnes · Dealtrace' })
 .co-vul { height: 100%; background: var(--green); transition: width var(--transition-base); }
 .co-verwacht { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--red); }
 .co-tempo-rij { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-.co-tempo { font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px; border-radius: 2px; }
-.co-tempo--voor { background: var(--green); color: var(--wit); }
-.co-tempo--op { background: var(--surface); color: var(--ink); border: 1px solid var(--border-strong); }
-.co-tempo--achter { background: var(--red); color: var(--wit); }
 .co-doel-stand { font-size: 11px; font-weight: 600; color: var(--ink-soft); }
 .co-dagen { margin-left: auto; font-size: 11px; color: var(--muted); }
 .co-open { margin-top: auto; padding-top: 12px; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: var(--muted); }

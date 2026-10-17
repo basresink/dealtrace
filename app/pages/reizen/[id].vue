@@ -6,7 +6,6 @@
 import { GEBEURTENIS_LABEL, type Gebeurtenis } from '~~/shared/nbStatus'
 import { HOOFDFASEN, HOOFDFASE_LABEL } from '~~/shared/reis'
 import { KIESBARE_GEBEURTENISSEN, KLEUREN } from '~~/shared/reisEditor'
-import { fasePil } from '~/utils/accountWeergave'
 const route = useRoute()
 const { functie } = useMe()
 const toast = useToast()
@@ -168,7 +167,7 @@ useHead({ title: computed(() => `${r.value?.naam ?? 'Reis'} · Prospectreizen ·
             <div class="ak-blokken">
               <article v-for="(f, i) in ((bewerken ? c.fases : r.fases) as any[])" :key="f.id" class="fasekaart" :data-fase="f.id" :data-test="`fase-${f.id}`">
                 <template v-if="bewerken">
-                  <header class="kaart-kop"><span class="meta tnum">{{ i + 1 }}</span><span class="pil" :class="fasePil(f.kleur)">{{ f.label || 'Zonder naam' }}</span>
+                  <header class="kaart-kop"><span class="meta tnum">{{ i + 1 }}</span><Label soort="fase" :waarde="f.hoofdfase" :tekst="f.label || 'Zonder naam'" />
                     <span class="dd-acties"><button type="button" class="dd-act dd-act--icoon" aria-label="Eerder" :disabled="i === 0" @click="schuif(i, -1)">↑</button><button type="button" class="dd-act dd-act--icoon" aria-label="Later" :disabled="i === c.fases.length - 1" @click="schuif(i, 1)">↓</button><button type="button" class="dd-act dd-act--icoon" :aria-label="`${f.label} verwijderen`" :data-test="`verwijder-${f.id}`" @click="verwijder = { fase: f, vervang: '' }">×</button></span></header>
                   <label class="veld"><span class="veld-label">Naam</span><input v-model="f.label" class="invoer"></label>
                   <div class="re-rij">
@@ -184,7 +183,7 @@ useHead({ title: computed(() => `${r.value?.naam ?? 'Reis'} · Prospectreizen ·
                   </div>
                 </template>
                 <template v-else>
-                  <header class="kaart-kop"><span class="meta tnum">{{ f.volgorde }}</span><span class="pil" :class="fasePil(f.kleur)">{{ f.label }}</span><span class="meta">{{ HOOFDFASE_LABEL[f.hoofdfase as keyof typeof HOOFDFASE_LABEL] }}</span></header>
+                  <header class="kaart-kop"><span class="meta tnum">{{ f.volgorde }}</span><Label soort="fase" :waarde="f.hoofdfase" :tekst="f.label" /><span class="meta">{{ HOOFDFASE_LABEL[f.hoofdfase as keyof typeof HOOFDFASE_LABEL] }}</span></header>
                   <p class="kaart-meta">{{ f.omschrijving }}</p>
                   <p class="kaart-meta">Verwacht verblijf: {{ verblijf(f) }} · <span class="tnum">{{ f.aantal }}</span> accounts</p>
                   <label v-if="r.kan.accent && !klein" class="veld fasekaart-accent"><span class="veld-label">Pitstop-accent</span><textarea v-model="accenten[f.id]" class="invoer" rows="2" :data-test="`accent-${f.id}`" /></label>
@@ -246,7 +245,7 @@ useHead({ title: computed(() => `${r.value?.naam ?? 'Reis'} · Prospectreizen ·
             <div v-for="h in HOOFDFASEN" :key="h" class="fasebord-kolom">
               <span class="kicker">{{ HOOFDFASE_LABEL[h] }}</span>
               <div v-for="f in c.fases.filter((x: any) => x.hoofdfase === h)" :key="f.id" class="fasekaart">
-                <span class="pil" :class="fasePil(f.kleur)">{{ f.label }}</span>
+                <Label soort="fase" :waarde="f.hoofdfase" :tekst="f.label" />
                 <ul class="schakel-lijst mt-8"><li v-for="o in c.overgangen.filter((x: any) => x.vanFaseId === f.id)" :key="o.id" class="stroom-pijl">{{ g(o.gebeurtenis) }} → {{ label(o.naarFaseId) }}</li></ul>
               </div>
             </div>

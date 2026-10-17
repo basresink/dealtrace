@@ -20,7 +20,7 @@ const zoek = ref('')
 const alleenMijn = ref(false)
 const zichtbaar = (i: any) => (!zoek.value || i.naam.toLowerCase().includes(zoek.value.toLowerCase())) && (!alleenMijn.value || i.eigenaarId === (me.value as any)?.gebruiker?.id)
 const STATUS: Record<string, string> = { concept: 'Concept', wacht: 'Wacht op bevestiging', actief: 'Actief', gepauzeerd: 'Gepauzeerd', afgerond: 'Afgerond' }
-const pilKlas = (p: string) => (p === 'Voor op schema' ? 'voor' : p === 'Op schema' ? 'op' : 'achter')
+const tempoSleutel = (p: string) => (p === 'Voor op schema' ? 'voor' : p === 'Op schema' ? 'op' : 'achter')
 const doelNodig = computed(() => (c.value?.doel?.type === 'procent' ? Math.ceil((c.value.accounts * c.value.doel.waarde) / 100) : c.value?.doel?.waarde ?? c.value?.accounts ?? 0))
 const voortgangPct = computed(() => c.value?.tempo?.voortgang ?? (c.value?.accounts ? Math.round((c.value.klaar / c.value.accounts) * 100) : 0))
 const initialen = (n: string) => n.split(/\s+/).filter((w) => /^[A-Z]/.test(w)).slice(0, 2).map((w) => w[0]).join('') || n.slice(0, 2).toUpperCase()
@@ -129,7 +129,7 @@ useHead(() => ({ title: `${c.value?.naam ?? 'Campagne'} · Dealtrace` }))
           </div>
 
           <div class="cb-tempo-rij">
-            <span v-if="c.tempo" class="cb-tempo" :class="`cb-tempo--${pilKlas(c.tempo.pil)}`" data-test="bord-tempo">{{ c.tempo.pil }}</span>
+            <Label v-if="c.tempo" soort="tempo" :waarde="tempoSleutel(c.tempo.pil)" :tekst="c.tempo.pil" data-test="bord-tempo" />
             <span v-if="c.dagenOver !== null" class="cb-dagen tnum">nog {{ c.dagenOver }} {{ c.dagenOver === 1 ? 'dag' : 'dagen' }}</span>
             <span v-if="c.status === 'actief' && c.accounts && !data.zonderTaak" class="cb-hint">Alle accounts hebben een taak.</span>
             <span class="cb-vul" />
@@ -241,10 +241,6 @@ useHead(() => ({ title: `${c.value?.naam ?? 'Campagne'} · Dealtrace` }))
 .cb-stat-num { font-family: var(--font-serif); font-size: 24px; font-weight: 700; line-height: 1; }
 .cb-stat-label { font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
 .cb-tempo-rij { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
-.cb-tempo { font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px; border-radius: 2px; }
-.cb-tempo--voor { background: var(--green); color: var(--wit); }
-.cb-tempo--op { background: var(--surface); color: var(--ink); border: 1px solid var(--border-strong); }
-.cb-tempo--achter { background: var(--red); color: var(--wit); }
 .cb-dagen, .cb-hint { font-size: 12px; color: var(--muted); }
 .cb-vul { flex: 1; }
 .cb-knoppen { display: flex; flex-wrap: wrap; gap: 8px; }

@@ -52,7 +52,7 @@ useHead({ title: 'Klanten · Platformbeheer · Dealtrace' })
                 <td class="tnum">{{ k.metLogin }}/{{ k.gebruikers }} met login</td>
                 <td>{{ datum(k.laatstActief) }}</td>
                 <td>–</td>
-                <td><span class="pil" :class="`pil--stand-${k.stand}`" :title="k.redenen.join(' · ')">{{ STAND_LABEL[k.stand as Stand] }}</span></td>
+                <td><Label soort="gezondheid" :waarde="k.stand" :tekst="STAND_LABEL[k.stand as Stand]" :titel="k.redenen.join(' · ')" /></td>
                 <td><div class="dd-acties">
                   <button type="button" class="dd-act" @click="openKlant(k.id)">Openen</button>
                   <button type="button" class="dd-act dd-act--primair" :data-test="`werk-in-${k.id}`" @click="werkIn = { id: k.id, naam: k.naam }">Werk in deze organisatie</button>

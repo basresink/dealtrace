@@ -147,7 +147,7 @@ defineExpose({ bewaarVerslag })
       <p v-else-if="!analyse && !analyseReden" class="meta">De Notulist maakt een samenvatting, zet actiepunten als concepttaak klaar en legt koopsignalen vast als inzicht. Jij keurt goed.</p>
       <p v-if="analyseReden" class="veld-fout" :data-test="tid('analyse-reden')">{{ analyseReden }}</p>
       <template v-if="analyse">
-        <p v-if="herkomst.length" class="gv-herkomst"><span class="meta">Gebaseerd op</span><span v-for="h in herkomst" :key="h" class="pil pil--paars">{{ h }}</span></p>
+        <p v-if="herkomst.length" class="gv-herkomst"><span class="meta">Gebaseerd op</span><span v-for="h in herkomst" :key="h" class="pil">{{ h }}</span></p>
         <div v-if="analyse.samenvatting" class="gv-an-blok" :data-test="tid('samenvatting')"><span class="gv-an-label">Samenvatting</span><p>{{ analyse.samenvatting }}</p></div>
         <div class="gv-an-blok" :data-test="tid('actiepunten')"><span class="gv-an-label">Actiepunten</span>
           <ul v-if="analyse.actiepunten.length"><li v-for="p in analyse.actiepunten" :key="p">{{ p }}</li></ul>

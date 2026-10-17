@@ -17,6 +17,8 @@ const props = defineProps<{
   aanleiding?: string
   voorgevuld?: { accountId?: string | null; titel?: string; actiesoort?: string; aanleiding?: string } | null
   contact?: Contact | null
+  /** Geopend vanuit de AI-assistent: ligt dan boven de assistent. */
+  bovenop?: boolean
 }>()
 const emit = defineEmits<{ sluit: []; gemaakt: [] }>()
 const { functie } = useMe()
@@ -35,6 +37,10 @@ function leeg() {
 const f = reactive(leeg())
 const klant = ref<Klant | null>(null)
 const contact = ref<Contact | null>(null)
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot Maak taak opslaat; sluiten vraagt dan eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [f, klant.value?.id ?? null, contact.value?.id ?? null])
+const ai = computed(() => ({ accountId: klant.value?.id ?? null, label: klant.value?.naam ?? 'Nieuwe taak', vraag: f.aanleiding.trim() ? `Maak een korte titel voor een taak met deze aanleiding: ${f.aanleiding.trim()}` : '', voorstellen: ['Maak een titel uit de aanleiding', 'Wanneer kan ik het beste bellen?', 'Welk type taak past hier?'] }))
 const bezig = ref(false)
 const fout = ref('')
 
@@ -47,6 +53,7 @@ watch(() => props.open, async (o) => {
   fout.value = ''; bezig.value = false
   // Voorgevuld vanuit de AI-assistent: account, titel en aanleiding; pas "Maak taak" maakt de taak.
   if (v?.accountId && !klant.value) { try { const a: any = await ($fetch as any)(`/api/accounts/${v.accountId}`); klant.value = { id: a.id, naam: a.naam } } catch { klant.value = null } }
+  await nextTick(); opslag.basis()
 }, { immediate: true })
 
 const dueIso = computed(() => (f.datum ? nlTijdstip(f.datum, f.tijd ? Number(f.tijd.slice(0, 2)) : 9, f.tijd ? Number(f.tijd.slice(3, 5)) : 0).toISOString() : undefined))
@@ -57,7 +64,7 @@ async function maak() {
   if (!kanMaken.value) return
   bezig.value = true; fout.value = ''
   try {
-    await $fetch('/api/tasks', {
+    await opslag.bewaar(() => $fetch('/api/tasks', {
       method: 'POST',
       body: {
         title: f.title.trim(), actionType: f.actionType, dueDate: dueIso.value, accountId: klant.value?.id, contactId: contact.value?.id,
@@ -69,28 +76,20 @@ async function maak() {
         aanleiding: f.aanleiding.trim() || props.voorgevuld?.aanleiding || undefined,
         ...(props.voorgevuld ? { herkomst: 'assistent' } : {}),
       },
-    })
+    }))
     toast.toon(f.herhalen && aantal.value > 1 ? `Taak gemaakt. Na afronden staat de volgende klaar, ${aantal.value} in totaal.` : 'Taak gemaakt.')
     emit('gemaakt')
   } catch (e) { fout.value = foutTekst(e); toast.toon(fout.value, 'fout') } finally { bezig.value = false }
 }
-function toets(e: KeyboardEvent) { if (e.key === 'Escape' && props.open) emit('sluit') }
-onMounted(() => document.addEventListener('keydown', toets))
-onBeforeUnmount(() => document.removeEventListener('keydown', toets))
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="nt-titel-kop" data-test="nieuwe-taak" @submit.prevent="maak">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+  <FlyoutShell :open="open" titel-id="nt-titel-kop" :opslag="opslag" :ai="ai" :overlay-klasse="{ 'fs-overlay--top': bovenop }" data-test="nieuwe-taak" @sluit="emit('sluit')" @bewaar="maak">
+    <template #kop>
             <span class="fo-kicker" data-test="nt-kicker">Nieuwe taak · {{ PRIO_LABEL[f.priority] }}</span>
             <h2 id="nt-titel-kop" class="fo-titel">Wat moet er gebeuren?</h2>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')">×</button>
-        </header>
-        <div class="fo-body fo-body--formulier">
+    </template>
+        <form id="nt-form" class="fo-body fo-body--formulier" @submit.prevent="maak">
           <KlantContactKiezer v-model:klant="klant" v-model:contact="contact" prefix="nt" />
 
           <label class="veld">
@@ -153,15 +152,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
             </label>
           </template>
           <p v-if="fout" class="veld-fout">{{ fout }}</p>
-        </div>
-        <footer class="fo-foot dd-acties">
-          <button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="submit" class="dd-act dd-act--geel" :disabled="!kanMaken" data-test="nt-maak">{{ bezig ? 'Opslaan…' : '✓ Maak taak' }}</button>
+        </form>
+    <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="nt-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!kanMaken" data-test="nt-maak"><Icoon naam="Check" :grootte="16" />{{ bezig ? 'Opslaan…' : 'Maak taak' }}</button>
+          <span class="fo-foot-vul" />
         </footer>
-      </form>
-    </div>
-  </Teleport>
+    </template>
+  </FlyoutShell>
 </template>
 
 <style scoped>

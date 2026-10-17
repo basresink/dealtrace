@@ -53,8 +53,8 @@ const nummer = (c: any) => c.mobiel ?? c.telefoon ?? null
                 <span class="cf-info">
                   <span class="cf-regel">
                     <span class="cf-naam">{{ c.naam }}</span>
-                    <span class="cf-rol" :class="`cf-rol--${c.rol}`">{{ CONTACTROL_LABEL[c.rol as keyof typeof CONTACTROL_LABEL] ?? c.rol }}</span>
-                    <span v-if="c.status === 'vertrokken'" class="cf-rol cf-rol--vertrokken">Vertrokken</span>
+                    <Label soort="rol" :waarde="c.rol || 'onbekend'" />
+                    <Label v-if="c.status === 'vertrokken'" soort="status" waarde="vertrokken" />
                   </span>
                   <span v-if="c.functie" class="cf-functie">{{ c.functie }}</span>
                   <span v-if="c.email" class="cf-meta">{{ c.email }}</span>
@@ -109,13 +109,6 @@ const nummer = (c: any) => c.mobiel ?? c.telefoon ?? null
 .cf-info { display: flex; flex: 1; flex-direction: column; min-width: 0; }
 .cf-regel { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .cf-naam { font-family: var(--font-serif); font-size: 15px; font-weight: 700; color: var(--ink); }
-.cf-rol { padding: 2px 6px; border: 1px solid transparent; border-radius: 2px; font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; background: var(--ink); color: var(--yellow); }
-.cf-rol--champion { background: var(--green); color: var(--wit); }
-.cf-rol--beinvloeder { background: var(--yellow); color: var(--ink); }
-.cf-rol--gebruiker { background: var(--blue); color: var(--wit); }
-.cf-rol--blokkeerder { background: var(--red); color: var(--wit); }
-.cf-rol--poortwachter { background: var(--purple); color: var(--wit); }
-.cf-rol--onbekend, .cf-rol--vertrokken { background: var(--bg); color: var(--muted); border-color: var(--border-strong); }
 .cf-functie { margin-top: 2px; font-size: 12px; color: var(--muted); }
 .cf-meta { font-size: 11px; color: var(--ink-soft); overflow-wrap: anywhere; }
 .cf-acties { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 4px 24px 12px 82px; }

@@ -141,11 +141,11 @@ const rolTekst = (k: any) => [k.contactNaam, k.contactRol].filter(Boolean).join(
         <div v-else-if="fase === 'laden'" class="sp-laden" role="status"><Icoon naam="Sparkles" /> De AI vult de AI-blokken voor {{ p.account.naam }}…</div>
 
         <template v-else-if="fase === 'beoordelen'">
-          <div class="rijtje"><span class="pil pil--paars">AI-concept</span><span class="meta" data-test="sp-teller"><strong>{{ aiTotaal - open }} van {{ aiTotaal }}</strong> AI-blokken beoordeeld. Bevestig, pas aan of verwerp elk blok.</span></div>
+          <div class="rijtje"><Label soort="ai" waarde="concept" /><span class="meta" data-test="sp-teller"><strong>{{ aiTotaal - open }} van {{ aiTotaal }}</strong> AI-blokken beoordeeld. Bevestig, pas aan of verwerp elk blok.</span></div>
           <div v-for="b in blokken" :key="b.id" class="sp-blok" :class="{ 'sp-blok--ai': b.voorstel, 'sp-blok--ok': b.status === 'bevestigd' || b.status === 'bewerkt', 'sp-blok--weg': b.status === 'verworpen' }" :data-test="`sp-blok-${b.id}`">
             <div class="sp-blok-kop">
               <span class="bloklabel">{{ b.titel || BLOK_LABEL[b.soort] }}</span>
-              <span v-if="b.voorstel" class="pil pil--paars">AI</span><span v-else-if="b.status === 'vast'" class="meta">vast uit het standaardscript</span>
+              <Label v-if="b.voorstel" soort="ai" waarde="voorstel" /><span v-else-if="b.status === 'vast'" class="meta">vast uit het standaardscript</span>
               <span v-if="STATUS[b.status]" class="pil" :class="STATUS[b.status]!.klas" :data-test="`sp-status-${b.id}`">{{ STATUS[b.status]!.label }}</span>
               <span class="sp-blok-acties">
                 <template v-if="b.status === 'voorgesteld'">
@@ -171,7 +171,7 @@ const rolTekst = (k: any) => [k.contactNaam, k.contactRol].filter(Boolean).join(
         <template v-else-if="fase === 'versie' && versieOpen">
           <div class="rijtje"><span class="pil pil--groen">Versie {{ versieOpen.versie }}</span><span class="meta">{{ datum(versieOpen.op) }} · {{ versieOpen.door }} · {{ versieOpen.samenvatting }}</span></div>
           <div v-for="b in versieOpen.data.blokken" :key="b.id" class="sp-blok" :class="{ 'sp-blok--ai': b.voorstel }" :data-test="`sp-versie-blok-${b.id}`">
-            <div class="sp-blok-kop"><span class="bloklabel">{{ b.titel || BLOK_LABEL[b.soort as BlokSoortScript] }}</span><span v-if="b.vanAi" class="pil pil--paars">AI</span><span v-if="STATUS[b.status]" class="pil" :class="STATUS[b.status]!.klas">{{ STATUS[b.status]!.label }}</span></div>
+            <div class="sp-blok-kop"><span class="bloklabel">{{ b.titel || BLOK_LABEL[b.soort as BlokSoortScript] }}</span><Label v-if="b.vanAi" soort="ai" waarde="ai" /><span v-if="STATUS[b.status]" class="pil" :class="STATUS[b.status]!.klas">{{ STATUS[b.status]!.label }}</span></div>
             <p class="sp-vast"><template v-for="(seg, j) in voorbeeldSegmenten(b.tekst, p.waarden)" :key="j"><span v-if="seg.variabele" class="var" :class="{ 'var--onbekend': seg.onbekend }">{{ seg.tekst || '…' }}</span><template v-else>{{ seg.tekst }}</template></template></p>
             <div v-if="b.vanAi" class="sp-herkomst"><span class="veld-label">Gebaseerd op</span><span v-for="h in b.herkomst" :key="h.label" class="sp-chip sp-chip--vast">{{ h.label }}</span></div>
           </div>

@@ -68,7 +68,7 @@ useHead({ title: 'Agents en mandaten · Instellingen · Dealtrace' })
           <article class="kaart mt-16" data-test="vier-niveaus">
             <h2 class="kaart-titel">Mandaten in vier niveaus</h2>
             <ul class="mandaat-uitleg mt-8">
-              <li v-for="m in MANDATEN" :key="m"><span class="pil" :class="`pil--mandaat-${m}`">{{ m }}</span><span>{{ MANDAAT_LABEL[m] }}</span></li>
+              <li v-for="m in MANDATEN" :key="m"><Label soort="klasse" :waarde="m" :titel="`Mandaat ${m}`" /><span>{{ MANDAAT_LABEL[m] }}</span></li>
             </ul>
             <p class="kaart-meta mt-8">Harde grenzen: D blijft D. Nooit zonder toestemming of in een afkoelperiode, nooit buiten het ritme, nooit een template, regel of verhaal wijzigen. Alles is herleidbaar, en met "Agents pauzeren" stopt alles wat zonder jou gaat.</p>
           </article>
@@ -85,7 +85,7 @@ useHead({ title: 'Agents en mandaten · Instellingen · Dealtrace' })
                       <select v-if="beheer && !a.altijdAan" v-model="a.mandaat" class="invoer" :aria-label="`Mandaat ${a.naam}`" :data-test="`mandaat-${a.sleutel}`" @change="zetAgent(a)">
                         <option v-for="m in a.opties" :key="m" :value="m">{{ m }} · {{ MANDAAT_LABEL[m as 'A'] }}</option>
                       </select>
-                      <span v-else class="pil" :class="`pil--mandaat-${a.mandaat}`">{{ a.mandaat }}</span>
+                      <Label v-else soort="klasse" :waarde="a.mandaat" :titel="`Mandaat ${a.mandaat}`" />
                     </td>
                     <td>
                       <input v-if="beheer && !a.altijdAan" v-model="a.dagplafond" type="number" min="0" class="invoer invoer--smal" placeholder="geen" :aria-label="`Dagplafond ${a.naam}`" @input="zetAgent(a)">

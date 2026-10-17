@@ -3155,17 +3155,13 @@ input[type='time'].invoer { font-feature-settings: "tnum"; }
    Accountklasse (AccountRow .acct-fase, kaarten .kaart-fase, top-lijsten
    .top-fase, 6 plekken): A zwart met gele tekst (5x), B blauw, C oranje,
    D grijs, overig paars, geen klasse gestippeld met de tekst "Geen klasse".
-   Signaaltag (SignalTag.vue, 15x): Intern zwart met geel, Extern geel met
-   zwart, Overig grijs; soorten gevuld (vacature paars, nieuws zwart,
-   concurrent rood, kvk oranje, kans groen). Geen hoek.
-   Statuslabel (StatusTag.vue): klant blauw, hot prospect paars, at-risk
-   oranje, strategisch rood, warm prospect groen, prospect grijs met rand,
-   watchlist grijs gestippeld.
+   Signaaltags (.tag) en statuslabels (.status) zijn vervangen door het
+   labelsysteem (<Label>, shared/labels.ts, sectie Labels in ui-standaard.css).
+   .pil wordt daar ook op het labelsysteem gezet.
 
    Opbouw:
    <span class="pil pil--blauw-vol">Klant</span>
    <span class="klasse klasse--a">A · Corporate</span>
-   <span class="tag tag--extern">Extern</span>
    ========================================================================== */
 .pil {
   display: inline-flex;
@@ -3224,52 +3220,6 @@ input[type='time'].invoer { font-feature-settings: "tnum"; }
 .klasse--d { background: var(--muted); border-color: var(--muted); }
 .klasse--overig { background: var(--purple); border-color: var(--purple); }
 .klasse--geen { background: transparent; color: var(--muted); border: 1px dashed var(--border-strong); }
-
-.tag {
-  display: inline-block;
-  padding: 2px 7px;
-  background: var(--surface);
-  color: var(--muted);
-  border: 1px solid var(--border-strong);
-  font-size: var(--fs-label);
-  font-weight: 800;
-  line-height: 1.6;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.tag--intern { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
-.tag--extern { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
-.tag--overig { background: var(--surface); color: var(--muted); border-color: var(--border-strong); }
-.tag--vacature { background: var(--purple); color: var(--wit); border-color: var(--purple); }
-.tag--nieuws { background: var(--ink); color: var(--wit); border-color: var(--ink); }
-.tag--social { background: var(--blue); color: var(--wit); border-color: var(--blue); }
-.tag--website { background: var(--green); color: var(--wit); border-color: var(--green); }
-.tag--branche { background: var(--muted); color: var(--wit); border-color: var(--muted); }
-.tag--concurrent,
-.tag--directiewissel,
-.tag--aflopend-contract { background: var(--red); color: var(--wit); border-color: var(--red); }
-.tag--kvk,
-.tag--omzetdaling { background: var(--orange); color: var(--wit); border-color: var(--orange); }
-.tag--kans { background: var(--green); color: var(--wit); border-color: var(--green); }
-
-.status {
-  display: inline-block;
-  padding: 2px 8px;
-  font-size: var(--fs-label);
-  font-weight: 800;
-  line-height: 1.6;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.status--strategisch { background: var(--red); color: var(--wit); }
-.status--klant { background: var(--blue); color: var(--wit); }
-.status--at-risk { background: var(--orange); color: var(--wit); }
-.status--hot-prospect { background: var(--purple); color: var(--wit); }
-.status--warm-prospect { background: var(--green); color: var(--wit); }
-.status--prospect { background: var(--surface); color: var(--muted); border: 1px solid var(--border-strong); }
-.status--watchlist { background: var(--surface); color: var(--muted); border: 1px dashed var(--border-strong); }
 
 /* Bandbadge (BandBadge.vue): drie standen van een dealband, zacht vlak,
    geen kapitalen. */

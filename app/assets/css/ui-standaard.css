@@ -297,3 +297,12 @@ button.lbl:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 /* Een rij labels. */
 .lbl-rij { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+/* Een label dat je kiest (rol op de contactkaart, klasse op de accountkaart): het label is de weergave,
+   een onzichtbare keuzelijst eroverheen doet het werk. */
+.lbl-kies { position: relative; display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; }
+.lbl-kies > select { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; font-size: 16px; }
+.lbl-kies > .icoon { color: var(--lbl-rand-zacht); }
+.lbl-kies:hover > .lbl { border-color: var(--lbl-rand-tekst); }
+.lbl-kies:focus-within > .lbl { outline: 2px solid var(--ink); outline-offset: 2px; }
+@media (max-width: 719px) { .lbl-kies { min-height: var(--touch-target-min); } }

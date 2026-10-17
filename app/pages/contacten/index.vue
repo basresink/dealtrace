@@ -3,8 +3,7 @@
 // met paarse kicker en de week, daaronder een grijze band met zes portretkaarten. Eerst wie
 // deze week iets heeft lopen (afspraak, open taak), aangevuld met beslissers, champions en
 // beïnvloeders van je eigen accounts (GET /api/contacten/top).
-import { CONTACTROL_LABEL } from '~~/shared/contactgegevens'
-import { datumActiviteit, initialen, klasseKleur, klasseLabel, kleurUitNaam } from '~/utils/accountWeergave'
+import { datumActiviteit, initialen, klasseLabel, kleurUitNaam } from '~/utils/accountWeergave'
 
 const { functie } = useMe()
 if (!functie('contacten.basis')?.beschikbaar) throw createError({ statusCode: 403, statusMessage: 'Geen toegang' })
@@ -12,7 +11,6 @@ const { data } = await useFetch<{ contacten: any[]; klassen: { id: string; naam:
 const top = computed(() => data.value.contacten)
 const d = (x: string | Date) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(x)).replace('.', '')
 const kicker = computed(() => data.value.week ? `Top deze week · ${d(data.value.week.van)} tot ${d(data.value.week.tot)}` : 'Top deze week')
-const rolLabel = (rol: string) => CONTACTROL_LABEL[rol as keyof typeof CONTACTROL_LABEL] ?? rol
 const metProtocol = (u: string) => (/^https?:\/\//i.test(u) ? u : `https://${u}`)
 useHead({ title: 'Contacten · Dealtrace' })
 </script>
@@ -37,7 +35,7 @@ useHead({ title: 'Contacten · Dealtrace' })
         <ul v-else class="portretten" data-test="top-contacten">
           <li v-for="c in top" :key="c.id" class="portret" :data-contact="c.id">
             <div class="portret-foto" :style="{ background: kleurUitNaam(c.naam) }">
-              <span class="portret-rol" :class="`portret-rol--${c.rol}`">{{ rolLabel(c.rol) }}</span>
+              <Label class="portret-rol" soort="rol" :waarde="c.rol || 'onbekend'" />
               <img v-if="c.fotoUrl" :src="c.fotoUrl" alt="" class="portret-img" loading="lazy">
               <span v-else class="portret-initialen" aria-hidden="true">{{ initialen(c.naam) }}</span>
             </div>
@@ -50,7 +48,7 @@ useHead({ title: 'Contacten · Dealtrace' })
                 <span v-if="c.jarenInRol"><strong>{{ c.jarenInRol }} jr</strong> in rol</span>
                 <a v-if="c.linkedin" :href="metProtocol(c.linkedin)" target="_blank" rel="noopener" class="portret-extern">LinkedIn ↗</a>
                 <span><strong>{{ c.account.soort === 'klant' ? 'Klant' : 'Prospect' }}</strong></span>
-                <span v-if="c.account.klasse" class="klasse-pil" :class="`klasse-pil--${klasseKleur(c.account.klasse, data.klassen)}`">{{ klasseLabel(c.account.klasse, data.klassen) }}</span>
+                <Label v-if="c.account.klasse" soort="klasse" :waarde="klasseLabel(c.account.klasse, data.klassen)" />
                 <span class="portret-open">Open →</span>
               </div>
             </div>
@@ -71,10 +69,8 @@ useHead({ title: 'Contacten · Dealtrace' })
 .portret-foto { position: relative; display: flex; align-items: center; justify-content: center; height: 150px; }
 .portret-foto::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.15)); pointer-events: none; }
 .portret-initialen { position: relative; z-index: 1; font-family: var(--font-serif); font-size: 52px; font-weight: 700; letter-spacing: -0.02em; color: var(--wit); }
-.portret-rol { position: absolute; top: 14px; left: 14px; z-index: 2; padding: 4px 10px; background: var(--ink); color: var(--yellow); font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
-.portret-rol--champion { background: var(--green); color: var(--wit); }
-.portret-rol--beinvloeder { background: var(--yellow); color: var(--ink); }
-.portret-rol--gebruiker { background: var(--blue); color: var(--wit); }
+.portret-rol { position: absolute; top: 14px; left: 14px; z-index: 2; }
+.portret-rol.lbl--leeg { background: var(--wit); }
 .portret-body { display: flex; flex: 1; flex-direction: column; padding: 20px 22px; }
 .portret-naam { margin: 0 0 4px; font-family: var(--font-serif); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); }
 .portret-link { color: inherit; text-decoration: none; }

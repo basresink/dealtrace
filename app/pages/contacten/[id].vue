@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Contactkaart (F04) in de opzet van DealDrive: kop met avatar en rol, kruimel, functie en account (link),
-// naam met rolpil, contactgegevens (mail, telefoon, mobiel, LinkedIn), de stuurstrip van het account en rechts
+// naam met rollabel, contactgegevens (mail, telefoon, mobiel, LinkedIn), de stuurstrip van het account en rechts
 // Zoeken, Vraag AI, Account en Meer. Meer opent een venster met korte kaders (Info, Briefing, Volgen, Invloed,
 // Belscript, Dossier, Kwalificatie, Reis, Klaarzetten en Bel) die elk hun eigen venster openen; ?meer=<id>
 // opent er direct een. Dossier, Kwalificatie en Reis tonen de stand van het account. Daaronder de statstrook en
@@ -71,7 +71,7 @@ const OPEN: Record<string, Ref<boolean>> = { info: infoOpen, briefing: briefingO
 function kies(id: string) { meerOpen.value = false; const r = OPEN[id]; if (r) r.value = true }
 onMounted(() => { const q = route.query.meer; if (typeof q === 'string' && kaders.value.some((x) => x.id === q && !x.href)) kies(q) })
 
-// Kop: avatar met initialen in een vaste kleur per naam, de rol als gekleurde pil.
+// Kop: avatar met initialen in een vaste kleur per naam, de rol als label met eigen icoon (kies via de keuzelijst eronder).
 const KLEUR = ['#194c8f', '#1e7c4a', '#c0392b', '#4c1d95', '#b45309', '#0a0a0a', '#0f766e']
 const kleur = computed(() => KLEUR[[...c.value.naam].reduce((s: number, x: string) => s + x.charCodeAt(0), 0) % KLEUR.length])
 const roepnaam = computed(() => c.value.voornaam || c.value.naam)
@@ -116,11 +116,11 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
           <div class="ck-info">
             <p class="ck-eyebrow" data-test="contact-functie"><template v-if="c.functie">{{ c.functie }}</template><template v-if="c.functie && c.account"> · </template><NuxtLink v-if="c.account" :to="`/accounts/${c.accountId}`" class="ck-account" data-test="contact-account">{{ c.account.naam }}</NuxtLink></p>
             <h1 class="ck-titel" data-test="contact-naam">{{ c.naam }}
-              <select class="ck-rolpil" :class="`ck-rol--${c.rol}`" :value="c.rol" aria-label="Rol" data-test="contact-rol" @change="wijzig({ rol: ($event.target as HTMLSelectElement).value })"><option v-for="r in ROLLEN_CONTACT" :key="r" :value="r">{{ CONTACTROL_LABEL[r] }}</option></select>
+              <span class="lbl-kies ck-rolkies"><Label soort="rol" :waarde="c.rol || 'onbekend'" data-test="contact-rol-label" /><Icoon naam="ChevronDown" :grootte="12" /><select :value="c.rol" aria-label="Rol" data-test="contact-rol" @change="wijzig({ rol: ($event.target as HTMLSelectElement).value })"><option v-for="r in ROLLEN_CONTACT" :key="r" :value="r">{{ CONTACTROL_LABEL[r] }}</option></select></span>
             </h1>
             <div v-if="c.status === 'vertrokken' || c.belMeNiet" class="ck-pillen">
-              <span v-if="c.status === 'vertrokken'" class="pil pil--grijs" data-test="vertrokken">Vertrokken<template v-if="c.vertrokkenOp"> {{ c.vertrokkenOp }}</template></span>
-              <span v-if="c.belMeNiet" class="pil pil--rood" data-test="bel-me-niet-pil">Bel me niet</span>
+              <Label v-if="c.belMeNiet" soort="urgentie" waarde="bel-me-niet" data-test="bel-me-niet-pil" />
+              <Label v-if="c.status === 'vertrokken'" soort="status" waarde="vertrokken" :tekst="c.vertrokkenOp ? `Vertrokken ${c.vertrokkenOp}` : null" data-test="vertrokken" />
             </div>
             <div class="ck-contactstrip" data-test="contactgegevens">
               <a v-if="c.email" :href="`mailto:${c.email}`"><Icoon naam="Mail" :grootte="14" /> {{ c.email }}</a>
@@ -214,15 +214,6 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
 .ck-account { color: var(--ink); text-decoration: none; border-bottom: 2px solid var(--yellow); }
 .ck-account:hover { color: var(--ink-soft); }
 .ck-titel { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin: 6px 0 0; font-family: var(--font-serif); font-size: clamp(26px, 3.4vw, 36px); font-weight: 700; line-height: 1.1; letter-spacing: -0.01em; color: var(--ink); }
-.ck-rolpil { appearance: none; min-height: 26px; padding: 3px 8px; border: 1px solid transparent; border-radius: 2px; font-family: var(--font-serif); font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.4; cursor: pointer; }
-.ck-rolpil option { background: #fff; color: var(--ink); font-family: Inter, sans-serif; text-transform: none; }
-.ck-rol--beslisser { background: var(--ink); color: var(--yellow); }
-.ck-rol--champion { background: var(--green); color: #fff; }
-.ck-rol--beinvloeder { background: var(--yellow); color: var(--ink); }
-.ck-rol--gebruiker { background: var(--blue); color: #fff; }
-.ck-rol--blokkeerder { background: var(--red); color: #fff; }
-.ck-rol--poortwachter { background: var(--purple); color: #fff; }
-.ck-rol--onbekend { background: #fff; color: var(--muted); border: 1px dashed var(--border-strong); }
 .ck-pillen { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .ck-contactstrip { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 12px; font-size: 13px; }
 .ck-contactstrip a { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; color: var(--ink); text-decoration: none; border-bottom: 1px solid transparent; overflow-wrap: anywhere; }
@@ -259,8 +250,6 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
   .ck-foto-paneel { width: min(280px, calc(100vw - 32px)); }
   .ck-foto-paneel .dd-act { min-height: 44px; }
   .ck-kruimel { min-height: 44px; margin-bottom: 4px; }
-  /* Tikdoel van 44 px; de pil zelf blijft klein (transparante rand). */
-  .ck-rolpil { min-height: 44px; border-width: 9px 0; border-color: transparent; background-clip: padding-box; }
   .ck-contactstrip a { min-height: 44px; }
   .ck-stats { padding: 12px 0; }
 }

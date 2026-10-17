@@ -192,7 +192,7 @@ useHead({ title: 'Dagstart · Dealtrace' })
                   <li v-for="i in dp.items" :key="i.sleutel" class="item-rij ds-item" :data-test="`ds-item-${i.sleutel}`">
                     <span class="item-tijd">{{ tijd(i.start) }}<small>{{ tijd(i.eind) }}</small></span>
                     <span class="item-icoon" :class="ICOON_KLASSE[i.soort === 'belblok' ? 'bel' : i.soort]"><Icoon :naam="ITEM_ICOON[i.soort] ?? 'Clock'" /></span>
-                    <span class="item-body"><span class="item-naam">{{ i.titel }}</span><span v-if="i.sub" class="item-meta">{{ i.sub }}</span><span class="pil-tags"><span class="pil pil--paars">Dagplanner</span><span v-if="i.agenda" class="pil pil--grijs">In je agenda</span></span>
+                    <span class="item-body"><span class="item-naam">{{ i.titel }}</span><span v-if="i.sub" class="item-meta">{{ i.sub }}</span><span class="pil-tags"><Label soort="herkomst" waarde="dagplanner" /><span v-if="i.agenda" class="pil pil--grijs">In je agenda</span></span>
                       <button v-if="kanOngedaan(i)" type="button" class="dd-act ds-item-knop" :disabled="!!bezigDp" :data-test="`ds-ongedaan-${i.sleutel}`" :aria-label="`Maak ${i.titel} ongedaan`" @click="ongedaan(i.sleutel)"><Icoon naam="Undo2" />Ongedaan</button>
                     </span>
                   </li>

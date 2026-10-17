@@ -32,7 +32,7 @@ const datum = (s: string | null) => (s ? new Intl.DateTimeFormat('nl-NL', { day:
       <LegeStaat v-if="!blokken.length" titel="Nog geen belscript." tekst="Er is nog geen actief script voor je team. Je salesmanager zet het standaardscript klaar in de Belscript Studio." />
       <ol v-else class="bsf-blokken" data-test="bsf-blokken">
         <li v-for="b in blokken" :key="b.id" class="bsf-blok">
-          <span class="bsf-label">{{ b.titel || BLOK_LABEL[b.soort as BlokSoortScript] || 'Blok' }}<span v-if="b.vanAi" class="pil pil--paars">AI</span></span>
+          <span class="bsf-label">{{ b.titel || BLOK_LABEL[b.soort as BlokSoortScript] || 'Blok' }}<Label v-if="b.vanAi" soort="ai" waarde="ai" /></span>
           <p class="bsf-tekst"><template v-for="(seg, j) in voorbeeldSegmenten(b.status === 'verworpen' ? (b.terugval ?? '') : (b.tekst ?? ''), p.waarden ?? {})" :key="j"><span v-if="seg.variabele" class="bsf-var" :class="{ 'bsf-var--onbekend': seg.onbekend }">{{ seg.tekst || '…' }}</span><template v-else>{{ seg.tekst }}</template></template></p>
         </li>
       </ol>

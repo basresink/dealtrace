@@ -5,7 +5,8 @@
 // nog geen naam bij is, staan als "Naam onbekend". Rechts de dekking (vaste regel: beslisser en minstens één
 // beïnvloeder gesproken), het grootste risico en één voorgestelde stap met Maak taak. Een klik op een persoon
 // opent de details (InvloedPersoonFlyout). De Notulist stelt houdingen voor uit de verslagen; jij bevestigt.
-import { HOUDING_LABEL, KNOOP_B, KNOOP_H, indeling, rolLabel, type Houding } from '~~/shared/invloed'
+import { labelDef } from '~~/shared/labels'
+import { HOUDINGEN, HOUDING_LABEL, KNOOP_B, KNOOP_H, indeling, rolLabel, type Houding } from '~~/shared/invloed'
 const props = defineProps<{ open: boolean; accountId: string | null; contactId?: string | null }>()
 const emit = defineEmits<{ sluit: []; gewijzigd: [] }>()
 const toast = useToast()
@@ -32,11 +33,13 @@ const kaart = computed(() => indeling(personen.value))
 const persoon = computed(() => personen.value.find((p) => p.id === gekozen.value) ?? null)
 const naamVan = (id: string | null) => personen.value.find((p) => p.id === id)?.naam ?? null
 
-const HOUDING_KLEUR: Record<Houding, string> = { voor: 'groen', neutraal: 'geel', tegen: 'rood', onbekend: 'leeg' }
-const contactKlasse = (n: number) => (n >= 2 ? 'groen' : n === 1 ? 'geel' : 'rood')
+const HOUDING_KLEUR: Record<Houding, string> = { voor: 'groen', neutraal: 'grijs', tegen: 'rood', onbekend: 'leeg' }
+const contactKlasse = (n: number) => (n >= 2 ? 'groen' : n === 1 ? 'oranje' : 'rood')
+/** Houding in het organigram: het icoon uit het labelregister (duim, streep, verbod, vraag) in de tint. */
+const houdingIcoon = (h: string) => labelDef('houding', h || 'onbekend')?.icoon ?? 'CircleHelp'
+const houdingKlas = (h: string) => { const d = labelDef('houding', h || 'onbekend'); return d?.stijl === 'zacht' ? ['lbl--zacht', `lbl--${d.tint}`] : ['lbl--leeg'] }
 const kleur = (p: any) => (modus.value === 'houding' ? HOUDING_KLEUR[p.houding as Houding] : contactKlasse(p.momenten))
 const contactTekst = (n: number) => (n === 0 ? 'nooit' : n === 1 ? '1 keer' : `${n} keer`)
-const rolKleur = (r: string) => (r === 'beslisser' ? 'var(--red)' : r === 'champion' ? 'var(--green)' : 'var(--muted)')
 const kort = (s: string | null, n = 22) => (!s ? '' : s.length > n ? `${s.slice(0, n - 1)}…` : s)
 const labelVan = (p: any) => `${p.functie ?? p.naam}, ${rolLabel(p.rol)}, houding ${HOUDING_LABEL[p.houding as Houding].toLowerCase()}, contact ${contactTekst(p.momenten)}${p.onbekend ? ', naam onbekend' : ''}`
 
@@ -113,7 +116,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
                       >
                         <rect class="inv-kader" :x="k.x - KNOOP_B / 2" :y="k.y - KNOOP_H / 2" :width="KNOOP_B" :height="KNOOP_H" rx="2" />
                         <rect :class="`inv-strook inv-strook--${kleur(k.persoon)}`" :x="k.x - KNOOP_B / 2 + 1" :y="k.y + KNOOP_H / 2 - 6" :width="KNOOP_B - 2" height="5" />
-                        <text :x="k.x - KNOOP_B / 2 + 9" :y="k.y - KNOOP_H / 2 + 15" class="inv-t-rol" :style="{ fill: rolKleur(k.persoon.rol) }">{{ rolLabel(k.persoon.rol).toUpperCase() }}<template v-if="k.persoon.onbekend || k.persoon.vermoedelijk"> ?</template></text>
+                        <foreignObject :x="k.x - KNOOP_B / 2 + 6" :y="k.y - KNOOP_H / 2 + 3" :width="KNOOP_B - 12" height="22">
+                          <div class="inv-fo-rij">
+                            <Label soort="rol" :waarde="k.persoon.rol || 'onbekend'" :vermoedelijk="k.persoon.onbekend || k.persoon.vermoedelijk" />
+                            <span v-if="modus === 'houding'" class="lbl inv-houding-ico" :class="houdingKlas(k.persoon.houding)" :title="`Houding ${HOUDING_LABEL[k.persoon.houding as Houding].toLowerCase()}`" :data-test="`inv-houding-${k.persoon.id}`"><Icoon :naam="houdingIcoon(k.persoon.houding)" :grootte="12" /></span>
+                          </div>
+                        </foreignObject>
                         <text :x="k.x - KNOOP_B / 2 + 9" :y="k.y - KNOOP_H / 2 + 31" class="inv-t-functie">{{ kort(k.persoon.functie ?? k.persoon.naam) }}</text>
                         <text :x="k.x - KNOOP_B / 2 + 9" :y="k.y - KNOOP_H / 2 + 45" class="inv-t-naam" :class="{ 'inv-t-naam--onbekend': k.persoon.onbekend }">{{ kort(k.persoon.functie ? k.persoon.naam : contactTekst(k.persoon.momenten), 24) }}</text>
                         <circle v-if="k.persoon.voorstel" class="inv-stip" :cx="k.x + KNOOP_B / 2 - 9" :cy="k.y - KNOOP_H / 2 + 10" r="4"><title>Voorstel van de Notulist</title></circle>
@@ -126,17 +134,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
                       <button type="button" class="inv-rij" :style="{ paddingLeft: `${12 + Math.min(k.laag, 3) * 14}px` }" :data-test="`inv-rij-${k.persoon.id}`" @click="gekozen = k.persoon.id">
                         <span :class="`inv-staaf inv-strook--${kleur(k.persoon)}`" aria-hidden="true" />
                         <span class="inv-rij-tekst">
-                          <span class="inv-rolpil" :class="`inv-rol--${k.persoon.rol}`">{{ rolLabel(k.persoon.rol) }}<template v-if="k.persoon.onbekend || k.persoon.vermoedelijk"> ?</template></span>
+                          <Label soort="rol" :waarde="k.persoon.rol || 'onbekend'" :vermoedelijk="k.persoon.onbekend || k.persoon.vermoedelijk" />
                           <strong>{{ k.persoon.functie ?? k.persoon.naam }}</strong>
                           <span class="meta">{{ k.persoon.functie ? k.persoon.naam : '' }}<template v-if="k.persoon.rapporteertAan"> · onder {{ naamVan(k.persoon.rapporteertAan) }}</template></span>
                         </span>
-                        <span class="inv-rij-rechts meta">{{ modus === 'houding' ? HOUDING_LABEL[k.persoon.houding as Houding] : contactTekst(k.persoon.momenten) }}</span>
+                        <Label v-if="modus === 'houding'" class="inv-rij-rechts" soort="houding" :waarde="k.persoon.houding || 'onbekend'" />
+                        <span v-else class="inv-rij-rechts meta">{{ contactTekst(k.persoon.momenten) }}</span>
                       </button>
                     </li>
                   </ul>
                   <p class="inv-legenda meta" data-test="inv-legenda">
-                    <template v-if="modus === 'houding'"><span><i class="inv-strook--groen" />Voor</span><span><i class="inv-strook--geel" />Neutraal</span><span><i class="inv-strook--rood" />Tegen</span><span><i class="inv-strook--leeg" />Onbekend</span></template>
-                    <template v-else><span><i class="inv-strook--groen" />Vaak gesproken</span><span><i class="inv-strook--geel" />1 keer</span><span><i class="inv-strook--rood" />Nooit</span></template>
+                    <template v-if="modus === 'houding'"><Label v-for="h in HOUDINGEN" :key="h" soort="houding" :waarde="h" /></template>
+                    <template v-else><span><i class="inv-strook--groen" />Vaak gesproken</span><span><i class="inv-strook--oranje" />1 keer</span><span><i class="inv-strook--rood" />Nooit</span></template>
                     <span>Een vraagteken: vermoedelijke rol. Klik op een persoon voor details.</span>
                   </p>
                 </template>
@@ -152,7 +161,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
                   </p>
                 </article>
                 <article class="kaart inv-blok" :class="{ 'kaart--geel': data.risico }" data-test="inv-risico">
-                  <div class="inv-blok-kop"><h3 class="inv-blok-titel">Grootste risico</h3><span v-if="data.risico" class="pil pil--rood" data-test="inv-risico-label">{{ data.risico.label }}</span></div>
+                  <div class="inv-blok-kop"><h3 class="inv-blok-titel">Grootste risico</h3><Label v-if="data.risico" soort="urgentie" waarde="risico" :tekst="data.risico.label" data-test="inv-risico-label" /></div>
                   <p class="inv-klein inv-klein--ink">{{ data.risico?.tekst ?? 'Geen groot risico: je sprak meerdere mensen en niemand met invloed staat tegen.' }}</p>
                 </article>
                 <article class="kaart inv-blok" data-test="inv-stap">
@@ -193,30 +202,25 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
 .inv-knoop:hover .inv-kader, .inv-knoop:focus-visible .inv-kader { stroke-width: 2; }
 .inv-knoop:focus-visible .inv-kader { stroke: var(--blue); }
 .inv-knoop--gekozen .inv-kader { stroke: var(--ink); stroke-width: 3; }
-.inv-t-rol { font-size: 9px; font-weight: 800; letter-spacing: 0.08em; }
+.inv-fo-rij { display: flex; align-items: center; justify-content: space-between; gap: 4px; height: 22px; overflow: hidden; }
+.inv-houding-ico { padding: 0 3px; }
 .inv-t-functie { font-size: 12px; font-weight: 700; fill: var(--ink); }
 .inv-t-naam { font-size: 11px; fill: var(--muted); }
 .inv-t-naam--onbekend { font-style: italic; }
 .inv-stip { fill: var(--purple); }
-.inv-strook--groen { fill: var(--green); background: var(--green); }
-.inv-strook--geel { fill: var(--yellow); background: var(--yellow); }
-.inv-strook--rood { fill: var(--red); background: var(--red); }
-.inv-strook--leeg { fill: var(--border-strong); background: var(--border-strong); }
+.inv-strook--groen { fill: var(--lbl-groen-tekst); background: var(--lbl-groen-tekst); }
+.inv-strook--grijs { fill: var(--lbl-grijs-rand); background: var(--lbl-grijs-rand); }
+.inv-strook--oranje { fill: var(--orange); background: var(--orange); }
+.inv-strook--rood { fill: var(--lbl-rood-tekst); background: var(--lbl-rood-tekst); }
+.inv-strook--leeg { fill: none; background: transparent; }
 .inv-lijst { display: none; margin: 0; padding: 0; list-style: none; }
 .inv-rij { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 8px 12px; background: var(--wit); border: 0; border-bottom: 1px solid var(--border); font: inherit; text-align: left; color: var(--ink); cursor: pointer; }
 .inv-rij:hover { background: var(--surface); }
 .inv-staaf { flex-shrink: 0; width: 6px; align-self: stretch; }
 .inv-rij-tekst { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .inv-rij-rechts { flex-shrink: 0; }
-.inv-rolpil { align-self: flex-start; padding: 1px 6px; border-radius: 2px; background: var(--ink); color: var(--yellow); font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
-.inv-rol--champion { background: var(--green); color: var(--wit); }
-.inv-rol--beinvloeder { background: var(--yellow); color: var(--ink); }
-.inv-rol--gebruiker { background: var(--blue); color: var(--wit); }
-.inv-rol--blokkeerder { background: var(--red); color: var(--wit); }
-.inv-rol--poortwachter { background: var(--purple); color: var(--wit); }
-.inv-rol--onbekend { background: var(--muted); color: var(--wit); }
 .inv-legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 0; }
-.inv-legenda span { display: inline-flex; align-items: center; gap: 6px; }
+.inv-legenda > span:not(.lbl) { display: inline-flex; align-items: center; gap: 6px; }
 .inv-legenda i { display: inline-block; width: 14px; height: 6px; }
 .inv-leeg { padding: 24px 8px; color: var(--ink-soft); }
 .inv-blok { padding: 16px; }

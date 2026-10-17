@@ -58,14 +58,17 @@ async function vraagSluiten() {
   emit('sluit')
 }
 function weggooien() { vraag.value = false; props.opslag?.reset(); emit('sluit') }
+// Opslaan in de bevestiging: de geplande opslag, opnieuw na een fout, of de hoofdactie van de flyout
+// (event bewaar). Lukt het, dan sluit de flyout; anders blijft hij open met de status in de kop.
 async function bewaarEnSluit() {
   const o = props.opslag
+  vraag.value = false
   if (o?.gepland) await o.flush()
   else if (o?.stand === 'fout') await o.opnieuw()
-  else emit('bewaar')
-  await nextTick()
-  if (!o || (!o.open && o.stand !== 'bezig')) { vraag.value = false; if (props.open) emit('sluit') }
-  else vraag.value = false
+  else { emit('bewaar'); await nextTick() }
+  if (!o) { if (props.open) emit('sluit'); return }
+  if (o.stand === 'bezig') await new Promise<void>((klaar) => { const stop = watch(() => o.stand, (s) => { if (s !== 'bezig') { stop(); klaar() } }) })
+  if (!o.open && props.open) emit('sluit')
 }
 
 // De bovenste overlay op het scherm: hoogste z-index, bij gelijke de laatste in de pagina.
@@ -128,6 +131,7 @@ defineExpose({ vraagSluiten })
         ref="paneel" v-bind="$attrs" class="fo-panel fo-panel--schuif fs-paneel"
         :class="[{ 'fo-panel--smal': breedte === 'smal', 'fo-panel--breed': breedte === 'breed', 'fo-panel--analyse': breedte === 'analyse', 'fo-panel--vol': breedte === 'vol', 'fo-panel--hulp': breedte === 'hulp', 'fo-panel--editor': breedte === 'editor' }, paneelKlasse]"
         role="dialog" aria-modal="true" :aria-labelledby="kopId" tabindex="-1"
+        @pointerdown="opslag?.interactie()" @keydown="opslag?.interactie()" @input="opslag?.interactie()"
       >
         <header class="fo-head fs-kop">
           <div class="fo-head-tekst fs-kop-tekst">
@@ -160,6 +164,9 @@ defineExpose({ vraagSluiten })
 </template>
 
 <style>
+/* Een flyout die vanuit de AI-assistent opent, ligt boven de assistent. */
+.fo-overlay.fs-overlay--top { z-index: calc(var(--z-modal-boven) + 2); }
+
 /* Kop: tekst, status, Vraag AI en sluiten op één regel; op de telefoon de status onder de titel. */
 .fo-head.fs-kop { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: start; column-gap: 8px; row-gap: 4px; }
 .fs-kop .fs-kop-tekst { grid-column: 1; grid-row: 1; }

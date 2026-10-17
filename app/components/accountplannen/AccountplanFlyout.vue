@@ -23,7 +23,6 @@ async function laad() {
 }
 watch(() => props.planId, () => { bewerk.value = false; laad() }, { immediate: true })
 
-const pilKlas = (w: string) => ({ actueel: 'pil--geel', verlopen: 'pil--rood', afgerond: 'pil--zwart' } as Record<string, string>)[w]
 const dag = (iso: string | null) => (iso ? dagKort(nlMoment(new Date(iso)).datum) : 'geen datum')
 
 function startBewerken() {
@@ -64,7 +63,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
             <span class="fo-kicker"><Icoon naam="ClipboardCheck" :grootte="12" /> Accountplan</span>
             <h2 id="apf-titel" class="fo-titel">{{ plan?.titel ?? 'Accountplan' }}</h2>
             <p v-if="plan" class="fo-meta apf-meta">
-              <span class="pil" :class="pilKlas(plan.weergave)" data-test="apf-status">{{ WEERGAVE_LABEL[plan.weergave as 'actueel'].toUpperCase() }}</span>
+              <Label soort="plan" :waarde="plan.weergave" :tekst="WEERGAVE_LABEL[plan.weergave as 'actueel']" data-test="apf-status" />
               <NuxtLink v-if="plan.account" :to="`/accounts/${plan.account.id}`" class="fo-link" data-test="apf-account">{{ plan.account.naam }}</NuxtLink>
               <span class="tnum">{{ geldigheidLabel(plan) }}</span>
             </p>

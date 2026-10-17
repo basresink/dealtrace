@@ -20,6 +20,8 @@ export interface FlyoutOpslag {
   reset: () => void
   basis: () => void
   volg: (bron: () => unknown) => void
+  /** De gebruiker deed iets in de flyout (de shell meldt toetsen, tikken en invoer). */
+  interactie: () => void
 }
 
 const hhmm = () => new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })
@@ -30,6 +32,7 @@ export function useFlyoutOpslag(): FlyoutOpslag {
   let laatste: (() => Promise<unknown>) | null = null
   let bron: (() => unknown) | null = null
   let basisJson: string | null = null
+  let interactieOp = 0
   const toestand = reactive({ stand: 'leeg' as OpslagStand, tijd: '', gepland: false })
 
   async function bewaar<T>(fn: () => Promise<T>): Promise<T> {
@@ -83,6 +86,8 @@ export function useFlyoutOpslag(): FlyoutOpslag {
     watch(b, () => {
       if (basisJson === null || toestand.stand === 'bezig' || toestand.gepland) return
       const nu = JSON.stringify(b())
+      // Een wijziging zonder dat de gebruiker iets deed (laden, een voorgekozen contact) is de nieuwe basis.
+      if (nu !== basisJson && toestand.stand !== 'gewijzigd' && Date.now() - interactieOp > 2000) { basisJson = nu; return }
       if (nu !== basisJson) toestand.stand = 'gewijzigd'
       else if (toestand.stand === 'gewijzigd') toestand.stand = toestand.tijd ? 'klaar' : 'leeg'
     }, { deep: true })
@@ -102,5 +107,6 @@ export function useFlyoutOpslag(): FlyoutOpslag {
     reset,
     basis,
     volg,
+    interactie: () => { interactieOp = Date.now() },
   }) as unknown as FlyoutOpslag
 }

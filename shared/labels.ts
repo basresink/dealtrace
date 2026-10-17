@@ -63,6 +63,7 @@ export const LABELS = {
     gedeactiveerd: leeg('Gedeactiveerd', 'Archive'),
     vertrokken: leeg('Vertrokken', 'UserX'),
     'geen-mail': leeg('Geen mail', 'MailX'),
+    'te-lang-in-fase': zacht('Te lang in fase', 'oranje', 'Clock'),
     actief: null,
   },
   /** Rol in het buying committee: zacht, elke rol een eigen icoon en tint. */
@@ -129,6 +130,42 @@ export const LABELS = {
     'campagne-achterstand': zacht('Campagne loopt achter', 'oranje', 'Clock'),
     'te-lang-in-fase': zacht('Te lang in fase', 'oranje', 'Clock'),
     'regel-voorstel': rand('Regelvoorstel', 'Workflow'),
+  },
+  /** Gezondheid van een klantorganisatie (platformbeheer). */
+  gezondheid: {
+    gezond: zacht('Gezond', 'groen', 'CircleCheck'),
+    let_op: zacht('Let op', 'oranje', 'TriangleAlert'),
+    risico: vol('Risico', 'TriangleAlert'),
+    leeg: leeg('Nog geen stand'),
+  },
+  /** Stand van een accountplan. */
+  plan: {
+    actueel: zacht('Actueel', 'blauw', 'CirclePlay'),
+    verlopen: zacht('Verlopen', 'rood', 'Clock'),
+    afgerond: zacht('Afgerond', 'groen', 'CircleCheck'),
+    concept: leeg('Concept', 'Pencil'),
+  },
+  /** Tempo van een campagne: op schema is de standaard en blijft een rand. */
+  tempo: {
+    voor: zacht('Voor op schema', 'groen', 'ArrowUp'),
+    op: rand('Op schema', 'CircleCheck'),
+    achter: zacht('Achter op schema', 'oranje', 'Clock'),
+  },
+  /** Status van een campagne. */
+  campagne: {
+    concept: leeg('Concept', 'Pencil'),
+    wacht: zacht('Wacht op bevestiging', 'oranje', 'Hourglass'),
+    actief: zacht('Actief', 'blauw', 'CirclePlay'),
+    gepauzeerd: zacht('Gepauzeerd', 'grijs', 'CirclePause'),
+    afgerond: zacht('Afgerond', 'groen', 'CircleCheck'),
+  },
+  /** Overdracht naar DealDrive of het CRM. */
+  overdracht: {
+    klaar: rand('Klaar', 'CircleDot'),
+    verstuurd: zacht('Verstuurd', 'blauw', 'ArrowRight'),
+    bevestigd: zacht('Bevestigd', 'groen', 'CircleCheck'),
+    mislukt: zacht('Mislukt', 'rood', 'TriangleAlert'),
+    gewonnen: zacht('Gewonnen na overdracht', 'groen', 'Trophy'),
   },
   /** Soort account: een feit. */
   account: {

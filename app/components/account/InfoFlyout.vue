@@ -12,16 +12,22 @@ const { me } = useMe()
 const meer = ref(false)
 const beginner = computed(() => me.value?.gebruiker.niveau === 'beginner' && !me.value?.organisatie?.iedereenAlles)
 const beheerder = computed(() => me.value?.gebruiker.rol === 'beheerder')
-const status = ref('')
+// Opslaan-status in de kop (FlyoutShell): typen in een veld is Gewijzigd, bewaren Opslaan… en dan
+// Opgeslagen om HH:MM. Sluiten met een open veld vraagt of je het wilt bewaren.
+const opslag = useFlyoutOpslag()
+const body = ref<HTMLElement | null>(null)
+const shell = ref<{ vraagSluiten: () => Promise<void> } | null>(null)
+function typ(e: Event) { if ((e.target as HTMLElement | null)?.closest('.bv-bewerk')) opslag.gewijzigd() }
+function veldDicht() { nextTick(() => { if (opslag.stand === 'gewijzigd' && !body.value?.querySelector('.bv--bewerk')) opslag.basis() }) }
+function bewaarOpen() { for (const f of body.value?.querySelectorAll<HTMLFormElement>('.bv-bewerk') ?? []) f.requestSubmit(); veldDicht() }
+const ai = computed(() => ({ accountId: props.account?.id ?? null, label: props.account?.naam, voorstellen: ['Vul ontbrekende gegevens aan', 'Klopt de branche?', 'Wat staat er op de website?'] }))
 async function bewaar(patch: Record<string, unknown>) {
-  status.value = 'Opslaan…'
-  try { await $fetch(`/api/accounts/${props.account.id}`, { method: 'PUT', body: patch }); status.value = 'Opgeslagen'; emit('gewijzigd') } catch (e) { status.value = 'Opslaan mislukt'; toast.toon(foutTekst(e), 'fout') }
+  try { await opslag.bewaar(() => $fetch(`/api/accounts/${props.account.id}`, { method: 'PUT', body: patch })); emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 const veld = (k: string) => (v: string) => bewaar({ [k]: v || null })
 function bewaarNaam(v: string) { if (v.trim()) bewaar({ naam: v.trim() }) }
 async function bewaarBronnen(bronnen: { label: string; url: string }[]) {
-  status.value = 'Opslaan…'
-  try { await $fetch(`/api/accounts/${props.account.id}/extra-bronnen`, { method: 'PUT', body: { bronnen } }); status.value = 'Opgeslagen'; emit('gewijzigd') } catch (e) { status.value = 'Opslaan mislukt'; toast.toon(foutTekst(e), 'fout') }
+  try { await opslag.bewaar(() => $fetch(`/api/accounts/${props.account.id}/extra-bronnen`, { method: 'PUT', body: { bronnen } })); emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 
 // Eigen velden: onder een vast kopje als de sectie zo heet, anders per eigen sectie.
@@ -54,19 +60,8 @@ const ondertitel = computed(() => [props.account?.officieleNaam && props.account
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open && account" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" aria-labelledby="if-titel" data-test="info-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
-            <span class="fo-kicker">Bedrijfsgegevens</span>
-            <h2 id="if-titel" class="fo-titel">{{ account.naam }}</h2>
-            <p v-if="ondertitel" class="fo-meta">{{ ondertitel }}</p>
-            <p class="fo-meta if-status" aria-live="polite">{{ status }}</p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
-        <div class="fo-body if-body">
+  <FlyoutShell ref="shell" :open="open && !!account" kicker="Bedrijfsgegevens" :titel="account?.naam" :meta="ondertitel" titel-id="if-titel" breedte="smal" :opslag="opslag" :ai="ai" data-test="info-flyout" @sluit="emit('sluit')" @bewaar="bewaarOpen">
+        <div ref="body" class="fo-body if-body" @input="typ" @click="veldDicht" @keyup.esc="veldDicht">
           <section class="if-sectie" data-test="if-adres">
             <h3 class="if-sectie-titel">Adres</h3>
             <BewerkVeld label="Adres" :waarde="account.adres" test="if-adres-veld" @bewaar="veld('adres')($event)" />
@@ -149,18 +144,19 @@ const ondertitel = computed(() => [props.account?.officieleNaam && props.account
           </template>
           <button v-else type="button" class="dd-act if-meer" data-test="if-meer" @click="meer = true">Meer gegevens</button>
 
-          <!-- Deactiveren onderaan de inhoud, niet in een vaste voet. Verwijderen kan niemand: de historie blijft. -->
-          <div v-if="account.kan.deactiveren" class="if-verwijder-vak">
-            <button type="button" class="dd-act" data-test="if-deactiveer" @click="emit('deactiveer')"><Icoon naam="Archive" class="dd-act-icoon" />Deactiveren</button>
-          </div>
         </div>
-      </aside>
-    </div>
-  </Teleport>
+    <!-- Voet (flyoutstandaard): Klaar sluit, Deactiveren als rode icoonknop. Verwijderen kan niemand: de historie blijft. -->
+    <template #voet>
+      <footer class="fo-foot fs-voet">
+        <button type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="if-klaar" @click="shell?.vraagSluiten()"><Icoon naam="Check" :grootte="16" />Klaar</button>
+        <span class="fo-foot-vul" />
+        <button v-if="account?.kan?.deactiveren" type="button" class="fs-ibtn fs-ibtn--rood" title="Deactiveren" aria-label="Deactiveren" data-test="if-deactiveer" @click="emit('deactiveer')"><Icoon naam="Archive" :grootte="18" /></button>
+      </footer>
+    </template>
+  </FlyoutShell>
 </template>
 
 <style scoped>
-.if-status:empty { display: none; }
 .if-body { display: flex; flex-direction: column; gap: 16px; }
 .if-sectie { padding: 4px 16px 8px; background: var(--wit); border: 1px solid var(--border); }
 .if-sectie-titel { margin: 12px 0 4px; padding-bottom: 6px; border-bottom: 1px solid var(--border); font-family: var(--font-serif); font-size: 14px; font-weight: 700; color: var(--ink); }
@@ -174,7 +170,6 @@ const ondertitel = computed(() => [props.account?.officieleNaam && props.account
 .if-logo-knop:hover { color: var(--ink); }
 .if-lijst { margin: 4px 0 8px; padding-left: 18px; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
 .if-meer { align-self: flex-start; }
-.if-verwijder-vak { padding-top: 4px; }
 @media (max-width: 767px) {
   .if-vast { grid-template-columns: 1fr; gap: 2px; }
   .if-kopieer, .if-logo-knop { min-width: 44px; min-height: 44px; }

@@ -13,7 +13,6 @@ const toast = useToast()
 const id = computed(() => String(route.params.id))
 const { data: p, refresh, error } = await useFetch<any>(() => `/api/accountplannen/${id.value}`, { immediate: aan })
 const kan = computed(() => !!p.value?.kan.bewerken)
-const pilKlas = (w: string) => ({ actueel: 'pil--geel', verlopen: 'pil--rood', afgerond: 'pil--zwart' } as Record<string, string>)[w]
 const dag = (iso: string | null) => (iso ? dagKort(nlMoment(new Date(iso)).datum) : 'geen datum')
 const vandaag = nlMoment(new Date()).datum
 const telaat = (a: any) => !a.klaar && a.dueDate && nlMoment(new Date(a.dueDate)).datum < vandaag
@@ -87,8 +86,8 @@ async function verwijder() {
             <div class="apd-kop-info">
               <NuxtLink to="/accountplannen" class="apd-kruimel" data-test="apd-terug"><Icoon naam="ArrowLeft" :grootte="12" /> Alle accountplannen</NuxtLink>
               <p class="apd-eyebrow">
-                <span class="pil" :class="pilKlas(p.weergave)" data-test="apd-status">{{ WEERGAVE_LABEL[p.weergave as 'actueel'].toUpperCase() }}</span>
-                <span v-if="p.account" class="pil" :class="p.account.soort === 'klant' ? 'pil--blauw' : 'pil--paars'">{{ p.account.soort === 'klant' ? 'KLANT' : 'PROSPECT' }}</span>
+                <Label soort="plan" :waarde="p.weergave" :tekst="WEERGAVE_LABEL[p.weergave as 'actueel']" data-test="apd-status" />
+                <Label v-if="p.account" soort="account" :waarde="p.account.soort === 'klant' ? 'klant' : 'prospect'" />
                 <NuxtLink v-if="p.account" :to="`/accounts/${p.account.id}`" class="apd-account" data-test="apd-account">{{ p.account.naam }}</NuxtLink>
                 <span class="tnum">{{ geldigheidLabel(p) }}</span>
                 <span>{{ p.eigenaar?.naam ?? 'Niet toegewezen' }}</span>

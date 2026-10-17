@@ -53,7 +53,7 @@ async function zetVoorstel(v: { datum: string; start: string }) {
     emit('ververs')
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = null }
 }
-const TEMPO: Record<string, string> = { 'Voor op schema': 'pil--groen', 'Op schema': 'pil--grijs', 'Achter op schema': 'pil--rood' }
+const TEMPO: Record<string, string> = { 'Voor op schema': 'voor', 'Op schema': 'op', 'Achter op schema': 'achter' }
 </script>
 
 <template>
@@ -170,7 +170,7 @@ const TEMPO: Record<string, string> = { 'Voor op schema': 'pil--groen', 'Op sche
           <NuxtLink :to="`/campagnes/${c.id}`" class="rb-groepkop">
             <span class="rb-groepnaam">{{ c.naam }}</span>
             <span class="meta">{{ c.kaarten.gedaan }} van {{ c.kaarten.totaal }} {{ c.kaarten.totaal === 1 ? 'kaart' : 'kaarten' }} gedaan<template v-if="c.dagenOver != null"> · nog {{ c.dagenOver === 1 ? '1 dag' : `${c.dagenOver} dagen` }}</template></span>
-            <span class="pil-tags"><span v-if="c.tempo" class="pil" :class="TEMPO[c.tempo.pil] ?? 'pil--grijs'">{{ c.tempo.pil }}</span><span class="pil" :class="c.aanDeBeurt ? 'pil--zwart' : 'pil--grijs'">{{ c.aanDeBeurt ? `${c.aanDeBeurt} aan de beurt` : 'Niets aan de beurt' }}</span></span>
+            <span class="pil-tags"><Label v-if="c.tempo" soort="tempo" :waarde="TEMPO[c.tempo.pil] ?? (c.tempo.pil.startsWith('Achter') ? 'achter' : 'op')" :tekst="c.tempo.pil" /><span class="pil" :class="c.aanDeBeurt ? 'pil--zwart' : 'pil--grijs'">{{ c.aanDeBeurt ? `${c.aanDeBeurt} aan de beurt` : 'Niets aan de beurt' }}</span></span>
           </NuxtLink>
           <span class="rb-staaf" role="img" :aria-label="`${c.kaarten.gedaan} van ${c.kaarten.totaal} kaarten gedaan`"><span :style="{ width: `${c.kaarten.totaal ? Math.round((c.kaarten.gedaan / c.kaarten.totaal) * 100) : 0}%` }" /></span>
           <ul v-if="c.taken.length" class="rb-lijst">

@@ -48,7 +48,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
       <div class="fo-body">
         <article class="fo-blok">
           <dl class="ivp-defs">
-            <dt>Houding</dt><dd data-test="ivp-houding">{{ HOUDING_LABEL[p.houding as Houding] }}<template v-if="p.houdingOp"> · {{ datum(p.houdingOp) }}</template></dd>
+            <dt>Houding</dt><dd data-test="ivp-houding"><Label soort="houding" :waarde="p.houding || 'onbekend'" /><template v-if="p.houdingOp"> · {{ datum(p.houdingOp) }}</template></dd>
             <dt>Contact</dt><dd data-test="ivp-contactmomenten">{{ contactTekst(p.momenten) }}<template v-if="p.momenten"> · {{ p.gesproken ? 'gesproken' : 'nog geen gesprek' }}</template></dd>
             <dt>Rapporteert aan</dt><dd>{{ naamVan(p.rapporteertAan) ?? 'Onbekend' }}</dd>
           </dl>

@@ -118,7 +118,7 @@ const platteTekst = (b: { segmenten: { tekst: string }[] }) => b.segmenten.map((
         <div v-for="(b, i) in zichtbaar" :key="b.id" class="scriptblok bs-blok" :class="{ 'bs-blok--nu': i === nu }" :data-test="`blok-${b.soort}`">
           <button type="button" class="bs-blok-kop" :aria-expanded="i === nu" :data-test="`stap-${b.soort}`" @click="naarBlok(Number(i))">
             <span class="bloklabel">{{ b.titel || BLOK_LABEL[b.soort] }}</span>
-            <span v-if="b.vanAi" class="pil pil--paars">AI</span>
+            <Label v-if="b.vanAi" soort="ai" waarde="ai" />
             <Icoon v-if="gebruikt.has(b.id) && i !== nu" naam="Check" :grootte="14" class="bs-gehad" />
           </button>
           <template v-if="b.soort === 'vragen' && i === nu">
@@ -135,7 +135,7 @@ const platteTekst = (b: { segmenten: { tekst: string }[] }) => b.segmenten.map((
       </template>
       <template v-else>
         <div v-for="b in zichtbaar" :key="b.id" class="scriptblok" :data-test="`blok-${b.soort}`">
-          <div class="scriptblok-kop"><span class="bloklabel">{{ b.titel || BLOK_LABEL[b.soort] }}</span><span v-if="b.vanAi" class="ai-label">AI</span><span v-else class="meta">{{ b.invulwijze === 'vast' ? 'vast' : aiStatus === 'laden' ? 'AI vult in…' : 'vaste tekst' }}</span></div>
+          <div class="scriptblok-kop"><span class="bloklabel">{{ b.titel || BLOK_LABEL[b.soort] }}</span><Label v-if="b.vanAi" soort="ai" waarde="ai" /><span v-else class="meta">{{ b.invulwijze === 'vast' ? 'vast' : aiStatus === 'laden' ? 'AI vult in…' : 'vaste tekst' }}</span></div>
           <template v-if="b.soort === 'vragen'">
             <div v-for="(v, i) in vragenUit(platteTekst(b))" :key="i" class="mt-4">
               <label class="vink"><input v-model="vraagSleutel(b.id, Number(i)).vink" type="checkbox"> {{ v }} <span v-if="Number(i) === 0 && b.veldKoppeling" class="codes">{{ b.veldKoppeling.bron }}.{{ b.veldKoppeling.sleutel }}</span></label>

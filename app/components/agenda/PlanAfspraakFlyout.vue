@@ -72,7 +72,12 @@ watch(() => props.open, async (o) => {
   if (eerste) f.meetingsoortId = eerste.id
   // Een voorstel (tussenstop, P14; klik in de agenda): datum, start in het gat, duur en vorm.
   if (v) { await nextTick(); Object.assign(f, v.datum ? { datum: v.datum } : {}, v.start ? { start: v.start } : {}, v.duurMin ? { duurMin: v.duurMin } : {}); if (soort.value) f.vorm = vormVoorSoort(soort.value, v.vorm) }
+  await nextTick(); opslag.basis()
 }, { immediate: true })
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot Plan afspraak opslaat; sluiten vraagt dan eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [f, klant.value?.id ?? null, contact.value?.id ?? null])
+const ai = computed(() => ({ accountId: klant.value?.id ?? null, label: klant.value?.naam ?? 'Nieuwe afspraak', vraag: '', voorstellen: ['Stel een moment voor', 'Schrijf de uitnodiging', 'Wat is een goed doel voor dit gesprek?'] }))
 // De vorm volgt uit het type: een bezoek uit de groep Afspraak, online of telefonisch bij een Meeting.
 watch(soort, (s) => { if (s) { f.duurMin = s.duurMin; f.vorm = vormVoorSoort(s); f.herinneringMin = s.data?.herinneringMin ?? 15 } })
 watch(voorgesteldeTitel, (t) => { if (!titelHandmatig.value) f.titel = t }, { immediate: true })
@@ -132,29 +137,24 @@ async function plan() {
   if (!kanPlannen.value) { fout.value = !klant.value && !intern.value ? 'Kies eerst een prospect.' : 'Vul een titel, datum en starttijd in.'; return }
   bezig.value = true; fout.value = ''
   try {
-    const r: any = await $fetch('/api/afspraken', { method: 'POST', body: {
+    const r: any = await opslag.bewaar(() => $fetch('/api/afspraken', { method: 'POST', body: {
       accountId: klant.value?.id ?? null, contactId: klant.value ? contact.value?.id ?? null : null, meetingsoortId: f.meetingsoortId, vorm: f.vorm, titel: f.titel.trim(), start: startIso(), duurMin: f.duurMin,
       herhaling: f.herhaling, herhalingTot: f.herhaling === 'geen' ? null : f.herhalingTot, voorWie: f.voorWie || null, collegaUitnodigen: f.deelnemers,
       locatie: f.locatie || null, herinneringMin: f.herinneringMin, aanleiding: f.aanleiding || null, beschrijving: f.beschrijving || null, taskId: props.taskId ?? null,
-    } })
+    } }))
     toast.toon(r.tekst); emit('gepland', r.id)
   } catch (e) { fout.value = foutTekst(e); toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="pa-titel-kop" data-test="plan-afspraak" @submit.prevent="plan">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+  <FlyoutShell :open="open" titel-id="pa-titel-kop" :opslag="opslag" :ai="ai" data-test="plan-afspraak" @sluit="emit('sluit')" @bewaar="plan">
+    <template #kop>
             <span class="fo-kicker">Nieuwe afspraak<template v-if="soort"> · {{ soort.naam }}</template></span>
             <h2 id="pa-titel-kop" class="fo-titel">Plan een afspraak in</h2>
             <p class="taak-meta" data-test="pa-uitleg"><template v-if="f.vorm === 'bezoek'">Verschijnt in de agenda en op de route van die dag.</template><template v-else>Verschijnt in de agenda en op Meetings.</template> Voeg een briefing toe vanuit de accountkaart.</p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
-        <div class="fo-body fo-body--formulier pa-body">
+    </template>
+        <form id="pa-form" class="fo-body fo-body--formulier pa-body" @submit.prevent="plan">
           <!-- Prospect en contactpersoon: zoekvelden, bewust als eerste. -->
           <div class="veld">
             <span id="pa-klant-label" class="veld-label">Prospect <span v-if="!intern" class="veld-verplicht">*</span></span>
@@ -230,15 +230,14 @@ async function plan() {
           <label class="veld"><span class="veld-label">Aanleiding of context</span><input v-model="f.aanleiding" class="invoer" placeholder="Bijvoorbeeld: inzicht nieuwe vestiging" data-test="pa-aanleiding"></label>
           <label class="veld"><span class="veld-label">Beschrijving</span><textarea v-model="f.beschrijving" class="invoer" rows="3" placeholder="Optioneel: doel, agendapunten, voorbereiding" data-test="pa-beschrijving" /></label>
           <p v-if="fout" class="veld-fout" data-test="pa-fout">{{ fout }}</p>
-        </div>
-        <footer class="fo-foot dd-acties">
-          <button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="submit" class="dd-act dd-act--geel" :disabled="bezig || !kanPlannen" data-test="pa-plan">{{ bezig ? 'Plannen…' : reeks.length > 1 && f.herhaling !== 'geen' ? `✓ Plan ${reeks.length} afspraken` : '✓ Plan afspraak' }}</button>
+        </form>
+    <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="pa-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || !kanPlannen" data-test="pa-plan"><Icoon naam="Check" :grootte="16" />{{ bezig ? 'Plannen…' : reeks.length > 1 && f.herhaling !== 'geen' ? `Plan ${reeks.length} afspraken` : 'Plan afspraak' }}</button>
+          <span class="fo-foot-vul" />
         </footer>
-      </form>
-    </div>
-  </Teleport>
+    </template>
+  </FlyoutShell>
 </template>
 
 <style scoped>

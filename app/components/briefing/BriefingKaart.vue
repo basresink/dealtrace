@@ -4,7 +4,7 @@
 // hoe compleet de briefing is in woorden met het eerste gat, en of Pitstop al een concept klaar heeft.
 // De linkerrand is paars voor een prospect en zwart voor een klant. Een belblok is één kaart met het aantal
 // gesprekken; de briefing per gesprek staat in de belmodus.
-import { compleetTekst, SOORT_KLEUR, SOORT_KORT } from '~~/shared/briefingOverzicht'
+import { compleetTekst, SOORT_KORT } from '~~/shared/briefingOverzicht'
 import type { BriefingSoort } from '~~/shared/briefing'
 const props = defineProps<{ item: any; vandaag: string; weergave?: 'kaarten' | 'lijst' }>()
 const emit = defineEmits<{ open: [item: any] }>()
@@ -48,14 +48,14 @@ const contactRegel = computed(() => (props.item.contact ? [props.item.contact.na
         <span class="item-meta">{{ contactRegel }} · {{ item.titel }}</span>
         <span v-if="item.compleet.gat" class="item-meta bk-gat">{{ item.compleet.gat }}</span>
       </span>
-      <span class="item-acties"><span class="pil" :class="`pil--${SOORT_KLEUR[soort]}`">{{ SOORT_KORT[soort] }}</span><span v-if="pitstop" class="pil pil--paars">{{ pitstop }}</span></span>
+      <span class="item-acties"><span class="pil">{{ SOORT_KORT[soort] }}</span><Label v-if="pitstop" soort="ai" waarde="concept" :tekst="pitstop" /></span>
     </button>
   </div>
 
   <!-- Kaart -->
   <article v-else class="bk" :class="{ 'bk--prospect': item.account.soort === 'prospect' }">
     <button type="button" class="bk-knop" :data-test="`briefing-kaart-${item.id}`" @click="emit('open', item)">
-      <span class="bk-kop"><span class="bk-tijd tnum" :class="{ 'bk-tijd--laat': laat }">{{ tijd }}</span><span class="pil" :class="`pil--${SOORT_KLEUR[soort]}`" data-test="briefing-kaart-soort">{{ SOORT_KORT[soort] }}</span></span>
+      <span class="bk-kop"><span class="bk-tijd tnum" :class="{ 'bk-tijd--laat': laat }">{{ tijd }}</span><span class="pil" data-test="briefing-kaart-soort">{{ SOORT_KORT[soort] }}</span></span>
       <span class="bk-naam">{{ item.account.naam }}</span>
       <span class="bk-meta">{{ contactRegel }}</span>
       <span class="bk-ctx"><Icoon :naam="icoon" :grootte="14" />{{ item.titel }}</span>

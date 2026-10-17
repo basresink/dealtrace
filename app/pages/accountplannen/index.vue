@@ -47,8 +47,8 @@ useHead({ title: 'Accountplannen · Dealtrace' })
                   <button type="button" class="ap-knop" :aria-label="`${p.titel} openen`" @click="openPlan(p.id)">
                     <span class="ap-kop">
                       <span class="ap-pillen">
-                        <span class="pil" :class="p.account.soort === 'klant' ? 'pil--blauw' : 'pil--paars'">{{ p.account.soort === 'klant' ? 'KLANT' : 'PROSPECT' }}</span>
-                        <span class="pil" :class="{ 'pil--geel': p.weergave === 'actueel', 'pil--rood': p.weergave === 'verlopen', 'pil--zwart': p.weergave === 'afgerond' }">{{ WEERGAVE_LABEL[p.weergave as 'actueel'].toUpperCase() }}</span>
+                        <Label soort="account" :waarde="p.account.soort === 'klant' ? 'klant' : 'prospect'" />
+                        <Label soort="plan" :waarde="p.weergave" :tekst="WEERGAVE_LABEL[p.weergave as 'actueel']" />
                       </span>
                       <span class="ap-eigenaar">{{ p.eigenaar?.naam ?? 'Niet toegewezen' }}</span>
                     </span>

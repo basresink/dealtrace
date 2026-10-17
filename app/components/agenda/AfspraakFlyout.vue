@@ -33,7 +33,25 @@ watch(() => [props.open, props.afspraakId], async ([o]) => {
   await laad()
   verslag.value = a.value?.verslag?.tekst ?? ''
   f.punten = (a.value?.soort.agenda ?? []).map((p: any) => ({ punt: p.punt, besproken: false }))
+  await nextTick(); opslag.basis()
 }, { immediate: true })
+
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd bij een ander moment, de uitkomst of een verslag dat nog
+// niet bewaard is; Opslaan… en Opgeslagen om HH:MM. Sluiten met wijzigingen vraagt in de flyout wat je wilt.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [verplaatsen.value ? vp : null, afronden.value ? { u: f.uitkomst, l: f.laterOp, r: f.reden, t: f.toelichting, v: f.vervolgstap } : null, verslag.value.trim() === String(a.value?.verslag?.tekst ?? '').trim() ? null : verslag.value])
+watch([verplaatsen, afronden], () => opslag.basis(), { flush: 'sync' })
+async function bewaarVoorSluiten() {
+  if (verplaatsen.value) return bewaarVerplaatsen()
+  if (afronden.value) return rondAf()
+  if (a.value) await opslag.bewaar(() => $fetch(`/api/afspraken/${a.value.id}/verslag`, { method: 'PUT', body: { tekst: verslag.value } })).then(() => laad()).catch((e) => toast.toon(tekstVan(e), 'fout'))
+}
+const ai = computed(() => ({
+  accountId: a.value?.account?.id ?? null,
+  label: a.value?.account?.naam ?? a.value?.titel,
+  vraag: a.value ? `Help me met de afspraak "${a.value.titel}"${a.value.account ? ` bij ${a.value.account.naam}` : ''}${a.value.contact ? ` met ${a.value.contact.naam}` : ''} op ${wanneer.value}.` : '',
+  voorstellen: a.value?.status === 'gepland' ? ['Maak een agenda voor dit gesprek', 'Wat is er sinds het vorige gesprek gebeurd?', 'Welke bezwaren kan ik verwachten?'] : ['Vat het verslag samen', 'Wat is de volgende stap?', 'Welke koopsignalen zie je?'],
+}))
 
 const STATUS: Record<string, string> = { gepland: 'GEPLAND', afgerond: 'AFGEROND', niet_verschenen: 'NIET VERSCHENEN', geannuleerd: 'GEANNULEERD' }
 const VORM: Record<string, string> = { bezoek: 'Bezoek', online: 'Online', telefoon: 'Telefoon' }
@@ -63,7 +81,7 @@ async function rondAf() {
       await voegToe({ tabel: 'appointments', op: 'patch', recordId: a.value.id, patch: { soort: 'afspraak.afronden', ...body, op: new Date().toISOString() } })
       toast.toon('Afgerond. Wordt verstuurd zodra je weer verbinding hebt.')
     } else {
-      const r: any = await $fetch(`/api/afspraken/${a.value.id}/afronden`, { method: 'POST', body })
+      const r: any = await opslag.bewaar(() => $fetch(`/api/afspraken/${a.value.id}/afronden`, { method: 'POST', body }))
       // P17: een eerste afspraak met vervolg opent meteen "Overdragen?".
       if (r.overdragen && a.value.account?.id) { ov.value = { accountId: a.value.account.id, naam: a.value.account.naam, vervolgstap: f.vervolgstap }; emit('gewijzigd'); return }
       toast.toon(r.tekst)
@@ -90,7 +108,7 @@ async function bewaarVerplaatsen() {
   if (!vp.datum || !vp.start) return
   bezig.value = true
   try {
-    const r: any = await $fetch(`/api/afspraken/${a.value.id}/verplaats`, { method: 'POST', body: { start: startIso(vp.datum, vp.start), duurMin: vp.duurMin, titel: vp.titel } })
+    const r: any = await opslag.bewaar(() => $fetch(`/api/afspraken/${a.value.id}/verplaats`, { method: 'POST', body: { start: startIso(vp.datum, vp.start), duurMin: vp.duurMin, titel: vp.titel } }))
     toast.toon(r.tekst); verplaatsen.value = false; emit('gewijzigd'); await laad()
   } catch (e) { toast.toon(tekstVan(e), 'fout') } finally { bezig.value = false }
 }
@@ -111,11 +129,8 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="af-titel" data-test="afspraak-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+  <FlyoutShell :open="open" titel-id="af-titel" :opslag="opslag" :ai="a ? ai : null" data-test="afspraak-flyout" @sluit="emit('sluit')" @bewaar="bewaarVoorSluiten">
+    <template #kop>
             <span class="fo-kicker af-kicker" data-test="af-kicker"><span v-if="a" class="af-stip" :style="{ background: KLEUR[a.soort.kleur] ?? 'var(--ink)' }" aria-hidden="true" />{{ kicker }}</span>
             <h2 id="af-titel" class="fo-titel" data-test="af-titel">{{ a ? a.titel : 'Laden…' }}</h2>
             <p v-if="a?.account" class="taak-meta af-kop-links">
@@ -123,9 +138,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
             </p>
             <p v-if="a" class="taak-meta">{{ wanneer }} · {{ VORM[a.vorm] }} · {{ eigenaar }}</p>
             <p v-if="a?.geplandDoor" class="taak-meta"><span class="pil pil--leeg" data-test="af-gepland-door">Gepland door {{ a.geplandDoor.replace(/^Testgebruiker /, '') }}</span></p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+    </template>
 
         <div v-if="a" class="fo-body fo-body--formulier">
           <!-- Verplaatsen: nieuw moment, duur en titel. -->
@@ -226,31 +239,32 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
           <a class="actiebalk-knop" :class="{ 'actiebalk-knop--uit': !a.actiebalk.navigeer }" :href="a.actiebalk.navigeer ?? undefined" :aria-disabled="!a.actiebalk.navigeer" :title="a.actiebalk.navigeer ? undefined : 'Geen adres bekend'" target="_blank" rel="noopener" data-test="af-navigeer"><Icoon naam="Navigation" />Navigeer</a>
         </nav>
 
-        <footer v-if="a && a.status === 'gepland' && verplaatsen" class="fo-foot dd-acties">
-          <button type="button" class="dd-act" @click="verplaatsen = false">Annuleren</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="button" class="dd-act dd-act--geel" :disabled="bezig || !vp.datum || !vp.start" data-test="af-verplaats-bewaar" @click="bewaarVerplaatsen">Bewaar nieuw moment</button>
+        <!-- Voet (flyoutstandaard): de hoofdactie links in zwart, rechts icoonknoppen van 44 px. -->
+        <template #voet>
+        <footer v-if="a && a.status === 'gepland' && verplaatsen" class="fo-foot fs-voet">
+          <button type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || !vp.datum || !vp.start" data-test="af-verplaats-bewaar" @click="bewaarVerplaatsen"><Icoon naam="Check" :grootte="16" />Bewaar nieuw moment</button>
+          <span class="fo-foot-vul" />
+          <button type="button" class="dd-actie dd-actie--secundair" @click="verplaatsen = false">Terug</button>
         </footer>
-        <footer v-else-if="a && a.status === 'gepland'" class="fo-foot dd-acties af-foot">
-          <template v-if="!afronden">
-            <button type="button" class="dd-act" data-test="af-verplaats" @click="startVerplaatsen"><Icoon naam="CalendarRange" />Verplaats</button>
-            <button type="button" class="dd-act" data-test="af-niet-verschenen" @click="zetStatus('niet_verschenen')">Niet verschenen</button>
-            <button type="button" class="dd-act dd-act--gevaar" data-test="af-annuleer" @click="zetStatus('geannuleerd')">Annuleer</button>
+        <footer v-else-if="a && a.status === 'gepland'" class="fo-foot fs-voet af-foot">
+          <button v-if="!afronden" type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="af-rond-af" @click="afronden = true; verplaatsen = false"><Icoon naam="Check" :grootte="16" />Rond af</button>
+          <button v-else type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || ongeldig" data-test="af-bewaar" @click="rondAf"><Icoon naam="Check" :grootte="16" />Bewaar</button>
+          <span class="fo-foot-vul" />
+          <button v-if="afronden" type="button" class="dd-actie dd-actie--secundair" @click="afronden = false">Terug</button>
+          <template v-else>
+            <button type="button" class="fs-ibtn" title="Verplaatsen" aria-label="Verplaatsen" data-test="af-verplaats" @click="startVerplaatsen"><Icoon naam="CalendarClock" :grootte="18" /></button>
+            <button type="button" class="fs-ibtn" title="Niet verschenen" aria-label="Niet verschenen" data-test="af-niet-verschenen" @click="zetStatus('niet_verschenen')"><Icoon naam="UserX" :grootte="18" /></button>
+            <button type="button" class="fs-ibtn fs-ibtn--rood" title="Afspraak annuleren" aria-label="Afspraak annuleren" data-test="af-annuleer" @click="zetStatus('geannuleerd')"><Icoon naam="Ban" :grootte="18" /></button>
+            <NuxtLink v-if="a.account && !opKlantkaart" :to="`/accounts/${a.account.id}`" class="fs-ibtn" title="Open accountkaart" aria-label="Open accountkaart" @click="emit('sluit')"><Icoon naam="ArrowRight" :grootte="18" /></NuxtLink>
           </template>
-          <button v-else type="button" class="dd-act" @click="afronden = false">Terug</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <NuxtLink v-if="a.account && !opKlantkaart && !afronden" :to="`/accounts/${a.account.id}`" class="dd-act dd-act--icoon af-naar-kaart" title="Open kaart" aria-label="Open kaart" @click="emit('sluit')"><Icoon naam="ArrowRight" /></NuxtLink>
-          <button v-if="!afronden" type="button" class="dd-act dd-act--geel af-hoofd" data-test="af-rond-af" @click="afronden = true; verplaatsen = false">Rond af</button>
-          <button v-else type="button" class="dd-act dd-act--primair af-hoofd" :disabled="bezig || ongeldig" data-test="af-bewaar" @click="rondAf">Bewaar</button>
         </footer>
-        <footer v-else-if="a?.account && !opKlantkaart" class="fo-foot dd-acties">
-          <span class="dd-acties-vul fo-foot-vul" />
-          <NuxtLink :to="`/accounts/${a.account.id}`" class="dd-act" @click="emit('sluit')">Open kaart<Icoon naam="ArrowRight" /></NuxtLink>
+        <footer v-else-if="a?.account && !opKlantkaart" class="fo-foot fs-voet">
+          <NuxtLink :to="`/accounts/${a.account.id}`" class="dd-actie dd-actie--zwart fs-hoofdactie" @click="emit('sluit')"><Icoon naam="ArrowRight" :grootte="16" />Open accountkaart</NuxtLink>
+          <span class="fo-foot-vul" />
         </footer>
-      </aside>
-    </div>
+        </template>
+  </FlyoutShell>
     <OverdrachtVenster :open="!!ov" :account-id="ov?.accountId ?? null" :account-naam="ov?.naam ?? ''" :vervolgstap="ov?.vervolgstap" @sluit="ov = null; emit('sluit')" @overgedragen="emit('gewijzigd')" />
-  </Teleport>
 </template>
 
 <style scoped>
@@ -272,8 +286,6 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
   .af-rij3 { grid-template-columns: 1fr 1fr; }
   .af-def dd a, .af-account-naam { display: inline-block; padding: 13px 0; border-bottom: 0; text-decoration: underline; text-decoration-color: var(--yellow); text-decoration-thickness: 2px; text-underline-offset: 3px; }
   .af-kop-links { display: none; }
-  .af-foot { flex-wrap: wrap; }
-  .af-foot .fo-foot-vul, .af-foot .af-naar-kaart { display: none; }
-  .af-foot .af-hoofd { flex: 1 1 100%; order: 9; }
+  .af-foot { gap: 6px; padding-left: 12px; padding-right: 12px; }
 }
 </style>

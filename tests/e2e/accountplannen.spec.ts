@@ -32,7 +32,7 @@ test.describe('accountplannen', () => {
     const f = page.getByTestId('ap-flyout')
     await expect(f).toBeVisible()
     await expect(f).toContainText('Accountplan')
-    await expect(f.getByTestId('apf-status')).toHaveText('ACTUEEL', { timeout: 15_000 })
+    await expect(f.getByTestId('apf-status')).toHaveText('Actueel', { timeout: 15_000 })
     await expect(f.getByTestId('apf-account')).toHaveAttribute('href', '/accounts/eva-a07')
     for (const t of ['Doelen (SMART)', 'Kansen', 'Bedreigingen', 'Strategieën', 'Evaluatie', 'Actieplan']) await expect(f).toContainText(t)
     await expect(f.locator('[data-test^="apf-actie-"]')).toHaveCount(3)

@@ -92,7 +92,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
         <div v-if="klant" class="fo-body">
           <article class="fo-blok">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Gebruik en gezondheid</h3>
-              <span class="pil" :class="`pil--stand-${klant.gezondheid?.stand ?? 'leeg'}`">{{ STAND_LABEL[(klant.gezondheid?.stand ?? 'leeg') as Stand] }}</span></header>
+              <Label soort="gezondheid" :waarde="klant.gezondheid?.stand ?? 'leeg'" :tekst="STAND_LABEL[(klant.gezondheid?.stand ?? 'leeg') as Stand]" /></header>
             <ul v-if="klant.gezondheid?.redenen?.length" class="fo-tekst"><li v-for="r in klant.gezondheid.redenen" :key="r">{{ r }}</li></ul>
             <p v-else class="fo-tekst">Geen signalen.</p>
           </article>

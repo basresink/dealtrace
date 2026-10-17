@@ -12,8 +12,8 @@
 import { NEE_REDENEN } from '~~/shared/nbStatus'
 import { UITKOMST_CODES, UITKOMST_LABEL } from '~~/shared/hercontact'
 import { nlMoment, nlTijdstip } from '~~/shared/datum'
-import { CONTACT_ACTIES, HERHALING_LABEL, HERINNERING_KANAAL, HERKOMST_LABEL, PRIORITEITEN, PRIO_LABEL, PRIO_STIP, STATUS_LABEL, TAAK_TYPES, isAchterstallig, vervalLabel, volgendeStap } from '~~/shared/taken'
-import { fasePil, telLink } from '~/utils/accountWeergave'
+import { CONTACT_ACTIES, HERHALING_LABEL, HERINNERING_KANAAL, PRIORITEITEN, PRIO_LABEL, PRIO_STIP, STATUS_LABEL, TAAK_TYPES, isAchterstallig, vervalLabel, volgendeStap } from '~~/shared/taken'
+import { telLink } from '~/utils/accountWeergave'
 import { agentDef } from '~~/shared/mandaat'
 import type { Contact, Klant } from './KlantContactKiezer.vue'
 const props = defineProps<{ open: boolean; taakId: string | null; basis?: any; volgende?: boolean; teamleden?: { id: string; naam: string }[]; lijst?: string[] }>()
@@ -115,13 +115,19 @@ function startBewerken() {
   bKlant.value = t.value.account ? { id: t.value.account.id, naam: t.value.account.naam, plaats: t.value.account.plaats } : null
   bContact.value = t.value.contact ? { id: t.value.contact.id, naam: t.value.contact.naam, functie: t.value.contact.functie, accountId: t.value.account?.id ?? null } : null
   bewerken.value = true
+  opslag.basis()
 }
 const kanBewaren = computed(() => bewerk.title.trim().length >= 3 && !bezig.value)
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd zodra het bewerkformulier afwijkt, dan Opslaan… en
+// Opgeslagen om HH:MM. Sluiten met wijzigingen vraagt in de flyout of je ze wilt bewaren.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => (bewerken.value ? [bewerk, bKlant.value?.id ?? null, bContact.value?.id ?? null] : null))
+watch(bewerken, () => opslag.basis(), { flush: 'sync' })
 async function bewaar() {
   if (!kanBewaren.value) return
   bezig.value = true
   try {
-    await $fetch(`/api/tasks/${t.value.id}`, {
+    await opslag.bewaar(() => $fetch(`/api/tasks/${t.value.id}`, {
       method: 'PUT',
       body: {
         title: bewerk.title, actionType: bewerk.actionType, accountId: bKlant.value?.id ?? null, contactId: bContact.value?.id ?? null,
@@ -129,7 +135,7 @@ async function bewaar() {
         aanleiding: bewerk.aanleiding, beschrijving: bewerk.beschrijving,
         ...(gevorderd.value ? { priority: bewerk.priority, ownerId: bewerk.ownerId || undefined, herinnering: bewerk.herinneren ? { minuten: bewerk.herinneringMin, kanaal: bewerk.herinneringKanaal } : null } : {}),
       },
-    })
+    }))
     toast.toon('Taak bijgewerkt.'); emit('gewijzigd'); t.value = await $fetch(`/api/tasks/${t.value.id}`); bewerken.value = false
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }
@@ -149,8 +155,8 @@ function vraagAi() {
   const wanneer = vervalDatum.value ? `, vervalt ${vervalDatum.value}` : ''
   const bij = x.account ? ` bij ${x.account.naam}` : ''
   const met = x.contact ? ` met ${x.contact.naam}` : ''
-  openAi({ accountId: x.account?.id ?? null, label: x.account?.naam ?? `taak ${x.title}`, vraag: `Help me met mijn taak "${x.title}" (${typeVan(x.actionType).label.toLowerCase()}${bij}${met}${wanneer})${x.aanleiding ? `. Aanleiding: ${x.aanleiding}` : ''}. Wat is de beste aanpak?` })
-  emit('sluit')
+  // De assistent opent boven het taakvenster (FlyoutShell); het venster blijft staan.
+  openAi({ accountId: x.account?.id ?? null, label: x.account?.naam ?? `taak ${x.title}`, vraag: `Help me met mijn taak "${x.title}" (${typeVan(x.actionType).label.toLowerCase()}${bij}${met}${wanneer})${x.aanleiding ? `. Aanleiding: ${x.aanleiding}` : ''}. Wat is de beste aanpak?`, voorstellen: [x.contact ? `Wat weet ik al over ${x.contact.naam}?` : 'Wat weet ik al over deze prospect?', 'Schrijf een openingszin', 'Welke bezwaren kan ik verwachten?'] })
 }
 const uitstelHouder = ref<HTMLElement | null>(null)
 function kiesAnnuleren() { uitstelOpen.value = false; annuleren.value = true; nextTick(() => document.querySelector<HTMLElement>('[data-test="annuleer-reden"]')?.focus()) }
@@ -180,32 +186,23 @@ const planOpen = ref(false)
 const kanPlannen = computed(() => !!functie('agenda.basis')?.beschikbaar && !!t.value?.account)
 function gepland(id: string) { planOpen.value = false; emit('gewijzigd'); emit('sluit'); navigateTo(`/agenda?afspraak=${id}`) }
 const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0, 10))
-function toets(e: KeyboardEvent) {
-  if (e.key !== 'Escape' || !props.open || planOpen.value || e.defaultPrevented) return
-  emit('sluit')
-}
 // Escape sluit eerst het uitstelmenu of de bevestiging (vangfase, vóór de layout); preventDefault houdt het venster open.
 function toetsEerst(e: KeyboardEvent) {
   if (e.key !== 'Escape' || !props.open || !(uitstelOpen.value || verwijderVraag.value)) return
   e.preventDefault(); e.stopPropagation(); uitstelOpen.value = false; verwijderVraag.value = false
 }
-onMounted(() => { document.addEventListener('keydown', toetsEerst, true); document.addEventListener('keydown', toets); document.addEventListener('click', buitenUitstel) })
-onBeforeUnmount(() => { document.removeEventListener('keydown', toetsEerst, true); document.removeEventListener('keydown', toets); document.removeEventListener('click', buitenUitstel) })
+onMounted(() => { document.addEventListener('keydown', toetsEerst, true); document.addEventListener('click', buitenUitstel) })
+onBeforeUnmount(() => { document.removeEventListener('keydown', toetsEerst, true); document.removeEventListener('click', buitenUitstel) })
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="tf-titel" data-test="taak-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+  <FlyoutShell :open="open" titel-id="tf-titel" :opslag="opslag" ai-in-voet :ai="{ accountId: t?.account?.id ?? null }" data-test="taak-flyout" @sluit="emit('sluit')" @bewaar="bewaar">
+    <template #kop>
             <span class="fo-kicker" data-test="tf-kicker"><span v-if="t" class="prio-stip" :class="PRIO_STIP[t.priority]" aria-hidden="true" /> {{ t ? `${PRIO_LABEL[t.priority] ?? t.priority} · ${STATUS_LABEL[t.status] ?? t.status}` : 'Taak' }}</span>
             <h2 id="tf-titel" class="fo-titel">{{ t?.title ?? 'Laden…' }}</h2>
-            <p v-if="t?.account" class="taak-meta"><NuxtLink :to="`/accounts/${t.account.id}`" class="tf-tik" @click="emit('sluit')">{{ t.account.naam }}</NuxtLink><template v-if="t.account.plaats"> · {{ t.account.plaats }}</template> <span v-if="t.account.fase" class="pil" :class="fasePil(t.account.fase.kleur)">{{ t.account.fase.label }}</span></p>
+            <p v-if="t?.account" class="taak-meta"><NuxtLink :to="`/accounts/${t.account.id}`" class="tf-tik" @click="emit('sluit')">{{ t.account.naam }}</NuxtLink><template v-if="t.account.plaats"> · {{ t.account.plaats }}</template> <Label v-if="t.account.fase" soort="fase" :waarde="t.account.fase.hoofdfase" :tekst="t.account.fase.label" /></p>
             <p v-if="t?.poging" class="taak-meta" data-test="pogingregel">poging {{ t.poging.n }} van {{ t.poging.van }}<template v-if="t.poging.kanaal"> · {{ t.poging.kanaal }}</template><template v-if="t.poging.vorige"> · vorige: {{ t.poging.vorige }}</template></p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')">×</button>
-        </header>
+    </template>
 
         <!-- Bewerken: de velden van Nieuwe taak. -->
         <form v-if="t && bewerken" id="tf-bewerk" class="fo-body fo-body--formulier" data-test="tf-bewerken" @submit.prevent="bewaar">
@@ -241,7 +238,7 @@ onBeforeUnmount(() => { document.removeEventListener('keydown', toetsEerst, true
 
         <div v-else-if="t" class="fo-body fo-body--formulier">
           <dl class="defs tf-defs" data-test="tf-gegevens">
-            <div class="def-rij"><dt>Type</dt><dd><span class="tf-type-pil"><Icoon :naam="typeVan(t.actionType).icoon" :grootte="14" />{{ typeVan(t.actionType).label }}</span></dd></div>
+            <div class="def-rij"><dt>Type</dt><dd><Label soort="actie" :waarde="t.actionType ?? 'taak'" :tekst="typeVan(t.actionType).label" /></dd></div>
             <div class="def-rij"><dt>Vervaldatum</dt><dd :class="{ 'fo-over-tijd': overTijd }"><span class="tnum">{{ vervalDatum ?? 'geen' }}</span><span v-if="t.dueDate" class="tf-delta"> ({{ vervalLabel(t.dueDate, nu) }})</span></dd></div>
             <div v-if="t.eigenaar" class="def-rij"><dt>Toegewezen aan</dt><dd>{{ t.eigenaar.replace(/^Testgebruiker /, '') }}</dd></div>
             <div v-if="t.account" class="def-rij"><dt>Prospect</dt><dd><NuxtLink :to="`/accounts/${t.account.id}`" class="fo-link tf-tik" data-test="tf-account" @click="emit('sluit')">{{ t.account.naam }}</NuxtLink></dd></div>
@@ -251,7 +248,7 @@ onBeforeUnmount(() => { document.removeEventListener('keydown', toetsEerst, true
             <div v-if="t.beschrijving" class="def-rij"><dt>Beschrijving</dt><dd>{{ t.beschrijving }}</dd></div>
           </dl>
           <article v-if="t.aanleiding || t.waarom" class="fo-blok aanleiding-blok" data-test="aanleiding">
-            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Aanleiding</h3><span class="pil pil--leeg">{{ HERKOMST_LABEL[t.herkomst] ?? 'Handmatig' }}</span></header>
+            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Aanleiding</h3><Label soort="herkomst" :waarde="t.herkomst ?? 'handmatig'" /></header>
             <p v-if="t.aanleiding">{{ t.aanleiding }}</p>
             <p v-if="t.waarom" class="mt-8" data-test="waarom"><strong>Waarom krijg ik dit?</strong> {{ t.waarom }}<template v-if="t.regel"> <NuxtLink v-if="functie('regels.lezen')?.beschikbaar" :to="`/instellingen/regels`" class="tekst-link">Bekijk de regel</NuxtLink></template></p>
           </article>
@@ -270,7 +267,7 @@ onBeforeUnmount(() => { document.removeEventListener('keydown', toetsEerst, true
             @patch="(p) => (t = { ...t, ...p })" @gewijzigd="emit('gewijzigd')" @sluit="emit('sluit')"
           />
           <article v-if="t.agent" class="fo-blok fo-blok--agent" data-test="agent-blok">
-            <p class="taak-meta">Door {{ agentDef(t.agent)?.naam ?? t.agent }}<template v-if="me?.gebruiker.niveau === 'expert' && t.mandaat"> · mandaat <span class="pil" :class="`pil--mandaat-${t.mandaat}`">{{ t.mandaat }}</span></template><template v-if="t.executorStatus"> · {{ EXECUTOR_LABEL[t.executorStatus] }}</template></p>
+            <p class="taak-meta">Door {{ agentDef(t.agent)?.naam ?? t.agent }}<template v-if="me?.gebruiker.niveau === 'expert' && t.mandaat"> · mandaat <Label soort="klasse" :waarde="t.mandaat" :titel="`Mandaat ${t.mandaat}`" /></template><template v-if="t.executorStatus"> · {{ EXECUTOR_LABEL[t.executorStatus] }}</template></p>
           </article>
           <article v-if="t.account && functie('briefing.lezen')?.beschikbaar && t.status !== 'klaar'" class="fo-blok fo-blok--agent" data-test="taak-pitstop"><header class="fo-blok-kop"><div><span class="fo-blok-kicker">Pitstop · AI-agent</span><h3 class="fo-blok-titel">Briefing en Pitstop</h3></div></header><BriefingPaneel onderwerp="taak" :id="t.id" ingeklapt /></article>
           <article v-if="t.concept" class="fo-blok"><header class="fo-blok-kop"><h3 class="fo-blok-titel">Concept</h3></header><p v-if="t.concept.onderwerp"><strong>{{ t.concept.onderwerp }}</strong></p><p>{{ t.concept.tekst }}</p>
@@ -317,6 +314,7 @@ onBeforeUnmount(() => { document.removeEventListener('keydown', toetsEerst, true
         </div>
         <p v-else-if="laden" class="fo-body meta">Laden…</p>
 
+        <template #voet>
         <footer v-if="t && bewerken" class="fo-foot dd-acties">
           <button type="button" class="dd-act" @click="bewerken = false">Annuleren</button>
           <span class="dd-acties-vul fo-foot-vul" />
@@ -341,9 +339,8 @@ onBeforeUnmount(() => { document.removeEventListener('keydown', toetsEerst, true
             <button type="button" class="dd-actie dd-actie--icoon tf-ibtn" title="Volgende taak" aria-label="Volgende taak" data-test="tf-volgende" :disabled="geenVolgende" @click="naarVolgende"><Icoon naam="ArrowRight" :grootte="18" /></button>
           </div>
         </footer>
-      </aside>
-    </div>
-  </Teleport>
+        </template>
+  </FlyoutShell>
   <BevestigVenster :open="verwijderVraag" titel="Taak verwijderen?" :tekst="`${t?.title ?? 'Deze taak'} verdwijnt helemaal, ook uit de historie van de prospect. Wil je hem alleen niet meer doen? Annuleer hem dan met een reden.`" bevestig="Verwijderen" gevaar @bevestigd="verwijder" @geannuleerd="verwijderVraag = false" />
   <PlanAfspraakFlyout v-if="t?.account" :open="planOpen" :account="{ id: t.account.id, naam: t.account.naam }" :task-id="t.id" :aanleiding="t.title" @sluit="planOpen = false" @gepland="gepland" />
 </template>
@@ -369,7 +366,6 @@ onBeforeUnmount(() => { document.removeEventListener('keydown', toetsEerst, true
   .tf-afronden { padding: 0 12px; }
 }
 .tf-delta { font-size: var(--fs-label); color: var(--muted); }
-.tf-type-pil { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--ink); color: var(--yellow); border-radius: var(--radius); font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
 .tf-klant { display: flex; gap: 12px; align-items: flex-start; }
 .tf-merk { flex: 0 0 44px; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: var(--ink); color: var(--yellow); font-family: var(--font-serif); font-weight: 700; font-size: 16px; }
 .tf-klant-tekst { min-width: 0; }

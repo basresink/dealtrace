@@ -187,7 +187,7 @@ useHead({ title: 'Weekreview · Dealtrace' })
               <span class="kicker">4 van 4 · Volgende week</span>
               <h2 class="wr-kop" data-test="wr-kop-volgende">{{ r.volgende.kop }}</h2>
               <ul v-if="r.volgende.ingepland.length" class="wr-lijst" data-test="wr-ingepland">
-                <li v-for="v in r.volgende.ingepland" :key="v.id"><span class="wr-vn-ico"><Icoon :naam="SOORT_ICOON[v.soort] ?? 'SquareCheck'" :grootte="16" /></span><span>{{ v.tekst }}</span><span v-if="v.gedeeld" class="pil pil--paars">Gedeeld</span></li>
+                <li v-for="v in r.volgende.ingepland" :key="v.id"><span class="wr-vn-ico"><Icoon :naam="SOORT_ICOON[v.soort] ?? 'SquareCheck'" :grootte="16" /></span><span>{{ v.tekst }}</span><span v-if="v.gedeeld" class="pil">Gedeeld</span></li>
               </ul>
               <button v-if="r.volgende.ingepland.length" type="button" class="dd-act wr-zet-in" data-test="wr-opnieuw" @click="kiesOpnieuw"><Icoon naam="RefreshCw" />Kies opnieuw</button>
               <template v-else>

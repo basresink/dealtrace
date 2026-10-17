@@ -257,7 +257,7 @@ test.describe('nieuwe taak en taakvenster in de opzet van DealDrive', () => {
     await expect(venster.getByRole('heading', { name: 'Wat moet er gebeuren?' })).toBeVisible()
     await expect(page.getByTestId('nt-kicker')).toHaveText(/Nieuwe taak · Middel/i)
     await expect(page.getByTestId('nt-maak')).toBeDisabled()
-    await expect(page.getByTestId('nt-maak')).toHaveText('✓ Maak taak')
+    await expect(page.getByTestId('nt-maak')).toHaveText('Maak taak')
     // Klant zoeken en kiezen; het contactveld toont daarna alleen de contacten van die klant, beslisser eerst.
     await page.getByTestId('nt-klant').fill(x.accountNaam.slice(0, 12))
     await page.getByTestId('nt-klant-optie').filter({ hasText: x.accountNaam }).click()

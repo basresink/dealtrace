@@ -13,7 +13,6 @@ const { data: plan } = await useFetch<any>(() => `/api/accountplannen/${lopendId
 const overige = computed(() => lijst.value.plannen.filter((p: any) => p.id !== lopendId.value))
 const samenvatting = computed(() => (plan.value ? ACCOUNTPLAN_SECTIES.filter((s) => (plan.value.secties?.[s.sleutel] ?? '').trim()).map((s) => ({ ...s, tekst: plan.value.secties[s.sleutel] as string })) : []))
 const nieuwOpen = ref(false)
-const pilKlas = (w: string) => ({ actueel: 'pil--geel', verlopen: 'pil--rood', afgerond: 'pil--zwart' } as Record<string, string>)[w] ?? 'pil--grijs'
 const acties = computed<any[]>(() => (plan.value?.acties ?? []).filter((x: any) => x.status !== 'geannuleerd'))
 </script>
 
@@ -34,7 +33,7 @@ const acties = computed<any[]>(() => (plan.value?.acties ?? []).filter((x: any) 
           <div class="apt-kop-tekst">
             <span class="apt-kicker">{{ plan.weergave === 'actueel' ? 'Lopend accountplan' : 'Laatste accountplan' }}</span>
             <NuxtLink :to="`/accountplannen/${plan.id}`" class="apt-titel" :data-test="`ak-accountplan-${plan.id}`">{{ plan.titel }}</NuxtLink>
-            <span class="apt-meta tnum"><span class="pil" :class="pilKlas(plan.weergave)">{{ WEERGAVE_LABEL[plan.weergave as 'actueel'] }}</span> {{ geldigheidLabel(plan) }}<template v-if="plan.eigenaar"> · {{ plan.eigenaar.naam.replace(/^Testgebruiker /, '') }}</template></span>
+            <span class="apt-meta tnum"><Label soort="plan" :waarde="plan.weergave" :tekst="WEERGAVE_LABEL[plan.weergave as 'actueel']" /> {{ geldigheidLabel(plan) }}<template v-if="plan.eigenaar"> · {{ plan.eigenaar.naam.replace(/^Testgebruiker /, '') }}</template></span>
           </div>
           <NuxtLink :to="`/accountplannen/${plan.id}`" class="dd-actie dd-actie--zwart" data-test="apt-open">Open accountplan<Icoon naam="ArrowRight" class="dd-actie-icoon" /></NuxtLink>
         </header>
@@ -71,7 +70,7 @@ const acties = computed<any[]>(() => (plan.value?.acties ?? []).filter((x: any) 
           <li v-for="p in overige" :key="p.id">
             <NuxtLink :to="`/accountplannen/${p.id}`" class="apt-link" :data-test="`ak-accountplan-${p.id}`">
               <span class="apt-link-naam">{{ p.titel }}</span>
-              <span class="apt-meta tnum"><span class="pil" :class="pilKlas(p.weergave)">{{ WEERGAVE_LABEL[p.weergave as 'actueel'] }}</span> {{ geldigheidLabel(p) }} · {{ p.acties.klaar }} van {{ p.acties.totaal }} acties klaar</span>
+              <span class="apt-meta tnum"><Label soort="plan" :waarde="p.weergave" :tekst="WEERGAVE_LABEL[p.weergave as 'actueel']" /> {{ geldigheidLabel(p) }} · {{ p.acties.klaar }} van {{ p.acties.totaal }} acties klaar</span>
             </NuxtLink>
           </li>
         </ul>

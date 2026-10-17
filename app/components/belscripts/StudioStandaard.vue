@@ -180,7 +180,7 @@ const code = (v: string) => '{' + v + '}'
               <div class="ss-blok-kop">
                 <button type="button" class="ss-mini" :aria-expanded="open.has(b.id)" :aria-label="`${open.has(b.id) ? 'Inklappen' : 'Uitklappen'}: ${BLOK_LABEL[b.soort as BlokSoortScript]}`" @click="wisselOpen(b.id)"><Icoon :naam="open.has(b.id) ? 'ChevronUp' : 'ChevronDown'" :grootte="16" /></button>
                 <span class="ss-blok-naam">{{ Number(i) + 1 }}. {{ b.titel || BLOK_LABEL[b.soort as BlokSoortScript] }}</span>
-                <span class="pil" :class="b.invulwijze === 'vast' ? 'pil--leeg' : 'pil--paars'">{{ INVULWIJZE_LABEL[b.invulwijze as Invulwijze] }}</span>
+                <span v-if="b.invulwijze === 'vast'" class="pil pil--leeg">{{ INVULWIJZE_LABEL[b.invulwijze as Invulwijze] }}</span><Label v-else soort="ai" waarde="ai" :tekst="INVULWIJZE_LABEL[b.invulwijze as Invulwijze]" />
                 <span v-if="!open.has(b.id)" class="meta ss-blok-kort">{{ kortVan(b.tekst) }}</span>
                 <span v-if="kanBewerken" class="ss-blok-acties">
                   <button type="button" class="ss-mini" aria-label="Omhoog" :disabled="i === 0" :data-test="`blok-op-${i}`" @click="verplaats(Number(i), -1)"><Icoon naam="ChevronUp" :grootte="16" /></button>

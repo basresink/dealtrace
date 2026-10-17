@@ -7,7 +7,9 @@
 // GET /api/contacten/:id/tabbladen. Op de accountkaart staat bij elk item de naam van het contact met een
 // link naar de contactkaart; op de contactkaart hoort alles bij dat ene contact. De inhoud van Reis en
 // Accountplan levert de pagina (slot); zonder slot geen tabblad. Reis en kwalificatie staan onder Meer.
-import { ACTIE_LABEL, HERKOMST_LABEL, PRIO_LABEL, isDringend } from '~~/shared/taken'
+import { ACTIE_LABEL, isDringend } from '~~/shared/taken'
+/** Status in de tijdlijn als label: klaar groen, open een rand, te laat gevuld rood. */
+const tlStatus = (soort: string, tekst: string) => (soort === 'klaar' ? { soort: 'status', waarde: 'afgerond', tekst } : soort === 'laat' ? { soort: 'urgentie', waarde: 'achterstallig', tekst } : { soort: 'status', waarde: 'nieuw', tekst })
 
 const props = defineProps<{
   account: { id: string; naam: string; soort?: string | null }
@@ -33,7 +35,6 @@ const SOORT: Record<string, string> = { gebeld: 'Gebeld', mail: 'Mail', notitie:
 const VORM: Record<string, string> = { bezoek: 'Bezoek', online: 'Online', telefoon: 'Telefoon' }
 const AFSPRAAK_STATUS: Record<string, string> = { gepland: 'Gepland', afgerond: 'Gehouden', geannuleerd: 'Geannuleerd', 'no-show': 'Niet verschenen' }
 const DEAL_FASE: Record<string, string> = { overgedragen: 'Overgedragen', lopend: 'Loopt in DealDrive', gewonnen: 'Gewonnen', verloren: 'Verloren', klaar: 'Klaar', verstuurd: 'Verstuurd', bevestigd: 'Bevestigd', mislukt: 'Mislukt' }
-const PRIO = PRIO_LABEL
 const CAMP_KOLOM: Record<string, string> = { klaar: 'Klaar', bezig: 'Bezig', afspraak: 'Afspraak', nee: 'Nee', 'geen-reactie': 'Geen reactie', later: 'Later' }
 const datumLang = (d: string | null) => (d ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Amsterdam' }).format(new Date(d)).replace('.', '') : '–')
 const wanneer = (d: string | null) => (d ? new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(d)) : 'geen datum')
@@ -161,7 +162,7 @@ const tabs = computed(() => [
                 <button v-if="i.open" type="button" class="tl-titel tl-strek" @click="i.open()">{{ i.titel }}</button>
                 <span v-else class="tl-titel">{{ i.titel }}</span>
                 <span v-if="i.tekst" class="tl-tekst">{{ i.tekst }}</span>
-                <span v-if="i.status" class="tl-status" :class="`tl-status--${i.statusSoort}`">{{ i.status }}</span>
+                <Label v-if="i.status" class="tl-status" v-bind="tlStatus(i.statusSoort, i.status)" />
               </div>
             </li>
           </ol>
@@ -178,7 +179,7 @@ const tabs = computed(() => [
                 <span class="tl-kop"><span class="tl-soort tl-soort--inzicht">{{ s.relevantie >= 75 ? 'Heet' : 'Inzicht' }}</span><span class="tl-type">{{ s.agent ?? (s.bron === 'extern' ? 'Extern' : 'Intern') }}</span><span v-if="s.specifiekeBron" class="tl-bron">{{ s.specifiekeBron }}</span><ItemMetaregel :contact="contactVan(s)" :door="s.gebruiker" :datum="tlDatum(Date.parse(s.createdAt))" /></span>
                 <button type="button" class="tl-titel tl-strek" :data-test="`ak-inzicht-${s.id}`" @click="inzicht = s">{{ s.title }}</button>
                 <span v-if="s.waarom" class="tl-tekst">{{ s.waarom }}</span>
-                <span class="tl-status" :class="s.status === 'nieuw' ? 'tl-status--open' : 'tl-status--klaar'">{{ s.status === 'nieuw' ? 'Ongezien' : s.status === 'omgezet' ? 'Taak gemaakt' : 'Gelezen' }}</span>
+                <Label class="tl-status" v-bind="tlStatus(s.status === 'nieuw' ? 'open' : 'klaar', s.status === 'nieuw' ? 'Ongezien' : s.status === 'omgezet' ? 'Taak gemaakt' : 'Gelezen')" />
               </div>
             </li>
           </ol>
@@ -194,11 +195,11 @@ const tabs = computed(() => [
               <li v-for="x in g.items" :key="x.id" class="tl-item">
                 <span class="tl-spoor" :class="isDringend(x.priority) ? 'tl-spoor--urgent' : 'tl-spoor--taak'" aria-hidden="true" />
                 <div class="tl-kaart tl-kaart--klik">
-                  <span class="tl-kop"><span class="tl-soort tl-soort--taak">{{ ACTIE_LABEL[x.actionType] ?? 'Taak' }}</span><span class="tl-type">{{ PRIO[x.priority] ?? x.priority }}</span><span class="tl-type">{{ HERKOMST_LABEL[x.herkomst] ?? 'Handmatig' }}</span><ItemMetaregel :contact="contactVan(x)" :door="x.gebruiker" :datum="wanneer(x.dueDate)" :datum-rood="x.achterstallig" /></span>
+                  <span class="tl-kop"><span class="tl-soort tl-soort--taak">{{ ACTIE_LABEL[x.actionType] ?? 'Taak' }}</span><Label soort="prioriteit" :waarde="x.priority" /><Label soort="herkomst" :waarde="x.herkomst ?? 'handmatig'" /><ItemMetaregel :contact="contactVan(x)" :door="x.gebruiker" :datum="wanneer(x.dueDate)" :datum-rood="x.achterstallig" /></span>
                   <button type="button" class="tl-titel tl-strek" :data-test="`ak-taak-${x.id}`" @click="taakId = x.id">{{ x.title }}</button>
                   <span v-if="x.aanleiding || x.poging" class="tl-tekst">{{ [x.aanleiding, x.poging ? `poging ${x.poging.n} van ${x.poging.van}` : null].filter(Boolean).join(' · ') }}</span>
-                  <span v-if="!['open', 'bezig'].includes(x.status)" class="tl-status tl-status--klaar">{{ x.status === 'geannuleerd' ? 'Geannuleerd' : 'Afgerond' }}<template v-if="x.uitkomst"> · {{ x.uitkomst }}</template></span>
-                  <span v-else-if="x.achterstallig" class="tl-status tl-status--laat">Achterstallig</span>
+                  <Label v-if="!['open', 'bezig'].includes(x.status)" class="tl-status" v-bind="tlStatus('klaar', `${x.status === 'geannuleerd' ? 'Geannuleerd' : 'Afgerond'}${x.uitkomst ? ` · ${x.uitkomst}` : ''}`)" />
+                  <Label v-else-if="x.achterstallig" class="tl-status" v-bind="tlStatus('laat', 'Achterstallig')" />
                 </div>
               </li>
             </ol>
@@ -242,7 +243,7 @@ const tabs = computed(() => [
                 <span class="tl-kop"><span class="tl-soort tl-soort--afspraak">{{ x.soort }}</span><span class="tl-type">{{ VORM[x.vorm] ?? x.vorm }}</span><ItemMetaregel :contact="contactVan(x)" :door="x.gebruiker" :datum="wanneer(x.start)" /></span>
                 <button type="button" class="tl-titel tl-strek" :data-test="`ak-afspraak-${x.id}`" @click="afspraakId = x.id"><template v-if="x.titel">{{ x.titel }}</template><template v-else>{{ x.soort }}<template v-if="x.contact"> met {{ x.contact }}</template></template></button>
                 <span v-if="x.locatie" class="tl-tekst">{{ x.locatie }}</span>
-                <span class="tl-status" :class="x.status === 'afgerond' ? 'tl-status--klaar' : x.status === 'gepland' ? 'tl-status--open' : 'tl-status--laat'">{{ AFSPRAAK_STATUS[x.status] ?? x.status }}<template v-if="x.heeftVerslag"> · verslag</template></span>
+                <Label class="tl-status" v-bind="tlStatus(x.status === 'afgerond' ? 'klaar' : x.status === 'gepland' ? 'open' : 'laat', `${AFSPRAAK_STATUS[x.status] ?? x.status}${x.heeftVerslag ? ' · verslag' : ''}`)" />
               </div>
             </li>
           </ol>
@@ -350,23 +351,16 @@ const tabs = computed(() => [
 .tl-strek:focus-visible { outline: none; }
 .tl-strek:focus-visible::after { outline: 2px solid var(--ink); outline-offset: -2px; }
 .tl-kop { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; margin-bottom: 6px; }
-.tl-soort, .tl-type { padding: 2px 7px; border-radius: 2px; font-size: 10px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
-.tl-soort--inzicht { background: var(--yellow); color: var(--ink); }
-.tl-soort--taak { background: var(--blue); color: #fff; }
-.tl-soort--afspraak { background: var(--green); color: #fff; }
-.tl-soort--deal { background: var(--purple); color: #fff; }
-.tl-soort--mail { background: var(--blue); color: #fff; }
-.tl-soort--contact { background: var(--surface); color: var(--muted); border: 1px solid var(--border-strong); }
-.tl-type { background: var(--surface); color: var(--ink-soft); border: 1px solid var(--border); }
+/* Soort en type zijn feiten: randlabels (UI-standaard, Labels). */
+.tl-soort, .tl-type { display: inline-flex; align-items: center; height: var(--lbl-h); padding: 0 6px; border: 1px solid var(--lbl-rand-lijn); border-radius: 2px; font-size: var(--lbl-fs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lbl-rand-tekst); }
+.tl-soort { border-color: var(--lbl-rand-tekst); }
 .tl-bron { font-size: 11px; color: var(--muted); }
 .ak-rij-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; }
 .ak-rij-meta > .meta::before { content: '·'; margin-right: 6px; }
 .tl-titel { margin: 0 0 3px; font-family: var(--font-serif); font-size: 15px; font-weight: 700; line-height: 1.35; color: var(--ink); }
 .tl-tekst { font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
 .tl-tekst--vol { white-space: pre-wrap; }
-.tl-status { display: inline-block; margin-top: 8px; padding: 2px 8px; border-radius: 2px; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; background: var(--surface); color: var(--muted); }
-.tl-status--klaar { background: rgba(30, 124, 74, 0.12); color: var(--green); }
-.tl-status--laat { background: rgba(192, 57, 43, 0.1); color: var(--red); }
+.tl-status { margin-top: 8px; }
 
 /* Rijen (verslagen, campagnes, documenten) */
 .ak-rijen { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; background: var(--wit); border: 1px solid var(--border); }

@@ -33,7 +33,7 @@ const startOpen = ref(false)
 async function gestart(id: string) { startOpen.value = false; zet({ stand: undefined, reeks: id }); await refresh() }
 
 const WIE_LABEL: Record<string, string> = { mij: 'Mijn reeksen', team: 'Mijn team', org: 'Hele organisatie' }
-const STAND_PIL: Record<string, string> = { concept: 'pil--paars', open: 'pil--geel', loopt: 'pil--leeg', raak: 'pil--groen', gestopt: 'pil--grijs' }
+const STAND_PIL: Record<string, string> = { concept: 'pil--leeg', open: 'pil--oranje', loopt: 'pil--blauw', raak: 'pil--groen', gestopt: 'pil--grijs' }
 const STAND_ICOON: Record<string, string> = { concept: 'item-icoon--email', open: 'item-icoon--call', raak: 'item-icoon--visit' }
 const dag = (iso: string | null) => (iso ? new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date(iso)).replace(/\./g, '') : '')
 function regel(x: any): string {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Top deze week (F03): de zes belangrijkste eigen prospects, in de opzet van DealDrive:
 // kop met paarse kicker, daaronder een grijze band met zes kaarten in de kleur van de warmte.
-import { klasseKleur, klasseLabel } from '~/utils/accountWeergave'
+import { klasseLabel } from '~/utils/accountWeergave'
 const { functie } = useMe()
 if (!functie('prospects.lijst')?.beschikbaar) throw createError({ statusCode: 403, statusMessage: 'Geen toegang' })
 const { data } = await useFetch<{ prospects: any[]; klassen: { id: string; naam: string }[] }>('/api/accounts/top', { default: () => ({ prospects: [], klassen: [] }) })
@@ -34,7 +34,7 @@ useHead({ title: 'Prospects · Dealtrace' })
           <NuxtLink v-for="p in top" :key="p.id" :to="`/accounts/${p.id}`" class="top-kaart-dd" :class="`top-kaart-dd--${p.warmte}`" :data-account="p.id">
             <span class="top-kaart-kop">
               <span class="top-rang-pil tnum">#{{ p.rang }}</span>
-              <span v-if="p.klasse" class="klasse-pil" :class="`klasse-pil--${klasseKleur(p.klasse, data.klassen)}`">{{ klasseLabel(p.klasse, data.klassen) }}</span>
+              <Label v-if="p.klasse" soort="klasse" :waarde="klasseLabel(p.klasse, data.klassen)" />
             </span>
             <h2 class="top-kaart-naam">{{ p.naam }}</h2>
             <span v-if="p.branche || p.plaats" class="top-kaart-meta">{{ [p.branche, p.plaats].filter(Boolean).join(' · ') }}</span>

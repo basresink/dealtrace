@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Accountkaart (F03, 8.5.5) in de opzet van DealDrive: kop met logovlak, kruimel, branche en plaats, naam met
-// klassepil, website en de stuurstrip; rechts Zoeken, Vraag AI, Contacten en Meer. Meer opent een venster met
+// klasselabel, website en de stuurstrip; rechts Zoeken, Vraag AI, Contacten en Meer. Meer opent een venster met
 // korte kaders (Info, Briefing, Volgen, Invloed, Belscript, Dossier, Kwalificatie, Ritme, Reis, Klaarzetten,
 // Overdragen en Deactiveren) die elk hun eigen venster openen; ?meer=<id> opent er direct een. Het logovlak
 // toont het logo (eigen logo-URL of het favicon van de website) en anders de initialen. Daaronder de
@@ -12,7 +12,7 @@
 import { CONTACTROL_LABEL, type ContactRol } from '~~/shared/contactgegevens'
 import type { Ref } from 'vue'
 import type { MeerKader } from '~/components/account/MeerFlyout.vue'
-import { STATUS_LABEL, STATUS_PIL, datumKort, fasePil, klasseKort, telLink, toonTelefoon } from '~/utils/accountWeergave'
+import { STATUS_LABEL, datumKort, klasseKort, telLink, toonTelefoon } from '~/utils/accountWeergave'
 const route = useRoute()
 const { functie, me } = useMe()
 if (!functie('prospects.kaart')?.beschikbaar) throw createError({ statusCode: 403, statusMessage: 'Geen toegang' })
@@ -35,7 +35,6 @@ const invloedOpen = ref(false)
 // P17: overdracht na de eerste afspraak.
 const overdragenOpen = ref(route.query.overdragen === '1')
 const OV_NAAR: Record<string, string> = { dealdrive: 'DealDrive', crm: 'het CRM', collega: 'een collega' }
-const OV_STATUS: Record<string, string> = { klaar: 'Klaar', verstuurd: 'Verstuurd', bevestigd: 'Bevestigd', mislukt: 'Mislukt' }
 // P23: het antwoord op "Mag dit een bewijs worden?" na een gewonnen deal in DealDrive.
 async function bewijs(ja: boolean) {
   try { await $fetch(`/api/accounts/${route.params.id}/bewijs`, { method: 'POST', body: { ja } }); toast.toon(ja ? 'Je salesmanager krijgt het als suggestie.' : 'Genoteerd. Er gaat niets naar je salesmanager.'); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
@@ -134,12 +133,11 @@ function ritmeActie(soort: 'nee' | 'pauzeer' | 'verplaats' | 'fase' | 'terugop')
   else handeling.value = soort
 }
 
-// Kop: logovlak met initialen in een vaste kleur per naam, klassepil in de kleur van de letter.
+// Kop: logovlak met initialen in een vaste kleur per naam; klasse, fase en status als label (shared/labels.ts).
 const MERK = ['#194c8f', '#1e7c4a', '#c0392b', '#4c1d95', '#b45309', '#0a0a0a', '#0f766e']
 const initialen = computed(() => a.value.naam.replace(/^(Test)(?=[A-Z])/, '').split(/\s+/).filter(Boolean).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase())
 const merkKleur = computed(() => MERK[[...a.value.naam].reduce((s: number, c: string) => s + c.charCodeAt(0), 0) % MERK.length])
 const klasseNaam = computed(() => a.value.klassen.find((k: any) => k.id === a.value.klasse)?.naam ?? klasseKort(a.value.klasse, a.value.klassen))
-const klasseKleur = computed(() => ({ A: 'a', B: 'b', C: 'c', D: 'd' } as Record<string, string>)[klasseKort(a.value.klasse, a.value.klassen).charAt(0).toUpperCase()] ?? (a.value.klasse ? 'overig' : 'geen'))
 const extern = (u: string) => (/^https?:\/\//i.test(u) ? u : `https://${u}`)
 // Het logovlak is 64 px, op de telefoon 48 px (zoals de initialen eerder).
 const logoMaat = ref(64)
@@ -179,15 +177,16 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
             <NuxtLink :to="a.soort === 'klant' ? '/klanten' : '/prospects/alle'" class="ak-kruimel"><Icoon naam="ArrowLeft" :grootte="12" /> {{ a.soort === 'klant' ? 'Bestaande klanten' : 'Alle prospects' }}</NuxtLink>
             <p class="ak-eyebrow"><span v-for="(c, i) in [a.branche, a.plaats, a.land, a.vvBranche?.naam].filter(Boolean)" :key="i"><template v-if="i"> · </template>{{ c }}</span></p>
             <h1 class="ak-titel" data-test="account-naam">{{ a.naam }}
-              <select v-if="a.kan.klasse" class="ak-klasse" :class="`ak-klasse--${klasseKleur}`" :value="a.klasse ?? ''" aria-label="Klasse" data-test="klasse" @change="zetKlasse(($event.target as HTMLSelectElement).value)">
+              <span v-if="a.kan.klasse" class="lbl-kies"><Label soort="klasse" :waarde="a.klasse ? klasseNaam : null" data-test="klasse-label" /><Icoon naam="ChevronDown" :grootte="12" /><select :value="a.klasse ?? ''" aria-label="Klasse" data-test="klasse" @change="zetKlasse(($event.target as HTMLSelectElement).value)">
                 <option value="">Geen klasse</option><option v-for="k in a.klassen" :key="k.id" :value="k.id" :title="k.naam">{{ k.naam }}</option>
-              </select>
-              <span v-else class="ak-klasse" :class="`ak-klasse--${klasseKleur}`">{{ a.klasse ? klasseNaam : 'Geen klasse' }}</span>
+              </select></span>
+              <Label v-else soort="klasse" :waarde="a.klasse ? klasseNaam : null" data-test="klasse-label" />
             </h1>
             <div class="ak-pillen">
-              <button v-if="a.reis?.fase" type="button" class="pil reis-pil-knop" :class="fasePil(a.reis.fase.kleur)" :disabled="!a.kan.geschiedenis" :title="a.kan.geschiedenis ? 'Reisgeschiedenis' : undefined" data-test="fasepil" @click="openFase">{{ a.reis.fase.label }}</button>
-              <span class="pil" :class="STATUS_PIL[a.status]" data-test="statuspil">{{ STATUS_LABEL[a.status] ?? a.status }}</span>
-              <span v-if="a.dagenInFase !== null && a.reis" class="meta" :class="{ 'meta--oranje': a.reis.fase?.overschreden }" data-test="dagen-in-fase">{{ a.dagenInFase }} dagen in fase</span>
+              <Label v-if="a.reis?.fase" soort="fase" :waarde="a.reis.fase.hoofdfase" :tekst="a.reis.fase.label" knop :uit="!a.kan.geschiedenis" :titel="a.kan.geschiedenis ? `Fase ${a.reis.fase.label}. Open de reisgeschiedenis` : undefined" data-test="fasepil" @click="openFase" />
+              <Label soort="status" :waarde="a.status" data-test="statuspil" />
+              <Label v-if="a.dagenInFase !== null && a.reis && a.reis.fase?.overschreden" soort="status" waarde="te-lang-in-fase" :tekst="`${a.dagenInFase} d in fase`" titel="Langer in deze fase dan verwacht" data-test="dagen-in-fase" />
+              <span v-else-if="a.dagenInFase !== null && a.reis" class="meta" data-test="dagen-in-fase">{{ a.dagenInFase }} dagen in fase</span>
               <span v-if="a.vvBranche" class="chip chip--branche" title="Branche (verkoopverhaal)" data-test="vv-branche">{{ a.vvBranche.naam }}</span><span v-if="a.vvBranche?.verwijderd" class="meta" data-test="branche-verwijderd">{{ a.vvBranche.verwijderd }}</span>
             </div>
             <div class="ak-contactstrip">
@@ -246,8 +245,8 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
       <div class="container stapel">
         <div v-if="a.overdracht" class="kaart ov-stand" :class="{ 'kaart--geel': a.overdracht.status === 'mislukt' }" data-test="overdracht-regel">
           <span>Overgedragen aan {{ OV_NAAR[a.overdracht.naar] }} op {{ new Date(a.overdracht.op).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Amsterdam' }) }} · {{ a.overdracht.door }}<template v-if="a.overdracht.dealdrive?.eigenaar"> · in DealDrive bij {{ a.overdracht.dealdrive.eigenaar }}</template></span>
-          <span class="pil" :class="{ 'pil--leeg': !['mislukt', 'bevestigd'].includes(a.overdracht.status), 'pil--groen': a.overdracht.status === 'bevestigd' }" data-test="overdracht-pil">{{ OV_STATUS[a.overdracht.status] ?? a.overdracht.status }}</span>
-          <span v-if="a.overdracht.dealdrive?.gewonnenOp" class="pil pil--groen" data-test="gewonnen-na-overdracht">Gewonnen na overdracht</span>
+          <Label soort="overdracht" :waarde="a.overdracht.status" data-test="overdracht-pil" />
+          <Label v-if="a.overdracht.dealdrive?.gewonnenOp" soort="overdracht" waarde="gewonnen" data-test="gewonnen-na-overdracht" />
           <span v-if="a.overdracht.winback" class="meta" data-test="winback">{{ a.overdracht.winback.maanden ? `Herwinnen: ${a.overdracht.winback.reden}` : `Verloren in DealDrive: ${a.overdracht.winback.reden}${a.overdracht.winback.verlorenAan ? ` aan ${a.overdracht.winback.verlorenAan}` : ''}` }} · terug op {{ new Date(a.overdracht.winback.datum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) }}</span>
           <a v-if="a.overdracht.externUrl" :href="a.overdracht.externUrl" target="_blank" rel="noopener" class="filter-link">Open in DealDrive</a>
           <button v-if="a.overdracht.status === 'mislukt'" type="button" class="dd-act" data-test="overdracht-opnieuw" @click="overdrachtOpnieuw">Opnieuw proberen</button>
@@ -333,15 +332,6 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
 .ak-kruimel:hover { color: var(--ink); }
 .ak-eyebrow { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
 .ak-titel { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin: 4px 0 0; font-family: var(--font-serif); font-size: clamp(28px, 4vw, 40px); font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; color: var(--ink); }
-.ak-klasse { appearance: none; padding: 3px 8px; border: 1px solid transparent; border-radius: 2px; font-family: var(--font-serif); font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.4; background: var(--ink); color: var(--yellow); }
-select.ak-klasse { cursor: pointer; min-height: 26px; }
-.ak-klasse--a { background: var(--ink); color: var(--yellow); }
-.ak-klasse--b { background: var(--blue); color: #fff; }
-.ak-klasse--c { background: var(--orange); color: #fff; }
-.ak-klasse--d { background: var(--muted); color: #fff; }
-.ak-klasse--overig { background: var(--purple); color: #fff; }
-.ak-klasse--geen { background: #fff; color: var(--muted); border: 1px dashed var(--border-strong); }
-.ak-klasse option { background: #fff; color: var(--ink); font-family: Inter, sans-serif; text-transform: none; }
 .ak-pillen { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
 .ak-contactstrip { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 10px; font-size: 13px; }
 .ak-contactstrip a { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; color: var(--ink); text-decoration: none; border-bottom: 1px solid transparent; }
