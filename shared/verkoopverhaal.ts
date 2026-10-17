@@ -188,7 +188,7 @@ export interface ConceptBranche { id: string; naam: string; focus: 'primair' | '
 export interface ConceptConcurrent { id: string; naam: string; soort: keyof typeof CONCURRENT_SOORTEN; sterk?: string; zwak?: string; onderscheid?: string; zoZegJeHet?: string; alsDeKlantZegt?: string; antwoord?: string; bewijs?: string; wanneerVerliezen?: string; actief?: boolean }
 export interface ConceptFase { id: string; naam: string; soort?: string; volgorde: number; reisHoofdfase?: string | null }
 export interface ConceptWinpunt { id: string; faseId: string | null; titel: string; omschrijving: string; waarom?: string; impact: 'hoog' | 'midden' | 'laag'; concurrentIds?: string[]; weging?: number; context?: unknown; actief?: boolean }
-export interface ConceptTerugkomregel { id: string; lijst: 'verloren' | 'slapend'; reden: string; termijn: string; termijnDagen: number; kanaal: string; klassen?: string[]; rollen?: string[]; aanpak: string; hercontactritmeId?: string | null }
+export interface ConceptTerugkomregel { id: string; lijst: 'verloren' | 'slapend'; reden: string; termijn: string; termijnDagen: number; kanaal: string; klassen?: string[]; rollen?: string[]; aanpak: string; hercontactritmeId?: string | null; oppakker?: 'eigenaar' | 'binnendienst' | 'buitendienst' | null }
 export interface Concepten {
   golden_circle: { waarom?: string; hoe?: string; wat?: string }
   bedrijfsverhaal: { wieZijnWij?: string; kernzin?: string | null; perBranche?: Record<string, string> }

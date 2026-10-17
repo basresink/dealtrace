@@ -59,7 +59,7 @@ const rolLabel = (r: string) => { const t = r.replace(/^rol-/, ''); return t.cha
 export interface Spiegel { inhoud: any; context?: any }
 /**
  * Een gespiegelde sublaag als concept, in dezelfde vorm als de eigen inrichting. Eigen aanvullingen
- * die SalesDNA niet kent (termijn in dagen, hoofdfase van de reis, weging, hercontactritme) komen uit
+ * die SalesDNA niet kent (termijn in dagen, hoofdfase van de reis, weging, hercontactritme, wie het oppakt) komen uit
  * het huidige concept, op id.
  */
 export function spiegelNaarConcept<O extends Onderdeel>(onderdeel: O, s: Spiegel, huidig?: Partial<Concepten[O]> | null): Concepten[O] {
@@ -86,7 +86,7 @@ export function spiegelNaarConcept<O extends Onderdeel>(onderdeel: O, s: Spiegel
     case 'terugkomregels': {
       const regel = (r: any, lijst: 'verloren' | 'slapend') => {
         const oud = opId<any>(h.items, r._id)
-        return { id: r._id, lijst, reden: labelVanCode(lijst === 'slapend' ? r.redenSlapen ?? r.reden : r.reden), termijn: termijnLabel(r.termijn), termijnDagen: oud?.termijnDagen ?? TERMIJN_DAGEN[r.termijn] ?? 91, kanaal: KANAAL[r.kanaal] ?? labelVanCode(r.kanaal), klassen: lijstVan(r.accountklasse), rollen: lijstVan(r.rollen).map(rolLabel), aanpak: r.aanpak, hercontactritmeId: oud?.hercontactritmeId ?? null }
+        return { id: r._id, lijst, reden: labelVanCode(lijst === 'slapend' ? r.redenSlapen ?? r.reden : r.reden), termijn: termijnLabel(r.termijn), termijnDagen: oud?.termijnDagen ?? TERMIJN_DAGEN[r.termijn] ?? 91, kanaal: KANAAL[r.kanaal] ?? labelVanCode(r.kanaal), klassen: lijstVan(r.accountklasse), rollen: oud?.oppakker ? (oud.rollen ?? []) : lijstVan(r.rollen).map(rolLabel), aanpak: r.aanpak, hercontactritmeId: oud?.hercontactritmeId ?? null, ...(oud?.oppakker ? { oppakker: oud.oppakker } : {}) }
       }
       c = { items: [...(i.rijen ?? []).map((r: any) => regel(r, 'verloren')), ...(i.extra ?? []).map((r: any) => regel(r, 'slapend'))] }
       break

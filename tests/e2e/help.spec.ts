@@ -7,7 +7,7 @@ test.describe.configure({ mode: 'serial' })
 const ROUTES = [
   '/', '/taken', '/taken?weergave=horizon', '/inzichten', '/reizen', '/notificaties', '/mij', '/leadgenerator', '/helpcenter',
   '/instellingen', '/instellingen/regels', '/instellingen/ritme', '/instellingen/agents', '/instellingen/gebruikers', '/instellingen/niveaus',
-  '/instellingen/audit', '/instellingen/eigen-velden', '/instellingen/nee-redenen', '/instellingen/organisatie', '/instellingen/abonnement', '/planning',
+  '/instellingen/audit', '/instellingen/eigen-velden', '/instellingen/terugkomen', '/instellingen/organisatie', '/instellingen/abonnement', '/planning',
 ]
 
 test.describe('Hulp per scherm', () => {

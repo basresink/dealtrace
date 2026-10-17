@@ -10,12 +10,13 @@ test.describe('Agents en mandaten', () => {
     await login(page, 'u-06')
     await ga(page, '/instellingen/agents')
     await expect(page.getByTestId('vier-niveaus')).toContainText('per stuk goedkeuren')
-    await expect(page.getByTestId('agent-zoeker')).toContainText('Komt later')
+    await expect(page.getByTestId('agent-zoeker')).not.toContainText('Komt later')
+    await expect(page.getByTestId('agent-gids')).toContainText('Komt later')
     await page.getByTestId('mandaat-schrijver').selectOption('C')
     await expect(page.getByTestId('opslagstatus')).toHaveText('Opgeslagen')
     const stand = await (await page.request.get('/api/agents')).json()
     expect(stand.agents.find((a: any) => a.sleutel === 'schrijver').mandaat).toBe('C')
-    const audit = await (await page.request.get('/api/instellingen/audit')).json()
+    const audit = (await (await page.request.get('/api/instellingen/audit')).json()).regels
     expect(audit.slice(0, 5).some((r: any) => r.actie === 'agent.mandaat')).toBe(true)
     // De keuzelijst van de Verzender gaat niet verder dan zijn maximum B.
     await expect(page.getByTestId('mandaat-verzender').locator('option')).toHaveText([/^B/, /^C/, /^D/])

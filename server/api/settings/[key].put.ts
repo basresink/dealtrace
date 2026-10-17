@@ -3,7 +3,6 @@
 import { and, eq } from 'drizzle-orm'
 import { isSettingKey, isVerborgen } from '../../../shared/settingKeys'
 import { rolMag } from '../../../shared/permissions'
-import { KANALEN } from '../../../shared/nbStatus'
 import { AGENT_INSTELLINGEN } from '../../../shared/mandaat'
 import { BELMATRIX_RIJEN, klasseGrensFouten, valideerMatrix } from '../../../shared/ritmematrix'
 import { overlap, valideerRegios, type Regio } from '../../../shared/gebieden'
@@ -43,11 +42,8 @@ export default defineEventHandler(async (event) => {
     if (fouten.length) throw createError({ statusCode: 422, statusMessage: fouten.join('; ') })
   }
   if (key === 'afkoeling') {
-    // Afkoelperiode per kanaal in dagen (7.2): elk kanaal een geheel getal van 0 tot 730.
-    const v = value as Record<string, unknown>
-    if (!v || typeof v !== 'object' || KANALEN.some((k) => !Number.isInteger(v[k]) || (v[k] as number) < 0 || (v[k] as number) > 730)) {
-      throw createError({ statusCode: 422, statusMessage: 'Geef per kanaal een aantal dagen tussen 0 en 730' })
-    }
+    // De afkoeling wijzig je alleen op Instellingen, Terugkomen: daar zie je ook welke prospects verschuiven.
+    throw createError({ statusCode: 409, statusMessage: 'De afkoeling wijzig je op Instellingen, Terugkomen' })
   }
 
   if (key === 'spraak') {
