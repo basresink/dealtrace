@@ -43,7 +43,7 @@ useHead({ title: 'DealDrive · Dealtrace' })
       <section class="section section--laatste">
         <div v-if="dd" class="container">
           <article class="kaart" data-test="dealdrive-stand">
-            <header class="kaart-kop"><h2 class="kaart-titel">{{ kop }}</h2><Label soort="instelling" :waarde="dd.stand === 'uit' ? 'uit' : 'gekoppeld'" :tekst="STAND[dd.stand]" /></header>
+            <header class="kaart-kop"><h2 class="kaart-titel">{{ kop }}</h2><InstellingLabel :stand="dd.stand === 'uit' ? 'uit' : 'gekoppeld'" :tekst="STAND[dd.stand]" /></header>
             <p class="kaart-meta">De founder richt de koppeling in. Staat hij uit, dan krijg je bij een overdracht een taak met de briefing om te mailen of te downloaden.</p>
             <p v-if="dd.getestOp" class="kaart-meta">Laatst getest {{ moment(dd.getestOp) }}.</p>
             <p class="kaart-meta">Overdrachten: {{ dd.telling.verstuurd ?? 0 }} verstuurd, {{ dd.telling.bevestigd ?? 0 }} bevestigd, {{ dd.telling.mislukt ?? 0 }} mislukt.</p>

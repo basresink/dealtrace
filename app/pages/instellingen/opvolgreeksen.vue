@@ -81,7 +81,7 @@ opslag.volg(() => [bewerk.value])
           <div v-else class="lijst" data-test="rsj-lijst">
             <div v-for="s in lijst" :key="s.id" class="rij rij--compact inst-rij" :class="{ 'inst-rij--uit': !s.actief }" :data-test="`rsj-${s.sleutel}`">
               <div class="rij-info">
-                <h3 class="rij-titel">{{ s.naam }} <Label v-if="!s.actief" soort="instelling" waarde="uit" /><Label v-for="u in s.uitkomsten" :key="u" soort="herkomst" waarde="reeks" :tekst="REEKS_UITKOMST_LABEL[u as keyof typeof REEKS_UITKOMST_LABEL] ?? u" /></h3>
+                <h3 class="rij-titel">{{ s.naam }} <InstellingLabel v-if="!s.actief" stand="uit" /><Label v-for="u in s.uitkomsten" :key="u" soort="herkomst" waarde="reeks" :tekst="REEKS_UITKOMST_LABEL[u as keyof typeof REEKS_UITKOMST_LABEL] ?? u" /></h3>
                 <div class="rij-sub">{{ stappenTekst(s) }}<template v-if="s.lopend"> · {{ s.lopend }} {{ s.lopend === 1 ? 'reeks loopt' : 'reeksen lopen' }}</template></div>
               </div>
               <div class="inst-rij-acties">

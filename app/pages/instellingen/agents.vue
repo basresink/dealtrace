@@ -106,11 +106,11 @@ useHead({ title: 'Agents en mandaten · Instellingen · Dealtrace' })
                       <input v-if="beheer && !a.altijdAan" v-model="a.dagplafond" type="number" min="0" class="invoer invoer--smal" placeholder="geen" :aria-label="`Dagplafond ${a.naam}`" @input="zetAgent(a)">
                       <span v-else class="meta">{{ a.dagplafond ?? 'geen' }}</span>
                     </td>
-                    <td><Label v-if="!a.gebouwd" soort="instelling" waarde="concept" tekst="Komt later" /><span v-else class="tnum">{{ a.vandaagGedaan }}<template v-if="a.vandaagTegengehouden"> · {{ a.vandaagTegengehouden }} tegengehouden</template></span></td>
+                    <td><InstellingLabel v-if="!a.gebouwd" stand="concept" tekst="Komt later" /><span v-else class="tnum">{{ a.vandaagGedaan }}<template v-if="a.vandaagTegengehouden"> · {{ a.vandaagTegengehouden }} tegengehouden</template></span></td>
                     <td>
-                      <Label v-if="a.altijdAan" soort="instelling" waarde="aan" tekst="Altijd aan" />
+                      <InstellingLabel v-if="a.altijdAan" stand="aan" tekst="Altijd aan" />
                       <Schakelaar v-else-if="beheer" :aan="a.aan" :label="`${a.naam} aan`" @wissel="a.aan = $event; zetAgent(a)" />
-                      <Label v-else soort="instelling" :waarde="a.aan ? 'aan' : 'uit'" />
+                      <InstellingLabel v-else :stand="a.aan ? 'aan' : 'uit'" />
                     </td>
                   </tr>
                 </tbody>

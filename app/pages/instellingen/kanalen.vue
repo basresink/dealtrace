@@ -93,8 +93,8 @@ useHead({ title: 'Kanalen en consent · Dealtrace' })
             <h2 class="kaart-titel">Mail</h2>
             <ul class="schakel-lijst">
               <li class="schakel-rij"><span>Afzender</span><span class="meta">{{ data.mail.status === 'actief' ? data.mail.van : 'Nog geen mailkoppeling' }}</span></li>
-              <li class="schakel-rij"><span>SPF, DKIM en DMARC</span><Label soort="instelling" :waarde="data.mail.status === 'actief' ? 'aan' : 'niet-gekoppeld'" :tekst="data.mail.status === 'actief' ? (data.mail.modus === 'mock' ? 'Testmailbox' : 'Gecontroleerd bij de test') : 'Nog niet gecontroleerd'" /></li>
-              <li class="schakel-rij"><span>Afmeldlink in elke eerste mail</span><Label soort="instelling" waarde="aan" /></li>
+              <li class="schakel-rij"><span>SPF, DKIM en DMARC</span><InstellingLabel :stand="data.mail.status === 'actief' ? 'aan' : 'niet-gekoppeld'" :tekst="data.mail.status === 'actief' ? (data.mail.modus === 'mock' ? 'Testmailbox' : 'Gecontroleerd bij de test') : 'Nog niet gecontroleerd'" /></li>
+              <li class="schakel-rij"><span>Afmeldlink in elke eerste mail</span><InstellingLabel stand="aan" /></li>
               <li class="schakel-rij"><span>Onderdrukkingslijst (gehasht)</span><span class="meta tnum">{{ data.mail.onderdrukt }} {{ data.mail.onderdrukt === 1 ? 'adres' : 'adressen' }}</span></li>
             </ul>
             <FunctieLink to="/instellingen/mail" class="dd-act mt-8">Mail koppelen</FunctieLink>
@@ -122,7 +122,7 @@ useHead({ title: 'Kanalen en consent · Dealtrace' })
               <h3 class="fo-blok-titel mt-16">Sjablonen</h3>
               <ul class="schakel-lijst" data-test="wa-sjablonen">
                 <li v-for="s in data.whatsapp.sjablonen" :key="s.id" class="schakel-rij"><div><span class="schakel-naam">{{ s.naam }} · {{ s.taal }}</span><span class="veld-uitleg">{{ s.tekst }}</span><span v-if="s.reden" class="veld-uitleg">{{ s.reden }}</span></div>
-                  <span class="dd-acties"><Label :soort="s.status === 'afgewezen' ? 'overdracht' : 'instelling'" :waarde="s.status === 'goedgekeurd' ? 'aan' : s.status === 'afgewezen' ? 'mislukt' : 'concept'" :tekst="SJ_STATUS[s.status]" /><button v-if="s.status === 'concept' || s.status === 'afgewezen'" type="button" class="dd-act" :data-test="`wa-indienen-${s.naam}`" @click="dienIn(s.id)">Dien in</button></span></li>
+                  <span class="dd-acties"><InstellingLabel :stand="s.status === 'goedgekeurd' ? 'aan' : s.status === 'afgewezen' ? 'fout' : 'concept'" :tekst="SJ_STATUS[s.status]" /><button v-if="s.status === 'concept' || s.status === 'afgewezen'" type="button" class="dd-act" :data-test="`wa-indienen-${s.naam}`" @click="dienIn(s.id)">Dien in</button></span></li>
               </ul>
               <p v-if="!data.whatsapp.sjablonen.length" class="kaart-meta">Nog geen sjablonen. Zonder goedgekeurd sjabloon gaat er niets via de koppeling.</p>
               <div class="formulier-raster mt-8">

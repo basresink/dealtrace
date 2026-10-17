@@ -61,7 +61,7 @@ opslag.volg(() => [bewerk.value])
               <div class="lijst">
                 <div v-for="s in g.soorten" :key="s.id" class="rij rij--compact inst-rij" :class="{ 'inst-rij--uit': !s.actief }">
                   <div class="rij-info">
-                    <h3 class="rij-titel">{{ s.naam }} <Label soort="account" waarde="prospect" :tekst="s.type === 'intern' ? 'Intern' : 'Prospect'" /><Label v-if="s.data.eersteAfspraak" soort="account" waarde="prospect" tekst="Eerste afspraak" /><Label v-if="!s.actief" soort="instelling" waarde="uit" /></h3>
+                    <h3 class="rij-titel">{{ s.naam }} <Label soort="account" waarde="prospect" :tekst="s.type === 'intern' ? 'Intern' : 'Prospect'" /><Label v-if="s.data.eersteAfspraak" soort="account" waarde="prospect" tekst="Eerste afspraak" /><InstellingLabel v-if="!s.actief" stand="uit" /></h3>
                     <div class="rij-sub">{{ s.duurMin }} min · {{ VORM[s.vorm] }} · {{ s.data.agenda.length }} agendapunten · {{ s.data.uitkomsten.length ? s.data.uitkomsten.map((u: any) => u.label).join(', ') : 'geen gespreksuitkomst' }}</div>
                   </div>
                   <div class="inst-rij-acties"><button type="button" class="dd-act" :data-test="`ms-bewerk-${s.slug}`" @click="open(s)">Bewerk</button></div>

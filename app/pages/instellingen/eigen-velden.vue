@@ -72,7 +72,7 @@ opslag.volg(() => [veld.value])
           <table v-else class="tabel tabel--kaarten" data-test="velden-tabel">
             <thead><tr><th>Naam</th><th>Type</th><th>Zichtbaar voor</th><th>Filterbaar</th><th v-if="object === 'account' || object === 'contact'">Datakwaliteit</th><th>Ingevuld</th><th><span class="sr-only">Acties</span></th></tr></thead>
             <tbody><tr v-for="v in s.velden" :key="v.id" :class="{ 'contact-vertrokken': v.gearchiveerd }">
-              <td><strong>{{ v.naam }}</strong> <Label v-if="v.gearchiveerd" soort="instelling" waarde="gearchiveerd" /><br><span class="meta">{{ cfVariabele(v.sleutel) }}</span></td>
+              <td><strong>{{ v.naam }}</strong> <InstellingLabel v-if="v.gearchiveerd" stand="gearchiveerd" /><br><span class="meta">{{ cfVariabele(v.sleutel) }}</span></td>
               <td>{{ VELDTYPE_LABEL[v.type as keyof typeof VELDTYPE_LABEL] }}</td>
               <td>{{ v.data.zichtbaarVanaf === 'beginner' ? 'Alle niveaus' : `Vanaf ${NIVEAU_LABEL[v.data.zichtbaarVanaf as Niveau]}` }}</td>
               <td>{{ v.data.filterbaar ? 'Ja' : 'Nee' }}</td>

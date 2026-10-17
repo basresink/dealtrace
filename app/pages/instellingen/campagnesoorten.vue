@@ -42,7 +42,7 @@ useHead({ title: 'Campagnesoorten · Dealtrace' })
           <div v-else class="lijst" data-test="cs-lijst">
             <div v-for="s in lijst" :key="s.id" class="rij rij--compact inst-rij" :class="{ 'inst-rij--uit': !s.actief }">
               <div class="rij-info">
-                <h3 class="rij-titel">{{ s.naam }} <Label v-if="s.startsoort" soort="instelling" waarde="startset" /><Label v-if="!s.actief" soort="instelling" waarde="uit" /></h3>
+                <h3 class="rij-titel">{{ s.naam }} <InstellingLabel v-if="s.startsoort" stand="startset" /><InstellingLabel v-if="!s.actief" stand="uit" /></h3>
                 <div class="rij-sub">{{ s.groep }} · {{ s.kanalen.join(', ') }} · {{ s.pogingen }} pogingen in {{ s.weken }} weken · {{ s.uitvoerder }}</div>
               </div>
               <div class="inst-rij-acties"><Schakelaar :aan="s.actief" :label="`${s.naam} aan`" :data-test="`cs-${s.sleutel}`" @wissel="(v: boolean) => zet(s, v)" /></div>

@@ -10,6 +10,7 @@ const toast = useToast()
 const { data: a } = await useFetch<any>('/api/instellingen/abonnement')
 const datum = (t?: string) => (t ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(t)) : '')
 const STATUS: Record<string, string> = { proef: 'Proefperiode', actief: 'Actief', opgezegd: 'Opgezegd' }
+const FACTUUR_STAND = { open: 'factuur-open', betaald: 'betaald', achterstallig: 'achterstallig', geannuleerd: 'geannuleerd' } as const as Record<string, 'factuur-open' | 'betaald' | 'achterstallig' | 'geannuleerd'>
 async function upgrade(pakket: string, label: string) {
   try { await $fetch('/api/instellingen/abonnement/upgrade', { method: 'POST', body: { pakket } }); toast.toon(`Upgrade naar ${label} aangevraagd. Dealtrace neemt contact met je op.`) } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
@@ -60,14 +61,14 @@ useHead({ title: 'Abonnement · Instellingen · Dealtrace' })
         <div class="abonnement-raster mt-16">
           <FactuurgegevensKaart :gegevens="a.factuurgegevens" @bewaard="a.factuurgegevens = $event" />
           <article class="kaart" data-test="facturen">
-            <header class="kaart-kop"><h2 class="kaart-titel">Facturen</h2><Label v-if="a.aiGepauzeerd" soort="factuur" waarde="achterstallig" tekst="AI gepauzeerd" /></header>
+            <header class="kaart-kop"><h2 class="kaart-titel">Facturen</h2><InstellingLabel v-if="a.aiGepauzeerd" stand="achterstallig" tekst="AI gepauzeerd" /></header>
             <p v-if="a.aiGepauzeerd" class="kaart-meta">Er staat een factuur open. AI-functies staan stil tot hij betaald is; de rest van Dealtrace werkt gewoon.</p>
             <LegeStaat v-if="!a.facturen.length" titel="Nog geen facturen" tekst="Je eerste factuur komt aan het eind van de eerste maand. Hij staat dan hier, met een pdf om te downloaden." />
             <LegeStaat v-else-if="!facturen.length" titel="Geen facturen met deze status." tekst="Kies een andere status in Filters." />
             <ul v-else class="schakel-lijst" data-test="facturen-lijst">
               <li v-for="f in facturen" :key="f.id" class="schakel-rij" :data-test="`factuur-${f.nummer}`">
                 <span class="factuur-tekst"><span class="tnum">{{ f.nummer }} · {{ euro(f.bedragCent) }}</span><span class="veld-uitleg">{{ datum(f.op) }}{{ f.status !== 'betaald' && f.vervaltOp ? `, te betalen voor ${datum(f.vervaltOp)}` : '' }}</span></span>
-                <span class="dd-acties"><Label soort="factuur" :waarde="f.status" :tekst="FACTUUR_STATUS[f.status] ?? f.status" /><a :href="f.pdf" download class="dd-act" :aria-label="`Pdf van factuur ${f.nummer} downloaden`" data-test="factuur-pdf"><Icoon naam="Download" :grootte="16" /> Pdf</a></span>
+                <span class="dd-acties"><InstellingLabel :stand="FACTUUR_STAND[f.status] ?? 'factuur-open'" :tekst="FACTUUR_STATUS[f.status] ?? f.status" /><a :href="f.pdf" download class="dd-act" :aria-label="`Pdf van factuur ${f.nummer} downloaden`" data-test="factuur-pdf"><Icoon naam="Download" :grootte="16" /> Pdf</a></span>
               </li>
             </ul>
             <p v-if="a.facturen.some((f: any) => f.status !== 'betaald' && f.status !== 'geannuleerd')" class="veld-uitleg mt-16">Betalen gaat via de betaallink in de mail van Dealtrace.</p>

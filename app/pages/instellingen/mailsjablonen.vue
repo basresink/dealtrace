@@ -59,7 +59,7 @@ useHead({ title: 'Mailsjablonen · Dealtrace' })
             </LegeStaat>
             <div v-else class="lijst mt-8" data-test="sj-lijst">
               <div v-for="s in lijst" :key="s.id" class="rij rij--compact inst-rij" :class="{ 'inst-rij--uit': !s.actief }" data-test="sj-rij" :data-naam="s.naam">
-                <div class="rij-info"><h3 class="rij-titel">{{ s.naam }} <Label soort="actie" :waarde="ACTIE[s.kanaal] ?? 'taak'" :tekst="KANAAL[s.kanaal] ?? s.kanaal" /> <Label v-if="!s.actief" soort="instelling" waarde="uit" /></h3><div class="rij-sub">{{ s.data.onderwerp }} · versie {{ s.versie }} · {{ (s.data.variabelen ?? []).join(' ') }}</div></div>
+                <div class="rij-info"><h3 class="rij-titel">{{ s.naam }} <Label soort="actie" :waarde="ACTIE[s.kanaal] ?? 'taak'" :tekst="KANAAL[s.kanaal] ?? s.kanaal" /> <InstellingLabel v-if="!s.actief" stand="uit" /></h3><div class="rij-sub">{{ s.data.onderwerp }} · versie {{ s.versie }} · {{ (s.data.variabelen ?? []).join(' ') }}</div></div>
                 <div class="inst-rij-acties">
                   <Schakelaar :aan="s.actief" :label="`${s.naam} aan`" data-test="sj-actief" @wissel="wissel(s, $event)" />
                   <button type="button" class="dd-act" @click="bewerk = JSON.parse(JSON.stringify(s))">Bewerk</button>

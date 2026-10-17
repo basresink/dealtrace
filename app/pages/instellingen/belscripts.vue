@@ -25,7 +25,7 @@ async function startset() {
   try { const r = await $fetch<any>('/api/belscripts/startset', { method: 'POST' }); toast.toon(r.toegevoegd ? `${r.toegevoegd} scripts uit de startset toegevoegd.` : 'De startset staat er al.'); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 const STATUS: Record<string, string> = { concept: 'Concept', actief: 'Actief', gearchiveerd: 'Gearchiveerd' }
-const STATUS_LABEL: Record<string, string> = { concept: 'concept', actief: 'aan', gearchiveerd: 'gearchiveerd' }
+const STATUS_LABEL: Record<string, 'concept' | 'aan' | 'gearchiveerd'> = { concept: 'concept', actief: 'aan', gearchiveerd: 'gearchiveerd' }
 const aantalFilters = computed(() => (filter.value.doel ? 1 : 0) + (filter.value.status ? 1 : 0))
 const titel = computed(() => (data.value.scripts.length ? `${data.value.tellers.actief ?? 0} van ${data.value.scripts.length} belscripts actief` : 'Belscripts'))
 const telDoel = (d: string) => data.value.scripts.filter((s: any) => s.doel === d).length
@@ -76,7 +76,7 @@ useHead({ title: 'Belscripts · Instellingen · Dealtrace' })
               <tbody>
                 <tr v-for="s in lijst" :key="s.id" class="tabel-rij--klik" :data-test="`script-${s.naam}`" @click="open = s.id">
                   <td><strong>{{ s.naam }}</strong> <Label v-if="s.controleren" soort="richting" waarde="controleren" /></td><td>{{ s.doelLabel }}</td><td>{{ teamNaam(s.data.teamIds) }}</td><td class="tnum">{{ s.versie }}</td>
-                  <td><Label soort="instelling" :waarde="STATUS_LABEL[s.status] ?? 'concept'" :tekst="STATUS[s.status]" /></td><td class="tnum">{{ s.gesprekken30 }}</td><td>{{ s.conversie ?? '–' }}</td><td>{{ datum(s.bijgewerktOp) }}</td>
+                  <td><InstellingLabel :stand="STATUS_LABEL[s.status] ?? 'concept'" :tekst="STATUS[s.status]" /></td><td class="tnum">{{ s.gesprekken30 }}</td><td>{{ s.conversie ?? '–' }}</td><td>{{ datum(s.bijgewerktOp) }}</td>
                 </tr>
               </tbody>
             </table>

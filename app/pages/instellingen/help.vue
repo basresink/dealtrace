@@ -57,7 +57,7 @@ useHead({ title: 'Helpartikelen · Dealtrace' })
             <table v-else class="tabel tabel--kaarten" data-test="help-beheerlijst"><thead><tr><th>Titel</th><th>Categorie</th><th>Herkomst</th><th>Status</th><th>Gelezen</th><th>Nuttig</th><th /></tr></thead>
               <tbody><tr v-for="a in data.artikelen" :key="a.id" :class="{ 'rij--grijs': a.verborgen }">
                 <td data-label="Titel"><NuxtLink :to="`/helpcenter/${a.slug}`">{{ a.titel }}</NuxtLink></td><td data-label="Categorie">{{ a.categorie }}</td>
-                <td data-label="Herkomst"><Label soort="instelling" :waarde="a.herkomst === 'eigen' ? 'eigen' : 'platform'" /></td><td data-label="Status"><Label soort="instelling" :waarde="a.verborgen ? 'verborgen' : a.status === 'concept' ? 'concept' : 'gepubliceerd'" :tekst="a.verborgen ? null : STATUS[a.status]" /></td>
+                <td data-label="Herkomst"><InstellingLabel :stand="a.herkomst === 'eigen' ? 'eigen' : 'platform'" /></td><td data-label="Status"><InstellingLabel :stand="a.verborgen ? 'verborgen' : a.status === 'concept' ? 'concept' : 'gepubliceerd'" :tekst="a.verborgen ? null : STATUS[a.status]" /></td>
                 <td data-label="Gelezen" class="tnum">{{ a.gelezen }}</td><td data-label="Nuttig" class="tnum">{{ a.nuttig }} ja · {{ a.nietNuttig }} nee</td>
                 <td><button v-if="a.herkomst === 'eigen'" type="button" class="dd-act" @click="open(a)">Bewerk</button><button v-else type="button" class="dd-act" :data-test="`verberg-${a.slug}`" @click="verberg(a)">{{ a.verborgen ? 'Toon' : 'Verberg' }}</button></td>
               </tr></tbody></table>

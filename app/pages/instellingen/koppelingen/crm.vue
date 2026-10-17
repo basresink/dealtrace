@@ -71,13 +71,13 @@ useHead({ title: 'CRM-koppeling · Dealtrace' })
           <article class="kaart" data-test="crm-keuze">
             <header class="kaart-kop"><h2 class="kaart-titel">Welk CRM</h2></header>
             <div class="chips mt-8">
-              <Label v-for="s in CRM_SOORTEN" :key="s" soort="instelling" :waarde="CRM_BESCHIKBAAR.includes(s) ? 'aan' : 'concept'" :tekst="CRM_BESCHIKBAAR.includes(s) ? CRM_LABEL[s] : `${CRM_LABEL[s]} · Volgt`" />
+              <InstellingLabel v-for="s in CRM_SOORTEN" :key="s" :stand="CRM_BESCHIKBAAR.includes(s) ? 'aan' : 'concept'" :tekst="CRM_BESCHIKBAAR.includes(s) ? CRM_LABEL[s] : `${CRM_LABEL[s]} · Volgt`" />
             </div>
           </article>
 
           <article v-if="crm" class="kaart mt-16" data-test="crm-verbinding">
             <header class="kaart-kop"><h2 class="kaart-titel">HubSpot</h2>
-              <span data-test="crm-status"><Label v-if="crm.status === 'fout' && !crm.verbonden" soort="overdracht" waarde="mislukt" tekst="Fout" /><Label v-else soort="instelling" :waarde="crm.verbonden ? 'gekoppeld' : 'niet-gekoppeld'" :tekst="crm.verbonden ? 'Verbonden' : 'Niet verbonden'" /></span></header>
+              <span data-test="crm-status"><InstellingLabel v-if="crm.status === 'fout' && !crm.verbonden" stand="fout" /><InstellingLabel v-else :stand="crm.verbonden ? 'gekoppeld' : 'niet-gekoppeld'" :tekst="crm.verbonden ? 'Verbonden' : 'Niet verbonden'" /></span></header>
             <p v-if="crm.verbonden" class="tekst">Verbonden met {{ crm.account }} sinds {{ datum(crm.verbondenOp) }}.<template v-if="crm.laatsteSync"> Laatst gesynchroniseerd {{ datum(crm.laatsteSync) }}.</template></p>
             <p v-else-if="crm.laatsteFout" class="tekst tekst-rood">{{ crm.laatsteFout }}</p>
             <LegeStaat v-else titel="Er is nog geen CRM gekoppeld." tekst="Verbind je CRM om te voorkomen dat je klanten of prospects van collega's opnieuw benadert." />

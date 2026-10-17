@@ -23,7 +23,7 @@ useHead({ title: 'Mijn scripts · Dealtrace' })
           <LegeStaat v-if="!data.mijn.length" kicker="Mijn scripts" titel="Je hebt nog geen eigen variant." tekst="Kies hieronder een script van je team en maak er je eigen formulering van." />
           <div v-else class="lijst" data-test="mijn-scripts">
             <div v-for="s in data.mijn" :key="s.id" class="rij rij--compact inst-rij">
-              <div class="rij-info"><h3 class="rij-titel">{{ s.naam }} <Label soort="instelling" :waarde="s.status === 'actief' ? 'aan' : 'concept'" :tekst="s.status === 'actief' ? `Actief, versie ${s.versie}` : null" /></h3>
+              <div class="rij-info"><h3 class="rij-titel">{{ s.naam }} <InstellingLabel :stand="s.status === 'actief' ? 'aan' : 'concept'" :tekst="s.status === 'actief' ? `Actief, versie ${s.versie}` : null" /></h3>
                 <div class="rij-sub">Variant van {{ origineel(s.basisScriptId) }}<template v-if="s.origineelGewijzigd"> · <strong data-test="origineel-gewijzigd">Het origineel is gewijzigd</strong></template></div></div>
               <button type="button" class="dd-act" @click="open = s.id">{{ s.origineelGewijzigd ? 'Bekijk verschil' : 'Bewerk' }}</button>
             </div>

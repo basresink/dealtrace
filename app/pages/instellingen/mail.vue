@@ -34,7 +34,7 @@ useHead({ title: 'Mail koppelen · Dealtrace' })
       <section class="section section--laatste">
         <div class="container container--smal">
           <form class="kaart" data-test="mail-koppeling" @submit.prevent="opslaan" @input.capture="opslag.interactie()" @pointerdown.capture="opslag.interactie()">
-            <header class="kaart-kop"><h2 class="kaart-titel">Mailserver</h2><Label soort="instelling" :waarde="data.status === 'actief' ? 'gekoppeld' : 'niet-gekoppeld'" /><OpslagStatus :opslag="opslag" test="mail-status" /></header>
+            <header class="kaart-kop"><h2 class="kaart-titel">Mailserver</h2><InstellingLabel :stand="data.status === 'actief' ? 'gekoppeld' : 'niet-gekoppeld'" /><OpslagStatus :opslag="opslag" test="mail-status" /></header>
             <div class="formulier-raster">
               <label class="veld"><span class="veld-label">Soort</span><select v-model="f.modus" class="invoer"><option value="smtp">SMTP</option><option value="mock">Testmailbox</option></select></label>
               <label class="veld"><span class="veld-label">Verzendadres</span><input v-model="f.van" type="email" class="invoer" placeholder="verkoop@bedrijf.nl"></label>
