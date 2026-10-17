@@ -75,7 +75,8 @@ test.describe('opvolgreeksen', () => {
     await page.getByTestId('or-start').click()
     const f = page.getByTestId('reeks-start-flyout')
     await f.getByTestId('rsf-zoek').fill('Testreeks Waal')
-    await page.locator('[data-test^="rsf-kies-"]').first().click()
+    // De kiezer toont bij focus meteen een lijst; kies de rij met de naam zodra het filter er is.
+    await page.locator('[data-test^="rsf-kies-"]', { hasText: NAAM }).first().click()
     await expect(f.getByTestId('rsf-gekozen')).toContainText(NAAM)
     await f.getByTestId('rsf-sjabloon-na-voicemail').click()
     await f.getByTestId('rsf-start').click()

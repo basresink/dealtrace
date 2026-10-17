@@ -113,8 +113,9 @@ test.describe('accountkaart: contact en gebruiker per item', () => {
 
       for (const tab of ['taken', 'verslagen']) {
         await page.getByTestId(`tab-${tab}`).click()
-        const m = page.getByTestId('item-meta').filter({ hasText: 'Wietse Testsma' }).first()
-        await expect(m.getByTestId('tl-contact')).toHaveAttribute('href', '/contacten/ct-07')
+        // Andere specs ronden taken van pr-06 af; elk item met een contact toont de link en de gebruiker.
+        const m = page.getByTestId('item-meta').filter({ has: page.getByTestId('tl-contact') }).first()
+        await expect(m.getByTestId('tl-contact')).toHaveAttribute('href', /^\/contacten\/[\w-]+$/)
         await expect(m.getByTestId('tl-door')).toHaveText(/^door \S+ \S+/)
       }
       await page.getByTestId('tab-tijdlijn').click()

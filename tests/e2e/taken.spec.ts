@@ -186,7 +186,7 @@ test.describe('inzichten', () => {
 })
 
 test.describe('niveaus', () => {
-  test('Beginner: lijst zonder horizon of bulk, minimale velden, /inzichten en /planning nog niet aangezet', async ({ page }) => {
+  test('Beginner: lijst zonder horizon of bulk, minimale velden, /inzichten nog niet aangezet en /planning wel', async ({ page }) => {
     await login(page, 'u-02')
     await ga(page, '/taken')
     // Zonder de functie horizon blijft de lijst de standaard.
@@ -206,8 +206,9 @@ test.describe('niveaus', () => {
     await page.keyboard.press('Escape')
     await ga(page, '/inzichten')
     await expect(page.getByTestId('niet-aangezet-pagina')).toBeVisible()
+    // /planning staat sinds 0064 (de motor voor iedereen) ook voor een beginner aan.
     await ga(page, '/planning?tab=ritme')
-    await expect(page.getByTestId('niet-aangezet-pagina')).toBeVisible()
+    await expect(page.getByTestId('niet-aangezet-pagina')).toHaveCount(0)
   })
   test('Gevorderd: horizon als standaard met achterstallig bovenaan in Vandaag, rijen zonder vinkje of afrondknop, en het tabblad Hercontactritme', async ({ page }) => {
     await apiLogin(page.request, 'u-03')

@@ -10,7 +10,8 @@ test.describe('agenda', () => {
     await expect(page.locator('h1.title')).toHaveText(/^(Geen afspraken vandaag\.|1 afspraak vandaag\.|\d+ afspraken vandaag\.)$/)
     await expect(page.getByTestId('agenda-periode')).toHaveText(/^Week \d+ · \d+ t\/m \d+ \w+ \d{4}$/)
     await expect(page.locator('[data-test^="dagkop-"]')).toHaveCount(5)
-    await expect(page.getByTestId('nu-lijn')).toHaveCount(1)
+    // De werkweek toont maandag tot en met vrijdag: in het weekend staat er geen nu-lijn.
+    await expect(page.getByTestId('nu-lijn')).toHaveCount([0, 6].includes(new Date().getDay()) ? 0 : 1)
     // Briefings staat sinds de ronde Taken op /taken, niet meer in de agenda.
     await expect(page.getByTestId('briefings-knop')).toHaveCount(0)
     // De weergave staat in het filterpaneel.

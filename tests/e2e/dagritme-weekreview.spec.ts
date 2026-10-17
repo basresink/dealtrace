@@ -121,9 +121,9 @@ test.describe('Weekstart en dagstart', () => {
     const api = await (await page.request.get(`/api/dagstart?dag=${dag}`)).json()
     expect(api.modus).toBe('binnen')
     expect(api.plan.blokken.length).toBeGreaterThan(0)
-    // De bereikbaarheid telt alleen Eva's eigen belpogingen.
-    const mijn = await (await page.request.get('/api/dagstart')).json()
-    expect(api.bereik.pogingen).toBe(mijn.bereik.pogingen)
+    // De bereikbaarheid telt alleen Eva's eigen belpogingen: over alle branches is het aantal elke dag gelijk.
+    const alle = async (q: string) => (await (await page.request.get(`/api/dagstart?${q}branche=alle`)).json()).bereik.pogingen
+    expect(await alle(`dag=${dag}&`)).toBe(await alle(''))
     expect((await page.request.get('/api/dagstart?dag=morgen')).status()).toBe(400)
   })
 

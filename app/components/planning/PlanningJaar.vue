@@ -114,7 +114,7 @@ const bezoek = ref<{ id: string; naam: string } | null>(null)
 </script>
 
 <template>
-  <div v-if="data" data-test="tab-jaar">
+  <div v-if="data" data-test="jaar-inhoud">
     <div class="pj-rij">
       <span class="kicker kicker--streep" data-test="jaar-kicker">Verkoopjaar {{ data.jaar.jaar }} · {{ data.stand.ingedeeld }} van {{ data.stand.totaal }} prospects ingedeeld</span>
       <div v-if="data.kan.team" class="keuzegroep keuzegroep--klein" role="group" aria-label="Wie">
