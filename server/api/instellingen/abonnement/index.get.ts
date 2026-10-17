@@ -6,6 +6,7 @@ import { PAKKET_LABEL, PAKKET_UITLEG, pakketVerschil } from '../../../../shared/
 import type { Pakket } from '../../../../shared/types'
 import { vereisBeheerder } from '../../../utils/beheerder'
 import { metOrganisatie, schema } from '../../../utils/db'
+import { leesFactuurInstelling } from '../../../utils/facturatie'
 
 export default defineEventHandler(async (event) => {
   const { organisatie } = await vereisBeheerder(event, 'instellingen.abonnement')
@@ -21,7 +22,10 @@ export default defineEventHandler(async (event) => {
       upgrades: hoger.map((p) => ({ pakket: p, label: PAKKET_LABEL[p], wint: pakketVerschil(pakket, p).wint })),
       // P24: facturen uit Stripe (pdf en betaallink) en de AI-pauze bij een achterstallige factuur.
       aiGepauzeerd: !!(o!.data as any)?.aiGepauzeerd, aiCreditsPerMaand: (await platformCredits(tx)).perGebruiker[pakket] ?? POT_PER_GEBRUIKER[pakket],
-      facturen: ((await tx.execute(sql`select nummer, bedrag_cent, status, pdf_url from facturen order by op desc limit 24`)).rows as any[]).map((f) => ({ nummer: f.nummer, bedragCent: f.bedrag_cent, status: f.status, pdf: f.pdf_url })),
+      // Pakket E: elke factuur met een eigen pdf (Dealtrace maakt hem zelf tot de echte Stripe-koppeling er is). Geen betaalknop.
+      facturen: ((await tx.execute(sql`select id, nummer, bedrag_cent, status, op, vervalt_op::text as vervalt_op from facturen where organisation_id = ${organisatie.id} order by op desc limit 24`)).rows as any[])
+        .map((f) => ({ id: f.id, nummer: f.nummer, bedragCent: f.bedrag_cent, status: f.status, op: new Date(f.op).toISOString(), vervaltOp: f.vervalt_op, pdf: `/api/instellingen/facturen/${encodeURIComponent(f.id)}/pdf` })),
+      factuurgegevens: await leesFactuurInstelling(tx),
     }
   })
 })

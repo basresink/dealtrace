@@ -34,6 +34,7 @@ const gebruikerRol = computed(() => {
   return g.rol === 'founder' ? rol : `${rol} · ${NIVEAU_LABEL[g.niveau as Niveau].toUpperCase()}`
 })
 const foto = computed(() => me.value?.gebruiker.foto ?? null)
+const orgLogo = computed(() => me.value?.organisatie?.logo ?? null)
 const initialen = computed(() => (me.value?.gebruiker.naam ?? '').replace(/^Test(gebruiker|founder)\s+/, '').split(/\s+/).map((d) => d[0]).slice(0, 2).join('').toUpperCase())
 const vandaag = new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short' }).format(new Date()).replace('.', '')
 
@@ -57,6 +58,11 @@ async function uitloggen() {
       <button class="sb-inklap" type="button" :aria-label="props.ingeklapt ? 'Zijbalk uitklappen' : 'Zijbalk inklappen'" :title="props.ingeklapt ? 'Zijbalk uitklappen' : 'Zijbalk inklappen'" @click="emit('inklap')">
         <Icoon naam="PanelLeft" />
       </button>
+    </div>
+
+    <!-- Pakket E: het logo van de organisatie op een licht vlak, alleen in de uitgeklapte zijbalk. -->
+    <div v-if="orgLogo && !props.ingeklapt" class="sb-org" data-test="sb-org-logo">
+      <img :src="orgLogo" :alt="`Logo van ${me?.organisatie?.naam ?? 'de organisatie'}`" class="sb-org-logo">
     </div>
 
     <div class="sb-meta">
@@ -132,6 +138,10 @@ async function uitloggen() {
 </template>
 
 <style scoped>
+/* Logo van de organisatie: licht vlak, zodat ook een donker logo leesbaar is; alleen vanaf 1024 px. */
+.sb-org { display: flex; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--wit-06); }
+.sb-org-logo { display: block; max-width: 100%; max-height: 32px; object-fit: contain; background: var(--wit); border-radius: var(--radius); padding: 4px 6px; }
+@media (max-width: 1023px) { .sb-org { display: none; } }
 /* Meer lucht boven elke groepstitel, zodat de secties niet op elkaar staan. */
 .sb-groep + .sb-groep > .sb-groep-kop { padding-top: 22px; }
 .sb-avatar-foto { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }

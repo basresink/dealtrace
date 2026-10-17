@@ -1,9 +1,8 @@
 // PUT /api/settings/:key: alleen de beheerder; sleutels van de leverancier geven 403,
 // onbekende sleutels 400. Elke wijziging is een auditregel.
 import { and, eq } from 'drizzle-orm'
-import { isSettingKey, isVerborgen } from '../../../shared/settingKeys'
+import { isEigenPaginaKey, isSettingKey, isVerborgen } from '../../../shared/settingKeys'
 import { rolMag } from '../../../shared/permissions'
-import { KANALEN } from '../../../shared/nbStatus'
 import { AGENT_INSTELLINGEN } from '../../../shared/mandaat'
 import { BELMATRIX_RIJEN, klasseGrensFouten, valideerMatrix } from '../../../shared/ritmematrix'
 import { overlap, valideerRegios, type Regio } from '../../../shared/gebieden'
@@ -21,6 +20,7 @@ export default defineEventHandler(async (event) => {
   if (isVerborgen(key)) throw createError({ statusCode: 403, statusMessage: 'Deze instelling beheert de leverancier' })
   if ((AGENT_INSTELLINGEN as readonly string[]).includes(key)) throw createError({ statusCode: 403, statusMessage: 'Mandaten en pauze zet je op de pagina Agents en mandaten' })
   if (!isSettingKey(key)) throw createError({ statusCode: 400, statusMessage: 'Onbekende instelling' })
+  if (isEigenPaginaKey(key)) throw createError({ statusCode: 403, statusMessage: 'Deze instelling wijzig je op haar eigen pagina' })
   if (!rolMag(gebruiker.rol, 'instellingen', 'schrijven')) throw createError({ statusCode: 403, statusMessage: 'Alleen de beheerder wijzigt instellingen' })
   const { value } = await readBody<{ value: unknown }>(event)
   if (value === undefined) throw createError({ statusCode: 400, statusMessage: 'value ontbreekt' })
@@ -43,11 +43,8 @@ export default defineEventHandler(async (event) => {
     if (fouten.length) throw createError({ statusCode: 422, statusMessage: fouten.join('; ') })
   }
   if (key === 'afkoeling') {
-    // Afkoelperiode per kanaal in dagen (7.2): elk kanaal een geheel getal van 0 tot 730.
-    const v = value as Record<string, unknown>
-    if (!v || typeof v !== 'object' || KANALEN.some((k) => !Number.isInteger(v[k]) || (v[k] as number) < 0 || (v[k] as number) > 730)) {
-      throw createError({ statusCode: 422, statusMessage: 'Geef per kanaal een aantal dagen tussen 0 en 730' })
-    }
+    // De afkoeling wijzig je alleen op Instellingen, Terugkomen: daar zie je ook welke prospects verschuiven.
+    throw createError({ statusCode: 409, statusMessage: 'De afkoeling wijzig je op Instellingen, Terugkomen' })
   }
 
   if (key === 'spraak') {

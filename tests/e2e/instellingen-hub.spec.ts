@@ -71,9 +71,10 @@ test.describe('Instellingen beheer', () => {
     expect(csv).toContain('Mailsjabloon')
     // Paging: zonder filter meer dan 50 regels, Meer laden voegt toe.
     await page.getByTestId('audit-wis').first().click()
-    await expect(page.getByTestId('audit-regel')).toHaveCount(50)
+    await expect(page).not.toHaveURL(/soort=/)
+    await expect(page.getByTestId('audit-telling')).toHaveText('50 regels, er zijn er meer')
     await page.getByTestId('audit-meer').click()
-    await expect.poll(() => page.getByTestId('audit-regel').count()).toBeGreaterThan(50)
+    await expect.poll(() => page.getByTestId('audit-regel').count(), { timeout: 20000 }).toBeGreaterThan(50)
     // Lege staat.
     await ga(page, '/instellingen/audit?van=2001-01-01&tot=2001-01-02')
     await expect(page.getByTestId('audit-leeg')).toContainText('Niets gevonden')

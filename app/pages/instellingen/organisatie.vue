@@ -34,18 +34,21 @@ useHead({ title: 'Organisatie · Instellingen · Dealtrace' })
     <PaginaKop kicker="Instellingen · Organisatie" titel="Organisatie" uitleg="Wijzigingen bewaren zichzelf." helpartikel="instellingen-organisatie" />
     <section class="section">
       <div class="container">
-        <article class="kaart">
-          <header class="kaart-kop"><h2 class="kaart-titel">Gegevens</h2><span class="bewaar-status" :class="{ 'bewaar-status--fout': orgBewaar.status.value === 'Opslaan mislukt' }" data-test="bewaar-organisatie" aria-live="polite">{{ orgBewaar.status.value }}</span></header>
-          <div class="formulier-raster">
-            <label class="veld"><span class="veld-label">Naam <span class="veld-verplicht">*</span></span><input v-model="org.naam" class="invoer" data-test="org-naam"></label>
-            <label class="veld"><span class="veld-label">Land</span>
-              <select v-model="org.land" class="invoer"><option value="NL">Nederland</option><option value="BE">België</option></select>
-            </label>
-            <label class="veld"><span class="veld-label">Verkoopjaar begint in</span>
-              <select v-model.number="org.verkoopjaarStartmaand" class="invoer"><option v-for="(m, i) in MAANDEN" :key="m" :value="i + 1">{{ m }}</option></select>
-            </label>
-          </div>
-        </article>
+        <div class="raster raster--2">
+          <article class="kaart">
+            <header class="kaart-kop"><h2 class="kaart-titel">Gegevens</h2><span class="bewaar-status" :class="{ 'bewaar-status--fout': orgBewaar.status.value === 'Opslaan mislukt' }" data-test="bewaar-organisatie" aria-live="polite">{{ orgBewaar.status.value }}</span></header>
+            <div class="formulier-raster">
+              <label class="veld"><span class="veld-label">Naam <span class="veld-verplicht">*</span></span><input v-model="org.naam" class="invoer" data-test="org-naam"></label>
+              <label class="veld"><span class="veld-label">Land</span>
+                <select v-model="org.land" class="invoer"><option value="NL">Nederland</option><option value="BE">België</option></select>
+              </label>
+              <label class="veld"><span class="veld-label">Verkoopjaar begint in</span>
+                <select v-model.number="org.verkoopjaarStartmaand" class="invoer"><option v-for="(m, i) in MAANDEN" :key="m" :value="i + 1">{{ m }}</option></select>
+              </label>
+            </div>
+          </article>
+          <OrganisatieLogoKaart />
+        </div>
       </div>
     </section>
     <section id="werkdagen" class="section">

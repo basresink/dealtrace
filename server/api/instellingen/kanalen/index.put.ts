@@ -1,7 +1,6 @@
-// PUT /api/instellingen/kanalen {afkoeling?, frequentieplafond?, uit?} (beheerder): afkoelperiode per kanaal
-// (0 tot 730 dagen), frequentieplafond (1 tot 10 werkdagen, 1 tot 5 berichten) en welke kanalen uit staan.
+// PUT /api/instellingen/kanalen {frequentieplafond?, uit?} (beheerder): frequentieplafond (1 tot 10 werkdagen, 1 tot 5 berichten) en welke kanalen uit staan.
 import { sql } from 'drizzle-orm'
-import { KANALEN, type Kanaal } from '../../../../shared/nbStatus'
+import { KANALEN } from '../../../../shared/nbStatus'
 import { schrijfAudit } from '../../../utils/audit'
 import { metOrganisatie } from '../../../utils/db'
 import { vereisFunctie } from '../../../utils/sessie'
@@ -11,15 +10,8 @@ export default defineEventHandler(async (event) => {
   const b = await readBody<any>(event)
   const org = ctx.organisatie.id
   const zet: Record<string, unknown> = {}
-  if (b?.afkoeling && typeof b.afkoeling === 'object') {
-    const a: Partial<Record<Kanaal, number>> = {}
-    for (const k of KANALEN) if (b.afkoeling[k] != null) {
-      const n = Math.round(Number(b.afkoeling[k]))
-      if (!Number.isFinite(n) || n < 0 || n > 730) throw createError({ statusCode: 400, statusMessage: 'Een afkoelperiode ligt tussen 0 en 730 dagen' })
-      a[k] = n
-    }
-    zet.afkoeling = a
-  }
+  // De afkoeling wijzig je alleen op Instellingen, Terugkomen: daar zie je ook welke prospects verschuiven.
+  if (b?.afkoeling != null) throw createError({ statusCode: 409, statusMessage: 'De afkoeling wijzig je op Instellingen, Terugkomen' })
   if (b?.frequentieplafond) {
     const w = Math.round(Number(b.frequentieplafond.werkdagen)); const m = Math.round(Number(b.frequentieplafond.maxBerichten))
     if (!(w >= 1 && w <= 10 && m >= 1 && m <= 5)) throw createError({ statusCode: 400, statusMessage: 'Kies 1 tot 10 werkdagen en 1 tot 5 berichten' })

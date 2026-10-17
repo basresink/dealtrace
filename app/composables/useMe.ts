@@ -7,7 +7,7 @@ export interface Me {
   /** De echte rol; de founder die in een organisatie werkt, heeft daar de rechten van een beheerder. */
   echteRol: string
   werkIn: { organisatie: string; organisatieId: string; modus: 'meekijken' | 'wijzigen'; reden: string; resterendMs: number; resterend: string } | null
-  organisatie: { id: string; naam: string; pakket: string; iedereenAlles: boolean } | null
+  organisatie: { id: string; naam: string; pakket: string; iedereenAlles: boolean; browserherkenning?: boolean; logo?: string | null } | null
   team: { id: string; naam: string } | null
   zijbalk: Zijbalk
   functies: { sleutel: string; naam: string; helpartikel: string; beschikbaar: boolean; reden: string | null; aanVanaf: string | null }[]

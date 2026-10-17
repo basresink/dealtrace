@@ -7,6 +7,7 @@ import { werkFunctiesGezienBij } from '../utils/functiesGezien'
 import { zijbalkVoor } from '../../shared/zijbalk'
 import { resterendTekst } from '../../shared/werkIn'
 import { metOrganisatie, schema } from '../utils/db'
+import { leesLogo, logoUrl } from '../utils/organisatieLogo'
 import { vereisSessie } from '../utils/sessie'
 
 // P24: de founder buiten een organisatie ziet alle platformschermen (elk een eigen, lui geladen deel van de bundel).
@@ -38,9 +39,10 @@ export default defineEventHandler(async (event) => {
   }
 
   // P31: de snelle voorvertoning in de browser alleen als de beheerder hem aanzette.
-  const browserherkenning = await metOrganisatie(organisatie.id, async (tx) => {
+  // Pakket E: het logo van de organisatie (zijbalk), uit dezelfde transactie.
+  const { browserherkenning, logo } = await metOrganisatie(organisatie.id, async (tx) => {
     const [r] = await tx.select({ value: schema.orgSettings.value }).from(schema.orgSettings).where(eq(schema.orgSettings.key, 'spraak'))
-    return !!(r?.value as any)?.browserherkenning
+    return { browserherkenning: !!(r?.value as any)?.browserherkenning, logo: logoUrl(await leesLogo(tx)) }
   })
   const team = await metOrganisatie(organisatie.id, async (tx) => {
     if (werkIn) return null
@@ -75,7 +77,7 @@ export default defineEventHandler(async (event) => {
     },
     echteRol,
     werkIn: werkIn ? { organisatie: werkIn.organisatieNaam, organisatieId: werkIn.organisatieId, modus: werkIn.modus, reden: werkIn.reden, resterendMs: werkIn.resterendMs, resterend: resterendTekst(werkIn.resterendMs) } : null,
-    organisatie: { id: organisatie.id, naam: organisatie.naam, pakket: organisatie.pakket, iedereenAlles: organisatie.iedereenAlles, browserherkenning },
+    organisatie: { id: organisatie.id, naam: organisatie.naam, pakket: organisatie.pakket, iedereenAlles: organisatie.iedereenAlles, browserherkenning, logo },
     team,
     zijbalk: metPlatform(zijbalkVoor(gebruiker, organisatie, stand), werkIn ? platformItem : null),
     functies: catalogusVoor(gebruiker, organisatie, stand),

@@ -26,6 +26,10 @@ export const SETTING_KEYS = [
   'overdracht', // {vasteOntvanger}: vaste ontvanger in DealDrive of het CRM (P17)
   'dagritme', // DagInstelling en SignaalInstelling uit shared/dag.ts en shared/signalen.ts (P32)
   'kanalenUit', // Kanaal[] uit shared/nbStatus.ts die de beheerder uitzet (P26)
+  // Pakket E (privacy, export, facturen, logo): elk met een eigen pagina en een eigen endpoint.
+  'bewaartermijnen', // Bewaartermijnen uit shared/privacy.ts: maanden per soort, null = niet opschonen
+  'factuurgegevens', // Factuurgegevens uit shared/facturatie.ts: naam, adres, KvK, btw, factuur-e-mail
+  'logo', // {bijlageId, mime, grootte, op}: het logo van de organisatie (shared/organisatieLogo.ts)
   // Van de leverancier:
   'pakket',
   'aiCredits',
@@ -36,6 +40,14 @@ export const SETTING_KEYS = [
 export type SettingKey = typeof SETTING_KEYS[number]
 
 export const VERBORGEN_KEYS: readonly SettingKey[] = ['pakket', 'aiCredits', 'features', 'platformprompts', 'agentmaxima']
+
+/** Sleutels met een eigen pagina en endpoint (validatie, audit en wie het mag lezen staan daar). De algemene
+ * PUT /api/settings/:key weigert ze en GET /api/settings laat ze weg. */
+export const EIGEN_PAGINA_KEYS: readonly SettingKey[] = ['bewaartermijnen', 'factuurgegevens', 'logo']
+
+export function isEigenPaginaKey(k: string): boolean {
+  return (EIGEN_PAGINA_KEYS as readonly string[]).includes(k)
+}
 
 export function isSettingKey(v: unknown): v is SettingKey {
   return typeof v === 'string' && (SETTING_KEYS as readonly string[]).includes(v)

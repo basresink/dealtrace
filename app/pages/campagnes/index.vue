@@ -96,7 +96,7 @@ useHead({ title: 'Campagnes · Dealtrace' })
               <NuxtLink :to="`/campagnes/${c.id}`" class="co-link" :data-test="`campagne-${c.id}`">
                 <header class="co-kop">
                   <div class="co-pillen">
-                    <Label soort="actie" :waarde="KANAAL_ACTIE[soortKleur(c.soort)] ?? 'taak'" :tekst="soortNaam(c.soort)" />
+                    <Label class="co-soort" soort="actie" :waarde="KANAAL_ACTIE[soortKleur(c.soort)] ?? 'taak'" :tekst="soortNaam(c.soort)" />
                     <Label class="co-status" soort="campagne" :waarde="c.status" :tekst="STATUS[c.status]" />
                   </div>
                   <span class="co-eigenaar">{{ c.eigenaar ?? 'Geen eigenaar' }}</span>

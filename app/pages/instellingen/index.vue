@@ -18,7 +18,7 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
       { titel: 'Werkdagen en feestdagen', tekst: 'Welke dagen telt Dealtrace als werkdag.', link: '/instellingen/organisatie#werkdagen', toon: beheerder.value },
       { titel: 'Gebruikers en teams', tekst: 'Toevoegen, niveau, werkplek en team.', link: '/instellingen/gebruikers', toon: true },
       { titel: 'Niveaus en functies', tekst: 'Standaardniveau, "Iedereen ziet alles", welke functie bij welk niveau hoort en wie mag wat.', link: '/instellingen/niveaus', toon: beheerder.value },
-      { titel: 'Abonnement', tekst: 'Je pakket in gewone woorden, seats en contract.', link: '/instellingen/abonnement', toon: beheerder.value },
+      { titel: 'Abonnement', tekst: 'Je pakket in gewone woorden, seats, contract, factuurgegevens en facturen als pdf.', link: '/instellingen/abonnement', toon: beheerder.value },
       { titel: 'Verbruik en AI-credits', tekst: 'De pot van deze maand, verbruik per soort en per gebruiker, plafonds en extra credits.', link: '/instellingen/verbruik', toon: !!functie('credits.verbruikLezen')?.beschikbaar },
       { titel: 'Audit en toegang leverancier', tekst: 'Wie wat wijzigde, met filters en download, en wanneer Dealtrace mag meekijken.', link: '/instellingen/audit', toon: !!functie('instellingen.audit')?.beschikbaar },
     ],
@@ -50,6 +50,7 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
   {
     naam: 'Data en AI',
     kaarten: [
+      { titel: 'Privacy en export', tekst: 'Bewaartermijnen, wat er bij de opschoning zou vervallen en alle data van de organisatie als zip.', link: '/instellingen/privacy', toon: beheerder.value },
       { titel: 'Eigen velden', tekst: 'Extra velden op prospects en contacten.', link: '/instellingen/eigen-velden', toon: beheerder.value },
       { titel: 'Agents en mandaten', tekst: 'Wat de agents zelf mogen, de Bewaker en de knop Agents pauzeren.', link: '/instellingen/agents', toon: !!functie('agents.lezen')?.beschikbaar || beheerder.value },
       { titel: 'Waarnemer en signaalregels', tekst: 'Per doelgroep de signalen waar de Waarnemer op let: vacatures, nieuws, KvK en websites.', link: '/instellingen/waarnemer', toon: !!functie('agents.lezen')?.beschikbaar },
