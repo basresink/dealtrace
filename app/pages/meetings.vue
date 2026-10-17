@@ -180,7 +180,7 @@ useHead({ title: 'Meetings · Dealtrace' })
 
     <section class="section">
       <div class="container" data-test="meetings-bellijst">
-        <BelPrioriteit :lijst="bel.bellijst" :kan="bel.kan" titel="Bel-prioriteit naast je meetings" uitleg="Dezelfde lijst als op Belblokken, zonder wie je die dag al spreekt. Een klik opent de beltaak; is die er nog niet, dan maakt Dealtrace hem eerst." @taak="taak = $event" />
+        <BelPrioriteit :lijst="bel.bellijst" :kan="bel.kan" titel="Bel-prioriteit bij je meetings" uitleg="Dezelfde lijst als op Belblokken, zonder wie je die dag al spreekt. Een klik opent de beltaak; is die er nog niet, dan maakt Dealtrace hem eerst." @taak="taak = $event" />
       </div>
     </section>
 

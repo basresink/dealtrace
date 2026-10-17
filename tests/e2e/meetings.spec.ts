@@ -115,7 +115,7 @@ test.describe('meetings', () => {
       await login(page, 'u-07')
       await ga(page, '/meetings')
       const bel = page.getByTestId('meetings-bellijst')
-      await expect(bel).toContainText('Bel-prioriteit naast je meetings')
+      await expect(bel).toContainText('Bel-prioriteit bij je meetings')
       const kaarten = bel.locator('[data-test^="bel-kaart-"]')
       expect(await kaarten.count()).toBeLessThanOrEqual(5)
       await expect(bel.locator('a', { hasText: /^Bel$/ })).toHaveCount(0)
