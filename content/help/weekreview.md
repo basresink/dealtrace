@@ -8,6 +8,8 @@ routes: /weekreview
 
 # Weekreview
 
+### Wanneer en waar
+
 Op vrijdag vanaf 15:30 staat je **weekreview** klaar. Je opent hem met de knop **Weekreview** in de kop van de **Agenda**, of via de link **Weekreview** op de **Dagstart**. De review is alleen voor jou: je vergelijkt jezelf met jezelf, nooit met collega's.
 
 ## Vier kaarten
@@ -18,6 +20,8 @@ Op de laptop stap je met de knoppen door de kaarten, op je telefoon veeg je.
 2. **Wat werkte**: je beste belmoment (weekdag en uur waarop het vaakst werd opgenomen, vanaf vijf pogingen in dat uur) en het winpunt dat het vaakst in je script stond bij je afspraken. Patronen tonen we pas vanaf tien gesprekken.
 3. **Wat bleef liggen**: taken die je drie keer of vaker naar een latere dag schoof. Dealtrace telt dat vanzelf. Per taak kies je **Plan in** (een datum; de teller begint opnieuw), **Draag over** (aan een collega, die een melding krijgt) of **Laat los** met een reden (de taak sluit met die reden).
 4. **Volgende week**: kies hooguit drie voornemens. Elk voornemen wordt meteen iets concreets: een belblok in je agenda, een taak of een regiodag met bezoeken. Een eigen voornemen wordt een taak op maandag. Zet je **Deel mijn voornemens** aan, dan staan ze als afspraak in je coachingsgesprek en krijgt je manager een melding.
+
+### Voornemens in je agenda
 
 Klaar met kiezen? **Zet in volgende week**. Bedenk je je, kies dan **Kies opnieuw**: wat de voornemens werden, verdwijnt weer uit je agenda.
 

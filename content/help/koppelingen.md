@@ -8,7 +8,11 @@ routes: /instellingen/koppelingen/salesdna, /instellingen/koppelingen/dealdrive
 
 # Koppelingen
 
+### Waar je koppelingen vindt
+
 Alle koppelingen staan bij **Instellingen**, groep **Koppelingen**. Naast de groepsnaam zie je hoeveel er actief zijn. Alleen de beheerder richt ze in.
+
+### KvK en Datacollectief
 
 KvK en Datacollectief vind je onder de kaart **Bronnen**: die opent de **Leadgenerator**, tabblad **Koppelingen**. Zoeken in KvK doe je in de Leadgenerator vanaf Gevorderd.
 
@@ -20,7 +24,11 @@ KvK en Datacollectief vind je onder de kaart **Bronnen**: die opent de **Leadgen
 4. Zet desgewenst een **maandplafond** lager dan je pakket.
 5. Klik **Opslaan**.
 
+### De sleutel
+
 De sleutel wordt versleuteld bewaard en is daarna niet meer zichtbaar. Je ziet alleen of hij er is. Is de sleutel verlopen, dan zegt de kaart wat je moet doen: "De KvK-sleutel is verlopen. Vraag een nieuwe aan bij KvK en plak hem hier."
+
+### Zonder sleutel
 
 Zonder sleutel is KvK geen kiesbare bron in de Leadgenerator.
 
@@ -33,6 +41,8 @@ Datacollectief zit in Compleet. Op Starter of Plus zie je "Onderdeel van Complee
 3. Zet desgewenst een **Maandplafond records**.
 4. Klik **Opslaan**. Daarna zie je van de sleutel alleen een vingerafdruk van acht tekens.
 
+### Als de sleutel niet meer werkt
+
 Werkt de sleutel niet meer, dan staat er "De Datacollectief-sleutel werkt niet meer. Vraag een nieuwe aan bij Datacollectief en plak hem hier." Is het tegoed op, dan is de bron uitgeschakeld tot je het aanvult. Onder **Functies en laatste runs** zie je per aanroep hoeveel records er gelezen zijn.
 
 ## SalesDNA koppelen
@@ -43,11 +53,15 @@ Met SalesDNA komt jullie verkoopverhaal automatisch binnen. Dealtrace leest alle
 2. Klik **Test verbinding**. Werkt het, dan staat er "Verbinding werkt".
 3. Klik **Koppelen**. Dealtrace haalt meteen alle bevestigde onderdelen op. Het logboek toont per onderdeel wat er binnenkwam.
 
+### Het webhook-adres
+
 Geef het webhook-adres dat op de pagina staat door aan SalesDNA. Daarna komt elke nieuwe bevestigde versie vanzelf binnen, meestal binnen een minuut.
 
 ## Bron per onderdeel
 
 Per onderdeel kies je de bron: **SalesDNA** of **Eigen inrichting**. Een onderdeel dat jullie nog niet zelf hadden ingevuld, neemt SalesDNA vanzelf over. Had je het wel zelf ingevuld, klik dan **Eerst vergelijken**: je ziet jullie versie naast die van SalesDNA en een controlelijst. Daarin staat bijvoorbeeld hoeveel accounts een branche hebben en aan welke branche in SalesDNA die op naam gekoppeld wordt. Klopt het, vink het aan en klik **SalesDNA wordt de bron**. Jullie eigen versie gaat naar het archief.
+
+### Wat je in Dealtrace aanvult
 
 Een onderdeel uit SalesDNA kun je in Dealtrace niet bewerken. Er staat dan "Wijzigen doe je in SalesDNA" met de plek. De eigen aanvullingen, zoals SBI-codes per branche en ambitiedoelen, blijven wel bewerkbaar.
 
@@ -71,9 +85,15 @@ Na een eerste afspraak met vervolg draag je een account over aan DealDrive. Bij 
 - **Mock**: de testomgeving met vaste antwoorden.
 - **Aan**: de echte koppeling. Je ziet "Gekoppeld met DealDrive" met de datum van de laatste overdracht.
 
+### Stand en test
+
 De stand, het adres van DealDrive en het gedeelde geheim richt de leverancier in. Jij ziet de stand, klikt **Test verbinding** en ziet de lijst **Mislukte overdrachten** met de reden en **Opnieuw proberen**. Het logboek bewaart geen inhoud, alleen wat er gebeurde en of het lukte.
 
+### Een mislukte overdracht
+
 Een mislukte overdracht betekent: DealDrive nam hem na de laatste poging niet aan. Het account blijft overgedragen; de eigenaar krijgt een taak en jij een melding. Veelvoorkomende redenen staan er in gewone taal bij, zoals "DealDrive herkent de handtekening niet. Controleer of het gedeelde geheim aan beide kanten hetzelfde is."
+
+### Al bekend in DealDrive
 
 Bij import en in de Leadgenerator kijkt Dealtrace ook in DealDrive: je ziet de pil **Al klant in DealDrive** of **Prospect in DealDrive** met de eigenaar. Een klant van DealDrive benader je niet, tenzij je salesmanager het toestaat.
 
@@ -89,6 +109,8 @@ Met een gekoppelde agenda van Microsoft 365 of Google telt wat daarin staat mee 
 2. Daarna koppelt iedereen vanaf Gevorderd zelf: **Account**, kaart **Gekoppelde agenda**, **Koppel Microsoft 365** of **Koppel Google**.
 3. Geef toestemming bij Microsoft of Google. Terug in Dealtrace zie je "Agenda gekoppeld."
 
+### Ontkoppelen
+
 Met **Ontkoppel** wis je de toegang weer. De toegang wordt versleuteld bewaard, met een eigen sleutel die alleen voor agenda's is. Werkt de koppeling niet meer, dan staat er "ontkoppeld, koppel opnieuw".
 
 
@@ -103,7 +125,11 @@ De CRM-koppeling voorkomt dat je een klant of een prospect van een collega opnie
 5. **Overdracht naar dit CRM.** Staat deze schakelaar aan, dan kies je het CRM bij "Overdragen?" na een gehouden eerste afspraak. Dealtrace zet een activiteit met de briefing bij het bedrijf.
 6. **Slapende klanten.** Wijs het veld "Laatste order" toe. Een klant die 3, 6 of 12 maanden niet bestelde, krijgt een herwintaak met de terugkomregel.
 
-**Bronprioriteit.** Wat je zelf invulde, wint altijd. Daarna KvK, Datacollectief, CRM, SalesDNA, web, AI en import. Houdt Dealtrace zijn eigen waarde, dan zie je het verschil in het **synchronisatielog**.
+### Welke bron wint
+
+Wat je zelf invulde, wint altijd. Daarna KvK, Datacollectief, CRM, SalesDNA, web, AI en import. Houdt Dealtrace zijn eigen waarde, dan zie je het verschil in het **synchronisatielog**.
+
+### Synchroniseren
 
 Dealtrace synchroniseert elk uur. Vanaf Expert klik je **Synchroniseer nu**. Werkt de koppeling niet meer, dan staat er in gewone taal wat er mis is en krijgt de beheerder een melding; met **Verbind opnieuw** herstel je hem.
 

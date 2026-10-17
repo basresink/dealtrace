@@ -8,6 +8,8 @@ routes: /mij
 
 # Je niveau en functies die aanstaan
 
+### Drie niveaus
+
 Dealtrace kent drie niveaus. Een niveau is een set functies die voor je aanstaat. Zo ziet de indeling er standaard uit; je organisatie kan hem aanpassen.
 
 | Niveau | Wat je ziet |
@@ -19,6 +21,8 @@ Dealtrace kent drie niveaus. Een niveau is een set functies die voor je aanstaat
 ## Wat uit staat, zie je niet
 
 Een functie die voor jouw niveau nog niet aanstaat, zie je nergens: geen menu-item, geen knop en geen link. Kom je via een oude link toch op zo'n scherm, dan toont Dealtrace de pagina "Nog niet aangezet" met wat de functie doet.
+
+### Per niveau bekijken
 
 Je beheerder ziet bij **Instellingen**, **Niveaus** per niveau welke functies aanstaan.
 

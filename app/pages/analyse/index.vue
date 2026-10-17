@@ -22,7 +22,8 @@ const filters = computed(() => ({ periode: q('periode') || undefined, team: q('t
 const { data, refresh } = await useFetch<any>(() => `/api/analyse/${tab.value === 'regio' ? 'funnel' : tab.value}`, { query: filters, immediate: aan.value, default: () => ({ tabellen: [] }) })
 const { data: team } = await useFetch<any>('/api/coaching', { immediate: aan.value, default: () => ({ teams: [], leden: [] }) })
 function zet(p: Record<string, string | undefined>) { const n: Record<string, any> = { ...route.query, ...p }; for (const k of Object.keys(n)) if (!n[k]) delete n[k]; router.replace({ query: n }) }
-watch(tab, (t) => { if (t === 'regio') navigateTo('/bezoek-analyse?scope=team') })
+// Regio woont in de bezoekanalyse; ook een directe link met ?tab=regio gaat erheen.
+watch(tab, (t) => { if (t === 'regio') navigateTo('/bezoek-analyse?scope=team') }, { immediate: true })
 const csv = (i: number) => `/api/analyse/${tab.value}?${new URLSearchParams({ ...(Object.fromEntries(Object.entries(filters.value).filter(([, v]) => v)) as Record<string, string>), formaat: 'csv', tabel: String(i) }).toString()}`
 async function besluit(id: string, b: string) { try { const r = await $fetch<any>(`/api/analyse/voorstellen/${id}`, { method: 'POST', body: { besluit: b } }); toast.toon(b === 'accepteer' ? 'Geaccepteerd. Er staat een conceptversie van de reis klaar.' : b === 'later' ? 'Het voorstel komt over 30 dagen terug.' : 'Voorstel afgewezen.'); if (r.conceptId) navigateTo(`/reizen/${r.conceptId}`); else refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') } }
 
@@ -53,7 +54,8 @@ const kicker = computed(() => ['Analyse', TABS.find(([k]) => k === tab.value)?.[
 
 // ── Wat de cijfers zeggen ───────────────────────────────────────────────────
 const tabellen = computed<AnalyseTabel[]>(() => data.value.tabellen ?? [])
-const beeld = computed(() => analyseBeeld(tab.value, tabellen.value, data.value.melding))
+// Regio leest de funneldata tot de doorverwijzing: dan ook de funnelkop, niet "8 regels in funnel van de prospectreis".
+const beeld = computed(() => analyseBeeld(tab.value === 'regio' ? 'funnel' : tab.value, tabellen.value, data.value.melding))
 const cijfer = ref<{ kicker: string; titel: string; regels: CijferRegel[] } | null>(null)
 function openTegel(t: { titel: string; label: string; regels: { label: string; waarde: string; meta?: string }[] }) { cijfer.value = { kicker: kicker.value, titel: t.titel, regels: t.regels.map((r, i) => ({ id: String(i), ...r })) } }
 // Leesbare waarden in de tabel (het kanaal); de CSV houdt de ruwe waarden.

@@ -8,6 +8,8 @@ routes: /accountplannen
 
 # Accountplannen
 
+### Wat een accountplan is
+
 Een accountplan is het plan voor één topprospect over een vaste periode, bijvoorbeeld een jaar. Een topprospect win je niet met losse acties: met een plan weet je bij elke stap waarom je hem zet. Plannen voor bestaande klanten horen in DealDrive; bij een klant kun je daarom geen accountplan maken. Accountplannen staan aan voor Expert.
 
 ## Het overzicht
@@ -16,6 +18,8 @@ Bij **Planning, Accountplannen** zie je twee groepen:
 
 - **Actueel**: plannen die nu lopen. Hier stuur je op.
 - **Verlopen en afgerond**: de geldigheid is voorbij of je hebt het plan afgesloten. Evalueer het en open een nieuwe periode.
+
+### Wat elke kaart toont
 
 Elke kaart toont de status, de eigenaar, de naam van het plan, de prospect, de geldigheid en de voortgang van het actieplan. Met **Filters** kies je een status (Alle, Actueel, Verlopen, Afgerond) of **Alleen mijn plannen**. Klik op een kaart om het plan in een venster te lezen, of kies **Open accountplan** voor de volledige pagina.
 
@@ -28,6 +32,8 @@ Kies **+ Accountplan** op het overzicht, of open op de accountkaart van de prosp
 - **Extra velden**: als je beheerder eigen velden voor accountplannen heeft gemaakt.
 - **De zes stappen**: informatie verzamelen, doelen SMART maken, kansen en bedreigingen, strategie bepalen, het actieplan en evalueren.
 
+### Wat verplicht is
+
 Alleen de prospect en de titel zijn verplicht. Na **Plan aanmaken** opent het plan meteen.
 
 ## De voorzet van de Pitstop
@@ -37,6 +43,8 @@ Bij elk blok en bij het actieplan staat **Voorzet van de Pitstop**. De Pitstop s
 ## Het plan lezen en wijzigen
 
 Het venster van een plan toont de kerngegevens (eigenaar, geldigheid en hoeveel acties klaar zijn), de contactpersonen, de zes blokken en het actieplan. Onderaan staan **Verwijderen**, **Wijzigen**, **Open accountplan** en **Sluiten**. Met **Wijzigen** pas je alles in één keer aan en sla je op met **Opslaan**.
+
+### Het plan bijwerken
 
 Op de pagina van het plan heeft elk blok een potlood. De tabbladen **Contactpersonen** (hier pas je ook de rol aan), **Taken**, **Afspraken** en **Notities** laten zien wat er verder bij deze prospect speelt.
 

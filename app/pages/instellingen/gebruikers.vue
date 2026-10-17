@@ -133,7 +133,13 @@ function wisFilters() { Object.assign(filter, { rol: '', niveau: '', team: '', s
 const telRol = (r: string) => actief.value.filter((g) => g.rol === r).length
 const titel = computed(() => {
   if (beheerder.value && abonnement.value?.seats) return `${abonnement.value.gebruikers} van ${abonnement.value.seats} seats in gebruik`
-  return `${actief.value.length} ${actief.value.length === 1 ? 'gebruiker' : 'gebruikers'} in ${teams.value.length} ${teams.value.length === 1 ? 'team' : 'teams'}`
+  if (beheerder.value) return `${actief.value.length} ${actief.value.length === 1 ? 'gebruiker' : 'gebruikers'} in ${teams.value.length} ${teams.value.length === 1 ? 'team' : 'teams'}`
+  // Een salesmanager telt zoals de hub: alleen de teams die hij leidt en de mensen daarin, zonder zichzelf.
+  const ik = me.value?.gebruiker.id ?? ''
+  const geleid = teams.value.filter((t) => t.managerIds.includes(ik))
+  if (!geleid.length) return 'Je hebt nog geen team'
+  const mensen = actief.value.filter((g) => g.id !== ik && geleid.some((t) => t.id === g.teamId)).length
+  return `${mensen} ${mensen === 1 ? 'persoon' : 'mensen'} in ${geleid.length} ${geleid.length === 1 ? 'team' : 'teams'}`
 })
 useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
 </script>

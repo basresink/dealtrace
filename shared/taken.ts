@@ -11,7 +11,7 @@ import { UITKOMST_LABEL, verwerkUitkomst, type Ritme, type RitmeStand, type Uitk
 export const ACTIETYPES = ['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht', 'sms', 'taak'] as const
 export const ACTIE_LABEL: Record<string, string> = { bellen: 'BEL', mailen: 'MAIL', linkedin: 'LINKEDIN', bezoek: 'BEZOEK', bericht: 'WHATSAPP', sms: 'SMS', taak: 'TAAK', geen: 'TAAK' }
 export const CONTACT_ACTIES = new Set(['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht', 'sms'])
-export const HERKOMST_LABEL: Record<string, string> = { regel: 'Uit regel', inzicht: 'Uit inzicht', campagne: 'Campagne', ritme: 'Ritme', handmatig: 'Handmatig', startactiviteit: 'Uit regel', agent: 'Agent', reeks: 'Opvolgreeks', volgen: 'Volgende stap', dagplanner: 'Dagplanner' }
+export const HERKOMST_LABEL: Record<string, string> = { regel: 'Uit regel', inzicht: 'Uit inzicht', campagne: 'Campagne', ritme: 'Ritme', handmatig: 'Handmatig', startactiviteit: 'Uit regel', agent: 'Agent', reeks: 'Opvolgreeks', volgen: 'Volgende stap', dagplanner: 'Dagplanner', coaching: 'Coaching' }
 export const AFWIJS_REDENEN = ['Niet relevant', 'Al bekend', 'Verkeerd account', 'Te oud'] as const
 export const PRIO_VOLGORDE: Record<string, number> = { urgent: 0, hoog: 1, middel: 2, laag: 3 }
 /** Prioriteit van een taak: vier niveaus zoals DealDrive. Regels kennen er drie; urgent zet je zelf. */

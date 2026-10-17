@@ -77,7 +77,8 @@ const stat = computed(() => {
 // Flyouts
 const plan = reactive({ open: false, account: null as null | { id: string; naam: string }, taskId: null as string | null, contactId: null as string | null, aanleiding: '', voorstel: null as any })
 function nieuweAfspraak() { Object.assign(plan, { open: true, account: null, taskId: null, contactId: null, aanleiding: '', voorstel: { vorm: 'bezoek', datum: data.value?.dag } }) }
-function tussenstop(k: any) {
+// + Afspraak: de afspraakflyout met de prospect, als bezoek op het moment langs de route.
+function afspraakMet(k: any) {
   const start = k.momentStart ? tijd(k.momentStart).replace(/:(\d)\d$/, (_m: string, t: string) => `:${Number(t) >= 3 ? '30' : '00'}`) : undefined
   Object.assign(plan, { open: true, account: { id: k.id, naam: k.naam }, taskId: k.taakId ?? null, contactId: k.contact?.id ?? null, aanleiding: k.bronnen[0]?.label ?? '', voorstel: { datum: data.value.dag, start, duurMin: 30, vorm: 'bezoek', soort: 'kennismaking' } })
 }
@@ -95,12 +96,16 @@ function inloop(k: any) {
   Object.assign(plan, { open: true, account: { id: k.id, naam: k.naam }, taskId: k.taakId ?? null, contactId: k.contact?.id ?? null, aanleiding: `Inloopbezoek langs de route${k.bronnen[0]?.label ? `: ${k.bronnen[0].label}` : ''}`, voorstel: { datum: data.value.dag, start, duurMin: 30, vorm: 'bezoek', soort: 'ongepland-bezoek' } })
 }
 // Eerst bellen: + Taak van het type Bellen met de prospect en het hoofdcontact al ingevuld.
-const belTaak = ref<null | { account: { id: string; naam: string }; contact: { id: string; naam: string } | null; titel: string; aanleiding: string }>(null)
+const belTaak = ref<null | { account: { id: string; naam: string }; contact: { id: string; naam: string } | null; titel?: string; aanleiding: string; soort?: string }>(null)
 function eerstBellen(k: any) {
   belTaak.value = {
     account: { id: k.id, naam: k.naam }, contact: k.contact?.id ? { id: k.contact.id, naam: k.contact.naam } : null,
-    titel: `Bellen voor bezoek · ${k.naam}`, aanleiding: `Kans langs de route${k.bronnen[0]?.label ? `: ${k.bronnen[0].label}` : ''}`,
+    titel: `Bellen voor bezoek · ${k.naam}`, aanleiding: `Kans langs de route${k.bronnen[0]?.label ? `: ${k.bronnen[0].label}` : ''}`, soort: 'bellen',
   }
+}
+// + Taak: het venster Nieuwe taak met de prospect en het hoofdcontact; het type kies je zelf.
+function taakMet(k: any) {
+  belTaak.value = { account: { id: k.id, naam: k.naam }, contact: k.contact?.id ? { id: k.contact.id, naam: k.contact.naam } : null, aanleiding: `Kans langs de route${k.bronnen[0]?.label ? `: ${k.bronnen[0].label}` : ''}` }
 }
 const bronnen = (k: any) => [...new Set<string>(k.bronnen.map((b: any) => b.label))]
 const opbouw = (k: any) => k.opbouw.map((o: any) => `${o.label} ${o.punten >= 0 ? '+' : ''}${o.punten}`).join(' · ')
@@ -199,9 +204,10 @@ useHead({ title: 'Bezoeken · Dealtrace' })
               <p class="bz-opbouw" :title="opbouw(k)">Score {{ k.score }}: {{ opbouw(k) }}</p>
             </div>
             <div class="bz-kn-acties">
-              <button type="button" class="dd-act dd-act--primair" :data-test="`tussenstop-${k.id}`" @click="tussenstop(k)"><Icoon naam="Plus" />Tussenstop</button>
               <button v-if="data.kan.kansenAlle" type="button" class="dd-act" :data-test="`eerst-bellen-${k.id}`" @click="eerstBellen(k)"><Icoon naam="Phone" />Eerst bellen</button>
+              <button v-if="$aan('taken.basis')" type="button" class="dd-act" :data-test="`kans-taak-${k.id}`" @click="taakMet(k)"><Icoon naam="Plus" />Taak</button>
               <button v-if="data.kan.inloop" type="button" class="dd-act" :data-test="`inloop-${k.id}`" @click="inloop(k)">Inloopbezoek</button>
+              <button type="button" class="dd-act dd-act--primair" :data-test="`kans-afspraak-${k.id}`" @click="afspraakMet(k)"><Icoon naam="Plus" />Afspraak</button>
               <a class="dd-act" :href="kaartLink({ punt: k.punt }, app) ?? undefined" target="_blank" rel="noopener"><Icoon naam="Navigation" />Navigeer</a>
               <button type="button" class="dd-act" :data-test="`overslaan-${k.id}`" @click="overslaan = k">Overslaan</button>
             </div>
@@ -238,7 +244,7 @@ useHead({ title: 'Bezoeken · Dealtrace' })
     </section>
 
     <PlanAfspraakFlyout :open="plan.open" :account="plan.account" :task-id="plan.taskId" :contact-id="plan.contactId" :aanleiding="plan.aanleiding" :voorstel="plan.voorstel" @sluit="plan.open = false" @gepland="gepland" />
-    <NieuweTaakFlyout :open="!!belTaak" :account="belTaak?.account ?? null" :contact="belTaak?.contact ?? null" actiesoort="bellen" :titel="belTaak?.titel" :aanleiding="belTaak?.aanleiding" @sluit="belTaak = null" @gemaakt="belTaak = null; refresh()" />
+    <NieuweTaakFlyout :open="!!belTaak" :account="belTaak?.account ?? null" :contact="belTaak?.contact ?? null" :actiesoort="belTaak?.soort" :titel="belTaak?.titel" :aanleiding="belTaak?.aanleiding" @sluit="belTaak = null" @gemaakt="belTaak = null; refresh()" />
     <AfspraakFlyout :open="!!afspraak" :afspraak-id="afspraak" @sluit="afspraak = null" @gewijzigd="refresh()" />
     <TaakFlyout :open="!!taak" :taak-id="taak" @sluit="taak = null" @klaar="taak = null; refresh()" @gewijzigd="refresh()" />
     <FlyoutShell v-if="overslaan" open titel-id="os-titel" breedte="smal" @sluit="overslaan = null">

@@ -8,6 +8,8 @@ routes: /prospects/alle
 
 # Een prospect toevoegen
 
+### Zo voeg je een prospect toe
+
 1. Ga naar **Prospects**, **Alle prospects** en klik **+ Prospect**.
 2. Typ de bedrijfsnaam. Dealtrace kijkt meteen of het bedrijf al bestaat en toont gelijkende namen; bestaat het al, dan open je die kaart.
 3. Vul in wat je weet: plaats, postcode, telefoon, website, e-mail en KvK-nummer. Is KvK gekoppeld, dan vult **Zoek in KvK** de officiële gegevens voor je in.

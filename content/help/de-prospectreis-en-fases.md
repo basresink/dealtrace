@@ -8,6 +8,8 @@ routes: /reizen/standaard
 
 # De prospectreis en fases
 
+### Tien fases in vijf hoofdfases
+
 Elk prospect loopt een reis tot de eerste afspraak en de overdracht. De reis heeft tien fases in vijf hoofdfases:
 
 - **Vinden**: Gevonden, Dossier compleet

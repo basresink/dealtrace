@@ -426,7 +426,8 @@ test.describe('Taken: nieuwe URL, horizon in het filter en Briefings', () => {
   test('filtergroep Periode: Morgen en een eigen periode in het verleden met afgeronde taken; geen Herkomst', async ({ page }) => {
     test.setTimeout(150_000)
     await apiLogin(page.request, 'u-03')
-    const dag = (n: number) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10)
+    // Kalenderdagen in Nederlandse tijd (net na middernacht is de UTC-datum nog gisteren).
+    const dag = (n: number) => new Date(Date.now() + n * 864e5).toLocaleDateString('sv-SE', { timeZone: 'Europe/Amsterdam' })
     const morgen = await (await page.request.post('/api/tasks', { data: { title: `Morgen ${uniek()}`, actionType: 'taak', dueDate: `${dag(1)}T10:00:00.000Z` } })).json()
     const oud = await (await page.request.post('/api/tasks', { data: { title: `Terugkijken ${uniek()}`, actionType: 'taak', dueDate: `${dag(-20)}T10:00:00.000Z` } })).json()
     expect((await page.request.post(`/api/tasks/${oud.id}/afronden`, { data: { uitkomst: 'gedaan', idempotentieSleutel: uniek() } })).ok()).toBe(true)

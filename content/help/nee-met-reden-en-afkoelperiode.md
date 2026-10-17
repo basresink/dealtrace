@@ -8,6 +8,8 @@ routes: /instellingen/nee-redenen, /instellingen/terugkomen
 
 # Nee met reden en afkoelperiode
 
+### Waarom je een reden vastlegt
+
 Een nee is een datapunt. Je legt vast waarom, hoe lang je wacht en wanneer je terugkomt.
 
 ## De zeven redenen

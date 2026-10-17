@@ -7,6 +7,8 @@ samenvatting: Welk script voorgeselecteerd staat, hoe je wisselt en wat de gele 
 
 # Een belscript kiezen
 
+### Welk script Dealtrace kiest
+
 In het belpaneel staat bovenaan de keuzelijst **Script**. Dealtrace kiest vooraf het script dat het best past:
 
 1. het script van de campagne;
@@ -14,6 +16,8 @@ In het belpaneel staat bovenaan de keuzelijst **Script**. Dealtrace kiest vooraf
 3. het script dat past bij het doel, de fase, de doelgroep en de rol van het contact;
 4. jouw eigen variant van dat script;
 5. anders het startscript van je organisatie.
+
+### Zelf wisselen
 
 Wissel gerust; Dealtrace onthoudt welk script je gebruikte, zodat je salesmanager scripts kan vergelijken.
 

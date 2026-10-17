@@ -122,6 +122,13 @@ export function nlMoment(t: Date): { datum: string; uur: number; minuut: number 
   return { datum: `${p.year}-${p.month}-${p.day}`, uur: Number(p.hour), minuut: Number(p.minute) }
 }
 
+const nlDagFormaat = new Intl.DateTimeFormat('sv-SE', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' })
+/** De Nederlandse kalenderdag (JJJJ-MM-DD) van een tijdstempel; net na middernacht is de UTC-datum nog gisteren. */
+export function nlDag(op: string | Date): string {
+  const t = op instanceof Date ? op : new Date(op)
+  return Number.isNaN(t.getTime()) ? String(op).slice(0, 10) : nlDagFormaat.format(t)
+}
+
 /** Het moment (UTC) dat in Nederland op `datum` om `uur`:00 valt. */
 export function nlTijdstip(datum: string, uur: number, minuut = 0): Date {
   const gok = new Date(`${datum}T${String(uur).padStart(2, '0')}:${String(minuut).padStart(2, '0')}:00Z`)

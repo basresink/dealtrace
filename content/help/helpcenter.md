@@ -8,6 +8,8 @@ routes: /helpcenter
 
 # Het helpcenter
 
+### Waar je het helpcenter opent
+
 Het **Helpcenter** open je met het **vraagteken** in de rij iconen onderaan de zijbalk; op de telefoon via **Meer**, **Helpcenter**.
 
 ## Wat je er vindt
@@ -18,6 +20,8 @@ Het **Helpcenter** open je met het **vraagteken** in de rij iconen onderaan de z
 - **New business-academie**: het vak zelf, met voorbeelden en drie controlevragen per artikel.
 - **Tips & Tricks**: korte tips om sneller te werken.
 - **Kennisbank**: de documenten van je organisatie. De Kennisbank staat niet in de zijbalk; je opent hem hier.
+
+### Per categorie
 
 Per categorie zie je de eerste zes artikelen. Zijn het er meer, klik dan **Toon alle**.
 

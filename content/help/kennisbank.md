@@ -8,6 +8,8 @@ routes: /kennisbank
 
 # Kennisbank
 
+### Wat de kennisbank is
+
 De kennisbank is de bibliotheek van je organisatie: cases, offertes, presentaties, productinfo, prijslijsten en contracten. Wat een collega uploadt, kun jij ook vinden en gebruiken. De kennisbank staat aan vanaf Gevorderd. Je opent hem in het **Helpcenter**, met de kaart **Kennisbank**.
 
 ## Zoeken en filteren
@@ -31,6 +33,8 @@ Klik op een document. Het venster toont:
 - **Datavelden**: type, versie, bestand, bijgewerkt, wie het uploadde en de gekoppelde bedrijven en contacten. Deze velden gaan mee naar de AI.
 - **Preview**: een afbeelding of PDF zie je direct; van andere bestanden de tekst die Dealtrace heeft uitgelezen. Is er geen voorbeeld, dan staat dat er.
 - **Vraag de AI over dit document**: drie voorgestelde vragen en **Stel je eigen vraag**.
+
+### Openen en verwijderen
 
 Met **Openen** zie je het bestand zelf. **Verwijderen** haalt het document weg uit de kennisbank en van elke kaart; dat mag wie het uploadde en de beheerder.
 

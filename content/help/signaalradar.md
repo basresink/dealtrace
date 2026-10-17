@@ -8,6 +8,8 @@ routes: /signaalradar
 
 # Signaalradar
 
+### Van signaal naar golf
+
 De Waarnemer vindt per account vacatures, nieuws en vergunningen. Eén inzicht bij één account valt op; dat veertien installateurs tegelijk monteurs zoeken, valt niemand op. De **Signaalradar** telt de inzichten op per branche en signaalsoort en vergelijkt met normaal. Zo zie je een marktbeweging en bel je er gericht op. Je vindt de radar in de zijbalk onder **Planning**, vanaf niveau Gevorderd.
 
 ## Het raster
@@ -22,12 +24,16 @@ Elke rij is een branche uit je verkoopverhaal, elke kolom een signaalsoort: vaca
 
 Normaal is het gemiddelde aantal accounts per periode van 30 dagen over de zes perioden daarvoor. Een cel is een **golf** als er minstens 5 accounts zijn en het aantal minstens 1,5 keer normaal is. Vanaf 3 keer normaal heet het een sterke golf.
 
+### De kleuren
+
 De kleuren:
 
 - Wit: rond normaal.
 - Lichtgeel: verhoogd, maar geen golf (bijvoorbeeld te weinig accounts).
 - Geel: golf.
 - Zwart: sterke golf.
+
+### De sterkste golf eerst
 
 De titel van de pagina zegt hoeveel golven er nu zijn. Zonder keuze opent de sterkste golf.
 
@@ -47,6 +53,8 @@ Klik op een cel. De golf opent onder het raster, over de volle breedte. Op een g
 - **Het winpunt dat past**: eerst een winpunt dat bij de branche hoort, dan een winpunt dat bij de signaalsoort past (vacatures passen bij snelheid en levering, nieuwbouw bij projecten), anders het sterkste winpunt uit je verkoopverhaal.
 - **Capaciteit**: hoeveel plekken je vrij hebt in je belblokken voor koude acquisitie van de komende twee weken.
 
+### Geen golf
+
 Is het geen golf, dan staat er waarom niet. De signalen staan gewoon bij Inzichten.
 
 ## Start belronde
@@ -59,8 +67,14 @@ Is het geen golf, dan staat er waarom niet. De signalen staan gewoon bij Inzicht
 
 ## Veelgestelde vragen
 
-**Waarom zie ik geen golf, terwijl er veel signalen zijn?** Een golf vergelijkt met normaal. Zijn er elke maand veel vacatures in een branche, dan is dat normaal en geen golf.
+### Waarom zie ik geen golf, terwijl er veel signalen zijn?
 
-**Waarom is de radar leeg?** Er zijn nog geen inzichten met bron in je regio. Kies Hele organisatie, of laat de Waarnemer zijn werk doen.
+Een golf vergelijkt met normaal. Zijn er elke maand veel vacatures in een branche, dan is dat normaal en geen golf.
 
-**Waarom kan ik geen belronde starten?** De knop staat alleen aan bij een golf, voor een branche, als je campagnes mag maken en als er accounts op jouw naam staan (accountmanager). De reden staat onder de knop.
+### Waarom is de radar leeg?
+
+Er zijn nog geen inzichten met bron in je regio. Kies Hele organisatie, of laat de Waarnemer zijn werk doen.
+
+### Waarom kan ik geen belronde starten?
+
+De knop staat alleen aan bij een golf, voor een branche, als je campagnes mag maken en als er accounts op jouw naam staan (accountmanager). De reden staat onder de knop.

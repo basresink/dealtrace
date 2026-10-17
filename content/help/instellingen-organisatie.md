@@ -8,12 +8,16 @@ routes: /instellingen/organisatie
 
 # Organisatie en werkdagen
 
+### Wat de beheerder hier zet
+
 Bij **Instellingen**, **Organisatie** zet de beheerder:
 
 - de naam en het land van de organisatie;
 - het logo van de organisatie;
 - de maand waarin jullie verkoopjaar begint;
 - welke dagen werkdagen zijn en welke feestdagen meetellen.
+
+### Waarvoor de werkdagen tellen
 
 Dealtrace gebruikt de werkdagen voor termijnen ("binnen 3 werkdagen"), voor het plannen van pogingen en voor de werkuren van de agents.
 

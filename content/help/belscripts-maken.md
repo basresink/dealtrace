@@ -8,6 +8,8 @@ routes: /belscripts,/instellingen/belscripts,/instellingen/mijn-scripts
 
 # Belscripts maken
 
+### Waar je belscripts maakt
+
 Belscripts staan in **Belscript Studio** (`/belscripts`), bereikbaar via **Instellingen**, **Belscripts**, via **Open Belscript Studio** in het blok Belscript op Vandaag en via **Meer**, **Belscript** op de accountkaart. De studio heeft vier tabbladen. Het overzicht van alle scripts met de vergelijking staat bij **Instellingen**, **Alle belscripts**. Elke organisatie start met zes scripts.
 
 ## Standaardscript

@@ -1,6 +1,6 @@
 // Eén opzet voor elk scherm onder Instellingen (InstellingenKop): de kruimel "Instellingen · <groep>" met
 // een terug-link naar de hub, een titel, geen horizontale scroll, en op een lijst de knop Filters met
-// een paneel. Op 1280 en 390 px, als beheerder (u-06). /instellingen/regels hoort bij een ander pakket.
+// een paneel. Op 1280 en 390 px, als beheerder (u-06).
 import { expect, test, type Page } from '@playwright/test'
 import { apiLogin, ga } from './hulp'
 
@@ -19,6 +19,7 @@ const PAGINAS: [string, string][] = [
   ['/instellingen/campagnesoorten', 'Verkoop'],
   ['/instellingen/funnel-normen', 'Verkoop'],
   ['/instellingen/terugkomen', 'Verkoop'],
+  ['/instellingen/regels', 'Ritme en regels'],
   ['/instellingen/ritme', 'Ritme en regels'],
   ['/instellingen/gebieden', 'Ritme en regels'],
   ['/instellingen/privacy', 'Data en AI'],

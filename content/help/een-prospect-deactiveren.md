@@ -8,6 +8,8 @@ routes: /accounts,/prospects/alle
 
 # Een prospect deactiveren en heractiveren
 
+### Deactiveren in plaats van verwijderen
+
 In Dealtrace verwijder je geen prospects. Is een bedrijf failliet, dubbel, buiten je doelgroep of definitief niet geïnteresseerd, dan **deactiveer** je het. Alles wat er gebeurde blijft bewaard en leesbaar.
 
 ## Deactiveren
@@ -16,7 +18,9 @@ In Dealtrace verwijder je geen prospects. Is een bedrijf failliet, dubbel, buite
 2. Kies een reden: **Failliet of opgeheven**, **Dubbel account**, **Buiten de doelgroep**, **Definitief geen interesse** of **Overig**. Bij Overig schrijf je er een toelichting bij.
 3. Klik **Deactiveren**.
 
-Wie mag dit? De eigenaar van de prospect, de salesmanager van zijn team en de beheerder.
+### Wie het mag
+
+De eigenaar van de prospect, de salesmanager van zijn team en de beheerder.
 
 ## Wat er dan gebeurt
 

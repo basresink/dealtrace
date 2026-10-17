@@ -8,6 +8,8 @@ routes: /instellingen
 
 # Instellingen
 
+### Waar je Instellingen vindt
+
 Bij **Instellingen** richt je Dealtrace in voor je organisatie. Je opent het in de zijbalk onder **Beheer**; je ziet het als beheerder of salesmanager. De kaarten staan in groepen:
 
 - **Organisatie**: naam, werkdagen, gebruikers en teams, niveaus en functies, abonnement, verbruik en AI-credits, en de audit.

@@ -83,6 +83,11 @@ describe('regel en voorbeeld', () => {
     expect(v).toMatchObject({ dagen: 60, ondergrens: 60, terugOp: '2027-01-01', opgeschoven: true, kanaal: 'mail' })
     expect(korterDanAfkoeling({ termijnDagen: 30, kanaal: 'E-mail' }, af)).toContain('korter dan de afkoeling van 60 dagen')
     expect(korterDanAfkoeling({ termijnDagen: 182, kanaal: 'Bezoek' }, af)).toBeNull()
+    // B10: wie de afkoeling niet mag wijzigen, krijgt geen advies om hem te verlagen.
+    expect(korterDanAfkoeling({ termijnDagen: 30, kanaal: 'E-mail' }, af)).toContain('verlaag dan de afkoeling')
+    const zonder = korterDanAfkoeling({ termijnDagen: 30, kanaal: 'E-mail' }, af, { magAfkoeling: false })!
+    expect(zonder).not.toContain('verlaag')
+    expect(zonder).toContain('De afkoeling past alleen de beheerder aan.')
   })
 
   it('wie pakt het op: drie keuzes, afgeleid uit de rollen', () => {

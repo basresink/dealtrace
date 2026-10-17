@@ -9,7 +9,7 @@ import { bouwBellijst, schatDuur, type BlokSoort } from '../../shared/belblokken
 import { voortgang, weergaveStatus } from '../../shared/accountplannen'
 import { nlMoment, nlTijdstip, plusDagen } from '../../shared/datum'
 import { bellijstNaastBezoeken } from '../../shared/route'
-import { RITME_BLOK_FUNCTIE, vulVoorstellen, type BelblokDagVoorstel, type RitmeAfspraak, type RitmeBlokken } from '../../shared/ritmeBlokken'
+import { RITME_BLOK_FUNCTIE, vulVoorstellen, type BelblokDagVoorstel, type BelblokVoorstel, type RitmeAfspraak, type RitmeBlokken } from '../../shared/ritmeBlokken'
 import { laadBelKandidaten } from './bellen'
 import { bezoekDag } from './bezoeken'
 import { lijst as campagneLijst } from './campagnes'
@@ -153,4 +153,35 @@ export async function laadRitmeBlokken(tx: Tx, g: RitmeGebruiker, nu: Date, o: R
   }
 
   return { periode: o.periode, belblokken, belprioriteit, kansen, campagnes, accountplannen }
+}
+
+/**
+ * Het vulvoorstel voor lege belblokken (zonder één gesprek) op /belblokken en in de belmodus: dezelfde bron
+ * als Dagstart en Weekstart (vulVoorstellen uit de eigen bellijst, zonder wie al in een blok staat of die dag
+ * een afspraak heeft). Een blok dat al loopt maar nog leeg is, telt mee als gepland. Per sessie-id het voorstel.
+ */
+export async function legeBlokVoorstellen(tx: Tx, gebruikerId: string, sessies: { id: string; startOp: string; eindOp: string; status: string; data: Record<string, any> }[], nu: Date): Promise<Map<string, BelblokVoorstel>> {
+  const uit = new Map<string, BelblokVoorstel>()
+  const open = sessies.filter((s) => ['gepland', 'bezig'].includes(s.status) && Date.parse(s.eindOp) > nu.getTime())
+  if (!open.length) return uit
+  const metGesprek = new Set((await rijen(tx, sql`select distinct belblok_id from tasks where belblok_id = any(string_to_array(${lijst(open.map((s) => s.id))}, ','))`)).map((r) => r.belblok_id as string))
+  const leeg = open.filter((s) => !metGesprek.has(s.id))
+  if (!leeg.length) return uit
+  const van = nlTijdstip(nlMoment(new Date(leeg[0]!.startOp)).datum, 0).toISOString()
+  const tot = nlTijdstip(plusDagen(nlMoment(new Date(leeg[leeg.length - 1]!.eindOp)).datum, 1), 0).toISOString()
+  const afs = await rijen(tx, sql`select start_at, account_id from appointments where owner_id = ${gebruikerId} and status in ('gepland', 'afgerond') and account_id is not null and start_at >= ${van} and start_at < ${tot}`)
+  const bezetPerDag = new Map<string, Set<string>>()
+  for (const a of afs) {
+    const d = nlMoment(new Date(iso(a.start_at)!)).datum
+    bezetPerDag.set(d, (bezetPerDag.get(d) ?? new Set()).add(a.account_id))
+  }
+  const kandidaten = await laadBelKandidaten(tx, gebruikerId)
+  const inEenBlok = new Set(kandidaten.filter((k) => k.belblokId).map((k) => k.accountId))
+  const pool = bouwBellijst(kandidaten.filter((k) => !k.belblokId && !inEenBlok.has(k.accountId)), nu)
+  const voorstellen = vulVoorstellen(leeg.map((s) => ({
+    id: s.id, start: s.startOp, eind: s.eindOp, status: 'gepland', soort: (['koud', 'opvolging', 'gemengd'].includes(s.data?.soort) ? s.data.soort : null) as BlokSoort | null,
+    verhouding: s.data?.verhouding != null && Number.isFinite(Number(s.data.verhouding)) ? Number(s.data.verhouding) : null, duren: [],
+  })), pool, nu, bezetPerDag)
+  for (const v of voorstellen) uit.set(v.id, v)
+  return uit
 }

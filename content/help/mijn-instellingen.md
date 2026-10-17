@@ -8,6 +8,8 @@ routes: /mijn-instellingen,/mij
 
 # Mijn instellingen
 
+### Waar je het vindt
+
 Onderaan de zijbalk staat een rij iconen. Het **wieltje** opent **Mijn instellingen**, het **poppetje** opent je **Account**. Op de telefoon vind je beide onder **Meer**.
 
 ## Mijn instellingen
@@ -20,6 +22,8 @@ Alles wat alleen voor jou geldt, met bovenaan een kaart per onderdeel:
 - **Telefoon**: handschoen- en zonlichtmodus voor onderweg.
 - **Dagplanning** en **Je ritme per mail**: de Dagplanner en je weekreview, weekstart en dagstart per mail.
 - **Meldingen onderweg** en **Offline**: push, stille uren, rijmodus en je dagpakket.
+
+### Wat je ziet
 
 Je ziet alleen de onderdelen van functies die voor je aanstaan.
 

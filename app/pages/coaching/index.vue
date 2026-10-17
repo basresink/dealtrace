@@ -143,7 +143,7 @@ useHead({ title: 'Coaching · Dealtrace' })
 
             <div class="mp-blok" data-test="coaching-afspraken">
               <header class="mp-blokkop"><h2 class="mp-bloktitel">Open afspraken uit coaching</h2><span class="meta">Wat je in eerdere gesprekken afsprak en nog niet is afgevinkt.</span></header>
-              <LegeStaat v-if="!afspraken.length" titel="Er staan geen afspraken open." tekst="Leg in het volgende gesprek een afspraak vast met doel, gedrag en termijn. De accountmanager ziet hem in Mijn resultaten." />
+              <LegeStaat v-if="!afspraken.length" titel="Er staan geen afspraken open." tekst="Leg in het volgende gesprek een afspraak vast met doel, gedrag en termijn. De accountmanager krijgt er een taak voor in Taken, met de termijn als deadline." />
               <ul v-else class="kaart mp-lijst">
                 <li v-for="a in afspraken" :key="a.id" :data-test="`coaching-afspraak-${a.id}`">
                   <div class="item-rij">
@@ -177,5 +177,6 @@ useHead({ title: 'Coaching · Dealtrace' })
 .mp-bloktitel { margin: 0; font-family: var(--font-serif); font-size: 20px; }
 .mp-lijst { list-style: none; margin: 0; padding-top: 4px; padding-bottom: 4px; }
 .mp-naam { text-decoration: none; }
+@media (max-width: 767px) { .mp-naam { display: inline-flex; align-items: center; min-height: 44px; } }
 .mp-naam:hover { color: var(--yellow-dark); }
 </style>

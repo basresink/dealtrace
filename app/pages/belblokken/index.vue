@@ -16,6 +16,19 @@ async function gepland() { zelf.value = new Set(); await refresh() }
 const nieuweTaak = ref(false)
 const nieuweAfspraak = ref(false)
 
+// Een leeg gepland blok: het vulvoorstel uit je bellijst (zoals Dagstart en Weekstart) met de knop Vul.
+const toast = useToast()
+const vullend = ref<string | null>(null)
+const namen = (l: { accountNaam: string }[]) => (l.length <= 3 ? l.map((x) => x.accountNaam).join(', ') : `${l.slice(0, 3).map((x) => x.accountNaam).join(', ')} en ${l.length - 3} meer`)
+async function vul(s: { id: string; voorstel: { accountId: string }[] }) {
+  vullend.value = s.id
+  try {
+    const r = await $fetch<any>(`/api/belblokken/${s.id}/vul`, { method: 'POST', body: { accountIds: s.voorstel.map((v) => v.accountId) } })
+    toast.toon(r.toast)
+    await refresh()
+  } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { vullend.value = null }
+}
+
 const nu = Date.now()
 const volgende = computed(() => data.value.gepland.find((s: any) => s.open > 0 && Date.parse(s.eind) > nu))
 const tijd = (iso: string) => new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(iso))
@@ -58,7 +71,12 @@ useHead({ title: 'Belblokken · Dealtrace' })
               <div class="bb-gepland-info">
                 <h3 class="bb-gepland-tijd">{{ tijd(s.start) }}</h3>
                 <p class="bb-gepland-sub">{{ s.open }} van {{ s.gesprekken }} gesprekken open · {{ s.plek ?? 'Kantoor' }}{{ s.vastBlokId ? ' · vast blok' : '' }}{{ s.status === 'bezig' ? ' · loopt' : '' }}</p>
+                <template v-if="!s.gesprekken && s.stand">
+                  <p v-if="s.voorstel?.length" class="bb-gepland-sub" :data-test="`blok-voorstel-${s.id}`">{{ s.stand }}. Past erin: {{ namen(s.voorstel) }}</p>
+                  <p v-else class="bb-gepland-sub" :data-test="`blok-voorstel-${s.id}`">{{ s.stand }}. Niemand in je bellijst past bij dit blok.</p>
+                </template>
               </div>
+              <button v-if="!s.gesprekken && s.voorstel?.length" type="button" class="dd-act dd-act--vast bb-vul" :disabled="!!vullend" :data-test="`vul-blok-${s.id}`" @click="vul(s)"><Icoon naam="Plus" />Vul met {{ s.voorstel.length }}</button>
               <FunctieLink :to="`/belblokken/${s.id}`" class="dd-act dd-act--vast" :data-test="`open-blok-${s.id}`">{{ s.status === 'bezig' ? 'Verder bellen' : 'Start' }}</FunctieLink>
             </li>
           </ul>
@@ -80,4 +98,9 @@ useHead({ title: 'Belblokken · Dealtrace' })
 .bb-gepland-info { min-width: 0; flex: 1; }
 .bb-gepland-tijd { margin: 0; font-size: 14px; font-weight: 700; }
 .bb-gepland-sub { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+/* Een leeg blok met vulvoorstel: op een telefoon staan Vul en Start onder de tekst. */
+@media (max-width: 480px) {
+  .bb-gepland-rij:has(.bb-vul) { flex-wrap: wrap; }
+  .bb-gepland-rij:has(.bb-vul) .bb-gepland-info { flex-basis: 100%; }
+}
 </style>

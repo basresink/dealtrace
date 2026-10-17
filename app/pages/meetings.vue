@@ -115,7 +115,7 @@ useHead({ title: 'Meetings · Dealtrace' })
 
 <template>
   <div>
-    <PaginaKop helpartikel="agenda">
+    <PaginaKop helpartikel="meetings">
       <template #kicker><span class="kicker kicker--streep" data-test="meetings-kicker">Meetings · 30 dagen<template v-if="vandaagAantal"> · {{ vandaagAantal }} vandaag</template></span></template>
       <template #titel><h1 class="title title--groot">Elk gesprek op het juiste moment.</h1></template>
       <template #uitleg><p class="subtitle subtitle--groot">Online meetings, belafspraken en intern overleg rond je prospects. Voor bezoeken op locatie is er <FunctieLink to="/bezoeken" class="mt-sublink" data-test="meetings-bezoeken">Bezoeken</FunctieLink>.</p></template>

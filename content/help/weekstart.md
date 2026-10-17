@@ -8,6 +8,8 @@ routes: /weekstart
 
 # Weekstart
 
+### Wat de weekstart toont
+
 De **weekstart** laat je hele week zien, zodat je weet waar je tijd naartoe gaat. Je opent hem met de knop **Weekstart** in de kop van de **Agenda**, of via de link **Weekstart** op de **Dagstart**.
 
 ## Wat je ziet
@@ -17,6 +19,8 @@ De **weekstart** laat je hele week zien, zodat je weet waar je tijd naartoe gaat
 - **Je voornemens**: wat je je vrijdag in de weekreview voornam, met de stand. Bijvoorbeeld "1 van 2 belblokken gehouden" of "Gedaan".
 - **Je week**: per dag de afspraken, bezoeken en belblokken. Klik op een regel en je opent hem in de agenda of bij Belblokken.
 - **Belangrijkste aanleidingen**: de drie sterkste open inzichten bij je eigen prospects.
+
+### Door naar je dag
 
 Vanaf hier ga je met **Dagstart** naar de indeling van vandaag. In het weekend toont de weekstart al de week erna.
 

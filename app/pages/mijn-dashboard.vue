@@ -57,7 +57,7 @@ useHead({ title: 'Mijn dashboard · Dealtrace' })
 // Funnel staat niet meer in de zijbalk; je opent hem hier. Weekreview en Weekstart open je via Dagstart.
 const funnelAan = computed(() => !!functie('nav.funnel')?.beschikbaar)
 const funnelLink = computed(() => `/funnel${data.value?.periode.sleutel === 'kwartaal' ? '?periode=kwartaal' : ''}`)
-// Bij welke poging de eerste afspraak kwam (activiteiten en afgeronde taken), voor de blokken hieronder.
+// Bij welke poging de eerste afspraak kwam (activiteiten en afgeronde taken): alleen in het venster (testronde 2), niet meer als regel in de blokken.
 const eersteAfspraak = computed(() => data.value?.funnel?.eersteAfspraak ?? null)
 const gemPoging = computed(() => (eersteAfspraak.value?.gemiddeld != null ? eersteAfspraak.value.gemiddeld.toLocaleString('nl-NL') : null))
 </script>
@@ -119,7 +119,6 @@ const gemPoging = computed(() => (eersteAfspraak.value?.gemiddeld != null ? eers
             <p class="md-blok-meta">{{ data.funnel.kop.titel }}</p>
             <BalkRijen v-if="data.funnel.aantalAccounts" :rijen="reisRijen" klikbaar label="Accounts per reisfase" @kies="(r) => kies('reis', r.sleutel)" />
             <p v-else class="md-leeg">Nog geen accounts in deze periode.</p>
-            <EersteAfspraakPoging v-if="eersteAfspraak" class="md-eap" :data="eersteAfspraak" data-test="reis-eerste-afspraak" />
             <p v-if="data.funnel.kop.stok" class="md-voet">{{ data.funnel.kop.stok }}</p>
           </div>
           <div class="md-blok" data-test="grafiek-uitkomsten">
@@ -127,7 +126,6 @@ const gemPoging = computed(() => (eersteAfspraak.value?.gemiddeld != null ? eers
             <p class="md-blok-meta">{{ data.periode.label }} · {{ data.kpi.pogingen }} pogingen</p>
             <BalkRijen v-if="uitkomstRijen.length" :rijen="uitkomstRijen" klikbaar label="Uitkomsten van je pogingen" @kies="(r) => kies('uitkomst', r.sleutel)" />
             <p v-else class="md-leeg">Nog geen pogingen met een uitkomst.</p>
-            <EersteAfspraakPoging v-if="eersteAfspraak" class="md-eap" vorm="regel" :data="eersteAfspraak" data-test="uitkomsten-eerste-afspraak" />
           </div>
         </div>
       </section>
@@ -139,7 +137,6 @@ const gemPoging = computed(() => (eersteAfspraak.value?.gemiddeld != null ? eers
             <template v-if="data.prospects.dekking">
               <DekkingRaster v-bind="data.prospects.dekking" klikbaar @kies="(s) => kies('dekking', s)" />
               <p class="md-voet">Laatste contact per actieve prospect (nieuw, gescoord of in reis).<template v-if="data.prospects.dekking.zonderContact"> <strong>{{ data.prospects.dekking.zonderContact }}</strong> {{ data.prospects.dekking.zonderContact === 1 ? 'prospect heeft' : 'prospects hebben' }} nog geen contactmoment: kandidaten voor je volgende belblok.</template></p>
-              <p v-if="eersteAfspraak?.accounts" class="md-voet" data-test="dekking-eerste-afspraak">Je eerste afspraak kwam gemiddeld bij poging <strong>{{ gemPoging }}</strong>: {{ eersteAfspraak.verdeling['1'] }} bij poging 1, {{ eersteAfspraak.verdeling['2'] }} bij poging 2, {{ eersteAfspraak.verdeling['3'] }} bij poging 3 en {{ eersteAfspraak.verdeling['4+'] }} bij poging 4 of later.</p>
             </template>
           </div>
 

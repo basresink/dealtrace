@@ -12,7 +12,7 @@ useHead({ title: 'Eigen agent-prompts · Dealtrace' })
   <div>
     <NietAangezetKop v-if="!aan" sleutel="instellingen.prompts" />
     <template v-else>
-      <InstellingenKop groep="Data en AI" :titel="titel" uitleg="Eigen agent-prompts: een eigen laag per slot. Leeg betekent: de tekst van het platform. Het vaste kader blijft altijd gelden." helpartikel="abonnement-verbruik-ai-credits" />
+      <InstellingenKop groep="Data en AI" :titel="titel" uitleg="Eigen agent-prompts: per slot lees je de prompt die nu geldt en schrijf je er een eigen laag boven. Leeg betekent: de tekst van het platform of de standaard uit de code. Het vaste kader blijft altijd gelden." helpartikel="abonnement-verbruik-ai-credits" />
       <section class="section section--laatste">
         <div class="container stapel">
           <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm.</p>

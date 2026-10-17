@@ -26,6 +26,18 @@ test.describe('bezoekanalyse', () => {
     await expect(page.getByTestId('ba-kicker')).toContainText('Team')
   })
 
+  test('Analyse, tab Regio gaat naar de bezoekanalyse; de dekkingsbalk opent de regio (B8)', async ({ page }) => {
+    await login(page, 'u-04')
+    await ga(page, '/analyse?tab=regio')
+    await expect(page).toHaveURL(/\/bezoek-analyse\?scope=team$/)
+    await expect(page.getByText(/regels in funnel van de prospectreis/)).toHaveCount(0)
+    const balk = page.getByTestId('regio-tabel').locator('[data-test^="regio-balk-"]:not([disabled])').first()
+    if (await balk.count()) {
+      await balk.click()
+      await expect(page.getByTestId('analyse-flyout')).toBeVisible()
+    }
+  })
+
   test('cijfers, regiotabel met flyout, bezoeken, routes en filters in de URL', async ({ page }) => {
     await login(page, 'u-07')
     await ga(page, '/bezoek-analyse')

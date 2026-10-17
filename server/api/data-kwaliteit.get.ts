@@ -42,7 +42,8 @@ export default defineEventHandler(async (event) => {
     }
     const ids = (eigenaren ?? []).join(',')
     const van = (kolom: SQL) => (eigenaren ? sql`${kolom} = any(string_to_array(${ids}, ','))` : sql`true`)
-    const accScope = van(sql`a.owner_id`)
+    // Een gedeactiveerde prospect telt niet mee: hij staat ook niet in de standaardlijst van /prospects/alle (zelfde aantal).
+    const accScope = sql`${van(sql`a.owner_id`)} and a.gedeactiveerd_op is null`
     const prospect = sql`a.account_kind = 'prospect' and ${accScope}`
     const actiefContact = sql`c.status <> 'vertrokken'`
     const datum = (kolom: SQL) => sql`to_char(${kolom} at time zone 'Europe/Amsterdam', 'DD-MM-YYYY')`

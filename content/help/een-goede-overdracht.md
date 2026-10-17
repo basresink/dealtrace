@@ -7,6 +7,8 @@ samenvatting: Waarom je binnen 24 uur overdraagt, wat de ontvanger nodig heeft e
 
 # Een goede overdracht
 
+### Het moment van de overdracht
+
 De eerste afspraak is gehouden en er is vervolg. Nu komt het moment waarop veel kansen weglekken: de overdracht.
 
 ## Waarom dit werkt
@@ -36,7 +38,11 @@ De klant verwacht dat de afgesproken stap gebeurt, en jij weet nu nog precies wa
 
 Na **Rond af** met **Vervolg afgesproken** vraagt Dealtrace **Overdragen?** en staat er een overdrachtstaak klaar voor de volgende werkdag. Kies **DealDrive**, **Het CRM** of **Een collega**.
 
+### Wat er meegaat naar DealDrive
+
 Kies je DealDrive, dan gaat het hele pakket mee: het account, de contacten met zakelijke gegevens, de eerste afspraak met je verslag, de vervolgstap, BAND, het winpunt, de reisgeschiedenis en de briefing. Privénummers en privémail gaan nooit mee. De deal en alles wat daarna komt, maakt DealDrive zelf; Dealtrace stuurt alleen een voorstel voor de deal. DealDrive maakt of vult het account aan, zet de contacten erin, maakt een deal in de fase behoefte en een vervolgtaak voor de nieuwe eigenaar.
+
+### Wat je terugziet
 
 Wat je terugziet:
 
@@ -45,6 +51,8 @@ Wat je terugziet:
 - **Lukt het niet?** Dealtrace probeert het opnieuw na 1, 5 en 30 minuten, 2 en 12 uur. Daarna krijg je de taak "Overdracht naar DealDrive mislukt" met de reden in gewone taal en **Opnieuw proberen**. Het account blijft overgedragen.
 - **Gewonnen in DealDrive?** Je krijgt de vraag "Mag dit een bewijs worden?". Met **Ja** wordt het een suggestie voor je salesmanager, zonder namen. Het account blijft overgedragen; een klant maakt DealDrive.
 - **Verloren of slapend?** Dan komt het account via de terugkomregels op de terugkomdatum terug als winback. Zie [Wanneer we iemand terugbellen](/helpcenter/wanneer-we-iemand-terugbellen).
+
+### Zonder koppeling
 
 Staat de koppeling met DealDrive uit, dan krijg je een overdrachtstaak met de briefing om te mailen of te downloaden.
 

@@ -7,6 +7,8 @@ samenvatting: Na een bezoek in een paar tikken de uitkomst, een ingesproken vers
 
 # Een bezoek afronden met een verslag
 
+### Waar je afrondt
+
 Na een bezoek tik je op **Bezoek afronden**: in de route of op de aankomstkaart. In het afspraakvenster op de laptop rond je af met **Rond af**.
 
 1. **Uitkomst**: tik een van de grote tegels, bijvoorbeeld **Vervolg afgesproken**, **Later terugkomen**, **Andere contactpersoon** of **Geen interesse**. De tegels komen van de meetingsoort.
@@ -14,7 +16,11 @@ Na een bezoek tik je op **Bezoek afronden**: in de route of op de aankomstkaart.
 3. **Volgende stap**: Dealtrace stelt hem voor uit de uitkomst, bijvoorbeeld "Terugbellen" over drie werkdagen. Pas wat, wanneer en de soort aan als dat nodig is.
 4. **Bewaar bezoek**.
 
+### Geen interesse of vervolg
+
 Bij **Geen interesse** kies je een reden; het account gaat naar nee, met de afkoelperiode per kanaal. Bij **Vervolg afgesproken** na een eerste afspraak vraagt Dealtrace **Overdragen?**: er staat een overdrachtstaak klaar met je verslag en de afgesproken vervolgstap. Dealtrace maakt geen offertes; die horen in DealDrive of jullie CRM.
+
+### Een nieuwe contactpersoon
 
 Onder **Nieuwe contactpersoon** voeg je iemand toe die je net hebt gesproken: naam, functie en telefoon.
 
@@ -25,5 +31,7 @@ Na bewaren zie je vijf seconden **Ongedaan maken**. Daarna gaat het bezoek de de
 ## Zonder verbinding
 
 Ben je in een kelder of op een plek zonder bereik, dan bewaart Dealtrace alles op je telefoon: "Bewaard op je telefoon, wordt verstuurd zodra je verbinding hebt." De opname en foto's gaan mee zodra er weer verbinding is; de tekst van een opname volgt dan ook. Wil je foto's en opnames alleen via wifi versturen, zet dat aan in **Mijn instellingen**, kaart **Offline**.
+
+### Foto's
 
 Foto's worden verkleind tot 1.600 pixels en twaalf maanden bewaard.

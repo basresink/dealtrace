@@ -1,9 +1,10 @@
 // De coachingkaart en Mijn resultaten (P21, F20). Een coachingpunt verschijnt pas bij de accountmanager na
 // "Deel"; een privénotitie komt nooit in een respons voor de accountmanager.
-import { sql } from 'drizzle-orm'
-import { nlMoment, plusDagen } from '../../shared/datum'
+import { eq, sql } from 'drizzle-orm'
+import { nlMoment, nlTijdstip, plusDagen, volgendWerkmoment } from '../../shared/datum'
 import { kiesGesprekken, kpi, teamGemiddelde, tempo, type Periode } from '../../shared/team'
-import { gebruikDb } from './db'
+import { schrijfAudit } from './audit'
+import { gebruikDb, schema } from './db'
 import { laadFunnel } from './funnel'
 import { ledenVan, ruw, vereisTeamlid, type Kijker } from './team'
 
@@ -76,9 +77,9 @@ export async function coachingKaart(tx: Tx, g: Kijker, gebruikerId: string, nu =
     cijfers: { ...c, ruw: undefined },
     funnel: { persoon: funnel.fases.map((f: any) => ({ faseId: f.faseId, label: f.label, aantal: f.aantal })), team: funnelTeam.fases.map((f: any) => ({ faseId: f.faseId, aantal: f.aantal })) },
     gesprekken,
-    sessie: sessies[0] ? { id: sessies[0].id, datum: datum(sessies[0].datum), punten: sessies[0].data?.punten ?? [], gesprekken: sessies[0].data?.gesprekken ?? [] } : null,
+    vandaag, sessie: sessies[0] ? { id: sessies[0].id, datum: datum(sessies[0].datum), punten: sessies[0].data?.punten ?? [], gesprekken: sessies[0].data?.gesprekken ?? [], afgerond: sessies[0].data?.afgerond ?? null } : null,
     afspraken, prive: notities.filter((n) => n.soort === 'prive').map(notitieUit),
-    historie: sessies.map((s) => ({ id: s.id, datum: datum(s.datum), punten: (s.data?.punten ?? []).length, afspraken: afspraken.filter((a) => a.sessieId === s.id).length })),
+    historie: sessies.map((s) => ({ id: s.id, datum: datum(s.datum), afgerond: !!s.data?.afgerond, punten: (s.data?.punten ?? []).length, afspraken: afspraken.filter((a) => a.sessieId === s.id).length })),
     afsprakenGehaald: { waarde: gehaald.length ? Math.round((gehaald.filter((a) => a.status === 'gehaald').length / gehaald.length) * 1000) / 1000 : null, noemer: gehaald.length },
     oefening: vv?.op && (!sessies[0] || iso(vv.op)! > iso(sessies[0].created_at)!) ? 'Vertel ons verhaal in twee minuten' : null,
   }
@@ -124,4 +125,34 @@ export async function mijnResultaten(tx: Tx, g: { id: string }, opties: { vergel
     trend: opties.vergelijken ? c.trend : null, team: opties.vergelijken ? c.team : null,
     afspraken, punten: gedeeld,
   }
+}
+
+/** Een afspraak uit een coachingsgesprek wordt een echte taak voor de verkoper: deadline de termijn (9.00 uur),
+ * anders het eerste werkmoment; herkomst coaching. Taak, melding (link naar de taak) en auditregel in dezelfde
+ * transactie als de afspraak. */
+export async function afspraakAlsTaak(tx: Tx, org: string, managerId: string, verkoperId: string, n: { id: string; tekst: string; termijn?: string | null; sessieId?: string | null }, nu = new Date()): Promise<string> {
+  const werkdagen = ((await tx.select().from(schema.orgSettings).where(eq(schema.orgSettings.key, 'werkdagen')))[0]?.value as any) ?? {}
+  const due = (n.termijn ? nlTijdstip(n.termijn, 9) : volgendWerkmoment(nu, werkdagen)).toISOString()
+  const [t] = await tx.insert(schema.tasks).values({
+    organisationId: org, ownerId: verkoperId, accountId: null, contactId: null, title: `Coachingafspraak: ${n.tekst}`.slice(0, 200),
+    actionType: 'taak', priority: 'middel', dueDate: due, executor: 'mens',
+    data: { herkomst: { bron: 'coaching', actiesoort: 'taak', uitvoerder: verkoperId }, coachingManagerId: managerId, beschrijving: n.tekst.slice(0, 1000), coachingNotitieId: n.id, ...(n.sessieId ? { coachingSessieId: n.sessieId } : {}) },
+  }).returning({ id: schema.tasks.id })
+  await tx.execute(sql`update coaching_notities set data = data || ${JSON.stringify({ taakId: t!.id })}::jsonb where id = ${n.id}`)
+  await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${crypto.randomUUID()}, ${org}, ${verkoperId}, 'systeem', 'Coachingafspraak gedeeld', ${n.tekst.slice(0, 200)}, ${`/taken?taak=${t!.id}`}, now(), '{}'::jsonb)`)
+  await schrijfAudit(tx, { organisationId: org, actorId: managerId, action: 'coaching.afspraak', resourceType: 'tasks', resourceId: t!.id, metadata: { gebruiker: verkoperId, notitie: n.id, termijn: n.termijn ?? null } })
+  return t!.id
+}
+
+/** Rond een coachingsgesprek af: data.afgerond met moment en wie, auditregel coaching.afronden. Alleen de manager
+ * van die persoon of de beheerder (vereisTeamlid). Een tweede keer verandert niets. */
+export async function rondSessieAf(tx: Tx, org: string, g: Kijker, sessieId: string, nu = new Date()) {
+  const [s] = await rijen(tx, sql`select * from coaching_sessies where id = ${sessieId}`)
+  if (!s) throw Object.assign(new Error('Sessie onbekend'), { statusCode: 404, statusMessage: 'Sessie onbekend' })
+  await vereisTeamlid(tx, g, s.gebruiker_id)
+  if (s.data?.afgerond) return s.data.afgerond as { op: string; door: string }
+  const afgerond = { op: nu.toISOString(), door: g.id }
+  await tx.execute(sql`update coaching_sessies set data = data || ${JSON.stringify({ afgerond })}::jsonb, updated_at = now() where id = ${sessieId}`)
+  await schrijfAudit(tx, { organisationId: org, actorId: g.id, action: 'coaching.afronden', resourceType: 'coaching_sessies', resourceId: sessieId, metadata: { gebruiker: s.gebruiker_id, punten: (s.data?.punten ?? []).length } })
+  return afgerond
 }

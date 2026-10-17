@@ -8,6 +8,8 @@ routes: /instellingen/gebruikers,/instellingen/niveaus,/instellingen
 
 # Gebruikers, rollen en niveaus
 
+### Rol en niveau
+
 Rol en niveau zijn los van elkaar. De **rol** bepaalt wat je mag (accountmanager, salesmanager, beheerder). Het **niveau** bepaalt welke functies aanstaan (Beginner, Gevorderd, Expert).
 
 ## Niveau kiezen
@@ -15,6 +17,8 @@ Rol en niveau zijn los van elkaar. De **rol** bepaalt wat je mag (accountmanager
 1. Open **Instellingen**, **Gebruikers en teams**.
 2. Kies bij een gebruiker Beginner, Gevorderd of Expert.
 3. Verlagen vraagt een bevestiging. De gegevens van de gebruiker blijven bewaard.
+
+### Wie het niveau kiest
 
 De salesmanager kiest het niveau voor de mensen in zijn teams; de beheerder voor iedereen. Een niveau verandert nooit vanzelf.
 
@@ -25,6 +29,8 @@ De salesmanager kiest het niveau voor de mensen in zijn teams; de beheerder voor
 3. Pas de naam of het e-mailadres aan. Met dit adres logt de gebruiker in; een adres dat al in gebruik is, kan niet.
 4. Bij een salesmanager zet je hier ook **Eigen portefeuille** aan of uit. Aan: hij werkt ook zelf prospects en krijgt de werkbalk van een accountmanager.
 5. Klik op **Bewaren**.
+
+### In de tabel
 
 Rol, werkplek en team kies je direct in de tabel. In de kolom **Status** zie je met de laatste inlog wie actief is en wie zijn uitnodiging nog niet gebruikte.
 
@@ -37,6 +43,8 @@ Gaat iemand weg, dan archiveer je hem. Hij kan dan niet meer inloggen; zijn gesc
 3. Kies aan wie dat werk gaat. Standaard is dat de salesmanager van zijn team. Overdragen is verplicht zodra er iets op zijn naam staat.
 4. Klik op **Overdragen en archiveren**.
 
+### Wat niet kan
+
 Jezelf archiveren kan niet, en de laatste beheerder blijft altijd beheerder.
 
 ## Iemand heractiveren
@@ -44,11 +52,15 @@ Jezelf archiveren kan niet, en de laatste beheerder blijft altijd beheerder.
 1. Open het tabblad **Gearchiveerd**.
 2. Klik bij de gebruiker op **Heractiveren**.
 
+### Seats
+
 Dat kan zolang er een seat vrij is. Zijn alle seats in gebruik, dan vraag je eerst een extra seat aan bij **Abonnement** of archiveer je iemand anders. Het werk dat bij archiveren overging, blijft bij de nieuwe eigenaar.
 
 ## Teams
 
 Op het tabblad **Teams** voegt de beheerder een team toe, **hernoemt** het, kiest de **salesmanagers** en de **gekoppelde teams** (bijvoorbeeld een binnendienst die afspraken plant voor een buitendienstteam). Een team **verwijderen** kan alleen als het leeg is: zet eerst de leden in een ander team en pas regels die voor dit team gelden aan. Dealtrace zegt wat er nog in de weg staat.
+
+### In de audit
 
 Elke wijziging komt in de audit van je organisatie.
 
@@ -63,6 +75,8 @@ Met de schakelaar **Iedereen ziet alles** staan voor iedereen alle functies uit 
 ## Welke functie bij welk niveau hoort
 
 Onder de schakelaar staat **Functies per niveau**: per groep welke functie aanstaat bij Beginner, Gevorderd en Expert in jullie organisatie. Bovenaan zie je per niveau hoeveel functies aanstaan, bijvoorbeeld "75 van 176". Zoek een functie of kies **Verschilt per niveau**. Met **Aangepast voor jullie** zie je de keuzes die Dealtrace speciaal voor jullie maakte. Functies die alleen bij een rol horen, staan als "Altijd aan voor salesmanager en beheerder"; functies buiten je pakket als "Niet in jullie pakket".
+
+### Alleen lezen
 
 Dit overzicht is alleen lezen. De indeling per niveau stelt Dealtrace in; wil je een functie eerder of later aan, vraag het aan Dealtrace. Het niveau per persoon kies je bij **Gebruikers en teams**.
 

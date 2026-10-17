@@ -27,7 +27,9 @@ async function startset() {
 const STATUS: Record<string, string> = { concept: 'Concept', actief: 'Actief', gearchiveerd: 'Gearchiveerd' }
 const STATUS_LABEL: Record<string, 'concept' | 'aan' | 'gearchiveerd'> = { concept: 'concept', actief: 'aan', gearchiveerd: 'gearchiveerd' }
 const aantalFilters = computed(() => (filter.value.doel ? 1 : 0) + (filter.value.status ? 1 : 0))
-const titel = computed(() => (data.value.scripts.length ? `${data.value.tellers.actief ?? 0} van ${data.value.scripts.length} belscripts actief` : 'Belscripts'))
+// Titel zoals de hub: actieve van de scripts die niet gearchiveerd zijn.
+const inGebruik = computed(() => data.value.scripts.filter((s: any) => s.status !== 'gearchiveerd').length)
+const titel = computed(() => (inGebruik.value ? `${data.value.tellers.actief ?? 0} van ${inGebruik.value} belscripts actief` : 'Belscripts'))
 const telDoel = (d: string) => data.value.scripts.filter((s: any) => s.doel === d).length
 useHead({ title: 'Belscripts · Instellingen · Dealtrace' })
 </script>

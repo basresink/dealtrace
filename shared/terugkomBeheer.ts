@@ -144,12 +144,13 @@ export function leesAfkoeling(v: unknown): Afkoeling | null {
   return uit
 }
 
-/** Een regel die korter wacht dan de afkoeling van zijn kanaal: de tekst voor de waarschuwing. */
-export function korterDanAfkoeling(r: { termijnDagen: number; kanaal: string }, afkoeling: Partial<Afkoeling>): string | null {
+/** Een regel die korter wacht dan de afkoeling van zijn kanaal: de tekst voor de waarschuwing. Wie de afkoeling
+ * niet mag wijzigen (`magAfkoeling: false`), krijgt geen advies om hem te verlagen. */
+export function korterDanAfkoeling(r: { termijnDagen: number; kanaal: string }, afkoeling: Partial<Afkoeling>, opties: { magAfkoeling?: boolean } = {}): string | null {
   const k = kanaalVanRegel(r.kanaal)
   const grens = { ...AFKOELING_STANDAARD, ...afkoeling }[k]
   if (r.termijnDagen >= grens) return null
-  return `${r.termijnDagen} dagen is korter dan de afkoeling van ${grens} dagen voor ${KANAAL_LABEL[k].toLowerCase()}. De datum schuift dus naar dag ${grens}. Wil je echt eerder terug, verlaag dan de afkoeling of kies een ander kanaal.`
+  return `${r.termijnDagen} dagen is korter dan de afkoeling van ${grens} dagen voor ${KANAAL_LABEL[k].toLowerCase()}. De datum schuift dus naar dag ${grens}. ${opties.magAfkoeling === false ? 'Wil je echt eerder terug, kies dan bij de regel een ander kanaal. De afkoeling past alleen de beheerder aan.' : 'Wil je echt eerder terug, verlaag dan de afkoeling of kies een ander kanaal.'}`
 }
 
 export interface TijdlijnStap { nr: number; dag: number; datum: string; kanaal: string; tekst: string }

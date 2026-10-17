@@ -5,6 +5,7 @@
 // helpcenter, notificaties, uitloggen) en de gebruikerskaart, zonder menu.
 // Wat uit staat, staat nergens in het menu; wat er nog komt, zie je bij Instellingen, Niveaus.
 import { NIVEAU_LABEL, ROL_LABEL, type Niveau, type Rol } from '~~/shared/types'
+import { nlMoment } from '~~/shared/datum'
 
 const props = defineProps<{ ingeklapt: boolean }>()
 const emit = defineEmits<{ inklap: [] }>()
@@ -34,7 +35,8 @@ const gebruikerRol = computed(() => {
 const foto = computed(() => me.value?.gebruiker.foto ?? null)
 const orgLogo = computed(() => me.value?.organisatie?.logo ?? null)
 const initialen = computed(() => (me.value?.gebruiker.naam ?? '').replace(/^Test(gebruiker|founder)\s+/, '').split(/\s+/).map((d) => d[0]).slice(0, 2).join('').toUpperCase())
-const vandaag = new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short' }).format(new Date()).replace('.', '')
+// De datum van vandaag in Nederlandse tijd (nlMoment), ook als de server of het apparaat in UTC draait.
+const vandaag = new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${nlMoment(new Date()).datum}T12:00:00Z`)).replace('.', '')
 
 function isActief(r: string) {
   return r === '/' ? route.path === '/' : route.path === r || route.path.startsWith(`${r}/`)

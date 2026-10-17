@@ -8,6 +8,8 @@ routes: /instellingen/verkoopverhaal,/richting
 
 # Ons verhaal
 
+### Waarom het verhaal telt
+
 Alles wat Dealtrace zegt namens jullie, komt uit het verkoopverhaal: de openingszin in een belscript, de boodschap in een campagne, de briefing voor een bezoek. De salesmanager en de beheerder leggen het vast onder **Instellingen, Verkoop, SalesDNA**.
 
 ## Jullie kernzin
@@ -17,6 +19,8 @@ Alles wat Dealtrace zegt namens jullie, komt uit het verkoopverhaal: de openings
 ## Acht onderdelen
 
 Golden circle, bedrijfsverhaal, ambitie en visie, waarde en belofte, branches, concurrenten, winpunten en terugkomregels. Per onderdeel zie je de status en het versienummer.
+
+### Bewaren als concept
 
 Wat je typt, wordt na een halve seconde bewaard als concept. Je ziet "Opslaan…", "Opgeslagen" of "Opslaan mislukt". Een concept gaat nooit naar buiten.
 

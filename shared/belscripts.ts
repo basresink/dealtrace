@@ -236,7 +236,7 @@ export function scriptWaarden(i: {
     'organisatie.naam': i.organisatie.naam, 'account.naam': i.account.naam, 'account.plaats': i.account.plaats ?? null, 'account.branche': i.account.brancheNaam ?? null,
     'account.klasse': i.account.klasse ?? null, 'contact.voornaam': i.contact?.voornaam ?? null,
     'contact.naam': i.contact ? [i.contact.voornaam, i.contact.achternaam].filter(Boolean).join(' ') || null : null, 'contact.functie': i.contact?.functie ?? null,
-    'contact.rol': i.contact?.rol ?? null, 'aanleiding.kort': i.aanleiding?.kort ? zinsdeel(i.aanleiding.kort) : null, 'aanleiding.bron': i.aanleiding?.bron ?? null,
+    'contact.rol': i.contact?.rol ?? null, 'aanleiding.kort': i.aanleiding?.kort ? metOnderwerp(zinsdeel(i.aanleiding.kort), i.account.naam) : null, 'aanleiding.bron': i.aanleiding?.bron ?? null,
     'reis.fase': i.account.faseNaam ?? null, 'poging.n': i.poging ? String(i.poging.n) : null, 'poging.van': i.poging ? String(i.poging.van) : null,
     'vorige.uitkomst': i.poging?.vorige ?? null,
     waarom: kern.tekst, 'verhaal.kernzin': kern.tekst, 'verhaal.branche': kern.terugval ? null : kern.tekst, belofte: bel.tekst, 'belofte.branche': bel.tekst,
@@ -275,6 +275,10 @@ export const conversieLabel = (r?: Pick<ScriptResultaat, 'gesprekken' | 'afsprak
 // ── Startset ───────────────────────────────────────────────────────────────
 
 /** "Plant woningbouw" midden in een zin: "plant woningbouw" (afkortingen blijven). */
+/** Begint de aanleiding met een werkwoord ("Zoekt twee werkvoorbereiders"), dan krijgt hij het account als onderwerp:
+ *  "Ik bel u omdat Testtechniek Vathorst zoekt twee werkvoorbereiders" in plaats van "omdat zoekt twee werkvoorbereiders". */
+const WERKWOORD_VOORAAN = /^(zoekt|zocht|won|wint|verhuist|verhuisde|groeit|groeide|kreeg|krijgt|breidt|breidde|kiest|koos|start|startte|neemt|nam|opent|opende|plant|plande|bouwt|bouwde|investeert|investeerde|heeft|had|is|was|gaat|ging|wil|werkt|sluit|sloot|zet|zette|haalt|haalde|levert|leverde|vernieuwt|vernieuwde|lanceert|lanceerde)\b/i
+export const metOnderwerp = (kort: string, accountNaam: string) => (WERKWOORD_VOORAAN.test(kort) ? `${accountNaam} ${kort.charAt(0).toLowerCase()}${kort.slice(1)}` : kort)
 const zinsdeel = (t: string) => (/^[A-Z][a-z]/.test(t) ? t.charAt(0).toLowerCase() + t.slice(1) : t).replace(/[.!?]\s*$/, '')
 const blok = (id: string, soort: BlokSoortScript, tekst: string, invulwijze: Invulwijze = 'vast', extra: Partial<ScriptBlok> = {}): ScriptBlok => ({ id, soort, tekst, invulwijze, ...extra })
 const basisData = (extra: Partial<ScriptData>): ScriptData => ({ reisfaseIds: [], doelgroepIds: 'alle', teamIds: 'alle', contactRollen: [], kanaal: 'beide', standaardVoor: { campagnesoorten: [], belblokIds: [] }, blokken: [], bezwaren: [], ...extra })

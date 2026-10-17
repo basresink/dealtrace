@@ -210,7 +210,7 @@ export function voorJou(nieuweFuncties: string[], gelezen: Set<string>, artikele
   const nieuwSlugs = [...new Set(nieuweFuncties.map((s) => FUNCTIES.find((f) => f.sleutel === s)?.helpartikel).filter((s): s is string => !!s && perSlug.has(s)))]
   const aanDeSlag = AAN_DE_SLAG.map((s) => perSlug.get(s)).filter((a): a is HelpArtikel => !!a)
   const alleGelezen = aanDeSlag.every((a) => gelezen.has(a.slug))
-  const bijgewerkt = [...artikelen].sort((a, b) => (b.bijgewerktOp ?? '').localeCompare(a.bijgewerktOp ?? '')).slice(0, 5)
+  const bijgewerkt = [...artikelen].sort((a, b) => (b.bijgewerktOp ?? '').localeCompare(a.bijgewerktOp ?? '')).slice(0, 6)
   return { nieuw: nieuwSlugs.map((s) => perSlug.get(s)!), aanDeSlag: alleGelezen ? [] : aanDeSlag, bijgewerkt }
 }
 

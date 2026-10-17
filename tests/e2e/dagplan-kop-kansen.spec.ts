@@ -42,7 +42,7 @@ for (const breedte of [1280, 390]) {
 }
 
 for (const breedte of [1280, 900]) {
-  test(`Bezoeken: Analyse tussen + Afspraak en Filters; Eerst bellen en Inloopbezoek openen de flyouts (${breedte})`, async ({ page }) => {
+  test(`Bezoeken: Analyse tussen + Afspraak en Filters; knoppen per kans in volgorde; Taak, Afspraak, Eerst bellen en Inloopbezoek openen de flyouts (${breedte})`, async ({ page }) => {
     await page.setViewportSize({ width: breedte, height: 900 })
     await login(page, 'u-07')
     const gevonden = await kansDag(page)
@@ -52,6 +52,21 @@ for (const breedte of [1280, 900]) {
     const kop = page.getByTestId('kop-knoppen')
     expect(await voor(kop.getByTestId('plus-bezoek'), kop.getByTestId('bezoekanalyse-knop'))).toBe(true)
     expect(await voor(kop.getByTestId('bezoekanalyse-knop'), kop.getByTestId('bz-filters'))).toBe(true)
+
+    // De knoppen per kans: Eerst bellen, + Taak, Inloopbezoek, + Afspraak, daarna Navigeer en Overslaan.
+    await expect(page.getByTestId(`kans-${kans.id}`).locator('.bz-kn-acties > *')).toHaveText([/Eerst bellen/, /^Taak$/, /Inloopbezoek/, /^Afspraak$/, /Navigeer/, /Overslaan/])
+    // + Taak: Nieuwe taak met de prospect.
+    await page.getByTestId(`kans-taak-${kans.id}`).click()
+    await expect(page.getByTestId('nieuwe-taak')).toBeVisible()
+    await expect(page.getByTestId('nt-klant-keuze')).toContainText(kans.naam)
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('nieuwe-taak')).toHaveCount(0)
+    // + Afspraak: de afspraakflyout met de prospect.
+    await page.getByTestId(`kans-afspraak-${kans.id}`).click()
+    await expect(page.getByTestId('plan-afspraak')).toBeVisible()
+    await expect(page.getByTestId('pa-klant-gekozen')).toContainText(kans.naam)
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('plan-afspraak')).toHaveCount(0)
 
     // Eerst bellen: Nieuwe taak met type Bellen, de prospect en het hoofdcontact.
     await page.getByTestId(`eerst-bellen-${kans.id}`).click()

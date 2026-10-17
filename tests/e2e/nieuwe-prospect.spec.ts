@@ -77,11 +77,13 @@ test.describe('nieuwe prospect', () => {
     await expect(venster.getByTestId('np-matrix-kort')).toBeVisible()
     const naam = uniekeNaam()
     const kvk = String(10_000_000 + Math.floor(Math.random() * 89_999_999))
+    // Een eigen domein per run: de dubbelcheck kent ook gedeactiveerde prospects uit eerdere runs (zelfde domein is "zeker" dubbel).
+    const email = `info@${naam.split(' ')[1]}.test`
     await page.getByTestId('np-naam').fill(naam)
     await page.getByTestId('np-plaats').fill('Zeist')
     await page.getByTestId('np-postcode').fill('3701 AB')
     await page.getByTestId('np-telefoon').fill('030 000 0000')
-    await page.getByTestId('np-email').fill('info@testvoorbeeld.test')
+    await page.getByTestId('np-email').fill(email)
     await page.getByTestId('np-kvk').fill(kvk)
     await page.getByTestId('np-medewerkers').fill('30')
     await page.getByTestId('np-leverancier').selectOption('cc-01')
@@ -91,7 +93,7 @@ test.describe('nieuwe prospect', () => {
     try {
       await apiLogin(request, 'u-02')
       const a = await (await request.get(`/api/accounts/${id}`)).json()
-      expect(a).toMatchObject({ naam, plaats: 'Zeist', postcode: '3701 AB', kvk, email: 'info@testvoorbeeld.test', telefoon: '+31300000000' })
+      expect(a).toMatchObject({ naam, plaats: 'Zeist', postcode: '3701 AB', kvk, email, telefoon: '+31300000000' })
       expect(a.huidigeLeverancier?.id).toBe('cc-01')
       // Leeg gelaten klasse volgt uit het aantal medewerkers.
       expect(a.klasse).toBe('kl-c-prospects')

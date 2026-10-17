@@ -3,6 +3,7 @@
 // telling die mislukt, ook niet (de kaart toont dan alleen zijn vaste tekst).
 import { sql } from 'drizzle-orm'
 import { AGENTS } from '../../shared/mandaat'
+import { KLANT_TABBLAD } from '../../shared/ritmematrix'
 import { NIVEAU_LABEL, PAKKET_LABEL, type Niveau, type Pakket } from '../../shared/types'
 import { NIET_INGERICHT, aantal, koppelingenTekst, vanTotaal, zin, type KoppelingStand } from '../../shared/instellingenStand'
 import { kan } from './accounts'
@@ -10,7 +11,6 @@ import { laadAgentStand } from './agents/bewaker'
 import { stand as creditsStand } from './credits'
 import { gebruikDb, metOrganisatie } from './db'
 import type { Context } from './sessie'
-import { ledenVan, zichtbareTeams } from './team'
 
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
 type Ctx = Context & { organisatie: NonNullable<Context['organisatie']> }
@@ -85,13 +85,14 @@ export const KAARTEN: Record<string, Kaart> = {
   '/instellingen/gebruikers': {
     mag: () => true,
     stand: async (tx, ctx) => {
+      // Zoals de titel van de pagina: wie niet gearchiveerd is. Een salesmanager telt alleen de teams die hij
+      // leidt en de mensen daarin, zonder zichzelf.
       if (!isBeheerder(ctx)) {
-        const teams = await zichtbareTeams(tx, { id: ctx.gebruiker.id, rol: ctx.gebruiker.rol })
-        const leden = await ledenVan(tx, teams.map((t) => t.id))
-        return teams.length ? `${aantal(leden.length, 'persoon', 'mensen')} in ${aantal(teams.length, 'team', 'teams')}` : 'Je hebt nog geen team'
+        const t = await een<{ g: number; t: number }>(tx, sql`select (select count(*)::int from teams where ${ctx.gebruiker.id} = any(manager_ids)) as t, (select count(*)::int from users u join teams tm on tm.id = u.team_id where ${ctx.gebruiker.id} = any(tm.manager_ids) and u.status <> 'gearchiveerd' and u.role <> 'founder' and u.id <> ${ctx.gebruiker.id}) as g`)
+        return t.t ? `${aantal(t.g, 'persoon', 'mensen')} in ${aantal(t.t, 'team', 'teams')}` : 'Je hebt nog geen team'
       }
-      const t = await een<{ g: number; t: number }>(tx, sql`select (select count(*)::int from users where status = 'actief' and role <> 'founder') as g, (select count(*)::int from teams) as t`)
-      return zin(aantal(t.g, 'actieve gebruiker', 'actieve gebruikers'), t.t ? `${aantal(t.t, 'team', 'teams')}` : 'nog geen teams')
+      const t = await een<{ g: number; t: number; seats: number }>(tx, sql`select (select count(*)::int from users where status <> 'gearchiveerd' and role <> 'founder') as g, (select count(*)::int from teams) as t, coalesce((select (contract->>'seats')::int from organisations where id = ${ctx.organisatie.id}), 0) as seats`)
+      return zin(t.seats ? `${t.g} van ${t.seats} seats in gebruik` : aantal(t.g, 'gebruiker', 'gebruikers'), t.t ? aantal(t.t, 'team', 'teams') : 'nog geen teams')
     },
   },
   '/instellingen/niveaus': {
@@ -111,8 +112,12 @@ export const KAARTEN: Record<string, Kaart> = {
   '/instellingen/ritme': {
     mag: () => true,
     stand: async (tx) => {
-      const k = await instelling<unknown[]>(tx, 'klassen')
-      return Array.isArray(k) && k.length ? aantal(k.length, 'klasse', 'klassen') : NIET_INGERICHT
+      // Zoals de titel van de pagina: alleen de klassen in de accountmatrix (zonder die op het tabblad Klanten) en de segmenten.
+      const k = await instelling<{ tabblad?: string }[]>(tx, 'klassen')
+      const seg = await instelling<unknown[]>(tx, 'segmenten')
+      const p = Array.isArray(k) ? k.filter((x) => x?.tabblad !== KLANT_TABBLAD).length : 0
+      const n = Array.isArray(seg) ? seg.length : 0
+      return p ? `${p} accountklassen, ${n} ${n === 1 ? 'segment' : 'segmenten'}` : NIET_INGERICHT
     },
   },
   '/planning?tab=ritme': {
@@ -188,8 +193,9 @@ export const KAARTEN: Record<string, Kaart> = {
   '/instellingen/belscripts': {
     mag: () => true,
     stand: async (tx) => {
-      const t = await een<{ n: number }>(tx, sql`select count(*)::int as n from belscripts where status <> 'gearchiveerd'`)
-      return aantal(t.n, 'script', 'scripts', 'Nog geen belscripts')
+      // Zoals de titel van de pagina: actieve van de niet-gearchiveerde scripts van de organisatie (geen persoonlijke).
+      const t = await een<{ n: number; a: number }>(tx, sql`select count(*)::int as n, count(*) filter (where status = 'actief')::int as a from belscripts where status <> 'gearchiveerd' and not is_persoonlijk`)
+      return vanTotaal(t.a, t.n, 'belscripts', 'actief', 'Nog geen belscripts')
     },
   },
   '/instellingen/eigen-velden': {

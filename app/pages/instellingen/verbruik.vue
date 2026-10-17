@@ -8,7 +8,14 @@ const toast = useToast()
 const route = useRoute()
 const { data, refresh } = await useFetch<any>('/api/instellingen/verbruik', { query: computed(() => ({ maand: route.query.maand })), default: () => null })
 const MAANDEN = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december']
-const maandTekst = computed(() => data.value ? `${MAANDEN[Number(data.value.maand.slice(5)) - 1]} ${data.value.maand.slice(0, 4)}` : '')
+const maandNaam = (m: string) => `${MAANDEN[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`
+const maandTekst = computed(() => data.value ? maandNaam(data.value.maand) : '')
+// Maandkeuze in de URL (?maand=2026-09); deze maand staat zonder parameter. De pot geldt alleen voor deze maand.
+const router = useRouter()
+const ditMaand = computed(() => !data.value?.huidig || data.value.maand === data.value.huidig)
+function kiesMaand(m: string) { router.replace({ query: { ...route.query, maand: m === data.value?.huidig ? undefined : m } }) }
+const maandTotaal = computed(() => (data.value?.perSoort ?? []).reduce((n: number, x: any) => n + Number(x.credits ?? 0), 0))
+const titel = computed(() => (ditMaand.value ? `${getal(data.value.stand.verbruikt)} van ${getal(data.value.stand.pot)} credits gebruikt, ${Math.round(data.value.stand.procent)} procent` : `${getal(maandTotaal.value)} credits gebruikt in ${maandTekst.value}`))
 const getal = (n: number) => new Intl.NumberFormat('nl-NL').format(n)
 const post = (url: string, body: unknown, method = 'POST'): Promise<any> => ($fetch as any)(url, { method, body })
 async function zetPlafond(u: any, w: string) {
@@ -35,9 +42,16 @@ useHead({ title: 'Verbruik · Instellingen · Dealtrace' })
 
 <template>
   <div v-if="data">
-    <InstellingenKop groep="Organisatie" :titel="`${getal(data.stand.verbruikt)} van ${getal(data.stand.pot)} credits gebruikt, ${Math.round(data.stand.procent)} procent`" :uitleg="`Verbruik en AI-credits in ${maandTekst}. Alle AI in Dealtrace rekent in credits uit één pot per maand.`" helpartikel="abonnement-verbruik-ai-credits" :filters="wie ? 1 : 0" @reset="wie = ''">
+    <InstellingenKop groep="Organisatie" :titel="titel" :uitleg="`Verbruik en AI-credits in ${maandTekst}. Alle AI in Dealtrace rekent in credits uit één pot per maand.`" helpartikel="abonnement-verbruik-ai-credits" :filters="wie ? 1 : 0" @reset="wie = ''">
+      <template #onder>
+        <label class="vb-maand mt-8"><span class="filter-label">Maand</span>
+          <select class="invoer invoer--klein" :value="data.maand" data-test="verbruik-maand" @change="kiesMaand(($event.target as HTMLSelectElement).value)">
+            <option v-for="m in data.maanden ?? [data.maand]" :key="m" :value="m">{{ maandNaam(m) }}{{ m === data.huidig ? ' (deze maand)' : '' }}</option>
+          </select>
+        </label>
+      </template>
       <template #acties>
-        <button v-if="data.kan.beheer" type="button" class="dd-actie dd-actie--primair" data-test="extra-aanvragen" :aria-expanded="extra.open" @click="extra.open = !extra.open"><Icoon naam="Plus" class="dd-actie-icoon" />Extra credits</button>
+        <button v-if="data.kan.beheer && ditMaand" type="button" class="dd-actie dd-actie--primair" data-test="extra-aanvragen" :aria-expanded="extra.open" @click="extra.open = !extra.open"><Icoon naam="Plus" class="dd-actie-icoon" />Extra credits</button>
       </template>
       <template #filters>
         <div class="ifp-groep" role="group" aria-label="Gebruikers"><span class="filter-label">Gebruikers</span>
@@ -48,7 +62,7 @@ useHead({ title: 'Verbruik · Instellingen · Dealtrace' })
     <section class="section section--laatste">
       <div class="container stapel">
         <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm.</p>
-        <article class="kaart" data-test="pot">
+        <article v-if="ditMaand" class="kaart" data-test="pot">
           <div class="pot-meter" role="meter" :aria-valuenow="data.stand.procent" aria-valuemin="0" aria-valuemax="100" aria-label="Verbruikt deel van de pot">
             <div class="pot-vulling" :class="{ 'pot-vulling--rood': data.stand.procent >= 90, 'pot-vulling--geel': data.stand.procent >= 80 && data.stand.procent < 90 }" :style="{ width: `${Math.min(100, data.stand.procent)}%` }" />
             <span class="pot-streep" style="left: 80%" title="Melding bij 80 procent" /><span class="pot-streep" style="left: 90%" title="Agents stoppen bij 10 procent over" />
@@ -76,6 +90,7 @@ useHead({ title: 'Verbruik · Instellingen · Dealtrace' })
           <table class="tabel tabel--kaarten mt-8"><thead><tr><th>Gebruiker</th><th>Credits</th><th>Plafond</th></tr></thead>
             <tbody><tr v-if="!gebruikers.length"><td colspan="3" class="meta">Niemand in dit filter.</td></tr><tr v-for="u in gebruikers" :key="u.id" :data-test="`gebruiker-${u.id}`"><td data-label="Gebruiker">{{ u.naam.replace(/^Testgebruiker /, '') }}</td><td data-label="Credits" class="tnum">{{ u.credits }}</td>
               <td data-label="Plafond"><input v-if="data.kan.beheer" class="invoer invoer--klein" type="number" min="0" :value="u.plafond ?? ''" placeholder="geen" :aria-label="`Plafond voor ${u.naam}`" data-test="plafond" @change="zetPlafond(u, ($event.target as HTMLInputElement).value)"><span v-else>{{ u.plafond ?? 'geen' }}</span></td></tr></tbody></table>
+          <p class="meta mt-8" data-test="verbruik-automatisch">Agents en automatisch: {{ getal(data.automatisch?.credits ?? 0) }} credits. Dat telt niet op een persoonlijk plafond.</p>
         </article>
 
         <article v-if="data.kan.beheer" class="kaart" data-test="dagplafonds">
@@ -88,3 +103,10 @@ useHead({ title: 'Verbruik · Instellingen · Dealtrace' })
     </section>
   </div>
 </template>
+
+<style scoped>
+.vb-maand { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+@media (max-width: 767px) {
+  .vb-maand .invoer { min-height: var(--touch-target-min); }
+}
+</style>

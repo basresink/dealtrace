@@ -47,7 +47,7 @@ for (const breedte of [1280, 390]) {
       await expect(page.getByTestId('funnel-tegels')).toBeVisible()
     })
 
-    test('bij welke poging de eerste afspraak kwam: in de drie dashboardblokken en op de funnel, gelijk aan de API', async ({ page }) => {
+    test('bij welke poging de eerste afspraak kwam: in het venster van het dashboard en op de funnel, gelijk aan de API', async ({ page }) => {
       await login(page, 'u-07')
       const api = await (await page.request.get('/api/resultaten/dashboard')).json()
       const ea = api.funnel.eersteAfspraak
@@ -55,11 +55,14 @@ for (const breedte of [1280, 390]) {
       expect(ea.accounts).toBeGreaterThan(0)
       const gem = ea.gemiddeld.toLocaleString('nl-NL')
       await ga(page, '/mijn-dashboard')
-      const reis = page.getByTestId('reis-eerste-afspraak')
-      await expect(reis).toContainText(`gemiddeld bij poging ${gem}`)
-      for (const [k, sleutel] of [['1', '1'], ['2', '2'], ['3', '3'], ['4', '4+']]) await expect(reis.getByTestId(`eerste-afspraak-${k}`)).toContainText(String(ea.verdeling[sleutel!]))
-      await expect(page.getByTestId('grafiek-uitkomsten').getByTestId('uitkomsten-eerste-afspraak')).toContainText(`${ea.verdeling['4+']} bij poging 4 of later`)
-      await expect(page.getByTestId('grafiek-dekking').getByTestId('dekking-eerste-afspraak')).toContainText(`gemiddeld bij poging ${gem}`)
+      // Op het dashboard zelf staat geen regel meer; alleen in het venster van de uitkomst Afspraak (en de afspraakfases).
+      await expect(page.getByTestId('reis-eerste-afspraak')).toHaveCount(0)
+      await expect(page.getByTestId('uitkomsten-eerste-afspraak')).toHaveCount(0)
+      await expect(page.getByTestId('dekking-eerste-afspraak')).toHaveCount(0)
+      await page.getByTestId('grafiek-uitkomsten').getByTestId('uitkomst-afspraak').click()
+      const fly = page.getByTestId('lijst-eerste-afspraak')
+      await expect(fly).toContainText(`gemiddeld bij poging ${gem}`)
+      await expect(fly).toContainText(`${ea.verdeling['4+']} bij poging 4 of later`)
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(breedte)
       await ga(page, '/funnel')
       await expect(page.getByTestId('funnel-eerste-afspraak')).toContainText(`gemiddeld bij poging ${gem}`)

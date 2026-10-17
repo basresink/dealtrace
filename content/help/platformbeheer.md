@@ -8,7 +8,11 @@ routes: /platform/klanten,/platform/features,/platform/abonnementen,/platform/ve
 
 # Platformbeheer
 
+### Wat Platformbeheer is
+
 Platformbeheer is alleen voor de leverancier van Dealtrace. Daar staan de klanten, hun pakket en contract, en welke functies per niveau aanstaan.
+
+### Wie het ziet
 
 Alleen de rol founder ziet Platformbeheer. De server weigert elke platformroute voor iedereen anders, en de database laat de platformrol alleen tellingen lezen, nooit klantrecords. Gevaarlijke acties (pakket verlagen, een AI-sleutel of platformprompt opslaan, de prijs per handeling wijzigen) vragen je authenticator-code als de laatste bevestiging ouder is dan 15 minuten. Alles wat je doet, staat in de **Platformaudit**.
 
@@ -32,12 +36,22 @@ Op **Features per niveau** zet je per functie en per niveau een schakelaar aan o
 
 ## De klantflyout: AI, Data en AVG, opzeggen
 
-**AI-koppeling en prompts.** Je ziet of de klant de platformkoppeling, een eigen sleutel of altijd de mock gebruikt. Een eigen sleutel gaat voor die van het platform en vraagt je authenticator-code. Met **Gebruik de platformkoppeling** haal je de eigen koppeling weg. Per promptslot zie je of de klant een eigen laag heeft, met versie en datum; de tekst zelf zie je niet.
+### AI-koppeling en prompts
 
-**Data en AVG.** Alleen aantallen: accounts per bron, contactpersonen (en hoeveel verrijkt of geïmporteerd), leads, activiteiten, verslagen, bijlagen en wie niet benaderd wil worden. Daaronder de bewaartermijnen die de klant koos, de verwerkersovereenkomst (leg versie en datum van ondertekenen vast) en de laatste export door de beheerder. Een export van klantdata maak je als leverancier niet zelf: met **Vraag de beheerder om een export** krijgen de beheerders een melding.
+Je ziet of de klant de platformkoppeling, een eigen sleutel of altijd de mock gebruikt. Een eigen sleutel gaat voor die van het platform en vraagt je authenticator-code. Met **Gebruik de platformkoppeling** haal je de eigen koppeling weg. Per promptslot zie je of de klant een eigen laag heeft, met versie en datum; de tekst zelf zie je niet.
 
-**AVG-verzoeken.** Komt er een verzoek binnen (iemand wil verwijderd worden of inzage, of de klant wil alles verwijderd), leg het vast met **Verzoek vastleggen**: de soort, de datum van ontvangst en een kenmerk zoals het ticketnummer. Noteer nooit een naam, e-mailadres of telefoonnummer. Je hebt 30 dagen; daarna staat het verzoek op **Over tijd**. De beheerders krijgen een melding en handelen het af in hun eigen organisatie. Zet het daarna op **Afgehandeld**.
+### Data en AVG
 
-**Organisatie opzeggen.** Onderaan de flyout. Je ziet eerst wat er gebeurt, kiest de laatste dag en de reden, en typt de naam van de organisatie over. Pas dan kun je bevestigen, en Dealtrace vraagt je authenticator-code als je die het afgelopen kwartier niet gaf. De klant werkt door tot en met de laatste dag; de beheerders krijgen een melding om te exporteren, en 30 dagen na de laatste dag mogen de gegevens weg. Met **Opzegging intrekken** zet je alles terug zoals het was.
+Alleen aantallen: accounts per bron, contactpersonen (en hoeveel verrijkt of geïmporteerd), leads, activiteiten, verslagen, bijlagen en wie niet benaderd wil worden. Daaronder de bewaartermijnen die de klant koos, de verwerkersovereenkomst (leg versie en datum van ondertekenen vast) en de laatste export door de beheerder. Een export van klantdata maak je als leverancier niet zelf: met **Vraag de beheerder om een export** krijgen de beheerders een melding.
+
+### AVG-verzoeken
+
+Komt er een verzoek binnen (iemand wil verwijderd worden of inzage, of de klant wil alles verwijderd), leg het vast met **Verzoek vastleggen**: de soort, de datum van ontvangst en een kenmerk zoals het ticketnummer. Noteer nooit een naam, e-mailadres of telefoonnummer. Je hebt 30 dagen; daarna staat het verzoek op **Over tijd**. De beheerders krijgen een melding en handelen het af in hun eigen organisatie. Zet het daarna op **Afgehandeld**.
+
+### Organisatie opzeggen
+
+Onderaan de flyout. Je ziet eerst wat er gebeurt, kiest de laatste dag en de reden, en typt de naam van de organisatie over. Pas dan kun je bevestigen, en Dealtrace vraagt je authenticator-code als je die het afgelopen kwartier niet gaf. De klant werkt door tot en met de laatste dag; de beheerders krijgen een melding om te exporteren, en 30 dagen na de laatste dag mogen de gegevens weg. Met **Opzegging intrekken** zet je alles terug zoals het was.
+
+### In de audit
 
 Alles wat je hier doet, staat in de Platformaudit en in de audit van de klant.

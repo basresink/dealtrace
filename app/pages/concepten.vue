@@ -42,9 +42,12 @@ function sluit() { open.value = null; if (q('concept')) zet({ concept: undefined
 async function bijgewerkt() {
   const id = open.value?.id
   await refresh()
-  if (!id) return
+  // Intussen gesloten (of een ander concept geopend): niet opnieuw openen.
+  if (!id || open.value?.id !== id) return
   const nieuw = data.value.concepten.find((c: any) => c.id === id)
-  open.value = nieuw ?? (await $fetch<any>('/api/concepten', { query: { ...query.value, concept: id } }).catch(() => null))?.uitgelicht ?? null
+  if (nieuw) { open.value = nieuw; return }
+  const los = (await $fetch<any>('/api/concepten', { query: { ...query.value, concept: id } }).catch(() => null))?.uitgelicht ?? null
+  if (open.value?.id === id) open.value = los
 }
 async function kaartGewijzigd() { await refresh() }
 useHead({ title: 'Concepten · Dealtrace' })

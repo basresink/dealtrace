@@ -8,6 +8,8 @@ routes: /campagnes
 
 # Campagnes
 
+### Wat een campagne is
+
 Een campagne is een gerichte actie over 20 tot 80 accounts rond één doel: een soort (bijvoorbeeld een koude belcampagne), een winpunt, een boodschap of script, een ritme en een einddatum.
 
 ## De lijst
@@ -17,6 +19,8 @@ Bij **Campagnes** zie je een kaart per campagne met de soort, de status, de eige
 - **Voor op schema**: je ligt 5 punten of meer voor op wat je nu zou moeten hebben.
 - **Op schema**: tot 10 punten eronder.
 - **Achter op schema**: meer dan 10 punten eronder.
+
+### Voortgang en filters
 
 De zwarte balk is je voortgang naar het doel; de rode streep is waar je nu zou moeten staan. Standaard zie je de campagnes **van mij**. Met **Filters** kies je status, soort of eigenaar.
 
@@ -37,6 +41,8 @@ Bovenaan het bord staan drie accounts om mee te beginnen: eerst wie nog nooit co
 
 Taken uit een campagne heten "{werkwoord} {account} ({campagne})", bijvoorbeeld "Bel Testinstallatie Noord (Koude belronde)". Je vindt ze in je koude belblokken, op Vandaag en bij Taken. Werk je buiten de deur, dan staan ze op de regiodag van het account. Rond je een taak af, dan schuift het kaartje vanzelf door: afspraak naar Afspraak, geen interesse naar Afgewezen, de laatste poging zonder reactie naar Geparkeerd.
 
+### Zonder verbinding
+
 Ook zonder verbinding kun je een kaartje verplaatsen; de wijziging komt één keer aan zodra je weer verbinding hebt.
 
 ## Achter op schema
@@ -46,5 +52,7 @@ Loopt een campagne 10 punten of meer achter, dan krijgt de salesmanager het inzi
 ## Afgerond
 
 Na de einddatum zet Dealtrace de campagne op **Afgerond** met de samenvatting: bereikt, gesprekken, afspraken gepland en gehouden, overgedragen, conversie en winpunt uitgevoerd. Deals en pipelinewaarde staan in het CRM.
+
+### Meer lezen
 
 Een campagne opzetten lees je in "Een campagne opzetten".

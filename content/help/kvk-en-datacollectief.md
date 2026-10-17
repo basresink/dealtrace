@@ -7,6 +7,8 @@ samenvatting: Bedrijven zoeken in het handelsregister, contactpersonen via Datac
 
 # KvK en Datacollectief
 
+### KvK
+
 KvK is het handelsregister. Dealtrace gebruikt het om bedrijven te zoeken op naam, KvK-nummer, plaats, postcode en SBI-code, en om officiële gegevens op te halen: naam, adres, SBI-code en aantal medewerkers. Het KvK-nummer is de sleutel om dubbelen te herkennen.
 
 ## Waar je KvK tegenkomt
@@ -31,6 +33,8 @@ Een lead uit KvK of de AI-zoeker heeft vaak geen aanspreekpunt. Datacollectief l
 - **Leadgenerator** (vanaf Expert): vink **Datacollectief** aan bij Bronnen. De ronde levert leads met de bronpil "Datacollectief" en de contactpersoon erbij, bijvoorbeeld "Jelle Testhoekstra · Eigenaar". Een bedrijf dat ook uit KvK komt, staat er één keer; de KvK-gegevens blijven, de contactpersonen komen erbij.
 - **Accountkaart** (vanaf Gevorderd): **Meer**, **Kwalificatie**, blok Datacollectief, knop **Zoek contactpersonen**. Dat kost tot 5 records. Bestaande contacten worden herkend op e-mailadres en anders op volledige naam; Dealtrace vult alleen lege velden aan.
 - **Importeren**: zet in de laatste stap **Zoek contactpersonen via Datacollectief** aan.
+
+### Herkomst van Datacollectief
 
 Elk veld dat uit Datacollectief komt, toont de herkomst met datum, bijvoorbeeld "Datacollectief · 2026-10-14". Datacollectief overschrijft nooit wat jij zelf invulde of wat uit KvK komt.
 

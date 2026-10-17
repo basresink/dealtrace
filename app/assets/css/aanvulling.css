@@ -333,6 +333,8 @@
   .tabel--kaarten thead { display: none; }
   .tabel--kaarten tr { display: grid; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--border); }
   .tabel--kaarten td { border: 0; padding: 0; }
+  /* Op de telefoon staat de kolomnaam boven de waarde, uit data-label (de thead is weg). */
+  .tabel--kaarten td[data-label]::before { content: attr(data-label); display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
 }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .tabel-rij--gemarkeerd td { background: var(--yellow-soft, #fff7cc); }

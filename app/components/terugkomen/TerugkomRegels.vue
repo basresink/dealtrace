@@ -62,7 +62,7 @@ const redenOpties = computed(() => (props.data.redenen ?? []).filter((x: any) =>
 const elders = (x: any) => (x.terugkomregelId && x.terugkomregelId !== gekozen.value ? regels.value.find((r) => r.id === x.terugkomregelId) : null)
 
 const vb = computed(() => (concept.value ? voorbeeld({ termijnDagen: Number(concept.value.termijnDagen) || 0, kanaal: regelKanaalWaarde(concept.value.kanaal) }, props.data.afkoeling, props.data.vandaag) : null))
-const letOp = computed(() => (concept.value ? korterDanAfkoeling({ termijnDagen: Number(concept.value.termijnDagen) || 0, kanaal: regelKanaalWaarde(concept.value.kanaal) }, props.data.afkoeling) : null))
+const letOp = computed(() => (concept.value ? korterDanAfkoeling({ termijnDagen: Number(concept.value.termijnDagen) || 0, kanaal: regelKanaalWaarde(concept.value.kanaal) }, props.data.afkoeling, { magAfkoeling: !!props.data.kan?.afkoeling }) : null))
 
 // Droogloop: wat verschuift, kort na elke wijziging.
 let timer: ReturnType<typeof setTimeout> | undefined

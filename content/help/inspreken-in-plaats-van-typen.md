@@ -7,6 +7,8 @@ samenvatting: Een opdracht, verslag of notitie inspreken, waar de opname heen ga
 
 # Inspreken in plaats van typen
 
+### Inspreken in plaats van typen
+
 Onderweg typ je niet; je spreekt in. Dealtrace zet je opname om in tekst bij een dienst in de EU. Daarna verdwijnt de opname, tenzij je beheerder bewaren aanzette. De tekst blijft twaalf maanden.
 
 ## Een opdracht inspreken
@@ -16,9 +18,15 @@ Onderweg typ je niet; je spreekt in. Dealtrace zet je opname om in tekst bij een
 3. Tik **Stop**. Je ziet het concept: de soort (taak of notitie), het account, de persoon, de datum, en wat Dealtrace heeft gecontroleerd, zoals "Account gevonden" en "Datum gelezen als dinsdag 20 oktober".
 4. Tik **Bewaar**. De taak of notitie staat direct op de accountkaart, op je telefoon en je laptop.
 
+### Over welk account
+
 Sta je op een accountkaart, dan gaat de opdracht over dat account. Anders zoekt Dealtrace het account in jouw accounts. Twijfelt hij tussen twee namen, dan vraagt hij welke je bedoelt. Kent hij het account niet, dan maakt hij niets en vraagt hij het opnieuw.
 
+### Een afspraak of mail inspreken
+
 Vanaf Gevorderd kun je ook een **afspraak** of een **mail** inspreken. Een mail blijft een concept; versturen doe je altijd zelf.
+
+### Liever typen
 
 Liever typen? Typ je opdracht in het veld onder de microfoon en tik **Maak concept**.
 

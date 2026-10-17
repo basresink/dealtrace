@@ -8,6 +8,8 @@ routes: /richting
 
 # Tegen wie we verkopen
 
+### Weet tegen wie je het opneemt
+
 Bijna elke prospect koopt al ergens. Weet tegen wie je het opneemt, dan weet je ook wat je zegt.
 
 ## Waarom dit werkt

@@ -8,6 +8,8 @@ routes: /reizen
 
 # Doelgroepen en reizen
 
+### Doelgroep en reis
+
 Een doelgroep beschrijft welke bedrijven je zoekt: branches, SBI-codes, klassen, omvang, postcodes en bron. De reis is de route die zo'n bedrijf aflegt tot de eerste afspraak.
 
 ## Een doelgroep maken (salesmanager)

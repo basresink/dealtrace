@@ -8,7 +8,11 @@ routes: /bezoeken
 
 # Bezoeken
 
+### Je rijdag op één scherm
+
 **Bezoeken** staat in de zijbalk onder **Planning** en is de rijdag van de buitendienst. In de kop staan **+ Afspraak**, **Analyse** (de bezoekanalyse, vanaf Gevorderd) en **Filters** met de periode en de filters voor de kansen.
+
+### Wat je ziet, van boven naar beneden
 
 Van boven naar beneden:
 
@@ -18,6 +22,10 @@ Van boven naar beneden:
 4. **De bellijst** (vanaf Gevorderd), Top 5 of Top 10: wie je naast je bezoeken belt. Een klik opent de beltaak.
 5. **Te plannen bezoeken**: open bezoektaken als kaarten. Een klik opent de taak; **Plan bezoek** opent Plan een afspraak.
 
+### Op je telefoon
+
 Op de telefoon opent dit scherm als **Onderweg** (de tab **Route**).
+
+### Meer over kansen
 
 Hoe de kansen tot stand komen en wat je ermee doet, lees je in "Bezoeken en kansen langs de route".

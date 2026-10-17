@@ -20,6 +20,8 @@ Op **Account** (het poppetje onderaan de zijbalk), kaart **Meldingen**, kies je 
 | Inzicht | wat opvalt in je cijfers, de recap | alleen de app |
 | Dealtrace | een concept klaar ter goedkeuring, een afspraak die een collega voor je maakte, een functie die voor je aangaat, AI-credits op 80 procent | app en push |
 
+### In de app en Notificaties
+
 Zet je **In de app** uit, dan krijg je die soort helemaal niet. Op **Notificaties** (de bel onderaan de zijbalk) staan je meldingen als kaarten. Tik op een teller om op soort te filteren, kies **Ongelezen** of **Alles**, en met **Alles gelezen** ben je in een keer bij. Onder **Voorkeuren** zet je per soort de app, e-mail en push aan of uit. Op je telefoon veeg je een melding naar links om hem gelezen te markeren.
 
 ## Onderweg
@@ -57,11 +59,15 @@ In **Mijn instellingen**, kaart **Meldingen voor onderweg**:
 - je stille uren en of het weekend stil is;
 - vanaf Expert ook je eigen dagplafond (lager dan dat van je organisatie).
 
+### Dagplafond en stille uren
+
 Je beheerder stelt het dagplafond en de stille uren voor de organisatie in onder **Instellingen, Organisatie**.
 
 ## Push op je telefoon
 
 Zet **Push op dit toestel** aan en sta meldingen toe. Op een iPhone werkt push alleen als je Dealtrace op je beginscherm hebt gezet (iOS 16.4 of nieuwer): open Dealtrace in Safari, tik op Deel en kies **Zet op beginscherm**.
+
+### Op al je toestellen
 
 Wat je op het ene toestel leest, staat op al je toestellen als gelezen.
 

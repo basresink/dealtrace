@@ -26,7 +26,7 @@ useHead({ title: 'Abonnement · Instellingen · Dealtrace' })
   <div>
     <InstellingenKop groep="Organisatie" :titel="titel" uitleg="Abonnement: je pakket, seats, contract, factuurgegevens en facturen." helpartikel="abonnement-verbruik-ai-credits" :filters="a?.facturen?.length ? (factuurStatus ? 1 : 0) : null" @reset="factuurStatus = ''">
       <template #acties>
-        <FunctieLink to="/instellingen/gebruikers" class="dd-actie dd-actie--primair" data-test="abonnement-gebruikers"><Icoon naam="Users" class="dd-actie-icoon" />Gebruikers beheren</FunctieLink>
+        <FunctieLink to="/instellingen/gebruikers" class="dd-actie dd-actie--secundair" data-test="abonnement-gebruikers"><Icoon naam="Users" class="dd-actie-icoon" />Gebruikers beheren</FunctieLink>
       </template>
       <template #filters>
         <div class="ifp-groep" role="group" aria-label="Status van de factuur"><span class="filter-label">Facturen</span>

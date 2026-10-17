@@ -12,6 +12,7 @@ import { laadScripts } from '../../utils/bellen'
 import { voerAiStapUit } from '../../utils/llm-provider'
 import { verkoopverhaal } from '../../utils/reis'
 import { vereisFunctie } from '../../utils/sessie'
+import { PROMPT_BELSCRIPT_ACCOUNT } from '../../../shared/promptStandaard'
 
 const SCHEMA: JsonSchema = {
   type: 'object', required: ['blokken'], additionalProperties: false,
@@ -51,7 +52,7 @@ export default defineEventHandler(async (event) => {
     }, contacten.flatMap((c) => [c.f, c.l]))
     const uit = await voerAiStapUit<{ blokken: { blokId: string; tekst: string; bronnen?: any[] }[] }>(tx, ctx.organisatie.id, {
       soort: 'belscript', agent: 'schrijver', gebruiker: { id: ctx.gebruiker.id, niveau: ctx.gebruiker.niveau, data: ctx.gebruiker.data as any }, accountId: a.id,
-      prompt: 'Vul de blokken van dit belscript in voor dit account. Elke zin heeft een bron uit het materiaal; geen feiten buiten het materiaal; hooguit 60 woorden per blok.', schema: SCHEMA, materiaal,
+      prompt: PROMPT_BELSCRIPT_ACCOUNT, schema: SCHEMA, materiaal,
     })
     if (!uit.ok) return { ok: false, reden: uit.reden }
     const ids = new Set(aiBlokken.map((x) => x.id))

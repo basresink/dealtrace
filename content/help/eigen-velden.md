@@ -8,6 +8,8 @@ routes: /instellingen/eigen-velden
 
 # Eigen velden
 
+### Waarvoor eigen velden zijn
+
 Met eigen velden leg je vast wat voor jullie verkoop belangrijk is, bijvoorbeeld "Aantal vestigingen".
 
 - De beheerder maakt de velden bij **Instellingen**, **Eigen velden**, voor prospects, contacten of accountplannen.

@@ -7,6 +7,8 @@ samenvatting: Wat er op je telefoon staat als je geen bereik hebt, wat dan wel e
 
 # Een dag offline
 
+### Het dagpakket
+
 Elke keer dat je Dealtrace met verbinding opent, zet hij een **dagpakket** op je telefoon. Daarmee kun je de hele dag verder, ook zonder bereik.
 
 ## Wat erin staat
@@ -15,6 +17,8 @@ Elke keer dat je Dealtrace met verbinding opent, zet hij een **dagpakket** op je
 - De accountkaarten daarvan: contactpersonen, de laatste tien contactmomenten en open taken en afspraken.
 - De meetingsoorten met hun uitkomsten en de redenen voor nee.
 - De helpartikelen van de functies die voor jou aanstaan.
+
+### De stand van je pakket
 
 Het pakket is hooguit 5 MB. In **Mijn instellingen**, kaart **Offline**, zie je de stand, bijvoorbeeld "Klaar voor vandaag · 23 accounts · 0,1 MB · bijgewerkt 07:42", en tik je **Ververs nu**.
 

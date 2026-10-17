@@ -8,6 +8,8 @@ routes: /instellingen/ritme
 
 # Accountmatrix
 
+### Wat de accountmatrix doet
+
 De accountmatrix legt vast hoeveel aandacht elke prospect krijgt. De regels voeren het uit. Klanten staan er niet in: het onderhoudsritme van klanten loopt in DealDrive, en Dealtrace maakt geen beltaken voor klanten.
 
 ## Klassen

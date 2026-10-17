@@ -1,7 +1,7 @@
 // Mijn dashboard en de funnel in de opzet van DealDrive /rapportage. Puur: de server levert activiteiten,
 // prospects en de funnelstand; deze functies rekenen de periode, de tegels, de reeks per dag of week, de
 // dekking, het doel en de normen uit. Normen komen uit shared/team (NORMEN), de funnel uit shared/funnel.
-import { isWerkdag, plusDagen } from './datum'
+import { isWerkdag, nlDag, plusDagen } from './datum'
 import { FUNNEL_LABEL, type FunnelFase } from './funnel'
 import { isContact, isGesproken, NORMEN, type Kpi, type KpiActiviteit, type Periode } from './team'
 
@@ -139,7 +139,7 @@ export function activiteitReeks(acts: KpiActiviteit[], p: Periode, gebruiker?: s
   const index = new Map(punten.map((x, i) => [x.sleutel, i]))
   for (const a of acts) {
     if (gebruiker && a.door !== gebruiker) continue
-    const dag = a.op.slice(0, 10)
+    const dag = nlDag(a.op)
     if (dag < p.van || dag > p.tot || !isContact(a)) continue
     const i = index.get(per === 'dag' ? dag : maandagVan(dag))
     if (i == null) continue
@@ -182,7 +182,7 @@ export function uitkomsten(acts: KpiActiviteit[], p: Periode, gebruiker?: string
   const tel = new Map<string, { sleutel: string; label: string; aantal: number }>()
   for (const a of acts) {
     if (gebruiker && a.door !== gebruiker) continue
-    const dag = a.op.slice(0, 10)
+    const dag = nlDag(a.op)
     if (dag < p.van || dag > p.tot || !isContact(a)) continue
     const g = uitkomstGroep(a.uitkomst)
     const x = tel.get(g.sleutel) ?? { ...g, aantal: 0 }

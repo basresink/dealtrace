@@ -2,7 +2,7 @@
 // De auditlijst voor /audit (salesmanager, zijn teams) en /instellingen/audit (beheerder, alles en wat
 // Dealtrace deed). Filters Wie, Soort en Periode staan in de url; Meer laden haalt de volgende 50 met
 // een cursor; Download geeft de hele selectie als CSV. Lege staat met een uitweg: filters wissen.
-import { AUDIT_PERIODEN, AUDIT_SOORT_LABEL, actieTekst, type AuditRegel } from '~~/shared/audit'
+import { AUDIT_PERIODEN, AUDIT_SOORT_LABEL, actieTekst, auditObjectTekst, type AuditRegel } from '~~/shared/audit'
 import { nlMoment, plusDagen } from '~~/shared/datum'
 
 // verborgenFilters: de pagina toont de filters pas na de knop Filters in haar kop (zoals op /audit).
@@ -94,7 +94,7 @@ const telling = computed(() => `${regels.value.length} ${regels.value.length ===
           <tr v-for="r in regels" :key="r.id" data-test="audit-regel" :data-actie="r.actie">
             <td class="tnum meta">{{ tijd(r.op) }}</td>
             <td><strong>{{ r.door || 'Onbekend' }}</strong> <span v-if="r.leverancier" class="pil">Dealtrace</span></td>
-            <td>{{ actieTekst(r.actie) }}<span v-if="r.objectId" class="meta au-object"> · {{ r.object }} {{ r.objectId }}</span></td>
+            <td>{{ actieTekst(r.actie) }}<span v-if="r.objectId" class="meta au-object" data-test="audit-object" :title="r.objectNaam ? r.objectId ?? undefined : undefined"> · {{ auditObjectTekst(r) }}</span></td>
             <td>{{ r.reden ?? '' }}</td>
           </tr>
         </tbody>

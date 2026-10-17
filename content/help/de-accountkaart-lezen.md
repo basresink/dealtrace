@@ -8,6 +8,8 @@ routes: /prospects,/accounts
 
 # De accountkaart lezen
 
+### Wat de accountkaart toont
+
 De accountkaart toont één account:
 
 - **Kop**: naam, fase en eigenaar, met rechts **Zoeken**, **Vraag AI**, **Contacten**, **Info** (bedrijfsgegevens, de huidige leverancier en eigen velden) en **Meer**.
@@ -17,5 +19,7 @@ De accountkaart toont één account:
 - **Tabbladen**: Tijdlijn, Inzichten, Taken, Notities, E-mails, Afspraken, Gespreksverslagen en Documenten. Een overdracht en wat DealDrive terugmeldt, zie je in de tijdlijn.
 - **Contactkaart**: rechts **Zoeken**, **Vraag AI**, **Info** en **Meer**. Bellen doe je via het nummer in de kop. De tijdlijn noemt bij elk item wie het deed; de naam van het contact staat er niet bij, want je zit al op zijn kaart. Staat het contact in een accountplan, dan vind je dat onder Meer.
 - **Score**: hoe kansrijk het account is (de opbouw zie je als Expert).
+
+### Filteren in Alle prospects
 
 In **Alle prospects** filter je onder **Filters** op onder meer status, fase en klasse; de filters staan in de link.

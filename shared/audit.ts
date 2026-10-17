@@ -22,6 +22,7 @@ export const AUDIT_SOORT_LABEL: Record<string, string> = {
 
 /** Perioden voor het filter; `van` is een datum (yyyy-mm-dd) die het scherm uitrekent. */
 export const AUDIT_PERIODEN = [
+  { sleutel: 'vandaag', label: 'Vandaag', dagen: 1 },
   { sleutel: '7', label: '7 dagen', dagen: 7 },
   { sleutel: '30', label: '30 dagen', dagen: 30 },
   { sleutel: '90', label: '90 dagen', dagen: 90 },
@@ -60,6 +61,8 @@ const VAST: Record<string, string> = {
   'agents.pauzeren': 'Agents gepauzeerd',
   'agents.hervatten': 'Agents hervat',
   'agent.mandaat': 'Mandaat van een agent gewijzigd',
+  'coaching.afspraak': 'Coachingafspraak vastgelegd als taak',
+  'coaching.afronden': 'Coachingsgesprek afgerond',
 }
 
 const OBJECT: Record<string, string> = {
@@ -91,10 +94,23 @@ export interface AuditRegel {
   actie: string
   object: string | null
   objectId: string | null
+  /** Naam van het object (account, contact, gebruiker, team, taak) als die bekend is. */
+  objectNaam?: string | null
   door: string
   doorId: string | null
   leverancier: boolean
   reden: string | null
+}
+
+/** Soort object in gewone taal, voor de kolom Wat. */
+export const AUDIT_OBJECT_LABEL: Record<string, string> = {
+  accounts: 'Account', contacts: 'Contact', users: 'Gebruiker', teams: 'Team', tasks: 'Taak', task: 'Taak',
+}
+/** "Account Bakkerij Test" als de naam bekend is, anders soort en id zoals voorheen. */
+export function auditObjectTekst(r: Pick<AuditRegel, 'object' | 'objectId' | 'objectNaam'>): string | null {
+  if (!r.objectId) return null
+  if (r.objectNaam) return `${AUDIT_OBJECT_LABEL[r.object ?? ''] ?? r.object ?? ''} ${r.objectNaam}`.trim()
+  return `${r.object ?? ''} ${r.objectId}`.trim()
 }
 
 /** Een veld voor CSV: puntkomma als scheiding (Excel in het Nederlands), aanhalingstekens en geen formules. */
@@ -106,8 +122,8 @@ export function csvVeld(v: unknown): string {
 
 /** De CSV van een auditlijst, met een BOM zodat Excel de tekens goed leest. */
 export function auditCsv(regels: AuditRegel[]): string {
-  const kop = ['Wanneer', 'Wie', 'Door Dealtrace', 'Handeling', 'Omschrijving', 'Object', 'Object-id', 'Reden']
-  const rijen = regels.map((r) => [r.op, r.door, r.leverancier ? 'ja' : 'nee', r.actie, actieTekst(r.actie), r.object ?? '', r.objectId ?? '', r.reden ?? ''])
+  const kop = ['Wanneer', 'Wie', 'Door Dealtrace', 'Handeling', 'Omschrijving', 'Object', 'Object-id', 'Objectnaam', 'Reden']
+  const rijen = regels.map((r) => [r.op, r.door, r.leverancier ? 'ja' : 'nee', r.actie, actieTekst(r.actie), r.object ?? '', r.objectId ?? '', r.objectNaam ?? '', r.reden ?? ''])
   return `﻿${[kop, ...rijen].map((rij) => rij.map(csvVeld).join(';')).join('\r\n')}\r\n`
 }
 

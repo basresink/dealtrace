@@ -18,7 +18,7 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
     kaarten: [
       { titel: 'Organisatie', tekst: 'Naam, land en start van het verkoopjaar.', link: '/instellingen/organisatie', toon: beheerder.value },
       { titel: 'Werkdagen en feestdagen', tekst: 'Welke dagen telt Dealtrace als werkdag.', link: '/instellingen/organisatie#werkdagen', toon: beheerder.value },
-      { titel: 'Gebruikers en teams', tekst: 'Toevoegen, niveau, werkplek en team.', link: '/instellingen/gebruikers', toon: true },
+      { titel: 'Gebruikers en teams', tekst: beheerder.value ? 'Toevoegen, niveau, werkplek en team.' : 'De mensen in je teams, hun niveau en werkplek.', link: '/instellingen/gebruikers', toon: true },
       { titel: 'Niveaus en functies', tekst: 'Standaardniveau, "Iedereen ziet alles", welke functie bij welk niveau hoort en wie mag wat.', link: '/instellingen/niveaus', toon: beheerder.value },
       { titel: 'Abonnement', tekst: 'Je pakket in gewone woorden, seats, contract, factuurgegevens en facturen als pdf.', link: '/instellingen/abonnement', toon: beheerder.value },
       { titel: 'Verbruik en AI-credits', tekst: 'De pot van deze maand, verbruik per soort en per gebruiker, plafonds en extra credits.', link: '/instellingen/verbruik', toon: !!functie('credits.verbruikLezen')?.beschikbaar },

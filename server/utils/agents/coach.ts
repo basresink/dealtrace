@@ -8,6 +8,7 @@ import { filterNamen } from '../../../shared/verkoopverhaal'
 import { gebruikDb } from '../db'
 import { voerAiStapUit } from '../llm-provider'
 import { logAgentRun, toets } from './bewaker'
+import { PROMPT_VERBETERVOORSTEL, promptCoachpunten } from '../../../shared/promptStandaard'
 
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
 const rijen = async (tx: Tx, q: ReturnType<typeof sql>) => (await tx.execute(q)).rows as Record<string, any>[]
@@ -29,7 +30,7 @@ export async function coachVoorstel(tx: Tx, org: string, vrager: { id: string; n
   const namen = (await rijen(tx, sql`select coalesce(first_name || ' ', '') || last_name as naam from contacts c join accounts a on a.id = c.account_id where a.owner_id = ${voor.id} limit 500`)).map((r) => ({ naam: String(r.naam).trim() }))
   const r = await voerAiStapUit<{ punten: CoachPunt[] }>(tx, org, {
     soort: 'coach', boekAls: 'coach', gebruiker: { id: vrager.id, niveau: vrager.niveau as any, data: vrager.data }, schema: COACH_SCHEMA,
-    prompt: `Geef hoogstens drie coachingpunten${opties.zelf ? ' voor deze week, in de je-vorm' : ''}. Elk punt noemt de cijfers waarop het rust en verwijst naar een artikel uit de lijst. Vergelijk niet als er te weinig gesprekken zijn. Geen niveauvoorstel.`,
+    prompt: promptCoachpunten(opties.zelf),
     materiaal: { coach: true, cijfers: m.cijfers, team: m.team, verslagen: m.verslagen.slice(0, 10).map((t) => filterNamen(t, namen)), scriptgebruik: m.scriptgebruik ?? null, artikelen, genoeg: genoegOmTeVergelijken(Number((m.cijfers as any).gesprekken ?? 0), 'gesprekken').genoeg },
   }, nu)
   await logAgentRun(tx, org, { agent: 'coach', handeling: opties.zelf ? 'zelfanalyse' : 'coachingpunten', mandaat: 'A', uitkomst: r.ok ? 'uitgevoerd' : 'fout', gebruikerId: voor.id, reden: r.ok ? null : r.reden }, nu)
@@ -55,7 +56,7 @@ export async function maandVerbetervoorstel(tx: Tx, org: string, nu = new Date()
     const fases = await rijen(tx, sql`select coalesce(fase_id, '-') as fase, count(*)::int as n from accounts where reis_id = ${r.id} group by 1 order by 2 desc`)
     const v = await voerAiStapUit<{ punten: CoachPunt[] }>(tx, org, {
       soort: 'coach', agent: 'coach', schema: COACH_SCHEMA,
-      prompt: 'Doe één verbetervoorstel voor deze reisversie: welke fase of overgang moet anders, met de cijfers waarop het rust.',
+      prompt: PROMPT_VERBETERVOORSTEL,
       materiaal: { coach: true, verbetervoorstel: true, reis: r.naam, versie: r.versie, fases, artikelen: ['doelgroepen-en-reizen'] },
     }, nu)
     if (!v.ok) break

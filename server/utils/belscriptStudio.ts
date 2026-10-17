@@ -13,6 +13,7 @@ import { kan } from './accounts'
 import { schrijfAudit } from './audit'
 import { belmodusItems, laadScripts, type Kandidaat } from './bellen'
 import { voerAiStapUit } from './llm-provider'
+import { PROMPT_BELSCRIPT_PROSPECT } from '../../shared/promptStandaard'
 
 type Tx = Parameters<Parameters<ReturnType<typeof import('./db').gebruikDb>['transaction']>[0]>[0]
 export interface StudioCtx { gebruiker: { id: string; naam: string; niveau: string; teamId: string | null; data?: unknown }; organisatie: { id: string; naam: string; pakket: any } }
@@ -87,7 +88,7 @@ export async function vulProspect(tx: Tx, ctx: StudioCtx, i: { accountId: string
   }, namen)
   const uit = await voerAiStapUit<{ blokken: { blokId: string; tekst: string; bronnen?: { soort?: string }[] }[] }>(tx, ctx.organisatie.id, {
     soort: 'belscript', gebruiker: { id: ctx.gebruiker.id, niveau: ctx.gebruiker.niveau, data: ctx.gebruiker.data as any }, accountId: i.accountId,
-    prompt: 'Vul de AI-blokken van dit belscript voor dit prospect. Gebruik alleen de meegegeven gegevens en verzin niets; ontbreekt iets, laat het blok dan weg. Houd variabelen tussen accolades zoals {contact.voornaam} staan. Hooguit 60 woorden per blok, je-vorm of u-vorm zoals in het blok, geen gedachtestreepjes.',
+    prompt: PROMPT_BELSCRIPT_PROSPECT,
     schema: SCHEMA, materiaal,
   })
   if (!uit.ok) throw createError({ statusCode: 422, statusMessage: uit.reden ?? 'De AI kon het script niet vullen' })

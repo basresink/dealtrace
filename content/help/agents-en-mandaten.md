@@ -8,6 +8,8 @@ routes: /instellingen/agents
 
 # Agents en mandaten
 
+### Wat agents doen
+
 Agents doen werk voor je: plannen, zoeken, verrijken, concepten schrijven. Wat ze zelf mogen, bepaalt hun mandaat.
 
 | Mandaat | Betekenis |
@@ -48,7 +50,11 @@ De beheerder klikt op **Agents pauzeren**. Alles wat zonder jou zou gaan, stopt 
 | Profielbouwer | Functies uit contacten en verslagen | Een voorstel voor het buying committee; onder 60 procent zekerheid staat er "vermoedelijk" |
 | Notulist | Je verslag na **Rond af** of **Bewaar bezoek** | Actiepunten als concept, koopsignalen en concurrenten als inzicht |
 
+### Alleen met bewijs
+
 Een agent noemt alleen wat hij kan aantonen. Een telefoonnummer of adres zonder bron vult de Verrijker nooit in; een afgeleid e-mailpatroon krijgt de pil "aanname". Namen uit je aantekeningen gaan niet mee naar de AI.
+
+### Een dossier opnieuw laten onderzoeken
 
 Op de accountkaart open je **Meer**, **Dossier** en klik je **Laat opnieuw onderzoeken** (vanaf Gevorderd, 10 credits). In het venster **Info** voeg je onder **Extra bronnen** een eigen webadres met een label toe, zoals een nieuwspagina of vacatures; de agents volgen het als bron.
 

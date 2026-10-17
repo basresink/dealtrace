@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Regels (F15) in de opzet van DealDrive /instellingen/activity-selling: kop met terug naar Instellingen,
+// Regels (F15) in de opzet van DealDrive /instellingen/activity-selling: de standaardkop van Instellingen,
 // tellers en de acties (Draai motor nu, Prospectreizen, Exporteren, Importeren, Back-up, Starterset), Filters
 // met een paneel, en master en detail: links de lijst (aan of uit, categorie en code, naam, motor, fase,
 // prioriteitsstip) en rechts het bewerkpaneel (RegelPaneel) met live voorbeeld en droogloop. Opslaan per veld
@@ -144,7 +144,13 @@ async function verwijder() {
 const magVerwijderen = computed(() => !!bewerk.value && (data.value.kan.beheer || bewerk.value.scope === 'persoonlijk'))
 const PRIO_STIP: Record<string, string> = { hoog: 'prio-stip--high', middel: 'prio-stip--medium', laag: 'prio-stip--low' }
 const ROL_LABEL: Record<string, string> = { binnendienst: 'Binnendienst', buitendienst: 'Buitendienst', eigenaar: 'Eigenaar', salesmanager: 'Salesmanager' }
-const uitleg = computed(() => `${data.value.tellers.actief ?? 0} actief · ${data.value.tellers.uit ?? 0} uit · ${data.value.tellers.motor ?? 0} door de motor · ${data.value.tellers.totaal ?? 0} totaal`)
+// Titel in woorden, zoals op de hub ("23 regels, 21 aan"); de naam van het scherm staat vooraan in de uitleg.
+const titel = computed(() => {
+  const n = data.value.tellers.totaal ?? 0
+  const a = data.value.tellers.actief ?? 0
+  return n ? `${n} ${n === 1 ? 'regel' : 'regels'}, ${a === n ? 'alle aan' : `${a} aan`}` : 'Nog geen regels'
+})
+const uitleg = computed(() => `Regels voor Activity selling: de als-dan-afspraken waarmee de motor taken en inzichten klaarzet. ${data.value.tellers.motor ?? 0} door de motor, ${data.value.tellers.uit ?? 0} uit.`)
 useHead({ title: 'Regels · Instellingen · Dealtrace' })
 </script>
 
@@ -152,13 +158,7 @@ useHead({ title: 'Regels · Instellingen · Dealtrace' })
   <div>
     <NietAangezetKop v-if="!magLezen" sleutel="regels.lezen" />
     <template v-else>
-      <PaginaKop titel="Regels" :uitleg="uitleg" helpartikel="regels">
-        <template #kicker>
-          <span class="rg-kicker">
-            <NuxtLink to="/instellingen" class="rg-terug" data-test="terug-instellingen"><Icoon naam="ArrowLeft" :grootte="14" />Alle instellingen</NuxtLink>
-            <span class="kicker kicker--streep">Methodiek · Activity selling</span>
-          </span>
-        </template>
+      <InstellingenKop groep="Ritme en regels" :titel="titel" :uitleg="uitleg" helpartikel="regels">
         <template #acties>
           <span v-if="status" class="meta rg-status" role="status" data-test="opslagstatus">{{ status }}</span>
           <button v-if="data.kan.motor" type="button" class="dd-actie dd-actie--primair" :disabled="motorBezig" data-test="draai-motor" @click="draaiMotor"><Icoon naam="Play" class="dd-actie-icoon" />{{ motorBezig ? 'Motor draait…' : 'Draai motor nu' }}</button>
@@ -167,7 +167,7 @@ useHead({ title: 'Regels · Instellingen · Dealtrace' })
             <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="rg-teller">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="rg-pijl" :class="{ 'rg-pijl--open': filtersOpen }" />
           </button>
         </template>
-      </PaginaKop>
+      </InstellingenKop>
       <section class="section section--laatste">
         <div class="container">
           <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm. Hier lees je de regels; bewerken doe je op een laptop.</p>
@@ -270,9 +270,6 @@ useHead({ title: 'Regels · Instellingen · Dealtrace' })
 </template>
 
 <style scoped>
-.rg-kicker { display: flex; flex-direction: column; align-items: flex-start; }
-.rg-terug { display: inline-flex; align-items: center; gap: 4px; width: fit-content; min-height: 32px; margin-bottom: 6px; font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); text-decoration: none; }
-.rg-terug:hover { color: var(--ink); }
 .rg-status { align-self: center; }
 .rg-filters--aan { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
 .rg-teller { display: inline-flex; align-items: center; height: 18px; padding: 0 7px; margin-left: 2px; background: var(--yellow); color: var(--ink); font-size: 11px; font-weight: 800; border-radius: 2px; }
@@ -308,7 +305,7 @@ useHead({ title: 'Regels · Instellingen · Dealtrace' })
 @media (max-width: 767px) {
   .rg-zoek { flex: 1 1 100%; }
   .rg-zoek .invoer { min-height: var(--touch-target-min); }
-  .rg-knoppen .dd-act, .rg-terug { min-height: var(--touch-target-min); }
+  .rg-knoppen .dd-act { min-height: var(--touch-target-min); }
   .rg-groep .filter-label { width: 100%; }
   .rg-groep .filter-pil, .rg-select .invoer { min-height: var(--touch-target-min); }
   .rg-select { width: 100%; flex-wrap: wrap; }

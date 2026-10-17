@@ -8,6 +8,8 @@ routes: /funnel
 
 # De funnel van je prospectreis
 
+### Waar je new business weglekt
+
 De **Funnel** beantwoordt één vraag: waar lekt je new business weg? De funnel staat niet in de zijbalk: je opent hem met de knop **Funnel** rechtsboven op **Mijn dashboard**. Hij leest de reis van je accounts; je hoeft niets apart in te vullen. Dealtrace stopt bij de eerste afspraak en de overdracht. Deals, offertes en pipelinewaarde staan in DealDrive of het CRM.
 
 ## De fases
@@ -24,10 +26,14 @@ De funnel loopt van **Gevonden** via **Dossier compleet**, **Gekwalificeerd**, *
 - **Expert**: twee reizen naast elkaar en **Download CSV**. Met minder dan 20 accounts per reis zie je "Te weinig accounts om te vergelijken".
 - **Salesmanager**: de funnel van je teams of van één persoon, met download.
 
+### De accounts erachter
+
 Tik op een fase of een uitvalreden voor de accounts die daar staan, met fase sinds, laatste poging en volgende stap. Per account **Maak taak** of **Open account**.
 
 ## Periode en normen
 
 Standaard zie je deze maand en je eigen accounts. Onder **Filters** kies je ook **Dit kwartaal**, **Dit verkoopjaar** of een eigen periode; de keuzes staan in de link, zodat je hem kunt delen. De beheerder stelt de normen per fase in bij **Instellingen**, **Normen per fase**.
+
+### Op je telefoon
 
 Op de telefoon open je de funnel ook via **Mijn dashboard** (onder **Meer**), met één fase per rij.

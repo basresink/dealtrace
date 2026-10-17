@@ -5,7 +5,7 @@ import {
   type BelKandidaat, type VastBlok,
 } from '../../shared/belblokken'
 import {
-  STARTSET_SCRIPTS, TE_WEINIG, bezwarenMetConcurrent, conversieLabel, kiesScript, scriptVergelijking, scriptWaarden, valideerScript, variabelenVan, vulScript, zichtbareScripts,
+  STARTSET_SCRIPTS, TE_WEINIG, bezwarenMetConcurrent, conversieLabel, kiesScript, metOnderwerp, scriptVergelijking, scriptWaarden, valideerScript, variabelenVan, vulScript, zichtbareScripts,
   type Belscript,
 } from '../../shared/belscripts'
 import { verkoopverhaalUitSeed } from '../../shared/verkoopverhaal'
@@ -277,5 +277,13 @@ describe('belscripts (F08)', () => {
     expect(r.melding).toBeNull()
     expect(r.beste?.scriptId).toBe('a')
     expect(conversieLabel({ gesprekken: 25, afspraken: 7 })).toBe('28% naar afspraak')
+  })
+})
+
+describe('aanleiding.kort met onderwerp', () => {
+  it('een aanleiding die met een werkwoord begint krijgt het account als onderwerp', () => {
+    expect(metOnderwerp('zoekt twee werkvoorbereiders', 'Testtechniek Vathorst')).toBe('Testtechniek Vathorst zoekt twee werkvoorbereiders')
+    expect(metOnderwerp('Won de aanbesteding', 'Testbouw Noord')).toBe('Testbouw Noord won de aanbesteding')
+    expect(metOnderwerp('nieuwe vestiging in Houten', 'Testbouw Noord')).toBe('nieuwe vestiging in Houten')
   })
 })

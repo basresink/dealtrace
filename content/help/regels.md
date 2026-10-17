@@ -8,11 +8,15 @@ routes: /instellingen/regels
 
 # Regels
 
+### Wat een regel is
+
 Een regel is een als-dan-afspraak. Als er bij een prospect iets waar is, zet Dealtrace een taak of een inzicht voor je klaar. Zo weet je 's ochtends wie je belt, mailt of bezoekt, waarom, en waar je het over hebt.
 
 ## Het scherm
 
 Links staat de lijst met alle regels: de schakelaar aan of uit, de categorie en code, de naam, of de motor hem uitvoert, de fase van de reis en de prioriteit (de stip). Rechts staat het bewerkpaneel van de regel die je kiest. Elk veld heeft een uitleg achter het i-teken. Wijzigingen worden per veld direct bewaard; er is geen opslaanknop.
+
+### Filters
 
 Met **Filters** filter je op aan of uit, alleen motorregels, regels met een winpunt, bron, reis, fase (ook **Zonder fase**), categorie, prospectstatus en uitvoerder. Bij elke fase zie je hoeveel regels erbij horen.
 
@@ -30,6 +34,8 @@ In het blok Gevolg koppel je tot vijf winpunten uit het verkoopverhaal aan de ac
 - in de taak als aanleiding ("Gespreksonderwerp: ...") en in het taakvenster onder Aanleiding;
 - in het belscript van die taak (het winpunt en het argument);
 - in de briefing van die taak.
+
+### Het winpunt in een taak
 
 Gebruik `{winpunt}` in het taaksjabloon om het winpunt in de titel te zetten, bijvoorbeeld "Bel {account} over {winpunt}". Een inzicht neemt het winpunt mee naar de taak die je ervan maakt.
 

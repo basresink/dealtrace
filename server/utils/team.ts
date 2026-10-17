@@ -111,6 +111,7 @@ export async function teamOverzicht(tx: Tx, g: Kijker, teamId: string, p: Period
   const leden = await ledenVan(tx, [teamId])
   const r = await ruw(tx, leden.map((l) => l.id), p, nu)
   const tel = (id: string, m: Metriek) => celRecords(r, id, m).length
+  const open = new Map((await rijen(tx, sql`select owner_id, count(*)::int as n from tasks where owner_id = any(string_to_array(${lijst(leden.map((l) => l.id)) || '-'}, ',')) and status in ('open', 'bezig') group by 1`)).map((x) => [x.owner_id as string, x.n as number]))
   const rijenTeam: (TeamRij & Record<string, any>)[] = leden.map((l) => {
     const k = kpi(l.id, p, r.activiteiten)
     const takenDag = r.takenVandaag.filter((t) => t.owner === l.id).length
@@ -118,7 +119,7 @@ export async function teamOverzicht(tx: Tx, g: Kijker, teamId: string, p: Period
       id: l.id, naam: l.naam, niveau: l.niveau, werkplek: l.werkplek, kpi: k,
       achterstallig: tel(l.id, 'achterstallig'), belblokkenGepland: tel(l.id, 'belblokkenGepland'), belblokkenGehouden: tel(l.id, 'belblokkenGehouden'), conceptenWachten: tel(l.id, 'concepten'),
       afgerondOpDag: tel(l.id, 'afgerondOpDag'), takenOpDag: takenDag, afgerondProcent: takenDag ? Math.round((tel(l.id, 'afgerondOpDag') / takenDag) * 100) : null,
-      afsprakenGehouden: tel(l.id, 'afsprakenGehouden'), overgedragen: tel(l.id, 'overgedragen'), tempo: tempo(k, l.werkplek),
+      afsprakenGehouden: tel(l.id, 'afsprakenGehouden'), overgedragen: tel(l.id, 'overgedragen'), tempo: tempo(k, l.werkplek), openTaken: open.get(l.id) ?? 0,
     }
   })
   const vandaag = nlMoment(nu).datum

@@ -108,6 +108,8 @@ const belLabel = (p: string) => (p === 'Urgent' ? { soort: 'prioriteit', waarde:
 .bl-labels { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
 .bl-labels .pil { text-transform: uppercase; letter-spacing: 0.08em; font-size: 10px; font-weight: 800; }
 .bl-grens { padding: 6px 18px; background: var(--surface); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+/* Tikdoel: op een telefoon is de naam minstens 44 px hoog. */
+@media (max-width: 768px) { .bl-naam { display: flex; align-items: center; min-height: var(--touch-target-min); } }
 @media (max-width: 480px) {
   .bl-kop, .bl-rij { padding-left: 12px; padding-right: 12px; }
   .bl-keuze { width: 100%; }

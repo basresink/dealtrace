@@ -25,6 +25,9 @@ test.describe('zijbalk per niveau', () => {
     await expect(page.locator('.sb-groep[data-groep="Planning"] [data-sleutel="nav.richting"]')).toHaveCount(0)
     await start.nth(2).click()
     await expect(page).toHaveURL(/\/richting$/)
+    // De datum naast LIVE is de datum in Nederland, ook als de server in UTC draait.
+    const nl = new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date()).replace('.', '')
+    await expect(page.locator('.sb-datum')).toHaveText(nl)
   })
 
   test('Rapportages met alleen Mijn dashboard (Funnel via de knop op Mijn dashboard); de gebruikerskaart opent geen menu', async ({ page }) => {

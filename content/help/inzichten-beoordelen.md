@@ -7,11 +7,15 @@ samenvatting: Bron en citaat lezen, Maak taak, afwijzen met reden en zelf een in
 
 # Inzichten beoordelen
 
+### Waar inzichten vandaan komen
+
 Een inzicht is een aanleiding met bewijs. De agents lezen bronnen voor je: de Waarnemer kijkt naar vacatures, nieuws en websites, de Notulist leest je verslagen en de Verrijker vult het dossier aan. Wat ze vinden, staat in de feed met de bron, de datum en een letterlijk citaat.
 
 ## Geen bewijs, geen inzicht
 
 Een agent mag alleen iets melden als hij het kan aantonen. Het citaat moet letterlijk in de bron staan en een link moet echt uit de zoekresultaten komen. Klopt dat niet, dan verschijnt het inzicht niet in je feed. Een Expert ziet zulke inzichten met de schakelaar **Toon tegengehouden**, met de reden erbij.
+
+### Als een bron veroudert
 
 Een bron veroudert. Een vacature ouder dan 30 dagen, nieuws ouder dan 90 dagen of een websitewijziging ouder dan 30 dagen krijgt geen taakvoorstel meer. Na 120, 365 en 90 dagen vervalt het inzicht. Ook een inzicht waarvan de agent minder dan 60 procent zeker is, krijgt geen taakvoorstel.
 

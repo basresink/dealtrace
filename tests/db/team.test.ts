@@ -11,6 +11,8 @@ import * as schema from '../../server/db/schema'
 const team = await import('../../server/utils/team')
 const coaching = await import('../../server/utils/coaching')
 const { coachVoorstel, maandVerbetervoorstel } = await import('../../server/utils/agents/coach')
+const { leesAudit } = await import('../../server/utils/auditLijst')
+const { AUDIT_PERIODEN } = await import('../../shared/audit')
 
 let pool: pg.Pool
 class Terug extends Error {}
@@ -109,6 +111,60 @@ describe('Coaching', () => {
       const n = (await rij(tx, sql`select count(*)::int n from signals where type = 'verbetervoorstel' and owner_id = 'u-04'`)).n
       await maandVerbetervoorstel(tx, ORG, nu)
       expect((await rij(tx, sql`select count(*)::int n from signals where type = 'verbetervoorstel' and owner_id = 'u-04'`)).n).toBe(n)
+    })
+  })
+})
+
+describe('testronde 2, manager', () => {
+  it('B3 en B7: open taken per persoon en één chip per fase in de werkverdeling', async () => {
+    await inOrg(ORG, async (tx) => {
+      const t = await team.teamOverzicht(tx, joost, 'team-binnendienst', maand, nu)
+      const sanne = t.rijen.find((r: any) => r.id === 'u-03')!
+      expect(sanne.openTaken).toBe((await rij(tx, sql`select count(*)::int n from tasks where owner_id = 'u-03' and status in ('open', 'bezig')`)).n)
+      for (const p of t.werkverdeling) expect(new Set(p.fases.map((f: any) => f.fase)).size).toBe(p.fases.length)
+    })
+  })
+  it('B4: een afspraak uit coaching wordt een taak voor de verkoper, met melding naar de taak en audit', async () => {
+    await inOrg(ORG, async (tx) => {
+      const [n] = await rijen(tx, sql`insert into coaching_notities (organisation_id, gebruiker_id, manager_id, soort, tekst, termijn, data) values (${ORG}, 'u-03', 'u-04', 'afspraak', 'Elke dag twee belblokken', '2026-10-23', '{}'::jsonb) returning id`)
+      const taakId = await coaching.afspraakAlsTaak(tx, ORG, 'u-04', 'u-03', { id: n.id, tekst: 'Elke dag twee belblokken', termijn: '2026-10-23' }, nu)
+      const t = await rij(tx, sql`select owner_id, status, title, due_date, data from tasks where id = ${taakId}`)
+      expect(t).toMatchObject({ owner_id: 'u-03', status: 'open', title: 'Coachingafspraak: Elke dag twee belblokken' })
+      expect(t.data.herkomst.bron).toBe('coaching')
+      expect(new Date(t.due_date).toISOString()).toBe('2026-10-23T07:00:00.000Z')
+      expect((await rij(tx, sql`select data->>'taakId' as t from coaching_notities where id = ${n.id}`)).t).toBe(taakId)
+      expect((await rij(tx, sql`select link from notificaties where gebruiker_id = 'u-03' and titel = 'Coachingafspraak gedeeld' order by op desc limit 1`)).link).toBe(`/taken?taak=${taakId}`)
+      expect((await rij(tx, sql`select actor_id, metadata->>'gebruiker' as g from audit_events where action = 'coaching.afspraak' and resource_id = ${taakId}`))).toEqual({ actor_id: 'u-04', g: 'u-03' })
+      // Zonder termijn: het eerste werkmoment.
+      const zonder = await coaching.afspraakAlsTaak(tx, ORG, 'u-04', 'u-03', { id: n.id, tekst: 'Script oefenen' }, nu)
+      expect(new Date((await rij(tx, sql`select due_date from tasks where id = ${zonder}`)).due_date).getTime()).toBeGreaterThanOrEqual(nu.getTime() - 3600_000)
+    })
+  })
+  it('B5: een gesprek afronden zet afgerond met audit, één keer; buiten je team 403', async () => {
+    await inOrg(ORG, async (tx) => {
+      const s = await rij(tx, sql`select id from coaching_sessies where gebruiker_id = 'u-03' order by datum desc limit 1`)
+      await expect(coaching.rondSessieAf(tx, ORG, { id: 'u-01', rol: 'accountmanager' }, s.id, nu)).rejects.toMatchObject({ statusCode: 403 })
+      const a = await coaching.rondSessieAf(tx, ORG, joost, s.id, nu)
+      expect(a.door).toBe('u-04')
+      await coaching.rondSessieAf(tx, ORG, joost, s.id, nu)
+      expect((await rij(tx, sql`select count(*)::int n from audit_events where action = 'coaching.afronden' and resource_id = ${s.id}`)).n).toBe(1)
+      const k = await coaching.coachingKaart(tx, joost, 'u-03', nu)
+      expect(k.sessie!.afgerond).toBeTruthy()
+      expect(k.historie[0]!.afgerond).toBe(true)
+      expect(k.vandaag).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    })
+  })
+  it('B9: de audit toont de naam van het object en filtert op vandaag', async () => {
+    await inOrg(ORG, async (tx) => {
+      const acc = await rij(tx, sql`select id, name from accounts where owner_id = 'u-03' order by id limit 1`)
+      await tx.execute(sql`insert into audit_events (id, organisation_id, actor_id, action, resource_type, resource_id, occurred_at) values (${crypto.randomUUID()}, ${ORG}, 'u-04', 'account.eigenaar', 'accounts', ${acc.id}, now())`)
+      await tx.execute(sql`insert into audit_events (id, organisation_id, actor_id, action, resource_type, resource_id, occurred_at) values (${crypto.randomUUID()}, ${ORG}, 'u-04', 'gebruiker.niveau', 'users', 'u-03', now())`)
+      const vandaag = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Amsterdam' }).format(nu)
+      const { regels } = await leesAudit(tx, { gebruiker: { id: 'u-06', rol: 'beheerder' } } as any, { van: vandaag, persoon: 'u-04' }, 5000)
+      for (const r of regels) expect(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Amsterdam' }).format(new Date(r.op))).toBe(vandaag)
+      expect(AUDIT_PERIODEN[0]).toMatchObject({ sleutel: 'vandaag', label: 'Vandaag', dagen: 1 })
+      expect(regels.find((r) => r.objectId === acc.id)!.objectNaam).toBe(acc.name)
+      expect(regels.find((r) => r.objectId === 'u-03' && r.object === 'users')!.objectNaam).toMatch(/Sanne/)
     })
   })
 })

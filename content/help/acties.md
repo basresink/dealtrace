@@ -7,6 +7,8 @@ samenvatting: Al je taken op één plek, als horizon of lijst, met filters op on
 
 # Taken
 
+### Waar je je taken vindt
+
 Bij **Taken** staan al je taken. Vanaf Gevorderd opent Taken met de horizon: Vandaag, Komende week en Week 2 en 3, met taken en afspraken samen. Als Beginner zie je de lijst in groepen (achterstallig, vandaag, deze week).
 
 - **Nieuwe taak**: met **+ Taak** kies je het type: Te doen, Bellen, Mailen, WhatsApp, SMS of LinkedIn. Een bezoek plan je met **+ Afspraak**; bezoektaken die er al stonden, blijven gewoon Bezoek.
@@ -15,5 +17,7 @@ Bij **Taken** staan al je taken. Vanaf Gevorderd opent Taken met de horizon: Van
 - **Weergave**: kies in het filterpaneel **Horizon** of **Lijst** (vanaf Gevorderd). Je keuze staat in de link.
 - **Afronden**: klik op een taak. In het taakvenster kies je de uitkomst en rond je af.
 - **Briefings**: in het menu direct onder Taken, voor je komende gesprekken of voor een prospect en contactpersoon die je zelf kiest.
+
+### Inzichten en meer lezen
 
 Inzichten staan op hun eigen pagina, **Inzichten**. Lees ook "Een taak afronden met een uitkomst".

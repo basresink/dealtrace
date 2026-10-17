@@ -38,19 +38,30 @@ export async function leesAudit(tx: Tx, ctx: Context, f: AuditFilters, limiet = 
   const lijst = leden?.join(',') ?? ''
   const patronen = f.leverancier ? AUDIT_SOORTEN.leverancier! : f.soort ? AUDIT_SOORTEN[f.soort]! : null
   const cursor = leesCursor(f.voor)
-  const rows = (await tx.execute(sql`select e.id, e.occurred_at, e.action, e.resource_type, e.resource_id, e.metadata, e.actor_id, u.name as door
+  // Van en tot zijn NL-dagen: date naar timestamp en dan naar Amsterdam (date direct "at time zone" schoof
+  // twee uur de verkeerde kant op, zodat Vandaag na middernacht niets toonde).
+  // De naam van het object waar die bekend is, zodat de kolom Wat geen ruwe id toont.
+  const rows = (await tx.execute(sql`select e.id, e.occurred_at, e.action, e.resource_type, e.resource_id, e.metadata, e.actor_id, u.name as door,
+      case e.resource_type
+        when 'accounts' then (select a.name from accounts a where a.id = e.resource_id)
+        when 'contacts' then (select trim(concat_ws(' ', c.first_name, c.last_name)) from contacts c where c.id = e.resource_id)
+        when 'users' then (select x.name from users x where x.id = e.resource_id)
+        when 'teams' then (select t.naam from teams t where t.id = e.resource_id)
+        when 'tasks' then (select k.title from tasks k where k.id = e.resource_id)
+        when 'task' then (select k.title from tasks k where k.id = e.resource_id)
+      end as object_naam
     from audit_events e left join users u on u.id = e.actor_id
     where true
     ${leden ? sql`and (e.actor_id = any(string_to_array(${lijst}, ',')) or (e.resource_type = 'accounts' and e.resource_id in (select id from accounts where owner_id = any(string_to_array(${lijst}, ',')))) or (e.resource_type = 'users' and e.resource_id = any(string_to_array(${lijst}, ','))))` : sql``}
     ${f.persoon ? sql`and e.actor_id = ${f.persoon}` : sql``}
     ${patronen ? sql`and (${sql.join(patronen.map((p) => sql`e.action like ${p}`), sql` or `)})` : sql``}
-    ${f.van ? sql`and e.occurred_at >= (${f.van}::date at time zone 'Europe/Amsterdam')` : sql``}
-    ${f.tot ? sql`and e.occurred_at < ((${f.tot}::date + 1) at time zone 'Europe/Amsterdam')` : sql``}
+    ${f.van ? sql`and e.occurred_at >= (${f.van}::date::timestamp at time zone 'Europe/Amsterdam')` : sql``}
+    ${f.tot ? sql`and e.occurred_at < ((${f.tot}::date + 1)::timestamp at time zone 'Europe/Amsterdam')` : sql``}
     ${cursor ? sql`and (e.occurred_at, e.id) < (${cursor.op}::timestamptz, ${cursor.id})` : sql``}
     order by e.occurred_at desc, e.id desc limit ${limiet + 1}`)).rows as any[]
   const meer = rows.length > limiet
   const regels: AuditRegel[] = rows.slice(0, limiet).map((r) => ({
-    id: r.id, op: new Date(r.occurred_at).toISOString(), actie: r.action, object: r.resource_type ?? null, objectId: r.resource_id ?? null,
+    id: r.id, op: new Date(r.occurred_at).toISOString(), actie: r.action, object: r.resource_type ?? null, objectId: r.resource_id ?? null, objectNaam: r.object_naam ? String(r.object_naam).replace(/^Testgebruiker /, '') : null,
     door: String(r.door ?? r.metadata?.door ?? r.actor_id ?? '').replace(/^Testgebruiker /, ''), doorId: r.actor_id ?? null,
     leverancier: String(r.action).startsWith('leverancier.'), reden: r.metadata?.reden ?? null,
   }))

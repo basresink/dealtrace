@@ -8,6 +8,8 @@ routes: /contacten
 
 # Het buying committee
 
+### Een rol per contact
+
 Bij een zakelijke aankoop beslist zelden één persoon. Geef elk contact een rol:
 
 - **Beslisser**: tekent uiteindelijk.
@@ -17,6 +19,10 @@ Bij een zakelijke aankoop beslist zelden één persoon. Geef elk contact een rol
 - **Poortwachter**: bepaalt wie doorkomt.
 - **Blokkeerder**: houdt het tegen.
 
+### Waar je de rol kiest
+
 De rol kies je op de contactkaart: klik op het rollabel naast de naam. Op de accountkaart zie je het buying committee onder **Meer**, **Kwalificatie**, en wie wie beïnvloedt onder **Meer**, **Invloed** (lees "De invloedskaart").
+
+### Beslissers en vertrekkers
 
 Een mail aan een beslisser gaat nooit zonder jouw goedkeuring de deur uit. Vertrekt iemand, zet het contact dan in het venster **Info** op de contactkaart op vertrokken; de geschiedenis blijft bewaard.

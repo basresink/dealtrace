@@ -72,7 +72,8 @@ test.describe('Mijn dashboard', () => {
     expect(raar.periode.sleutel).toBe('maand')
     const eigen = await (await request.get('/api/resultaten/dashboard?periode=eigen&van=2026-09-01&tot=2099-01-01')).json()
     expect(eigen.periode.van).toBe('2026-09-01')
-    expect(eigen.periode.tot <= new Date().toISOString().slice(0, 10)).toBe(true)
+    // Vandaag in Nederlandse tijd: net na middernacht is de UTC-datum nog gisteren.
+    expect(eigen.periode.tot <= new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Amsterdam' })).toBe(true)
   })
 
   test('op 390 px geen horizontale scroll en tegels in twee kolommen', async ({ page }) => {

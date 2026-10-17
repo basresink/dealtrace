@@ -8,6 +8,8 @@ routes: /instellingen/kanalen
 
 # Kanalen en consent
 
+### Hoe Dealtrace benadert
+
 Onder **Instellingen, Data en AI, Kanalen en consent** legt de beheerder vast hoe Dealtrace prospects benadert. De Bewaker houdt zich er bij elke handeling aan; wat hij tegenhoudt, staat met de reden op de kaart "Vandaag tegengehouden door de Bewaker".
 
 ## Per kanaal
@@ -21,6 +23,8 @@ Onder **Instellingen, Data en AI, Kanalen en consent** legt de beheerder vast ho
 | Bezoek | 180 dagen |
 | Kaart | 365 dagen |
 
+### SMS en de afkoeling
+
 Een SMS valt voor de afkoeling en het frequentieplafond onder WhatsApp. De dagen zie je hier alleen; wijzigen doe je bij **Instellingen**, **Terugkomen**, tabblad **Afkoeling**. Hier zet je wel een kanaal aan of uit; een uitgezet kanaal gebruikt geen enkele agent. Het **frequentieplafond** is standaard één bericht per kanaal per 3 werkdagen buiten het ritme. Feestdagen tellen niet als werkdag.
 
 ## Mail
@@ -32,6 +36,8 @@ Dealtrace mailt alleen als SPF, DKIM en DMARC van je domein in orde zijn; dat co
 1. Kies de provider en tik **Koppel**. Met **Test verbinding** controleer je de koppeling. Je krijgt één keer een webhookadres met geheim voor de provider; daarmee komen statussen en afmeldingen binnen.
 2. Maak een **sjabloon**: een naam in kleine letters (zoals `eerste_contact`), de taal en een tekst van hooguit 60 woorden. `{{1}}` wordt de tekst van het goedgekeurde concept.
 3. Tik **Dien in**. Pas als de provider het sjabloon goedkeurt, is het kiesbaar.
+
+### WhatsApp en toestemming
 
 Een WhatsApp-bericht gaat alleen naar een contact met toestemming "ja" (met datum en bron, in de contactflyout) en altijd na jouw goedkeuring. Zonder toestemming houdt de Bewaker het tegen met "Geen consent voor WhatsApp". Antwoordt iemand STOP, dan zet Dealtrace de toestemming op nee.
 

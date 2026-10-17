@@ -63,6 +63,11 @@ describe('wat de Dagplanner schrijft', () => {
     expect(itemsUitPlan(planDag(basis({ modus: 'binnen', belTaken: 60 })), { belacties: 60, capaciteit: 12, kansenMax: 0 }).filter((i) => i.soort === 'belblok').reduce((s, i) => s + (i.aantal ?? 0), 0)).toBe(12)
     expect(itemsUitPlan(planDag(basis()), { ...opties, kansenMax: 0 }).some((i) => i.soort === 'kans')).toBe(false)
   })
+  it('een voorgesteld belblok van een uur noemt niet meer gesprekken dan erin passen', () => {
+    const bel = planDag(basis({ modus: 'buiten', belTaken: 66 })).blokken.filter((b) => b.soort === 'bel' && b.voorstel)
+    expect(bel.length).toBeGreaterThan(0)
+    for (const b of bel) expect(b.titel).toBe('Belblok 10 gesprekken')
+  })
   it('een lunch in de gekoppelde agenda telt als de lunch; bezet blijft staan', () => {
     const p = planDag(basis({ vast: [...basis().vast, { id: 'bezet:1', soort: 'bezet', start: om(DAG, 12), eind: om(DAG, 12, 30), titel: 'Lunch' }] }))
     expect(p.blokken.filter((b) => b.soort === 'lunch')).toHaveLength(0)

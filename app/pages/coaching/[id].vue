@@ -12,9 +12,15 @@ const pct = (m: { waarde: number; noemer: number | null } | null | undefined) =>
 const kort = (n: string) => n?.replace(/^Testgebruiker /, '') ?? ''
 const punten = ref<any[]>([])
 watch(() => k.value?.sessie, (s) => { punten.value = JSON.parse(JSON.stringify(s?.punten ?? [])) }, { immediate: true })
+// Een nieuw gesprek kan zodra het laatste niet van vandaag is; afronden legt het gesprek vast (auditregel).
+const kanNieuw = computed(() => !k.value?.sessie || k.value.sessie.datum !== k.value.vandaag)
 async function nieuweSessie() {
-  try { await $fetch(`/api/coaching/${route.params.id}/sessie`, { method: 'POST', body: { datum: new Date().toISOString().slice(0, 10) } }); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+  try { await $fetch(`/api/coaching/${route.params.id}/sessie`, { method: 'POST', body: { datum: k.value.vandaag } }); toast.toon('Nieuw gesprek gestart.'); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
+async function rondAf() {
+  try { await $fetch(`/api/coaching/sessie/${k.value.sessie.id}`, { method: 'PUT', body: { punten: punten.value, afgerond: true } }); toast.toon('Gesprek afgerond.'); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+}
+const datumLang = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
 const coachBezig = ref(false)
 async function coach() {
   coachBezig.value = true
@@ -29,7 +35,7 @@ const nieuw = reactive({ soort: 'afspraak', tekst: '', termijn: '' })
 async function voegNotitieToe() {
   try {
     await $fetch(`/api/coaching/${route.params.id}/notities`, { method: 'POST', body: { soort: nieuw.soort, tekst: nieuw.tekst, termijn: nieuw.termijn || null, sessieId: k.value.sessie?.id ?? null, sleutel: crypto.randomUUID() } })
-    toast.toon(nieuw.soort === 'afspraak' ? 'Afspraak vastgelegd en gedeeld.' : 'Privénotitie bewaard.'); Object.assign(nieuw, { soort: 'afspraak', tekst: '', termijn: '' }); await refresh()
+    toast.toon(nieuw.soort === 'afspraak' ? 'Afspraak vastgelegd. De accountmanager krijgt er een taak voor.' : 'Privénotitie bewaard.'); Object.assign(nieuw, { soort: 'afspraak', tekst: '', termijn: '' }); await refresh()
   } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 async function zetStatus(id: string, status: string) { try { await $fetch(`/api/coaching/notities/${id}`, { method: 'PUT', body: { status } }); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') } }
@@ -53,7 +59,8 @@ useHead({ title: computed(() => `Coaching ${kort(k.value?.persoon?.naam ?? '')} 
         <div class="container cg-kaart">
           <article class="kaart cg-punten" data-test="coachingpunten">
             <header class="kaart-kop"><h2 class="kaart-titel">Coachingpunten</h2>
-              <span class="dd-acties"><button v-if="!k.sessie" type="button" class="dd-act" @click="nieuweSessie">Nieuw gesprek</button><button v-if="k.kan.coach" type="button" class="dd-act" :disabled="coachBezig" data-test="coach-voorstel" @click="coach"><Icoon naam="Sparkles" class="dd-actie-icoon" />Laat de Coach voorstellen</button></span></header>
+              <span class="dd-acties"><button v-if="kanNieuw" type="button" class="dd-act" data-test="coaching-nieuw-gesprek" @click="nieuweSessie">Nieuw gesprek</button><button v-if="k.sessie && !k.sessie.afgerond" type="button" class="dd-act" data-test="coaching-rond-af" @click="rondAf"><Icoon naam="Check" class="dd-actie-icoon" />Rond gesprek af</button><button v-if="k.kan.coach" type="button" class="dd-act" :disabled="coachBezig" data-test="coach-voorstel" @click="coach"><Icoon naam="Sparkles" class="dd-actie-icoon" />Laat de Coach voorstellen</button></span></header>
+            <p v-if="k.sessie" class="meta" data-test="coaching-sessie-datum">Gesprek van {{ datumLang(k.sessie.datum) }}<template v-if="k.sessie.afgerond"> · afgerond</template></p>
             <p v-if="!punten.length" class="kaart-meta">Nog geen coachingpunten. Schrijf er zelf een of laat de Coach er hoogstens drie voorstellen.</p>
             <div v-for="(p, i) in punten" :key="i" class="cg-punt">
               <textarea v-model="p.tekst" class="invoer" rows="2" :aria-label="`Coachingpunt ${i + 1}`" @change="bewaarPunten()" />
@@ -92,7 +99,7 @@ useHead({ title: computed(() => `Coaching ${kort(k.value?.persoon?.naam ?? '')} 
               <div class="stat-card"><span class="stat-label">Winpunt uitgevoerd</span><span class="stat-num tnum">{{ pct(k.cijfers.discipline.winpuntUitgevoerd) }}</span><span class="meta">norm 90%</span></div>
             </div>
             <div class="cg-trend mt-16" aria-label="Pogingen per week">
-              <div v-for="t in k.cijfers.trend" :key="t.van" class="cg-week"><div class="cg-balk" :style="{ height: `${(t.pogingen / trendMax) * 100}%` }" /><span class="meta">{{ t.van.slice(5) }}</span><span class="meta tnum">{{ t.pogingen }} · {{ t.afspraken }} afspr.</span></div>
+              <div v-for="t in k.cijfers.trend" :key="t.van" class="cg-week"><div class="cg-balk" data-test="coaching-trend-balk" :style="{ height: `${Math.max(2, Math.round((t.pogingen / trendMax) * 96))}px` }" /><span class="meta">{{ t.van.slice(5) }}</span><span class="meta tnum">{{ t.pogingen }} · {{ t.afspraken }} afspr.</span></div>
             </div>
           </details>
 
@@ -113,7 +120,7 @@ useHead({ title: computed(() => `Coaching ${kort(k.value?.persoon?.naam ?? '')} 
             <h2 class="kaart-titel">Plan coachingsgesprek</h2>
             <form class="cg-nieuw" @submit.prevent="plan"><input v-model="planMoment" type="datetime-local" class="invoer" aria-label="Moment" required><button type="submit" class="dd-act" :disabled="!planMoment" data-test="plan-gesprek">Plan coachingsgesprek</button></form>
             <h3 class="kaart-meta mt-16">Historie</h3>
-            <ul class="schakel-lijst"><li v-for="h in k.historie" :key="h.id" class="schakel-rij"><span>{{ h.datum }}</span><span class="meta">{{ h.punten }} {{ h.punten === 1 ? 'punt' : 'punten' }} · {{ h.afspraken }} {{ h.afspraken === 1 ? 'afspraak' : 'afspraken' }}</span></li></ul>
+            <ul class="schakel-lijst"><li v-for="h in k.historie" :key="h.id" class="schakel-rij" data-test="coaching-historie-rij"><span>{{ datumLang(h.datum) }}<template v-if="h.afgerond"> · afgerond</template></span><span class="meta">{{ h.punten }} {{ h.punten === 1 ? 'punt' : 'punten' }} · {{ h.afspraken }} {{ h.afspraken === 1 ? 'afspraak' : 'afspraken' }}</span></li></ul>
           </article>
         </div>
       </section>

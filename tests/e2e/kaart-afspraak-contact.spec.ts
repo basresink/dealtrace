@@ -37,9 +37,16 @@ for (const breedte of [1280, 390]) {
       expect(taak.ok()).toBe(true)
       const af = await page.request.post('/api/afspraken', { data: { accountId: a.id, meetingsoortId: await soortId(page.request, 'online-meeting'), start: `${dagOver(9)}T09:00:00.000Z` } })
       expect(af.ok()).toBe(true)
+      const losTitel = `Stuur de offerte ${nr()}`
+      expect((await page.request.post('/api/tasks', { data: { title: losTitel, actionType: 'taak', accountId: a.id, dueDate: new Date(Date.now() + 3 * 864e5).toISOString() } })).ok()).toBe(true)
 
       await ga(page, `/accounts/${a.id}`)
       const tl = page.getByTestId('tijdlijn')
+      // Een gewone taak: één label Taak (soort actie, zoals in Taken), nooit "TAAK TAAK" en geen los soortlabel.
+      const los = tl.locator('.tl-item', { hasText: losTitel })
+      await expect(los.locator('[data-test=tl-actie][data-waarde=taak]')).toHaveCount(1)
+      await expect(los.locator('.tl-soort, .tl-type')).toHaveCount(0)
+      await expect(tl.locator('.tl-item').filter({ has: page.locator('[data-test=tl-actie][data-waarde=online]') }).first().locator('.tl-soort')).toHaveCount(0)
       const bel = tl.locator('[data-test=tl-actie][data-waarde=bellen]').first()
       await expect(bel).toBeVisible()
       await expect(bel).toHaveClass(/lbl lbl--rand/)

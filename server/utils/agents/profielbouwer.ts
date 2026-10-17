@@ -7,6 +7,7 @@ import { filterNamen } from '../../../shared/verkoopverhaal'
 import { gebruikDb } from '../db'
 import { voerAiStapUit } from '../llm-provider'
 import { logAgentRun } from './bewaker'
+import { PROMPT_BUYING_COMMITTEE } from '../../../shared/promptStandaard'
 
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
 type Rij = Record<string, any>
@@ -24,7 +25,7 @@ export async function stelCommitteeVoor(tx: Tx, org: string, gebruiker: any, acc
   const functies = [...new Set([...contacten.map((c) => c.functie).filter(Boolean), ...verslagen.flatMap((t) => t.match(/\b(directeur|eigenaar|werkvoorbereider|projectleider|hoofd inkoop|inkoper|bedrijfsleider)\b/gi) ?? [])].map((f: string) => f.toLowerCase()))]
   const r = await voerAiStapUit<any>(tx, org, {
     soort: 'brief', schema: COMMITTEE_SCHEMA, accountId, gebruiker, boekAls: 'profielbouwer',
-    prompt: 'Stel het buying committee voor: per functie de rol, de bron en je zekerheid van 0 tot 100. Verzin geen namen.',
+    prompt: PROMPT_BUYING_COMMITTEE,
     materiaal: { committee: true, functies, verslagen: verslagen.map((t) => filterNamen(t, namen)), bron: 'Verslagen en contacten' },
   }, nu)
   await logAgentRun(tx, org, { agent: 'profielbouwer', handeling: 'committee', mandaat: 'A', uitkomst: r.ok ? 'uitgevoerd' : 'fout', accountId, reden: r.ok ? null : r.reden }, nu)

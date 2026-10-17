@@ -1,4 +1,4 @@
-// POST /api/belblokken/:id/vul {accountIds}: vul een eigen gepland belblok met het voorstel van Dagstart of
+// POST /api/belblokken/:id/vul {accountIds}: vul een eigen gepland (of leeg geopend) belblok met het voorstel van Dagstart of
 // Weekstart (shared/ritmeBlokken.ts vulVoorstellen). Alleen kandidaten uit je eigen bellijst die nog aan geen
 // blok hangen; bestaande beltaken krijgen het blok, de rest een nieuwe beltaak (hangAanBlok, zoals de vuller).
 import { eq } from 'drizzle-orm'
@@ -17,7 +17,8 @@ export default defineEventHandler(async (event) => {
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
     const [s] = await tx.select().from(schema.belblokSessies).where(eq(schema.belblokSessies.id, id))
     if (!s || s.gebruikerId !== ctx.gebruiker.id) throw createError({ statusCode: 404, statusMessage: 'Belblok onbekend' })
-    if (s.status !== 'gepland') throw createError({ statusCode: 409, statusMessage: 'Dit blok loopt al of is klaar' })
+    // Een blok dat al open staat in de belmodus (bezig) maar nog leeg is, mag je ook vullen.
+    if (s.status !== 'gepland' && s.status !== 'bezig') throw createError({ statusCode: 409, statusMessage: 'Dit blok is al klaar' })
     const nu = new Date()
     if (Date.parse(s.eindOp) <= nu.getTime()) throw createError({ statusCode: 422, statusMessage: 'Dit blok is al voorbij' })
     const alle = await laadBelKandidaten(tx, ctx.gebruiker.id)

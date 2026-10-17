@@ -31,6 +31,19 @@ for (const breedte of [1280, 390]) {
       await geenScroll(page)
     })
 
+    test('team: een klik op een naam opent de flyout met coachingkaart en open taken (B1, B3)', async ({ page }) => {
+      await login(page, 'u-04')
+      await ga(page, '/team')
+      await expect(page.getByTestId('team-kicker')).not.toContainText('Team Team')
+      await page.getByTestId(breedte < 500 ? 'team-persoon-u-07' : 'team-naam-u-07').click()
+      await expect(page).toHaveURL(/\/team/)
+      const fly = page.getByTestId('cijfer-flyout')
+      await expect(fly).toContainText('Open taken')
+      await expect(fly).toContainText('Pogingen')
+      await fly.getByRole('link', { name: 'Coachingkaart' }).click()
+      await expect(page).toHaveURL(/\/coaching\/u-07$/)
+    })
+
     test('coaching: wie wacht, open afspraken, cijferflyout en gesprek plannen', async ({ page }) => {
       await login(page, 'u-04')
       await ga(page, '/coaching')
@@ -87,3 +100,44 @@ for (const breedte of [1280, 390]) {
     })
   })
 }
+
+// Coachingsgesprek en audit op 1280 px: afronden, een nieuw gesprek, een afspraak die een taak wordt (B4, B5)
+// en de audit met periode Vandaag en namen in plaats van ruwe id's (B9).
+test.describe('coaching en audit (testronde 2)', () => {
+  test.use({ viewport: { width: 1280, height: 900 } })
+
+  test('coachingkaart: rond gesprek af, nieuw gesprek, afspraak wordt een taak voor de verkoper', async ({ page }) => {
+    await login(page, 'u-04')
+    await ga(page, '/coaching/u-07')
+    const k = await (await page.request.get('/api/coaching/u-07')).json()
+    if (k.sessie && k.sessie.datum !== k.vandaag) {
+      await page.getByTestId('coaching-nieuw-gesprek').click()
+      await expect(page.getByTestId('coaching-sessie-datum')).toBeVisible()
+      await expect(page.getByTestId('coaching-nieuw-gesprek')).toHaveCount(0)
+    }
+    if (await page.getByTestId('coaching-rond-af').count()) {
+      await page.getByTestId('coaching-rond-af').click()
+      await expect(page.getByTestId('coaching-sessie-datum')).toContainText('afgerond')
+      await expect(page.getByTestId('coaching-rond-af')).toHaveCount(0)
+    }
+    await expect(page.getByTestId('coaching-historie-rij').first()).toContainText(/\d{4}/)
+    const tekst = `Elke ochtend een belblok ${Date.now()}`
+    await page.getByTestId('notitie-tekst').fill(tekst)
+    await page.getByTestId('notitie-opslaan').click()
+    await expect(page.getByTestId('afspraken')).toContainText(tekst)
+    const lijst = await (await page.request.get('/api/tasks?eigenaar=u-07')).json()
+    const taak = lijst.groepen.flatMap((g: any) => g.taken).find((t: any) => t.title === `Coachingafspraak: ${tekst}`)
+    expect(taak).toMatchObject({ ownerId: 'u-07', herkomst: 'coaching', status: 'open' })
+  })
+
+  test('audit: periode Vandaag en de naam van het object in de kolom Wat', async ({ page }) => {
+    await login(page, 'u-06')
+    await ga(page, '/instellingen/audit')
+    await page.getByTestId('audit-periode-vandaag').click()
+    await expect(page).toHaveURL(/van=\d{4}-\d{2}-\d{2}/)
+    await expect(page.getByTestId('audit-periode-vandaag')).toHaveAttribute('aria-pressed', 'true')
+    await page.getByTestId('audit-periode-alles').click()
+    await expect(page.getByTestId('audit-regel').first()).toBeVisible()
+    for (const t of await page.getByTestId('audit-object').allTextContents()) expect(t).not.toMatch(/^ · (accounts|users|contacts|teams) [0-9a-z-]+$/)
+  })
+})

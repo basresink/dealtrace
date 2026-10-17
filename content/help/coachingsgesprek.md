@@ -8,6 +8,8 @@ routes: /coaching
 
 # Coaching
 
+### Waar je Coaching vindt
+
 **Coaching** staat in de zijbalk onder **Manager**. De norm is één coachingsgesprek per accountmanager per twee weken. De kop zegt wie op een gesprek wacht.
 
 ## Het overzicht
@@ -15,6 +17,8 @@ routes: /coaching
 - **Vier cijfers**: Gesprek nodig, Open afspraken, Achter op tempo en Taken over tijd. Klik op een cijfer om te zien wie erachter zit.
 - **Wie spreek je als eerste?**: je accountmanagers op volgorde van wie het eerst aan de beurt is, met de reden uit de cijfers van de laatste twee weken, en **Plan gesprek**.
 - **Open afspraken uit coaching**: wat je in eerdere gesprekken afsprak en nog niet is afgevinkt.
+
+### Filters
 
 Onder **Filters** kies je team, stand en werkplek; je keuze staat in de link.
 

@@ -10,6 +10,7 @@ import { gebruikDb } from './db'
 import { voerAiStapUit } from './llm-provider'
 import { alsDoelgroepAccount, zetOmNaarVersie } from './reis'
 import { leesStand } from './vvProjectie'
+import { PROMPT_REISVOORSTEL } from '../../shared/promptStandaard'
 
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
 type Rij = Record<string, any>
@@ -272,7 +273,7 @@ export async function stelFasesVoor(tx: Tx, org: string, g: Bewerker & { niveau:
   const stand = await leesStand(tx)
   const r = await voerAiStapUit<any>(tx, org, {
     soort: 'coach', boekAls: 'coach', gebruiker: { id: g.id, niveau: g.niveau as any, data: g.data }, schema: REIS_SCHEMA as any,
-    prompt: 'Stel een prospectreis voor deze doelgroep voor: fases met hoofdfase, een instapfase, een eindfase overgedragen en een eindfase verloren, en de overgangen met gebeurtenissen uit de lijst. Geen fases voor offertes of deals. Schrijf geen winpunten.',
+    prompt: PROMPT_REISVOORSTEL,
     materiaal: { coach: true, reisVoorstel: true, doelgroep: d ? { naam: d.naam, ...d.data } : null, gebeurtenissen: KIESBARE_GEBEURTENISSEN, fasen: (stand.fasen ?? []).map((f: any) => ({ naam: f.naam, hoofdfase: f.reisHoofdfase ?? null })) },
   }, nu)
   if (!r.ok) fout(502, r.reden ?? 'Er kwam geen voorstel')

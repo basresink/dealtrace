@@ -78,10 +78,23 @@ test.describe('Terugkomen op 1280 px', () => {
     await page.getByTestId('tk-tab-afkoeling').click()
     await expect(page.getByTestId('tk-afk-bellen')).toBeDisabled()
     await expect(page.getByTestId('tk-afk-bewaar')).toHaveCount(0)
+    // B10: geen advies om de afkoeling te verlagen aan wie hem niet mag wijzigen.
+    await expect(page.getByText(/verlaag dan de afkoeling/)).toHaveCount(0)
+    for (const w of await page.getByTestId('tk-afk-let-op').allTextContents()) expect(w).toContain('De afkoeling past alleen de beheerder aan.')
     const r1 = await page.request.put('/api/instellingen/terugkomen/redenen', { data: { bronSoort: 'nee', reden: 'Geen budget', terugkomregelId: 'hc-01' } })
     expect(r1.status()).toBe(403)
     const r2 = await page.request.put('/api/instellingen/terugkomen/afkoeling', { data: { afkoeling: { bellen: 90, mail: 60, linkedin: 90, whatsapp: 180, bezoek: 180, kaart: 365 } } })
     expect(r2.status()).toBe(403)
+  })
+
+  test('salesmanager op Kanalen: wie het aanpast in plaats van een niveau, met een link naar de afkoeling', async ({ page }) => {
+    await als(page, 'u-04', '/instellingen/kanalen')
+    const reden = page.getByTestId('niet-aangezet-reden')
+    await expect(reden).toHaveText('Alleen de beheerder past dit aan.')
+    await expect(page.getByTestId('niet-aangezet-pagina')).not.toContainText('hoort bij')
+    await page.getByTestId('niet-aangezet-verder').click()
+    await expect(page).toHaveURL(/\/instellingen\/terugkomen\?tab=afkoeling/)
+    await expect(page.getByTestId('tk-afk-bellen')).toBeDisabled()
   })
 
   test('accountmanager: geen toegang, ook niet via de API', async ({ page }) => {

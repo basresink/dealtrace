@@ -7,6 +7,8 @@ samenvatting: Waar je begint, wat de zijbalk laat zien en hoe je je eerste taken
 
 # Je eerste dag in Dealtrace
 
+### Wat Dealtrace voor je doet
+
 Dealtrace helpt je nieuwe klanten te vinden en een eerste afspraak te maken. Je hoeft niet alles tegelijk te leren: je ziet de functies die bij jouw niveau horen.
 
 ## Inloggen
@@ -29,7 +31,11 @@ Dealtrace heeft geen wachtwoord. Vul je e-mailadres in en tik **Stuur mij een co
 - **Planning**: een uitklapmenu met onder meer Belblokken, Bezoeken, Meetings, Campagnes, de Leadgenerator, Prospectplanning met daaronder Terug in beeld.
 - Voor de salesmanager en de beheerder ook **Manager** (Team, Coaching, Analyse, Audit) en **Beheer** (Instellingen).
 
+### De iconen onderaan
+
 Onderaan staat een rij iconen: **Account**, **Mijn instellingen**, het **Helpcenter**, **Meldingen** en **Uitloggen**.
+
+### Wat je nog niet ziet
 
 Een functie die voor jouw niveau nog niet aanstaat, zie je niet. Er staat dus nooit een knop of menu-item dat je nog niet kunt gebruiken.
 

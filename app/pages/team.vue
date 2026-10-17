@@ -62,9 +62,16 @@ async function openCel(r: any, metriek: string, label: string) {
     venster.value = { kicker: `${x.records.length} ${x.records.length === 1 ? 'record' : 'records'} · ${data.value.periode?.label ?? ''}`, titel: `${kortNaam(r.naam)}: ${label}`, regels: x.records.map((y: any) => ({ id: y.id, label: y.titel, meta: y.meta, link: y.link })), leeg: 'Geen records in deze periode.' }
   } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
+// Een klik op een naam (1280 en 390) opent de cijfers in een flyout, met de coachingkaart en de open taken erbij.
 function openPersoon(r: any) {
-  venster.value = { kicker: `Cijfers · ${data.value.periode?.label ?? ''}`, titel: kortNaam(r.naam), meta: tempoLabel(r).tekst, regels: KOLOMMEN.map((k) => ({ id: k.k, label: k.label, waarde: tekstCel(r, k.k), klik: () => openCel(r, k.cel, k.label) })) }
+  const extra: CijferRegel[] = [
+    { id: 'openTaken', label: 'Open taken', waarde: String(r.openTaken ?? 0), meta: `${r.achterstallig} over tijd` },
+    ...(functie('nav.coaching')?.beschikbaar ? [{ id: 'coaching', label: 'Coachingkaart', meta: 'Cijfers, afspraken en gesprekken', link: `/coaching/${r.id}` }] : []),
+  ]
+  venster.value = { kicker: `Cijfers · ${data.value.periode?.label ?? ''}`, titel: kortNaam(r.naam), meta: tempoLabel(r).tekst, regels: [...extra, ...KOLOMMEN.map((k) => ({ id: k.k, label: k.label, waarde: tekstCel(r, k.k), klik: () => openCel(r, k.cel, k.label) }))] }
 }
+// Teamnamen beginnen vaak al met "Team": geen "Team Team Zuid" in de kicker.
+const teamNaam = (n: string) => (/^team\b/i.test(n) ? n : `Team ${n}`)
 const perPersoon = (metriek: string, label: string, getal: (r: any) => number, tekst?: (r: any) => string): CijferRegel[] =>
   [...data.value.rijen].sort((a: any, b: any) => getal(b) - getal(a)).map((r: any) => ({ id: r.id, label: kortNaam(r.naam), meta: `${NIVEAU_LABEL[r.niveau as 'beginner']} · ${r.werkplek}`, waarde: tekst ? tekst(r) : String(getal(r)), klik: () => openCel(r, metriek, label) }))
 const tegels = computed(() => {
@@ -119,7 +126,7 @@ useHead({ title: 'Team · Dealtrace' })
     <NietAangezetKop v-if="!aan" sleutel="nav.team" />
     <template v-else>
       <PaginaKop :titel="data.team ? teamKop(data.rijen) : 'Team'" :uitleg="data.team ? teamLede(data.rijen) : undefined" helpartikel="team-controleren">
-        <template #kicker><span class="kicker kicker--streep" data-test="team-kicker">{{ data.team ? `Team ${data.team.naam} · ${data.periode?.label ?? ''} · ${data.rijen.length} ${data.rijen.length === 1 ? 'accountmanager' : 'accountmanagers'}` : 'Team' }}</span></template>
+        <template #kicker><span class="kicker kicker--streep" data-test="team-kicker">{{ data.team ? `${teamNaam(data.team.naam)} · ${data.periode?.label ?? ''} · ${data.rijen.length} ${data.rijen.length === 1 ? 'accountmanager' : 'accountmanagers'}` : 'Team' }}</span></template>
         <template v-if="data.team" #acties>
           <button v-if="$aan('nav.coaching') && data.rijen.length" type="button" class="dd-actie dd-actie--primair" data-test="team-plan-coaching" @click="plan = true"><Icoon naam="CalendarCheck" class="dd-actie-icoon" />Plan gesprek</button>
           <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'mp-filterknop--aan': filtersOpen || chips.length }" :aria-expanded="filtersOpen" data-test="team-filters" @click="filtersOpen = !filtersOpen">
@@ -179,7 +186,7 @@ useHead({ title: 'Team · Dealtrace' })
                   </tr></thead>
                   <tbody>
                     <tr v-for="r in rijen" :key="r.id" :data-test="`team-rij-${r.id}`">
-                      <td><FunctieLink als-tekst :to="`/coaching/${r.id}`" class="tm-naam">{{ kortNaam(r.naam) }}</FunctieLink><br><span class="meta">{{ NIVEAU_LABEL[r.niveau as 'beginner'] }} · {{ r.werkplek }}</span></td>
+                      <td><button type="button" class="tm-naam" :data-test="`team-naam-${r.id}`" @click="openPersoon(r)">{{ kortNaam(r.naam) }}</button><br><span class="meta">{{ NIVEAU_LABEL[r.niveau as 'beginner'] }} · {{ r.werkplek }}</span></td>
                       <td><Label soort="tempo" :waarde="tempoLabel(r).waarde" :tekst="tempoLabel(r).tekst" /></td>
                       <td v-for="k in KOLOMMEN" :key="k.k" class="tnum"><button type="button" class="tm-cel" :class="{ 'tekst-rood': k.k === 'achterstallig' && r.achterstallig >= 10 }" :data-test="`cel-${r.id}-${k.cel}`" @click="openCel(r, k.cel, k.label)">{{ tekstCel(r, k.k) }}</button></td>
                     </tr>
@@ -188,7 +195,7 @@ useHead({ title: 'Team · Dealtrace' })
               </div>
               <ul class="alleen-telefoon kaart mp-lijst" data-test="team-lijst">
                 <li v-for="r in rijen" :key="r.id">
-                  <button type="button" class="item-rij mp-rij" @click="openPersoon(r)">
+                  <button type="button" class="item-rij mp-rij" :data-test="`team-persoon-${r.id}`" @click="openPersoon(r)">
                     <span class="item-icoon" :class="{ 'item-icoon--urgent': r.tempo.stand === 'achter' }"><Icoon naam="User" /></span>
                     <span class="item-body"><span class="item-naam">{{ kortNaam(r.naam) }}</span><span class="item-meta">{{ r.kpi.pogingen }} pogingen · {{ r.kpi.afspraken }} afspraken · {{ r.achterstallig }} over tijd</span><span class="pil-tags"><Label soort="tempo" :waarde="tempoLabel(r).waarde" :tekst="tempoLabel(r).tekst" /></span></span>
                   </button>
@@ -202,7 +209,7 @@ useHead({ title: 'Team · Dealtrace' })
                 <p class="kaart-meta">Prospects per fase. Klik op een fase om die accounts naar een collega te verplaatsen.</p>
                 <ul class="schakel-lijst">
                   <li v-for="p in data.werkverdeling" :key="p.id" class="schakel-rij tm-verdeling"><strong>{{ kortNaam(p.naam) }}</strong>
-                    <span class="chips"><button v-for="f in p.fases" :key="`${f.fase}-${f.status}`" type="button" class="chip" :title="`Verplaats ${f.label ?? f.fase}`" @click="verplaats = { van: p.id, fase: f.fase, label: f.label }">{{ f.label ?? f.fase }} · {{ f.aantal }}</button></span></li>
+                    <span class="chips"><button v-for="f in p.fases" :key="f.fase" type="button" class="chip" :title="`Verplaats ${f.label ?? f.fase}`" @click="verplaats = { van: p.id, fase: f.fase, label: f.label }">{{ f.label ?? f.fase }} · {{ f.aantal }}</button></span></li>
                 </ul>
               </article>
               <article class="kaart" data-test="goedkeuringen">
@@ -260,7 +267,8 @@ useHead({ title: 'Team · Dealtrace' })
 .mp-lijst { list-style: none; margin: 0; padding-top: 4px; padding-bottom: 4px; }
 .mp-rij { grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; }
 .tm-tabel th, .tm-tabel td { white-space: nowrap; }
-.tm-naam { font-weight: 600; }
+.tm-naam { padding: 0; background: none; border: 0; color: var(--ink); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.tm-naam:hover { color: var(--yellow-dark); text-decoration: underline; }
 .tm-sorteer, .tm-cel { all: unset; cursor: pointer; min-height: 32px; display: inline-flex; align-items: center; }
 .tm-cel { text-decoration: underline dotted; }
 .tm-cel:focus-visible, .tm-sorteer:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }

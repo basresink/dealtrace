@@ -8,6 +8,8 @@ routes: /bellen
 
 # De belmodus
 
+### Gesprek na gesprek
+
 De belmodus opent je belblok schermvullend en gaat gesprek na gesprek. Je opent hem met **Start belblok** op **Belblokken**, of door een blok in je agenda of in de lijst met komende blokken te openen.
 
 - **Links** het belscript, al ingevuld voor dit account.
@@ -30,10 +32,14 @@ Onderaan kies je wat er gebeurde. Dealtrace rondt de taak af en plant de volgend
 | Niet geschikt | Het account staat 365 dagen op nee. |
 | Geen interesse | Nee met reden en afkoelperiode per kanaal. |
 
+### Het blokresultaat
+
 Na het laatste gesprek of bij **Stop blok** zie je het blokresultaat: gesprekken, bereikt, beslisser bereikt, afspraken en de duur tegen de schatting.
 
 ## Op de telefoon
 
 Bij **Bellen** tik je op het nummer. Kom je terug in de app, dan vraagt Dealtrace "Hoe ging het?" met vier tegels: Gesproken, Niet bereikt, Voicemail en Terugbellen. Zonder verbinding wordt de uitkomst bewaard en later verstuurd.
+
+### Handsfree
 
 Vanaf Gevorderd kun je **Handsfree** aanzetten: Dealtrace leest naam, reden en opening voor.

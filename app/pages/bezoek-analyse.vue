@@ -124,7 +124,7 @@ useHead({ title: 'Bezoekanalyse · Dealtrace' })
                       <td><strong>{{ r.naam }}</strong><br><span class="ba-hint">{{ r.beschrijving || '—' }}</span></td>
                       <td><span v-if="r.regioId" class="pil" :class="r.regiodag ? '' : 'pil--leeg'">{{ r.regiodag ?? 'Geen' }}</span><span v-else>—</span></td>
                       <td class="cel-r">{{ r.klanten }}</td><td class="cel-r">{{ r.prospects }}</td><td class="cel-r">{{ r.nietBenaderd }}</td>
-                      <td><DekkingBalk :gezien="r.gezien" :stil="r.stil" :nooit="r.nooit" :titel="`${r.gezien} ${data.venster.binnen} · ${r.stil} ${data.venster.buiten} · ${r.nooit} nooit bezocht`" /></td>
+                      <td><button type="button" class="ba-balkknop" :disabled="!r.totaal" :aria-label="`Open ${r.naam}`" :data-test="`regio-balk-${r.regioId ?? 'zonder'}`" @click="openRegio(r)"><DekkingBalk :gezien="r.gezien" :stil="r.stil" :nooit="r.nooit" :titel="`${r.gezien} ${data.venster.binnen} · ${r.stil} ${data.venster.buiten} · ${r.nooit} nooit bezocht`" /></button></td>
                       <td class="cel-r" :class="ernst(r)">{{ r.stil + r.nooit }}</td>
                       <td><button type="button" class="dd-act" :disabled="!r.totaal" :data-test="`regio-open-${r.regioId ?? 'zonder'}`" @click="openRegio(r)">Openen</button></td>
                     </tr>
@@ -240,4 +240,7 @@ useHead({ title: 'Bezoekanalyse · Dealtrace' })
 .ba-regioknop:disabled { cursor: default; opacity: 0.7; }
 .ba-regioknop-kop { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
 @media (max-width: 719px) { .ba-terug { min-height: 44px; } .ba-groot { display: none; } .ba-klein { display: grid; } .ba-bloktitel { font-size: 20px; } }
+.ba-balkknop { display: block; width: 100%; padding: 4px 0; background: none; border: 0; cursor: pointer; }
+.ba-balkknop:disabled { cursor: default; }
+.ba-balkknop:not(:disabled):hover :deep(.db) { border-color: var(--ink); }
 </style>

@@ -109,8 +109,10 @@ export async function herplanDag(tx: Tx, org: string, gebruikerId: string, nu: D
   if (veranderd) {
     await logAgentRun(tx, org, { agent: 'planner', handeling: 'dagplanning.herplannen', mandaat: t.mandaat, uitkomst: 'uitgevoerd', gebruikerId: g.id, bronnen: [{ dag, aanleiding, verplaatst: h.verplaatst.length, vervalt: h.vervalt.length, nieuw: erbij.length }] }, nu)
     await schrijfAudit(tx, { organisationId: org, actorId: g.id, action: 'dagplanning.herplannen', resourceType: 'dagplanningen', resourceId: dp.id, changes: { aanleiding, regels } })
-    await meldDagplanning(tx, org, g.id, 'Je dag is opnieuw ingedeeld', regels.join(' '), nu)
   }
+  // Elke regel in "Wat schoof" komt ook als melding, ook als de planning zelf niet hoefde te veranderen
+  // (Dagstart zegt dan net zo goed "Je dag is opnieuw ingedeeld").
+  if (regels.length) await meldDagplanning(tx, org, g.id, 'Je dag is opnieuw ingedeeld', regels.join(' '), nu)
   return { regels }
 }
 

@@ -10,6 +10,7 @@ import { belmodusItems, laadBelKandidaten, laadScripts } from '../../../utils/be
 import { scriptResultaten } from '../../../utils/belscripts'
 import { sjablonen } from '../../../utils/opvolgreeks'
 import { lopendeReeksen } from '../../../utils/opvolgreeksOverzicht'
+import { legeBlokVoorstellen } from '../../../utils/ritmeBlokken'
 import { vereisFunctie } from '../../../utils/sessie'
 
 export default defineEventHandler(async (event) => {
@@ -29,7 +30,10 @@ export default defineEventHandler(async (event) => {
     const volgen = kan(ctx, 'prospects.volgen')
     const reeksen = volgen ? await lopendeReeksen(tx, [...new Set(items.map((i: any) => i.accountId as string))]) : new Map()
     const reeksSjablonen = volgen ? (await sjablonen(tx, ctx.organisatie.id)).map((x) => ({ id: x.id, naam: x.naam, na: x.na, uitkomsten: x.uitkomsten })) : []
+    // Een blok zonder één gesprek krijgt het vulvoorstel (dezelfde bron als Dagstart en Weekstart).
+    const leeg = !items.length && s.status !== 'klaar' ? (await legeBlokVoorstellen(tx, ctx.gebruiker.id, [s], new Date())).get(s.id) ?? null : null
     return {
+      vulVoorstel: leeg ? { stand: leeg.stand, voorstel: leeg.voorstel } : null,
       sessie: { id: s.id, start: s.startOp, eind: s.eindOp, status: s.status, plek: s.data.plek, soort: s.data.soort, gesprekken: s.data.gesprekken ?? [], resultaat: s.data.resultaat ?? null, stil: !!s.data.stil },
       items: items.map((i: any) => ({ ...i, reeks: reeksen.get(i.accountId) ?? null })), reeksSjablonen, scripts: scripts.map((x) => ({ ...x, conversie: res.length ? conversieLabel(res.find((r) => r.scriptId === x.id && r.versie === x.versie)) : null })),
       kan: { ai: kan(ctx, 'belscript.ai'), handsfree: kan(ctx, 'bellen.handsfree'), variant: kan(ctx, 'belscript.variant') },

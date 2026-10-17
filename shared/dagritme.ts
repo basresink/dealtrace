@@ -1,6 +1,7 @@
 // Het dagritme (P32, 8.13, uit dexRitme): de vorm van het moment, de focus (de eerste zet met de
 // reden erbij) en de tip van de dag. Puur, met `nu` als parameter. Dealtrace rekent met de reis in
 // plaats van met deals (B17).
+import { GESPREKKEN_PER_UUR } from './dagplanning'
 import { isWerkdag, nlMoment, nlTijdstip, plusDagen, type WerkdagInstelling } from './datum'
 import type { Dag, Regel } from './dag'
 import { NORMEN, tempo } from './team'
@@ -313,7 +314,8 @@ export function planDag(p: PlanInput): Dagplan {
   const uren = [...p.bereik.uren].filter((u) => u.uur >= wdag.start && u.uur < wdag.eind).sort((a, b) => rang(b) - rang(a) || a.uur - b.uur)
   const voorstellen: PlanBlok[] = []
   const aantalVoorstel = Math.max(0, nodig - Math.floor(alUren))
-  const perBlok = Math.max(1, Math.ceil(p.belTaken / Math.max(1, aantalVoorstel)))
+  // Hooguit wat in een blok van een uur past (zoals de Dagplanner: GESPREKKEN_PER_UUR), nooit "66 gesprekken" in een uur.
+  const perBlok = Math.min(GESPREKKEN_PER_UUR, Math.max(1, Math.ceil(p.belTaken / Math.max(1, aantalVoorstel))))
   for (let i = 0; i < aantalVoorstel; i++) {
     const u = uren.find((x) => { const s = ts(p.dag, x.uur); return s >= nuT && vrij(s, s + 60 * MIN) })
     if (!u) break

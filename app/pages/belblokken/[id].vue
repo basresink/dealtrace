@@ -12,7 +12,7 @@ import { reeksStrip, reeksUitkomstVan, sjabloonVoorUitkomst } from '~~/shared/op
 const route = useRoute()
 const toast = useToast()
 const id = route.params.id as string
-const { data, error } = await useFetch<any>(() => `/api/belblokken/${id}`)
+const { data, error, refresh } = await useFetch<any>(() => `/api/belblokken/${id}`)
 const items = ref<any[]>([])
 watch(data, (d) => { if (d && !items.value.length) items.value = [...d.items] }, { immediate: true })
 const index = ref(0)
@@ -61,6 +61,21 @@ async function uitkomst(knop: KnopSleutel) {
   try { await $fetch(`/api/belblokken/${id}/gesprek`, { method: 'POST', body }); afgerond = true } catch (e) { toast.toon(`${item.accountNaam}: ${foutTekst(e)}`, 'fout') }
   if (afgerond && reeksSjabloon) await startReeksNa(item, knop, reeksSjabloon)
   if (index.value >= items.value.length) await stop()
+}
+// Een leeg blok: vul het met het voorstel uit je bellijst (zelfde bron en endpoint als Dagstart) en begin te bellen.
+const vullend = ref(false)
+async function vulBlok() {
+  const v = data.value?.vulVoorstel
+  if (!v?.voorstel.length) return
+  vullend.value = true
+  try {
+    const r = await $fetch<any>(`/api/belblokken/${id}/vul`, { method: 'POST', body: { accountIds: v.voorstel.map((x: { accountId: string }) => x.accountId) } })
+    toast.toon(r.toast)
+    await refresh()
+    items.value = [...(data.value?.items ?? [])]
+    index.value = 0
+    gestart.value = Date.now()
+  } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { vullend.value = false }
 }
 function volgende() {
   index.value++
@@ -176,6 +191,16 @@ useHead({ title: 'Belmodus · Dealtrace' })
         </div>
       </div>
     </template>
+    <div v-else-if="data?.vulVoorstel && !gedaan.length" class="belmodus-raster belmodus-raster--resultaat" data-test="bm-leeg">
+      <div>
+        <p>Dit blok is nog leeg. {{ data.vulVoorstel.stand }}.</p>
+        <template v-if="data.vulVoorstel.voorstel.length">
+          <p class="meta" data-test="bm-vulvoorstel">Past erin uit je bellijst: {{ data.vulVoorstel.voorstel.map((x: any) => x.accountNaam).join(', ') }}.</p>
+          <button type="button" class="dd-actie dd-actie--primair mt-8" :disabled="vullend" data-test="bm-vul" @click="vulBlok"><Icoon naam="Plus" class="dd-actie-icoon" />Vul met {{ data.vulVoorstel.voorstel.length }}</button>
+        </template>
+        <p v-else class="meta">Niemand in je bellijst past bij dit blok.</p>
+      </div>
+    </div>
     <div v-else class="belmodus-raster belmodus-raster--resultaat"><div><p>Er staan geen gesprekken meer in dit blok.</p><button type="button" class="dd-act mt-8" @click="stop">Toon het blokresultaat</button></div></div>
   </div>
 </template>

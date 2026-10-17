@@ -8,6 +8,8 @@ routes: /leadgenerator
 
 # Leadgenerator
 
+### Wat de Leadgenerator doet
+
 De **Leadgenerator** zoekt bedrijven die passen bij je doelgroep. Elke bron (AI-zoeker, KvK, import) levert dezelfde lead: met bron, datum en bewijs per criterium. Je vindt hem in de zijbalk onder **Planning**, vanaf niveau Gevorderd. Op de telefoon werk je liever niet in bulk; daar zoek je één bedrijf op in KvK (zie "KvK en Datacollectief").
 
 ## Een ronde starten
@@ -15,6 +17,8 @@ De **Leadgenerator** zoekt bedrijven die passen bij je doelgroep. Elke bron (AI-
 1. Klik **Zoekopdracht aanpassen**.
 2. Kies branche, klasse, werkgebied (postcodegebieden of een straal rond je thuisbasis), een aanleiding en de bronnen.
 3. Klik **Nieuwe ronde**.
+
+### Rondes en kosten
 
 Een ronde levert hooguit 25 bedrijven. Dezelfde zoekopdracht binnen 24 uur geeft het bewaarde resultaat, zonder kosten. Je kunt 10 rondes per dag starten.
 
@@ -30,6 +34,8 @@ Elke lead krijgt een score van 0 tot 6: klasse of omvang, branche, werkgebied, a
 - **Valt af**: minstens één criterium is nee.
 - **Al in je bestand**: hetzelfde KvK-nummer, domein of naam met postcode als een account, of al klant of prospect in DealDrive.
 
+### De zoekopdracht aanpassen
+
 Pas je de zoekopdracht aan, dan schuiven de leads meteen naar de juiste groep.
 
 ## Toevoegen en afwijzen
@@ -40,7 +46,11 @@ Pas je de zoekopdracht aan, dan schuiven de leads meteen naar de juiste groep.
 - **Maak een eerste taak aan**: het type (bellen in je eerstvolgende acquisitieblok, te doen, bellen, mailen, WhatsApp, SMS of LinkedIn; een bezoek plan je daarna als afspraak), de datum en de contactpersoon.
 - **Maak accountplan aan**: een leeg accountplan op jouw naam. Dit vinkje zie je als accountplannen voor jouw niveau aanstaan.
 
+### Een lead toevoegen
+
 Klik **Voeg toe**. Dealtrace maakt de prospect met het bewijs als notitie; de klasse komt uit het aantal medewerkers. Je krijgt een melding met een link naar de nieuwe accountkaart. Een salesmanager kan de lead voor een teamlid klaarzetten.
+
+### Niet relevant
 
 **Niet relevant** vraagt een reden: kies een vaste reden of **Andere reden** en schrijf zelf op waarom. Het bedrijf komt daarna niet meer terug, ook niet op een ander toestel, en de reden stuurt de volgende ronde bij. Met de filter **Niet relevant** zie je de afgewezen bedrijven van de ronde met hun reden, ook je eigen tekst.
 

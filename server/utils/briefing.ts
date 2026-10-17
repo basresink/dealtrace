@@ -16,6 +16,7 @@ import { voerAiStapUit } from './llm-provider'
 import { verstuurMail } from './mail'
 import { teamLeden } from './planning'
 import { leesStand } from './vvProjectie'
+import { promptSchrijver } from '../../shared/promptStandaard'
 
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
 type Rij = Record<string, any>
@@ -268,7 +269,7 @@ export async function bereidVoor(tx: Tx, org: string, gebruiker: any, o: { soort
     verslag: c.ctx.verslagen[0] ? filterNamen(c.ctx.verslagen[0].tekst, namen) : null,
   }
   const [pp] = await rijen(tx, sql`select value from org_settings where key = 'platformprompts'`)
-  const prompt = bouwPrompt({ platform: (pp?.value as any)?.schrijver ?? null, organisatie: c.ctx.faseAccent ? `Fase-accent: ${c.ctx.faseAccent}` : null, instructie: `Schrijf als Schrijver een ${type === 'briefing' ? 'voorbereiding per blok' : type} voor een eerste of volgend contact. Volgorde: waarom (de aanleiding), hoe (precies één winpunt met één bewijs), één vraag. Geen "wat" in de eerste alinea. Je-vorm, geen gedachtestreepjes, geen namen van personen. Fase-accent: ${c.ctx.faseAccent ?? 'geen'}.${opties.stap?.instructie ? ` Opdracht voor deze stap van de opvolgreeks: ${opties.stap.instructie}` : ''}${opties.stap?.onderwerp ? ` Onderwerp: ${opties.stap.onderwerp}.` : ''}` }).volledig
+  const prompt = bouwPrompt({ platform: (pp?.value as any)?.schrijver ?? null, organisatie: c.ctx.faseAccent ? `Fase-accent: ${c.ctx.faseAccent}` : null, instructie: promptSchrijver({ type, faseAccent: c.ctx.faseAccent, instructie: opties.stap?.instructie, onderwerp: opties.stap?.onderwerp }) }).volledig
   let r = await voerAiStapUit<any>(tx, org, { soort: 'concept', prompt, schema: SCHEMA[type]!, materiaal, gebruiker, boekAls: 'schrijver', accountId: c.accountId, ...agent } as any, nu)
   const tekstVan = (x: any) => (type === 'briefing' ? Object.values(x?.blokken ?? {}).join(' ') : String(x?.tekst ?? ''))
   let stijl = r.ok ? stijlScore(tekstVan(r.antwoord)) : null

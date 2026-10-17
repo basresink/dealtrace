@@ -8,6 +8,8 @@ routes: /reizen/
 
 # Een eigen prospectreis bouwen
 
+### Waarom een eigen reis
+
 Elke doelgroep koopt anders. Een installateur in de woningbouw wil een werkbezoek op een project, een groothandel een proeforder. Met een eigen reis geef je zo'n doelgroep een eigen route, van gevonden tot de overdracht na de eerste afspraak.
 
 ## Een concept maken
@@ -18,6 +20,8 @@ Bij **Prospectreizen** klik je **Nieuwe reis**. Begin vanuit de standaardreis, v
 - **Fases**: elke fase heeft een naam, een hoofdfase (Vinden, Bewerken, Verbinden, Overgedragen of Verloren), een verwacht verblijf en een Pitstop-accent. Er is minstens één instapfase, één eindfase overgedragen en één eindfase verloren. Fases voor offertes of deals bestaan niet: de reis eindigt bij de overdracht.
 - **Overgangen**: vanuit welke fase en bij welke gebeurtenis een account doorschuift.
 - **Activiteiten**: wat er klaarstaat als een account een fase betreedt, per rol.
+
+### Een fase verwijderen
 
 Een fase verwijder je alleen met een vervangende fase. Overgangen, regels, startactiviteiten en accounts gaan mee; er blijft nergens een oude fase achter.
 

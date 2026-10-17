@@ -47,9 +47,11 @@ const aiSoorten = computed(() => (credits.value?.soorten ?? []).filter((s: any) 
 const stand = ref<'' | 'aan' | 'uit' | 'later'>('')
 const agents = computed(() => data.value.agents.filter((a: any) => !stand.value || (stand.value === 'later' ? !a.gebouwd : stand.value === 'aan' ? (a.altijdAan || a.aan) && a.gebouwd : !a.altijdAan && !a.aan && a.gebouwd)))
 const titel = computed(() => {
-  const n = data.value.agents.length
+  // Alleen de gebouwde agents tellen mee, zoals op de hub; wat later komt staat wel in de tabel.
+  const gebouwd = data.value.agents.filter((x: any) => x.gebouwd)
+  const n = gebouwd.length
   if (!n) return 'Agents en mandaten'
-  const a = data.value.agents.filter((x: any) => x.altijdAan || x.aan).length
+  const a = gebouwd.filter((x: any) => x.altijdAan || x.aan).length
   return data.value.pauze ? `Agents gepauzeerd, ${a} van ${n} staan aan` : `${a} van ${n} agents aan`
 })
 useHead({ title: 'Agents en mandaten · Instellingen · Dealtrace' })

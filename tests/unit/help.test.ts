@@ -87,7 +87,7 @@ describe('helpcenter (F21)', () => {
     expect(v.nieuw.map((a) => a.slug)).toEqual(['leadgenerator'])
     expect(v.aanDeSlag.map((a) => a.slug)).toEqual([...AAN_DE_SLAG])
     expect(voorJou([], new Set(AAN_DE_SLAG), artikelen).aanDeSlag).toEqual([])
-    expect(voorJou([], new Set(), artikelen).bijgewerkt).toHaveLength(5)
+    expect(voorJou([], new Set(), artikelen).bijgewerkt).toHaveLength(6)
   })
   it('dagpakket: alleen artikelen van functies die aanstaan, zonder verborgen artikelen', () => {
     const lijst = artikelenVoorDagpakket(['nav.vandaag', 'taken.basis'], artikelen, ['vandaag'])

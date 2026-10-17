@@ -1,6 +1,6 @@
 // Team, coaching en resultaten (P21, F20, hoofdstuk 16). Elk cijfer komt uit de activiteitenlog en heeft
 // een noemer, zodat het herleidbaar is. Geen niveauvoorstellen of criteria voor een volgend niveau (B19).
-import { isWerkdag, plusDagen } from './datum'
+import { isWerkdag, nlDag, plusDagen } from './datum'
 
 export const CONTACT_SOORTEN = ['gebeld', 'mail', 'bericht', 'bezoek', 'linkedin', 'whatsapp', 'sms', 'kaart'] as const
 const NIET_GESPROKEN = new Set(['geen_reactie', 'voicemail', 'verzonden', 'niet_bereikt', 'verkeerd_nummer', 'bezet', '', null, undefined])
@@ -45,7 +45,7 @@ export interface Kpi {
   pogingenPerDag: Metriek; gesprekNaarAfspraak: Metriek; beslisserBereikt: Metriek; pogingenTotAfspraak: Metriek
 }
 const deel = (a: number, b: number): Metriek => ({ waarde: b ? Math.round((a / b) * 1000) / 1000 : 0, noemer: b })
-const binnen = (op: string, p: Periode) => op.slice(0, 10) >= p.van && op.slice(0, 10) <= p.tot
+const binnen = (op: string, p: Periode) => { const d = nlDag(op); return d >= p.van && d <= p.tot }
 export const isContact = (a: Pick<KpiActiviteit, 'soort' | 'intern'>) => (CONTACT_SOORTEN as readonly string[]).includes(a.soort) && !a.intern
 export const isGesproken = (a: Pick<KpiActiviteit, 'soort' | 'uitkomst' | 'intern'>) => isContact(a) && !NIET_GESPROKEN.has(a.uitkomst as any)
 

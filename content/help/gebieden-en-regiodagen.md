@@ -18,9 +18,15 @@ De beheerder richt de regio's in onder **Instellingen**, groep **Ritme en regels
 - **eigenaren**: de buitendienst en de binnendienstpartner;
 - **regiodagen** per persoon, elke week of alleen in even of oneven weken.
 
+### Postcode boven plaats
+
 De postcode gaat voor de plaats. Een buitenlandse postcode valt nooit in een Nederlandse reeks. Twee regio's mogen elkaar niet overlappen: dan zegt Dealtrace bijvoorbeeld "Postcode 3750 valt al in Regio Midden. Haal hem daar eerst weg of kies een andere reeks." en kun je niet bewaren.
 
+### Een voorstel uit je accounts
+
 Met **Voorstel uit je accounts** groepeert Dealtrace je accounts op het eerste cijfer van de postcode. Controleer het voorstel en klik **Bewaar**.
+
+### Synoniemen voor plaatsnamen
 
 Onderaan staan de **synoniemen voor plaatsnamen**. "Den Bosch" is altijd "'s-Hertogenbosch"; voeg jullie eigen schrijfwijzen toe.
 

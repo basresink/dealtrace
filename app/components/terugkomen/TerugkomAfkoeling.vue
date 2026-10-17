@@ -14,7 +14,7 @@ watch(() => props.data.afkoeling, (a) => Object.assign(dagen, a ?? {}), { immedi
 const gewijzigd = computed(() => KANALEN.some((k) => Number(dagen[k]) !== props.data.afkoeling?.[k]))
 const geldig = computed(() => KANALEN.every((k) => Number.isInteger(Number(dagen[k])) && Number(dagen[k]) >= 0 && Number(dagen[k]) <= 730 && String(dagen[k]) !== ''))
 const regelsPer = (k: Kanaal) => (props.data.regels ?? []).filter((r: any) => r.kanaalSleutel === k)
-const korter = computed(() => (props.data.regels ?? []).map((r: any) => ({ r, t: korterDanAfkoeling(r, { ...dagen }) })).filter((x: any) => x.t))
+const korter = computed(() => (props.data.regels ?? []).map((r: any) => ({ r, t: korterDanAfkoeling(r, { ...dagen }, { magAfkoeling: mag.value }) })).filter((x: any) => x.t))
 
 const lijst = ref<Verschuiving[] | null>(null)
 const rekent = ref(false)
