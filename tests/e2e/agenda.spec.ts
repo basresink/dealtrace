@@ -11,7 +11,7 @@ test.describe('agenda', () => {
     await expect(page.getByTestId('agenda-periode')).toHaveText(/^Week \d+ · \d+ t\/m \d+ \w+ \d{4}$/)
     await expect(page.locator('[data-test^="dagkop-"]')).toHaveCount(5)
     // De werkweek toont maandag tot en met vrijdag: in het weekend staat er geen nu-lijn.
-    await expect(page.getByTestId('nu-lijn')).toHaveCount([0, 6].includes(new Date().getDay()) ? 0 : 1)
+    await expect(page.getByTestId('nu-lijn')).toHaveCount(['Sat', 'Sun'].includes(new Intl.DateTimeFormat('en-GB', { weekday: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date())) ? 0 : 1)
     // Briefings staat sinds de ronde Taken op /taken, niet meer in de agenda.
     await expect(page.getByTestId('briefings-knop')).toHaveCount(0)
     // De weergave staat in het filterpaneel.
@@ -21,6 +21,9 @@ test.describe('agenda', () => {
     await page.getByTestId('weergave-week').click()
     await expect(page).toHaveURL(/weergave=week/)
     await expect(page.locator('[data-test^="dagkop-"]')).toHaveCount(7)
+    // Ook in de week met zaterdag en zondag staat de nu-lijn alleen op een werkdag (Nederlandse tijd).
+    const nlDag = new Intl.DateTimeFormat('en-GB', { weekday: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date())
+    await expect(page.getByTestId('nu-lijn')).toHaveCount(['Sat', 'Sun'].includes(nlDag) ? 0 : 1)
     const periode = await page.getByTestId('agenda-periode').textContent()
     await page.getByTestId('agenda-volgende').click()
     await expect(page.getByTestId('agenda-periode')).not.toHaveText(periode!)

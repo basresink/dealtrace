@@ -182,7 +182,7 @@ const uren = Array.from({ length: 25 }, (_, i) => i)
             <span class="ar-titel">{{ b.data.titel ?? 'Bezet' }}</span>
           </span>
         </template>
-        <div v-if="k.vandaag && nu !== null" class="ar-nu" :style="{ top: `${(nu / 60) * UUR}px` }" data-test="nu-lijn"><span class="ar-nu-stip" /></div>
+        <div v-if="k.vandaag && !k.weekend && nu !== null" class="ar-nu" :style="{ top: `${(nu / 60) * UUR}px` }" data-test="nu-lijn"><span class="ar-nu-stip" /></div>
       </div>
     </div>
   </div>

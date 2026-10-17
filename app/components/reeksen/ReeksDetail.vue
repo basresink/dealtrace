@@ -7,14 +7,10 @@ import { OVERZICHT_LABEL, type OverzichtStand } from '~~/shared/opvolgreeks'
 
 const props = defineProps<{ reeksId: string }>()
 const emit = defineEmits<{ gewijzigd: [] }>()
-const d = ref<any>(null)
-const fout = ref<string | null>(null)
 const taakId = ref<string | null>(null)
-async function laad() {
-  fout.value = null
-  try { d.value = await $fetch<any>(`/api/reeksen/${props.reeksId}`) } catch (e) { fout.value = foutTekst(e) }
-}
-await laad()
+// useFetch met een vaste sleutel: de server geeft de reeks mee in de payload, zodat de client hetzelfde rendert (geen hydration mismatch).
+const { data: d, error, refresh: laad } = await useFetch<any>(() => `/api/reeksen/${props.reeksId}`, { key: `reeks-detail-${props.reeksId}` })
+const fout = computed(() => (error.value ? foutTekst(error.value) : null))
 async function gewijzigd() { await laad(); emit('gewijzigd') }
 async function taakDicht() { taakId.value = null; await gewijzigd() }
 const r = computed(() => d.value?.reeks ?? null)

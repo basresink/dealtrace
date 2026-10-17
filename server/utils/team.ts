@@ -123,7 +123,8 @@ export async function teamOverzicht(tx: Tx, g: Kijker, teamId: string, p: Period
   })
   const vandaag = nlMoment(nu).datum
   const [terug] = await rijen(tx, sql`select count(*)::int as n from accounts where owner_id = any(string_to_array(${lijst(leden.map((l) => l.id)) || '-'}, ',')) and nb_status = 'wachtend' and terug_op between ${vandaag} and ${plusDagen(vandaag, 7)}`)
-  const verdeling = await rijen(tx, sql`select owner_id, coalesce(fase_id, '-') as fase, nb_status, count(*)::int as n from accounts where account_kind = 'prospect' and owner_id = any(string_to_array(${lijst(leden.map((l) => l.id)) || '-'}, ',')) group by 1, 2, 3 order by 1, 2`)
+  // Eén chip per fase: Verplaats werkt per fase, dus een fase met twee statussen gaf twee gelijke chips.
+  const verdeling = await rijen(tx, sql`select owner_id, coalesce(fase_id, '-') as fase, count(*)::int as n from accounts where account_kind = 'prospect' and owner_id = any(string_to_array(${lijst(leden.map((l) => l.id)) || '-'}, ',')) group by 1, 2 order by 1, 2`)
   // Faselabels uit de reizen, zodat de chips "Afspraak gehouden" tonen en geen ruwe fase-id (B21).
   const faseLabels = new Map<string, string>()
   for (const r of await rijen(tx, sql`select data from reistemplates`)) for (const f of ((r.data as any)?.fases ?? []) as { id: string; label: string }[]) if (!faseLabels.has(f.id)) faseLabels.set(f.id, f.label)
@@ -136,7 +137,7 @@ export async function teamOverzicht(tx: Tx, g: Kijker, teamId: string, p: Period
     team, teams: await zichtbareTeams(tx, g), periode: p,
     kop: rijenTeam.length ? `${opSchema === rijenTeam.length ? 'Iedereen ligt' : `${opSchema} van de ${rijenTeam.length} liggen`} op schema.` : 'Er zit nog niemand in dit team.',
     rijen: rijenTeam, aandachtspunten: aandachtspunten(rijenTeam, { terugDezeWeek: terug?.n ?? 0 }),
-    werkverdeling: leden.map((l) => ({ id: l.id, naam: l.naam, fases: verdeling.filter((v) => v.owner_id === l.id).map((v) => ({ fase: v.fase, label: faseLabels.get(v.fase) ?? (v.fase === '-' ? 'Zonder fase' : v.fase), status: v.nb_status, aantal: v.n })) })),
+    werkverdeling: leden.map((l) => ({ id: l.id, naam: l.naam, fases: verdeling.filter((v) => v.owner_id === l.id).map((v) => ({ fase: v.fase, label: faseLabels.get(v.fase) ?? (v.fase === '-' ? 'Zonder fase' : v.fase), aantal: v.n })) })),
     goedkeuringen, stapels: await teamStapels(tx, leden as any),
   }
 }

@@ -85,8 +85,9 @@ const kort = (naam: string) => naam.replace(/^Testgebruiker /, '').split(' ')[0]
 /** Maximaal vijf aandachtspunten, uitgerekend; gelijke ernst in vaste volgorde (soort, dan naam). */
 export function aandachtspunten(rijen: TeamRij[], extra: { campagnesAchter?: number; terugDezeWeek?: number } = {}): Aandachtspunt[] {
   const uit: Aandachtspunt[] = []
-  const metAfspraak = rijen.filter((r) => r.kpi.afspraken > 0)
-  const teamPta = metAfspraak.length ? metAfspraak.reduce((s, r) => s + r.kpi.pogingen, 0) / metAfspraak.reduce((s, r) => s + r.kpi.afspraken, 0) : 0
+  // Zelfde maat als per persoon: pogingen per account (som pogingen gedeeld door som accounts).
+  const teamAccounts = rijen.reduce((s, r) => s + r.kpi.accounts, 0)
+  const teamPta = teamAccounts ? rijen.reduce((s, r) => s + r.kpi.pogingen, 0) / teamAccounts : 0
   for (const r of rijen) {
     const pta = r.kpi.accounts ? r.kpi.pogingen / r.kpi.accounts : 0
     if (r.kpi.accounts >= 3 && pta < NORMEN.pogingenTotAfspraak.min * 0.6) uit.push({ soort: 'pogingen', gebruikerId: r.id, ernst: 3, tekst: `${kort(r.naam)} stopt gemiddeld na ${nl(Math.round(pta * 10) / 10)} pogingen${teamPta ? ` (team ${nl(Math.round(teamPta * 10) / 10)})` : ''}` })
