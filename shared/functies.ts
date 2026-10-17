@@ -33,6 +33,10 @@ export interface Functie {
     icoon: string
     /** Extra label bij Beginner, zoals "meedoen" of "lezen" (6.1). */
     beginnerLabel?: string
+    /** Menulabel als dat afwijkt van de functienaam. */
+    naam?: string
+    /** Staat in het menu direct onder dit item, los van de plek in de catalogus. */
+    na?: string
   }
   /** Rollen voor wie de functie los van het niveau aanstaat (bijvoorbeeld Prospectreizen voor de salesmanager). */
   altijdVoor?: readonly Rol[]
@@ -52,6 +56,11 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'nav.agenda', naam: 'Agenda', pakket: 'starter', rollen: 'iedereen', helpartikel: 'agenda', startNiveau: 'beginner',
     zijbalk: { groep: 'Start', route: '/agenda', icoon: 'Calendar' },
     uitleg: { watHetDoet: 'Je afspraken, belblokken en regiodagen in een dag-, week- of maandweergave.', totDieTijd: 'Je afspraken van vandaag staan op Vandaag.' },
+  },
+  {
+    sleutel: 'nav.inzichten', naam: 'Inzichten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'inzichten', startNiveau: 'gevorderd',
+    zijbalk: { groep: 'Activiteiten', route: '/inzichten', icoon: 'Lightbulb' },
+    uitleg: { watHetDoet: 'Aanleidingen met bewijs die agents vinden, om te beoordelen en om te zetten in een taak.', totDieTijd: 'De belangrijkste aanleiding van de dag staat op Vandaag.' },
   },
   {
     sleutel: 'nav.acties', naam: 'Taken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'acties', startNiveau: 'beginner',
@@ -111,18 +120,13 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Ziet welke signalen nu opvallend vaak in een branche voorkomen en maakt er met één klik een gerichte belronde van.', totDieTijd: 'De signalen staan per account bij Inzichten.' },
   },
   {
-    sleutel: 'nav.inzichten', naam: 'Inzichten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'inzichten', startNiveau: 'gevorderd',
-    zijbalk: { groep: 'Activiteiten', route: '/inzichten', icoon: 'Lightbulb' },
-    uitleg: { watHetDoet: 'Aanleidingen met bewijs die agents vinden, om te beoordelen en om te zetten in een taak.', totDieTijd: 'De belangrijkste aanleiding van de dag staat op Vandaag.' },
-  },
-  {
     sleutel: 'nav.concepten', naam: 'Concepten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'concepten-goedkeuren-en-versturen', startNiveau: 'beginner',
     zijbalk: { groep: 'Activiteiten', route: '/concepten', icoon: 'Inbox' },
     uitleg: { watHetDoet: 'Wat agents klaarzetten ter goedkeuring: mails, berichten en briefings.', totDieTijd: 'Geen.' },
   },
   {
     sleutel: 'nav.kennisbank', naam: 'Kennisbank', pakket: 'starter', rollen: 'iedereen', helpartikel: 'kennisbank', startNiveau: 'gevorderd',
-    zijbalk: { groep: 'Activiteiten', route: '/kennisbank', icoon: 'BookOpen' },
+    // Niet meer in het hoofdmenu: de ingang staat op /helpcenter (Kennisbank).
     uitleg: { watHetDoet: 'De documenten van je organisatie op één plek: cases, offertes, presentaties, productinfo en contracten, te doorzoeken, gekoppeld aan accounts en contacten en te bevragen met de AI.', totDieTijd: 'Documenten bij een account of contact staan op het tabblad Documenten van de accountkaart.' },
   },
   {
@@ -721,6 +725,8 @@ export const FUNCTIES: readonly Functie[] = [
   },
   {
     sleutel: 'briefing.bewerken', naam: 'Briefing bewerken en delen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'briefing-en-pitstop', startNiveau: 'gevorderd',
+    // Het overzicht /briefings staat in het hoofdmenu direct onder Taken.
+    zijbalk: { groep: 'Activiteiten', route: '/briefings', icoon: 'FileText', naam: 'Briefings', na: 'nav.acties' },
     uitleg: { watHetDoet: 'Eigen tekst per blok, het overzicht van je briefings en de volledige printbare briefing.', totDieTijd: 'Je leest de berekende briefing.' },
   },
   {

@@ -28,7 +28,19 @@ const GROEPEN: ZijbalkGroep[] = ['Start', 'Activiteiten', 'Prospects', 'Rapporta
 
 function naarItem(f: Functie, label?: string): ZijbalkItem {
   const z = f.zijbalk!
-  return { sleutel: f.sleutel, naam: f.naam, route: z.route, icoon: z.icoon, groep: z.groep, ...(label ? { label } : {}) }
+  return { sleutel: f.sleutel, naam: z.naam ?? f.naam, route: z.route, icoon: z.icoon, groep: z.groep, ...(label ? { label } : {}) }
+}
+
+/** Een item met `na` staat direct onder dat andere item (Briefings onder Taken), los van de plek in de catalogus. */
+function menuVolgorde(items: Functie[]): Functie[] {
+  const los = items.filter((f) => f.zijbalk?.na && items.some((x) => x.sleutel === f.zijbalk!.na))
+  if (!los.length) return items
+  const uit: Functie[] = []
+  for (const f of items) {
+    if (los.includes(f)) continue
+    uit.push(f, ...los.filter((x) => x.zijbalk!.na === f.sleutel))
+  }
+  return uit
 }
 
 /** Volgorde binnen "Planning": binnendienst Belblokken boven Bezoeken, buitendienst andersom. */
@@ -52,7 +64,7 @@ export function zijbalkVoor(
 
   for (const groep of GROEPEN) {
     const kandidaten = werkVolgorde(
-      FUNCTIES.filter((f) => f.zijbalk?.groep === groep),
+      menuVolgorde(FUNCTIES.filter((f) => f.zijbalk?.groep === groep)),
       gebruiker.werkplek,
     )
     const items: ZijbalkItem[] = []

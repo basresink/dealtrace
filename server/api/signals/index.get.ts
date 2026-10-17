@@ -1,11 +1,13 @@
-// GET /api/signals: inzichten met filters (gelezen, bron, agent, periode of sinds, fase, soort account en
-// teller). Tegengehouden inzichten staan hier niet in (P19); die komen uit /api/signals/tegengehouden.
+// GET /api/signals: inzichten met filters (gelezen of afgewezen, bron, agent, periode of sinds, Van en Tot
+// (JJJJ-MM-DD, hele dagen in Amsterdamse tijd, ook ver terug), fase, soort account en teller). Tegengehouden inzichten staan hier niet in (P19); die komen uit /api/signals/tegengehouden.
 // Elke rij draagt wat de kaart in de opzet van DealDrive toont: account met soort, bronlabel, tag en de
 // AI-context (de commerciële duiding: winpunt, voorgestelde taak of de vaste duiding per soort).
 import { and, eq, inArray } from 'drizzle-orm'
+import { afwijsTekst, binnenPeriode, inzichtHistorie, winpuntTekst } from '../../../shared/inzichten'
 import { ACTIE_LABEL } from '../../../shared/taken'
 import { metOrganisatie, schema } from '../../utils/db'
 import { vereisFunctie } from '../../utils/sessie'
+import { winpuntTitels } from '../../utils/winpuntTitels'
 
 const AGENT_NAAM: Record<string, string> = { waarnemer: 'Waarnemer', verrijker: 'Verrijker', profielbouwer: 'Profielbouwer', notulist: 'Notulist', handmatig: 'Handmatig' }
 
@@ -28,8 +30,8 @@ function bronLabel(s: { specifiekeBron: string | null; agent: string | null; bro
   return s.specifiekeBron ?? (s.agent ? AGENT_NAAM[s.agent] ?? s.agent : s.bron === 'extern' ? 'Web' : 'CRM')
 }
 
-function aiContext(s: { type: string; winpuntVoorstel: string | null; voorstel: { title: string; actionType?: string } | null }) {
-  if (s.winpuntVoorstel) return `Winpunt: ${s.winpuntVoorstel}`
+function aiContext(s: { type: string; winpuntTitel: string | null; voorstel: { title: string; actionType?: string } | null }) {
+  if (s.winpuntTitel) return `Winpunt: ${s.winpuntTitel}`
   if (s.voorstel?.title) return `Voorstel${s.voorstel.actionType && ACTIE_LABEL[s.voorstel.actionType] ? ` (${ACTIE_LABEL[s.voorstel.actionType]!.toLowerCase()})` : ''}: ${s.voorstel.title}`
   return DUIDING[s.type] ?? null
 }
@@ -42,8 +44,9 @@ export default defineEventHandler(async (event) => {
   const q = getQuery(event) as Record<string, string | undefined>
   const nu = Date.now()
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
-    const statussen = q.gelezen === 'alle' ? ['nieuw', 'gelezen'] : q.gelezen === 'gelezen' ? ['gelezen'] : ['nieuw']
-    const rijen = await tx.select().from(schema.signals).where(and(eq(schema.signals.ownerId, ctx.gebruiker.id), inArray(schema.signals.status, ['nieuw', 'gelezen'])))
+    const statussen = q.gelezen === 'alle' ? ['nieuw', 'gelezen'] : q.gelezen === 'gelezen' ? ['gelezen'] : q.gelezen === 'afgewezen' ? ['afgewezen'] : ['nieuw']
+    const rijen = await tx.select().from(schema.signals).where(and(eq(schema.signals.ownerId, ctx.gebruiker.id), inArray(schema.signals.status, ['nieuw', 'gelezen', 'afgewezen'])))
+    const titels = rijen.some((s) => (s.data as any)?.winpuntVoorstel) ? await winpuntTitels(tx) : new Map<string, string>()
     const ids = [...new Set(rijen.map((s) => s.accountId).filter(Boolean))] as string[]
     const accounts = ids.length ? await tx.select({ id: schema.accounts.id, naam: schema.accounts.name, kind: schema.accounts.accountKind, faseId: schema.accounts.faseId, reisId: schema.accounts.reisId, klasse: schema.accounts.klasse }).from(schema.accounts).where(inArray(schema.accounts.id, ids)) : []
     const reizen = accounts.length ? await tx.select({ id: schema.reistemplates.id, data: schema.reistemplates.data }).from(schema.reistemplates) : []
@@ -55,14 +58,16 @@ export default defineEventHandler(async (event) => {
       const rij = {
         id: s.id, title: s.title, type: s.type, status: s.status, bron: s.bron, relevantie: s.relevanceScore, createdAt: s.createdAt, ruleId: s.ruleId,
         agent: s.agent ?? d.agent ?? null, evidence: d.evidence ?? [], zekerheid: d.zekerheid ?? (s.confidence != null ? Math.round(s.confidence * 100) : null),
-        winpuntVoorstel: d.winpuntVoorstel ?? null, bronUrl: d.bron?.url ?? null, bronDatum: d.bron?.datum ?? null,
+        winpuntVoorstel: d.winpuntVoorstel ?? null, winpuntTitel: winpuntTekst(d.winpuntVoorstel, titels), bronUrl: d.bron?.url ?? null, bronDatum: d.bron?.datum ?? null,
         specifiekeBron: d.bron?.naam ?? null, waarom: d.waarom ?? null, bewijs: d.bewijs ?? [], voorstel: d.voorstel ?? null,
         account: s.accountId ? { id: s.accountId, naam: a?.naam ?? null, soort: a?.kind ?? null, faseId: a?.faseId ?? null, fase: faseLabel(a) } : null,
         tag: s.type === 'agenda' ? 'agenda' : s.bron === 'extern' ? 'extern' : 'intern',
         bronLabel: '', context: null as string | null,
+        afwijsReden: s.status === 'afgewezen' ? afwijsTekst(d) : null, historie: [] as ReturnType<typeof inzichtHistorie>,
       }
       rij.bronLabel = bronLabel(rij)
       rij.context = aiContext(rij)
+      rij.historie = inzichtHistorie({ createdAt: s.createdAt, updatedAt: s.updatedAt, status: s.status, bronLabel: rij.bronLabel, data: d })
       return rij
     })
     const ouderdom = (s: { createdAt: string }) => nu - Date.parse(s.createdAt)
@@ -74,20 +79,21 @@ export default defineEventHandler(async (event) => {
     if (q.bron === 'intern' || q.bron === 'extern') basis = basis.filter((s) => s.bron === q.bron)
     const sinds = SINDS[q.sinds ?? ''] ?? (q.periode === 'week' ? SINDS.week : undefined)
     if (sinds) basis = basis.filter((s) => ouderdom(s) <= sinds)
+    if (q.van || q.tot) basis = basis.filter((s) => binnenPeriode(s.createdAt, q.van, q.tot))
     if (q.agent) basis = basis.filter((s) => (q.agent === 'motor' ? !s.agent : s.agent === q.agent))
     if (q.fase) basis = basis.filter((s) => s.account?.faseId === q.fase)
     basis.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     const teller = { nieuw: (s: typeof alle[number]) => ouderdom(s) <= DAG, hot: (s: typeof alle[number]) => s.relevantie >= 75, week: (s: typeof alle[number]) => ouderdom(s) <= 7 * DAG }
     const lijst = q.teller && q.teller in teller ? basis.filter(teller[q.teller as keyof typeof teller]) : basis
     // De fases waarin je inzichten hebt, voor het filter.
-    const fases = [...new Map(alle.filter((s) => s.account?.faseId && s.account.fase).map((s) => [s.account!.faseId!, { id: s.account!.faseId!, label: s.account!.fase! }])).values()].sort((a, b) => a.label.localeCompare(b.label, 'nl'))
+    const fases = [...new Map(alle.filter((s) => s.status !== 'afgewezen').filter((s) => s.account?.faseId && s.account.fase).map((s) => [s.account!.faseId!, { id: s.account!.faseId!, label: s.account!.fase! }])).values()].sort((a, b) => a.label.localeCompare(b.label, 'nl'))
     return {
       tellers: {
         nieuw: basis.filter(teller.nieuw).length,
         hot: basis.filter(teller.hot).length,
         week: basis.filter(teller.week).length,
         totaal: basis.length,
-        open: alle.length,
+        open: alle.filter((s) => s.status !== 'afgewezen').length,
       },
       fases,
       inzichten: lijst.slice(0, 200),

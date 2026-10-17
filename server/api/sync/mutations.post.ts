@@ -24,7 +24,8 @@ import { bewaarConcept, bewaarVisitekaartje, leesEnBewaarVisitekaartje, verwerkO
 import { OVERSLA_REDENEN } from '../../../shared/route'
 import { nlMoment, plusDagen } from '../../../shared/datum'
 import { sql } from 'drizzle-orm'
-import { AFWIJS_REDENEN, uitstellen } from '../../../shared/taken'
+import { uitstellen } from '../../../shared/taken'
+import { afwijsData, leesAfwijsReden } from '../../../shared/inzichten'
 import { magTaak, rondAf } from '../../utils/taken'
 import { isNeeReden } from '../../../shared/nbStatus'
 import { kan } from '../../utils/accounts'
@@ -117,8 +118,9 @@ export default defineEventHandler(async (event) => {
         if (!s) return { status: 'geweigerd', recordId: m.recordId, code: 404, reden: 'Inzicht onbekend' }
         if (p.soort === 'inzicht.afwijzen') {
           if (!klant || !kan(klant, 'inzichten.afwijzen')) return { status: 'geweigerd', recordId: m.recordId, code: 403, reden: 'Functie niet beschikbaar' }
-          if (!(AFWIJS_REDENEN as readonly string[]).includes(p.reden)) return { status: 'geweigerd', recordId: m.recordId, code: 422, reden: 'Kies een reden om af te wijzen' }
-          await tx.update(schema.signals).set({ status: 'afgewezen', data: { ...(s.data ?? {}), afwijsReden: p.reden }, updatedAt: new Date().toISOString() }).where(eq(schema.signals.id, m.recordId))
+          const k = leesAfwijsReden(p.reden, p.toelichting)
+          if (!k.ok) return { status: 'geweigerd', recordId: m.recordId, code: 422, reden: k.melding }
+          await tx.update(schema.signals).set({ status: 'afgewezen', data: { ...(s.data ?? {}), ...afwijsData(k.keuze, gebruiker.id) }, updatedAt: new Date().toISOString() }).where(eq(schema.signals.id, m.recordId))
         } else if (s.status === 'nieuw') await tx.update(schema.signals).set({ status: 'gelezen', updatedAt: new Date().toISOString() }).where(eq(schema.signals.id, m.recordId))
       } else if (m.tabel === 'appointments') {
         // P13: plannen (afspraak.nieuw, recordId = nieuw id) en afronden (afspraak.afronden) via
