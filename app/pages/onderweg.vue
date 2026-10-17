@@ -138,13 +138,9 @@ useHead({ title: 'Route · Dealtrace' })
     <PlanAfspraakFlyout :open="plan.open" :account="plan.account" :task-id="plan.taskId" :voorstel="plan.voorstel" @sluit="plan.open = false" @gepland="geplandOnline" />
     <InDeBuurtVenster :open="buurtOpen" :kaartapp="app" @sluit="buurtOpen = false" @inloop="startInloop" />
     <InloopKiezer :open="inloopOpen" @sluit="inloopOpen = false" @gekozen="startInloop" />
-    <Teleport to="body">
-      <div v-if="overslaan" class="fo-overlay" @click.self="overslaan = null">
-        <aside class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-label="Overslaan">
-          <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Overslaan</span><h2 class="fo-titel">{{ overslaan.naam }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="overslaan = null"><Icoon naam="X" /></button></header>
+    <FlyoutShell v-if="overslaan" open titel-id="fs-onderweg0" breedte="smal" @sluit="overslaan = null">
+        <template #kop><span class="fo-kicker">Overslaan</span><h2 id="fs-onderweg0" class="fo-titel">{{ overslaan.naam }}</h2></template>
           <div class="fo-body"><div class="uitkomst-raster"><button v-for="r in OVERSLA_REDENEN" :key="r" type="button" class="uitkomst-knop" @click="slaOver(r)">{{ r }}</button></div></div>
-        </aside>
-      </div>
-    </Teleport>
+      </FlyoutShell>
   </div>
 </template>

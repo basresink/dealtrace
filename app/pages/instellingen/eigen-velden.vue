@@ -71,10 +71,9 @@ useHead({ title: 'Eigen velden · Instellingen · Dealtrace' })
       </div>
     </section>
 
-    <Teleport to="body">
-      <div v-if="veld" class="fo-overlay" @click.self="veld = null">
-        <form class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" aria-labelledby="ev-titel" data-test="veld-flyout" @submit.prevent="bewaar">
-          <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">{{ OBJECT_LABEL[object] }}</span><h2 id="ev-titel" class="fo-titel">{{ veld.id ? veld.naam : 'Nieuw veld' }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="veld = null"><Icoon naam="X" /></button></header>
+    <FlyoutShell v-if="veld" open titel-id="ev-titel" breedte="smal" data-test="veld-flyout" @sluit="veld = null">
+        <template #kop><span class="fo-kicker">{{ OBJECT_LABEL[object] }}</span><h2 id="ev-titel" class="fo-titel">{{ veld.id ? veld.naam : 'Nieuw veld' }}</h2></template>
+        <form id="ev-form" class="fs-form" @submit.prevent="bewaar">
           <div class="fo-body fo-body--formulier"><article class="fo-blok">
             <label class="veld"><span class="veld-label">Naam <span class="veld-verplicht">*</span></span><input v-model="veld.naam" class="invoer" required data-test="ev-naam"><span class="veld-uitleg">Sleutel: {{ sleutelVoorbeeld }}{{ veld.id ? ' (vast)' : '' }}</span></label>
             <div class="formulier-raster mt-16">
@@ -97,10 +96,14 @@ useHead({ title: 'Eigen velden · Instellingen · Dealtrace' })
               <Schakelaar :aan="!!veld.data.datakwaliteit" label="Meenemen in Datakwaliteit" data-test="ev-datakwaliteit" @wissel="veld.data.datakwaliteit = $event" />
             </div>
           </article></div>
-          <footer class="fo-foot dd-acties"><button type="submit" class="dd-act dd-act--primair" data-test="ev-bewaar">Veld opslaan</button><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="veld = null">Annuleren</button></footer>
         </form>
-      </div>
-    </Teleport>
+        <template #voet>
+          <footer class="fo-foot fs-voet">
+          <button type="submit" form="ev-form" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="ev-bewaar"><Icoon naam="Check" :grootte="16" />Veld opslaan</button>
+          <span class="fo-foot-vul" />
+        </footer>
+        </template>
+      </FlyoutShell>
     <BevestigVenster :open="!!archiveer" :titel="archiveer?.gearchiveerd ? 'Veld terugzetten' : 'Veld archiveren'" :tekst="archiveer?.gearchiveerd ? 'Het veld is weer zichtbaar.' : `Archiveren verbergt het veld; de ${archiveer?.ingevuld ?? 0} ingevulde waarden blijven bewaard.`" :bevestig="archiveer?.gearchiveerd ? 'Terugzetten' : 'Archiveren'" @geannuleerd="archiveer = null" @bevestigd="doeArchiveer" />
   </div>
 </template>

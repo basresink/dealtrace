@@ -81,20 +81,23 @@ useHead({ title: 'Prospectreizen · Dealtrace' })
         </div>
       </div>
     </section>
-    <Teleport to="body">
-      <div v-if="nieuweReis" class="fo-overlay" @click.self="nieuweReis = false">
-        <form class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" data-test="nieuwe-reis" @submit.prevent="maakReis">
-          <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Nieuwe reis</span><h2 class="fo-titel">Waar begin je?</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="nieuweReis = false"><Icoon naam="X" /></button></header>
+    <FlyoutShell v-if="nieuweReis" open titel-id="fs-index0" breedte="smal" data-test="nieuwe-reis" @sluit="nieuweReis = false">
+        <template #kop><span class="fo-kicker">Nieuwe reis</span><h2 id="fs-index0" class="fo-titel">Waar begin je?</h2></template>
+        <form id="nr-form" class="fs-form" @submit.prevent="maakReis">
           <div class="fo-body fo-body--formulier">
             <label class="schakel-inline"><input v-model="vanuit" type="radio" value="standaard"> Vanuit de standaardreis</label>
             <label v-for="r in rz.reizen.filter((x: any) => !x.isStandaard && x.status !== 'concept')" :key="r.id" class="schakel-inline"><input v-model="vanuit" type="radio" :value="r.id"> Vanuit {{ r.naam }}</label>
             <label class="schakel-inline"><input v-model="vanuit" type="radio" value="leeg"> Leeg</label>
             <label class="veld"><span class="veld-label">Naam</span><input v-model="nieuweNaam" class="invoer" placeholder="Bijvoorbeeld: Installateurs woningbouw" data-test="nieuwe-reis-naam"></label>
           </div>
-          <footer class="fo-foot dd-acties"><span class="dd-acties-vul fo-foot-vul" /><button type="submit" class="dd-act dd-act--primair" data-test="nieuwe-reis-maak">Maak concept</button></footer>
         </form>
-      </div>
-    </Teleport>
+        <template #voet>
+          <footer class="fo-foot fs-voet">
+          <button type="submit" form="nr-form" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="nieuwe-reis-maak"><Icoon naam="Check" :grootte="16" />Maak concept</button>
+          <span class="fo-foot-vul" />
+        </footer>
+        </template>
+      </FlyoutShell>
     </template>
     <DoelgroepFlyout v-if="aan" :open="open" :doelgroep="bewerk" :branches="dg.branches" :klassen="dg.klassen" :ambitie="dg.ambitie" @sluit="open = false" @bewaard="bewaard" />
   </div>

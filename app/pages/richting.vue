@@ -133,13 +133,18 @@ useHead({ title: 'Richting · Dealtrace' })
         </template>
       </div>
     </section>
-    <div v-if="voorstel" class="fo-overlay" @click.self="voorstel = null">
-      <form class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" data-test="voorstel-flyout" @submit.prevent="stuurVoorstel">
-        <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Stel voor</span><h2 class="fo-titel">{{ voorstel.titel }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="voorstel = null"><Icoon naam="X" /></button></header>
+    <FlyoutShell v-if="voorstel" open titel-id="fs-richting0" breedte="smal" data-test="voorstel-flyout" @sluit="voorstel = null">
+      <template #kop><span class="fo-kicker">Stel voor</span><h2 id="fs-richting0" class="fo-titel">{{ voorstel.titel }}</h2></template>
+        <form id="rv-form" class="fs-form" @submit.prevent="stuurVoorstel">
         <div class="fo-body fo-body--formulier"><label class="veld"><span class="veld-label">Je voorstel (antwoord, bezwaar, bewijs of winpunt per branche)</span><textarea v-model="voorstelTekst" class="invoer" rows="4" required data-test="voorstel-tekst" /></label></div>
-        <footer class="fo-foot dd-acties"><button type="submit" class="dd-act dd-act--primair" :disabled="!voorstelTekst.trim()">Stuur naar je salesmanager</button><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="voorstel = null">Annuleren</button></footer>
-      </form>
-    </div>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="rv-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!voorstelTekst.trim()"><Icoon naam="Check" :grootte="16" />Stuur naar je salesmanager</button>
+          <span class="fo-foot-vul" />
+        </footer>
+      </template>
+    </FlyoutShell>
   </div>
 </template>
 

@@ -95,19 +95,16 @@ async function voegToe() {
     emit('klaar', { id: r.id, naam: r.naam, tekst, accountplanId })
   } catch (e) { fout.value = foutTekst(e); toast.toon(fout.value, 'fout') } finally { bezig.value = false }
 }
-function toets(e: KeyboardEvent) { if (e.key === 'Escape' && props.lead) emit('sluit') }
-onMounted(() => document.addEventListener('keydown', toets))
-onBeforeUnmount(() => document.removeEventListener('keydown', toets))
+// Flyoutstandaard (FlyoutShell): Escape, focus en de opslaan-status regelt de shell; Gewijzigd tot Voeg toe.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [g, contacten.value])
+const ai = computed(() => ({ label: props.lead?.naam, vraag: '', voorstellen: ['Zoek de gegevens van dit bedrijf op', 'Bij welke doelgroep hoort dit bedrijf?', 'Wat is een goede eerste taak?'] }))
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="lead" class="fo-overlay" @click.self="emit('sluit')">
-      <form class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" aria-labelledby="vt-titel" data-test="voeg-toe-flyout" novalidate @submit.prevent="voegToe">
-        <header class="fo-head">
-          <div class="fo-head-tekst"><span class="fo-kicker">Voeg toe als prospect</span><h2 id="vt-titel" class="fo-titel">{{ lead.naam }}</h2></div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+  <FlyoutShell v-if="lead" open titel-id="vt-titel" breedte="smal" :opslag="opslag" :ai="ai" data-test="voeg-toe-flyout" @sluit="emit('sluit')" @bewaar="voegToe">
+    <template #kop><span class="fo-kicker">Voeg toe als prospect</span><h2 id="vt-titel" class="fo-titel">{{ lead.naam }}</h2></template>
+      <form id="vt-form" class="fs-form" novalidate @submit.prevent="voegToe">
         <div class="fo-body fo-body--formulier">
           <article class="fo-blok" data-test="vt-gegevens">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Gegevens</h3></header>
@@ -174,14 +171,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
           </article>
           <p v-if="fout" class="veld-fout" role="alert" data-test="vt-fout">{{ fout }}</p>
         </div>
-        <footer class="fo-foot dd-acties">
-          <button type="submit" class="dd-act dd-act--primair" :disabled="bezig || !g.naam.trim()" data-test="vt-opslaan">{{ bezig ? 'Bezig…' : 'Voeg toe' }}</button>
-          <span class="dd-acties-vul fo-foot-vul" />
-          <button type="button" class="dd-act" @click="emit('sluit')">Annuleren</button>
-        </footer>
       </form>
-    </div>
-  </Teleport>
+    <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="vt-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || !g.naam.trim()" data-test="vt-opslaan"><Icoon naam="Plus" :grootte="16" />{{ bezig ? 'Bezig…' : 'Voeg toe' }}</button>
+          <span class="fo-foot-vul" />
+        </footer>
+    </template>
+  </FlyoutShell>
 </template>
 
 <style scoped>

@@ -25,16 +25,19 @@ async function maak() {
   if (!gekozen.value) return
   bezig.value = true
   try {
-    const p = await $fetch<any>('/api/accountplannen', { method: 'POST', body: { accountId: gekozen.value.id, titel: titel.value, geldigVan: van.value || null, geldigTot: tot.value || null } })
+    const p = await opslag.bewaar(() => $fetch<any>('/api/accountplannen', { method: 'POST', body: { accountId: gekozen.value.id, titel: titel.value, geldigVan: van.value || null, geldigTot: tot.value || null } }))
     toast.toon('Accountplan aangemaakt. Vul nu de blokken en het actieplan in.')
     emit('sluit')
     await navigateTo(`/accountplannen/${p.id}`)
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [gekozen.value?.id ?? null, titel.value, van.value, tot.value])
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="apn-titel" data-test="ap-nieuw-flyout" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open" open titel-id="apn-titel" data-test="ap-nieuw-flyout" :opslag="opslag" @sluit="emit('sluit')" @bewaar="maak">
       <template #kop><span class="fo-kicker">Accountplan</span><h2 id="apn-titel" class="fo-titel">Nieuw accountplan</h2><p class="fo-meta">Eén plan per topprospect en per periode. De blokken en acties vul je daarna op de pagina van het plan in.</p></template>
         <form id="apn-form" class="fs-form" @submit.prevent="maak">
         <div class="fo-body">

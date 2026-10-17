@@ -86,7 +86,7 @@ async function maak() {
   try {
     const res = kvk.gekozen
       ? await $fetch<any>(`/api/kvk/${kvk.gekozen.kvk}/toevoegen`, { method: 'POST', body: { naam: f.naam, website: f.website || undefined, telefoon: f.telefoon || undefined, email: f.email || undefined, customFields: f.customFields, ...matrix } })
-      : await $fetch<any>('/api/accounts', { method: 'POST', body: { ...f, ...matrix } })
+      : await opslag.bewaar(() => $fetch<any>('/api/accounts', { method: 'POST', body: { ...f, ...matrix } }))
     toast.toon(`${res.naam} staat erbij.`)
     emit('aangemaakt', res.id)
   } catch (e: any) {
@@ -94,10 +94,13 @@ async function maak() {
     else toast.toon(foutTekst(e), 'fout')
   } finally { bezig.value = false }
 }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [f])
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="np-titel" breedte="smal" data-test="nieuwe-prospect-flyout" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open" open titel-id="np-titel" breedte="smal" data-test="nieuwe-prospect-flyout" :opslag="opslag" @sluit="emit('sluit')" @bewaar="maak">
       <template #kop><span class="fo-kicker">Nieuwe prospect</span><h2 id="np-titel" class="fo-titel">Wie ga je erbij zetten?</h2></template>
         <form id="np-form" class="fs-form" @submit.prevent="maak">
         <div class="fo-body fo-body--formulier">

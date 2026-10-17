@@ -18,10 +18,13 @@ const duren = computed(() => (DUREN.includes(f.value.minuten) ? DUREN : [...DURE
 watch(() => f.value.soort, (s) => { if (s === 'gemengd' && f.value.verhouding === undefined) f.value.verhouding = STANDAARD_VERHOUDING })
 
 function bewaar() { if (!fouten.value.length) emit('bewaar', { ...f.value }) }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [f.value])
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="vb-titel" breedte="smal" data-test="vast-blok-flyout" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open" open titel-id="vb-titel" breedte="smal" data-test="vast-blok-flyout" :opslag="opslag" @sluit="emit('sluit')" @bewaar="bewaar">
       <template #kop><span class="fo-kicker">Vaste belblokken</span><h2 id="vb-titel" class="fo-titel">{{ blok ? 'Vast blok wijzigen' : 'Vast blok plannen' }}</h2></template>
         <form id="vb-form" class="fs-form" @submit.prevent="bewaar">
         <div class="fo-body fo-body--formulier">

@@ -21,7 +21,7 @@ async function maak() {
   if (!klant.value) return
   bezig.value = true; dubbel.value = null
   try {
-    const c = await $fetch<{ id: string; naam: string }>('/api/contacten', { method: 'POST', body: { ...f, accountId: klant.value.id } })
+    const c = await opslag.bewaar(() => $fetch<{ id: string; naam: string }>('/api/contacten', { method: 'POST', body: { ...f, accountId: klant.value.id } }))
     toast.toon(`${c.naam} staat erbij.`)
     emit('aangemaakt', c.id)
   } catch (e: any) {
@@ -30,10 +30,13 @@ async function maak() {
     else toast.toon(foutTekst(e), 'fout')
   } finally { bezig.value = false }
 }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [f, klant.value?.id ?? null])
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="nc-titel" breedte="smal" data-test="nieuw-contact" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open" open titel-id="nc-titel" breedte="smal" data-test="nieuw-contact" :opslag="opslag" @sluit="emit('sluit')" @bewaar="maak">
       <template #kop><span class="fo-kicker">Nieuw contact</span><h2 id="nc-titel" class="fo-titel">Wie ga je erbij zetten?</h2></template>
         <form id="nc-form" class="fs-form" @submit.prevent="maak">
         <div class="fo-body fo-body--formulier">

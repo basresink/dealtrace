@@ -231,15 +231,18 @@ useHead({ title: 'Bezoeken · Dealtrace' })
     <PlanAfspraakFlyout :open="plan.open" :account="plan.account" :task-id="plan.taskId" :aanleiding="plan.aanleiding" :voorstel="plan.voorstel" @sluit="plan.open = false" @gepland="gepland" />
     <AfspraakFlyout :open="!!afspraak" :afspraak-id="afspraak" @sluit="afspraak = null" @gewijzigd="refresh()" />
     <TaakFlyout :open="!!taak" :taak-id="taak" @sluit="taak = null" @klaar="taak = null; refresh()" @gewijzigd="refresh()" />
-    <Teleport to="body">
-      <div v-if="overslaan" class="fo-overlay" @click.self="overslaan = null">
-        <form class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="os-titel" @submit.prevent="slaOver">
-          <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Overslaan</span><h2 id="os-titel" class="fo-titel">{{ overslaan.naam }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="overslaan = null"><Icoon naam="X" /></button></header>
+    <FlyoutShell v-if="overslaan" open titel-id="os-titel" breedte="smal" @sluit="overslaan = null">
+        <template #kop><span class="fo-kicker">Overslaan</span><h2 id="os-titel" class="fo-titel">{{ overslaan.naam }}</h2></template>
+        <form id="os-form" class="fs-form" @submit.prevent="slaOver">
           <div class="fo-body fo-body--formulier"><div class="uitkomst-raster"><button v-for="r in OVERSLA_REDENEN" :key="r" type="button" class="uitkomst-knop" :class="{ 'uitkomst-knop--actief': reden === r }" @click="reden = r">{{ r }}</button></div><p class="meta mt-8">De kans komt 7 dagen niet terug.</p></div>
-          <footer class="fo-foot dd-acties"><span class="dd-acties-vul fo-foot-vul" /><button type="submit" class="dd-act dd-act--primair" :disabled="!reden" data-test="overslaan-bewaar">Overslaan</button></footer>
         </form>
-      </div>
-    </Teleport>
+        <template #voet>
+          <footer class="fo-foot fs-voet">
+          <button type="submit" form="os-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!reden" data-test="overslaan-bewaar"><Icoon naam="Check" :grootte="16" />Overslaan</button>
+          <span class="fo-foot-vul" />
+        </footer>
+        </template>
+      </FlyoutShell>
   </div>
 </template>
 

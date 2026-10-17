@@ -23,16 +23,19 @@ async function zet() {
       await voegToe({ tabel: 'klaargezet_voor', op: 'patch', recordId: props.account.id, patch: { soort: 'kans.klaarzetten', ...body } })
       toast.toon('Klaargezet. Wordt verstuurd zodra je weer verbinding hebt.')
     } else {
-      const r: any = await $fetch(`/api/accounts/${props.account.id}/klaarzetten`, { method: 'POST', body })
+      const r: any = await opslag.bewaar(() => $fetch(`/api/accounts/${props.account.id}/klaarzetten`, { method: 'POST', body }))
       toast.toon(r.tekst)
     }
     emit('klaar'); emit('sluit')
   } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [f])
 </script>
 
 <template>
-  <FlyoutShell v-if="open && account" open titel-id="kz-titel" breedte="smal" data-test="klaarzetten" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open && account" open titel-id="kz-titel" breedte="smal" data-test="klaarzetten" :opslag="opslag" @sluit="emit('sluit')" @bewaar="zet">
       <template #kop><span class="fo-kicker">Klaarzetten voor buitendienst</span><h2 id="kz-titel" class="fo-titel">{{ account.naam }}</h2></template>
         <form id="kz-form" class="fs-form" @submit.prevent="zet">
         <div class="fo-body fo-body--formulier">

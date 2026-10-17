@@ -78,10 +78,8 @@ useHead({ title: 'Bellen · Dealtrace' })
           </div>
         </div>
       </section>
-      <Teleport to="body">
-        <div v-if="vraag && bezig" class="fo-overlay" @click.self="vraag = false">
-          <aside class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-label="Hoe ging het?" data-test="hoe-ging-het">
-            <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">{{ bezig.accountNaam }}</span><h2 class="fo-titel">Hoe ging het?</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="vraag = false"><Icoon naam="X" /></button></header>
+      <FlyoutShell v-if="vraag && bezig" open titel-id="fs-bellen0" breedte="smal" data-test="hoe-ging-het" @sluit="vraag = false">
+          <template #kop><span class="fo-kicker">{{ bezig.accountNaam }}</span><h2 id="fs-bellen0" class="fo-titel">Hoe ging het?</h2></template>
             <div class="fo-body">
               <div v-if="stap === 'tegels'" class="uitkomstraster uitkomstraster--2">
                 <button v-for="t in HOE_GING_HET" :key="t.sleutel" type="button" class="uitkomst uitkomst--tegel" :data-test="`tegel-${t.sleutel}`" @click="tegel(t.sleutel)">{{ t.label }}</button>
@@ -102,9 +100,7 @@ useHead({ title: 'Bellen · Dealtrace' })
               </div>
               <label class="veld mt-16"><span class="veld-label">Notitie (Inspreken komt later)</span><textarea v-model="notitie" class="invoer" rows="2" /></label>
             </div>
-          </aside>
-        </div>
-      </Teleport>
+        </FlyoutShell>
     </template>
   </div>
 </template>

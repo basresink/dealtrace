@@ -55,6 +55,8 @@ export interface GebruikerData {
   nieuwTot?: Record<string, string>
   /** Eigen mandaat per agent (Expert), binnen het organisatiemaximum (P08). */
   mandaat?: Record<string, { mandaat: 'A' | 'B' | 'C' | 'D'; dagplafond?: number | null }>
+  /** Salesmanager met een eigen portefeuille: krijgt de onderbalk van de accountmanager. */
+  eigenPortefeuille?: boolean
 }
 
 export const users = pgTable('users', {

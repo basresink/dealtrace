@@ -176,13 +176,14 @@ export async function weekreeks(tx: Tx, gebruikerIds: string[], van: string) {
 }
 
 /** "Verplaats" (Werkverdeling): accounts van de eigen teams naar iemand in de eigen teams, met reden en een auditregel per account. */
-export async function verplaatsAccounts(tx: Tx, org: string, g: Kijker, b: { accountIds?: string[]; van?: { gebruiker: string; fase: string } | null; naarGebruiker?: string; reden?: string }) {
+/** opties.ontvangers: de toegestane ontvangers als de aanroeper die zelf al controleerde (archiveren met overdracht). */
+export async function verplaatsAccounts(tx: Tx, org: string, g: Kijker, b: { accountIds?: string[]; van?: { gebruiker: string; fase: string } | null; naarGebruiker?: string; reden?: string }, opties: { ontvangers?: string[] } = {}) {
   const reden = b.reden?.trim()
   if (!reden) fout(422, 'Geef een reden')
   let ids = [...new Set((b.accountIds ?? []).filter((x) => typeof x === 'string'))].slice(0, 500)
   if (!ids.length && b.van?.gebruiker && b.van.fase) ids = (await rijen(tx, sql`select id from accounts where owner_id = ${b.van.gebruiker} and account_kind = 'prospect' and coalesce(fase_id, '-') = ${b.van.fase} limit 500`)).map((r) => r.id as string)
   if (!ids.length || !b.naarGebruiker) fout(422, 'Kies accounts en een collega')
-  const leden = (await ledenVan(tx, (await zichtbareTeams(tx, g)).map((t) => t.id))).map((l) => l.id as string)
+  const leden = opties.ontvangers ?? (await ledenVan(tx, (await zichtbareTeams(tx, g)).map((t) => t.id))).map((l) => l.id as string)
   if (!leden.includes(b.naarGebruiker!)) fout(403, 'Deze collega valt niet onder jou')
   const accounts = await rijen(tx, sql`select id, owner_id from accounts where id = any(string_to_array(${ids.join(',')}, ','))`)
   if (accounts.length !== ids.length || accounts.some((a) => !leden.includes(a.owner_id) && g.rol !== 'beheerder')) fout(403, 'Niet alle accounts vallen onder jou')

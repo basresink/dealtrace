@@ -36,28 +36,24 @@ const wanneerTekst = computed(() => {
 })
 const voorbij = computed(() => !!data.value?.wanneer && nu.value > 0 && Date.parse(data.value.wanneer) < nu.value)
 
-// Opslaan-status in de kop: Gewijzigd, Opslaan..., Opgeslagen om 09:12.
-const status = ref<null | 'gewijzigd' | 'bezig' | 'klaar' | 'fout'>(null)
-const opgeslagenOm = ref('')
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd, Opslaan…, Opgeslagen om 09:12.
+const opslag = useFlyoutOpslag()
 const bewerk = ref<string | null>(null)
 const alles = ref(false)
 const teksten = reactive<Record<string, string>>({})
 const kanBewerken = computed(() => !!data.value?.kan?.bewerken && gesprek.value)
 async function bewaarBlok(blok: string, tekst: string) {
-  status.value = 'bezig'
   try {
-    await $fetch('/api/briefing/tekst', { method: 'PUT', body: { onderwerp: props.onderwerp, id: props.id, blok, tekst } })
-    opgeslagenOm.value = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })
-    status.value = 'klaar'
+    await opslag.bewaar(() => $fetch('/api/briefing/tekst', { method: 'PUT', body: { onderwerp: props.onderwerp, id: props.id, blok, tekst } }))
     emit('gewijzigd')
-  } catch (e) { status.value = 'fout'; toast.toon(foutTekst(e), 'fout') }
+  } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 function startBewerk(b: any) { bewerk.value = b.sleutel; teksten[b.sleutel] = b.tekst === 'Nog niet bekend.' ? '' : b.tekst; nextTick(() => document.querySelector<HTMLTextAreaElement>(`[data-test="tekst-${b.sleutel}"]`)?.focus()) }
 async function bewaar(sleutel: string) { await bewaarBlok(sleutel, teksten[sleutel] ?? ''); bewerk.value = null; await refresh() }
-function annuleer() { bewerk.value = null; if (status.value === 'gewijzigd') status.value = null }
+function annuleer() { bewerk.value = null; if (opslag.stand === 'gewijzigd') opslag.basis() }
 const timers: Record<string, ReturnType<typeof setTimeout>> = {}
 function typ(sleutel: string) {
-  status.value = 'gewijzigd'
+  opslag.gewijzigd()
   if (!alles.value) return
   clearTimeout(timers[sleutel])
   timers[sleutel] = setTimeout(() => bewaarBlok(sleutel, teksten[sleutel] ?? ''), 1200)
@@ -100,12 +96,15 @@ async function bereidVoor() {
 
 const stap = ref('')
 async function doel(d: 'ja' | 'deels' | 'nee') {
-  status.value = 'bezig'
   try {
-    await $fetch('/api/briefing/uitkomst', { method: 'POST', body: { onderwerp: props.onderwerp, id: props.id, doel: d, volgendeStap: stap.value || null } })
-    opgeslagenOm.value = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }); status.value = 'klaar'
+    await opslag.bewaar(() => $fetch('/api/briefing/uitkomst', { method: 'POST', body: { onderwerp: props.onderwerp, id: props.id, doel: d, volgendeStap: stap.value || null } }))
     await refresh(); emit('gewijzigd')
-  } catch (e) { status.value = 'fout'; toast.toon(foutTekst(e), 'fout') }
+  } catch (e) { toast.toon(foutTekst(e), 'fout') }
+}
+// Opslaan vanuit de vraag bij sluiten: alle blokken of het blok dat open staat.
+async function bewaarVoorSluiten() {
+  if (alles.value) await wisselAlles()
+  else if (bewerk.value) await bewaar(bewerk.value)
 }
 
 const vl = useVoorlezen()
@@ -126,17 +125,12 @@ const MOMENT: Record<string, string> = { gebeld: 'Gebeld', mail: 'Mail', afspraa
 const dag = (iso: string) => new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', timeZone: TZ })
 const kort = (iso: string | null) => (iso ? new Date(iso).toLocaleString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: TZ }) : 'Geen datum')
 const soort = computed(() => data.value?.soort as BriefingSoort | undefined)
-function opEscape(e: KeyboardEvent) { if (e.key === 'Escape') emit('sluit') }
-onMounted(() => window.addEventListener('keydown', opEscape))
-onBeforeUnmount(() => { window.removeEventListener('keydown', opEscape); for (const t of Object.values(timers)) clearTimeout(t); vl.stop() })
+onBeforeUnmount(() => { for (const t of Object.values(timers)) clearTimeout(t); vl.stop() })
 </script>
 
 <template>
-  <Teleport to="body">
-    <div class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--breed bfd" role="dialog" aria-modal="true" aria-labelledby="bfd-titel" :data-test="onderwerp === 'account' ? 'briefing-gekozen' : 'briefing-venster'">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
+  <FlyoutShell open titel-id="bfd-titel" breedte="breed" paneel-klasse="bfd" :opslag="opslag" :ai="data ? { accountId: data.account.id, label: data.account.naam } : null" ai-in-voet status-test="briefing-opslag" :data-test="onderwerp === 'account' ? 'briefing-gekozen' : 'briefing-venster'" @sluit="emit('sluit')" @bewaar="bewaarVoorSluiten">
+    <template #kop>
             <span class="fo-kicker"><span v-if="soort" class="bfd-stip" :class="`bfd-stip--${SOORT_KLEUR[soort]}`" />Briefing<template v-if="data"> · {{ data.soortLabel }}<template v-if="data.vastgezet"> · vastgezet</template></template></span>
             <h2 id="bfd-titel" class="fo-titel">{{ data?.account?.naam ?? 'Briefing' }}</h2>
             <p v-if="data" class="fo-meta">
@@ -144,15 +138,7 @@ onBeforeUnmount(() => { window.removeEventListener('keydown', opEscape); for (co
               <template v-if="gesprek">{{ onderwerp === 'afspraak' ? 'Afspraak' : 'Taak' }} {{ wanneerTekst }}<template v-if="data.titel"> · {{ data.titel }}</template></template>
               <template v-else>{{ data.account.soort === 'klant' ? 'Klant' : 'Prospect' }} · briefing voor je volgende contact</template>
             </p>
-          </div>
-          <span class="bfd-opslag" aria-live="polite" data-test="briefing-opslag">
-            <template v-if="status === 'gewijzigd'"><span class="bfd-opslag--gewijzigd">Gewijzigd</span></template>
-            <template v-else-if="status === 'bezig'">Opslaan…</template>
-            <template v-else-if="status === 'klaar'"><Icoon naam="Check" :grootte="14" />Opgeslagen om {{ opgeslagenOm }}</template>
-            <template v-else-if="status === 'fout'"><span class="bfd-opslag--fout">Niet opgeslagen</span></template>
-          </span>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+    </template>
 
         <div class="fo-body">
           <p v-if="error" class="meta" data-test="briefing-fout">{{ foutTekst(error) }}</p>
@@ -253,19 +239,19 @@ onBeforeUnmount(() => { window.removeEventListener('keydown', opEscape); for (co
           </section>
         </div>
 
-        <footer v-if="data" class="fo-foot dd-acties bfd-voet">
-          <button v-if="gesprek" type="button" class="dd-act dd-act--primair" data-test="briefing-open-item" @click="emit('openItem', { onderwerp: onderwerp as 'afspraak' | 'taak', id })"><Icoon :naam="onderwerp === 'afspraak' ? 'Calendar' : 'Phone'" :grootte="14" />{{ onderwerp === 'afspraak' ? 'Open afspraak' : 'Open taak' }}</button>
-          <NuxtLink v-else :to="`/accounts/${data.account.id}`" class="dd-act dd-act--primair" data-test="briefing-open-account">Open accountkaart</NuxtLink>
-          <span class="dd-acties-vul fo-foot-vul" />
+        <template #voet>
+        <footer v-if="data" class="fo-foot fs-voet bfd-voet">
+          <button v-if="gesprek" type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="briefing-open-item" @click="emit('openItem', { onderwerp: onderwerp as 'afspraak' | 'taak', id })"><Icoon :naam="onderwerp === 'afspraak' ? 'Calendar' : 'Phone'" :grootte="16" />{{ onderwerp === 'afspraak' ? 'Open afspraak' : 'Open taak' }}</button>
+          <NuxtLink v-else :to="`/accounts/${data.account.id}`" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="briefing-open-account"><Icoon naam="ArrowRight" :grootte="16" />Open accountkaart</NuxtLink>
+          <span class="fo-foot-vul" />
           <button v-if="aiAan" type="button" class="dd-act dd-act--icoon" aria-label="Vraag AI" title="Vraag AI" data-test="briefing-ai" @click="openAi({ accountId: data.account.id, label: data.account.naam })"><Icoon naam="Sparkles" :grootte="16" /></button>
           <button v-if="kanLezen" type="button" class="dd-act dd-act--icoon" :aria-label="vl.spreekt.value ? 'Stop met voorlezen' : 'Lees voor'" :title="vl.spreekt.value ? 'Stop' : 'Lees voor'" :aria-pressed="vl.spreekt.value" data-test="briefing-lees-voor" @click="leesVoor"><Icoon :naam="vl.spreekt.value ? 'VolumeX' : 'Volume2'" :grootte="16" /></button>
           <button v-if="kanBewerken" type="button" class="dd-act dd-act--icoon" aria-label="Alle blokken bewerken" title="Alle blokken bewerken" :aria-pressed="alles" data-test="briefing-alles" @click="wisselAlles"><Icoon naam="Pencil" :grootte="16" /></button>
           <button type="button" class="dd-act dd-act--icoon" aria-label="Volledige briefing afdrukken" title="Afdrukken" data-test="briefing-afdrukken" @click="drukAf"><Icoon naam="FileText" :grootte="16" /></button>
           <NuxtLink v-if="gesprek" :to="`/accounts/${data.account.id}`" class="dd-act dd-act--icoon" aria-label="Open accountkaart" title="Open accountkaart" data-test="briefing-open-account"><Icoon naam="ChevronRight" :grootte="16" /></NuxtLink>
         </footer>
-      </aside>
-    </div>
-  </Teleport>
+        </template>
+  </FlyoutShell>
 </template>
 
 <style scoped>
@@ -274,9 +260,6 @@ onBeforeUnmount(() => { window.removeEventListener('keydown', opEscape); for (co
 .bfd-stip--paars { background: var(--purple); }
 .bfd-stip--oranje { background: var(--orange); }
 .bfd-stip--groen { background: var(--green); }
-.bfd-opslag { display: inline-flex; align-items: center; gap: 4px; align-self: center; margin-left: auto; font-size: 12px; color: var(--muted); white-space: nowrap; }
-.bfd-opslag--gewijzigd { color: var(--orange-dark); font-weight: 700; }
-.bfd-opslag--fout { color: var(--red); font-weight: 700; }
 .bfd-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
 .bfd-tab { min-height: 40px; padding: 0 14px; background: none; border: 0; border-bottom: 3px solid transparent; color: var(--muted); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .bfd-tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--yellow); }
@@ -319,6 +302,6 @@ onBeforeUnmount(() => { window.removeEventListener('keydown', opEscape); for (co
   .bf-blok-titel a, .bf-contact-gegevens a { display: inline-block; padding: 13px 0; margin: -13px 0; }
 }
 @media print {
-  .bfd-tabs, .bfd-soort .bfd-pillen, .bfd-pitstop, .bf-doel, .bfd-opslag, .bfd-blok-kop .dd-act { display: none !important; }
+  .bfd-tabs, .bfd-soort .bfd-pillen, .bfd-pitstop, .bf-doel, .bfd-blok-kop .dd-act { display: none !important; }
 }
 </style>

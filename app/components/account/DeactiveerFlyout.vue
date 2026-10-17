@@ -15,15 +15,18 @@ async function bewaar() {
   if (ongeldig.value) return
   bezig.value = true
   try {
-    const r = await $fetch<any>(`/api/accounts/${props.account.id}/deactiveren`, { method: 'POST', body: { reden: reden.value, toelichting: toelichting.value.trim() || undefined } })
+    const r = await opslag.bewaar(() => $fetch<any>(`/api/accounts/${props.account.id}/deactiveren`, { method: 'POST', body: { reden: reden.value, toelichting: toelichting.value.trim() || undefined } }))
     const gestopt = r.gestopt?.taken ? ` ${r.gestopt.taken} open ${r.gestopt.taken === 1 ? 'taak is' : 'taken zijn'} gestopt.` : ''
     emit('klaar', `${props.account.naam} is gedeactiveerd.${gestopt}`)
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [reden.value, toelichting.value])
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="deactiveer-titel" breedte="smal" data-test="deactiveer-venster" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open" open titel-id="deactiveer-titel" breedte="smal" data-test="deactiveer-venster" :opslag="opslag" @sluit="emit('sluit')" @bewaar="bewaar">
       <template #kop><span class="fo-kicker">Deactiveren</span><h2 id="deactiveer-titel" class="fo-titel">{{ account.naam }}</h2></template>
         <form id="deactiveer-form" class="fs-form" @submit.prevent="bewaar">
         <div class="fo-body fo-body--formulier">

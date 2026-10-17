@@ -134,13 +134,18 @@ const nieuweAfspraak = ref(false)
       <button v-if="menu.taak.account" type="button" @click="navigateTo(`/accounts/${menu.taak.account.id}`)">Open kaart</button>
       <button type="button" @click="annuleer = menu.taak; menu = null">Annuleer met reden</button>
     </div>
-    <div v-if="annuleer" class="fo-overlay" @click.self="annuleer = null">
-      <form class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" @submit.prevent="doeAnnuleren">
-        <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Annuleren</span><h2 class="fo-titel">{{ annuleer.title }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="annuleer = null"><Icoon naam="X" /></button></header>
+    <FlyoutShell v-if="annuleer" open titel-id="fs-taken0" breedte="smal" @sluit="annuleer = null">
+      <template #kop><span class="fo-kicker">Annuleren</span><h2 id="fs-taken0" class="fo-titel">{{ annuleer.title }}</h2></template>
+        <form id="ta-form" class="fs-form" @submit.prevent="doeAnnuleren">
         <div class="fo-body"><label class="veld"><span class="veld-label">Reden</span><input v-model="annuleerReden" class="invoer" required></label></div>
-        <footer class="fo-foot dd-acties"><span class="dd-acties-vul fo-foot-vul" /><button type="submit" class="dd-act dd-act--primair" :disabled="!annuleerReden.trim()">Annuleer taak</button></footer>
-      </form>
-    </div>
+        </form>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="submit" form="ta-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!annuleerReden.trim()"><Icoon naam="Check" :grootte="16" />Annuleer taak</button>
+          <span class="fo-foot-vul" />
+        </footer>
+      </template>
+    </FlyoutShell>
     <TaakFlyout :open="!!open" :taak-id="open" :basis="alle.find((t: any) => t.id === open)" :lijst="alle.map((t: any) => t.id)" :volgende="true" :teamleden="data.teamleden" @sluit="open = null" @klaar="klaar" @gewijzigd="refresh" />
     <NieuweTaakFlyout :open="nieuw" :teamleden="data.teamleden" @sluit="nieuw = false" @gemaakt="nieuw = false; refresh()" />
     <PlanAfspraakFlyout :open="nieuweAfspraak" @sluit="nieuweAfspraak = false" @gepland="(id: string) => { nieuweAfspraak = false; navigateTo(`/agenda?weergave=dag&afspraak=${id}`) }" />

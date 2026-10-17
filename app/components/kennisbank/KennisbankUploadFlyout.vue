@@ -47,15 +47,18 @@ async function bewaar() {
       accountIds: props.contact ? [] : props.account ? [props.account.id] : accounts.value.map((a) => a.id),
       contactIds: props.contact ? [props.contact.id] : vast.value ? [] : contacten.value.map((c) => c.id),
     }
-    const r = await $fetch<{ id: string; tekstStatus: string }>('/api/documenten', { method: 'POST', body })
+    const r = await opslag.bewaar(() => $fetch<{ id: string; tekstStatus: string }>('/api/documenten', { method: 'POST', body }))
     toast.toon(r.tekstStatus === 'niet-gelezen' ? 'Document bewaard. Het lezen van de inhoud is mislukt (een scan of een beveiligd bestand?); de AI kent alleen titel, type en koppelingen.' : r.tekstStatus === 'gelezen' ? 'Document bewaard in de kennisbank. De AI kan vragen over de inhoud beantwoorden.' : 'Document bewaard in de kennisbank.')
     emit('bewaard', r.id)
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [naam.value, type.value, versie.value, beschrijving.value, bestand.value?.name ?? null])
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="kbu-titel" breedte="breed" data-test="kennisbank-upload" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open" open titel-id="kbu-titel" breedte="breed" data-test="kennisbank-upload" :opslag="opslag" @sluit="emit('sluit')" @bewaar="bewaar">
       <template #kop>
             <span class="fo-kicker"><Icoon naam="Upload" :grootte="12" /> Kennisbank · upload</span>
             <h2 id="kbu-titel" class="fo-titel">{{ contact ? contact.naam : account ? account.naam : 'Document toevoegen' }}</h2>

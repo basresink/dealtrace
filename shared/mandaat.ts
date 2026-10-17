@@ -25,7 +25,7 @@ export interface AgentDef {
 }
 
 export const AGENTS: AgentDef[] = [
-  { sleutel: 'zoeker', naam: 'Zoeker', platformMax: 'A', organisatieMax: 'A', perNiveau: { beginner: 'A', gevorderd: 'A', expert: 'A' }, gebouwd: false, omschrijving: 'Zoekt nieuwe prospects bij je doelgroep.' },
+  { sleutel: 'zoeker', naam: 'Zoeker', platformMax: 'A', organisatieMax: 'A', perNiveau: { beginner: 'A', gevorderd: 'A', expert: 'A' }, gebouwd: true, omschrijving: 'Zoekt nieuwe prospects bij je doelgroep: automatische rondes in de leadgenerator.' },
   { sleutel: 'verrijker', naam: 'Verrijker', platformMax: 'A', organisatieMax: 'A', perNiveau: { beginner: 'A', gevorderd: 'A', expert: 'A' }, gebouwd: true, omschrijving: 'Vult dossiers aan met bewijs.' },
   { sleutel: 'waarnemer', naam: 'Waarnemer', platformMax: 'A', organisatieMax: 'A', perNiveau: { beginner: 'A', gevorderd: 'A', expert: 'A' }, gebouwd: true, omschrijving: 'Let op signalen bij je accounts.' },
   { sleutel: 'profielbouwer', naam: 'Profielbouwer', platformMax: 'A', organisatieMax: 'A', perNiveau: { beginner: 'A', gevorderd: 'A', expert: 'A' }, gebouwd: true, omschrijving: 'Bouwt het buying committee op.' },

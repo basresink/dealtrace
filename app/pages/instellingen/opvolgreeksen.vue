@@ -73,13 +73,9 @@ useHead({ title: 'Sjablonen voor opvolgreeksen · Dealtrace' })
         </div>
       </section>
     </template>
-    <Teleport to="body">
-      <div v-if="bewerk" class="fo-overlay" @click.self="bewerk = null">
-        <form class="fo-panel fo-panel--breed fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="rsj-titel" data-test="rsj-flyout" @submit.prevent="bewaar" @keydown.esc="bewerk = null">
-          <header class="fo-head">
-            <div class="fo-head-tekst"><span class="fo-kicker">Sjabloon voor opvolgreeksen</span><h2 id="rsj-titel" class="fo-titel">{{ bewerk.naam || 'Nieuw sjabloon' }}</h2><p class="fo-meta">Lopende reeksen houden hun stappen; nieuwe reeksen krijgen dit sjabloon.</p></div>
-            <button type="button" class="fo-sluit" aria-label="Sluiten" @click="bewerk = null"><Icoon naam="X" /></button>
-          </header>
+    <FlyoutShell v-if="bewerk" open titel-id="rsj-titel" breedte="breed" data-test="rsj-flyout" @sluit="bewerk = null">
+        <template #kop><span class="fo-kicker">Sjabloon voor opvolgreeksen</span><h2 id="rsj-titel" class="fo-titel">{{ bewerk.naam || 'Nieuw sjabloon' }}</h2><p class="fo-meta">Lopende reeksen houden hun stappen; nieuwe reeksen krijgen dit sjabloon.</p></template>
+        <form id="rsj-form" class="fs-form" @submit.prevent="bewaar">
           <div class="fo-body fo-body--formulier">
             <article class="fo-blok">
               <div class="formulier-raster">
@@ -127,14 +123,14 @@ useHead({ title: 'Sjablonen voor opvolgreeksen · Dealtrace' })
             </article>
             <ul v-if="fouten.length" class="fo-fout rsj-fouten" data-test="rsj-fouten"><li v-for="f in fouten" :key="f">{{ f }}</li></ul>
           </div>
-          <footer class="fo-foot dd-acties">
-            <button type="button" class="dd-act" @click="bewerk = null">Annuleren</button>
-            <span class="dd-acties-vul fo-foot-vul" />
-            <button type="submit" class="dd-act dd-act--primair" :disabled="bezig || !!fouten.length" data-test="rsj-bewaar">Bewaar</button>
-          </footer>
         </form>
-      </div>
-    </Teleport>
+        <template #voet>
+          <footer class="fo-foot fs-voet">
+          <button type="submit" form="rsj-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="bezig || !!fouten.length" data-test="rsj-bewaar"><Icoon naam="Check" :grootte="16" />Bewaar</button>
+          <span class="fo-foot-vul" />
+        </footer>
+        </template>
+      </FlyoutShell>
   </div>
 </template>
 

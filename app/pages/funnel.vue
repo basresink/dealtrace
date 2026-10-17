@@ -163,11 +163,8 @@ useHead({ title: 'Funnel · Dealtrace' })
         </div>
       </section>
     </template>
-    <Teleport to="body">
-      <div v-if="lijst" class="fo-overlay" @click.self="lijst = null">
-        <aside class="fo-panel fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="fn-lijst-titel" data-test="funnel-lijst">
-          <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Funnel</span><h2 id="fn-lijst-titel" class="fo-titel">{{ lijst.titel }}</h2></div>
-            <button type="button" class="fo-sluit" aria-label="Sluiten" @click="lijst = null"><Icoon naam="X" /></button></header>
+    <FlyoutShell v-if="lijst" open titel-id="fn-lijst-titel" data-test="funnel-lijst" @sluit="lijst = null">
+        <template #kop><span class="fo-kicker">Funnel</span><h2 id="fn-lijst-titel" class="fo-titel">{{ lijst.titel }}</h2></template>
           <div class="fo-body">
             <p v-if="laadt" class="rij-sub">Laden…</p>
             <p v-else-if="!accounts.accounts.length" class="rij-sub">Geen accounts.</p>
@@ -178,9 +175,7 @@ useHead({ title: 'Funnel · Dealtrace' })
               <NuxtLink :to="`/accounts/${a.id}`" class="dd-act">Open account</NuxtLink>
             </div>
           </div>
-        </aside>
-      </div>
-    </Teleport>
+      </FlyoutShell>
     <NieuweTaakFlyout :open="!!nieuweTaak" :account="nieuweTaak" @sluit="nieuweTaak = null" @gemaakt="nieuweTaak = null" />
   </div>
 </template>

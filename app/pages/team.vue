@@ -133,31 +133,30 @@ useHead({ title: 'Team · Dealtrace' })
         </div>
       </section>
 
-      <Teleport to="body">
-        <div v-if="cel || persoon" class="fo-overlay" @click.self="cel = null; persoon = null">
-          <aside class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" data-test="team-venster">
-            <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">{{ cel ? `${cel.records.length} records` : 'Cijfers' }}</span><h2 class="fo-titel">{{ cel?.titel ?? kort(persoon.naam) }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="cel = null; persoon = null"><Icoon naam="X" /></button></header>
+      <FlyoutShell v-if="cel || persoon" open titel-id="fs-team0" breedte="smal" data-test="team-venster" @sluit="cel = null; persoon = null">
+          <template #kop><span class="fo-kicker">{{ cel ? `${cel.records.length} records` : 'Cijfers' }}</span><h2 id="fs-team0" class="fo-titel">{{ cel?.titel ?? kort(persoon.naam) }}</h2></template>
             <div class="fo-body">
               <ul v-if="cel" class="schakel-lijst" data-test="cel-lijst"><li v-for="x in cel.records" :key="x.id" class="schakel-rij"><span><NuxtLink v-if="x.link" :to="x.link">{{ x.titel }}</NuxtLink><template v-else>{{ x.titel }}</template><br><span class="meta">{{ x.meta }}</span></span></li></ul>
               <ul v-else class="schakel-lijst">
                 <li v-for="k in KOLOMMEN" :key="k.k" class="schakel-rij"><button type="button" class="tm-persoon" @click="openCel(persoon, k.cel!, k.label); persoon = null"><span>{{ k.label }}</span><strong class="tnum">{{ tekstCel(persoon, k.k) }}</strong></button></li>
               </ul>
             </div>
-          </aside>
-        </div>
-      </Teleport>
-      <Teleport to="body">
-        <div v-if="verplaats" class="fo-overlay" @click.self="verplaats = null">
-          <form class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" @submit.prevent="doeVerplaats">
-            <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Verplaats</span><h2 class="fo-titel">Accounts in {{ verplaats.label ?? verplaats.fase }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="verplaats = null"><Icoon naam="X" /></button></header>
+        </FlyoutShell>
+      <FlyoutShell v-if="verplaats" open titel-id="fs-team1" breedte="smal" @sluit="verplaats = null">
+          <template #kop><span class="fo-kicker">Verplaats</span><h2 id="fs-team1" class="fo-titel">Accounts in {{ verplaats.label ?? verplaats.fase }}</h2></template>
+        <form id="tv-form" class="fs-form" @submit.prevent="doeVerplaats">
             <div class="fo-body fo-body--formulier">
               <label class="veld"><span class="veld-label">Naar</span><select v-model="naar" class="invoer" required data-test="verplaats-naar"><option value="" disabled>Kies een collega</option><option v-for="r in data.rijen.filter((x: any) => x.id !== verplaats!.van)" :key="r.id" :value="r.id">{{ kort(r.naam) }}</option></select></label>
               <label class="veld"><span class="veld-label">Reden</span><input v-model="reden" class="invoer" required placeholder="Bijvoorbeeld: verlof" data-test="verplaats-reden"></label>
             </div>
-            <footer class="fo-foot dd-acties"><span class="dd-acties-vul fo-foot-vul" /><button type="submit" class="dd-act dd-act--primair" :disabled="!naar || !reden.trim()">Verplaats</button></footer>
-          </form>
-        </div>
-      </Teleport>
+        </form>
+          <template #voet>
+            <footer class="fo-foot fs-voet">
+          <button type="submit" form="tv-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!naar || !reden.trim()"><Icoon naam="Check" :grootte="16" />Verplaats</button>
+          <span class="fo-foot-vul" />
+        </footer>
+          </template>
+        </FlyoutShell>
       <BevestigVenster :open="!!niveauVraag" :titel="`Niveau van ${niveauVraag?.naam ?? ''} wijzigen?`" :tekst="`Van ${NIVEAU_LABEL[(niveauVraag?.van ?? 'beginner') as 'beginner']} naar ${NIVEAU_LABEL[(niveauVraag?.naar ?? 'beginner') as 'beginner']}. Functies die aangaan, krijgen een melding met uitleg.`" bevestig="Wijzig niveau" :met-reden="!!niveauVraag && NIVEAUS.indexOf(niveauVraag.naar as any) < NIVEAUS.indexOf(niveauVraag.van as any)" @bevestigd="zetNiveau" @geannuleerd="niveauVraag = null; refresh()" />
     </template>
     <SuggestiesFlyout :open="sgOpen" @sluit="sgOpen = false" @gewijzigd="verversSg()" />

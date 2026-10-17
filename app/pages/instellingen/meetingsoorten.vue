@@ -56,13 +56,9 @@ useHead({ title: 'Meetingsoorten · Dealtrace' })
         </div>
       </section>
     </template>
-    <Teleport to="body">
-      <div v-if="bewerk" class="fo-overlay" @click.self="bewerk = null">
-        <form class="fo-panel fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="ms-titel" data-test="ms-flyout" @submit.prevent="bewaar">
-          <header class="fo-head">
-            <div class="fo-head-tekst"><span class="fo-kicker">Meetingsoort</span><h2 id="ms-titel" class="fo-titel">{{ bewerk.naam || 'Nieuwe meetingsoort' }}</h2></div>
-            <button type="button" class="fo-sluit" aria-label="Sluiten" @click="bewerk = null"><Icoon naam="X" /></button>
-          </header>
+    <FlyoutShell v-if="bewerk" open titel-id="ms-titel" data-test="ms-flyout" @sluit="bewerk = null">
+        <template #kop><span class="fo-kicker">Meetingsoort</span><h2 id="ms-titel" class="fo-titel">{{ bewerk.naam || 'Nieuwe meetingsoort' }}</h2></template>
+        <form id="ms-form" class="fs-form" @submit.prevent="bewaar">
           <div class="fo-body fo-body--formulier">
             <article class="fo-blok">
               <div class="formulier-raster">
@@ -97,14 +93,14 @@ useHead({ title: 'Meetingsoorten · Dealtrace' })
               </template>
             </article>
           </div>
-          <footer class="fo-foot dd-acties">
-            <button type="button" class="dd-act" @click="bewerk = null">Annuleren</button>
-            <span class="dd-acties-vul fo-foot-vul" />
-            <button type="submit" class="dd-act dd-act--primair" data-test="ms-bewaar">Bewaar</button>
-          </footer>
         </form>
-      </div>
-    </Teleport>
+        <template #voet>
+          <footer class="fo-foot fs-voet">
+          <button type="submit" form="ms-form" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="ms-bewaar"><Icoon naam="Check" :grootte="16" />Bewaar</button>
+          <span class="fo-foot-vul" />
+        </footer>
+        </template>
+      </FlyoutShell>
   </div>
 </template>
 

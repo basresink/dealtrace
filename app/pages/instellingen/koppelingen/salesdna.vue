@@ -135,9 +135,8 @@ useHead({ title: 'SalesDNA · Koppelingen · Dealtrace' })
       </div>
     </section>
 
-    <div v-if="vergelijking" class="fo-overlay" @click.self="vergelijking = null">
-      <section class="fo-panel fo-panel--hulp" role="dialog" aria-modal="true" data-test="sd-vergelijk">
-        <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Vergelijken</span><h2 class="fo-titel">{{ vergelijking.label }}</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="vergelijking = null"><Icoon naam="X" /></button></header>
+    <FlyoutShell v-if="vergelijking" open titel-id="fs-salesdna0" breedte="hulp" data-test="sd-vergelijk" @sluit="vergelijking = null">
+      <template #kop><span class="fo-kicker">Vergelijken</span><h2 id="fs-salesdna0" class="fo-titel">{{ vergelijking.label }}</h2></template>
         <div class="fo-body">
           <div class="vv-velden">
             <div><h3 class="kaart-titel">Eigen inrichting</h3>
@@ -157,8 +156,12 @@ useHead({ title: 'SalesDNA · Koppelingen · Dealtrace' })
           </template>
           <label class="mt-16 rijtje"><input v-model="akkoord" type="checkbox" data-test="sd-akkoord"> Ik heb de verschillen{{ vergelijking.controlelijst.length ? ' en de controlelijst' : '' }} gecontroleerd. De eigen inhoud gaat naar het archief.</label>
         </div>
-        <footer class="fo-foot dd-acties"><button type="button" class="dd-act dd-act--primair" :disabled="!akkoord || !!bezig" data-test="sd-word-bron" @click="wordBron">SalesDNA wordt de bron</button><span class="dd-acties-vul fo-foot-vul" /><button type="button" class="dd-act" @click="vergelijking = null">Annuleren</button></footer>
-      </section>
-    </div>
+      <template #voet>
+        <footer class="fo-foot fs-voet">
+          <button type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="!akkoord || !!bezig" data-test="sd-word-bron" @click="wordBron"><Icoon naam="Check" :grootte="16" />SalesDNA wordt de bron</button>
+          <span class="fo-foot-vul" />
+        </footer>
+      </template>
+    </FlyoutShell>
   </div>
 </template>

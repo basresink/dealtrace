@@ -254,31 +254,30 @@ useHead({ title: computed(() => `${r.value?.naam ?? 'Reis'} · Prospectreizen ·
         </div>
       </section>
 
-      <Teleport to="body">
-        <div v-if="droog" class="fo-overlay" @click.self="droog = null">
-          <aside class="fo-panel re-560" role="dialog" aria-modal="true" data-test="droogloop-venster">
-            <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Droogloop</span><h2 class="fo-titel">{{ droog.accounts }} accounts, {{ droog.taken }} startactiviteiten</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="droog = null"><Icoon naam="X" /></button></header>
+      <FlyoutShell v-if="droog" open titel-id="fs-id0" paneel-klasse="re-560" data-test="droogloop-venster" @sluit="droog = null">
+          <template #kop><span class="fo-kicker">Droogloop</span><h2 id="fs-id0" class="fo-titel">{{ droog.accounts }} accounts, {{ droog.taken }} startactiviteiten</h2></template>
             <div class="fo-body">
               <p v-if="droog.inAndereReis" class="meta">{{ droog.inAndereReis }} accounts zitten al in een andere reis en blijven daar.</p>
               <ul class="schakel-lijst"><li v-for="f in droog.perFase" :key="f.faseId" class="schakel-rij"><span>{{ f.label }}</span><span class="tnum">{{ f.accounts }} accounts · {{ f.taken }} taken</span></li></ul>
               <h3 class="kicker mt-16">Per persoon</h3>
               <ul class="schakel-lijst"><li v-for="p in droog.perPersoon" :key="p.ownerId" class="schakel-rij"><span>{{ p.naam }}</span><span class="tnum">{{ p.taken }} taken</span></li></ul>
             </div>
-          </aside>
-        </div>
-      </Teleport>
-      <Teleport to="body">
-        <div v-if="mapping && mapping.rijen.length" class="fo-overlay" @click.self="mapping = null">
-          <form class="fo-panel re-640" role="dialog" aria-modal="true" data-test="fasemapping" @submit.prevent="doePubliceer(mapping!.keuze)">
-            <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Fasemapping</span><h2 class="fo-titel">Waar gaan de accounts naartoe?</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="mapping = null"><Icoon naam="X" /></button></header>
+        </FlyoutShell>
+      <FlyoutShell v-if="mapping && mapping.rijen.length" open titel-id="fs-id1" paneel-klasse="re-640" data-test="fasemapping" @sluit="mapping = null">
+          <template #kop><span class="fo-kicker">Fasemapping</span><h2 id="fs-id1" class="fo-titel">Waar gaan de accounts naartoe?</h2></template>
+        <form id="fm-form" class="fs-form" @submit.prevent="doePubliceer(mapping!.keuze)">
             <div class="fo-body">
               <ul class="schakel-lijst"><li v-for="m in mapping.rijen" :key="m.faseId" class="schakel-rij"><span>{{ m.label ?? m.faseId }} <span class="meta">· {{ m.aantal }} accounts</span></span>
                 <select v-model="mapping.keuze[m.faseId]" class="invoer invoer--klein re-mapping" required :aria-label="`Nieuwe fase voor ${m.label ?? m.faseId}`" :data-test="`mapping-${m.faseId}`"><option value="" disabled>Kies</option><option v-for="f in c.fases" :key="f.id" :value="f.id">{{ f.label }}</option></select></li></ul>
             </div>
-            <footer class="fo-foot dd-acties"><span class="dd-acties-vul fo-foot-vul" /><button type="submit" class="dd-act dd-act--primair" :disabled="mapping.rijen.some((m) => !mapping!.keuze[m.faseId])" data-test="mapping-publiceer">{{ mapping.terug ? 'Draai terug en zet accounts om' : 'Publiceer en zet accounts om' }}</button></footer>
-          </form>
-        </div>
-      </Teleport>
+        </form>
+          <template #voet>
+            <footer class="fo-foot fs-voet">
+          <button type="submit" form="fm-form" class="dd-actie dd-actie--zwart fs-hoofdactie" :disabled="mapping.rijen.some((m) => !mapping!.keuze[m.faseId])" data-test="mapping-publiceer"><Icoon naam="Check" :grootte="16" />{{ mapping.terug ? 'Draai terug en zet accounts om' : 'Publiceer en zet accounts om' }}</button>
+          <span class="fo-foot-vul" />
+        </footer>
+          </template>
+        </FlyoutShell>
       <Teleport to="body">
         <div v-if="verwijder" class="cd-overlay" @click.self="verwijder = null">
           <div class="cd-dialog" role="alertdialog" aria-modal="true" aria-labelledby="fv-titel" data-test="fase-verwijderen">

@@ -11,14 +11,17 @@ watch(() => props.open, (o) => { if (o) { onderwerp.value = ''; tekst.value = ''
 async function verstuur() {
   bezig.value = true
   try {
-    const r = await $fetch<any>(`/api/accounts/${props.account.id}/mail`, { method: 'POST', body: { onderwerp: onderwerp.value, tekst: tekst.value, contactId: props.contactId ?? undefined } })
+    const r = await opslag.bewaar(() => $fetch<any>(`/api/accounts/${props.account.id}/mail`, { method: 'POST', body: { onderwerp: onderwerp.value, tekst: tekst.value, contactId: props.contactId ?? undefined } }))
     toast.toon(r.tekst ?? 'Verstuurd.'); emit('verstuurd')
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }
+// Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [onderwerp.value, tekst.value])
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="mf-titel" data-test="mail-flyout" @sluit="emit('sluit')">
+  <FlyoutShell v-if="open" open titel-id="mf-titel" data-test="mail-flyout" :opslag="opslag" @sluit="emit('sluit')" @bewaar="verstuur">
       <template #kop><span class="fo-kicker">Nieuwe mail</span><h2 id="mf-titel" class="fo-titel">{{ account.naam }}</h2><p class="fo-meta">Aan {{ aan ?? 'de beslisser of de eerste contactpersoon met een e-mailadres' }}</p></template>
         <form id="mf-form" class="fs-form" @submit.prevent="verstuur">
         <div class="fo-body">

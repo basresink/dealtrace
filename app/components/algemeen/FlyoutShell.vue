@@ -25,8 +25,9 @@ const props = withDefaults(defineProps<{
   overlayKlasse?: unknown
   paneelKlasse?: unknown
   sluitTest?: string
+  statusTest?: string
   bovenop?: boolean
-}>(), { kicker: '', titel: '', meta: null, titelId: '', breedte: 'normaal', opslag: null, ai: null, aiInVoet: false, sluitTest: undefined, bovenop: false })
+}>(), { statusTest: 'fs-status', kicker: '', titel: '', meta: null, titelId: '', breedte: 'normaal', opslag: null, ai: null, aiInVoet: false, sluitTest: undefined, bovenop: false })
 const emit = defineEmits<{ sluit: []; bewaar: [] }>()
 const slots = useSlots()
 const { functie } = useMe()
@@ -141,7 +142,7 @@ defineExpose({ vraagSluiten })
               <slot name="meta"><p v-if="meta" class="fo-meta">{{ meta }}</p></slot>
             </slot>
           </div>
-          <span v-if="opslag" class="fs-status" role="status" aria-live="polite" data-test="fs-status" :data-stand="stand">
+          <span v-if="opslag" class="fs-status" role="status" aria-live="polite" :data-test="statusTest" :data-stand="stand">
             <span v-if="stand === 'gewijzigd'" class="fs-stand fs-stand--gewijzigd">Gewijzigd</span>
             <span v-else-if="stand === 'bezig'" class="fs-stand fs-stand--bezig"><Icoon naam="RefreshCw" :grootte="14" />Opslaan…</span>
             <span v-else-if="stand === 'klaar'" class="fs-stand fs-stand--klaar"><Icoon naam="Check" :grootte="14" />Opgeslagen om {{ opslag.tijd }}</span>
@@ -205,6 +206,8 @@ defineExpose({ vraagSluiten })
 /* Bevestiging bij sluiten met wijzigingen, boven de voet. */
 .fs-wijzig { display: flex; flex-wrap: wrap; flex-shrink: 0; align-items: center; gap: 8px; padding: 10px 28px; background: var(--orange-zacht, var(--surface)); border-top: 1px solid var(--orange); font-size: 13px; color: var(--ink); }
 .fs-wijzig > span { flex: 1 1 200px; }
+
+@media print { .fs-status, .fs-ai, .fs-wijzig { display: none !important; } }
 
 /* Telefoon: schermvullend, de kop blijft staan en elk tikdoel is minstens 44 px. */
 @media (max-width: 767px) {
