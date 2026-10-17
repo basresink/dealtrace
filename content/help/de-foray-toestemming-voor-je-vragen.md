@@ -44,7 +44,7 @@ Joost heeft voor dit product twaalf vragen klaar. Hij gebruikt er vier en weet d
 
 ## Zo doe je het in Dealtrace
 
-Zet je foray direct na de opening in je belscript, en je behoeftegerichte vragen in het blok vragen. Vanaf Gevorderd maak je bij **Mijn scripts** een eigen variant. In de belmodus vink je een vraag af met een kort antwoord; een antwoord bij een BAND-vraag wordt direct een veldwaarde op het account. Zie [Een belscript kiezen](/helpcenter/een-belscript-kiezen) en [Vragen stellen met BAND](/helpcenter/vragen-stellen-met-band).
+Zet je foray direct na de opening in je belscript, en je behoeftegerichte vragen in het blok vragen. Vanaf Gevorderd maak je in **Mijn instellingen**, **Mijn scripts**, een eigen variant. In de belmodus vink je een vraag af met een kort antwoord; een antwoord bij een BAND-vraag wordt direct een veldwaarde op het account. Zie [Een belscript kiezen](/helpcenter/een-belscript-kiezen) en [Vragen stellen met BAND](/helpcenter/vragen-stellen-met-band).
 
 ## Controlevragen
 

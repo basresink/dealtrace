@@ -8,7 +8,7 @@ useHead({ title: 'Agenda · Koppelingen · Dealtrace' })
 
 <template>
   <div>
-    <PaginaKop kicker="Instellingen · Koppelingen" titel="Agenda" uitleg="Microsoft 365 en Google: aanzetten voor de organisatie." helpartikel="agenda" />
+    <InstellingenKop groep="Koppelingen" titel="Agenda" uitleg="Microsoft 365 en Google: aanzetten voor de organisatie. Ieder koppelt daarna zijn eigen agenda bij Account." helpartikel="agenda" />
     <section class="section section--laatste">
       <div class="container container--smal">
         <AgendaOrganisatie />

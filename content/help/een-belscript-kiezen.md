@@ -27,4 +27,4 @@ Wissel gerust; Dealtrace onthoudt welk script je gebruikte, zodat je salesmanage
 
 ## Mijn scripts
 
-Vanaf Gevorderd maak je bij **Mijn scripts** een eigen variant met je eigen formuleringen. Wijzigt het origineel, dan zie je "Het origineel is gewijzigd" met **Neem over**.
+Vanaf Gevorderd maak je bij **Mijn instellingen**, **Mijn scripts** een eigen variant met je eigen formuleringen. Wijzigt het origineel, dan zie je "Het origineel is gewijzigd" met **Neem over**.

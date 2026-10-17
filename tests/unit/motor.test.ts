@@ -48,11 +48,12 @@ const FIXTURE: Record<Patroon, Partial<MotorAccount>> = {
   'trigger-heractivatie': { nbStatus: 'wachtend', signalen: [{ id: 's1', soort: 'vacature', op: dagen(2), extern: true }, { id: 's2', soort: 'nieuws', op: dagen(2), extern: true }, { id: 's3', soort: 'kvk-mutatie', op: dagen(2), extern: true }, { id: 's4', soort: 'jubileum', op: dagen(2), extern: true }] },
   'tussendoel-gehaald': { tussendoelen: [{ id: 'td1', gehaaldOp: dagen(1) }] },
   'partner-te-laat': { partnerLeads: [{ id: 'pl1', deadline: dagen(1), bevestigd: false }] },
+  'reis-overgang': { gebeurtenissen: [{ id: 'g2', gebeurtenis: 'gekwalificeerd', vanFaseId: 'dossier-compleet', naarFaseId: 'gekwalificeerd', op: dagen(0.2) }] },
 }
 
 describe('triggerpatronen', () => {
-  it('de catalogus heeft vijftien patronen', () => {
-    expect(PATROON_SLEUTELS).toHaveLength(15)
+  it('de catalogus heeft zestien patronen (met de overgang in de reis)', () => {
+    expect(PATROON_SLEUTELS).toHaveLength(16)
   })
   for (const p of PATROON_SLEUTELS) {
     it(`${p}: vuurt op de fixture en niet zonder`, () => {
@@ -339,5 +340,66 @@ describe('Excel (gat 7)', () => {
     const cellen = REGEL_KOLOMMEN.map((k) => String(k.uit(set[0]!)))
     cellen[koppen.indexOf('actiesoort')] = 'faxen'
     expect(regelUitRij(koppen, cellen).fouten).toContain('"faxen" is geen geldige waarde voor actiesoort')
+  })
+})
+
+describe('Dealtrace: regels aan de prospectreis en winpunten aan de activiteit', () => {
+  const overgang = (p: Record<string, unknown>, extra: Partial<Regel> = {}): Regel => ({
+    id: 'r-ov', naam: 'Na gekwalificeerd bellen', categorie: 'Bewerken', actief: true, motor: 'regel', scope: 'organisatie', cadansDagen: 0, prioriteit: 'middel',
+    data: { omschrijving: 'Net gekwalificeerd.', activiteit: 'taak', bron: 'intern', trigger: { patroon: 'reis-overgang', parameters: p }, afbakening: { accounttypes: ['prospect'] },
+      gevolg: { actiesoort: 'bellen', uitvoerderrol: 'eigenaar', termijnWerkdagen: 1, taaksjabloon: 'Bel {account} over {winpunt}', winpuntIds: ['wp-b', 'wp-a'] } },
+    ...extra,
+  })
+  const winpunten = [
+    { id: 'wp-a', titel: 'Schouw binnen 48 uur', omschrijving: 'Gratis schouw.', hoofdfase: 'bewerken' },
+    { id: 'wp-b', titel: 'Levering op het uur', omschrijving: 'Op het uur.', hoofdfase: 'verbinden' },
+  ]
+  const ov = { id: 'g9', gebeurtenis: 'gekwalificeerd', vanFaseId: 'dossier-compleet', naarFaseId: 'gekwalificeerd', op: dagen(0.2) }
+
+  it('een overgang als trigger vuurt alleen op de gekozen van-, naar-fase en gebeurtenis', () => {
+    const a = acc({ faseId: 'gekwalificeerd', hoofdfase: 'bewerken', gebeurtenissen: [ov] })
+    expect(evaluateTrigger(overgang({ naarFase: 'gekwalificeerd' }), a, NU)).toMatchObject({ vuurt: true, sleutel: 'a1:g9' })
+    expect(evaluateTrigger(overgang({ vanFase: 'dossier-compleet', gebeurtenis: 'gekwalificeerd' }), a, NU).vuurt).toBe(true)
+    expect(evaluateTrigger(overgang({ naarFase: 'benaderd' }), a, NU).vuurt).toBe(false)
+    expect(evaluateTrigger(overgang({ vanFase: 'gevonden', naarFase: 'gekwalificeerd' }), a, NU).vuurt).toBe(false)
+    // Een gebeurtenis zonder faseovergang telt niet.
+    expect(evaluateTrigger(overgang({ gebeurtenis: 'gekwalificeerd' }), acc({ gebeurtenissen: [{ ...ov, vanFaseId: 'gekwalificeerd' }] }), NU).vuurt).toBe(false)
+    expect(valideerRegel(overgang({ vanFase: null, naarFase: null, gebeurtenis: null }))).toContain('Kies bij een overgang in de reis minstens een fase of gebeurtenis')
+  })
+
+  it('een regel geldt alleen in de fases en de reis waaraan hij gekoppeld is', () => {
+    const r = overgang({ naarFase: 'gekwalificeerd' }, { reisId: 'reis-1' })
+    r.data.afbakening.faseIds = ['gekwalificeerd']
+    expect(ruleTargetsAccount(r, acc({ reisId: 'reis-1', faseId: 'gekwalificeerd' }), NU)).toBe(true)
+    expect(ruleTargetsAccount(r, acc({ reisId: 'reis-1', faseId: 'benaderd' }), NU)).toBe(false)
+    expect(ruleTargetsAccount(r, acc({ reisId: 'reis-2', faseId: 'gekwalificeerd' }), NU)).toBe(false)
+  })
+
+  it('de taak van de motor krijgt het winpunt dat bij de hoofdfase past als gespreksonderwerp', () => {
+    const a = acc({ faseId: 'gekwalificeerd', hoofdfase: 'bewerken', gebeurtenissen: [ov] })
+    const u = motorRun(invoer({ regels: [overgang({ naarFase: 'gekwalificeerd' })], accounts: [a], winpunten }))
+    expect(u.taken).toHaveLength(1)
+    expect(u.taken[0]).toMatchObject({ title: 'Bel Testprospect Woningbouw 01 over Schouw binnen 48 uur', winpunt: { id: 'wp-a', titel: 'Schouw binnen 48 uur' } })
+    // Geen passende hoofdfase: het eerste gekoppelde winpunt.
+    const b = motorRun(invoer({ regels: [overgang({ naarFase: 'gekwalificeerd' })], accounts: [{ ...a, hoofdfase: 'vinden' }], winpunten }))
+    expect(b.taken[0]!.winpunt?.id).toBe('wp-b')
+    // Een inzicht neemt het winpunt mee naar de taak die eruit komt.
+    const r = overgang({ naarFase: 'gekwalificeerd' }); r.data.activiteit = 'inzicht'
+    expect(motorRun(invoer({ regels: [r], accounts: [a], winpunten })).inzichten[0]!.winpunt?.id).toBe('wp-a')
+    // Zonder gekoppelde winpunten geen winpunt.
+    const z = overgang({ naarFase: 'gekwalificeerd' }); z.data.gevolg.winpuntIds = []
+    expect(motorRun(invoer({ regels: [z], accounts: [a], winpunten })).taken[0]!.winpunt).toBeNull()
+  })
+
+  it('de droogloop toont de geraakte accounts met hun winpunt', () => {
+    const a = acc({ faseId: 'gekwalificeerd', hoofdfase: 'bewerken', gebeurtenissen: [ov] })
+    const d = droogloop(overgang({ naarFase: 'gekwalificeerd' }), [a, acc({ id: 'a2', gebeurtenissen: [] })], NU, undefined, undefined, {}, winpunten)
+    expect(d.geraakt).toBe(1)
+    expect(d.accounts).toEqual([expect.objectContaining({ id: 'a1', maaktTaak: true, winpuntId: 'wp-a' })])
+  })
+
+  it('{winpunt} is een geldige sjabloonvariabele en valt terug op "het winpunt"', () => {
+    expect(sjabloonFouten('Bel {account} over {winpunt}')).toEqual([])
+    expect(vulSjabloon('Over {winpunt}', {})).toBe('Over het winpunt')
   })
 })

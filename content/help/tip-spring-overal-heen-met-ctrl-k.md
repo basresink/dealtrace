@@ -14,7 +14,7 @@ Wie snel werkt, gebruikt het toetsenbord. Met **Ctrl K** (op een Mac Cmd K) of d
 
 - Je springt in een paar toetsen naar elke pagina: typ "bel" voor Belblokken of "conc" voor Concepten.
 - Je vindt een collega zonder het menu door te lopen.
-- Een functie die nog niet aanstaat, zie je met een slot; tik erop en je leest waarom.
+- Je vindt alleen pagina's van functies die voor je aanstaan.
 - Vanaf Gevorderd, met KvK gekoppeld, zoek je ook in het KvK-register en voeg je een bedrijf met één tik toe.
 
 ## Zo doe je het

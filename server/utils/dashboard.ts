@@ -60,7 +60,7 @@ export async function mijnDashboard(tx: Tx, gebruikerId: string, q: Record<strin
         and (updated_at at time zone 'Europe/Amsterdam')::date = (due_date at time zone 'Europe/Amsterdam')::date)::int as op_dag_klaar`)
   const s = n as Record<string, number>
   const anders = Math.max(0, s.prospects! - s.in_reis! - s.nieuw! - s.wacht!)
-  const actief = opties.dekking ? (await rijen(tx, sql`select laatste_contact_op from accounts where owner_id = ${gebruikerId} and account_kind = 'prospect' and nb_status in ('nieuw', 'in reis', 'gescoord')`)).map((x) => (x.laatste_contact_op ? new Date(x.laatste_contact_op).toISOString() : null)) : null
+  const actief = opties.dekking ? (await rijen(tx, sql`select laatste_contact_op from accounts where owner_id = ${gebruikerId} and account_kind = 'prospect' and nb_status in ('nieuw', 'in reis', 'gescoord') and gedeactiveerd_op is null`)).map((x) => (x.laatste_contact_op ? new Date(x.laatste_contact_op).toISOString() : null)) : null
 
   const doel = doelStand(k.pogingen, periode, u?.werkplek, vandaag)
   const w = periode.vorigeLabel

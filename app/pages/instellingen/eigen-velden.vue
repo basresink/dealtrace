@@ -10,10 +10,17 @@ const object = ref<typeof VELD_OBJECTEN[number]>('account')
 const { data, refresh } = await useFetch<any>('/api/eigen-velden', { query: { object }, default: () => ({ velden: [], voorstellen: [] }) })
 const SECTIES: Record<string, string[]> = { account: ['Adres', 'Bereik', 'Stamgegevens', 'Kwalificatie', 'Contract en order'], contact: ['Stamgegevens', 'Bereik'], campagne: ['Stamgegevens'], afspraak: ['Stamgegevens'] }
 const OBJECT_LABEL: Record<string, string> = { account: 'Account', contact: 'Contact', campagne: 'Campagne', afspraak: 'Afspraak', accountplan: 'Accountplan' }
+const MEERVOUD: Record<string, string> = { account: 'accounts', contact: 'contacten', campagne: 'campagnes', afspraak: 'afspraken', accountplan: 'accountplannen' }
+// Filters: stand (actief of gearchiveerd) en alleen filterbare velden.
+const filter = reactive({ stand: '', filterbaar: false })
+const aantalFilters = computed(() => (filter.stand ? 1 : 0) + (filter.filterbaar ? 1 : 0))
+const pastBij = (v: any) => (!filter.stand || (filter.stand === 'gearchiveerd') === !!v.gearchiveerd) && (!filter.filterbaar || !!v.data?.filterbaar)
 const secties = computed(() => {
   const namen = [...new Set([...SECTIES[object.value]!, ...data.value.velden.map((v: any) => v.sectie)])]
-  return namen.map((n) => ({ naam: n, velden: data.value.velden.filter((v: any) => v.sectie === n) }))
+  return namen.map((n) => ({ naam: n, velden: data.value.velden.filter((v: any) => v.sectie === n && pastBij(v)) }))
 })
+const actieveVelden = computed(() => data.value.velden.filter((v: any) => !v.gearchiveerd).length)
+const titel = computed(() => `${actieveVelden.value} eigen ${actieveVelden.value === 1 ? 'veld' : 'velden'} op ${MEERVOUD[object.value] ?? object.value}`)
 const leeg = () => ({ id: '', naam: '', sleutel: '', type: 'tekst', sectie: SECTIES[object.value]![0], volgorde: 0, data: { opties: [] as any[], verplicht: 'nee', hulp: '', zichtbaarVanaf: 'beginner', bewerkbaarDoor: 'iedereen', filterbaar: false, bron: 'handmatig', toonInKop: false, datakwaliteit: false } })
 const veld = ref<any>(null)
 const nieuweSectie = ref('')
@@ -41,9 +48,17 @@ opslag.volg(() => [veld.value])
 
 <template>
   <div>
-    <PaginaKop kicker="Instellingen · Eigen velden" titel="Eigen velden" uitleg="Velden die jullie zelf nodig hebben, bovenop de standaard." helpartikel="eigen-velden">
+    <InstellingenKop groep="Data en AI" :titel="titel" uitleg="Eigen velden: wat jullie zelf nodig hebben, bovenop de standaard." helpartikel="eigen-velden" :filters="aantalFilters" @reset="filter.stand = ''; filter.filterbaar = false">
       <template #acties><button type="button" class="dd-actie dd-actie--primair" data-test="veld-nieuw" @click="open()"><Icoon naam="Plus" class="dd-actie-icoon" />Veld</button></template>
-    </PaginaKop>
+      <template #filters>
+        <div class="ifp-groep" role="group" aria-label="Stand"><span class="filter-label">Stand</span>
+          <button v-for="[k, l] in [['', 'Alle'], ['actief', 'Actief'], ['gearchiveerd', 'Gearchiveerd']]" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter.stand === k }" :aria-pressed="filter.stand === k" @click="filter.stand = k!">{{ l }}</button>
+        </div>
+        <div class="ifp-groep" role="group" aria-label="Filterbaar"><span class="filter-label">Gebruik</span>
+          <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter.filterbaar }" :aria-pressed="filter.filterbaar" @click="filter.filterbaar = !filter.filterbaar">Alleen filterbaar</button>
+        </div>
+      </template>
+    </InstellingenKop>
     <section class="section section--laatste">
       <div class="container">
         <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm.</p>
@@ -53,11 +68,11 @@ opslag.volg(() => [veld.value])
         </div>
         <div v-for="s in secties" :key="s.naam" class="mt-16 kaart">
           <header class="kaart-kop"><h2 class="kaart-titel">{{ s.naam }}</h2><span class="meta">{{ s.velden.length }} velden</span></header>
-          <p v-if="!s.velden.length" class="kaart-meta">Nog geen eigen velden in deze sectie.</p>
+          <p v-if="!s.velden.length" class="kaart-meta">{{ aantalFilters ? 'Geen velden in dit filter.' : 'Nog geen eigen velden in deze sectie.' }}</p>
           <table v-else class="tabel tabel--kaarten" data-test="velden-tabel">
             <thead><tr><th>Naam</th><th>Type</th><th>Zichtbaar voor</th><th>Filterbaar</th><th v-if="object === 'account' || object === 'contact'">Datakwaliteit</th><th>Ingevuld</th><th><span class="sr-only">Acties</span></th></tr></thead>
             <tbody><tr v-for="v in s.velden" :key="v.id" :class="{ 'contact-vertrokken': v.gearchiveerd }">
-              <td><strong>{{ v.naam }}</strong><br><span class="meta">{{ cfVariabele(v.sleutel) }}</span></td>
+              <td><strong>{{ v.naam }}</strong> <Label v-if="v.gearchiveerd" soort="instelling" waarde="gearchiveerd" /><br><span class="meta">{{ cfVariabele(v.sleutel) }}</span></td>
               <td>{{ VELDTYPE_LABEL[v.type as keyof typeof VELDTYPE_LABEL] }}</td>
               <td>{{ v.data.zichtbaarVanaf === 'beginner' ? 'Alle niveaus' : `Vanaf ${NIVEAU_LABEL[v.data.zichtbaarVanaf as Niveau]}` }}</td>
               <td>{{ v.data.filterbaar ? 'Ja' : 'Nee' }}</td>

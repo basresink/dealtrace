@@ -41,7 +41,7 @@ Testinstallatie Vonkenburg past: 30 man, drie projecten. Een eenmanszaak die voo
 
 ## Zo doe je het in Dealtrace
 
-Bij **Prospects** filter je op fase, klasse en eigenaar, zodat je ziet hoeveel accounts op je beschrijving lijken. Vanaf Gevorderd zoekt de **Leadgenerator** nieuwe bedrijven. Kies **Lijkt op mijn klanten** of een doelgroep, en stel klasse, branche, werkgebied en aanleiding in. Elke lead krijgt een score op zes criteria met bewijs. Past een bedrijf niet, klik **Niet relevant** en geef een reden: de volgende ronde wordt daar beter van. Je salesmanager legt de ideale klant vast als doelgroep bij **Prospectreizen** met **+ Doelgroep**.
+In **Alle prospects** filter je onder **Filters** op onder meer fase en klasse, zodat je ziet hoeveel accounts op je beschrijving lijken. Vanaf Gevorderd zoekt de **Leadgenerator** nieuwe bedrijven. Klik **Zoekopdracht aanpassen** en stel branche, klasse, werkgebied en aanleiding in. Elke lead krijgt een score op zes criteria met bewijs. Past een bedrijf niet, klik **Niet relevant** en geef een reden: de volgende ronde wordt daar beter van. Je salesmanager legt de ideale klant vast als doelgroep bij **Prospectreizen** met **+ Doelgroep**.
 
 ## Controlevragen
 

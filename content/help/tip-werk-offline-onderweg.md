@@ -21,7 +21,7 @@ Bereik is er niet altijd: een parkeergarage, een bedrijfshal, een polder. Met he
 
 1. Open Dealtrace 's ochtends met verbinding. Het dagpakket wordt vanzelf gemaakt.
 2. Kijk in **Mijn instellingen**, kaart **Offline**, naar de stand, bijvoorbeeld "Klaar voor vandaag · 23 accounts". Tik **Ververs nu** als je planning net veranderde.
-3. Ga je morgen langs een account dat er niet in zit? Open de accountkaart met verbinding en tik **Bewaar voor offline**.
+3. Ga je morgen langs een account dat er niet in zit? Open de accountkaart met verbinding, tik **Meer** en dan **Bewaar voor offline**.
 4. Werk onderweg zoals altijd. Zonder bereik zie je "Offline" met het aantal wijzigingen dat wacht.
 
 ## Voorbeeld

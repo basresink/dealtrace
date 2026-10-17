@@ -16,9 +16,16 @@ async function zetPlafond(u: any, w: string) {
 }
 const dag = ref<Record<string, string>>({})
 watch(() => data.value?.dagplafonds, (d) => { dag.value = Object.fromEntries(Object.entries(d ?? {}).map(([k, v]) => [k, String(v)])) }, { immediate: true })
+// Opslaan-status bij de dagplafonds (zelfde vorm als de flyouts): Gewijzigd tot Bewaar dagplafonds.
+const dagOpslag = useFlyoutOpslag()
+dagOpslag.volg(() => dag.value)
+onMounted(() => dagOpslag.basis())
 async function bewaarDag() {
-  try { await post('/api/instellingen/credits/dagplafonds', Object.fromEntries(Object.entries(dag.value).filter(([, v]) => v !== ''))  , 'PUT'); toast.toon('Dagplafonds bewaard.'); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+  try { await dagOpslag.bewaar(() => post('/api/instellingen/credits/dagplafonds', Object.fromEntries(Object.entries(dag.value).filter(([, v]) => v !== '')), 'PUT')); toast.toon('Dagplafonds bewaard.'); await refresh(); dagOpslag.basis() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
+// Filter op de lijst per gebruiker.
+const wie = ref<'' | 'verbruik' | 'plafond'>('')
+const gebruikers = computed(() => (data.value?.perGebruiker ?? []).filter((u: any) => (wie.value !== 'verbruik' || u.credits > 0) && (wie.value !== 'plafond' || u.plafond != null)))
 const extra = reactive({ open: false, aantal: 1000, toelichting: '' })
 async function vraagExtra() {
   try { const r = await post('/api/abonnement/extra-credits', { aantal: extra.aantal, toelichting: extra.toelichting }); toast.toon(r.tekst); extra.open = false; await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
@@ -28,7 +35,16 @@ useHead({ title: 'Verbruik · Instellingen · Dealtrace' })
 
 <template>
   <div v-if="data">
-    <PaginaKop :kicker="`Verbruik · ${maandTekst}`" :titel="`${getal(data.stand.verbruikt)} van ${getal(data.stand.pot)} credits gebruikt, ${Math.round(data.stand.procent)} procent.`" uitleg="Alle AI in Dealtrace rekent in credits uit één pot per maand." helpartikel="abonnement-verbruik-ai-credits" />
+    <InstellingenKop groep="Organisatie" :titel="`${getal(data.stand.verbruikt)} van ${getal(data.stand.pot)} credits gebruikt, ${Math.round(data.stand.procent)} procent`" :uitleg="`Verbruik en AI-credits in ${maandTekst}. Alle AI in Dealtrace rekent in credits uit één pot per maand.`" helpartikel="abonnement-verbruik-ai-credits" :filters="wie ? 1 : 0" @reset="wie = ''">
+      <template #acties>
+        <button v-if="data.kan.beheer" type="button" class="dd-actie dd-actie--primair" data-test="extra-aanvragen" :aria-expanded="extra.open" @click="extra.open = !extra.open"><Icoon naam="Plus" class="dd-actie-icoon" />Extra credits</button>
+      </template>
+      <template #filters>
+        <div class="ifp-groep" role="group" aria-label="Gebruikers"><span class="filter-label">Gebruikers</span>
+          <button v-for="[k, l] in [['', 'Iedereen'], ['verbruik', 'Met verbruik'], ['plafond', 'Met plafond']]" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': wie === k }" :aria-pressed="wie === k" @click="wie = k as typeof wie">{{ l }}</button>
+        </div>
+      </template>
+    </InstellingenKop>
     <section class="section section--laatste">
       <div class="container stapel">
         <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm.</p>
@@ -39,18 +55,17 @@ useHead({ title: 'Verbruik · Instellingen · Dealtrace' })
           </div>
           <p class="meta mt-8">Bij 80 procent krijgt iedereen een melding. Bij 10 procent over stoppen agents en automatische voorbereiding; wat jullie zelf vragen gaat door. <NuxtLink to="/helpcenter/abonnement-verbruik-ai-credits">Lees hoe het werkt</NuxtLink></p>
           <p v-if="data.stand.extra" class="meta">Inclusief {{ getal(data.stand.extra) }} extra credits deze maand.</p>
-          <button v-if="data.kan.beheer" type="button" class="dd-act mt-8" data-test="extra-aanvragen" @click="extra.open = !extra.open">Extra credits aanvragen</button>
           <form v-if="extra.open" class="vv-velden mt-8" data-test="extra-form" @submit.prevent="vraagExtra">
             <label class="veld"><span class="veld-label">Aantal</span><input v-model.number="extra.aantal" type="number" min="1" class="invoer"></label>
             <label class="veld"><span class="veld-label">Toelichting</span><input v-model="extra.toelichting" class="invoer"></label>
             <div><button type="submit" class="dd-act dd-act--primair">Aanvragen</button></div>
           </form>
-          <ul v-if="data.aanvragen.length" class="schakel-lijst mt-8"><li v-for="a in data.aanvragen" :key="a.id" class="schakel-rij"><span>{{ getal(a.aantal) }} credits</span><span class="meta">{{ a.status }}</span></li></ul>
+          <ul v-if="data.aanvragen.length" class="schakel-lijst mt-8"><li v-for="a in data.aanvragen" :key="a.id" class="schakel-rij"><span>{{ getal(a.aantal) }} extra credits aangevraagd</span><span class="meta">{{ a.status }}</span></li></ul>
         </article>
 
         <article class="kaart" data-test="per-soort">
           <h2 class="kaart-titel">Per soort</h2>
-          <p v-if="!data.perSoort.length" class="meta">Deze maand nog geen AI gebruikt.</p>
+          <LegeStaat v-if="!data.perSoort.length" kicker="Per soort" titel="Deze maand nog geen AI gebruikt." tekst="Zodra iemand een concept, briefing of zoekronde laat maken, zie je hier wat het kostte." />
           <table v-else class="tabel tabel--kaarten mt-8"><thead><tr><th>Soort</th><th>Handelingen</th><th>Credits</th></tr></thead>
             <tbody><tr v-for="s in data.perSoort" :key="s.soort"><td data-label="Soort">{{ s.naam }}</td><td data-label="Handelingen" class="tnum">{{ s.handelingen }}</td><td data-label="Credits" class="tnum">{{ s.credits }}</td></tr></tbody></table>
         </article>
@@ -59,14 +74,14 @@ useHead({ title: 'Verbruik · Instellingen · Dealtrace' })
           <h2 class="kaart-titel">Per gebruiker</h2>
           <p class="meta">Wat iemand zelf vraagt, telt op zijn plafond. Leeg is geen plafond.</p>
           <table class="tabel tabel--kaarten mt-8"><thead><tr><th>Gebruiker</th><th>Credits</th><th>Plafond</th></tr></thead>
-            <tbody><tr v-for="u in data.perGebruiker" :key="u.id" :data-test="`gebruiker-${u.id}`"><td data-label="Gebruiker">{{ u.naam.replace(/^Testgebruiker /, '') }}</td><td data-label="Credits" class="tnum">{{ u.credits }}</td>
+            <tbody><tr v-if="!gebruikers.length"><td colspan="3" class="meta">Niemand in dit filter.</td></tr><tr v-for="u in gebruikers" :key="u.id" :data-test="`gebruiker-${u.id}`"><td data-label="Gebruiker">{{ u.naam.replace(/^Testgebruiker /, '') }}</td><td data-label="Credits" class="tnum">{{ u.credits }}</td>
               <td data-label="Plafond"><input v-if="data.kan.beheer" class="invoer invoer--klein" type="number" min="0" :value="u.plafond ?? ''" placeholder="geen" :aria-label="`Plafond voor ${u.naam}`" data-test="plafond" @change="zetPlafond(u, ($event.target as HTMLInputElement).value)"><span v-else>{{ u.plafond ?? 'geen' }}</span></td></tr></tbody></table>
         </article>
 
         <article v-if="data.kan.beheer" class="kaart" data-test="dagplafonds">
-          <h2 class="kaart-titel">Dagplafond per AI-soort voor de agents</h2>
+          <header class="kaart-kop"><h2 class="kaart-titel">Dagplafond per AI-soort voor de agents</h2><OpslagStatus :opslag="dagOpslag" test="dagplafond-status" /></header>
           <p class="meta">De Bewaker toetst dit samen met het dagplafond per agent (Agents en mandaten).</p>
-          <div class="vv-velden mt-8"><label v-for="s in data.soorten" :key="s.sleutel" class="veld"><span class="veld-label">{{ s.naam }}</span><input v-model="dag[s.sleutel]" type="number" min="0" class="invoer" placeholder="geen"></label></div>
+          <div class="vv-velden mt-8" @input.capture="dagOpslag.interactie()"><label v-for="s in data.soorten" :key="s.sleutel" class="veld"><span class="veld-label">{{ s.naam }}</span><input v-model="dag[s.sleutel]" type="number" min="0" class="invoer" placeholder="geen"></label></div>
           <button type="button" class="dd-act dd-act--primair mt-8" @click="bewaarDag">Bewaar dagplafonds</button>
         </article>
       </div>

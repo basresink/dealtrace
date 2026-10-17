@@ -23,7 +23,7 @@ Per klasse kies je hoe vaak je een prospect belt, en per klasse hoe vaak je een 
 
 ## Afkoelperiodes en plafonds
 
-Na een nee wacht je per kanaal een afkoelperiode. Het frequentieplafond voorkomt te veel berichten buiten het ritme. Het dagplafond (standaard 40 beltaken en 6 bezoeken) schuift wat te veel is naar de volgende werkdag.
+Na een nee wacht je per kanaal een afkoelperiode. Op deze pagina zie je die alleen; wijzigen doe je bij **Instellingen**, **Terugkomen**, tabblad **Afkoeling**. Het frequentieplafond voorkomt te veel berichten buiten het ritme. Het dagplafond (standaard 40 beltaken en 6 bezoeken) schuift wat te veel is naar de volgende werkdag.
 
 ## Twee ritmes
 

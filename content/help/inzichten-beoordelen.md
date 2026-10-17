@@ -2,7 +2,7 @@
 titel: Inzichten beoordelen
 categorie: Dagelijks werk
 collectie: product
-samenvatting: Bron en citaat lezen, Maak taak, afwijzen met reden en een inzicht met bron toevoegen.
+samenvatting: Bron en citaat lezen, Maak taak, afwijzen met reden en zelf een inzicht met bron toevoegen.
 ---
 
 # Inzichten beoordelen
@@ -17,14 +17,14 @@ Een bron veroudert. Een vacature ouder dan 30 dagen, nieuws ouder dan 90 dagen o
 
 ## Wat je ermee doet
 
-- **Maak taak**: de taak neemt de titel, de prioriteit en het inzicht als bron over. Hoog bij een relevantie van 80 of meer.
+- **+ Maak taak**: de taak neemt de titel, de prioriteit en het inzicht als bron over. Hoog bij een relevantie van 80 of meer.
 - **Markeer als gelezen**: je hebt het gezien, er hoeft niets te gebeuren.
-- **Wijs af** met een reden, zoals "Niet relevant" of "Te oud". Je reden telt mee in de rapportage per regel, zodat de regels minder ruis geven.
+- **Wijs af** in het inzichtvenster (klik op het inzicht) met een reden: "Niet relevant", "Al bekend", "Verkeerd account" of "Te oud". Je reden telt mee in de rapportage per regel, zodat de regels minder ruis geven.
 
 ## Inzicht met bron
 
-Weet je zelf iets, bijvoorbeeld uit een gesprek op een beurs? Klik **Inzicht met bron** en vul het account, een titel, de bron en een citaat in. Het inzicht staat dan in de feed met de bron "Handmatig".
+Weet je zelf iets, bijvoorbeeld uit een gesprek op een beurs? Klik **+ Inzicht** naast Filters. Kies de prospect en eventueel een contactpersoon, en vul een titel, de bron, eventueel een URL en een citaat in. Het inzicht staat dan in de feed met de bron "Handmatig"; kies je een contact, dan staat het ook op diens contactkaart.
 
-## Door agents gedaan
+## Wat de agents zagen
 
-Vanaf Gevorderd zie je op Vandaag één regel met wat de agents sinds gisteren deden, zoals "3 dossiers ververst · 2 nieuwe aanleidingen".
+Wat de agents over een prospect vonden, zie je op de accountkaart onder **Meer**, **Dossier**.

@@ -8,17 +8,17 @@ routes: /instellingen
 
 # Instellingen
 
-Bij **Instellingen** richt je Dealtrace in voor je organisatie. De kaarten staan in groepen:
+Bij **Instellingen** richt je Dealtrace in voor je organisatie. Je opent het in de zijbalk onder **Beheer**; je ziet het als beheerder of salesmanager. De kaarten staan in groepen:
 
 - **Organisatie**: naam, werkdagen, gebruikers en teams, niveaus en functies, abonnement, verbruik en AI-credits, en de audit.
-- **Verkoop**: verkoopverhaal, prospectreizen, belscripts, mailsjablonen, opvolgreeksen, meetingsoorten, campagnesoorten, normen per fase, redenen voor nee en terugkomregels.
+- **Verkoop**: SalesDNA (jullie verkoopverhaal), prospectreizen, belscripts (de Belscript Studio en Alle belscripts), mailsjablonen, opvolgreeksen, meetingsoorten, campagnesoorten, normen per fase en **Terugkomen** (terugkomregels, verliesredenen, afkoeling en het hercontactritme daarna).
 - **Ritme en regels**: accountmatrix, hercontactritmes, regels en gebieden.
-- **Data en AI**: eigen velden, agents en mandaten, de Waarnemer, eigen agent-prompts en kanalen en consent.
+- **Data en AI**: privacy en export, eigen velden, agents en mandaten, de Waarnemer, eigen agent-prompts en kanalen en consent.
 - **Koppelingen**: SalesDNA, agenda, mail, CRM, bronnen (KVK en Datacollectief) en DealDrive. Naast de groepsnaam staat hoeveel koppelingen actief zijn, bijvoorbeeld "5 van 7 koppelingen actief".
 
 ## De stand per kaart
 
-Elke kaart zegt in één regel hoe het ervoor staat, bijvoorbeeld "23 regels, alle aan", "2 van 2 sjablonen aan", "90 van 10.500 credits gebruikt deze maand" of **Nog niet ingericht**. Klik op de kaart om het te wijzigen.
+Je ziet alleen de kaarten van functies die voor je aanstaan. Elke kaart zegt in één regel hoe het ervoor staat, bijvoorbeeld "23 regels, alle aan", "2 van 2 sjablonen aan", "90 van 10.500 credits gebruikt deze maand" of **Nog niet ingericht**. Klik op de kaart om het te wijzigen.
 
 ## Agenda koppelen voor de organisatie
 

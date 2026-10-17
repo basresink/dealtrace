@@ -45,6 +45,7 @@ const runs = computed(() => (crm.value?.runs ?? []).filter((r: any) => !alleenFo
 const openRun = ref<string | null>(null)
 const datum = (d: string | null) => (d ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(d)) : '')
 const BRON_NAAM: Record<string, string> = { hand: 'handmatig', kvk: 'KvK', datacollectief: 'Datacollectief', crm: 'CRM', salesdna: 'SalesDNA', web: 'web', ai: 'AI', import: 'import' }
+const titel = computed(() => (crm.value?.verbonden ? `HubSpot gekoppeld${crm.value.account ? ` met ${crm.value.account}` : ''}` : crm.value?.status === 'fout' ? 'De CRM-koppeling geeft een fout' : 'Nog geen CRM gekoppeld'))
 useHead({ title: 'CRM-koppeling · Dealtrace' })
 </script>
 
@@ -52,27 +53,36 @@ useHead({ title: 'CRM-koppeling · Dealtrace' })
   <div>
     <NietAangezetKop v-if="!aan" sleutel="koppeling.crm" />
     <template v-else>
-      <PaginaKop kicker="Instellingen · Data en AI" titel="CRM-koppeling" uitleg="Dealtrace leest je CRM om dubbel werk te voorkomen en schrijft terug wat je hier doet. Deals en offertes maakt het CRM zelf." helpartikel="koppelingen" />
+      <InstellingenKop groep="Koppelingen" :titel="titel" uitleg="CRM-koppeling: Dealtrace leest je CRM om dubbel werk te voorkomen en schrijft terug wat je hier doet. Deals en offertes maakt het CRM zelf." helpartikel="koppelingen" :filters="crm?.runs?.length ? (alleenFouten ? 1 : 0) : null" @reset="alleenFouten = false">
+        <template #acties>
+          <a v-if="crm && magInrichten && !crm.verbonden" class="dd-actie dd-actie--primair" href="/api/koppelingen/hubspot/start" data-test="crm-verbind"><Icoon naam="Link" class="dd-actie-icoon" />{{ crm.status === 'fout' ? 'Verbind opnieuw' : 'Verbind met HubSpot' }}</a>
+          <button v-else-if="crm?.verbonden" type="button" class="dd-actie dd-actie--primair" :disabled="bezig || !crm.kan.synchroniseren" data-test="crm-sync" @click="sync"><Icoon naam="RefreshCw" class="dd-actie-icoon" />Synchroniseer nu</button>
+        </template>
+        <template #filters>
+          <div class="ifp-groep" role="group" aria-label="Synchronisatielog"><span class="filter-label">Log</span>
+            <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': !alleenFouten }" :aria-pressed="!alleenFouten" @click="alleenFouten = false">Alle runs</button>
+            <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': alleenFouten }" :aria-pressed="alleenFouten" @click="alleenFouten = true">Alleen met fouten</button>
+          </div>
+        </template>
+      </InstellingenKop>
       <section class="section section--laatste">
         <div class="container">
           <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm.</p>
           <article class="kaart" data-test="crm-keuze">
             <header class="kaart-kop"><h2 class="kaart-titel">Welk CRM</h2></header>
             <div class="chips mt-8">
-              <span v-for="s in CRM_SOORTEN" :key="s" class="pil" :class="CRM_BESCHIKBAAR.includes(s) ? 'pil--zwart' : 'pil--leeg'">{{ CRM_LABEL[s] }}<template v-if="!CRM_BESCHIKBAAR.includes(s)"> · Volgt</template></span>
+              <Label v-for="s in CRM_SOORTEN" :key="s" soort="instelling" :waarde="CRM_BESCHIKBAAR.includes(s) ? 'aan' : 'concept'" :tekst="CRM_BESCHIKBAAR.includes(s) ? CRM_LABEL[s] : `${CRM_LABEL[s]} · Volgt`" />
             </div>
           </article>
 
           <article v-if="crm" class="kaart mt-16" data-test="crm-verbinding">
             <header class="kaart-kop"><h2 class="kaart-titel">HubSpot</h2>
-              <span class="pil" :class="crm.verbonden ? 'pil--groen' : crm.status === 'fout' ? 'pil--rood' : 'pil--grijs'" data-test="crm-status">{{ crm.verbonden ? 'Verbonden' : crm.status === 'fout' ? 'Fout' : 'Niet verbonden' }}</span></header>
+              <span data-test="crm-status"><Label v-if="crm.status === 'fout' && !crm.verbonden" soort="overdracht" waarde="mislukt" tekst="Fout" /><Label v-else soort="instelling" :waarde="crm.verbonden ? 'gekoppeld' : 'niet-gekoppeld'" :tekst="crm.verbonden ? 'Verbonden' : 'Niet verbonden'" /></span></header>
             <p v-if="crm.verbonden" class="tekst">Verbonden met {{ crm.account }} sinds {{ datum(crm.verbondenOp) }}.<template v-if="crm.laatsteSync"> Laatst gesynchroniseerd {{ datum(crm.laatsteSync) }}.</template></p>
             <p v-else-if="crm.laatsteFout" class="tekst tekst-rood">{{ crm.laatsteFout }}</p>
             <LegeStaat v-else titel="Er is nog geen CRM gekoppeld." tekst="Verbind je CRM om te voorkomen dat je klanten of prospects van collega's opnieuw benadert." />
             <div class="dd-acties mt-16">
-              <a v-if="magInrichten && !crm.verbonden" class="dd-actie dd-actie--primair" href="/api/koppelingen/hubspot/start" data-test="crm-verbind">{{ crm.status === 'fout' ? 'Verbind opnieuw' : 'Verbind met HubSpot' }}</a>
               <button v-if="magInrichten && crm.verbonden" type="button" class="dd-act" data-test="crm-test" @click="test">Test verbinding</button>
-              <button v-if="crm.verbonden" type="button" class="dd-act" :disabled="bezig || !crm.kan.synchroniseren" data-test="crm-sync" @click="sync">Synchroniseer nu</button>
               <button v-if="magInrichten && crm.verbonden" type="button" class="dd-act dd-act--gevaar" data-test="crm-ontkoppel" @click="ontkoppelVraag = true">Ontkoppel</button>
             </div>
             <p class="meta mt-8">Dealtrace synchroniseert elk uur en op verzoek.</p>

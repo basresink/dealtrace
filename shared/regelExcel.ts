@@ -42,7 +42,7 @@ export const REGEL_KOLOMMEN: Kolom[] = [
   { kop: 'belscript', uit: (r) => r.data.gevolg.belscriptId ?? '', in: (r, w) => zetData(r, ['gevolg', 'belscriptId'], w || null), toelichting: 'Belscript-id bij bellen.' },
   { kop: 'automatisch voorbereiden', uit: (r) => (r.data.gevolg.automatischVoorbereiden ? 'ja' : 'nee'), in: (r, w) => zetData(r, ['gevolg', 'automatischVoorbereiden'], w === 'ja'), keuzes: ['ja', 'nee'], toelichting: 'Concept vooraf klaarzetten.' },
   { kop: 'signaaltype', uit: (r) => r.data.gevolg.signaaltype ?? '', in: (r, w) => zetData(r, ['gevolg', 'signaaltype'], w || null), toelichting: 'Soort inzicht.' },
-  { kop: 'winpunten', uit: (r) => (r.data.gevolg.winpuntIds ?? []).join(', '), in: (r, w) => zetData(r, ['gevolg', 'winpuntIds'], lijst(w)), toelichting: 'Id\'s van winpunten uit het verkoopverhaal die de taak als gespreksonderwerp meekrijgt, hooguit vijf.' },
+  { kop: 'winpunten', uit: (r) => (r.data.gevolg.winpuntIds ?? []).join(', '), in: (r, w) => zetData(r, ['gevolg', 'winpuntIds'], lijst(w).length ? lijst(w) : undefined), toelichting: 'Id\'s van winpunten uit het verkoopverhaal die de taak als gespreksonderwerp meekrijgt, hooguit vijf.' },
   { kop: 'verwacht resultaat', uit: (r) => r.data.gevolg.verwachtResultaat ?? '', in: (r, w) => zetData(r, ['gevolg', 'verwachtResultaat'], w || null), toelichting: 'Wat de taak moet opleveren.' },
   { kop: 'herkomst', uit: (r) => r.data.herkomst ?? 'eigen', in: (r, w) => zetData(r, ['herkomst'], w || 'import'), keuzes: ['starterset', 'eigen', 'import'], toelichting: 'Waar de regel vandaan komt.' },
 ]

@@ -83,14 +83,14 @@ const naarLijst = (s: string) => s.split(',').map((x) => x.trim()).filter(Boolea
 async function beoordeel(v: any, s: 'overgenomen' | 'afgewezen') {
   try { await $fetch(`/api/instellingen/verkoopverhaal/voorstellen/${v.id}`, { method: 'POST', body: { status: s } }); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
-useHead({ title: 'Verkoopverhaal · Instellingen · Dealtrace' })
+useHead({ title: 'SalesDNA · Instellingen · Dealtrace' })
 </script>
 
 <template>
   <div>
-    <PaginaKop kicker="Instellingen · Verkoop" titel="Verkoopverhaal" uitleg="Waar elk script, elke boodschap en elke briefing uit leest. Alleen bevestigde inhoud gaat naar buiten." helpartikel="ons-verhaal">
+    <InstellingenKop groep="Verkoop" titel="SalesDNA" uitleg="Waar elk script, elke boodschap en elke briefing uit leest. Alleen bevestigde inhoud gaat naar buiten." helpartikel="ons-verhaal">
       <template #acties><FunctieLink to="/richting" class="dd-act">Bekijk Richting</FunctieLink></template>
-    </PaginaKop>
+    </InstellingenKop>
     <section class="section section--laatste">
       <div class="container">
         <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm.</p>

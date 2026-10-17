@@ -42,7 +42,7 @@ Joost van Voltvast belt Marloes van Testinstallatie Vonkenburg.
 
 ## Zo doe je het in Dealtrace
 
-Lukt het, plan dan de eerste afspraak met **+ Afspraak** en kies de meetingsoort, bijvoorbeeld Kennismaking. Rond je de taak af met **Gesproken, afspraak**, dan stopt het ritme.
+Lukt het, plan dan de eerste afspraak met **+ Afspraak** en kies het type afspraak, bijvoorbeeld Gepland bezoek of Online meeting. Rond je de taak af met **Gesproken, afspraak**, dan stopt het ritme.
 
 Noemt de prospect een later moment, zoals een project dat volgende maand begint, kies dan **Gesproken, later** met die datum.
 

@@ -145,7 +145,7 @@ useHead({ title: 'Nieuwe campagne · Dealtrace' })
             <div v-if="voorstel" class="aanleiding-blok" data-test="winpunt-voorstel"><strong>Voorstel: {{ winpuntTitel(voorstel.winpuntId) }}</strong><p class="rij-sub">{{ voorstel.motivatie }}</p></div>
             <label class="veld"><span class="veld-label">Winpunt</span>
               <select v-model="f.winpuntId" class="invoer" data-test="winpunt"><option value="">Geen winpunt</option><option v-for="w in v?.winpunten ?? []" :key="w.id" :value="w.id">{{ w.titel }}</option></select></label>
-            <p v-if="!(v?.winpunten ?? []).length" class="rij-sub">Er zijn nog geen bevestigde winpunten. Je beheerder vult ze bij Verkoopverhaal.</p>
+            <p v-if="!(v?.winpunten ?? []).length" class="rij-sub">Er zijn nog geen bevestigde winpunten. Je beheerder vult ze bij SalesDNA.</p>
           </div>
 
           <!-- 4. Boodschap en script -->

@@ -11,7 +11,7 @@ Een belblok is een vaste tijd waarin je achter elkaar belt. Dealtrace zet de bel
 
 ## Zo werkt het
 
-1. Klik **Start belblok** op **Vandaag** of bij **Belblokken**.
+1. Open **Belblokken** (in de zijbalk onder **Planning**) en klik **Start belblok**.
 2. Je ziet het eerste account met het script: de opening, één vraag en antwoorden op bezwaren.
 3. Bel, kies de uitkomst en ga door naar het volgende account.
 4. Na het blok zie je hoeveel gesprekken en afspraken het opleverde.

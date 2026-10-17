@@ -14,12 +14,12 @@ Een vraag zonder context geeft een algemeen antwoord. Stel je vraag vanaf de acc
 
 - Bovenaan de chat staat "Bij:" met de naam van het account. Hij gebruikt wat jij over dat account mag zien.
 - Bij elk antwoord staan de bronnen, zoals het verkoopverhaal of een helpartikel. Tik erop om ze te openen.
-- Onder het antwoord staan voorstellen, zoals een taak die voorgevuld opent. Pas als jij opslaat, bestaat hij.
+- Onder het antwoord staan voorstellen, zoals een taak die voorgevuld opent. Pas als jij op **Maak taak** klikt, bestaat hij.
 
 ## Zo doe je het
 
 1. Open de accountkaart.
-2. Klik **Vraag AI** (het sterretje rechtsboven).
+2. Klik op het **sterretjesicoon** rechtsboven (Vraag AI).
 3. Controleer de chip "Bij:" bovenaan de chat.
 4. Stel een concrete vraag, bijvoorbeeld "Wat is een goede reden om Sanne volgende week te bellen?"
 5. Lees de bronnen en kies eventueel een voorstel onder het antwoord.

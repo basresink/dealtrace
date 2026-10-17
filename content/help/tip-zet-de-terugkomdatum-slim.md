@@ -19,7 +19,7 @@ Bij een nee stelt Dealtrace een terugkomdatum voor uit de terugkomregel van de r
 ## Zo doe je het
 
 1. Open de accountkaart van het account dat nee zei.
-2. Klik **Terugkomdatum**.
+2. Open **Meer**, **Reis** en klik **Terugkomdatum**.
 3. Kies de datum en schrijf een korte reden, bijvoorbeeld "Nieuw contract ingaand 1 maart".
 4. Klik **Datum bewaren**. Valt de datum in de afkoelperiode, dan schuift Dealtrace hem op naar het einde ervan en zegt hij dat.
 

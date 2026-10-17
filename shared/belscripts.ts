@@ -553,9 +553,9 @@ export function prospectGegevens(i: {
   const rol = [i.contact?.functie, i.contact?.rol && i.contact.rol !== 'onbekend' ? i.contact.rol : null].filter(Boolean).join(', ')
   return [
     g('aanleiding', i.aanleiding?.tekst, i.aanleiding?.tekst ? `Accountkaart, aanleiding${i.aanleiding.bron ? ` (${i.aanleiding.bron})` : ''}${datum ? `, ${datum}` : ''}` : 'Accountkaart: geen aanleiding'),
-    g('branche', i.branche?.naam, i.branche?.naam ? 'Verkoopverhaal, branches' : 'Accountkaart: geen branche', i.branche?.kernzin ? `"${i.branche.kernzin}"${i.branche.algemeen ? ' (algemene kernzin)' : ''}` : null),
-    g('leverancier', i.leverancier?.naam, i.leverancier?.naam ? 'Accountkaart, huidige leverancier en Verkoopverhaal, concurrenten' : 'Accountkaart: leverancier onbekend'),
-    g('winpunt', i.winpunt?.titel, i.winpunt?.titel ? 'Verkoopverhaal, winpunten' : 'Verkoopverhaal: geen actief winpunt', i.winpunt?.argument ?? null),
+    g('branche', i.branche?.naam, i.branche?.naam ? 'SalesDNA, branches' : 'Accountkaart: geen branche', i.branche?.kernzin ? `"${i.branche.kernzin}"${i.branche.algemeen ? ' (algemene kernzin)' : ''}` : null),
+    g('leverancier', i.leverancier?.naam, i.leverancier?.naam ? 'Accountkaart, huidige leverancier en SalesDNA, concurrenten' : 'Accountkaart: leverancier onbekend'),
+    g('winpunt', i.winpunt?.titel, i.winpunt?.titel ? 'SalesDNA, winpunten' : 'SalesDNA: geen actief winpunt', i.winpunt?.argument ?? null),
     g('rol', rol || null, i.contact?.naam ? `Contactkaart ${i.contact.naam}` : 'Geen contact bij dit prospect'),
     { sleutel: 'tijden', label: GEGEVEN_LABEL.tijden, waarde: null, toelichting: null, bron: i.agendaGekoppeld ? 'Agenda: tijden bij het bellen' : 'Agenda niet gekoppeld: terugvalzin', gebruikt: false },
   ]

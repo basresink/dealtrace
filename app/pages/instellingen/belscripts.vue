@@ -25,6 +25,10 @@ async function startset() {
   try { const r = await $fetch<any>('/api/belscripts/startset', { method: 'POST' }); toast.toon(r.toegevoegd ? `${r.toegevoegd} scripts uit de startset toegevoegd.` : 'De startset staat er al.'); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 const STATUS: Record<string, string> = { concept: 'Concept', actief: 'Actief', gearchiveerd: 'Gearchiveerd' }
+const STATUS_LABEL: Record<string, string> = { concept: 'concept', actief: 'aan', gearchiveerd: 'gearchiveerd' }
+const aantalFilters = computed(() => (filter.value.doel ? 1 : 0) + (filter.value.status ? 1 : 0))
+const titel = computed(() => (data.value.scripts.length ? `${data.value.tellers.actief ?? 0} van ${data.value.scripts.length} belscripts actief` : 'Belscripts'))
+const telDoel = (d: string) => data.value.scripts.filter((s: any) => s.doel === d).length
 useHead({ title: 'Belscripts · Instellingen · Dealtrace' })
 </script>
 
@@ -32,7 +36,7 @@ useHead({ title: 'Belscripts · Instellingen · Dealtrace' })
   <div>
     <NietAangezetKop v-if="!aan" sleutel="belscript.kiezen" />
     <template v-else>
-      <PaginaKop kicker="Instellingen · Verkoop" titel="Belscripts" uitleg="Standaardscripts die je team kiest in het belpaneel. AI vult per account de aanleiding en het winpunt in." helpartikel="belscripts-maken">
+      <InstellingenKop groep="Verkoop" :titel="titel" :filters="aantalFilters" uitleg="Alle belscripts: de standaardscripts die je team kiest in het belpaneel. AI vult per account de aanleiding en het winpunt in." helpartikel="belscripts-maken" @reset="zet({ doel: undefined, status: undefined })">
         <template #acties>
           <FunctieLink v-if="!data.kan.beheer" to="/belscripts" class="dd-actie dd-actie--secundair" data-test="naar-studio"><Icoon naam="ScrollText" class="dd-actie-icoon" />Belscript Studio</FunctieLink>
           <template v-else>
@@ -42,7 +46,17 @@ useHead({ title: 'Belscripts · Instellingen · Dealtrace' })
           <KopMeer :items="[{ label: 'Kopieer uit startset', icoon: 'Copy', actie: startset, test: 'kopieer-startset' }, { label: 'Belscript Studio', icoon: 'ScrollText', to: '/belscripts', test: 'naar-studio' }]" />
           </template>
         </template>
-      </PaginaKop>
+        <template #filters>
+          <div class="ifp-groep" role="group" aria-label="Doel"><span class="filter-label">Doel</span>
+            <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': !filter.doel }" :aria-pressed="!filter.doel" @click="zet({ doel: undefined })">Alle</button>
+            <button v-for="d in SCRIPT_DOELEN" :key="d" type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter.doel === d }" :aria-pressed="filter.doel === d" @click="zet({ doel: d })">{{ DOEL_LABEL[d] }}<span class="pil-teller tnum">{{ telDoel(d) }}</span></button>
+          </div>
+          <div class="ifp-groep" role="group" aria-label="Status"><span class="filter-label">Status</span>
+            <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': !filter.status }" :aria-pressed="!filter.status" @click="zet({ status: undefined })">Alle</button>
+            <button v-for="(l, k) in STATUS" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter.status === k }" :aria-pressed="filter.status === k" @click="zet({ status: k })">{{ l }}</button>
+          </div>
+        </template>
+      </InstellingenKop>
       <section class="section section--laatste">
         <div class="container">
           <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm.</p>
@@ -53,18 +67,17 @@ useHead({ title: 'Belscripts · Instellingen · Dealtrace' })
             <div class="stat-card"><span class="stat-label">Gebruikt in 30 dagen</span><span class="stat-num tnum">{{ data.tellers.gebruikt30 ?? 0 }}</span></div>
             <div class="stat-card"><span class="stat-label">Beste conversie</span><span class="stat-num">{{ data.tellers.beste ? data.tellers.beste.conversie : '–' }}</span><span v-if="data.tellers.beste" class="meta">{{ data.tellers.beste.naam }}</span></div>
           </div>
-          <div class="rijtje mt-16">
-            <label class="veld"><span class="veld-label">Doel</span><select class="invoer" :value="filter.doel" @change="zet({ doel: ($event.target as HTMLSelectElement).value || undefined })"><option value="">Alle doelen</option><option v-for="d in SCRIPT_DOELEN" :key="d" :value="d">{{ DOEL_LABEL[d] }}</option></select></label>
-            <label class="veld"><span class="veld-label">Status</span><select class="invoer" :value="filter.status" @change="zet({ status: ($event.target as HTMLSelectElement).value || undefined })"><option value="">Alle</option><option v-for="(l, k) in STATUS" :key="k" :value="k">{{ l }}</option></select></label>
-          </div>
-          <LegeStaat v-if="!data.scripts.length" class="mt-16" titel="Er zijn nog geen belscripts. Begin met de startset van zes scripts." tekst="" />
+          <LegeStaat v-if="!data.scripts.length" class="mt-16" kicker="Belscripts" titel="Er zijn nog geen belscripts." tekst="Begin met de startset van zes scripts (onder Meer) of maak zelf een nieuw script." />
+          <LegeStaat v-else-if="!lijst.length" class="mt-16" kicker="Niets gevonden" titel="Geen scripts in dit filter." tekst="Kies een ander doel of een andere status.">
+            <button type="button" class="dd-act mt-16" @click="zet({ doel: undefined, status: undefined })">Wis filters</button>
+          </LegeStaat>
           <div v-else class="tabel-schuif mt-16">
             <table class="tabel" data-test="script-tabel">
               <thead><tr><th>Naam</th><th>Doel</th><th>Teams</th><th>Versie</th><th>Status</th><th>Gesprekken 30 d</th><th>Naar afspraak</th><th>Laatst gewijzigd</th></tr></thead>
               <tbody>
                 <tr v-for="s in lijst" :key="s.id" class="tabel-rij--klik" :data-test="`script-${s.naam}`" @click="open = s.id">
-                  <td><strong>{{ s.naam }}</strong><span v-if="s.controleren" class="pil pil--geel">Controleren</span></td><td>{{ s.doelLabel }}</td><td>{{ teamNaam(s.data.teamIds) }}</td><td class="tnum">{{ s.versie }}</td>
-                  <td><span class="pil pil--leeg">{{ STATUS[s.status] }}</span></td><td class="tnum">{{ s.gesprekken30 }}</td><td>{{ s.conversie ?? '–' }}</td><td>{{ datum(s.bijgewerktOp) }}</td>
+                  <td><strong>{{ s.naam }}</strong> <Label v-if="s.controleren" soort="richting" waarde="controleren" /></td><td>{{ s.doelLabel }}</td><td>{{ teamNaam(s.data.teamIds) }}</td><td class="tnum">{{ s.versie }}</td>
+                  <td><Label soort="instelling" :waarde="STATUS_LABEL[s.status] ?? 'concept'" :tekst="STATUS[s.status]" /></td><td class="tnum">{{ s.gesprekken30 }}</td><td>{{ s.conversie ?? '–' }}</td><td>{{ datum(s.bijgewerktOp) }}</td>
                 </tr>
               </tbody>
             </table>

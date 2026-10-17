@@ -24,6 +24,12 @@ async function test() {
 async function opnieuw(id: string) {
   try { await $fetch(`/api/overdrachten/${id}/opnieuw`, { method: 'POST' }); toast.toon('De overdracht is opnieuw verstuurd.'); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
+const titel = computed(() => {
+  if (!dd.value) return 'DealDrive'
+  if (dd.value.stand === 'uit') return 'DealDrive staat nog uit'
+  const m = dd.value.telling.mislukt ?? 0
+  return m ? `DealDrive gekoppeld, ${m} ${m === 1 ? 'overdracht mislukt' : 'overdrachten mislukt'}` : `DealDrive gekoppeld, ${dd.value.telling.bevestigd ?? 0} overdrachten bevestigd`
+})
 useHead({ title: 'DealDrive · Dealtrace' })
 </script>
 
@@ -31,19 +37,20 @@ useHead({ title: 'DealDrive · Dealtrace' })
   <div>
     <NietAangezetKop v-if="!aan" sleutel="koppelingen.dealdrive" />
     <template v-else>
-      <PaginaKop kicker="Instellingen · Koppelingen" titel="DealDrive" uitleg="Na de eerste afspraak gaat het account naar DealDrive, waar de deal en de offerte ontstaan. DealDrive meldt terug wat ermee gebeurt." helpartikel="koppelingen" />
+      <InstellingenKop groep="Koppelingen" :titel="titel" uitleg="DealDrive: na de eerste afspraak gaat het account naar DealDrive, waar de deal en de offerte ontstaan. DealDrive meldt terug wat ermee gebeurt." helpartikel="koppelingen">
+        <template #acties><button v-if="dd" type="button" class="dd-actie dd-actie--primair" :disabled="bezig" data-test="dealdrive-test" @click="test"><Icoon naam="RefreshCw" class="dd-actie-icoon" />Test verbinding</button></template>
+      </InstellingenKop>
       <section class="section section--laatste">
         <div v-if="dd" class="container">
           <article class="kaart" data-test="dealdrive-stand">
-            <header class="kaart-kop"><h2 class="kaart-titel">{{ kop }}</h2><span class="pil" :class="dd.stand === 'uit' ? 'pil--leeg' : 'pil--groen'">{{ STAND[dd.stand] }}</span></header>
+            <header class="kaart-kop"><h2 class="kaart-titel">{{ kop }}</h2><Label soort="instelling" :waarde="dd.stand === 'uit' ? 'uit' : 'gekoppeld'" :tekst="STAND[dd.stand]" /></header>
             <p class="kaart-meta">De founder richt de koppeling in. Staat hij uit, dan krijg je bij een overdracht een taak met de briefing om te mailen of te downloaden.</p>
             <p v-if="dd.getestOp" class="kaart-meta">Laatst getest {{ moment(dd.getestOp) }}.</p>
             <p class="kaart-meta">Overdrachten: {{ dd.telling.verstuurd ?? 0 }} verstuurd, {{ dd.telling.bevestigd ?? 0 }} bevestigd, {{ dd.telling.mislukt ?? 0 }} mislukt.</p>
-            <div class="dd-acties mt-8"><button type="button" class="dd-act" :disabled="bezig" data-test="dealdrive-test" @click="test">Test verbinding</button></div>
           </article>
           <article class="kaart mt-16" data-test="dealdrive-mislukt">
             <header class="kaart-kop"><h2 class="kaart-titel">Mislukte overdrachten</h2></header>
-            <p v-if="!dd.mislukt.length" class="kaart-meta">Geen.</p>
+            <LegeStaat v-if="!dd.mislukt.length" titel="Geen mislukte overdrachten." tekst="Alles wat naar DealDrive ging, is aangekomen." />
             <ul v-else class="schakel-lijst">
               <li v-for="m in dd.mislukt" :key="m.id" class="schakel-rij"><span><NuxtLink :to="`/accounts/${m.accountId}`">{{ m.account }}</NuxtLink><span class="meta"> · {{ datum(m.op) }} · {{ m.melding }}</span></span><button type="button" class="dd-act" @click="opnieuw(m.id)">Opnieuw proberen</button></li>
             </ul>
@@ -51,9 +58,9 @@ useHead({ title: 'DealDrive · Dealtrace' })
           <article class="kaart mt-16" data-test="dealdrive-logboek">
             <header class="kaart-kop"><h2 class="kaart-titel">Logboek</h2></header>
             <p class="kaart-meta">Zonder inhoud: alleen wat er gebeurde, wanneer en of het lukte.</p>
-            <p v-if="!dd.runs.length && !dd.gebeurtenissen.length" class="kaart-meta">Nog niets.</p>
+            <LegeStaat v-if="!dd.runs.length && !dd.gebeurtenissen.length" titel="Nog niets in het logboek." tekst="Na de eerste overdracht of test staat hier wat er gebeurde." />
             <ul class="schakel-lijst">
-              <li v-for="r in dd.runs" :key="r.start + r.handeling" class="schakel-rij"><span>{{ HANDELING[r.handeling] ?? r.handeling }}</span><span class="meta">{{ moment(r.start) }} · {{ r.ok ? 'gelukt' : r.fout }}</span></li>
+              <li v-for="r in dd.runs" :key="r.start + r.handeling" class="schakel-rij"><span>{{ HANDELING[r.handeling] ?? r.handeling }}</span><span class="dd-acties"><span class="meta">{{ moment(r.start) }}</span><Label v-if="r.ok" soort="overdracht" waarde="bevestigd" tekst="Gelukt" /><Label v-else soort="overdracht" waarde="mislukt" :tekst="r.fout || 'Mislukt'" /></span></li>
               <li v-for="g in dd.gebeurtenissen" :key="g.op + g.soort" class="schakel-rij"><span>Terugmelding {{ g.soort }}</span><span class="meta">{{ moment(g.op) }} · {{ g.resultaat }}</span></li>
             </ul>
           </article>

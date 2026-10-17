@@ -42,7 +42,7 @@ Joost: "Mooi. Donderdag om twee uur op de bouw. Ik stuur je zo een uitnodiging."
 
 ## Zo doe je het in Dealtrace
 
-Zegt de prospect ja, kies in de belmodus dan **Gesproken, afspraak**. Het ritme stopt. Open de taak en klik **+ Afspraak**. Kies de **klant** en de **meetingsoort**, zoals Kennismaking. Kies de vorm: **Bezoek**, **Online** of **Telefoon**. Onder de tijd zie je je **vrije momenten**; tik er een aan en klik **Plan afspraak**. De eerste kennismaking zet de fase op Afspraak gepland. Is het nee, kies dan **Geen interesse** en geef de reden. Bij **Mijn dashboard** zie je hoeveel gesprekken een afspraak opleveren; de norm is meer dan 15 procent.
+Zegt de prospect ja, kies dan **Gesproken, afspraak**. Het ritme stopt. In het taakvenster klik je daarna **Plan de afspraak**; je kunt ook **+ Afspraak** gebruiken. De prospect en de contactpersoon staan klaar. Kies het **type afspraak**, zoals Gepland bezoek of Online meeting; de vorm volgt uit het type. Onder de tijd zie je je **vrije momenten**; tik er een aan en klik **Plan afspraak**. De eerste afspraak zet de fase op Afspraak gepland. Is het nee, kies dan **Geen interesse** en geef de reden. Bij **Mijn dashboard** zie je hoeveel gesprekken een afspraak opleveren; de norm is meer dan 15 procent.
 
 ## Controlevragen
 

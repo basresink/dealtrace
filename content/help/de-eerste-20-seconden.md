@@ -45,7 +45,7 @@ In vijftien seconden weet Hilde wie belt, waarom, en wat het haar kan opleveren.
 
 ## Zo doe je het in Dealtrace
 
-Klik **Start belblok** op **Vandaag** of bij **Belblokken**. In de belmodus staat links het belscript, al ingevuld voor dit account, met de opening bovenaan. In het midden staat de gesprekskaart met het contact, het nummer en de aanleiding. Lees die vlak voor je belt. Ontbreekt een waarde in de opening, dan zie je een gele markering **onbekend** met een terugvalzin. Wil je een opening op maat, tik dan in de **Pitstop** op **Bereid voor**. Vanaf Gevorderd zet je **Handsfree** aan: Dealtrace leest naam, reden en opening voor je voor.
+Klik **Start belblok** bij **Belblokken**. In de belmodus staat links het belscript, al ingevuld voor dit account, met de opening bovenaan. In het midden staat de gesprekskaart met het contact, het nummer en de aanleiding. Lees die vlak voor je belt. Ontbreekt een waarde in de opening, dan zie je een gele markering **onbekend** met een terugvalzin. Wil je een opening op maat, tik dan in de **Pitstop** op **Bereid voor**. Vanaf Gevorderd zet je **Handsfree** aan: Dealtrace leest naam, reden en opening voor je voor.
 
 ## Controlevragen
 

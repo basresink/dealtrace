@@ -28,7 +28,7 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
   {
     naam: 'Verkoop',
     kaarten: [
-      { titel: 'Verkoopverhaal', tekst: 'Verhaal, belofte, branches, concurrenten, winpunten en terugkomregels.', link: '/instellingen/verkoopverhaal', toon: !!functie('verkoopverhaal.inrichten')?.beschikbaar },
+      { titel: 'SalesDNA', tekst: 'Verhaal, belofte, branches, concurrenten, winpunten en terugkomregels.', link: '/instellingen/verkoopverhaal', toon: !!functie('verkoopverhaal.inrichten')?.beschikbaar },
       { titel: 'Prospectreizen', tekst: 'Doelgroepen, de standaardreis en reizen op maat.', link: '/reizen', toon: beheerder.value },
       { titel: 'Belscripts', tekst: 'Belscript Studio: het standaardscript in blokken, templates, een script per prospect en de belmodus.', link: '/belscripts', toon: true },
       { titel: 'Alle belscripts', tekst: 'Overzicht van alle scripts met versies, resultaten en vergelijking.', link: '/instellingen/belscripts', toon: true },
@@ -72,16 +72,45 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
     ],
   },
 ] as { naam: string; kaarten: Kaart[] }[]).map((g) => ({ ...g, kaarten: g.kaarten.filter((k) => k.toon && magNaar(k.link)) })).filter((g) => g.kaarten.length))
+// Filters op de hub: één groep, wat nog aandacht vraagt (nog niet ingericht of gekoppeld) en zoeken op naam.
+const filter = reactive({ groep: '', aandacht: false, zoek: '' })
+const aantalFilters = computed(() => (filter.groep ? 1 : 0) + (filter.aandacht ? 1 : 0) + (filter.zoek.trim() ? 1 : 0))
+const vraagtAandacht = (k: Kaart) => /^(nog niet|nog geen|niet gekoppeld|uit\b)/i.test(overzicht.value.stand[k.link] ?? '')
+const zichtbareGroepen = computed(() => {
+  const z = filter.zoek.trim().toLowerCase()
+  return GROEPEN.value
+    .filter((g) => !filter.groep || g.naam === filter.groep)
+    .map((g) => ({ ...g, kaarten: g.kaarten.filter((k) => (!filter.aandacht || vraagtAandacht(k)) && (!z || `${k.titel} ${k.tekst}`.toLowerCase().includes(z))) }))
+    .filter((g) => g.kaarten.length)
+})
+const alleKaarten = computed(() => GROEPEN.value.flatMap((g) => g.kaarten))
+const aandachtTal = computed(() => alleKaarten.value.filter(vraagtAandacht).length)
+const hubTitel = computed(() => `${alleKaarten.value.length} onderdelen, ${aandachtTal.value ? `${aandachtTal.value} nog niet ingericht` : 'alles ingericht'}`)
+function wisFilters() { Object.assign(filter, { groep: '', aandacht: false, zoek: '' }) }
 useHead({ title: 'Instellingen · Dealtrace' })
 </script>
 
 <template>
   <div>
-    <PaginaKop kicker="Instellingen" titel="Instellingen" uitleg="Hoe Dealtrace voor je organisatie werkt." helpartikel="instellingen" />
+    <InstellingenKop hub :groep="beheerder ? 'Beheer' : 'Je teams'" :titel="hubTitel" uitleg="Hoe Dealtrace voor je organisatie werkt. Elke kaart zegt wat hij regelt en hoe het er nu voor staat." helpartikel="instellingen" :filters="aantalFilters" @reset="wisFilters">
+      <template #filters>
+        <div class="ifp-groep"><label class="filter-label" for="hub-zoek">Zoeken</label><input id="hub-zoek" v-model="filter.zoek" type="search" class="invoer ifp-zoek" placeholder="Bijvoorbeeld mail of regio" data-test="hub-zoek"></div>
+        <div class="ifp-groep" role="group" aria-label="Groep"><span class="filter-label">Groep</span>
+          <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': !filter.groep }" :aria-pressed="!filter.groep" @click="filter.groep = ''">Alle</button>
+          <button v-for="g in GROEPEN" :key="g.naam" type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter.groep === g.naam }" :aria-pressed="filter.groep === g.naam" @click="filter.groep = g.naam">{{ g.naam }}<span class="pil-teller tnum">{{ g.kaarten.length }}</span></button>
+        </div>
+        <div class="ifp-groep" role="group" aria-label="Stand"><span class="filter-label">Stand</span>
+          <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter.aandacht }" :aria-pressed="filter.aandacht" data-test="hub-aandacht" @click="filter.aandacht = !filter.aandacht">Nog niet ingericht<span class="pil-teller tnum">{{ aandachtTal }}</span></button>
+        </div>
+      </template>
+    </InstellingenKop>
     <section class="section section--laatste">
       <div class="container">
         <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm. Instellingen werken ook hier, maar zijn ruimer op een laptop.</p>
-        <div v-for="g in GROEPEN" :key="g.naam" class="instellingen-groep">
+        <LegeStaat v-if="!zichtbareGroepen.length" kicker="Niets gevonden" titel="Geen instellingen in dit filter." tekst="Kies een andere groep of zoek op een ander woord.">
+          <button type="button" class="dd-act mt-16" @click="wisFilters">Wis filters</button>
+        </LegeStaat>
+        <div v-for="g in zichtbareGroepen" :key="g.naam" class="instellingen-groep">
           <div class="inst-groepkop"><span class="kicker kicker--streep">{{ g.naam }}</span><span v-if="overzicht.groepen[g.naam]" class="meta" :data-test="`groepstand-${g.naam}`">{{ overzicht.groepen[g.naam] }}</span></div>
           <div class="instellingen-raster mt-16">
             <FunctieLink v-for="k in g.kaarten" :key="k.titel" :to="k.link" class="kaart kaart--klik" :data-test="`kaart-${k.titel}`">

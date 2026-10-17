@@ -45,7 +45,7 @@ Marloes: "Dank je wel, Hilde."
 
 ## Zo doe je het in Dealtrace
 
-Geef de receptionist of planner bij **Contacten** de rol **Poortwachter**, zodat je collega's weten wie de deur bewaakt. Word je in de belmodus doorverbonden met iemand anders, kies dan **Doorverbonden, nieuw contact**: dezelfde poging gaat dan naar de nieuwe persoon. Moet je terugbellen, kies **Poortwachter: terugbellen** en kies het moment dat de poortwachter noemde. Gaat het om een bezoek, dan zie je in de briefing van de soort **Bezoek** wie je bij de receptie vraagt.
+Geef de receptionist of planner op de contactkaart de rol **Poortwachter**, zodat je collega's weten wie de deur bewaakt. Word je in de belmodus doorverbonden met iemand anders, kies dan **Doorverbonden, nieuw contact**: dezelfde poging gaat dan naar de nieuwe persoon. Moet je terugbellen, kies **Poortwachter: terugbellen** en kies het moment dat de poortwachter noemde. Gaat het om een bezoek, dan zie je in de briefing van de soort **Bezoek** wie je bij de receptie vraagt.
 
 ## Controlevragen
 

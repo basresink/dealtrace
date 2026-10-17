@@ -20,7 +20,7 @@ useHead({ title: 'Audit · Instellingen · Dealtrace' })
 
 <template>
   <div>
-    <PaginaKop kicker="Instellingen · Audit" titel="Audit en toegang leverancier" uitleg="Wie wat wijzigde, ook Dealtrace, en wanneer Dealtrace mag meekijken." helpartikel="als-dealtrace-meekijkt" />
+    <InstellingenKop groep="Organisatie" titel="Audit en toegang leverancier" :uitleg="`Wie wat wijzigde, ook Dealtrace, en wanneer Dealtrace mag meekijken. ${toegang?.stand === 'altijd' ? 'Dealtrace mag altijd meekijken voor support.' : 'Dealtrace kijkt alleen mee na jouw toestemming.'}`" helpartikel="als-dealtrace-meekijkt" />
     <section class="section">
       <div class="container">
         <article class="kaart" data-test="toegang-leverancier">

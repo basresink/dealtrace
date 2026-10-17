@@ -8,7 +8,7 @@ routes: /leadgenerator
 
 # Leadgenerator
 
-De **Leadgenerator** zoekt bedrijven die passen bij je doelgroep. Elke bron (AI-zoeker, KvK, import) levert dezelfde lead: met bron, datum en bewijs per criterium. Je vindt hem in de zijbalk onder Prospects, vanaf niveau Gevorderd. Op de telefoon werk je liever niet in bulk; daar zoek je één bedrijf op in KvK (zie "KvK en Datacollectief").
+De **Leadgenerator** zoekt bedrijven die passen bij je doelgroep. Elke bron (AI-zoeker, KvK, import) levert dezelfde lead: met bron, datum en bewijs per criterium. Je vindt hem in de zijbalk onder **Planning**, vanaf niveau Gevorderd. Op de telefoon werk je liever niet in bulk; daar zoek je één bedrijf op in KvK (zie "KvK en Datacollectief").
 
 ## Een ronde starten
 

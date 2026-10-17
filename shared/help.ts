@@ -146,7 +146,7 @@ export function citatenGeldig(antwoord: { bronnen?: { soort: string; ref?: strin
 }
 
 // ── Verkoopverhaal in artikelen (F25) ──────────────────────────────────────
-export const VERHAAL_LEEG = 'Jullie verkoopverhaal is nog niet vastgelegd.'
+export const VERHAAL_LEEG = 'Jullie SalesDNA is nog niet vastgelegd.'
 export interface VerhaalVoorHelp { kernzin?: string | null; kernbelofte?: string | null; winpunten?: { titel: string; omschrijving?: string }[]; concurrenten?: { naam: string; alsDeKlantZegt?: string | null }[]; terugkomregels?: { reden: string; termijn: string; kanaal: string }[]; branches?: { naam: string }[] }
 /** Vult {{verhaal:kernzin}}, {{verhaal:kernbelofte}}, {{verhaal:winpunten}}, {{verhaal:concurrenten}}, {{verhaal:terugkomregels}} en {{verhaal:branches}} met het leesmodel van de eigen organisatie. */
 export function vulVerhaal(md: string, v: VerhaalVoorHelp | null): string {
@@ -245,7 +245,7 @@ export function categorieUitSlug(slug: string): { naam: string; collectie: HelpC
 /** E\u00e9n zin per categorie, onder de kop in het helpcenter. */
 export const CATEGORIE_UITLEG: Record<string, string> = {
   'Aan de slag': 'Je eerste dag, je instellingen, meldingen, de AI-assistent en Dealtrace op je telefoon.',
-  'Dagelijks werk': 'Vandaag, acties, agenda, belblokken, bezoeken, inzichten en concepten.',
+  'Dagelijks werk': 'Vandaag, taken, agenda, belblokken, bezoeken, inzichten en concepten.',
   'Prospects': 'Prospects toevoegen en importeren, de accountkaart, contacten en de prospectreis.',
   'Plannen en sturen': 'Prospectplanning, campagnes, Richting, de funnel en je dashboard.',
   'Inrichten': 'Regels, reizen, agents, koppelingen en instellingen voor de beheerder.',

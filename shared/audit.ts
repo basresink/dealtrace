@@ -63,7 +63,7 @@ const VAST: Record<string, string> = {
 }
 
 const OBJECT: Record<string, string> = {
-  account: 'Prospect', reis: 'Reis', reeks: 'Opvolgreeks', taak: 'Taak', belblok: 'Belblok', verkoopverhaal: 'Verkoopverhaal',
+  account: 'Prospect', reis: 'Reis', reeks: 'Opvolgreeks', taak: 'Taak', belblok: 'Belblok', verkoopverhaal: 'SalesDNA',
   document: 'Document', afspraak: 'Afspraak', eigenVeld: 'Eigen veld', planning: 'Planning', belscript: 'Belscript', contact: 'Contact',
   weekreview: 'Weekreview', import: 'Import', campagne: 'Campagne', gebruiker: 'Gebruiker', reekssjabloon: 'Reekssjabloon', agent: 'Agent',
   accountplan: 'Accountplan', doelgroep: 'Doelgroep', regel: 'Regel', regels: 'Regels', team: 'Team', mailsjabloon: 'Mailsjabloon',

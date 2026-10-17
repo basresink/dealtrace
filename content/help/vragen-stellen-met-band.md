@@ -45,7 +45,7 @@ Joost heeft drie van de vier. Hij vraagt om een afspraak met Hilde en de werkvoo
 
 ## Zo doe je het in Dealtrace
 
-In de belmodus staat BAND op de gesprekskaart, in het midden. In het belscript vink je een vraag af met een kort antwoord. Een antwoord bij een BAND-vraag wordt direct een veldwaarde op het account. In Dealtrace telt een account als gekwalificeerd bij minstens 3 van de 4. Een gekwalificeerd account start het **hercontactritme**. Het buying committee leg je vast bij **Contacten** met de rollen **Beslisser**, **Beïnvloeder**, **Gebruiker** en **Poortwachter**.
+In de belmodus staat BAND op de gesprekskaart, in het midden. In het belscript vink je een vraag af met een kort antwoord. Een antwoord bij een BAND-vraag wordt direct een veldwaarde op het account. In Dealtrace telt een account als gekwalificeerd bij minstens 3 van de 4. Een gekwalificeerd account start het **hercontactritme**. Het buying committee leg je vast op de contactkaart met de rollen **Beslisser**, **Beïnvloeder**, **Champion**, **Gebruiker**, **Poortwachter** en **Blokkeerder**. Op de accountkaart zie je BAND en het buying committee onder **Meer**, **Kwalificatie**.
 
 ## Controlevragen
 

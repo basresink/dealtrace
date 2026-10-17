@@ -12,11 +12,11 @@ Een eerste afspraak staat vaak op één enthousiaste contactpersoon. Bij de over
 
 ## Waar vind je hem
 
-Op de accountkaart en de contactkaart staat rechtsboven de knop **Invloed**. Vanaf de contactkaart opent de kaart van het account, met dat contact al geselecteerd.
+Op de accountkaart en de contactkaart open je rechtsboven **Meer** en kies je **Invloed**. Vanaf de contactkaart opent de kaart van het account, met dat contact al geselecteerd.
 
 ## Wat je ziet
 
-- **Het organigram.** Elke persoon met zijn rol in het buying committee: beslisser, beïnvloeder, champion, poortwachter, gebruiker. Wie aan wie rapporteert, zie je aan de lijnen. Op de telefoon is het een lijst.
+- **Het organigram.** Elke persoon met zijn rol in het buying committee: beslisser, beïnvloeder, champion, poortwachter, gebruiker of blokkeerder. Wie aan wie rapporteert, zie je aan de lijnen. Op de telefoon is het een lijst.
 - **Kleur op houding of op contact.** Met **Kleur op houding** zie je wie voor, neutraal of tegen is. Met **Kleur op contact** zie je met wie je vaak, één keer of nooit contact had.
 - **Naam onbekend.** Een rol die de Profielbouwer vermoedt, maar waar nog geen contact bij is. Een vraagteken betekent: vermoedelijk, onder 60 procent zekerheid. De Profielbouwer verzint nooit een naam.
 - **Dekking.** Hoeveel rollen je sprak. De vaste regel voor een overdracht: de beslisser en minstens één beïnvloeder gesproken. Een gesprek is een belpoging waarin je iemand sprak, een bezoek of een gehouden afspraak. Een mail telt als contact, niet als gesprek.

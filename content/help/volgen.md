@@ -9,7 +9,7 @@ samenvatting: Per account één concrete stap met de reden erbij, en een opvolgr
 
 Een account heeft vaak drie taken, twee inzichten en een terugkomregel tegelijk. Welke eerst? Met **Volgen** krijg je per account één stap met de reden erbij. En na "stuur maar wat informatie" loopt een opvolgreeks, zodat de tweede en derde opvolging niet blijven liggen.
 
-Je vindt de knop **Volgen** rechtsboven op de accountkaart en op de contactkaart.
+Je vindt **Volgen** op de accountkaart en op de contactkaart onder **Meer**, rechtsboven.
 
 ## De volgende beste stap
 
@@ -49,7 +49,7 @@ Een reeks is een vaste volgorde van stappen per dag. Er zijn drie startsjablonen
 Een reeks start je op vier plekken:
 
 - onder **Opvolgreeks** in het venster Volgen: kies een sjabloon, de contactpersoon en het mandaat, en kies **Start reeks**;
-- op de pagina **Opvolgreeksen** (in het menu onder Activiteiten, bij Taken) met **Start reeks**: kies eerst de prospect;
+- op de pagina **Opvolgreeksen** (in de zijbalk onder **Activiteiten**) met **Start reeks**: kies eerst de prospect;
 - in **Rond af** van een taak: kies je **Voicemail ingesproken** of **Gesproken, later**, dan staat onder de uitkomst **Opvolgreeks starten** met het sjabloon dat bij die uitkomst hoort. Vroeg de prospect om informatie, kies dan **Na informatie**. Kies **Geen reeks** als je niets wilt starten;
 - in de **belmodus**: na **Voicemail ingesproken** of **Gesproken, later** kies je bij Afronden een sjabloon of Geen reeks.
 
@@ -92,7 +92,7 @@ In het menu onder **Activiteiten** staat **Opvolgreeksen**. De kop zegt hoeveel 
 
 Filter op stand, sjabloon of naam. Als salesmanager kies je ook **Mijn team**, als beheerder **Hele organisatie**. Rechts staat de gekozen reeks met de stappen per dag, het mandaat, **Reactie ontvangen**, **Pauzeer** en **Stop**. Concepten en LinkedIn-stappen van een reeks staan ook als taak op Vandaag en bij Taken, met "stap 2 van 4".
 
-Een lopende reeks zie je ook bij **Prospects** (onder de prospect: de reeks, stap x van y en de volgende stap) en op de gesprekskaart in de **belmodus**.
+Een lopende reeks zie je ook in **Alle prospects** (onder de prospect: de reeks, stap x van y en de volgende stap) en op de gesprekskaart in de **belmodus**.
 
 ## Sjablonen beheren
 

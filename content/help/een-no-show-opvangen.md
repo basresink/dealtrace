@@ -48,10 +48,10 @@ Mail na een gemiste kennismaking bij Testtechniek Kabelgoot:
 
 ## Zo doe je het in Dealtrace
 
-1. Open de afspraak in de **Agenda** en klik **Niet verschenen**.
+1. Open de afspraak in de **Agenda** en klik onderin op het icoon **Niet verschenen**.
 2. Bij de eerste afspraak gaat de fase terug naar In gesprek. Een geannuleerde afspraak telt niet mee als gescoord.
-3. Je krijgt het inzicht "Gat in je agenda". Vanaf Gevorderd verschijnt het account bij **Wie moet ik spreken** met de reden "No-show opnieuw inplannen".
-4. Klik **+ Afspraak**, kies de meetingsoort en de vorm. Tik onder de tijd een van je **vrije momenten** aan en klik **Plan afspraak**.
+3. Je krijgt het inzicht "Gat in je agenda". Vanaf Gevorderd verschijnt het account op **Meetings** bij **Wie is er aan de beurt?** met de reden "No-show opnieuw inplannen".
+4. Klik **+ Afspraak** en kies het type afspraak; de vorm volgt uit het type. Tik onder de tijd een van je **vrije momenten** aan en klik **Plan afspraak**.
 5. Open de **Briefing en Pitstop** en tik **Bereid voor** voor een concept van je mail. Jij keurt goed en verstuurt.
 
 ## Controlevragen

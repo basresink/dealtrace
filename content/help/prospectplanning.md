@@ -8,7 +8,7 @@ routes: /planning
 
 # Prospectplanning
 
-Bij **Prospectplanning** zie je wie dit verkoopjaar aan de beurt is. Je vindt het in de zijbalk onder Plannen, vanaf niveau Gevorderd. Er zijn drie tabbladen: **Jaarplanning**, **Hercontactritme** en **Terugkomregels**.
+Bij **Prospectplanning** zie je wie dit verkoopjaar aan de beurt is. Je vindt het in de zijbalk onder **Planning**, op elk niveau. Er zijn drie tabbladen: **Jaarplanning**, **Hercontactritme** en **Terugkomregels**. Direct onder Prospectplanning staat in de zijbalk **Terug in beeld**: de verloren prospects die weer aan de beurt zijn.
 
 ## Potentie en vensters
 
@@ -32,6 +32,8 @@ Staan er prospects zonder klasse, klik **Deel in** en kies per prospect een klas
 
 ## Jaarkalender en maanddetail
 
-De twaalf maandtegels tonen per groep hoeveel er benaderd is en hoeveel te laat. Klik een maand voor de rijen met **Bel** en **Plan bezoek**. Op de telefoon veeg je door de maanden.
+Bovenaan staan tellers: ingedeeld, nog niet benaderd, te laat en benaderd. De kalender toont per maand en per potentie hoeveel er benaderd is en hoeveel te laat. Onder **Filters** kies je de weergave **Jaar** (standaard), **Kwartaal** of **Maand**.
+
+Klik een maand voor het maanddetail: wie aan de beurt is en wat is blijven liggen. Standaard zie je alleen wie nog niet benaderd is; met **Toon ook benaderde** zie je iedereen. Per prospect opent **+ Bel taak** een nieuwe taak van het type Bellen, met de prospect en het hoofdcontact al ingevuld. Onderaan staan de prospects buiten de planning.
 
 Is het venster voorbij en is een prospect nog niet benaderd, dan zet de motor elke week een belpoging op Vandaag.

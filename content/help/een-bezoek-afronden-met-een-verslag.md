@@ -7,7 +7,7 @@ samenvatting: Na een bezoek in een paar tikken de uitkomst, een ingesproken vers
 
 # Een bezoek afronden met een verslag
 
-Na een bezoek tik je op **Bezoek afronden**: in de route, op de aankomstkaart of in de afspraak. Het venster schuift van onderen omhoog.
+Na een bezoek tik je op **Bezoek afronden**: in de route of op de aankomstkaart. In het afspraakvenster op de laptop rond je af met **Rond af**.
 
 1. **Uitkomst**: tik een van de grote tegels, bijvoorbeeld **Vervolg afgesproken**, **Later terugkomen**, **Andere contactpersoon** of **Geen interesse**. De tegels komen van de meetingsoort.
 2. **Verslag**: tik **Spreek je verslag in**, vertel wat er besproken is en tik op **Stop**. De tekst verschijnt in het veld; je kunt hem aanvullen of gewoon typen. Met **Foto** maak je een foto van een whiteboard, visitekaartje of de situatie.

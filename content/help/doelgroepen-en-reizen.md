@@ -12,7 +12,7 @@ Een doelgroep beschrijft welke bedrijven je zoekt: branches, SBI-codes, klassen,
 
 ## Een doelgroep maken (salesmanager)
 
-1. Ga naar **Prospectreizen** en klik **+ Doelgroep**.
+1. Ga naar **Prospectreizen** (in de zijbalk onder **Planning**, vanaf Expert; de beheerder ook via **Instellingen**) en klik **+ Doelgroep**.
 2. Kies branches en filters. De teller laat zien hoeveel accounts erin vallen en hoeveel al in een andere reis zitten.
 3. Geef een prioriteit. Past een account in twee doelgroepen, dan wint prioriteit 1.
 4. Beantwoord "Past deze doelgroep bij onze ambitie?".

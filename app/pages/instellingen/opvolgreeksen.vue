@@ -42,6 +42,12 @@ async function zetActief(s: any, actief: boolean) {
 }
 const ICOON: Record<string, string> = { mail: 'Mail', linkedin: 'Linkedin', bellen: 'Phone' }
 const stappenTekst = (s: any) => `${s.stappen.map((x: any) => `dag ${x.dag} ${(REEKS_KANAAL_LABEL[x.kanaal as keyof typeof REEKS_KANAAL_LABEL] ?? x.kanaal).toLowerCase()}`).join(' · ')} · dag ${s.einde.dag} terug naar het ritme`
+// Filters: stand (aan of uit) en of er reeksen lopen.
+const filter = reactive({ stand: '', lopend: false })
+const aantalFilters = computed(() => (filter.stand ? 1 : 0) + (filter.lopend ? 1 : 0))
+const lijst = computed(() => data.value.sjablonen.filter((s: any) => (!filter.stand || (filter.stand === 'aan') === !!s.actief) && (!filter.lopend || s.lopend > 0)))
+function wis() { filter.stand = ''; filter.lopend = false }
+const titel = computed(() => (data.value.sjablonen.length ? `${data.value.sjablonen.filter((s: any) => s.actief).length} van ${data.value.sjablonen.length} opvolgsjablonen aan` : 'Sjablonen voor opvolgreeksen'))
 useHead({ title: 'Sjablonen voor opvolgreeksen · Dealtrace' })
 // Opslaan-status in de kop (FlyoutShell): Gewijzigd tot de hoofdactie opslaat; sluiten met wijzigingen vraagt eerst.
 const opslag = useFlyoutOpslag()
@@ -52,22 +58,33 @@ opslag.volg(() => [bewerk.value])
   <div>
     <NietAangezetKop v-if="!aan" sleutel="instellingen.opvolgreeksen" />
     <template v-else>
-      <PaginaKop kicker="Instellingen · Werkwijze" titel="Sjablonen voor opvolgreeksen" uitleg="Een reeks van mail, LinkedIn en bellen die vanzelf stopt zodra de prospect reageert. De Schrijver maakt elke mail en elk bericht vlak voor de verzenddag; jij of je verkopers keuren goed." helpartikel="volgen">
+      <InstellingenKop groep="Verkoop" :titel="titel" :filters="data.sjablonen.length ? aantalFilters : null" @reset="wis" uitleg="Sjablonen voor opvolgreeksen: een reeks van mail, LinkedIn en bellen die vanzelf stopt zodra de prospect reageert. De Schrijver maakt elke mail en elk bericht vlak voor de verzenddag; jij of je verkopers keuren goed." helpartikel="volgen">
         <template #acties>
           <FunctieLink to="/opvolgreeksen" class="dd-actie dd-actie--secundair">Naar de reeksen</FunctieLink>
           <button type="button" class="dd-actie dd-actie--primair" data-test="rsj-nieuw" @click="nieuw"><Icoon naam="Plus" class="dd-actie-icoon" />Sjabloon</button>
         </template>
-      </PaginaKop>
+        <template #filters>
+          <div class="ifp-groep" role="group" aria-label="Stand"><span class="filter-label">Stand</span>
+            <button v-for="[k, l] in [['', 'Alle'], ['aan', 'Aan'], ['uit', 'Uit']]" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter.stand === k }" :aria-pressed="filter.stand === k" @click="filter.stand = k!">{{ l }}</button>
+          </div>
+          <div class="ifp-groep" role="group" aria-label="Gebruik"><span class="filter-label">Gebruik</span>
+            <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter.lopend }" :aria-pressed="filter.lopend" @click="filter.lopend = !filter.lopend">Met lopende reeksen</button>
+          </div>
+        </template>
+      </InstellingenKop>
       <section class="section section--laatste">
         <div class="container">
-          <LegeStaat v-if="!data.sjablonen.length" titel="Nog geen sjablonen." tekst="Maak een eerste sjabloon. De startset (Na informatie, Na voicemail, Na eerste gesprek) komt bij het eerste gebruik vanzelf." />
+          <LegeStaat v-if="!data.sjablonen.length" kicker="Opvolgreeksen" titel="Nog geen sjablonen." tekst="Maak een eerste sjabloon. De startset (Na informatie, Na voicemail, Na eerste gesprek) komt bij het eerste gebruik vanzelf." />
+          <LegeStaat v-else-if="!lijst.length" kicker="Niets gevonden" titel="Geen sjablonen in dit filter." tekst="Kies een andere stand.">
+            <button type="button" class="dd-act mt-16" @click="wis">Wis filters</button>
+          </LegeStaat>
           <div v-else class="lijst" data-test="rsj-lijst">
-            <div v-for="s in data.sjablonen" :key="s.id" class="rij rij--compact" :class="{ 'rij--uit': !s.actief }" :data-test="`rsj-${s.sleutel}`">
+            <div v-for="s in lijst" :key="s.id" class="rij rij--compact inst-rij" :class="{ 'inst-rij--uit': !s.actief }" :data-test="`rsj-${s.sleutel}`">
               <div class="rij-info">
-                <h3 class="rij-titel">{{ s.naam }} <span v-if="!s.actief" class="pil">uit</span><span v-for="u in s.uitkomsten" :key="u" class="pil pil--leeg">{{ REEKS_UITKOMST_LABEL[u as keyof typeof REEKS_UITKOMST_LABEL] ?? u }}</span></h3>
+                <h3 class="rij-titel">{{ s.naam }} <Label v-if="!s.actief" soort="instelling" waarde="uit" /><Label v-for="u in s.uitkomsten" :key="u" soort="herkomst" waarde="reeks" :tekst="REEKS_UITKOMST_LABEL[u as keyof typeof REEKS_UITKOMST_LABEL] ?? u" /></h3>
                 <div class="rij-sub">{{ stappenTekst(s) }}<template v-if="s.lopend"> · {{ s.lopend }} {{ s.lopend === 1 ? 'reeks loopt' : 'reeksen lopen' }}</template></div>
               </div>
-              <div class="rsj-knoppen">
+              <div class="inst-rij-acties">
                 <Schakelaar :aan="s.actief" :label="s.actief ? `${s.naam} staat aan` : `${s.naam} staat uit`" @wissel="zetActief(s, $event)" />
                 <button type="button" class="dd-act" :data-test="`rsj-bewerk-${s.sleutel}`" @click="open(s)">Bewerk</button>
               </div>
@@ -138,7 +155,6 @@ opslag.volg(() => [bewerk.value])
 </template>
 
 <style scoped>
-.rsj-knoppen { display: flex; align-items: center; gap: 10px; }
 .rsj-pillen { display: flex; flex-wrap: wrap; gap: 8px; }
 .rsj-stappen { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .rsj-stap { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--border); }
@@ -148,6 +164,6 @@ opslag.volg(() => [bewerk.value])
 @media (max-width: 719px) {
   .rsj-stap-kop { grid-template-columns: 70px minmax(0, 1fr) auto; }
   .rsj-stap-kop .item-icoon { display: none; }
-  .rsj-knoppen .dd-act { min-height: var(--touch-target-min); }
+  .inst-rij-acties .dd-act { min-height: var(--touch-target-min); }
 }
 </style>

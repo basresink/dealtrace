@@ -8,7 +8,7 @@ routes: /concepten
 
 # Concepten goedkeuren en versturen
 
-Bij **Concepten** staat alles wat agents voor je klaarzetten: een opvolgmail, een LinkedIn-bericht, een belscript of een bezoekbriefing. Per concept zie je wie het maakte, waarom, de tekst met stijlscore en de bron.
+Bij **Concepten** (in de zijbalk onder **Activiteiten**, met een teller) staat alles wat agents voor je klaarzetten: een opvolgmail, een LinkedIn-bericht, een belscript of een bezoekbriefing. Per concept zie je wie het maakte, waarom, de tekst met stijlscore en de bron.
 
 - **Goedkeuren**: zoals het is.
 - **Aanpassen**: je wijzigt de tekst en keurt goed.
@@ -24,7 +24,7 @@ Na goedkeuren:
 - **Verstuur via je mail** opent je mailapp met ontvanger, onderwerp en tekst ingevuld.
 - Een WhatsApp-bericht (hooguit 60 woorden) gaat met **Verstuur via WhatsApp** via de koppeling, als je organisatie WhatsApp heeft gekoppeld, er een goedgekeurd sjabloon is en het contact toestemming gaf. Anders opent **Open in WhatsApp** de app met de tekst ingevuld. Zonder toestemming zie je "Geen toestemming voor WhatsApp"; bel of mail dan.
 
-Een opvolgmail versturen: tik op Concepten bij de bel (op de telefoon onder Meer) (1), open het concept (2), **Goedkeuren** (3), **Verstuur via je mail** (4).
+Een opvolgmail versturen: open **Concepten** in de zijbalk (op de telefoon onder **Meer**) (1), open het concept (2), **Goedkeuren** (3), **Verstuur via je mail** (4).
 
 Elke eerste mail krijgt onderaan een afmeldlink en een verwijzing naar de privacyverklaring. Meldt iemand zich af, dan krijgt dat adres nooit meer mail, ook niet na een nieuwe import.
 

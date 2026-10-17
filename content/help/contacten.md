@@ -2,9 +2,19 @@
 titel: Contacten
 categorie: Prospects
 collectie: product
-samenvatting: Contactpersonen bij je accounts.
+samenvatting: Top deze week en Alle contacten: de mensen bij je prospects, met functie en rol.
+routes: /contacten/alle
 ---
 
 # Contacten
 
-Bij **Contacten** staan de mensen bij je accounts, met functie en rol. Lees "Het buying committee" voor hoe je rollen gebruikt.
+**Contacten** staat in de zijbalk onder **Prospects** en opent met **Top deze week**: zes contactpersonen die deze week tellen. Eerst wie een afspraak of open taak heeft, aangevuld met beslissers, champions en beïnvloeders van je eigen prospects.
+
+## Alle contacten
+
+- **+ Contact** voegt een contactpersoon toe aan een prospect.
+- **Filters**: eigenaar, rol en **Accounts** (standaard prospects, met **Ook klanten** erbij), en vanaf Gevorderd bereikbaarheid, laatste contact en toestemming. Daarin staan ook **Sorteer op** (standaard Rol) en de weergave.
+- Onder **Meer** staan **Nieuwe taak**, **Nieuwe afspraak** en, voor Expert, **Exporteren**.
+- Klik met de rechtermuisknop op een rij om te bellen, te mailen, een taak of afspraak te maken, of iemand op bel me niet of vertrokken te zetten.
+
+Een klik op een naam opent de contactkaart. Lees "Het buying committee" voor hoe je rollen gebruikt.

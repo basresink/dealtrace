@@ -20,11 +20,11 @@ useHead({ title: 'Niveaus · Instellingen · Dealtrace' })
 
 <template>
   <div>
-    <PaginaKop kicker="Instellingen · Niveaus" titel="Niveaus" uitleg="Een niveau bepaalt welke functies voor iemand aanstaan." helpartikel="gebruikers-rollen-niveaus" />
+    <InstellingenKop groep="Organisatie" :titel="n.iedereenAlles ? 'Iedereen ziet alles uit het pakket' : `Nieuwe gebruikers starten als ${NIVEAU_LABEL[n.standaardNiveauNieuweGebruiker as keyof typeof NIVEAU_LABEL]}`" uitleg="Niveaus en functies: een niveau bepaalt welke functies voor iemand aanstaan." helpartikel="gebruikers-rollen-niveaus" />
     <section class="section section--laatste">
       <div class="container">
         <article class="kaart">
-          <header class="kaart-kop"><h2 class="kaart-titel">Voor je organisatie</h2><span class="bewaar-status" aria-live="polite" data-test="bewaar-niveaus">{{ status }}</span></header>
+          <header class="kaart-kop"><h2 class="kaart-titel">Voor je organisatie</h2><OpslagStatus :status="status" test="bewaar-niveaus" /></header>
           <div class="schakel-rij">
             <div><span class="schakel-naam">Iedereen ziet alles</span><span class="veld-uitleg">Zet alles uit je pakket aan voor iedereen, los van het niveau. Rollen blijven gelden.</span></div>
             <Schakelaar :aan="n.iedereenAlles" label="Iedereen ziet alles" data-test="iedereen-alles" @wissel="n.iedereenAlles = $event" />

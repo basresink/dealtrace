@@ -46,10 +46,10 @@ De week van Marloes, accountmanager bij Voltvast:
 
 ## Zo doe je het in Dealtrace
 
-1. Begin elke dag op **Vandaag**. Daar staan je taken, achterstallig bovenaan, en je werkblok: het belblok voor de binnendienst, de bezoekdag voor de buitendienst. Vanaf Gevorderd zie je daar ook je week.
-2. Kies in de **Agenda** de weergave **Week**. Je belblokken staan er als grijs gestippeld vak, bezet uit je gekoppelde agenda als gearceerd vak.
+1. Begin elke dag op **Vandaag**. Daar staan je taken, achterstallig bovenaan, je afspraken en wat niet mag blijven liggen. Met **Dagstart** deel je de dag in.
+2. Bekijk je week in de **Agenda** (standaard de werkweek). Je belblokken staan erin, en wat bezet is in je gekoppelde agenda als gearceerd vak. Op maandag helpt **Weekstart**, op vrijdag **Weekreview**.
 3. Bij **Taken** kies je onder **Filters** de weergave **Horizon** om te zien wat er deze week aankomt.
-4. Vanaf Gevorderd zie je bij **Prospectplanning** onder **Wat knelt er nu** welke grote prospects nog niet benaderd zijn.
+4. Bij **Prospectplanning** zie je onder **Wat knelt er nu** welke grote prospects nog niet benaderd zijn.
 5. Kijk op vrijdag bij **Mijn dashboard** naar je pogingen, gesprekken, afspraken en overdrachten.
 
 ## Controlevragen
@@ -64,5 +64,5 @@ De week van Marloes, accountmanager bij Voltvast:
    - [ ] Niets, dan is het weekend.
 3. Waar zie je in Dealtrace je belblokken van de week?
    - [ ] Bij Instellingen.
-   - [x] In de Agenda, weergave Week.
+   - [x] In de Agenda.
    - [ ] Op de accountkaart.

@@ -40,10 +40,10 @@ Met de knoppen rechtsboven kies je wat de radar telt:
 
 ## Een cel openen
 
-Klik op een cel. Rechts (op de telefoon eronder) zie je:
+Klik op een cel. De golf opent onder het raster, over de volle breedte. Op een groot scherm staan links het waarom, het winpunt, de capaciteit en de knoppen en rechts de accounts. Je ziet:
 
 - **Waarom het wel of geen golf is**, met de zeven perioden als staafjes: de zes ervoor en nu.
-- **De accounts** met het laatste signaal, de bron en de datum. Een klik opent de accountkaart.
+- **De accounts** met het laatste signaal, de bron en de datum. Een klik op de naam opent de accountkaart; het lampje opent het inzicht.
 - **Het winpunt dat past**: eerst een winpunt dat bij de branche hoort, dan een winpunt dat bij de signaalsoort past (vacatures passen bij snelheid en levering, nieuwbouw bij projecten), anders het sterkste winpunt uit je verkoopverhaal.
 - **Capaciteit**: hoeveel plekken je vrij hebt in je belblokken voor koude acquisitie van de komende twee weken.
 

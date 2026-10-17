@@ -24,21 +24,22 @@ De onderbalk heeft vijf tabs en verandert nooit van plek, ook niet als je een ho
 - **Hybride**: Vandaag, Route, Belblok, Prospects, Meer.
 - **Salesmanager zonder eigen portefeuille**: Team, Coaching, Taken, Prospects, Meer.
 
-Onder **Meer** staat de rest van je menu in dezelfde volgorde als op de laptop, met onderaan **Nog niet aangezet**. Instellingen en Platformbeheer werken ook op de telefoon, maar zijn beter op een groot scherm.
+Onder **Meer** staat bovenaan de **AI-assistent**, daarna de rest van je menu in dezelfde groepen en volgorde als op de laptop, en onderaan de groep **Jij**: Concepten, Meldingen, Helpcenter, Account, Mijn instellingen, Roadmap en Uitloggen. Wat voor je uit staat, zie je niet. Instellingen en Platformbeheer werken ook op de telefoon, maar zijn beter op een groot scherm.
 
 ## Vandaag op je telefoon
 
-Open je Dealtrace op je telefoon, dan zie je zonder te scrollen drie dingen:
+Open je Dealtrace op je telefoon, dan zie je bovenaan:
 
 - **De groet** met de datum. Rechts staat **Lees voor**: je telefoon leest je dag in een minuut voor. Tik nog een keer om te stoppen.
-- **Je eerste zet**: één kaart met wat je nu het beste kunt doen, waarom, en één knop. Bijvoorbeeld "Navigeer naar Testinstallatie Leidingdal" voor je eerste afspraak, "Bel Nadia" voor een poging die vandaag moet, of "Leg het verslag vast" als een afspraak geweest is.
+- **De quote van de dag**.
+- **De dagkiezer** met **Morgen**.
 - **De telstrip**: Afspraken, Bellen, Acties en Kansen. Rood betekent achterstand. Tik op een tegel om naar die stapel te gaan.
 
 Daaronder staan de stapels met de knop in de regel: **Navigeer** bij een afspraak, **Bel** en **Uitkomst** bij een belactie, **Afgehandeld** bij een actie zonder contact. Een belactie, mail of bezoek rond je altijd af met een uitkomst. Staat er "Geen nummer", dan is er geen telefoonnummer bekend.
 
 Werk je op kantoor (binnendienst), dan staat de belstapel bovenaan.
 
-Vanaf Gevorderd zie je ook één **signaal**, bijvoorbeeld "Testinstallatie Pompstation komt vandaag terug". Kies **Gedaan**, **Later** (komt over drie dagen terug) of **Weg** (morgen weer). Je besluit geldt ook op je laptop. Per dag zie je hooguit vier signalen. Zonder signaal staat er een tip van de dag onder je eerste zet.
+Onder de telstrip staat soms een tip van de dag. Vanaf Gevorderd zie je ook één **signaal**, bijvoorbeeld "Testinstallatie Pompstation komt vandaag terug". Kies **Gedaan**, **Later** (komt over drie dagen terug) of **Weg** (morgen weer). Je besluit geldt ook op je laptop. Per dag zie je hooguit vier signalen.
 
 Na 16:00 staat bovenaan **De dag in het kort**: gesprekken zonder verslag en wie morgen terugkomt. Tik erop voor alles.
 
@@ -60,22 +61,21 @@ Hoe je een bezoek afrondt, lees je in "Een bezoek afronden met een verslag". Wat
 
 ## Visitekaartje en handsfree
 
-Vanaf Gevorderd tik je op de accountkaart of in **Bezoek afronden** op **Scan visitekaartje**. Maak een foto; Dealtrace leest naam, functie, telefoon en e-mail en laat het contact zien. Staat die persoon er al, dan vraagt hij of je wilt samenvoegen. Tik **Bewaar contact**. Zonder verbinding wacht de foto en wordt hij gelezen zodra je weer verbinding hebt.
+Vanaf Gevorderd tik je op de accountkaart onder **Meer**, of in **Bezoek afronden**, op **Scan visitekaartje**. Maak een foto; Dealtrace leest naam, functie, telefoon en e-mail en laat het contact zien. Staat die persoon er al, dan vraagt hij of je wilt samenvoegen. Tik **Bewaar contact**. Zonder verbinding wacht de foto en wordt hij gelezen zodra je weer verbinding hebt.
 
 In de belmodus zet je **Handsfree** aan. Dealtrace leest naam, reden en opening voor; je belt via je carkit. Kom je na het gesprek terug in de app, dan vraagt Dealtrace "Hoe ging het?". Zeg **gesproken**, **niet bereikt** of **terugbellen**.
 
 ## De kop
 
-Rechts in de kop staan **Zoeken**, **Inspreken** en **Meldingen**. Op een kaart, zoals een prospect, zie je links een terugknop.
+Rechts in de kop staan **Zoeken**, de **AI-assistent** (sterretjes), **Inspreken** en **Meldingen**, voor zover ze voor je aanstaan. Op een kaart, zoals een prospect, zie je links een terugknop.
 
 ## Schuifvensters
 
-Een venster schuift van onderen omhoog. Sluiten doe je door het omlaag te vegen, met **Sluiten** of met Escape op een toetsenbord.
+Een venster vult op de telefoon het scherm. Sluiten doe je door de kop van het venster omlaag te vegen, met het kruisje of met Escape op een toetsenbord.
 
 ## Offline
 
 Ook zonder verbinding werkt Vandaag: Afgehandeld, een uitkomst na bellen en Gedaan, Later of Weg bij een signaal worden bewaard en verstuurd zodra je weer verbinding hebt.
-
 
 Zonder verbinding zie je onder de kop een gele strook: "Offline · 3 wijzigingen wachten". Wat je doet, bewaart Dealtrace op je telefoon en verstuurt het zodra je weer verbinding hebt. Lukt versturen niet, dan wordt de strook rood met **Opnieuw proberen**.
 
@@ -85,4 +85,4 @@ Bij **Mijn instellingen**, blok **Telefoon**, zet je de **handschoenmodus** aan 
 
 ## Toestellen
 
-Bij **Mijn instellingen** zie je op welke toestellen je bent ingelogd. Kwijt je telefoon? Tik **Uitloggen op alle toestellen**; daarna log je overal opnieuw in met een code.
+Bij **Mijn instellingen**, onderdeel **Toestellen en sessies**, zie je op welke toestellen je bent ingelogd. Kwijt je telefoon? Tik **Uitloggen op alle toestellen**; daarna log je overal opnieuw in met een code.

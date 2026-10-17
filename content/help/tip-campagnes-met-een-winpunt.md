@@ -32,7 +32,7 @@ Je zet een belcampagne op voor 40 vakantieparken in Gelderland. Het voorstel in 
 ## Valkuilen
 
 - **Meerdere winpunten tegelijk.** Kies er één. Bij een mailreeks hebben bericht 2 en verder vanzelf een ander winpunt.
-- **Geen bevestigde winpunten.** Dan is de keuzelijst leeg. Je beheerder vult ze bij Verkoopverhaal.
+- **Geen bevestigde winpunten.** Dan is de keuzelijst leeg. Je beheerder vult ze bij SalesDNA.
 - **Te veel of te weinig accounts.** Een campagne werkt het best met 20 tot 80 accounts.
 
 ## Meer weten

@@ -13,12 +13,26 @@ const STATUS: Record<string, string> = { proef: 'Proefperiode', actief: 'Actief'
 async function upgrade(pakket: string, label: string) {
   try { await $fetch('/api/instellingen/abonnement/upgrade', { method: 'POST', body: { pakket } }); toast.toon(`Upgrade naar ${label} aangevraagd. Dealtrace neemt contact met je op.`) } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
+const titel = computed(() => (a.value ? `Pakket ${a.value.label}${a.value.seats ? `, ${a.value.gebruikers} van ${a.value.seats} seats in gebruik` : ''}` : 'Abonnement'))
+// Filter op de facturen: status (open, betaald, achterstallig).
+const factuurStatus = ref('')
+const facturen = computed(() => (a.value?.facturen ?? []).filter((f: any) => !factuurStatus.value || f.status === factuurStatus.value))
+const telStatus = (k: string) => (a.value?.facturen ?? []).filter((f: any) => f.status === k).length
 useHead({ title: 'Abonnement · Instellingen · Dealtrace' })
 </script>
 
 <template>
   <div>
-    <PaginaKop kicker="Instellingen · Abonnement" titel="Abonnement" uitleg="Je pakket, seats, contract, factuurgegevens en facturen." helpartikel="abonnement-verbruik-ai-credits" />
+    <InstellingenKop groep="Organisatie" :titel="titel" uitleg="Abonnement: je pakket, seats, contract, factuurgegevens en facturen." helpartikel="abonnement-verbruik-ai-credits" :filters="a?.facturen?.length ? (factuurStatus ? 1 : 0) : null" @reset="factuurStatus = ''">
+      <template #acties>
+        <FunctieLink to="/instellingen/gebruikers" class="dd-actie dd-actie--primair" data-test="abonnement-gebruikers"><Icoon naam="Users" class="dd-actie-icoon" />Gebruikers beheren</FunctieLink>
+      </template>
+      <template #filters>
+        <div class="ifp-groep" role="group" aria-label="Status van de factuur"><span class="filter-label">Facturen</span>
+          <button v-for="[k, l] in [['', 'Alle'], ['open', 'Open'], ['achterstallig', 'Achterstallig'], ['betaald', 'Betaald']]" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': factuurStatus === k }" :aria-pressed="factuurStatus === k" @click="factuurStatus = k!">{{ l }}<span v-if="k" class="pil-teller tnum">{{ telStatus(k!) }}</span></button>
+        </div>
+      </template>
+    </InstellingenKop>
     <section v-if="a" class="section section--laatste">
       <div class="container">
         <div class="instellingen-raster">
@@ -34,7 +48,7 @@ useHead({ title: 'Abonnement · Instellingen · Dealtrace' })
           <article class="kaart">
             <header class="kaart-kop"><h2 class="kaart-titel">Contract</h2></header>
             <dl class="gegevens">
-              <dt>Status</dt><dd>{{ STATUS[a.contract.status] ?? 'Actief' }}</dd>
+              <dt>Status</dt><dd><Label v-if="a.contract.status === 'proef' || a.contract.status === 'opgezegd'" soort="contract" :waarde="a.contract.status" /><template v-else>{{ STATUS[a.contract.status] ?? 'Actief' }}</template></dd>
               <template v-if="a.contract.proefTot"><dt>Proef tot</dt><dd>{{ datum(a.contract.proefTot) }}</dd></template>
               <template v-if="a.contract.start"><dt>Start</dt><dd>{{ datum(a.contract.start) }}</dd></template>
               <template v-if="a.contract.looptijdMaanden"><dt>Looptijd</dt><dd>{{ a.contract.looptijdMaanden }} maanden</dd></template>
@@ -46,13 +60,14 @@ useHead({ title: 'Abonnement · Instellingen · Dealtrace' })
         <div class="abonnement-raster mt-16">
           <FactuurgegevensKaart :gegevens="a.factuurgegevens" @bewaard="a.factuurgegevens = $event" />
           <article class="kaart" data-test="facturen">
-            <header class="kaart-kop"><h2 class="kaart-titel">Facturen</h2><span v-if="a.aiGepauzeerd" class="pil pil--rood">AI gepauzeerd</span></header>
+            <header class="kaart-kop"><h2 class="kaart-titel">Facturen</h2><Label v-if="a.aiGepauzeerd" soort="factuur" waarde="achterstallig" tekst="AI gepauzeerd" /></header>
             <p v-if="a.aiGepauzeerd" class="kaart-meta">Er staat een factuur open. AI-functies staan stil tot hij betaald is; de rest van Dealtrace werkt gewoon.</p>
             <LegeStaat v-if="!a.facturen.length" titel="Nog geen facturen" tekst="Je eerste factuur komt aan het eind van de eerste maand. Hij staat dan hier, met een pdf om te downloaden." />
+            <LegeStaat v-else-if="!facturen.length" titel="Geen facturen met deze status." tekst="Kies een andere status in Filters." />
             <ul v-else class="schakel-lijst" data-test="facturen-lijst">
-              <li v-for="f in a.facturen" :key="f.id" class="schakel-rij" :data-test="`factuur-${f.nummer}`">
+              <li v-for="f in facturen" :key="f.id" class="schakel-rij" :data-test="`factuur-${f.nummer}`">
                 <span class="factuur-tekst"><span class="tnum">{{ f.nummer }} · {{ euro(f.bedragCent) }}</span><span class="veld-uitleg">{{ datum(f.op) }}{{ f.status !== 'betaald' && f.vervaltOp ? `, te betalen voor ${datum(f.vervaltOp)}` : '' }}</span></span>
-                <span class="dd-acties"><span class="pil" :class="f.status === 'betaald' ? 'pil--groen' : f.status === 'achterstallig' ? 'pil--rood' : 'pil--leeg'">{{ FACTUUR_STATUS[f.status] ?? f.status }}</span><a :href="f.pdf" download class="dd-act" :aria-label="`Pdf van factuur ${f.nummer} downloaden`" data-test="factuur-pdf"><Icoon naam="Download" :grootte="16" /> Pdf</a></span>
+                <span class="dd-acties"><Label soort="factuur" :waarde="f.status" :tekst="FACTUUR_STATUS[f.status] ?? f.status" /><a :href="f.pdf" download class="dd-act" :aria-label="`Pdf van factuur ${f.nummer} downloaden`" data-test="factuur-pdf"><Icoon naam="Download" :grootte="16" /> Pdf</a></span>
               </li>
             </ul>
             <p v-if="a.facturen.some((f: any) => f.status !== 'betaald' && f.status !== 'geannuleerd')" class="veld-uitleg mt-16">Betalen gaat via de betaallink in de mail van Dealtrace.</p>

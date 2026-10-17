@@ -22,7 +22,7 @@ test.describe('Mijn dashboard', () => {
     const api = await (await page.request.get('/api/resultaten/dashboard')).json()
     await expect(page.getByTestId('tegel-pogingen')).toContainText(String(api.tegels.pogingen.aantal))
     expect(api.tegels.pogingen.aantal).toBeGreaterThan(0)
-    for (const g of ['grafiek-activiteit', 'grafiek-reis', 'grafiek-uitkomsten', 'grafiek-dekking', 'mijn-trend', 'mijn-team', 'mijn-afspraken']) await expect(page.getByTestId(g)).toBeVisible()
+    for (const g of ['grafiek-activiteit', 'grafiek-reis', 'grafiek-uitkomsten', 'grafiek-dekking', 'grafiek-status', 'mijn-trend', 'mijn-team']) await expect(page.getByTestId(g)).toBeVisible()
     await expect(page.getByTestId('grafiek-dekking')).toContainText('Prospectdekking')
     await expect(page.getByTestId('trend-uit')).toHaveCount(0)
   })

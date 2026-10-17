@@ -13,7 +13,7 @@ Wie zijn dag begint in zijn mail, laat de dag door anderen bepalen. Vandaag zet 
 
 ## Wat het je oplevert
 
-- Je ziet in één scherm wat vandaag moet: taken, afspraken, prio en je werkblok.
+- Je ziet in één scherm wat vandaag moet: taken, afspraken en prio.
 - Achterstallige taken staan altijd bovenaan, zodat niets stilletjes blijft liggen.
 - De aanleiding van de dag geeft je één goede reden om iemand nu te bellen.
 - Concepten die de agents klaarzetten, keur je goed voordat je begint.
@@ -24,7 +24,7 @@ Wie zijn dag begint in zijn mail, laat de dag door anderen bepalen. Vandaag zet 
 2. Lees de kop: hoeveel taken en afspraken je hebt.
 3. Kijk naar de **aanleiding van de dag**. Is hij goed, tik **Maak taak**.
 4. Werk de taken af van boven naar beneden. Rond elke taak af met een uitkomst.
-5. Start je werkblok: je belblok of je bezoekdag.
+5. Start je belblok bij **Belblokken**, of open je route bij **Bezoeken**.
 
 ## Voorbeeld
 

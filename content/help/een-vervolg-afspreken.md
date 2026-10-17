@@ -48,7 +48,7 @@ Einde van een kennismaking bij Testbrontsma Installatietechniek:
 
 Dealtrace stopt bij de eerste afspraak. Je vervolg is de stap die je na die afspraak overdraagt.
 
-1. Open de afspraak en klik op de gele knop **Rond af**.
+1. Open de afspraak en klik links onderin op **Rond af**.
 2. Kies de uitkomst **Vervolg afgesproken**. Zet het verslag erin en geef per agendapunt aan of het besproken is.
 3. Klik **Bewaar**. Bij de eerste afspraak gaat de fase naar Afspraak gehouden.
 4. Dealtrace vraagt **Overdragen?** Controleer de vervolgstap, met datum en soort, en kies naar wie: **DealDrive**, **Het CRM** of **Een collega**.

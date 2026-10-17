@@ -8,16 +8,16 @@ routes: /dagstart
 
 # Dagstart
 
-De **dagstart** deelt je dag voor je in. Je opent hem vanaf **Vandaag** of vanaf de weekstart.
+De **dagstart** deelt je dag voor je in. Je opent hem met de knop **Dagstart** op **Vandaag**, of vanaf de weekstart.
 
 ## Hoe de dag wordt ingedeeld
 
 1. **Vaste punten eerst**: je afspraken en bezoeken staan vast. Voor een bezoek staat de reistijd (een schatting vanaf je vorige bezoek of je thuisbasis). Lunch komt rond 12:00 als daar ruimte is.
 2. **Voorbereiding**: een half uur voor je eerste afspraak, voor de Pitstop en de briefing.
 3. **Kansen langs de route**: in de stand Buitendienst vult Dealtrace een gat tussen bezoeken met een kans uit Bezoeken.
-4. **Belblok op het beste uur**: uit alle belpogingen van je organisatie van de laatste 90 dagen weet Dealtrace per branche en uur hoe vaak er wordt opgenomen. Het belblok landt in het beste vrije uur voor de doelgroep van je belacties. In de grafiek zie je waarom. Met minder dan 30 belpogingen staat het belblok in het eerste vrije uur.
+4. **Belblok op het beste uur**: uit je eigen belpogingen van de laatste 90 dagen weet Dealtrace per branche en uur hoe vaak er wordt opgenomen. Cijfers van collega's of je team gebruikt hij hier niet. Het belblok landt in het beste vrije uur voor de doelgroep van je belacties. In de grafiek zie je waarom. Met minder dan 30 belpogingen staat het belblok in het eerste vrije uur.
 
-Met **Buitendienst** en **Binnendienst** wissel je de indeling: buiten één belblok naast je bezoeken, binnen genoeg belblokken voor je belacties (hooguit drie) en een blok om taken af te werken.
+Je werkplek bepaalt de indeling; bovenaan staat welke dat is. Buitendienst: één belblok naast je bezoeken. Binnendienst: genoeg belblokken voor je belacties (hooguit drie) en een blok om taken af te werken. Er is geen knop om te wisselen; je werkplek wijzigt je beheerder.
 
 ## Eerst jouw akkoord
 

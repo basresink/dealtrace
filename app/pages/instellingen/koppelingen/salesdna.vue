@@ -58,7 +58,7 @@ useHead({ title: 'SalesDNA · Koppelingen · Dealtrace' })
 
 <template>
   <div>
-    <PaginaKop kicker="Instellingen · Koppelingen" titel="SalesDNA" uitleg="Het verkoopverhaal automatisch uit SalesDNA. Dealtrace leest alleen bevestigde versies en schrijft niets terug." helpartikel="koppelingen" />
+    <InstellingenKop groep="Koppelingen" :titel="data.gekoppeld ? `SalesDNA gekoppeld, ${data.onderdelen.filter((o: any) => o.bron === 'salesdna').length} van ${data.onderdelen.length} onderdelen uit SalesDNA` : 'SalesDNA nog niet gekoppeld'" uitleg="SalesDNA: het verkoopverhaal automatisch uit SalesDNA. Dealtrace leest alleen bevestigde versies en schrijft niets terug." helpartikel="koppelingen" />
     <section class="section section--laatste">
       <div class="container stapel">
         <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm.</p>

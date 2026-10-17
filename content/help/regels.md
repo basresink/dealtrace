@@ -20,9 +20,9 @@ Een regel is een als-dan-afspraak. Als er bij een account iets waar is, zet Deal
 
 Bij elke regel zie je hoeveel accounts hij nu raakt en hoeveel taken de volgende run maakt, per persoon. Maakt een regel meer dan 50 taken voor één persoon, dan vraagt Dealtrace of je het zeker weet.
 
-## Persoonlijke regels (Expert)
+## Persoonlijke regels
 
-Als Expert maak je een regel voor je eigen accounts. Een regel van het team pas je niet zelf aan; je stelt een wijziging voor.
+Iedereen kan de regels lezen, met de droogloop. Op **Account**, kaart **Mijn regels**, ga je met **Naar de regels** naar dit scherm en maak je een regel voor je eigen accounts. Een regel van het team pas je niet zelf aan; je stelt een wijziging voor. Regels voor de hele organisatie wijzigt de beheerder.
 
 ## De leerlus
 

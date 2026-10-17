@@ -41,7 +41,7 @@ De aanleiding is echt, actueel en past precies bij het winpunt.
 
 ## Zo doe je het in Dealtrace
 
-Bij **Inzichten** staan aanleidingen met bewijs: de bron, de datum en een letterlijk citaat. De Waarnemer kijkt naar vacatures, nieuws en websites. Klik **Maak taak** om er een beltaak van te maken, of **Wijs af** met een reden zoals "Te oud". Op **Vandaag** zie je bovenaan de **Aanleiding van de dag**. Weet je zelf iets, bijvoorbeeld uit een gesprek op een beurs? Klik **Inzicht met bron** en vul bron en citaat in. In de belmodus staat de aanleiding op de gesprekskaart, zodat je hem voor je hebt als je belt.
+Bij **Inzichten** staan aanleidingen met bewijs: de bron, de datum en een letterlijk citaat. De Waarnemer kijkt naar vacatures, nieuws en websites. Klik **+ Maak taak** om er een taak van te maken, of open het inzicht en kies **Wijs af** met een reden zoals "Te oud". Op **Vandaag** zie je bovenaan de **Aanleiding van de dag**. Weet je zelf iets, bijvoorbeeld uit een gesprek op een beurs? Klik **+ Inzicht** en vul bron en citaat in. In de belmodus staat de aanleiding op de gesprekskaart, zodat je hem voor je hebt als je belt.
 
 ## Controlevragen
 

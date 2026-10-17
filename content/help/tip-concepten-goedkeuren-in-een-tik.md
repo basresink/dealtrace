@@ -19,7 +19,7 @@ Agents zetten opvolgmails, LinkedIn-berichten en belscripts voor je klaar. Je ho
 
 ## Zo doe je het
 
-1. Open **Concepten**, via de bel of op de telefoon onder **Meer**.
+1. Open **Concepten** in de zijbalk onder **Activiteiten**, of op de telefoon onder **Meer**.
 2. Lees op de kaart het onderwerp en de eerste regels.
 3. Klopt het, tik **Goedkeuren**. Klopt het niet, tik **Afwijzen**, of open het concept met **Bekijk** om aan te passen.
 4. Na goedkeuren staat op de kaart **Verstuur**.

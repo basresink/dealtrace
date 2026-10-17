@@ -19,7 +19,7 @@ Achter het stuur wil je niet zoeken in een scherm. De **rijmodus** laat alleen z
 
 ## Zo doe je het
 
-1. Zet de rijmodus aan in **Mijn instellingen**, kaart **Meldingen onderweg**. Of tik **Navigeer** op Route: dan gaat hij vanzelf aan.
+1. Zet de rijmodus aan in **Mijn instellingen**, kaart **Meldingen voor onderweg**. Of tik **Navigeer** op Route: dan gaat hij vanzelf aan.
 2. Tik **Lees voor** als je wegrijdt naar je volgende afspraak.
 3. Na de afspraak tik je **Inspreken** voor je notitie of opdracht.
 4. Tik **Bel volgende**: je gaat naar je volgende belactie en de rijmodus gaat uit. Bel alleen handsfree.

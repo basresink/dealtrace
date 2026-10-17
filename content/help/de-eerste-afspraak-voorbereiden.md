@@ -48,10 +48,10 @@ Voorbereiding voor een kennismaking bij Testinstallatie Vonkenburg:
 
 ## Zo doe je het in Dealtrace
 
-1. Open de **Agenda** en klik op de afspraak. De meetingsoort, zoals Kennismaking of Inventarisatie, vult de duur en de agendapunten.
+1. Open de **Agenda** en klik op de afspraak. Het type afspraak, zoals Gepland bezoek of Online meeting, vult de duur en de agendapunten.
 2. Lees de **Briefing en Pitstop**. Voor een eerste gesprek kiest Dealtrace de soort **Eerste gesprek**, op locatie de soort **Bezoek**, met adres en wie je bij de receptie vraagt.
 3. Tik **Bereid voor**. De Schrijver maakt een bezoekbriefing met precies één winpunt en één bewijs. Jij keurt goed.
-4. Kijk op de accountkaart bij **Contactpersonen** wie beslisser, beïnvloeder of gebruiker is, en bij **Geschiedenis** wat er eerder gebeurde.
+4. Kijk op de accountkaart bij **Contacten** wie beslisser, beïnvloeder of gebruiker is, en in de **Tijdlijn** wat er eerder gebeurde.
 5. Vanaf Gevorderd tik je **Bewerken** in een briefingblok om je eigen doel of vragen toe te voegen.
 
 Na het gesprek kies je onderaan de briefing **Doel gehaald?**: Ja, Deels of Nee.
@@ -63,7 +63,7 @@ Na het gesprek kies je onderaan de briefing **Doel gehaald?**: Ja, Deels of Nee.
    - [ ] Geen, je luistert alleen.
    - [x] Eén, dat bij deze prospect past.
 2. Waar vind je in Dealtrace wie beslisser is?
-   - [x] Op de accountkaart bij Contactpersonen.
+   - [x] Op de accountkaart bij Contacten.
    - [ ] Bij Instellingen.
    - [ ] Bij Resultaten.
 3. Wat is een goed doel voor een eerste afspraak bij Voltvast?

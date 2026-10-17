@@ -29,7 +29,7 @@ Eén keer per maand controleert Dealtrace of er iets veranderde in het register 
 Een lead uit KvK of de AI-zoeker heeft vaak geen aanspreekpunt. Datacollectief levert bedrijven met contactpersonen: functie, direct nummer, zakelijk e-mailadres en LinkedIn. Het zit in Compleet en werkt met de sleutel van jullie eigen contract.
 
 - **Leadgenerator** (vanaf Expert): vink **Datacollectief** aan bij Bronnen. De ronde levert leads met de bronpil "Datacollectief" en de contactpersoon erbij, bijvoorbeeld "Jelle Testhoekstra · Eigenaar". Een bedrijf dat ook uit KvK komt, staat er één keer; de KvK-gegevens blijven, de contactpersonen komen erbij.
-- **Accountkaart** (vanaf Gevorderd): tabblad **Contacten**, knop **Zoek contactpersonen**. Dat kost tot 5 records. Bestaande contacten worden herkend op e-mailadres en anders op volledige naam; Dealtrace vult alleen lege velden aan.
+- **Accountkaart** (vanaf Gevorderd): **Meer**, **Kwalificatie**, blok Datacollectief, knop **Zoek contactpersonen**. Dat kost tot 5 records. Bestaande contacten worden herkend op e-mailadres en anders op volledige naam; Dealtrace vult alleen lege velden aan.
 - **Importeren**: zet in de laatste stap **Zoek contactpersonen via Datacollectief** aan.
 
 Elk veld dat uit Datacollectief komt, toont de herkomst met datum, bijvoorbeeld "Datacollectief · 2026-10-14". Datacollectief overschrijft nooit wat jij zelf invulde of wat uit KvK komt.

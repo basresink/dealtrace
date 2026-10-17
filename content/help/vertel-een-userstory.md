@@ -45,7 +45,7 @@ Hilde: "Dat complex van ons heeft ook zo'n boeteclausule."
 
 ## Zo doe je het in Dealtrace
 
-Een userstory past in het blok winpunt van je belscript. Vanaf Gevorderd maak je bij **Mijn scripts** een eigen variant met je verhaal, met een terugvalzin voor als het niet past. Zie [Een belscript kiezen](/helpcenter/een-belscript-kiezen). Oefen het verhaal in een belblok bij een paar accounts in dezelfde branche, en kijk bij het afronden welke reactie je kreeg. Zie [Een belblok uitvoeren met een script](/helpcenter/een-belblok-uitvoeren-met-een-script).
+Een userstory past in het blok winpunt van je belscript. Vanaf Gevorderd maak je in **Mijn instellingen**, **Mijn scripts**, een eigen variant met je verhaal, met een terugvalzin voor als het niet past. Zie [Een belscript kiezen](/helpcenter/een-belscript-kiezen). Oefen het verhaal in een belblok bij een paar accounts in dezelfde branche, en kijk bij het afronden welke reactie je kreeg. Zie [Een belblok uitvoeren met een script](/helpcenter/een-belblok-uitvoeren-met-een-script).
 
 ## Controlevragen
 

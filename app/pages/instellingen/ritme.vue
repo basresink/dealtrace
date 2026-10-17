@@ -58,14 +58,20 @@ const RIJ_LABEL: Record<string, string> = { prospect: 'Prospect', meeting: 'Meet
 // Klassen op het tabblad Klanten (uit DealDrive of het CRM) staan niet in de accountmatrix: het onderhoudsritme
 // van klanten hoort in DealDrive. Ze blijven bewaard, zodat de lijst Bestaande klanten ze kan tonen.
 const prospectKlassen = computed(() => data.value.klassen.filter((k: any) => k.tabblad !== KLANT_TABBLAD))
+const titel = computed(() => {
+  const k = prospectKlassen.value.length
+  const s = data.value.segmenten.length
+  return k ? `${k} accountklassen, ${s} ${s === 1 ? 'segment' : 'segmenten'}` : 'Accountmatrix en ritmes'
+})
 useHead({ title: 'Accountmatrix · Instellingen · Dealtrace' })
 </script>
 
 <template>
   <div>
-    <PaginaKop kicker="Instellingen · Accountmatrix" titel="Accountmatrix en ritmes" uitleg="Hoeveel aandacht elk account verdient. De matrix is de inrichting, de regels zijn de uitvoering." helpartikel="accountmatrix">
-      <template #acties><span v-if="status" class="meta" role="status" data-test="opslagstatus">{{ status }}</span></template>
-    </PaginaKop>
+    <InstellingenKop groep="Ritme en regels" :titel="titel" uitleg="Accountmatrix en ritmes: hoeveel aandacht elk account verdient. De matrix is de inrichting, de regels zijn de uitvoering. Elke wijziging bewaart zichzelf." helpartikel="accountmatrix">
+      <template #onder><p class="mt-8"><OpslagStatus :status="status" test="opslagstatus" /></p></template>
+      <template #acties><FunctieLink to="/instellingen/regels" class="dd-actie dd-actie--secundair" data-test="ritme-naar-regels"><Icoon naam="Workflow" class="dd-actie-icoon" />Regels</FunctieLink></template>
+    </InstellingenKop>
     <section class="section section--laatste">
       <div class="container">
         <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm.</p>

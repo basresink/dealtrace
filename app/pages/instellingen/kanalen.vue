@@ -16,11 +16,21 @@ const { data: lijst, refresh: herlaadLijst } = await useFetch<any[]>('/api/inste
 const afk = reactive<Record<string, number>>({})
 const uit = ref<string[]>([])
 const fp = reactive({ werkdagen: 3, maxBerichten: 1 })
-watch(data, (d) => { if (!d) return; for (const k of d.kanalen) afk[k.kanaal] = k.afkoeling; uit.value = d.kanalen.filter((k: any) => !k.aan).map((k: any) => k.kanaal); Object.assign(fp, d.frequentieplafond) }, { immediate: true })
+// Opslaan-status bij Per kanaal (zelfde vorm als de flyouts): Gewijzigd tot Bewaar kanalen.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [uit.value, { ...fp }])
+watch(data, (d) => { if (!d) return; for (const k of d.kanalen) afk[k.kanaal] = k.afkoeling; uit.value = d.kanalen.filter((k: any) => !k.aan).map((k: any) => k.kanaal); Object.assign(fp, d.frequentieplafond); nextTick(() => opslag.basis()) }, { immediate: true })
+onMounted(() => opslag.basis())
 async function bewaar() {
-  try { const r: any = await $fetch('/api/instellingen/kanalen', { method: 'PUT', body: { frequentieplafond: { ...fp }, uit: uit.value } }); toast.toon(r.tekst); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+  try { const r: any = await opslag.bewaar(() => $fetch('/api/instellingen/kanalen', { method: 'PUT', body: { frequentieplafond: { ...fp }, uit: uit.value } })); toast.toon(r.tekst); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
-const wissel = (k: Kanaal, w: boolean) => { uit.value = w ? uit.value.filter((x) => x !== k) : [...uit.value, k] }
+const titel = computed(() => {
+  if (!data.value) return 'Kanalen en consent'
+  const n = data.value.kanalen.length
+  const a = n - uit.value.length
+  return `${a} van ${n} kanalen aan, ${data.value.belMeNiet} op de bel-me-niet-lijst`
+})
+const wissel = (k: Kanaal, w: boolean) => { opslag.interactie(); uit.value = w ? uit.value.filter((x) => x !== k) : [...uit.value, k] }
 
 // WhatsApp
 const wa = reactive({ modus: 'mock', telefoonId: '', wabaId: '', token: '', optInTekst: '' })
@@ -57,30 +67,34 @@ useHead({ title: 'Kanalen en consent · Dealtrace' })
   <div>
     <NietAangezetKop v-if="!aan" sleutel="instellingen.kanalen" />
     <template v-else-if="data">
-      <PaginaKop kicker="Data en AI" titel="Kanalen en consent" uitleg="Hoe lang een nee geldt, hoe vaak je iemand benadert en wie nooit gebeld wil worden. De Bewaker houdt zich hieraan." helpartikel="kanalen-en-consent" />
+      <InstellingenKop groep="Data en AI" :titel="titel" uitleg="Kanalen en consent: hoe lang een nee geldt, hoe vaak je iemand benadert en wie nooit gebeld wil worden. De Bewaker houdt zich hieraan." helpartikel="kanalen-en-consent" :filters="zoek ? 1 : 0" @reset="zoek = ''">
+        <template #acties><button type="button" class="dd-actie dd-actie--primair" data-test="kanalen-bewaar" @click="bewaar"><Icoon naam="Check" class="dd-actie-icoon" />Bewaar kanalen</button></template>
+        <template #filters>
+          <div class="ifp-groep"><label class="filter-label" for="bmn-zoek">Bel-me-niet</label><input id="bmn-zoek" v-model="zoek" type="search" class="invoer ifp-zoek" placeholder="Zoek op nummer" data-test="bmn-zoek"></div>
+        </template>
+      </InstellingenKop>
       <section class="section section--laatste">
         <div class="container stapel">
           <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm.</p>
           <article class="kaart" data-test="kanalen-tabel">
-            <h2 class="kaart-titel">Per kanaal</h2>
+            <header class="kaart-kop"><h2 class="kaart-titel">Per kanaal</h2><OpslagStatus :opslag="opslag" test="kanalen-status" /></header>
             <table class="tabel tabel--kaarten"><thead><tr><th>Kanaal</th><th>Afkoelperiode na een nee</th><th>Aan</th></tr></thead>
               <tbody><tr v-for="k in data.kanalen" :key="k.kanaal"><td data-label="Kanaal">{{ KANAAL_LABEL[k.kanaal as Kanaal] }}</td>
                 <td data-label="Afkoelperiode"><input v-model.number="afk[k.kanaal]" type="number" min="0" max="730" class="invoer kn-afk" disabled :aria-label="`Afkoelperiode ${KANAAL_LABEL[k.kanaal as Kanaal]} in dagen`" :data-test="`afk-${k.kanaal}`"> dagen</td>
                 <td data-label="Aan"><Schakelaar :aan="!uit.includes(k.kanaal)" :label="`${KANAAL_LABEL[k.kanaal as Kanaal]} aan`" @wissel="wissel(k.kanaal, $event)" /></td></tr></tbody></table>
             <p class="kaart-meta mt-8" data-test="afkoeling-lezen">De afkoeling pas je aan op <FunctieLink to="/instellingen/terugkomen?tab=afkoeling" class="tekst-link">Instellingen, Terugkomen</FunctieLink>; daar zie je ook wat er verschuift.</p>
-            <div class="formulier-raster mt-16">
+            <div class="formulier-raster mt-16" @input.capture="opslag.interactie()">
               <label class="veld"><span class="veld-label">Frequentieplafond: hooguit</span><input v-model.number="fp.maxBerichten" type="number" min="1" max="5" class="invoer"><span class="veld-uitleg">bericht per kanaal</span></label>
               <label class="veld"><span class="veld-label">per</span><input v-model.number="fp.werkdagen" type="number" min="1" max="10" class="invoer" data-test="fp-werkdagen"><span class="veld-uitleg">werkdagen, buiten het ritme</span></label>
             </div>
-            <button type="button" class="dd-act dd-act--primair mt-16" data-test="kanalen-bewaar" @click="bewaar">Bewaar</button>
           </article>
 
           <article class="kaart" data-test="kanalen-mail">
             <h2 class="kaart-titel">Mail</h2>
             <ul class="schakel-lijst">
               <li class="schakel-rij"><span>Afzender</span><span class="meta">{{ data.mail.status === 'actief' ? data.mail.van : 'Nog geen mailkoppeling' }}</span></li>
-              <li class="schakel-rij"><span>SPF, DKIM en DMARC</span><span class="pil" :class="data.mail.status === 'actief' ? 'pil--groen' : 'pil--grijs'">{{ data.mail.status === 'actief' ? (data.mail.modus === 'mock' ? 'Testmailbox' : 'Gecontroleerd bij de test') : 'Voorwaarde, nog niet gecontroleerd' }}</span></li>
-              <li class="schakel-rij"><span>Afmeldlink in elke eerste mail</span><span class="pil pil--groen">Aan</span></li>
+              <li class="schakel-rij"><span>SPF, DKIM en DMARC</span><Label soort="instelling" :waarde="data.mail.status === 'actief' ? 'aan' : 'niet-gekoppeld'" :tekst="data.mail.status === 'actief' ? (data.mail.modus === 'mock' ? 'Testmailbox' : 'Gecontroleerd bij de test') : 'Nog niet gecontroleerd'" /></li>
+              <li class="schakel-rij"><span>Afmeldlink in elke eerste mail</span><Label soort="instelling" waarde="aan" /></li>
               <li class="schakel-rij"><span>Onderdrukkingslijst (gehasht)</span><span class="meta tnum">{{ data.mail.onderdrukt }} {{ data.mail.onderdrukt === 1 ? 'adres' : 'adressen' }}</span></li>
             </ul>
             <FunctieLink to="/instellingen/mail" class="dd-act mt-8">Mail koppelen</FunctieLink>
@@ -108,7 +122,7 @@ useHead({ title: 'Kanalen en consent · Dealtrace' })
               <h3 class="fo-blok-titel mt-16">Sjablonen</h3>
               <ul class="schakel-lijst" data-test="wa-sjablonen">
                 <li v-for="s in data.whatsapp.sjablonen" :key="s.id" class="schakel-rij"><div><span class="schakel-naam">{{ s.naam }} · {{ s.taal }}</span><span class="veld-uitleg">{{ s.tekst }}</span><span v-if="s.reden" class="veld-uitleg">{{ s.reden }}</span></div>
-                  <span class="dd-acties"><span class="pil" :class="{ 'pil--groen': s.status === 'goedgekeurd', 'pil--rood': s.status === 'afgewezen' }">{{ SJ_STATUS[s.status] }}</span><button v-if="s.status === 'concept' || s.status === 'afgewezen'" type="button" class="dd-act" :data-test="`wa-indienen-${s.naam}`" @click="dienIn(s.id)">Dien in</button></span></li>
+                  <span class="dd-acties"><Label :soort="s.status === 'afgewezen' ? 'overdracht' : 'instelling'" :waarde="s.status === 'goedgekeurd' ? 'aan' : s.status === 'afgewezen' ? 'mislukt' : 'concept'" :tekst="SJ_STATUS[s.status]" /><button v-if="s.status === 'concept' || s.status === 'afgewezen'" type="button" class="dd-act" :data-test="`wa-indienen-${s.naam}`" @click="dienIn(s.id)">Dien in</button></span></li>
               </ul>
               <p v-if="!data.whatsapp.sjablonen.length" class="kaart-meta">Nog geen sjablonen. Zonder goedgekeurd sjabloon gaat er niets via de koppeling.</p>
               <div class="formulier-raster mt-8">
@@ -131,8 +145,9 @@ useHead({ title: 'Kanalen en consent · Dealtrace' })
               <button type="button" class="dd-act dd-act--primair" data-test="bmn-toevoegen" @click="voegToe">Toevoegen</button>
               <a class="dd-act" href="/api/instellingen/bel-me-niet?formaat=csv" download>Exporteren</a>
             </div>
-            <input v-model="zoek" type="search" class="invoer mt-16" placeholder="Zoek op nummer" aria-label="Zoek op nummer">
-            <ul class="schakel-lijst mt-8">
+            <p v-if="zoek" class="meta mt-16">Gefilterd op "{{ zoek }}". <button type="button" class="tekst-link" @click="zoek = ''">Wis filter</button></p>
+            <LegeStaat v-if="!lijst.length" class="mt-16" kicker="Bel-me-niet" :titel="zoek ? 'Geen nummer gevonden.' : 'De lijst is leeg.'" :tekst="zoek ? 'Probeer een deel van het nummer.' : 'Iedereen mag gebeld worden zolang het ritme het toelaat.'" />
+            <ul v-else class="schakel-lijst mt-8">
               <li v-for="b in lijst" :key="b.nummer" class="schakel-rij"><div><span class="schakel-naam tnum">{{ b.nummer }}</span><span class="veld-uitleg">{{ b.reden ?? 'Zonder reden' }} · {{ b.door ?? 'onbekend' }} · {{ datum(b.op) }}</span></div><button type="button" class="dd-act" @click="weg = b">Verwijder</button></li>
             </ul>
           </article>

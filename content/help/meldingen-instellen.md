@@ -9,7 +9,7 @@ samenvatting: Per soort kiezen tussen de app, e-mail en push, stille uren, het d
 
 ## Per soort en kanaal
 
-In **Mijn instellingen**, kaart **Meldingen**, kies je per soort hoe je hem krijgt: **In de app**, **E-mail** of **Push**.
+Op **Account** (het poppetje onderaan de zijbalk), kaart **Meldingen**, kies je per soort hoe je hem krijgt: **In de app**, **E-mail** of **Push**. Dezelfde keuzes staan op **Notificaties** onder **Voorkeuren**.
 
 | Soort | Bijvoorbeeld | Standaard |
 |---|---|---|
@@ -20,7 +20,7 @@ In **Mijn instellingen**, kaart **Meldingen**, kies je per soort hoe je hem krij
 | Inzicht | wat opvalt in je cijfers, de recap | alleen de app |
 | Dealtrace | een concept klaar ter goedkeuring, een afspraak die een collega voor je maakte, een functie die voor je aangaat, AI-credits op 80 procent | app en push |
 
-Zet je **In de app** uit, dan krijg je die soort helemaal niet. Op **Notificaties** (de bel) staan je meldingen als kaarten. Tik op een teller om op soort te filteren, kies **Ongelezen** of **Alles**, en met **Alles gelezen** ben je in een keer bij. Onder **Voorkeuren** zet je per soort de app, e-mail en push aan of uit. Op je telefoon veeg je een melding naar links om hem gelezen te markeren.
+Zet je **In de app** uit, dan krijg je die soort helemaal niet. Op **Notificaties** (de bel onderaan de zijbalk) staan je meldingen als kaarten. Tik op een teller om op soort te filteren, kies **Ongelezen** of **Alles**, en met **Alles gelezen** ben je in een keer bij. Onder **Voorkeuren** zet je per soort de app, e-mail en push aan of uit. Op je telefoon veeg je een melding naar links om hem gelezen te markeren.
 
 ## Onderweg
 
@@ -67,4 +67,4 @@ Wat je op het ene toestel leest, staat op al je toestellen als gelezen.
 
 ## Je ritme per mail
 
-Onder de kanalen staat **Je ritme per mail** met drie schakelaars, elk met een tijdstip: **Weekreview per mail** (vrijdag, standaard 15:30), **Weekstart per mail** (maandag, standaard 07:30) en **Dagstart per mail** (elke werkdag, standaard 07:00). Ze staan standaard uit. Valt je tijdstip in je stille uren, dan komt de mail direct daarna; tijdens de rijmodus of een belblok wacht hij even. Met **Stuur een voorbeeld** krijg je hem meteen in je mailbox. Dezelfde schakelaars staan in **Mijn instellingen**.
+Op **Notificaties**, onder **Voorkeuren**, staat onder de kanalen **Je ritme per mail** met drie schakelaars, elk met een tijdstip: **Weekreview per mail** (vrijdag, standaard 15:30), **Weekstart per mail** (maandag, standaard 07:30) en **Dagstart per mail** (elke werkdag, standaard 07:00). Ze staan standaard uit. Valt je tijdstip in je stille uren, dan komt de mail direct daarna; tijdens de rijmodus of een belblok wacht hij even. Met **Stuur een voorbeeld** krijg je hem meteen in je mailbox. Dezelfde schakelaars staan in **Mijn instellingen**.

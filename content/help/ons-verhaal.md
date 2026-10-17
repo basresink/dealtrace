@@ -8,7 +8,7 @@ routes: /instellingen/verkoopverhaal,/richting
 
 # Ons verhaal
 
-Alles wat Dealtrace zegt namens jullie, komt uit het verkoopverhaal: de openingszin in een belscript, de boodschap in een campagne, de briefing voor een bezoek. De salesmanager en de beheerder leggen het vast onder **Instellingen, Verkoop, Verkoopverhaal**.
+Alles wat Dealtrace zegt namens jullie, komt uit het verkoopverhaal: de openingszin in een belscript, de boodschap in een campagne, de briefing voor een bezoek. De salesmanager en de beheerder leggen het vast onder **Instellingen, Verkoop, SalesDNA**.
 
 ## Jullie kernzin
 

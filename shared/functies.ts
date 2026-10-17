@@ -144,7 +144,7 @@ export const FUNCTIES: readonly Functie[] = [
   {
     sleutel: 'nav.richting', naam: 'Richting', pakket: 'starter', rollen: 'iedereen', helpartikel: 'richting', startNiveau: 'beginner',
     zijbalk: { groep: 'Start', route: '/richting', icoon: 'Compass', beginnerLabel: 'lezen', na: 'nav.agenda' },
-    uitleg: { watHetDoet: 'Het verkoopverhaal van je organisatie: verhaal, belofte, concurrenten, winpunten.', totDieTijd: 'Niets; Richting is voor iedereen te lezen.' },
+    uitleg: { watHetDoet: 'De SalesDNA van je organisatie: verhaal, belofte, concurrenten, winpunten.', totDieTijd: 'Niets; Richting is voor iedereen te lezen.' },
   },
   {
     sleutel: 'nav.reizen', naam: 'Prospectreizen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'doelgroepen-en-reizen', startNiveau: 'expert', altijdVoor: MANAGERS,
@@ -498,11 +498,11 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Een antwoord, bezwaar, winpunt of bewijs voorstellen aan je salesmanager.', totDieTijd: 'Bespreek het met je salesmanager.' },
   },
   {
-    sleutel: 'verkoopverhaal.inrichten', naam: 'Verkoopverhaal inrichten', pakket: 'starter', rollen: ['salesmanager', 'beheerder'], helpartikel: 'ons-verhaal', startNiveau: 'gevorderd',
-    uitleg: { watHetDoet: 'De acht onderdelen van het verkoopverhaal vullen en bevestigen.', totDieTijd: 'Vraag je salesmanager of beheerder.' },
+    sleutel: 'verkoopverhaal.inrichten', naam: 'SalesDNA inrichten', pakket: 'starter', rollen: ['salesmanager', 'beheerder'], helpartikel: 'ons-verhaal', startNiveau: 'gevorderd',
+    uitleg: { watHetDoet: 'De acht onderdelen van de SalesDNA vullen en bevestigen.', totDieTijd: 'Vraag je salesmanager of beheerder.' },
   },
   {
-    sleutel: 'verkoopverhaal.mappings', naam: 'Mappings verkoopverhaal', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'ons-verhaal', startNiveau: 'expert',
+    sleutel: 'verkoopverhaal.mappings', naam: 'Mappings SalesDNA', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'ons-verhaal', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Branche naar SBI, verliesreden naar terugkomreden en ambitiedoelen beheren.', totDieTijd: 'Vraag je beheerder.' },
   },
   // P13: agenda, afspraken en meetingsoorten (F09).

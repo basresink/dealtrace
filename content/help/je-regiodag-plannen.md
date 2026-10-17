@@ -45,13 +45,13 @@ Maandagmiddag belt ze de twee vaste afspraken: "Ik kom morgen om negen uur langs
 
 ## Zo doe je het in Dealtrace
 
-De beheerder richt de regio's en regiodagen in bij **Instellingen, Werkwijze, Gebieden en regiodagen**. Bovenaan die pagina staat **Je week**: per dag wie in welke regio is.
+De beheerder richt de regio's en regiodagen in bij **Instellingen**, groep **Ritme en regels**, kaart **Gebieden en regiodagen**. Bovenaan die pagina staat **Je week**: per dag wie in welke regio is.
 
 Op **Bezoeken** zie je bovenaan je week, bijvoorbeeld "dinsdag Regio Noord". Taken voor de buitendienst landen vanzelf op de regiodag van het account. Plan een afspraak met **+ Afspraak** en kies een van je **vrije momenten**.
 
-Werk je in de binnendienst, dan zet je een prospect klaar met **Klaarzetten voor buitendienst** op de accountkaart. Kies je collega en de eerstvolgende regiodag in de regio van het account. Je collega ziet de kans met "Klaargezet door" en jouw naam.
+Werk je in de binnendienst, dan zet je een prospect klaar op de accountkaart met **Meer**, **Klaarzetten**. Kies je collega en de eerstvolgende regiodag in de regio van het account. Je collega ziet de kans met "Klaargezet door" en jouw naam.
 
-Je **thuisbasis** zet je in **Mijn instellingen**, kaart **Routes en navigeren**. Daar begint en eindigt je route.
+Je **thuisbasis** zet je op **Account**, kaart **Routes en navigeren**. Daar begint en eindigt je route.
 
 ## Controlevragen
 

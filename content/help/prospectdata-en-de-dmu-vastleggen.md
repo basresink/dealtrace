@@ -47,7 +47,7 @@ In het gesprek met Peter vraagt ze naar de nachtdienst. Hij is verrast dat ze da
 
 ## Zo doe je het in Dealtrace
 
-Leg contactpersonen vast met hun rol in het buying committee. Dealtrace kent de rollen beslisser, beïnvloeder, champion, poortwachter en gebruiker. Een inkoper of coördinator zet je bij de rol die het best past, met de functie erbij. Zie [Het buying committee](/helpcenter/buying-committee) en [Het buying committee in kaart](/helpcenter/het-buying-committee-in-kaart).
+Leg contactpersonen vast met hun rol in het buying committee. Dealtrace kent de rollen beslisser, beïnvloeder, champion, poortwachter, gebruiker en blokkeerder. Een inkoper of coördinator zet je bij de rol die het best past, met de functie erbij. Zie [Het buying committee](/helpcenter/buying-committee) en [Het buying committee in kaart](/helpcenter/het-buying-committee-in-kaart).
 
 De **Invloedskaart** laat zien met wie je nog nooit sprak. Zie [De invloedskaart](/helpcenter/de-invloedskaart). Nieuws over een account vind je bij **Inzichten**. Zie [Inzichten](/helpcenter/inzichten). Website en KvK-nummer vul je in bij [Een prospect toevoegen](/helpcenter/een-prospect-toevoegen).
 

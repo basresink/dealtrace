@@ -43,6 +43,15 @@ const AGENT_NAAM = computed<Record<string, string>>(() => Object.fromEntries(dat
 const eigenAgents = computed(() => data.value.agents.filter((a: any) => !a.altijdAan && a.opties.length > 1))
 function eigenOpties(a: any): Mandaat[] { return MANDATEN.filter((x) => a.opties.includes(x) && MANDATEN.indexOf(x) >= MANDATEN.indexOf(a.mandaat)) }
 const aiSoorten = computed(() => (credits.value?.soorten ?? []).filter((s: any) => s.aan))
+// Filter op de tabel Agents: aan, uit of nog niet gebouwd.
+const stand = ref<'' | 'aan' | 'uit' | 'later'>('')
+const agents = computed(() => data.value.agents.filter((a: any) => !stand.value || (stand.value === 'later' ? !a.gebouwd : stand.value === 'aan' ? (a.altijdAan || a.aan) && a.gebouwd : !a.altijdAan && !a.aan && a.gebouwd)))
+const titel = computed(() => {
+  const n = data.value.agents.length
+  if (!n) return 'Agents en mandaten'
+  const a = data.value.agents.filter((x: any) => x.altijdAan || x.aan).length
+  return data.value.pauze ? `Agents gepauzeerd, ${a} van ${n} staan aan` : `${a} van ${n} agents aan`
+})
 useHead({ title: 'Agents en mandaten · Instellingen · Dealtrace' })
 </script>
 
@@ -50,12 +59,17 @@ useHead({ title: 'Agents en mandaten · Instellingen · Dealtrace' })
   <div>
     <NietAangezetKop v-if="!aan" sleutel="agents.lezen" />
     <template v-else>
-      <PaginaKop kicker="Instellingen · Data en AI" titel="Agents en mandaten" uitleg="Wat de agents zelf mogen doen, wat eerst langs jou gaat, en wat de Bewaker tegenhield." helpartikel="agents-en-mandaten">
+      <InstellingenKop groep="Data en AI" :titel="titel" uitleg="Agents en mandaten: wat de agents zelf mogen doen, wat eerst langs jou gaat, en wat de Bewaker tegenhield. Elke wijziging bewaart zichzelf." helpartikel="agents-en-mandaten" :filters="data.agents.length ? (stand ? 1 : 0) : null" @reset="stand = ''">
+        <template #onder><p class="mt-8"><OpslagStatus :status="status" test="opslagstatus" /></p></template>
         <template #acties>
-          <span v-if="status" class="meta" role="status" data-test="opslagstatus">{{ status }}</span>
-          <button v-if="beheer && !data.pauze" type="button" class="dd-act dd-act--gevaar" data-test="agents-pauzeren" @click="pauzeVraag = true"><Icoon naam="Pause" class="dd-act-icoon" />Agents pauzeren</button>
+          <button v-if="beheer && !data.pauze" type="button" class="dd-actie dd-actie--gevaar" data-test="agents-pauzeren" @click="pauzeVraag = true"><Icoon naam="Pause" class="dd-actie-icoon" />Agents pauzeren</button>
         </template>
-      </PaginaKop>
+        <template #filters>
+          <div class="ifp-groep" role="group" aria-label="Stand"><span class="filter-label">Agents</span>
+            <button v-for="[k, l] in [['', 'Alle'], ['aan', 'Aan'], ['uit', 'Uit'], ['later', 'Komt later']]" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': stand === k }" :aria-pressed="stand === k" @click="stand = k as typeof stand">{{ l }}</button>
+          </div>
+        </template>
+      </InstellingenKop>
       <section class="section section--laatste">
         <div class="container">
           <div v-if="data.pauze" class="kaart kaart--geel pauzestrook" role="status" data-test="pauzestrook">
@@ -79,7 +93,8 @@ useHead({ title: 'Agents en mandaten · Instellingen · Dealtrace' })
               <table class="tabel agents-tabel mt-8" data-test="agents-tabel">
                 <thead><tr><th>Agent</th><th>Mandaat</th><th>Dagplafond</th><th>Vandaag</th><th>Aan</th></tr></thead>
                 <tbody>
-                  <tr v-for="a in data.agents" :key="a.sleutel" :data-test="`agent-${a.sleutel}`">
+                  <tr v-if="!agents.length"><td colspan="5" class="meta">Geen agents in dit filter.</td></tr>
+                  <tr v-for="a in agents" :key="a.sleutel" :data-test="`agent-${a.sleutel}`">
                     <td><strong>{{ a.naam }}</strong><br><span class="meta">{{ a.omschrijving }}</span></td>
                     <td>
                       <select v-if="beheer && !a.altijdAan" v-model="a.mandaat" class="invoer" :aria-label="`Mandaat ${a.naam}`" :data-test="`mandaat-${a.sleutel}`" @change="zetAgent(a)">
@@ -91,11 +106,11 @@ useHead({ title: 'Agents en mandaten · Instellingen · Dealtrace' })
                       <input v-if="beheer && !a.altijdAan" v-model="a.dagplafond" type="number" min="0" class="invoer invoer--smal" placeholder="geen" :aria-label="`Dagplafond ${a.naam}`" @input="zetAgent(a)">
                       <span v-else class="meta">{{ a.dagplafond ?? 'geen' }}</span>
                     </td>
-                    <td><span v-if="!a.gebouwd" class="pil pil--leeg">Komt later</span><span v-else class="tnum">{{ a.vandaagGedaan }}<template v-if="a.vandaagTegengehouden"> · {{ a.vandaagTegengehouden }} tegengehouden</template></span></td>
+                    <td><Label v-if="!a.gebouwd" soort="instelling" waarde="concept" tekst="Komt later" /><span v-else class="tnum">{{ a.vandaagGedaan }}<template v-if="a.vandaagTegengehouden"> · {{ a.vandaagTegengehouden }} tegengehouden</template></span></td>
                     <td>
-                      <span v-if="a.altijdAan" class="meta">altijd aan</span>
+                      <Label v-if="a.altijdAan" soort="instelling" waarde="aan" tekst="Altijd aan" />
                       <Schakelaar v-else-if="beheer" :aan="a.aan" :label="`${a.naam} aan`" @wissel="a.aan = $event; zetAgent(a)" />
-                      <span v-else class="meta">{{ a.aan ? 'aan' : 'uit' }}</span>
+                      <Label v-else soort="instelling" :waarde="a.aan ? 'aan' : 'uit'" />
                     </td>
                   </tr>
                 </tbody>
@@ -128,7 +143,7 @@ useHead({ title: 'Agents en mandaten · Instellingen · Dealtrace' })
           </article>
 
           <article v-if="credits" class="kaart mt-16" data-test="agent-credits">
-            <header class="kaart-kop"><h2 class="kaart-titel">AI-credits van de agents deze maand</h2><span v-if="credits.stand.letOp" class="pil pil--geel">let op</span></header>
+            <header class="kaart-kop"><h2 class="kaart-titel">AI-credits van de agents deze maand</h2><Label v-if="credits.stand.letOp" soort="richting" waarde="controleren" tekst="Let op" /></header>
             <p class="kaart-meta"><span class="tnum">{{ credits.stand.verbruikt.toLocaleString("nl-NL") }}</span> van <span class="tnum">{{ credits.stand.pot.toLocaleString("nl-NL") }}</span> credits verbruikt, <span class="tnum">{{ credits.stand.over.toLocaleString("nl-NL") }}</span> over. Onder 10 procent van de pot staan de agents stil, zodat er credits overblijven voor wat jullie zelf vragen.</p>
             <div class="tabel-schuif">
               <table class="tabel mt-8">

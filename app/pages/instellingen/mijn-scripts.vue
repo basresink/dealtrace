@@ -17,20 +17,21 @@ useHead({ title: 'Mijn scripts · Dealtrace' })
   <div>
     <NietAangezetKop v-if="!aan" sleutel="belscript.variant" />
     <template v-else>
-      <PaginaKop kicker="Mijn instellingen" titel="Mijn scripts" uitleg="Je eigen formuleringen op een script van je team. Activeer je variant om ermee te bellen." helpartikel="een-belscript-kiezen" />
+      <InstellingenKop groep="Mijn scripts" :titel="data.mijn.length ? `${data.mijn.length} eigen ${data.mijn.length === 1 ? 'variant' : 'varianten'}` : 'Mijn scripts'" uitleg="Je eigen formuleringen op een script van je team. Activeer je variant om ermee te bellen." helpartikel="een-belscript-kiezen" :terug="{ to: '/mij', label: 'Mijn instellingen' }" />
       <section class="section section--laatste">
         <div class="container">
-          <div class="lijst" data-test="mijn-scripts">
-            <div v-for="s in data.mijn" :key="s.id" class="rij rij--compact">
-              <div class="rij-info"><h3 class="rij-titel">{{ s.naam }} <span class="pil pil--leeg">{{ s.status === 'actief' ? `actief, versie ${s.versie}` : 'concept' }}</span></h3>
+          <LegeStaat v-if="!data.mijn.length" kicker="Mijn scripts" titel="Je hebt nog geen eigen variant." tekst="Kies hieronder een script van je team en maak er je eigen formulering van." />
+          <div v-else class="lijst" data-test="mijn-scripts">
+            <div v-for="s in data.mijn" :key="s.id" class="rij rij--compact inst-rij">
+              <div class="rij-info"><h3 class="rij-titel">{{ s.naam }} <Label soort="instelling" :waarde="s.status === 'actief' ? 'aan' : 'concept'" :tekst="s.status === 'actief' ? `Actief, versie ${s.versie}` : null" /></h3>
                 <div class="rij-sub">Variant van {{ origineel(s.basisScriptId) }}<template v-if="s.origineelGewijzigd"> · <strong data-test="origineel-gewijzigd">Het origineel is gewijzigd</strong></template></div></div>
               <button type="button" class="dd-act" @click="open = s.id">{{ s.origineelGewijzigd ? 'Bekijk verschil' : 'Bewerk' }}</button>
             </div>
-            <p v-if="!data.mijn.length" class="rij rij--compact meta">Je hebt nog geen eigen variant.</p>
+            
           </div>
           <h2 class="kop-blok mt-24">Scripts van je team</h2>
           <div class="lijst mt-8">
-            <div v-for="s in data.scripts.filter((x: any) => x.status === 'actief')" :key="s.id" class="rij rij--compact">
+            <div v-for="s in data.scripts.filter((x: any) => x.status === 'actief')" :key="s.id" class="rij rij--compact inst-rij">
               <div class="rij-info"><h3 class="rij-titel">{{ s.naam }}</h3><div class="rij-sub">{{ s.doelLabel }} · {{ s.conversie }}</div></div>
               <button type="button" class="dd-act" :data-test="`variant-${s.naam}`" @click="kopie(s.id)">Maak persoonlijke variant</button>
             </div>

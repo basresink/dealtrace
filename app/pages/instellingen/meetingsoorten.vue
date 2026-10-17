@@ -11,7 +11,13 @@ const { data, refresh } = await useFetch<any>('/api/meetingsoorten', { default: 
 const GEVOLG: Record<string, string> = { gehouden: 'Eerste afspraak gehouden, vraag "Overdragen?"', later: 'Wachtend tot datum, met terugkomtaak', contactpersoon: 'Nieuw contact en een nieuwe poging', nee: 'Nee met reden en terugkomregel', afspraak: 'Eerste afspraak plannen', geen: 'Geen gevolg' }
 const VORM: Record<string, string> = { bezoek: 'Bezoek', online: 'Online', telefoon: 'Telefoon' }
 const bewerk = ref<any>(null)
-const groepen = computed(() => (['bezoek', 'meeting'] as Categorie[]).map((c) => ({ categorie: c, label: CATEGORIE_LABEL[c], uitleg: CATEGORIE_UITLEG[c], soorten: data.value.soorten.filter((s: any) => categorieVan(s) === c) })))
+// Filters: stand (aan of uit) en type (prospect of intern).
+const filter = reactive({ stand: '', type: '' })
+const aantalFilters = computed(() => (filter.stand ? 1 : 0) + (filter.type ? 1 : 0))
+const pastBij = (s: any) => (!filter.stand || (filter.stand === 'aan') === (s.actief !== false)) && (!filter.type || (filter.type === 'intern') === (s.type === 'intern'))
+function wis() { filter.stand = ''; filter.type = '' }
+const groepen = computed(() => (['bezoek', 'meeting'] as Categorie[]).map((c) => ({ categorie: c, label: CATEGORIE_LABEL[c], uitleg: CATEGORIE_UITLEG[c], soorten: data.value.soorten.filter((s: any) => categorieVan(s) === c && pastBij(s)) })))
+const titel = computed(() => (data.value.soorten.length ? `${data.value.soorten.filter((s: any) => s.actief !== false).length} van ${data.value.soorten.length} meetingsoorten aan` : 'Meetingsoorten en uitkomsten'))
 function open(s: any) { bewerk.value = { ...JSON.parse(JSON.stringify(s)), categorie: categorieVan(s) } }
 // Een andere categorie zet de vorm die erbij past: een bezoek op locatie, een meeting online of telefonisch.
 function zetCategorie(c: Categorie) { bewerk.value.categorie = c; if (!VORMEN_PER_CATEGORIE[c].includes(bewerk.value.vorm)) bewerk.value.vorm = VORMEN_PER_CATEGORIE[c][0] }
@@ -36,23 +42,31 @@ opslag.volg(() => [bewerk.value])
   <div>
     <NietAangezetKop v-if="!aan" sleutel="instellingen.meetingsoorten" />
     <template v-else>
-      <PaginaKop kicker="Instellingen · Verkoop" titel="Meetingsoorten en uitkomsten" uitleg="Elke afspraak heeft een soort. De uitkomst na afloop zet de reis, de status en de volgende stap." helpartikel="meetingsoorten-en-uitkomsten-inrichten">
+      <InstellingenKop groep="Verkoop" :titel="titel" :filters="aantalFilters" @reset="wis" uitleg="Meetingsoorten en uitkomsten: elke afspraak heeft een soort. De uitkomst na afloop zet de reis, de status en de volgende stap." helpartikel="meetingsoorten-en-uitkomsten-inrichten">
         <template #acties><button type="button" class="dd-actie dd-actie--primair" data-test="ms-nieuw" @click="nieuw"><Icoon naam="Plus" class="dd-actie-icoon" />Meetingsoort</button></template>
-      </PaginaKop>
-      <section class="section">
+        <template #filters>
+          <div class="ifp-groep" role="group" aria-label="Stand"><span class="filter-label">Stand</span>
+            <button v-for="[k, l] in [['', 'Alle'], ['aan', 'Aan'], ['uit', 'Uit']]" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter.stand === k }" :aria-pressed="filter.stand === k" @click="filter.stand = k!">{{ l }}</button>
+          </div>
+          <div class="ifp-groep" role="group" aria-label="Type"><span class="filter-label">Type</span>
+            <button v-for="[k, l] in [['', 'Alle'], ['klant', 'Prospect'], ['intern', 'Intern']]" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter.type === k }" :aria-pressed="filter.type === k" @click="filter.type = k!">{{ l }}</button>
+          </div>
+        </template>
+      </InstellingenKop>
+      <section class="section section--laatste">
         <div class="container">
           <div data-test="ms-lijst">
             <section v-for="g in groepen" :key="g.categorie" class="ms-groep" :data-test="`ms-groep-${g.categorie}`">
               <h2 class="ms-groep-kop">{{ g.label }} <span class="meta">{{ g.uitleg }}</span></h2>
               <div class="lijst">
-                <div v-for="s in g.soorten" :key="s.id" class="rij rij--compact" :class="{ 'rij--uit': !s.actief }">
+                <div v-for="s in g.soorten" :key="s.id" class="rij rij--compact inst-rij" :class="{ 'inst-rij--uit': !s.actief }">
                   <div class="rij-info">
-                    <h3 class="rij-titel">{{ s.naam }} <span class="pil pil--leeg">{{ s.type === 'intern' ? 'intern' : 'prospect' }}</span><span v-if="s.data.eersteAfspraak" class="pil pil--leeg">eerste afspraak</span><span v-if="!s.actief" class="pil">uit</span></h3>
+                    <h3 class="rij-titel">{{ s.naam }} <Label soort="account" waarde="prospect" :tekst="s.type === 'intern' ? 'Intern' : 'Prospect'" /><Label v-if="s.data.eersteAfspraak" soort="account" waarde="prospect" tekst="Eerste afspraak" /><Label v-if="!s.actief" soort="instelling" waarde="uit" /></h3>
                     <div class="rij-sub">{{ s.duurMin }} min · {{ VORM[s.vorm] }} · {{ s.data.agenda.length }} agendapunten · {{ s.data.uitkomsten.length ? s.data.uitkomsten.map((u: any) => u.label).join(', ') : 'geen gespreksuitkomst' }}</div>
                   </div>
-                  <button type="button" class="dd-act" :data-test="`ms-bewerk-${s.slug}`" @click="open(s)">Bewerk</button>
+                  <div class="inst-rij-acties"><button type="button" class="dd-act" :data-test="`ms-bewerk-${s.slug}`" @click="open(s)">Bewerk</button></div>
                 </div>
-                <p v-if="!g.soorten.length" class="meta">Nog geen soorten in deze groep.</p>
+                <p v-if="!g.soorten.length" class="rij rij--compact inst-rij meta">{{ aantalFilters ? 'Geen soorten in dit filter.' : 'Nog geen soorten in deze groep.' }}</p>
               </div>
             </section>
           </div>

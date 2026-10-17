@@ -8,7 +8,7 @@ routes: /bellen
 
 # De belmodus
 
-De belmodus opent je belblok schermvullend en gaat gesprek na gesprek.
+De belmodus opent je belblok schermvullend en gaat gesprek na gesprek. Je opent hem met **Start belblok** op **Belblokken**, of door een blok in je agenda of in de lijst met komende blokken te openen.
 
 - **Links** het belscript, al ingevuld voor dit account.
 - **In het midden** de gesprekskaart: contact, nummer, aanleiding, laatste uitkomsten en BAND.

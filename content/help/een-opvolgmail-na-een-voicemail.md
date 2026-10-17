@@ -52,7 +52,7 @@ In de **belmodus** kies je na het gesprek **Voicemail ingesproken**. Dealtrace r
 
 Zo verstuur je hem in vier tikken:
 
-1. Tik op **Concepten** bij de bel. Op de telefoon staat het onder Meer.
+1. Open **Concepten** in de zijbalk onder **Activiteiten**. Op de telefoon staat het onder **Meer**.
 2. Open het concept.
 3. Tik **Goedkeuren**. Wil je iets wijzigen, pas dan eerst de tekst aan.
 4. Tik **Verstuur via je mail**. Je mailapp opent met ontvanger, onderwerp en tekst ingevuld.

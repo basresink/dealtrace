@@ -8,7 +8,7 @@ routes: /weekstart
 
 # Weekstart
 
-Op maandag zie je op **Vandaag** de kaart **Je weekplan staat klaar**. De **weekstart** laat je hele week zien, zodat je weet waar je tijd naartoe gaat.
+De **weekstart** laat je hele week zien, zodat je weet waar je tijd naartoe gaat. Je opent hem met de knop **Weekstart** in de kop van de **Agenda**, of via de link **Weekstart** op de **Dagstart**.
 
 ## Wat je ziet
 

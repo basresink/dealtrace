@@ -48,7 +48,7 @@ Opvolgmail na een regionale installatiebeurs:
 
 ## Zo doe je het in Dealtrace
 
-1. Zet de bedrijven die je sprak in Dealtrace. Eén voor één bij **Prospects** met **Nieuw**, of als bestand via **Leadgenerator** en **Importeren**. Dealtrace laat vooraf zien wat dubbel is.
+1. Zet de bedrijven die je sprak in Dealtrace. Eén voor één bij **Alle prospects** met **+ Prospect**, of als bestand via **Leadgenerator**, tabblad **Importeren**. Dealtrace laat vooraf zien wat dubbel is.
 2. Vanaf Gevorderd zet je bij **Campagnes** met **+ Campagne** een campagne op van de soort **Beurs of event**. Kies als doelgroep de importbatch en een winpunt.
 3. Warme accounts lopen in het ritme **Warm**: bellen op dag 0, mail op dag 3 en bellen op dag 10.
 4. Open per taak de **Briefing en Pitstop** en tik **Bereid voor** voor een concept dat je zelf goedkeurt.

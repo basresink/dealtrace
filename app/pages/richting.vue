@@ -44,7 +44,8 @@ function kies(k: RichtingTab, focus = false) {
   if (focus) nextTick(() => document.getElementById(`ri-tab-${k}`)?.focus())
 }
 function toets(e: KeyboardEvent) {
-  const i = RICHTING_TABS.findIndex((t) => t.k === tab.value.k)
+  const doel = (e.target as HTMLElement | null)?.id?.replace('ri-tab-', '')
+  const i = Math.max(0, RICHTING_TABS.findIndex((t) => t.k === (doel || tab.value.k)))
   const n = RICHTING_TABS.length
   const naar = e.key === 'ArrowRight' ? (i + 1) % n : e.key === 'ArrowLeft' ? (i - 1 + n) % n : e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : -1
   if (naar < 0) return

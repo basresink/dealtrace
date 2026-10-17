@@ -28,7 +28,7 @@ AI, KvK en Datacollectief, een nieuwe route berekenen (de laatste route blijft s
 
 ## Een account extra bewaren
 
-Weet je dat je morgen langs een account gaat dat niet in je dagpakket zit? Open de accountkaart met verbinding en tik **Bewaar voor offline**. Hij gaat dan voortaan mee.
+Weet je dat je morgen langs een account gaat dat niet in je dagpakket zit? Open de accountkaart op je telefoon met verbinding, tik **Meer** en dan **Bewaar voor offline**. Hij gaat dan voortaan mee.
 
 ## Als twee mensen tegelijk iets wijzigen
 

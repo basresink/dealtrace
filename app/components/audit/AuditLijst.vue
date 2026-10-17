@@ -5,7 +5,8 @@
 import { AUDIT_PERIODEN, AUDIT_SOORT_LABEL, actieTekst, type AuditRegel } from '~~/shared/audit'
 import { nlMoment, plusDagen } from '~~/shared/datum'
 
-const props = defineProps<{ bron: string }>()
+// verborgenFilters: de pagina toont de filters pas na de knop Filters in haar kop (zoals op /audit).
+const props = defineProps<{ bron: string; verborgenFilters?: boolean }>()
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
@@ -53,7 +54,7 @@ const telling = computed(() => `${regels.value.length} ${regels.value.length ===
 
 <template>
   <div class="au">
-    <div class="filters au-filters" data-test="audit-filters">
+    <div v-if="!verborgenFilters" class="filters au-filters" data-test="audit-filters">
       <div class="filter-groep">
         <label class="au-veld"><span class="filter-label">Wie</span>
           <select class="invoer invoer--klein" data-test="audit-wie" :value="filters.persoon ?? ''" @change="zet({ persoon: ($event.target as HTMLSelectElement).value || undefined })">

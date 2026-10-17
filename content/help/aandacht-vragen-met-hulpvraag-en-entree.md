@@ -45,7 +45,7 @@ Hilde hoort geen product en geen prijs, maar een idee over iets wat haar bezigho
 
 ## Zo doe je het in Dealtrace
 
-Zet je hulpvraag en entree in het blok opening van je belscript. Vanaf Gevorderd maak je bij **Mijn scripts** een eigen variant. Zie [Een belscript kiezen](/helpcenter/een-belscript-kiezen). In de belmodus staat links het belscript, al ingevuld voor dit account, met de opening bovenaan. Wil je een opening op maat, tik dan in de **Pitstop** op **Bereid voor**. Zie [De eerste 20 seconden](/helpcenter/de-eerste-20-seconden) en [Briefing en Pitstop](/helpcenter/briefing-en-pitstop).
+Zet je hulpvraag en entree in het blok opening van je belscript. Vanaf Gevorderd maak je in **Mijn instellingen**, **Mijn scripts**, een eigen variant. Zie [Een belscript kiezen](/helpcenter/een-belscript-kiezen). In de belmodus staat links het belscript, al ingevuld voor dit account, met de opening bovenaan. Wil je een opening op maat, tik dan in de **Pitstop** op **Bereid voor**. Zie [De eerste 20 seconden](/helpcenter/de-eerste-20-seconden) en [Briefing en Pitstop](/helpcenter/briefing-en-pitstop).
 
 ## Controlevragen
 

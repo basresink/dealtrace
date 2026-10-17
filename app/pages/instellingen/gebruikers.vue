@@ -125,16 +125,44 @@ const salesmanagers = computed(() => actief.value.filter((g) => g.rol === 'sales
 const ledenVan = (teamId: string) => actief.value.filter((g) => g.teamId === teamId).length
 async function teamGewijzigd() { await Promise.all([herlaadTeams(), herlaadGebruikers()]) }
 const naamVan = (id: string) => gebruikers.value.find((g) => g.id === id)?.naam ?? id
+// Filters op de lijst Gebruikers: rol, niveau, team en status.
+const filter = reactive({ rol: '', niveau: '', team: '', status: '' })
+const aantalFilters = computed(() => Object.values(filter).filter(Boolean).length)
+const zichtbaar = computed(() => actief.value.filter((g) => (!filter.rol || g.rol === filter.rol) && (!filter.niveau || g.niveau === filter.niveau) && (!filter.team || (g.teamId ?? 'geen') === filter.team) && (!filter.status || (filter.status === 'uitgenodigd') === (g.status === 'uitgenodigd'))))
+function wisFilters() { Object.assign(filter, { rol: '', niveau: '', team: '', status: '' }) }
+const telRol = (r: string) => actief.value.filter((g) => g.rol === r).length
+const titel = computed(() => {
+  if (beheerder.value && abonnement.value?.seats) return `${abonnement.value.gebruikers} van ${abonnement.value.seats} seats in gebruik`
+  return `${actief.value.length} ${actief.value.length === 1 ? 'gebruiker' : 'gebruikers'} in ${teams.value.length} ${teams.value.length === 1 ? 'team' : 'teams'}`
+})
 useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
 </script>
 
 <template>
   <div>
-    <PaginaKop kicker="Instellingen · Gebruikers" titel="Gebruikers en teams" :uitleg="beheerder ? 'Wie werkt in Dealtrace, op welk niveau en in welk team.' : 'De mensen in je teams en hun niveau.'" helpartikel="gebruikers-rollen-niveaus">
+    <InstellingenKop groep="Organisatie" :titel="titel" :uitleg="beheerder ? `Gebruikers en teams: ${actief.length} actieve gebruikers in ${teams.length} teams, op welk niveau en met welke werkplek.` : 'Gebruikers en teams: de mensen in je teams en hun niveau.'" helpartikel="gebruikers-rollen-niveaus" :filters="tab === 'gebruikers' ? aantalFilters : null" @reset="wisFilters">
       <template #acties>
         <button v-if="beheerder && tab === 'gebruikers'" type="button" class="dd-actie dd-actie--primair" data-test="gebruiker-toevoegen" @click="nieuw.open = !nieuw.open"><Icoon naam="Plus" class="dd-actie-icoon" />{{ zelfToevoegen ? 'Gebruiker toevoegen' : 'Gebruiker aanvragen' }}</button>
       </template>
-    </PaginaKop>
+      <template #filters>
+        <div class="ifp-groep" role="group" aria-label="Rol"><span class="filter-label">Rol</span>
+          <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': !filter.rol }" :aria-pressed="!filter.rol" @click="filter.rol = ''">Alle</button>
+          <button v-for="r in (['accountmanager', 'salesmanager', 'beheerder'] as Rol[]).filter((x) => telRol(x))" :key="r" type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter.rol === r }" :aria-pressed="filter.rol === r" :data-test="`filter-rol-${r}`" @click="filter.rol = r">{{ ROL_LABEL[r] }}<span class="pil-teller tnum">{{ telRol(r) }}</span></button>
+        </div>
+        <div class="ifp-groep" role="group" aria-label="Niveau"><span class="filter-label">Niveau</span>
+          <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': !filter.niveau }" :aria-pressed="!filter.niveau" @click="filter.niveau = ''">Alle</button>
+          <button v-for="n in NIVEAUS" :key="n" type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter.niveau === n }" :aria-pressed="filter.niveau === n" @click="filter.niveau = n">{{ NIVEAU_LABEL[n] }}</button>
+        </div>
+        <div class="ifp-groep" role="group" aria-label="Team"><span class="filter-label">Team</span>
+          <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': !filter.team }" :aria-pressed="!filter.team" @click="filter.team = ''">Alle</button>
+          <button v-for="t in teams" :key="t.id" type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter.team === t.id }" :aria-pressed="filter.team === t.id" @click="filter.team = t.id">{{ t.naam }}</button>
+          <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter.team === 'geen' }" :aria-pressed="filter.team === 'geen'" @click="filter.team = 'geen'">Geen team</button>
+        </div>
+        <div class="ifp-groep" role="group" aria-label="Status"><span class="filter-label">Status</span>
+          <button v-for="[k, l] in [['', 'Alle'], ['actief', 'Actief'], ['uitgenodigd', 'Uitgenodigd']]" :key="k" type="button" class="filter-pil" :class="{ 'filter-pil--aan': filter.status === k }" :aria-pressed="filter.status === k" @click="filter.status = k!">{{ l }}</button>
+        </div>
+      </template>
+    </InstellingenKop>
     <section class="section section--laatste">
       <div class="container">
         <nav class="tabbalk" aria-label="Gebruikers en teams">
@@ -157,15 +185,18 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
           </form>
           <div v-if="openAanvragen.length" class="kaart mt-16" data-test="open-aanvragen">
             <span class="veld-label">Aangevraagd bij Dealtrace</span>
-            <ul class="schakel-lijst"><li v-for="a in openAanvragen" :key="a.id" class="schakel-rij"><span>{{ a.data.naam }} · {{ a.data.email }}</span><span class="pil pil--geel">open</span></li></ul>
+            <ul class="schakel-lijst"><li v-for="a in openAanvragen" :key="a.id" class="schakel-rij"><span>{{ a.data.naam }} · {{ a.data.email }}</span><Label soort="status" waarde="wachtend" tekst="Aangevraagd" /></li></ul>
           </div>
 
           <LegeStaat v-if="!actief.length" :titel="beheerder ? 'Nog geen gebruikers.' : 'Nog niemand in je teams.'" :tekst="beheerder ? 'Voeg je eerste collega toe met Gebruiker toevoegen.' : 'De beheerder zet accountmanagers in jouw teams.'" />
+          <LegeStaat v-else-if="!zichtbaar.length" class="mt-16" kicker="Niets gevonden" titel="Niemand in dit filter." tekst="Kies een andere rol, een ander niveau of team.">
+            <button type="button" class="dd-act mt-16" @click="wisFilters">Wis filters</button>
+          </LegeStaat>
           <div v-else class="tabel-wrap gb-wrap mt-16">
             <table class="tabel tabel--kaarten gb-tabel" data-test="gebruikers-tabel">
               <thead><tr><th>Naam</th><th>Rol</th><th>Niveau</th><th>Werkplek</th><th>Team</th><th>Status</th><th v-if="beheerder"><span class="sr-only">Acties</span></th></tr></thead>
               <tbody>
-                <tr v-for="g in actief" :key="g.id" :data-gebruiker="g.id" :class="{ 'tabel-rij--gemarkeerd': gemarkeerd === g.id }">
+                <tr v-for="g in zichtbaar" :key="g.id" :data-gebruiker="g.id" :class="{ 'tabel-rij--gemarkeerd': gemarkeerd === g.id }">
                   <td><div class="gebruiker-cel"><strong>{{ g.naam }}</strong><small>{{ g.email }}</small><small v-if="g.rol === 'salesmanager' && g.eigenPortefeuille">Met eigen portefeuille</small></div></td>
                   <td>
                     <select v-if="beheerder" class="invoer invoer--klein" :value="g.rol" :aria-label="`Rol van ${g.naam}`" @change="wijzig(g, 'rol', ($event.target as HTMLSelectElement).value)">

@@ -225,6 +225,27 @@ export const LABELS = {
     gepland: zacht('Gepland', 'grijs', 'CalendarClock'),
     gestart: zacht('Gestart', 'groen', 'CircleCheck'),
   },
+  /** Stand van een onderdeel op een scherm onder Instellingen (sjabloon, soort, artikel, agent, koppeling). */
+  instelling: {
+    aan: zacht('Aan', 'groen', 'CircleCheck'),
+    uit: leeg('Uit', 'CirclePause'),
+    startset: rand('Startset'),
+    eigen: rand('Eigen', 'Pencil'),
+    platform: rand('Van Dealtrace'),
+    concept: leeg('Concept', 'Pencil'),
+    gepubliceerd: zacht('Gepubliceerd', 'groen', 'CircleCheck'),
+    verborgen: leeg('Verborgen'),
+    gearchiveerd: leeg('Gearchiveerd', 'Archive'),
+    gekoppeld: zacht('Gekoppeld', 'groen', 'CircleCheck'),
+    'niet-gekoppeld': leeg('Niet gekoppeld'),
+  },
+  /** Status van een factuur (Instellingen, Abonnement). Achterstallig in zacht rood. */
+  factuur: {
+    open: rand('Open', 'Clock'),
+    betaald: zacht('Betaald', 'groen', 'CircleCheck'),
+    achterstallig: zacht('Achterstallig', 'rood', 'TriangleAlert'),
+    geannuleerd: leeg('Geannuleerd'),
+  },
   /** Soort account: een feit. */
   account: {
     prospect: rand('Prospect'),

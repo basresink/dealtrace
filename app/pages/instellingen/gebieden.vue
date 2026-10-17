@@ -10,7 +10,12 @@ const toast = useToast()
 const { data, refresh } = await useFetch<any>('/api/gebieden', { default: () => ({ regios: [], synoniemen: {}, tellingen: [], gebruikers: [], kan: {} }) })
 const regios = ref<Regio[]>([])
 const synoniemen = ref<{ van: string; naar: string }[]>([])
+// Opslaan-status onder de kop: Gewijzigd tot Bewaar.
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [regios.value, synoniemen.value])
 watch(data, (d) => { regios.value = JSON.parse(JSON.stringify(d.regios ?? [])); synoniemen.value = Object.entries(d.synoniemen ?? {}).map(([van, naar]) => ({ van, naar: String(naar) })) }, { immediate: true })
+watch(data, () => nextTick(() => opslag.basis()))
+onMounted(() => opslag.basis())
 const DAGEN = ['', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag']
 const buitendienst = computed(() => data.value.gebruikers.filter((u: any) => u.werkplek === 'buitendienst'))
 const binnendienst = computed(() => data.value.gebruikers.filter((u: any) => u.werkplek === 'binnendienst'))
@@ -29,12 +34,19 @@ const bezig = ref(false)
 async function bewaar() {
   bezig.value = true
   try {
-    await $fetch('/api/settings/plaatsSynoniemen', { method: 'PUT', body: { value: Object.fromEntries(synoniemen.value.filter((s) => s.van.trim() && s.naar.trim()).map((s) => [s.van.trim().toLowerCase(), s.naar.trim().toLowerCase()])) } })
-    await $fetch('/api/settings/gebieden', { method: 'PUT', body: { value: regios.value } })
+    await opslag.bewaar(async () => {
+      await $fetch('/api/settings/plaatsSynoniemen', { method: 'PUT', body: { value: Object.fromEntries(synoniemen.value.filter((s) => s.van.trim() && s.naar.trim()).map((s) => [s.van.trim().toLowerCase(), s.naar.trim().toLowerCase()])) } })
+      await $fetch('/api/settings/gebieden', { method: 'PUT', body: { value: regios.value } })
+    })
     toast.toon('Gebieden bewaard. Accounts hebben hun regio gekregen.'); await refresh()
   } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }
 const kies = (lijst: string[], id: string, aan: boolean) => { const i = lijst.indexOf(id); if (aan && i < 0) lijst.push(id); if (!aan && i >= 0) lijst.splice(i, 1) }
+const titel = computed(() => {
+  const r = regios.value.length
+  const d = regios.value.reduce((n, x) => n + x.dagen.length, 0)
+  return r ? `${r} ${r === 1 ? 'regio' : "regio's"}, ${d} ${d === 1 ? 'regiodag' : 'regiodagen'} per week` : 'Gebieden en regiodagen'
+})
 useHead({ title: 'Gebieden · Dealtrace' })
 </script>
 
@@ -42,14 +54,15 @@ useHead({ title: 'Gebieden · Dealtrace' })
   <div>
     <NietAangezetKop v-if="!aan" sleutel="instellingen.gebieden" />
     <template v-else>
-      <PaginaKop kicker="Instellingen · Werkwijze" titel="Gebieden en regiodagen" uitleg="Regio's op postcode, wie er eigenaar is en op welke dag de buitendienst er is." helpartikel="gebieden-en-regiodagen">
+      <InstellingenKop groep="Ritme en regels" :titel="titel" uitleg="Gebieden en regiodagen: regio's op postcode, wie er eigenaar is en op welke dag de buitendienst er is." helpartikel="gebieden-en-regiodagen">
+        <template #onder><p class="mt-8"><OpslagStatus :opslag="opslag" test="gb-status" /></p></template>
         <template #acties>
           <button type="button" class="dd-actie dd-actie--secundair" data-test="gb-voorstel" @click="voorstel">Voorstel uit je accounts</button>
-          <button type="button" class="dd-actie dd-actie--primair" :disabled="bezig || !!conflict" data-test="gb-bewaar" @click="bewaar">Bewaar</button>
+          <button type="button" class="dd-actie dd-actie--primair" :disabled="bezig || !!conflict" data-test="gb-bewaar" @click="bewaar"><Icoon naam="Check" class="dd-actie-icoon" />Bewaar gebieden</button>
         </template>
-      </PaginaKop>
-      <section class="section">
-        <div class="container">
+      </InstellingenKop>
+      <section class="section section--laatste">
+        <div class="container" @input.capture="opslag.interactie()" @pointerdown.capture="opslag.interactie()">
           <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm. Gebieden werken ook hier, maar zijn ruimer op een laptop.</p>
           <h2 class="kop-blok">Je week</h2>
           <div class="bz-week" data-test="gb-week">
@@ -60,7 +73,8 @@ useHead({ title: 'Gebieden · Dealtrace' })
           </div>
           <p class="taak-meta mt-16" data-test="gb-zonder">Zonder regio: {{ tel(null).klanten + tel(null).prospects }} accounts.</p>
           <p v-if="conflict" class="kaart kaart--rood mt-16" role="alert" data-test="gb-overlap">{{ conflict }}</p>
-          <div class="lijst mt-16">
+          <LegeStaat v-if="!regios.length" class="mt-16" kicker="Gebieden" titel="Nog geen regio's." tekst="Begin met Voorstel uit je accounts of voeg zelf een regio toe op postcode." />
+          <div v-else class="lijst mt-16">
             <article v-for="(r, ri) in regios" :key="r.id" class="kaart" :data-test="`gb-regio-${r.id}`">
               <div class="formulier-raster">
                 <label class="veld"><span class="veld-label">Naam</span><input v-model="r.naam" class="invoer"></label>

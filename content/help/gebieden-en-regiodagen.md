@@ -10,7 +10,7 @@ routes: /instellingen/gebieden,/analyse/regio
 
 ## Regio's inrichten
 
-De beheerder richt de regio's in onder **Instellingen, Werkwijze, Gebieden en regiodagen**. Per regio:
+De beheerder richt de regio's in onder **Instellingen**, groep **Ritme en regels**, kaart **Gebieden en regiodagen**. Per regio:
 
 - een **naam**;
 - **postcodereeksen** van vier cijfers, bijvoorbeeld "3701-3799, 3800-3829";
@@ -32,6 +32,6 @@ Na het bewaren krijgt elk account zijn regio. Een nieuwe prospect zonder eigenaa
 
 Bovenaan de pagina staat **Je week**: per dag wie in welke regio is, met het aantal klanten, prospects, nooit bezocht en stil. Zo zie je in één oogopslag of de belblokken van de binnendienst en de regiodagen van de buitendienst op elkaar aansluiten.
 
-## Regio-analyse
+## Bezoekanalyse
 
-Vanaf Gevorderd staat op **Bezoeken** rechtsboven de knop **Bezoekanalyse**: "Waar laat je omzet liggen?". Je ziet hoeveel accounts in beeld zijn, hoeveel stil of nooit bezocht, hoeveel prospects nog niet benaderd, en welk deel je in de gekozen periode bezocht (doel 80 procent). Per regio een rij met de bezoekdekking, gesorteerd op wat stil ligt, en een rij **Zonder regio** als er accounts buiten elke regio vallen. Klik **Openen** voor de accounts: nooit bezocht bovenaan, dan het langst stil. Plan daar een afspraak of zet een account klaar voor de regiodag. Daaronder wat je bezoeken opleverden (uitkomsten, verslagen, conversie naar vervolg en de doorlooptijd tot de volgende afspraak), of je je regiodagen benut met de gereden kilometers, en wat je langs de route meenam. Onder **Filters** kies je de periode en het type bezoek; de salesmanager kiest **Team** of een persoon uit zijn team.
+Vanaf Gevorderd staat op **Bezoeken** rechtsboven de knop **Analyse**. Die opent de bezoekanalyse: "Waar laat je omzet liggen?". Je ziet hoeveel accounts in beeld zijn, hoeveel stil of nooit bezocht, hoeveel prospects nog niet benaderd, en welk deel je in de gekozen periode bezocht (doel 80 procent). Per regio een rij met de bezoekdekking, gesorteerd op wat stil ligt, en een rij **Zonder regio** als er accounts buiten elke regio vallen. Klik **Openen** voor de accounts: nooit bezocht bovenaan, dan het langst stil. Plan daar een afspraak of zet een account klaar voor de regiodag. Daaronder wat je bezoeken opleverden (uitkomsten, verslagen, conversie naar vervolg en de doorlooptijd tot de volgende afspraak), of je je regiodagen benut met de gereden kilometers, en wat je langs de route meenam. Onder **Filters** kies je de periode en het type bezoek; de salesmanager kiest **Team** of een persoon uit zijn team. Met **Download** krijg je de accounts als CSV.

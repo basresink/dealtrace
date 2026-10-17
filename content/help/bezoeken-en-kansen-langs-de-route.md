@@ -9,7 +9,7 @@ samenvatting: Waar je vandaag heen gaat, en wie je onderweg meeneemt: route, kaa
 
 ## Je route
 
-Op **Bezoeken** staan je bezoekafspraken van de dag in volgorde, met tijd, account, adres en de reistijd naar de volgende stop. De volgende stop is rood. Met **Navigeer** opent je kaartapp; welke dat is, kies je in **Mijn instellingen**, kaart **Routes en navigeren**. Daar zet je ook je **thuisbasis**: daar begint en eindigt je route. Je locatie zelf bewaart Dealtrace niet.
+Op **Bezoeken** staan je bezoekafspraken van de dag in volgorde, met tijd, account, adres en de reistijd naar de volgende stop. De volgende stop is rood. Met **Navigeer** opent je kaartapp; welke dat is, kies je op **Account**, kaart **Routes en navigeren**. Daar zet je ook je **thuisbasis**: daar begint en eindigt je route. Je locatie zelf bewaart Dealtrace niet.
 
 Bovenaan zie je je week, bijvoorbeeld "dinsdag Regio Noord". Vanaf Gevorderd tik je een andere dag aan om die route te zien.
 
@@ -31,19 +31,19 @@ Je ziet alleen je eigen accounts en geen accounts die je vandaag al bezoekt, die
 
 ## Wat je met een kans doet
 
-- **+ Tussenstop**: de afspraakflyout opent met Kennismaking, vandaag, in het voorgestelde gat, 30 minuten. Had het account een open bezoektaak, dan hangt die aan de afspraak en sluit hij bij afronden.
-- **Eerst bellen**: opent de accountkaart om eerst te bellen.
-- **Inloopbezoek**: legt achteraf vast dat je binnen bent gelopen. Het telt als bezoek.
+- **Tussenstop**: Plan een afspraak opent met een bezoek, vandaag, in het voorgestelde gat, 30 minuten. Had het account een open bezoektaak, dan hangt die aan de afspraak en sluit hij bij afronden.
+- **Eerst bellen**: Nieuwe taak opent met type Bellen, de prospect en het hoofdcontact al ingevuld.
+- **Inloopbezoek**: Plan een afspraak opent als **Ongepland bezoek** op die dag en dat moment langs de route.
 - **Overslaan**: kies een reden; de kans komt 7 dagen niet terug.
 - **Navigeer**: rechtstreeks naar het account.
 
 ## Bellijst en te plannen bezoeken
 
-Vanaf Gevorderd staat onder de kansen je **bellijst naast je bezoeken**. Alleen de accounts die je die dag bezoekt, staan er niet in. Daarnaast staan je **te plannen bezoeken**: open bezoektaken, oudste eerst, met **+ Plan bezoek**.
+Vanaf Gevorderd staat onder de kansen je **bellijst naast je bezoeken**, Top 5 of Top 10. De accounts die je die dag bezoekt, staan er niet in. Een klik opent de open beltaak; is die er niet, dan maakt Dealtrace hem eerst. Daaronder staan je **te plannen bezoeken**: open bezoektaken als kaarten, oudste eerst. Een klik opent de taak, **Plan bezoek** opent Plan een afspraak.
 
 ## Klaarzetten voor de buitendienst
 
-Werk je in de binnendienst, dan zet je een prospect klaar voor de regiodag van een collega: op de accountkaart **Klaarzetten voor buitendienst**, collega kiezen, een datum of de eerstvolgende regiodag in de regio van het account, een korte reden, **Klaarzetten**. Je collega krijgt een melding en ziet de kans met "Klaargezet door" en jouw naam. Heeft je collega geen regiodag in die regio, dan zegt Dealtrace dat.
+Werk je in de binnendienst, dan zet je een prospect klaar voor de regiodag van een collega: op de accountkaart onder **Meer**, **Klaarzetten**, collega kiezen, een datum of de eerstvolgende regiodag in de regio van het account, een korte reden, **Klaarzetten**. Je collega krijgt een melding en ziet de kans met "Klaargezet door" en jouw naam. Heeft je collega geen regiodag in die regio, dan zegt Dealtrace dat.
 
 ## Gat in je agenda
 

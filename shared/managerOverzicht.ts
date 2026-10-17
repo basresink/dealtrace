@@ -140,16 +140,16 @@ export function analyseBeeld(tab: string, tabellen: AnalyseTabel[], melding?: st
     const over = rij('overgedragen') ?? r0[r0.length - 1]
     const verloren = tabellen[1]?.rijen ?? []
     const opvallend: string[] = []
-    if (stok) opvallend.push(`Het stokpunt is ${String(stok.label).toLowerCase()}: daar stroomt ${stok.conversie} procent door naar de volgende fase.`)
+    if (stok) opvallend.push(`Het stokpunt zit in de fase ${String(stok.label).toLowerCase()}: daar stroomt ${stok.conversie} procent door naar de volgende fase.`)
     if (uitval && (getal(uitval.uitgevallen) ?? 0) > 0) opvallend.push(`De meeste uitval zit in ${String(uitval.label).toLowerCase()}: ${meervoud(getal(uitval.uitgevallen)!, 'account', 'accounts')}.`)
     if (traag) opvallend.push(`${traag.label} duurt het langst: gemiddeld ${String(traag.doorlooptijd).replace('.', ',')} dagen.`)
     if (verloren.length) { const v = [...verloren].sort((a, b) => (getal(b.n) ?? 0) - (getal(a.n) ?? 0))[0]!; opvallend.push(`Het vaakst verloren aan ${String(v.concurrent).toLowerCase()}: ${meervoud(som(verloren.filter((x) => x.concurrent === v.concurrent), 'n'), 'account', 'accounts')}.`) }
     return {
       titel: melding || 'De funnel van je team in deze periode.', lede, opvallend,
       tegels: [
-        tegel('instroom', getal(r0[0]!.aantal) ?? 0, `In ${String(r0[0]!.label).toLowerCase()}`, 'Accounts per fase', lijst('aantal', '')),
-        ...(gepland ? [tegel('gepland', getal(gepland.aantal) ?? 0, 'Afspraak gepland', 'Doorgestroomd per fase', lijst('doorgestroomd', ''))] : []),
-        ...(over ? [tegel('over', getal(over.aantal) ?? 0, String(over.label), 'Uitgevallen per fase', lijst('uitgevallen', ''))] : []),
+        tegel('instroom', getal(r0[0]!.aantal) ?? 0, `In ${String(r0[0]!.label).toLowerCase()}`, 'Accounts per fase', lijst('aantal', ''), { voet: `${nl(getal(r0[0]!.doorgestroomd) ?? 0)} door naar de volgende fase` }),
+        ...(gepland ? [tegel('gepland', getal(gepland.aantal) ?? 0, 'Afspraak gepland', 'Doorgestroomd per fase', lijst('doorgestroomd', ''), { voet: `${nl(getal(gepland.doorgestroomd) ?? 0)} door naar de volgende fase` })] : []),
+        ...(over ? [tegel('over', getal(over.aantal) ?? 0, String(over.label), 'Uitgevallen per fase', lijst('uitgevallen', ''), { voet: `${nl(som(r0, 'uitgevallen'))} uitgevallen onderweg` })] : []),
         ...(stok ? [tegel('stok', `${stok.conversie}%`, `Stokpunt: ${String(stok.label).toLowerCase()}`, 'Conversie per fase', lijst('conversie', '%'), { rood: true, voet: 'laagste doorstroom naar de volgende fase' })] : []),
       ],
     }

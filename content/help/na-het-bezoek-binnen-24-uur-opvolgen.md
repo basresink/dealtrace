@@ -48,7 +48,7 @@ Na haar bezoek aan Testinstallatie Vonkenburg mailt Hilde dezelfde middag:
 
 ## Zo doe je het in Dealtrace
 
-Tik **Bezoek afronden** in de route, op de aankomstkaart of in de afspraak.
+Tik op je telefoon **Bezoek afronden** in de route of op de aankomstkaart. Op de laptop open je de afspraak en klik je **Rond af**.
 
 1. Kies de **uitkomst**, bijvoorbeeld **Vervolg afgesproken**.
 2. Tik **Spreek je verslag in**, vertel wat er besproken is en tik **Stop**. Met **Foto** leg je een whiteboard of de situatie vast.

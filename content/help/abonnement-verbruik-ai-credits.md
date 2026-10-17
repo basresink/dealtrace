@@ -12,7 +12,7 @@ routes: /instellingen/abonnement,/instellingen/verbruik,/instellingen/prompts
 
 Onder **Instellingen, Abonnement** zie je je pakket in gewone woorden, hoeveel seats in gebruik zijn, je AI-credits per gebruiker per maand en je contract. Met **Upgrade aanvragen** vraag je een hoger pakket aan; Dealtrace neemt contact met je op.
 
-Bij **Factuurgegevens** vul je in op welke naam en welk adres Dealtrace factureert: naam, straat en huisnummer, postcode en plaats, KvK-nummer, btw-nummer en het e-mailadres waar de facturen heen gaan. Dealtrace controleert elk veld; klopt er iets niet, dan staat onder het veld wat er mis is. Pas met **Bewaar factuurgegevens** worden ze bewaard.
+Bij **Factuurgegevens** vul je in op welke naam en welk adres Dealtrace factureert: naam, straat en huisnummer, postcode en plaats, land (Nederland of België), KvK-nummer (in België het ondernemingsnummer), btw-nummer en het e-mailadres waar de facturen heen gaan. Dealtrace controleert elk veld; klopt er iets niet, dan staat onder het veld wat er mis is. Pas met **Bewaar factuurgegevens** worden ze bewaard.
 
 Bij **Facturen** staan je facturen met datum, bedrag en status. Elke factuur download je met **Pdf**. Betalen gaat via de betaallink in de mail van Dealtrace; een betaalknop in Dealtrace zelf komt later. Staat een factuur te lang open, dan pauzeert Dealtrace de AI: je ziet **AI gepauzeerd**. Al het andere werk gaat gewoon door. Zodra de factuur betaald is, werkt de AI weer.
 
@@ -48,4 +48,4 @@ Onder **Instellingen, Eigen agent-prompts** geef je de AI per onderdeel (belscri
 
 ## Wat de leverancier mag
 
-Dealtrace kan in je organisatie meekijken als jij dat toestaat, met een reden en een tijdslimiet. Onder **Instellingen, Audit** zie je alles wat de leverancier deed, met reden en of het meekijken of wijzigen was. Pakket, credits, prijzen en de standaardprompts zet alleen Dealtrace; die kun je zelf niet wijzigen.
+Dealtrace kan in je organisatie meekijken als jij dat toestaat, met een reden en een tijdslimiet. Onder **Instellingen, Audit en toegang leverancier** zie je alles wat de leverancier deed, met reden en of het meekijken of wijzigen was. Pakket, credits, prijzen en de standaardprompts zet alleen Dealtrace; die kun je zelf niet wijzigen.

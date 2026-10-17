@@ -8,7 +8,9 @@ routes: /instellingen/koppelingen/salesdna, /instellingen/koppelingen/dealdrive
 
 # Koppelingen
 
-De koppelingen staan bij **Leadgenerator**, tabblad **Koppelingen**. Alleen de beheerder richt ze in; een gebruiker vanaf Expert gebruikt ze.
+Alle koppelingen staan bij **Instellingen**, groep **Koppelingen**. Naast de groepsnaam zie je hoeveel er actief zijn. Alleen de beheerder richt ze in.
+
+KvK en Datacollectief vind je onder de kaart **Bronnen**: die opent de **Leadgenerator**, tabblad **Koppelingen**. Zoeken in KvK doe je in de Leadgenerator vanaf Gevorderd.
 
 ## KvK koppelen
 
@@ -77,14 +79,14 @@ Bij import en in de Leadgenerator kijkt Dealtrace ook in DealDrive: je ziet de p
 
 ## Mail
 
-De beheerder koppelt de mail van de organisatie bij **Instellingen**, **Mail koppelen**: verzendadres, mailserver, poort, gebruikersnaam en wachtwoord. Tik eerst **Test**: Dealtrace controleert of het domein SPF, DKIM en DMARC heeft en of de mailserver de verbinding aanneemt. Pas daarna kun je **Opslaan**. Het wachtwoord wordt versleuteld bewaard en nooit meer getoond. Zonder mailkoppeling verstuur je concepten via je eigen mailapp.
+De beheerder koppelt de mail van de organisatie bij **Instellingen**, **Koppelingen**, **Mail koppelen**: verzendadres, mailserver, poort, gebruikersnaam en wachtwoord. Tik eerst **Test**: Dealtrace controleert of het domein SPF, DKIM en DMARC heeft en of de mailserver de verbinding aanneemt. Pas daarna kun je **Opslaan**. Het wachtwoord wordt versleuteld bewaard en nooit meer getoond. Zonder mailkoppeling verstuur je concepten via je eigen mailapp.
 
 ## Je agenda koppelen
 
 Met een gekoppelde agenda van Microsoft 365 of Google telt wat daarin staat mee als bezet: bij vrije momenten voor een afspraak, bij het advies voor een belblok en bij het vullen van je dag. Afspraken die je in Dealtrace plant, komen in je agenda, met een Teams- of Meet-link als de afspraak online is.
 
-1. De beheerder zet de koppeling aan in **Mijn instellingen**, kaart **Gekoppelde agenda**, met **Agendakoppeling aan voor de organisatie**.
-2. Daarna koppelt iedereen vanaf Gevorderd zelf: **Mijn instellingen**, **Gekoppelde agenda**, **Koppel Microsoft 365** of **Koppel Google**.
+1. De beheerder zet de koppeling aan bij **Instellingen**, **Koppelingen**, **Agenda**, met **Agendakoppeling aan voor de organisatie**. Daar ziet hij ook hoeveel mensen hun agenda al koppelden.
+2. Daarna koppelt iedereen vanaf Gevorderd zelf: **Account**, kaart **Gekoppelde agenda**, **Koppel Microsoft 365** of **Koppel Google**.
 3. Geef toestemming bij Microsoft of Google. Terug in Dealtrace zie je "Agenda gekoppeld."
 
 Met **Ontkoppel** wis je de toegang weer. De toegang wordt versleuteld bewaard, met een eigen sleutel die alleen voor agenda's is. Werkt de koppeling niet meer, dan staat er "ontkoppeld, koppel opnieuw".
@@ -94,7 +96,7 @@ Met **Ontkoppel** wis je de toegang weer. De toegang wordt versleuteld bewaard, 
 
 De CRM-koppeling voorkomt dat je een klant of een prospect van een collega opnieuw benadert, en zet wat je in Dealtrace doet terug in je CRM. Deals en offertes maakt het CRM zelf.
 
-1. Ga naar **Instellingen**, **CRM** en klik **Verbind met HubSpot**. Geef toestemming in HubSpot. Terug in Dealtrace zie je "HubSpot is gekoppeld."
+1. Ga naar **Instellingen**, **Koppelingen**, **CRM** en klik **Verbind met HubSpot**. Geef toestemming in HubSpot. Terug in Dealtrace zie je "HubSpot is gekoppeld."
 2. **Eerst lezen, dan schrijven.** Een nieuwe koppeling leest alleen: bedrijven en contacten komen binnen voor ontdubbelen en het klantprofiel. Klanten uit het CRM worden klant-accounts. Zet een object pas op **Schrijven** of **Beide** als de veldtoewijzing klopt. Vanaf dat moment gaan overgenomen leads, contactpersonen en uitkomsten van pogingen naar het CRM, elk precies één keer.
 3. **Veldtoewijzing met voorbeeld.** Per veld zie je welke waarde uit het eerste CRM-record binnenkomt. Een eigen veld koppel je als `cf:sleutel`. Een leeg veld in het CRM wist niets in Dealtrace.
 4. **Eigenaarsregel.** De eigenaar in het CRM wordt de gebruiker met hetzelfde e-mailadres. Is het adres onbekend, dan kies je wie het krijgt; de onbekende adressen staan in een lijst.

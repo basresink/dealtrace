@@ -42,7 +42,7 @@ Ze kiest dit halfjaar de industrie als focus en de zorg als tweede segment. Voor
 
 De branches van je organisatie staan op **Richting**, tabblad **Branches**, met focus en horizon. Zie [Richting](/helpcenter/richting). De klassen op omvang staan in de [Accountmatrix](/helpcenter/accountmatrix) en je regio's op postcode bij [Gebieden en regiodagen](/helpcenter/gebieden-en-regiodagen).
 
-In **Prospects** filter je op fase, klasse en eigenaar. De **Leadgenerator** zoekt op klasse, branche en werkgebied. Zie [Leadgenerator](/helpcenter/leadgenerator) en [Je ideale klant bepalen](/helpcenter/je-ideale-klant-bepalen).
+In **Alle prospects** filter je onder **Filters** op onder meer fase en klasse. De **Leadgenerator** zoekt op klasse, branche en werkgebied. Zie [Leadgenerator](/helpcenter/leadgenerator) en [Je ideale klant bepalen](/helpcenter/je-ideale-klant-bepalen).
 
 ## Controlevragen
 

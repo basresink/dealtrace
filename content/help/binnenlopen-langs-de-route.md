@@ -49,13 +49,13 @@ Op **Bezoeken** staan onder je route de **kansen langs de route**. Elke kans zeg
 
 Bij elke kans kies je:
 
-- **+ Tussenstop**: plan een korte kennismaking in het voorgestelde gat.
-- **Eerst bellen**: open de accountkaart om eerst te bellen.
+- **+ Tussenstop**: plan een kort bezoek in het voorgestelde gat.
+- **Eerst bellen**: maak een beltaak met de prospect en het hoofdcontact al ingevuld.
 - **Navigeer**: rij er rechtstreeks heen.
-- **Inloopbezoek**: leg achteraf vast dat je bent binnengelopen. Het telt als bezoek.
+- **Inloopbezoek**: plan het binnenlopen als **Ongepland bezoek** op dat moment langs de route. Het telt als bezoek.
 - **Overslaan**: kies een reden; de kans komt 7 dagen niet terug.
 
-Kreeg je een visitekaartje, tik dan vanaf Gevorderd **Scan visitekaartje** op de accountkaart.
+Kreeg je een visitekaartje, tik dan vanaf Gevorderd op je telefoon **Meer**, **Scan visitekaartje** op de accountkaart.
 
 ## Controlevragen
 

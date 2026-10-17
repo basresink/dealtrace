@@ -23,7 +23,7 @@ Een taak bij een bedrijf zegt niet met wie je praat. Koppel de contactpersoon, e
 2. Typ bij **Prospect** een paar letters en kies het account.
 3. Typ bij **Contactpersoon** de naam. Met een gekozen prospect zie je eerst diens contacten, de beslisser bovenaan.
 4. Weet je alleen de naam van de persoon? Kies het contact zonder prospect; de prospect gaat dan vanzelf mee.
-5. Bewaar de taak.
+5. Klik **Maak taak**, of bij een bestaande taak **Opslaan**.
 
 ## Voorbeeld
 

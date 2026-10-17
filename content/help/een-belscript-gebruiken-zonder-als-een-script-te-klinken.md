@@ -43,7 +43,7 @@ Die vraag stond niet in het script. Maar hij past precies, omdat Joost luistert 
 
 ## Zo doe je het in Dealtrace
 
-In de belmodus staat links het belscript, al ingevuld voor het account. Bovenaan staat de keuzelijst **Script**, met het script dat het best past al voorgeselecteerd. Wissel gerust. Vragen vink je af met een kort antwoord. Klik op een bezwaar voor het antwoord. Een gele markering **onbekend** betekent dat een waarde ontbreekt; gebruik dan de terugvalzin of zeg het in je eigen woorden. Vanaf Gevorderd maak je bij **Mijn scripts** een eigen variant met je eigen formuleringen. Wijzigt het origineel, dan zie je "Het origineel is gewijzigd" met **Neem over**.
+In de belmodus staat links het belscript, al ingevuld voor het account. Bovenaan staat de keuzelijst **Script**, met het script dat het best past al voorgeselecteerd. Wissel gerust. Vragen vink je af met een kort antwoord. Klik op een bezwaar voor het antwoord. Een gele markering **onbekend** betekent dat een waarde ontbreekt; gebruik dan de terugvalzin of zeg het in je eigen woorden. Vanaf Gevorderd maak je in **Mijn instellingen**, **Mijn scripts**, een eigen variant met je eigen formuleringen. Wijzigt het origineel, dan zie je "Het origineel is gewijzigd" met **Neem over**.
 
 ## Controlevragen
 
@@ -57,5 +57,5 @@ In de belmodus staat links het belscript, al ingevuld voor het account. Bovenaan
    - [ ] Je zoekt het antwoord in het script
 3. Waar maak je in Dealtrace een eigen variant van een script?
    - [ ] Bij Contacten
-   - [x] Bij Mijn scripts
+   - [x] In Mijn instellingen, bij Mijn scripts
    - [ ] Bij Inzichten

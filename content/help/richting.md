@@ -8,7 +8,7 @@ routes: /richting
 
 # Richting
 
-Op **Richting** lees je het verkoopverhaal van je organisatie. Iedereen kan het lezen, op elk niveau. Je ziet alleen wat bevestigd is: een concept dat de salesmanager nog aan het schrijven is, zie je hier niet.
+Op **Richting** lees je de SalesDNA van je organisatie: jullie verkoopverhaal. Iedereen kan het lezen, op elk niveau. Je ziet alleen wat bevestigd is: een concept dat de salesmanager nog aan het schrijven is, zie je hier niet.
 
 ## Wat de verkooprichting je oplevert
 
@@ -39,7 +39,11 @@ Verandert de salesmanager iets en bevestigt hij het, dan gebruikt alles in Dealt
 
 ### Waar het vandaan komt
 
-De salesmanager en de beheerder leggen het verhaal vast in **Instellingen, Verkoop, Verkoopverhaal**, of het komt uit SalesDNA. Rechtsboven op Richting zie je welke bron geldt: "Eigen inrichting" of "Uit SalesDNA" met de datum van de laatste versie. Per onderdeel staat het versienummer en wanneer het is bevestigd. Hoe dat werkt, lees je in [Ons verhaal](/helpcenter/ons-verhaal).
+De salesmanager en de beheerder leggen het verhaal vast in **Instellingen, Verkoop, SalesDNA**, of het komt via de koppeling met het platform SalesDNA. Rechtsboven op Richting zie je welke bron geldt: "Eigen inrichting" of "Uit SalesDNA" met de datum van de laatste versie. Per onderdeel staat het versienummer en wanneer het is bevestigd. Hoe dat werkt, lees je in [Ons verhaal](/helpcenter/ons-verhaal).
+
+## Zo is de pagina opgebouwd
+
+Bovenaan staat in een donker blok **Waar we voor staan**: de kernzin, de belofte en vier kerncijfers (branches nu en later, concurrenten met een antwoord, winpunten per fase en terugkomregels). Eronder zie je hoeveel onderdelen bevestigd zijn en wanneer dat het laatst gebeurde. De tabbladen blijven bovenaan staan als je scrolt; met de pijltjestoetsen ga je naar het volgende of vorige tabblad. Elk tabblad begint met een geel blok **Waarom dit ertoe doet**.
 
 ## De tabbladen
 
@@ -47,9 +51,9 @@ De salesmanager en de beheerder leggen het verhaal vast in **Instellingen, Verko
 - **Richting**: ambitie, visie en missie, en de ambitiedoelen met een balk, bijvoorbeeld "Vaste projectpartners: 112 van 400, doel 2029".
 - **Belofte**: wat jullie beloven, algemeen en per branche. Onder "Als de prospect doorvraagt" staat het waardestatement.
 - **Branches**: op welke branches jullie je richten, met focus, horizon, het aantal accounts en hoeveel gesprekken dit kwartaal in die branche vielen.
-- **Concurrenten**: per concurrent wat ze goed doen, waar ze zwakker zijn en wat je zegt. Zie [Tegen wie we verkopen](/helpcenter/tegen-wie-we-verkopen).
-- **Winpunten**: per fase van de reis waarom klanten voor jullie kiezen. Zie [Een winpunt per gesprek](/helpcenter/een-winpunt-per-gesprek).
-- **Terugkomen**: wanneer je iemand opnieuw belt na een nee of als een klant stil wordt. Zie [Wanneer we iemand terugbellen](/helpcenter/wanneer-we-iemand-terugbellen).
+- **Concurrenten**: per concurrent wat ze goed doen, waar ze zwakker zijn, jullie onderscheid, "Zo zeg je het", het bezwaar als kort gesprek, het bewijs en waar jullie verliezen. Filter op soort: direct, indirect, intern of niets doen. Vanaf Gevorderd download je de concurrentiekaart. Zie [Tegen wie we verkopen](/helpcenter/tegen-wie-we-verkopen).
+- **Winpunten**: de reis in vijf fasen met per fase waarom klanten voor jullie kiezen. Een fase zonder winpunt laat het gat zien. Zie [Een winpunt per gesprek](/helpcenter/een-winpunt-per-gesprek).
+- **Terugkomen**: wanneer je iemand opnieuw belt na een nee of als een klant stil wordt, op een tijdlijn en per regel met de termijn als groot getal. Zie [Wanneer we iemand terugbellen](/helpcenter/wanneer-we-iemand-terugbellen).
 
 ## Statussen
 
@@ -57,6 +61,6 @@ Bij elk onderdeel staat "Bevestigd · versie 3" of "Concept". Staat er **Control
 
 ## Zelf iets voorstellen
 
-Weet je een beter antwoord op een bezwaar? Op niveau Expert staat bij elke concurrent **Stel voor**. Je voorstel komt bij je salesmanager terecht.
+Weet je een beter antwoord op een bezwaar? Op niveau Expert staat bij elke concurrent en elk winpunt **Stel voor**. Je voorstel komt bij je salesmanager terecht.
 
 Op je telefoon vind je Richting onder **Meer**. De tabbladen schuif je opzij.

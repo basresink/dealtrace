@@ -8,7 +8,7 @@ routes: /accountplannen
 
 # Accountplannen
 
-Een accountplan is het plan voor één topprospect over een vaste periode, bijvoorbeeld een jaar. Een topprospect win je niet met losse acties: met een plan weet je bij elke stap waarom je hem zet. Plannen voor bestaande klanten horen in DealDrive; bij een klant staat daarom geen **+ Accountplan**. Accountplannen staan aan voor Expert.
+Een accountplan is het plan voor één topprospect over een vaste periode, bijvoorbeeld een jaar. Een topprospect win je niet met losse acties: met een plan weet je bij elke stap waarom je hem zet. Plannen voor bestaande klanten horen in DealDrive; bij een klant kun je daarom geen accountplan maken. Accountplannen staan aan voor Expert.
 
 ## Het overzicht
 
@@ -21,7 +21,7 @@ Elke kaart toont de status, de eigenaar, de naam van het plan, de prospect, de g
 
 ## Een plan maken
 
-Kies **+ Accountplan** op het overzicht, of op de accountkaart van de prospect in het tabblad **Accountplan**. Alles staat in één venster dat je van boven naar beneden invult:
+Kies **+ Accountplan** op het overzicht, of open op de accountkaart van de prospect **Meer**, **Accountplan** en kies **Maak accountplan**. Alles staat in één venster dat je van boven naar beneden invult:
 
 - **Kerngegevens**: de prospect, een titel met de periode erin (zoals "Accountplan 2027"), de eigenaar en **Geldig van** en **Geldig tot**. Heeft de prospect al een actueel plan, dan zie je een waarschuwing. Een salesmanager kan een teamlid eigenaar maken; die krijgt dan ook de acties.
 - **Contactpersonen**: kies uit de contactpersonen van het account wie meebeslist. Je ziet meteen hun rol, zoals Beslisser of Beïnvloeder.

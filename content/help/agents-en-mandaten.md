@@ -50,7 +50,7 @@ De beheerder klikt op **Agents pauzeren**. Alles wat zonder jou zou gaan, stopt 
 
 Een agent noemt alleen wat hij kan aantonen. Een telefoonnummer of adres zonder bron vult de Verrijker nooit in; een afgeleid e-mailpatroon krijgt de pil "aanname". Namen uit je aantekeningen gaan niet mee naar de AI.
 
-Op de accountkaart klik je **Laat opnieuw onderzoeken** (vanaf Gevorderd, 10 credits). Als Expert voeg je onder **Bronnen om te volgen** een eigen URL of trefwoord toe.
+Op de accountkaart open je **Meer**, **Dossier** en klik je **Laat opnieuw onderzoeken** (vanaf Gevorderd, 10 credits). In het venster **Info** voeg je onder **Extra bronnen** een eigen webadres met een label toe, zoals een nieuwspagina of vacatures; de agents volgen het als bron.
 
 ## De Waarnemer instellen
 

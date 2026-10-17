@@ -8,7 +8,7 @@ routes: /belscripts,/instellingen/belscripts,/instellingen/mijn-scripts
 
 # Belscripts maken
 
-Belscripts staan in **Belscript Studio** (`/belscripts`), bereikbaar via **Belblokken** en via **Instellingen**, **Belscripts**. De studio heeft vier tabbladen. Het overzicht van alle scripts met de vergelijking staat bij **Instellingen**, **Alle belscripts**. Elke organisatie start met zes scripts.
+Belscripts staan in **Belscript Studio** (`/belscripts`), bereikbaar via **Instellingen**, **Belscripts**, via **Open Belscript Studio** in het blok Belscript op Vandaag en via **Meer**, **Belscript** op de accountkaart. De studio heeft vier tabbladen. Het overzicht van alle scripts met de vergelijking staat bij **Instellingen**, **Alle belscripts**. Elke organisatie start met zes scripts.
 
 ## Standaardscript
 
@@ -28,7 +28,7 @@ Het huidige blok staat groot, de rest ingeklapt op één regel. **Volgende blok*
 
 ## Een script maken in Instellingen
 
-1. Klik **Nieuw script**, of laat AI een opzet maken. Een opzet is altijd een concept.
+1. Klik bij **Alle belscripts** op **Nieuw script**, of op **AI-opzet** om AI een opzet te laten maken. Een opzet is altijd een concept. Onder **Meer** staat ook **Kopieer uit startset**.
 2. Kies het doel, de teams en de rol van het contact.
 3. Bouw de blokken op: opening, aanleiding, vragen, winpunt, afsluiting en voicemail. Gebruik variabelen tussen accolades, zoals {contact.voornaam}.
 4. Kies per blok **Vast**, **AI vult aan** of **AI schrijft**, met een terugvalzin voor als AI niets levert.

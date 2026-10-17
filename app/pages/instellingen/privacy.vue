@@ -66,13 +66,13 @@ useHead({ title: 'Privacy · Instellingen · Dealtrace' })
 
 <template>
   <div>
-    <PaginaKop kicker="Instellingen · Privacy" titel="Privacy en bewaartermijnen" uitleg="Hoe lang Dealtrace gegevens van je organisatie bewaart, en alles in één keer downloaden." helpartikel="privacy-bewaartermijnen-en-export" />
+    <InstellingenKop groep="Data en AI" titel="Privacy en bewaartermijnen" uitleg="Hoe lang Dealtrace gegevens van je organisatie bewaart, en alles in één keer downloaden. Elke keuze bewaart zichzelf." helpartikel="privacy-bewaartermijnen-en-export" />
     <section v-if="p" class="section">
       <div class="container">
         <article class="kaart" data-test="privacy-termijnen">
           <header class="kaart-kop">
             <h2 class="kaart-titel">Bewaartermijnen die je zelf kiest</h2>
-            <span class="bewaar-status" :class="{ 'bewaar-status--fout': bewaar.status.value === 'Opslaan mislukt' }" data-test="privacy-status" aria-live="polite">{{ bewaar.status.value }}</span>
+            <OpslagStatus :status="bewaar.status.value" test="privacy-status" />
           </header>
           <p class="kaart-meta">Kies per soort hoe lang je gegevens bewaart. Wat ouder is, vervalt bij de opschoning. Kies je "niet opschonen", dan blijft het staan zolang jullie Dealtrace gebruiken.</p>
           <div v-for="d in BEWAAR_SOORTEN" :key="d.soort" class="privacy-rij" :data-test="`termijn-${d.soort}`">

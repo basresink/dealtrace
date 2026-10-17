@@ -8,7 +8,7 @@ routes: /weekreview
 
 # Weekreview
 
-Op vrijdag vanaf 15:30 staat je **weekreview** klaar. Je opent hem vanaf **Vandaag** (de zwarte kaart bovenaan) of met de knop **Weekreview** op **Mijn dashboard**. De review is alleen voor jou: je vergelijkt jezelf met jezelf, nooit met collega's.
+Op vrijdag vanaf 15:30 staat je **weekreview** klaar. Je opent hem met de knop **Weekreview** in de kop van de **Agenda**, of via de link **Weekreview** op de **Dagstart**. De review is alleen voor jou: je vergelijkt jezelf met jezelf, nooit met collega's.
 
 ## Vier kaarten
 

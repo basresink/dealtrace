@@ -7,19 +7,19 @@ samenvatting: Een afspraak plannen met een meetingsoort, na afloop één uitkoms
 
 # Een afspraak plannen, afronden en overdragen
 
-Elke afspraak heeft een **meetingsoort**, zoals Kennismaking, Inventarisatie of Belafspraak. De soort vult de duur, de agendapunten en de uitkomsten die je na afloop kunt kiezen.
+Elke afspraak heeft een **type afspraak** (een meetingsoort), zoals Gepland bezoek, Online meeting of Belafspraak. Het type vult de duur, de agendapunten en de uitkomsten die je na afloop kunt kiezen, en bepaalt de vorm: een type uit de groep **Afspraak** is een bezoek op locatie, een type uit de groep **Meeting** is online of telefonisch.
 
 ## Plannen
 
-1. Klik **+ Afspraak** in de agenda, of open een taak en klik **+ Afspraak**.
-2. Kies de **prospect** en de **meetingsoort**. De contactpersoon staat al klaar; beslissers staan bovenaan.
-3. Kies de vorm: **Bezoek**, **Online** of **Telefoon**. Bij een bezoek staat het adres van het account al bij locatie.
+1. Klik **+ Afspraak**, bijvoorbeeld op Vandaag, Taken, Agenda of Meetings. Vanuit een taak kies je bij de uitkomst **Gesproken, afspraak** en dan **Plan de afspraak**, of je kiest **Plan een afspraak** onder **Uitstellen**.
+2. Kies de **prospect** en het **type afspraak**. De contactpersoon staat al klaar; de beslisser wordt voorgekozen. De vorm volgt uit het type.
+3. Controleer de **titel**. Bij een bezoek staat het adres van het account al bij locatie.
 4. Kies datum en start. Onder de tijd zie je je **vrije momenten**; tik er een aan.
 5. Klik **Plan afspraak**.
 
 Plan je vanuit een taak, dan hangt die taak aan de afspraak. Rond je de afspraak af, dan sluit de taak vanzelf.
 
-De **eerste** kennismaking, inventarisatie of demo met een account zet de status op gescoord en de fase op Afspraak gepland. Een tweede afspraak doet dat niet meer, en een geannuleerde telt niet mee.
+De **eerste** afspraak met een account (een type dat als eerste afspraak telt, zoals Gepland bezoek, Online meeting, Kennismaking of Demo) zet de status op gescoord en de fase op Afspraak gepland. Een tweede afspraak doet dat niet meer, en een geannuleerde telt niet mee.
 
 ## Plannen voor een collega
 
@@ -27,7 +27,7 @@ Vanaf Gevorderd zie je **Voor wie**. Kies daar de collega van de buitendienst. J
 
 ## Afronden
 
-Na afloop open je de afspraak en klik je op de gele knop **Rond af**.
+Na afloop open je de afspraak en klik je links onderin op **Rond af**.
 
 1. Kies één **uitkomst**.
 2. Typ of plak je **verslag** en geef per agendapunt aan of het besproken is.
@@ -60,13 +60,13 @@ Het account krijgt de status **Overgedragen** en verdwijnt uit je actieve reis. 
 - **Later** laat de overdrachtstaak staan voor de volgende werkdag. Is er na een werkdag nog niets overgedragen, dan krijg je een inzicht.
 - Meldt DealDrive dat het bedrijf **al klant** is, dan vraagt Dealtrace "Overdragen als nieuwe kans bij een bestaande klant?".
 - Lukt het versturen niet, dan probeert Dealtrace het opnieuw. Lukt het na vijf keer niet, dan krijg je een taak en staat op de accountkaart **Opnieuw proberen**. De overdracht in Dealtrace blijft staan.
-- Vanaf de accountkaart open je hetzelfde venster met **Overdragen**, alleen na een gehouden eerste afspraak met vervolg.
+- Vanaf de accountkaart open je hetzelfde venster met **Meer**, **Overdragen**. Dat kader staat er alleen na een gehouden eerste afspraak met vervolg.
 
 Op de telefoon kies je in **Bezoek afronden** meteen naar wie je overdraagt; ook zonder verbinding gaat dat mee in de wachtrij.
 
 ## Niet verschenen of geannuleerd
 
-Kwam de prospect niet, klik dan **Niet verschenen**. Bij de eerste afspraak gaat de fase terug naar In gesprek en verschijnt het account in "Wie moet ik spreken" met "No-show opnieuw inplannen". Je krijgt ook het inzicht "Gat in je agenda".
+Kwam de prospect niet, klik dan onderin het afspraakvenster op het icoon **Niet verschenen**. Bij de eerste afspraak gaat de fase terug naar In gesprek en verschijnt het account op **Meetings** bij **Wie is er aan de beurt?** met "No-show opnieuw inplannen". Je krijgt ook het inzicht "Gat in je agenda".
 
 ## Zonder verbinding
 

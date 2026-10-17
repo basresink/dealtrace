@@ -41,7 +41,7 @@ Ze zet de nee met de reden Verkeerd moment en een terugkomdatum op maandag 1 maa
 
 ## Zo doe je het in Dealtrace
 
-Klik op de accountkaart op **Zet nee** en kies de reden. Dealtrace zet een afkoelperiode per kanaal en stelt een terugkomdatum voor. Zie [Nee met reden en afkoelperiode](/helpcenter/nee-met-reden-en-afkoelperiode) en [Wanneer we iemand terugbellen](/helpcenter/wanneer-we-iemand-terugbellen).
+Klik op de accountkaart bij **Meer**, **Reis** op **Zet nee** en kies de reden. Dealtrace zet een afkoelperiode per kanaal en stelt een terugkomdatum voor. Zie [Nee met reden en afkoelperiode](/helpcenter/nee-met-reden-en-afkoelperiode) en [Wanneer we iemand terugbellen](/helpcenter/wanneer-we-iemand-terugbellen).
 
 Een account dat nu niet reageert, parkeer je en haal je op de terugkomdatum terug met een nieuwe aanleiding. Zie [Parkeren en terughalen](/helpcenter/parkeren-en-terughalen) en [Bel over een half jaar terug](/helpcenter/bel-over-een-half-jaar-terug). Met **Volgen** zie je welke stap nu de beste is, en wat de Bewaker tegenhoudt. Zie [Volgen: de volgende beste stap en opvolgreeksen](/helpcenter/volgen).
 

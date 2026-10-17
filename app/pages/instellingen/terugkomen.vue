@@ -28,11 +28,11 @@ useHead({ title: 'Terugkomen · Instellingen · Dealtrace' })
   <div>
     <NietAangezetKop v-if="!aan" sleutel="verkoopverhaal.inrichten" />
     <template v-else>
-      <PaginaKop kicker="Instellingen · Terugkomen" titel="Terugkomregels en ritme" uitleg="Hier leg je vast wanneer een verloren prospect terugkomt en wat de accountmanager dan doet. De regel bepaalt de wachttijd, het kanaal, wie het oppakt en de aanpak. Het ritme bepaalt de stappen na de terugkomdatum." helpartikel="wanneer-we-iemand-terugbellen">
+      <InstellingenKop groep="Verkoop" titel="Terugkomregels en ritme" uitleg="Hier leg je vast wanneer een verloren prospect terugkomt en wat de accountmanager dan doet. De regel bepaalt de wachttijd, het kanaal, wie het oppakt en de aanpak. Het ritme bepaalt de stappen na de terugkomdatum." helpartikel="wanneer-we-iemand-terugbellen">
         <template #acties>
           <FunctieLink to="/planning?tab=terugkom" class="dd-actie dd-actie--secundair" data-test="tk-naar-planning">Bekijk wie terugkomt<Icoon naam="ArrowRight" class="dd-actie-icoon" /></FunctieLink>
         </template>
-      </PaginaKop>
+      </InstellingenKop>
       <section class="section section--laatste">
         <div class="container">
           <nav class="tabbalk tabbalk--schuif" aria-label="Onderdelen van terugkomen">

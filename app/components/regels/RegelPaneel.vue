@@ -52,6 +52,8 @@ function wijzig() { emit('wijzig') }
 function kiesPatroon(p: string) {
   const info = props.keuzes.patronen.find((x: any) => x.id === p)
   regel.value.data.trigger = { patroon: p, parameters: { ...(info?.parameters ?? {}) } }
+  // Een overgang zonder keuze vuurt nergens op: begin met de eerste fase waarin de regel geldt.
+  if (p === 'reis-overgang') regel.value.data.trigger.parameters.naarFase = gekozenFases.value[0] ?? fases.value.find((f) => !f.instap)?.id ?? null
   wijzig()
 }
 function kiesReis(id: string) {

@@ -8,7 +8,11 @@ const INKOMEND_LABEL: Record<string, string> = { gestopt: 'reeks gestopt', 'auto
 const { data, refresh } = await useFetch<any>('/api/koppelingen/mail', { immediate: aan.value, default: () => ({ status: 'uit', instellingen: { modus: 'smtp', poort: 587 } }) })
 const f = reactive<any>({ modus: 'smtp', host: '', poort: 587, gebruiker: '', van: '', naam: '', domein: '', dkimSelector: 'default' })
 const wachtwoord = ref('')
-watch(() => data.value, (d) => Object.assign(f, d?.instellingen ?? {}), { immediate: true })
+// Opslaan-status in de kaartkop: Gewijzigd tot Opslaan (na een geslaagde test).
+const opslag = useFlyoutOpslag()
+opslag.volg(() => [{ ...f }, wachtwoord.value])
+watch(() => data.value, (d) => { Object.assign(f, d?.instellingen ?? {}); nextTick(() => opslag.basis()) }, { immediate: true })
+onMounted(() => opslag.basis())
 const test = ref<{ ok: boolean; tekst: string } | null>(null)
 const bezig = ref(false)
 async function testen() {
@@ -16,7 +20,7 @@ async function testen() {
   try { test.value = await $fetch('/api/koppelingen/mail/test', { method: 'POST', body: { instellingen: f, wachtwoord: wachtwoord.value || undefined } }) } catch (e) { test.value = { ok: false, tekst: foutTekst(e) } } finally { bezig.value = false }
 }
 async function opslaan() {
-  try { const r = await $fetch<any>('/api/koppelingen/mail', { method: 'PUT', body: { instellingen: f, wachtwoord: wachtwoord.value || undefined } }); toast.toon(`Mail gekoppeld. ${r.tekst}`); wachtwoord.value = ''; test.value = null; await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
+  try { const r = await opslag.bewaar(() => $fetch<any>('/api/koppelingen/mail', { method: 'PUT', body: { instellingen: f, wachtwoord: wachtwoord.value || undefined } })); toast.toon(`Mail gekoppeld. ${r.tekst}`); wachtwoord.value = ''; test.value = null; await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 async function ontkoppel() { try { await $fetch('/api/koppelingen/mail', { method: 'PUT', body: { uit: true } }); toast.toon('Mail ontkoppeld.'); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') } }
 useHead({ title: 'Mail koppelen · Dealtrace' })
@@ -26,10 +30,11 @@ useHead({ title: 'Mail koppelen · Dealtrace' })
   <div>
     <NietAangezetKop v-if="!aan" sleutel="koppeling.mail" />
     <template v-else>
-      <PaginaKop kicker="Instellingen · Koppelingen" titel="Mail koppelen" :uitleg="data.status === 'actief' ? `Gekoppeld: ${data.instellingen.van}${data.instellingen.modus === 'mock' ? ' (testmailbox, er gaat geen echte mail uit)' : ''}.` : 'Nog niet gekoppeld. Concepten verstuur je dan via je eigen mailapp.'" helpartikel="koppelingen" />
-      <section class="section">
+      <InstellingenKop groep="Koppelingen" :titel="data.status === 'actief' ? 'Mail gekoppeld' : 'Mail nog niet gekoppeld'" :uitleg="data.status === 'actief' ? `Gekoppeld: ${data.instellingen.van}${data.instellingen.modus === 'mock' ? ' (testmailbox, er gaat geen echte mail uit)' : ''}.` : 'Nog niet gekoppeld. Concepten verstuur je dan via je eigen mailapp.'" helpartikel="koppelingen" />
+      <section class="section section--laatste">
         <div class="container container--smal">
-          <form class="kaart" data-test="mail-koppeling" @submit.prevent="opslaan">
+          <form class="kaart" data-test="mail-koppeling" @submit.prevent="opslaan" @input.capture="opslag.interactie()" @pointerdown.capture="opslag.interactie()">
+            <header class="kaart-kop"><h2 class="kaart-titel">Mailserver</h2><Label soort="instelling" :waarde="data.status === 'actief' ? 'gekoppeld' : 'niet-gekoppeld'" /><OpslagStatus :opslag="opslag" test="mail-status" /></header>
             <div class="formulier-raster">
               <label class="veld"><span class="veld-label">Soort</span><select v-model="f.modus" class="invoer"><option value="smtp">SMTP</option><option value="mock">Testmailbox</option></select></label>
               <label class="veld"><span class="veld-label">Verzendadres</span><input v-model="f.van" type="email" class="invoer" placeholder="verkoop@bedrijf.nl"></label>
@@ -58,7 +63,7 @@ useHead({ title: 'Mail koppelen · Dealtrace' })
             <ul v-if="data.inkomend.laatste.length" class="schakel-lijst mt-8" aria-label="Laatste inkomende mail">
               <li v-for="(x, i) in data.inkomend.laatste" :key="i" class="schakel-rij"><span>{{ x.van }}<template v-if="x.onderwerp"> · {{ x.onderwerp }}</template></span><span class="meta">{{ INKOMEND_LABEL[x.verwerking] ?? x.verwerking }} · {{ new Date(x.op).toLocaleDateString('nl-NL') }}</span></li>
             </ul>
-            <p v-else class="meta mt-8">Nog geen inkomende mail.</p>
+            <LegeStaat v-else class="mt-8" titel="Nog geen inkomende mail." tekst="Zodra een contact antwoordt op een opvolgreeks, staat het hier." />
           </article>
         </div>
       </section>

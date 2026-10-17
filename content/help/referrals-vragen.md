@@ -48,7 +48,7 @@ Twee dagen later bel je Joost en noem je Hilde in je eerste zin.
 
 ## Zo doe je het in Dealtrace
 
-1. Voeg de nieuwe naam toe bij **Prospects** met **Nieuw**. Dealtrace laat zien of het account al bestaat.
+1. Voeg de nieuwe naam toe bij **Alle prospects** met **+ Prospect**. Dealtrace laat zien of het account al bestaat.
 2. Leg in je verslag vast wie je aanbeval. Dan staat het in de **Briefing en Pitstop** van je eerste gesprek.
 3. Plan een referralronde bij je beste klanten. Vanaf Gevorderd zet je bij **Campagnes** met **+ Campagne** een campagne op van de soort **Referral**. Kies een winpunt, zoals "Levering op het uur", en een doel.
 4. Rond elke poging af met een uitkomst. De volgende stap komt vanzelf.

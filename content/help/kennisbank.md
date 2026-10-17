@@ -36,7 +36,7 @@ Met **Openen** zie je het bestand zelf. **Verwijderen** haalt het document weg u
 
 ## Vraag de AI
 
-De AI krijgt de datavelden en, als Dealtrace de tekst kon lezen, de inhoud van het document. Tekst, Markdown, Word, Excel en PowerPoint worden uitgelezen. Van een PDF of een afbeelding lezen we de tekst niet; de AI kent dan alleen naam, type en koppelingen, en dat staat er ook bij. Een vraag kost AI-credits, net als een vraag aan de AI-assistent.
+De AI krijgt de datavelden en, als Dealtrace de tekst kon lezen, de inhoud van het document. Tekst, Markdown, CSV, PDF, Word, Excel en PowerPoint (ook de oude Office-formaten) worden uitgelezen. Van een afbeelding, een scan zonder tekstlaag of een beveiligd of beschadigd bestand lukt dat niet; de AI kent dan alleen naam, type en koppelingen, en dat staat er ook bij. Een vraag kost AI-credits, net als een vraag aan de AI-assistent.
 
 ## Documenten op de accountkaart
 

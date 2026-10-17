@@ -31,12 +31,12 @@ useHead({ title: 'Organisatie · Instellingen · Dealtrace' })
 
 <template>
   <div>
-    <PaginaKop kicker="Instellingen · Organisatie" titel="Organisatie" uitleg="Wijzigingen bewaren zichzelf." helpartikel="instellingen-organisatie" />
+    <InstellingenKop groep="Organisatie" :titel="`${org.naam || 'Organisatie'}, ${werk.werkdagen.length} werkdagen per week`" uitleg="Naam, logo, werkdagen, spraak en meldingen voor de hele organisatie. Elke wijziging bewaart zichzelf." helpartikel="instellingen-organisatie" />
     <section class="section">
       <div class="container">
         <div class="raster raster--2">
           <article class="kaart">
-            <header class="kaart-kop"><h2 class="kaart-titel">Gegevens</h2><span class="bewaar-status" :class="{ 'bewaar-status--fout': orgBewaar.status.value === 'Opslaan mislukt' }" data-test="bewaar-organisatie" aria-live="polite">{{ orgBewaar.status.value }}</span></header>
+            <header class="kaart-kop"><h2 class="kaart-titel">Gegevens</h2><OpslagStatus :status="orgBewaar.status.value" test="bewaar-organisatie" /></header>
             <div class="formulier-raster">
               <label class="veld"><span class="veld-label">Naam <span class="veld-verplicht">*</span></span><input v-model="org.naam" class="invoer" data-test="org-naam"></label>
               <label class="veld"><span class="veld-label">Land</span>
@@ -54,9 +54,9 @@ useHead({ title: 'Organisatie · Instellingen · Dealtrace' })
     <section id="werkdagen" class="section">
       <div class="container">
         <article class="kaart">
-          <header class="kaart-kop"><h2 class="kaart-titel">Werkdagen en feestdagen</h2><span class="bewaar-status" :class="{ 'bewaar-status--fout': werkBewaar.status.value === 'Opslaan mislukt' }" aria-live="polite">{{ werkBewaar.status.value }}</span></header>
+          <header class="kaart-kop"><h2 class="kaart-titel">Werkdagen en feestdagen</h2><OpslagStatus :status="werkBewaar.status.value" /></header>
           <div class="veld"><span class="veld-label">Werkdagen</span>
-            <div class="keuzegroep" role="group" aria-label="Werkdagen">
+            <div class="keuzegroep org-dagen" role="group" aria-label="Werkdagen">
               <button v-for="d in DAGEN" :key="d.n" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': werk.werkdagen.includes(d.n) }" :aria-pressed="werk.werkdagen.includes(d.n)" @click="wisselDag(d.n)">{{ d.l }}</button>
             </div>
           </div>
@@ -72,7 +72,7 @@ useHead({ title: 'Organisatie · Instellingen · Dealtrace' })
     <section id="spraak" class="section section--laatste">
       <div class="container raster raster--2">
         <article class="kaart" data-test="org-spraak">
-          <header class="kaart-kop"><h2 class="kaart-titel">Spraak</h2><span class="bewaar-status" aria-live="polite">{{ spraakBewaar.status.value }}</span></header>
+          <header class="kaart-kop"><h2 class="kaart-titel">Spraak</h2><OpslagStatus :status="spraakBewaar.status.value" /></header>
           <p class="kaart-meta">Opnames gaan alleen naar een transcriptiedienst in de EU. Na de transcriptie verdwijnt de opname, tenzij je hieronder bewaren aanzet. Transcripten blijven twaalf maanden.</p>
           <p class="schakel-rij"><span>Opnames bewaren</span><Schakelaar :aan="spraak.opnamesBewaren" label="Opnames bewaren" @wissel="spraak.opnamesBewaren = $event" /></p>
           <label v-if="spraak.opnamesBewaren" class="veld"><span class="veld-label">Bewaartermijn (dagen)</span><input v-model.number="spraak.bewaartermijnDagen" type="number" min="1" max="365" class="invoer"></label>
@@ -80,7 +80,7 @@ useHead({ title: 'Organisatie · Instellingen · Dealtrace' })
           <p class="veld-uitleg">Staat standaard uit. In Chrome loopt de voorvertoning via Google, buiten de EU.</p>
         </article>
         <article class="kaart" data-test="org-meldingsregels">
-          <header class="kaart-kop"><h2 class="kaart-titel">Meldingen voor onderweg</h2><span class="bewaar-status" aria-live="polite">{{ regelsBewaar.status.value }}</span></header>
+          <header class="kaart-kop"><h2 class="kaart-titel">Meldingen voor onderweg</h2><OpslagStatus :status="regelsBewaar.status.value" /></header>
           <div class="formulier-raster">
             <label class="veld"><span class="veld-label">Dagplafond</span><input v-model.number="regels.dagplafond" type="number" min="0" max="20" class="invoer"></label>
             <label class="veld"><span class="veld-label">Stil vanaf</span><select v-model.number="regels.stilVan" class="invoer"><option v-for="h in 24" :key="h" :value="h - 1">{{ String(h - 1).padStart(2, '0') }}:00</option></select></label>
@@ -92,3 +92,9 @@ useHead({ title: 'Organisatie · Instellingen · Dealtrace' })
     </section>
   </div>
 </template>
+
+<style scoped>
+/* Zeven dagen passen ook op de telefoon in de kaart. */
+.org-dagen { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.org-dagen .keuzegroep-knop { min-width: 0; min-height: var(--touch-target-min); padding-left: 0; padding-right: 0; justify-content: center; }
+</style>

@@ -21,7 +21,7 @@ Onder **Instellingen, Data en AI, Kanalen en consent** legt de beheerder vast ho
 | Bezoek | 180 dagen |
 | Kaart | 365 dagen |
 
-Je past de dagen per kanaal aan en zet een kanaal uit; een uitgezet kanaal gebruikt geen enkele agent. Het **frequentieplafond** is standaard één bericht per kanaal per 3 werkdagen buiten het ritme. Feestdagen tellen niet als werkdag.
+Een SMS valt voor de afkoeling en het frequentieplafond onder WhatsApp. De dagen zie je hier alleen; wijzigen doe je bij **Instellingen**, **Terugkomen**, tabblad **Afkoeling**. Hier zet je wel een kanaal aan of uit; een uitgezet kanaal gebruikt geen enkele agent. Het **frequentieplafond** is standaard één bericht per kanaal per 3 werkdagen buiten het ritme. Feestdagen tellen niet als werkdag.
 
 ## Mail
 
