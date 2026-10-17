@@ -10,7 +10,12 @@ const concepten = useState<number>('conceptenTeller', () => 0)
 useSchermklasse()
 
 // Het bovenste schuifvenster sluit met Escape of door omlaag te vegen over de kop.
-function sluitBovenste() { const k = [...document.querySelectorAll<HTMLElement>('.fo-overlay .fo-sluit')].at(-1); k?.click() }
+// Bovenste = hoogste z-index, bij gelijke de laatste in de pagina (de assistent ligt boven een flyout).
+function sluitBovenste() {
+  const lagen = [...document.querySelectorAll<HTMLElement>('.fo-overlay')].map((el, i) => ({ el, i, z: Number.parseInt(getComputedStyle(el).zIndex, 10) || 0 }))
+  const top = lagen.sort((a, b) => a.z - b.z || a.i - b.i).at(-1)
+  top?.el.querySelector<HTMLElement>('.fo-sluit')?.click()
+}
 // Sluit alleen als het venster zelf niet al op Escape reageerde (dan is er een overlay minder).
 function toets(e: KeyboardEvent) {
   if (e.key !== 'Escape' || e.defaultPrevented) return

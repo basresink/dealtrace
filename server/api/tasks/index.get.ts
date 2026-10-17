@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
     const contacten = contactIds.length ? await tx.select({ id: schema.contacts.id, voornaam: schema.contacts.firstName, achternaam: schema.contacts.lastName }).from(schema.contacts).where(inArray(schema.contacts.id, contactIds)) : []
     const contactPer = new Map(contacten.map((c) => [c.id, `${c.voornaam ?? ''} ${c.achternaam}`.trim()]))
     const reizen = await tx.select({ id: schema.reistemplates.id, data: schema.reistemplates.data }).from(schema.reistemplates)
-    const fase = (a?: typeof accounts[number]) => { const f = reizen.find((r) => r.id === a?.reisId)?.data.fases.find((x) => x.id === a?.faseId); return f ? { id: f.id, label: f.label, kleur: f.kleur } : null }
+    const fase = (a?: typeof accounts[number]) => { const f = reizen.find((r) => r.id === a?.reisId)?.data.fases.find((x) => x.id === a?.faseId); return f ? { id: f.id, label: f.label, kleur: f.kleur, hoofdfase: f.hoofdfase } : null }
     const per = new Map(accounts.map((a) => [a.id, a]))
     const herkomst = (t: typeof rijen[number]) => { const h = (t.data as any)?.herkomst; return typeof h === 'string' ? h : h?.bron ?? (t.signalId ? 'inzicht' : t.ruleId ? 'regel' : 'handmatig') }
     let lijst = rijen.map((t) => ({

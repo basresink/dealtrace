@@ -6,23 +6,12 @@
 export interface MeerKader { id: string; titel: string; tekst: string; icoon: string; test: string; href?: string; accent?: boolean }
 const props = defineProps<{ open: boolean; onderwerp: string; kaders: MeerKader[] }>()
 const emit = defineEmits<{ sluit: []; kies: [id: string] }>()
-function toets(e: KeyboardEvent) { if (e.key === 'Escape' && props.open) emit('sluit') }
-onMounted(() => document.addEventListener('keydown', toets))
-onBeforeUnmount(() => document.removeEventListener('keydown', toets))
+// Vraag AI in de kop opent de assistent met dit onderwerp (FlyoutShell); er is niets te bewaren.
+const ai = computed(() => ({ label: props.onderwerp, voorstellen: [`Wat is de volgende stap bij ${props.onderwerp}?`, `Vat ${props.onderwerp} samen`, 'Waar moet ik op letten?'] }))
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--smal fo-panel--schuif" role="dialog" aria-modal="true" aria-labelledby="mf-titel" data-test="meer-flyout">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
-            <span class="fo-kicker">Meer</span>
-            <h2 id="mf-titel" class="fo-titel">{{ onderwerp }}</h2>
-            <p class="fo-meta">Kies wat je wilt zien of doen; elk onderdeel opent zijn eigen venster.</p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" data-test="meer-flyout-sluit" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
+  <FlyoutShell :open="open" kicker="Meer" :titel="onderwerp" meta="Kies wat je wilt zien of doen; elk onderdeel opent zijn eigen venster." titel-id="mf-titel" breedte="smal" :ai="ai" sluit-test="meer-flyout-sluit" data-test="meer-flyout" @sluit="emit('sluit')">
         <div class="fo-body">
           <ul class="mf-lijst" role="list">
             <li v-for="k in kaders" :key="k.id">
@@ -39,9 +28,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
             </li>
           </ul>
         </div>
-      </aside>
-    </div>
-  </Teleport>
+  </FlyoutShell>
 </template>
 
 <style scoped>

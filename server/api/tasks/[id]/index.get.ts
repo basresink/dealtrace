@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
       agent: d.agent ?? null, mandaat: d.mandaat ?? null, executorStatus: t.executorStatus ?? null,
       regel: regel ? { naam: regel.naam, code: regel.code } : null, inzicht: inzicht ? { id: inzicht.id, title: inzicht.title, bron: inzicht.bron } : null,
       account: a ? {
-        id: a.id, naam: a.name, plaats: a.city ?? null, score: a.score, klasse: a.klasse, status: a.nbStatus, fase: f ? { label: f.label, kleur: f.kleur, accent: f.accent } : null,
+        id: a.id, naam: a.name, plaats: a.city ?? null, score: a.score, klasse: a.klasse, status: a.nbStatus, fase: f ? { label: f.label, kleur: f.kleur, hoofdfase: f.hoofdfase, accent: f.accent } : null,
         primair: primair ? { id: primair.id, naam: `${primair.firstName ?? ''} ${primair.lastName}`.trim(), telefoon: primair.data?.mobiel ?? primair.data?.telefoon ?? null, email: primair.email, belMeNiet: !!primair.data?.belMeNiet } : null,
         telefoon: a.data?.telefoon ?? null,
         laatste: laatste.map((x) => ({ soort: x.soort, uitkomst: x.uitkomst, op: x.op })),

@@ -112,7 +112,7 @@ useHead({ title: 'Meetings · Dealtrace' })
         <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'mt-filterknop--aan': filtersOpen || filterAantal }" :aria-expanded="filtersOpen" data-test="meetings-filterknop" @click="filtersOpen = !filtersOpen">
           <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="filterAantal" class="mt-teller">{{ filterAantal }}</span><Icoon naam="ChevronDown" class="mt-caret" :class="{ 'mt-caret--open': filtersOpen }" />
         </button>
-        <KopMeer :items="[{ label: 'Agenda', icoon: 'Calendar', to: '/agenda', test: 'meetings-agenda' }, ...(analyseAan ? [{ label: 'Meetinganalyse', icoon: 'ChartLine', to: '/meeting-analyse', test: 'meetings-analyse' }] : [])]" />
+        <NuxtLink v-if="analyseAan" to="/meeting-analyse" class="dd-actie dd-actie--secundair" data-test="meetings-analyse"><Icoon naam="ChartLine" class="dd-actie-icoon" />Analyse</NuxtLink>
       </template>
     </PaginaKop>
 

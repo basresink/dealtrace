@@ -24,7 +24,7 @@ watch(open, (o) => {
   nextTick(() => invoer.value?.focus())
 })
 watch(() => context.value?.accountId, () => { chatId.value = null; berichten.value = [] })
-const VOORSTELLEN = computed(() => context.value?.accountId
+const VOORSTELLEN = computed(() => context.value?.voorstellen?.length ? context.value.voorstellen : context.value?.accountId
   ? ['Hoe begin ik dit gesprek?', 'Welke bezwaren kan ik verwachten?', 'Wat weten we al over dit account?']
   : context.value?.label === 'Helpcenter' ? ['Hoe werkt een belblok?', 'Hoe rond ik een taak af?', 'Wat is een terugkomregel?']
     : ['Wat staat er vandaag voor mij klaar?', 'Hoe werkt een belblok?', 'Welke bezwaren kan ik verwachten?'])
@@ -63,7 +63,7 @@ function sluit() { open.value = false }
 
 <template>
   <Teleport to="body">
-    <div v-if="open" class="fo-overlay fo-overlay--licht" @click.self="sluit">
+    <div v-if="open" class="fo-overlay fo-overlay--licht ai-overlay" @click.self="sluit">
       <section class="fo-panel fo-panel--hulp ai-chat" role="dialog" aria-modal="true" aria-label="AI-assistent" data-test="ai-chat">
         <header class="fo-head">
           <div class="fo-head-tekst">
@@ -106,6 +106,11 @@ function sluit() { open.value = false }
         </footer>
       </section>
     </div>
-    <NieuweTaakFlyout v-if="nieuweTaak" :open="!!nieuweTaak" :voorgevuld="nieuweTaak" @sluit="nieuweTaak = null" @gemaakt="nieuweTaak = null; toast.toon('Taak opgeslagen.')" />
+    <NieuweTaakFlyout v-if="nieuweTaak" :open="!!nieuweTaak" bovenop :voorgevuld="nieuweTaak" @sluit="nieuweTaak = null" @gemaakt="nieuweTaak = null; toast.toon('Taak opgeslagen.')" />
   </Teleport>
 </template>
+
+<style scoped>
+/* De assistent opent ook vanuit een flyout (Vraag AI) en ligt dan boven die flyout. */
+.ai-overlay { z-index: calc(var(--z-modal-boven) + 1); }
+</style>

@@ -1,33 +1,29 @@
 <script setup lang="ts">
 // Een venster van de accountkaart of de contactkaart dat onder Meer hangt (Dossier, Kwalificatie, Ritme,
-// Reis): dezelfde opzet als de andere flyouts (kicker, titel, uitleg, sluiten) met de inhoud als slot.
+// Reis, Belscript): de flyoutstandaard (FlyoutShell) met kicker, titel, uitleg, Vraag AI en sluiten, en de
+// inhoud als slot. Vraag AI opent de assistent met dit account en drie vragen die bij het venster passen.
 // Sluit met Escape, de sluitknop en een klik naast het venster.
-const props = withDefaults(defineProps<{ open: boolean; kicker: string; titel: string; meta?: string | null; test: string; maat?: 'smal' | 'normaal' | 'breed' }>(), { meta: null, maat: 'normaal' })
+import type { FlyoutOpslag } from '~/composables/useFlyoutOpslag'
+const props = withDefaults(defineProps<{ open: boolean; kicker: string; titel: string; meta?: string | null; test: string; maat?: 'smal' | 'normaal' | 'breed'; accountId?: string | null; opslag?: FlyoutOpslag | null }>(), { meta: null, maat: 'normaal', accountId: null, opslag: null })
 const emit = defineEmits<{ sluit: [] }>()
 const titelId = computed(() => `${props.test}-titel`)
-function toets(e: KeyboardEvent) { if (e.key === 'Escape' && props.open) emit('sluit') }
-onMounted(() => document.addEventListener('keydown', toets))
-onBeforeUnmount(() => document.removeEventListener('keydown', toets))
+const VOORSTELLEN: Record<string, string[]> = {
+  'kwalificatie-flyout': ['Wat ontbreekt er nog in BAND?', 'Wie hoort er in het buying committee?', 'Met welke vraag toets ik het budget?'],
+  'ritme-flyout': ['Past dit ritme bij dit account?', 'Wanneer neem ik het beste weer contact op?', 'Wat zeg ik bij het volgende contact?'],
+  'reis-flyout': ['Waar staat dit account in de reis?', 'Wat brengt het naar de volgende fase?', 'Welke fasewissel zegt het meest?'],
+  'dossier-flyout': ['Vat het dossier samen', 'Wat is er nieuw sinds vorige week?', 'Welke aanleiding heb ik om te bellen?'],
+  'belscript-flyout': ['Schrijf een openingszin', 'Welke bezwaren kan ik verwachten?', 'Maak het script korter'],
+}
+const ai = computed(() => ({ accountId: props.accountId, label: props.titel, vraag: '', voorstellen: VOORSTELLEN[props.test] ?? [`Wat moet ik weten over ${props.titel}?`] }))
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="fo-overlay" @click.self="emit('sluit')">
-      <aside class="fo-panel fo-panel--schuif" :class="{ 'fo-panel--smal': maat === 'smal', 'fo-panel--breed': maat === 'breed' }" role="dialog" aria-modal="true" :aria-labelledby="titelId" :data-test="test">
-        <header class="fo-head">
-          <div class="fo-head-tekst">
-            <span class="fo-kicker">{{ kicker }}</span>
-            <h2 :id="titelId" class="fo-titel">{{ titel }}</h2>
-            <p v-if="meta" class="fo-meta">{{ meta }}</p>
-          </div>
-          <button type="button" class="fo-sluit" aria-label="Sluiten" :data-test="`${test}-sluit`" @click="emit('sluit')"><Icoon naam="X" /></button>
-        </header>
-        <div class="fo-body kf-body">
-          <slot />
-        </div>
-      </aside>
+  <FlyoutShell :open="open" :kicker="kicker" :titel="titel" :meta="meta" :titel-id="titelId" :breedte="maat" :ai="ai" :opslag="opslag" :sluit-test="`${test}-sluit`" :data-test="test" @sluit="emit('sluit')">
+    <div class="fo-body kf-body">
+      <slot />
     </div>
-  </Teleport>
+    <template v-if="$slots.voet" #voet><slot name="voet" /></template>
+  </FlyoutShell>
 </template>
 
 <style scoped>

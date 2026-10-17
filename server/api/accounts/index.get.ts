@@ -80,11 +80,11 @@ export default defineEventHandler(async (event) => {
     // F7: de lopende opvolgreeks per zichtbare rij (stap x van y en de volgende stap).
     const reeksen = await lopendeReeksen(tx, zichtbaar.map((r) => r.id), fctx.nu)
     // Fases van alle reistemplates (standaard eerst), voor het faselabel op de rij.
-    const faseLabels = new Map<string, { label: string; kleur: string | null }>()
+    const faseLabels = new Map<string, { label: string; kleur: string | null; hoofdfase: string | null }>()
     if (reisFilter) {
       const templates = await tx.select({ isStandaard: schema.reistemplates.isStandaard, data: schema.reistemplates.data }).from(schema.reistemplates)
       for (const t of templates.sort((a, b) => Number(b.isStandaard) - Number(a.isStandaard))) {
-        for (const f of t.data.fases ?? []) if (!faseLabels.has(f.id)) faseLabels.set(f.id, { label: f.label, kleur: f.kleur ?? null })
+        for (const f of t.data.fases ?? []) if (!faseLabels.has(f.id)) faseLabels.set(f.id, { label: f.label, kleur: f.kleur ?? null, hoofdfase: f.hoofdfase ?? null })
       }
     }
     return {

@@ -12,8 +12,9 @@
      rood   .dd-actie--gevaar, .dd-act--gevaar                  verwijderen
    Tekstlink: vet met gele streep.
    Filters: pillen van 36 px, actief zwart met gele tekst; keuzegroep van 40 px.
-   Tags (.pil): uppercase 10 px vet, gevuld: blauw actiesoort, rood urgent of
-   risico, paars AI, groen bezoek, grijs overig.
+   Labels (<Label>, .lbl, sectie onderaan): drie stijlen (gevuld alleen rood,
+   zacht met tint en icoon, rand voor feiten), zeven tinten, paars alleen AI.
+   Losse tags (.pil) volgen hetzelfde systeem.
    Rij (.item-rij): tijd, icoon van 36 px, naam en meta, tag, kleine knop.
    Kaarten: rand 1 px, binnenmarge 24 px (16 px op de telefoon).
    Op de telefoon blijft elk tikdoel minstens 44 px.
@@ -99,26 +100,39 @@
 .keuzegroep-knop--aan:hover { background: var(--ink); color: var(--yellow); }
 .keuzegroep--klein .keuzegroep-knop { min-height: 32px; padding: 0 11px; font-size: 11px; }
 
-/* ---------- Tags ---------- */
+/* ---------- Tags (.pil) ----------
+   Losse tags die nog geen <Label> zijn volgen het labelsysteem (sectie Labels onderaan):
+   standaard een rand, rood en de andere tinten zacht, -vol alleen bij rood gevuld, leeg
+   gestippeld. Geel en zwart met geel zijn geen label meer; als knop (selectie) blijven ze. */
 .pil {
-  padding: 1px 7px;
-  background: var(--surface);
-  color: var(--ink);
-  border: 0;
-  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--lbl-h);
+  padding: 0 6px;
+  background: transparent;
+  color: var(--lbl-rand-tekst);
+  border: 1px solid var(--lbl-rand-lijn);
+  border-radius: 2px;
+  font-size: var(--lbl-fs);
   font-weight: 700;
-  line-height: 1.6;
-  letter-spacing: 0.04em;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
 }
-.pil--grijs { background: var(--surface); color: var(--ink); }
-.pil--geel { background: var(--yellow); color: var(--ink); }
-.pil--zwart { background: var(--ink); color: var(--yellow); }
-.pil--rood, .pil--rood-vol { background: var(--red); color: var(--wit); }
-.pil--oranje, .pil--oranje-vol { background: var(--orange); color: var(--wit); }
-.pil--groen, .pil--groen-vol { background: var(--green); color: var(--wit); }
-.pil--blauw, .pil--blauw-vol { background: var(--blue); color: var(--wit); }
-.pil--paars, .pil--paars-vol { background: var(--purple); color: var(--wit); }
-.pil--leeg { background: transparent; color: var(--muted); border: 1px dashed var(--border-strong); }
+.pil--grijs { background: var(--lbl-grijs-vlak); color: var(--lbl-grijs-tekst); border-color: var(--lbl-grijs-rand); }
+.pil--geel, .pil--oranje, .pil--oranje-vol { background: var(--lbl-oranje-vlak); color: var(--lbl-oranje-tekst); border-color: var(--lbl-oranje-rand); }
+span.pil--zwart, .pil--blauw-vol, .pil--groen-vol { background: transparent; color: var(--lbl-rand-tekst); border-color: var(--lbl-rand-tekst); }
+button.pil--zwart { background: var(--ink); color: var(--yellow); border-color: var(--ink); }
+.pil--rood { background: var(--lbl-rood-vlak); color: var(--lbl-rood-tekst); border-color: var(--lbl-rood-rand); }
+.pil--rood-vol { background: var(--lbl-vol-vlak); color: var(--lbl-vol-tekst); border-color: var(--lbl-vol-vlak); }
+.pil--groen { background: var(--lbl-groen-vlak); color: var(--lbl-groen-tekst); border-color: var(--lbl-groen-rand); }
+.pil--blauw { background: var(--lbl-blauw-vlak); color: var(--lbl-blauw-tekst); border-color: var(--lbl-blauw-rand); }
+.pil--paars, .pil--paars-vol { background: var(--lbl-paars-vlak); color: var(--lbl-paars-tekst); border-color: var(--lbl-paars-rand); }
+.pil--leeg { background: transparent; color: var(--lbl-rand-zacht); border: 1px dashed var(--lbl-rand-lijn); }
+button.pil { cursor: pointer; }
 
 /* ---------- Rij voor taken en afspraken ---------- */
 .item-rij {
@@ -193,3 +207,93 @@ button.item-rij:hover .item-naam { color: var(--yellow-dark); }
 
 /* "Bel" onder een telefoonveld in een venster (Info, Contact-info). */
 .veld .veld-bel { align-self: flex-start; width: fit-content; margin-top: 8px; }
+
+/* ============================================================================
+   Labels (mockup "Labels in Dealtrace"), alleen het lichte thema
+   ----------------------------------------------------------------------------
+   Eén register (shared/labels.ts) en één component (<Label soort waarde>).
+   Drie stijlen: .lbl--vol (alleen rood, alleen voor wat nu een handeling vraagt),
+   .lbl--zacht + tint (altijd met icoon), .lbl--rand (feit zonder oordeel);
+   .lbl--leeg is de gestippelde rand voor onbekend of ontbrekend, .lbl--voorstel
+   een AI-voorstel dat je nog bevestigt. Tinten: rood, oranje, groen, blauw, cyaan,
+   paars (alleen AI) en grijs. Klasse: .lbl-klasse met lettertegel en .lbl-trap;
+   fase: .lbl-fase met .lbl-stappen; score: .lbl-score. Elke tekst haalt 4,5:1.
+   ========================================================================== */
+:root {
+  --lbl-h: 20px; --lbl-fs: 10px; --lbl-ico: 12px;
+  --lbl-vol-vlak: #b42d20; --lbl-vol-tekst: #ffffff;
+  --lbl-rood-tekst: #9f2a1f;   --lbl-rood-vlak: #fbe9e7;   --lbl-rood-rand: #efc4bf;
+  --lbl-oranje-tekst: #8a4204; --lbl-oranje-vlak: #fdf0dc; --lbl-oranje-rand: #f1d3a6;
+  --lbl-groen-tekst: #17643c;  --lbl-groen-vlak: #e5f3ea;  --lbl-groen-rand: #b9dcc6;
+  --lbl-blauw-tekst: #194c8f;  --lbl-blauw-vlak: #e7eef8;  --lbl-blauw-rand: #bccde6;
+  --lbl-cyaan-tekst: #0b5e68;  --lbl-cyaan-vlak: #e1f2f3;  --lbl-cyaan-rand: #b1d9dd;
+  --lbl-paars-tekst: #4c1d95;  --lbl-paars-vlak: #efe9f9;  --lbl-paars-rand: #d2c4ee;
+  --lbl-grijs-tekst: #4d4c47;  --lbl-grijs-vlak: #efeee9;  --lbl-grijs-rand: #d6d3ca;
+  --lbl-rand-tekst: #0a0a0a;   --lbl-rand-lijn: #c8c5bc;   --lbl-rand-zacht: #5c5b57;
+  --lbl-tegel: var(--ink); --lbl-tegel-tekst: var(--wit);
+  /* Cyaan als tint naast de bestaande kleuren. */
+  --cyan: #0b5e68; --cyaan: var(--cyan);
+}
+
+.lbl {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: var(--lbl-h);
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font: 700 var(--lbl-fs)/1 var(--font-sans, "Inter", sans-serif);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.lbl .icoon { width: var(--lbl-ico); height: var(--lbl-ico); flex-shrink: 0; }
+.lbl--vol { background: var(--lbl-vol-vlak); color: var(--lbl-vol-tekst); border-color: var(--lbl-vol-vlak); }
+.lbl--zacht { background: var(--t-vlak); color: var(--t-tekst); border-color: var(--t-rand); }
+.lbl--rand { background: transparent; color: var(--lbl-rand-tekst); border-color: var(--lbl-rand-lijn); }
+.lbl--leeg { background: transparent; color: var(--lbl-rand-zacht); border: 1px dashed var(--lbl-rand-lijn); }
+.lbl--voorstel { border-style: dashed; }
+.lbl--rood   { --t-tekst: var(--lbl-rood-tekst);   --t-vlak: var(--lbl-rood-vlak);   --t-rand: var(--lbl-rood-rand); }
+.lbl--oranje { --t-tekst: var(--lbl-oranje-tekst); --t-vlak: var(--lbl-oranje-vlak); --t-rand: var(--lbl-oranje-rand); }
+.lbl--groen  { --t-tekst: var(--lbl-groen-tekst);  --t-vlak: var(--lbl-groen-vlak);  --t-rand: var(--lbl-groen-rand); }
+.lbl--blauw  { --t-tekst: var(--lbl-blauw-tekst);  --t-vlak: var(--lbl-blauw-vlak);  --t-rand: var(--lbl-blauw-rand); }
+.lbl--cyaan  { --t-tekst: var(--lbl-cyaan-tekst);  --t-vlak: var(--lbl-cyaan-vlak);  --t-rand: var(--lbl-cyaan-rand); }
+.lbl--paars  { --t-tekst: var(--lbl-paars-tekst);  --t-vlak: var(--lbl-paars-vlak);  --t-rand: var(--lbl-paars-rand); }
+.lbl--grijs  { --t-tekst: var(--lbl-grijs-tekst);  --t-vlak: var(--lbl-grijs-vlak);  --t-rand: var(--lbl-grijs-rand); }
+
+/* Klasse: rand, lettertegel en een trap van vier streepjes (A vier, D een). */
+.lbl-klasse { gap: 6px; padding-left: 2px; }
+.lbl-klasse-letter { display: inline-grid; place-items: center; min-width: 14px; height: 14px; padding: 0 2px; background: var(--lbl-tegel); color: var(--lbl-tegel-tekst); font: 700 10px/1 var(--font-serif); letter-spacing: 0; border-radius: 1px; }
+.lbl-trap { display: inline-flex; align-items: flex-end; gap: 1px; height: 10px; }
+.lbl-trap i { display: block; width: 2px; background: var(--lbl-rand-lijn); }
+.lbl-trap i:nth-child(1) { height: 4px; }
+.lbl-trap i:nth-child(2) { height: 6px; }
+.lbl-trap i:nth-child(3) { height: 8px; }
+.lbl-trap i:nth-child(4) { height: 10px; }
+.lbl-trap[data-n="1"] i:nth-child(-n+1), .lbl-trap[data-n="2"] i:nth-child(-n+2),
+.lbl-trap[data-n="3"] i:nth-child(-n+3), .lbl-trap[data-n="4"] i:nth-child(-n+4) { background: var(--lbl-rand-tekst); }
+
+/* Fase: rand met vier stappen (vinden, bewerken, verbinden, overgedragen); verloren gestippeld. */
+.lbl-fase { gap: 6px; }
+.lbl-stappen { display: inline-flex; gap: 2px; }
+.lbl-stappen i { display: block; width: 6px; height: 6px; border: 1px solid var(--lbl-rand-tekst); }
+.lbl-stappen[data-n="1"] i:nth-child(-n+1), .lbl-stappen[data-n="2"] i:nth-child(-n+2),
+.lbl-stappen[data-n="3"] i:nth-child(-n+3), .lbl-stappen[data-n="4"] i:nth-child(-n+4) { background: var(--lbl-rand-tekst); }
+.lbl-fase--uit { color: var(--lbl-rand-zacht); border-style: dashed; }
+.lbl-fase--uit .lbl-stappen i { border-color: var(--lbl-rand-zacht); background: transparent; }
+
+/* Een label als knop (fase opent de reisgeschiedenis): groter tikvlak, zelfde maat. */
+button.lbl { position: relative; cursor: pointer; }
+button.lbl::after { content: ""; position: absolute; inset: -12px -4px; }
+button.lbl:hover:not(:disabled) { border-color: var(--lbl-rand-tekst); }
+button.lbl:disabled { cursor: default; }
+button.lbl:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Score: rand met cijfer; heet (vanaf 75) zacht oranje met een vlam. */
+.lbl-score { font-size: 11px; letter-spacing: 0; font-feature-settings: "tnum"; }
+
+/* Een rij labels. */
+.lbl-rij { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }

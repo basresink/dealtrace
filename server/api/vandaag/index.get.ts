@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
     // Alleen de primaire branches (voorrang); niet het hele verkoopverhaal, dat zijn tien leesvragen.
     const voorrang = new Set(((await tx.execute(sql`select extern_id as id from vv_branches where actief and focus = 'primair'`)).rows as { id: string }[]).map((b) => b.id))
     const reizen = await tx.select({ id: schema.reistemplates.id, data: schema.reistemplates.data }).from(schema.reistemplates)
-    const fase = (a?: typeof accounts[number]) => { const f = reizen.find((r) => r.id === a?.reisId)?.data.fases.find((x) => x.id === a?.faseId); return f ? { label: f.label, kleur: f.kleur } : null }
+    const fase = (a?: typeof accounts[number]) => { const f = reizen.find((r) => r.id === a?.reisId)?.data.fases.find((x) => x.id === a?.faseId); return f ? { label: f.label, kleur: f.kleur, hoofdfase: f.hoofdfase } : null }
 
     // Taken: maximaal 8, achterstallig eerst; accounts in een primaire branche krijgen voorrang.
     const vandaagEnEerder = taken.filter((t) => !t.dueDate || nlMoment(new Date(t.dueDate)).datum <= v)

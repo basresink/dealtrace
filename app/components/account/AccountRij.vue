@@ -1,11 +1,12 @@
 <script setup lang="ts">
 // Eén rij in de lijst van prospects en klanten, in de opzet van DealDrive: logovlak met het
-// logo (eigen logo-URL of favicon van de website) of anders de initialen, naam met klassepil, kanalen en feiten, een regel met gekleurde streep
-// (aanleiding, achterstallige next-action of fase) en rechts de contactpersonen.
+// logo (eigen logo-URL of favicon van de website) of anders de initialen, naam met klasselabel, kanalen en feiten, een regel met gekleurde streep
+// (aanleiding of achterstallige next-action), de labels fase en status, en rechts de contactpersonen.
 // De naam is de link; de streklink maakt de hele rij klikbaar zonder geneste links.
 import { CONTACTROL_LABEL } from '~~/shared/contactgegevens'
+import { ordenLabels } from '~~/shared/labels'
 import { reeksStrip } from '~~/shared/opvolgreeks'
-import { STATUS_LABEL, datumActiviteit, initialen, klasseKleur, klasseLabel, kleurUitNaam, telLink, toonTelefoon } from '~/utils/accountWeergave'
+import { datumActiviteit, initialen, klasseLabel, kleurUitNaam, telLink, toonTelefoon } from '~/utils/accountWeergave'
 
 const props = defineProps<{
   rij: any
@@ -13,8 +14,6 @@ const props = defineProps<{
   weergave?: 'lijst' | 'compact' | 'kaarten'
   toonScore?: boolean
 }>()
-
-const FASE_KLEUR: Record<string, string> = { geel: 'var(--yellow)', zwart: 'var(--ink)', rood: 'var(--red)', paars: 'var(--purple)', oranje: 'var(--orange)', groen: 'var(--green)', blauw: 'var(--blue)', grijs: 'var(--muted)' }
 
 const website = computed(() => {
   const w = props.rij.website as string | null
@@ -25,15 +24,18 @@ const linkedin = computed(() => {
   return l ? (/^https?:\/\//i.test(l) ? l : `https://${l}`) : null
 })
 
-/** De regel onder de feiten: aanleiding, dan een achterstallige next-action, dan de fase. */
+/** De regel onder de feiten: aanleiding, dan een achterstallige next-action. */
 const regel = computed<{ tekst: string; kleur: string } | null>(() => {
   const r = props.rij
-  if (r.aanleiding?.tekst) return { tekst: r.aanleiding.tekst, kleur: r.aanleiding.heet ? 'var(--red)' : 'var(--yellow)' }
+  if (r.aanleiding?.tekst) return { tekst: r.aanleiding.tekst, kleur: r.aanleiding.heet ? 'var(--red)' : 'var(--border-strong)' }
   if (r.nextActionDagenOver) return { tekst: `Next-action ${r.nextActionDagenOver} ${r.nextActionDagenOver === 1 ? 'dag' : 'dagen'} overschreden`, kleur: 'var(--orange)' }
-  if (r.fase?.label) return { tekst: `Fase: ${r.fase.label}`, kleur: FASE_KLEUR[r.fase.kleur] ?? 'var(--muted)' }
-  if (r.kind === 'prospect' && r.nbStatus && STATUS_LABEL[r.nbStatus]) return { tekst: `Status: ${STATUS_LABEL[r.nbStatus]}`, kleur: 'var(--border-strong)' }
   return null
 })
+/** Labels in vaste volgorde: fase met stappen en de status (alleen bij prospects); de reeks wacht op jou. */
+const labels = computed(() => ordenLabels([
+  props.rij.fase?.label ? { soort: 'fase', waarde: props.rij.fase.hoofdfase ?? null, tekst: props.rij.fase.label } : null,
+  props.rij.kind === 'prospect' && props.rij.nbStatus ? { soort: 'status', waarde: props.rij.reeks?.wacht && props.rij.nbStatus === 'in reis' ? 'wacht op jou' : props.rij.nbStatus } : null,
+]))
 
 /** Primaire contactpersoon eerst, daarna de rest (de API levert er hoogstens drie). */
 const contacten = computed(() => {
@@ -52,9 +54,8 @@ const rolLabel = (rol: string) => CONTACTROL_LABEL[rol as keyof typeof CONTACTRO
     <div class="acc-info">
       <h3 class="acc-naam">
         <NuxtLink :to="`/accounts/${rij.id}`" class="acc-link">{{ rij.name }}</NuxtLink>
-        <span v-if="rij.klasse" class="klasse-pil" :class="`klasse-pil--${klasseKleur(rij.klasse, klassen)}`">{{ klasseLabel(rij.klasse, klassen) }}</span>
-        <span v-else class="klasse-pil klasse-pil--geen">Geen klasse</span>
-        <span v-if="rij.gedeactiveerd" class="pil pil--grijs" data-test="rij-gedeactiveerd">Gedeactiveerd</span>
+        <Label soort="klasse" :waarde="rij.klasse ? klasseLabel(rij.klasse, klassen) : null" data-test="rij-klasse" />
+        <Label v-if="rij.gedeactiveerd" soort="status" waarde="gedeactiveerd" data-test="rij-gedeactiveerd" />
       </h3>
       <div class="acc-sub">
         <a v-if="website" :href="website" target="_blank" rel="noopener" class="acc-kanaal" :title="rij.website" :aria-label="`Website van ${rij.name}`"><Icoon naam="Globe" :grootte="13" /></a>
@@ -69,6 +70,7 @@ const rolLabel = (rol: string) => CONTACTROL_LABEL[rol as keyof typeof CONTACTRO
         <span v-if="toonScore" class="tnum">Score {{ rij.score }}</span>
       </div>
       <div v-if="regel && weergave !== 'compact'" class="acc-regel" :style="{ borderLeftColor: regel.kleur }" data-test="rij-regel">{{ regel.tekst }}</div>
+      <div v-if="labels.length && weergave !== 'compact'" class="lbl-rij acc-labels" data-test="rij-labels"><Label v-for="l in labels" :key="l.soort" :soort="l.soort" :waarde="(l.waarde as string | null)" :tekst="l.tekst ?? null" /></div>
       <NuxtLink v-if="rij.reeks" :to="`/opvolgreeksen?reeks=${rij.reeks.id}`" class="acc-reeks" :class="{ 'acc-reeks--wacht': rij.reeks.wacht }" data-test="rij-reeks"><Icoon naam="Repeat" :grootte="13" /><span>Opvolgreeks {{ reeksStrip(rij.reeks) }}<template v-if="rij.reeks.wacht"> · wacht op jou</template></span></NuxtLink>
     </div>
     <div class="acc-contacten">
@@ -83,10 +85,11 @@ const rolLabel = (rol: string) => CONTACTROL_LABEL[rol as keyof typeof CONTACTRO
 
 <style scoped>
 /* F7: de lopende opvolgreeks onder de regel (stap x van y en de volgende stap). */
-.acc-reeks { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; line-height: 1.4; color: var(--purple); text-decoration: none; }
+.acc-reeks { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; line-height: 1.4; color: var(--ink-soft); text-decoration: none; }
 .acc-reeks:hover span { text-decoration: underline; }
 .acc-reeks--wacht { font-weight: 700; }
 @media (max-width: 719px) { .acc-reeks { min-height: var(--touch-target-min); } }
 .acc-contact { overflow: hidden; }
+.acc-labels { margin-top: 6px; }
 .acc-contact-foto { width: 100%; height: 100%; object-fit: cover; }
 </style>

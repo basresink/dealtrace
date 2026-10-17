@@ -21,7 +21,7 @@ const datum = (s: string | null) => (s ? new Intl.DateTimeFormat('nl-NL', { day:
 </script>
 
 <template>
-  <KaartFlyout :open="open" kicker="Belscript" :titel="naam" meta="Het script voor je volgende gesprek met dit prospect." test="belscript-flyout" maat="breed" @sluit="emit('sluit')">
+  <KaartFlyout :open="open" kicker="Belscript" :titel="naam" meta="Het script voor je volgende gesprek met dit prospect." test="belscript-flyout" maat="breed" :account-id="accountId" @sluit="emit('sluit')">
     <p v-if="laden" class="fo-leeg">Laden…</p>
     <p v-else-if="fout" class="fo-fout">{{ fout }}</p>
     <template v-else-if="p">
@@ -36,9 +36,12 @@ const datum = (s: string | null) => (s ? new Intl.DateTimeFormat('nl-NL', { day:
           <p class="bsf-tekst"><template v-for="(seg, j) in voorbeeldSegmenten(b.status === 'verworpen' ? (b.terugval ?? '') : (b.tekst ?? ''), p.waarden ?? {})" :key="j"><span v-if="seg.variabele" class="bsf-var" :class="{ 'bsf-var--onbekend': seg.onbekend }">{{ seg.tekst || '…' }}</span><template v-else>{{ seg.tekst }}</template></template></p>
         </li>
       </ol>
-      <div class="bsf-voet">
-        <NuxtLink :to="studio" class="dd-actie dd-actie--secundair" data-test="bsf-studio" @click="emit('sluit')"><Icoon naam="ScrollText" class="dd-actie-icoon" />{{ versie ? 'Open in de Belscript Studio' : 'Maak een versie voor dit prospect' }}</NuxtLink>
-      </div>
+    </template>
+    <template v-if="p && !laden && !fout" #voet>
+      <footer class="fo-foot fs-voet">
+        <NuxtLink :to="studio" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="bsf-studio" @click="emit('sluit')"><Icoon naam="ScrollText" :grootte="16" />{{ versie ? 'Open in de Belscript Studio' : 'Maak een versie voor dit prospect' }}</NuxtLink>
+        <span class="fo-foot-vul" />
+      </footer>
     </template>
   </KaartFlyout>
 </template>
@@ -51,5 +54,4 @@ const datum = (s: string | null) => (s ? new Intl.DateTimeFormat('nl-NL', { day:
 .bsf-tekst { margin: 6px 0 0; font-size: 14px; line-height: 1.5; white-space: pre-line; }
 .bsf-var { padding: 0 2px; background: var(--yellow-soft, #fff6cc); }
 .bsf-var--onbekend { background: var(--bg); color: var(--muted); font-style: italic; }
-.bsf-voet { display: flex; flex-wrap: wrap; gap: 8px; }
 </style>

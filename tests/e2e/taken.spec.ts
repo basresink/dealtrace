@@ -147,11 +147,13 @@ test.describe('inzichten', () => {
     await expect(page.getByText('Klik op een kaart voor de volledige context')).toBeVisible()
     const kaarten = page.locator('[data-test=inzichten] .inzicht-kaart')
     await expect(kaarten.first()).toBeVisible()
-    // Kopbalk met accountnaam en soort, scoretegel, AI-context en de voet.
+    // Kopbalk met accountnaam en soort, scorelabel (rand), bronlabel (rand met icoon) en de voet.
     const eerste = kaarten.first()
     await expect(eerste.locator('.ik-balk')).toBeVisible()
-    await expect(eerste.locator('.ik-score')).toHaveText(/^\d+$/)
-    await expect(eerste.locator('.ik-tag')).toHaveText(/^(Intern|Extern|Agenda)$/)
+    await expect(eerste.getByTestId('ik-score')).toHaveText(/^\d+$/)
+    await expect(eerste.getByTestId('ik-score')).toHaveClass(/lbl-score/)
+    await expect(eerste.getByTestId('ik-bron')).toHaveText(/^(Intern|Extern|Agenda)$/)
+    await expect(eerste.getByTestId('ik-bron')).toHaveClass(/lbl--rand/)
     await expect(eerste.getByRole('button', { name: '+ Maak taak' })).toBeVisible()
     // Drie per rij op een breed scherm.
     if ((await kaarten.count()) >= 3) {
