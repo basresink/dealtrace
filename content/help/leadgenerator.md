@@ -37,7 +37,7 @@ Pas je de zoekopdracht aan, dan schuiven de leads meteen naar de juiste groep.
 **Voeg toe** opent een venster met de gegevens van de lead: bedrijfsnaam, plaats, adres, website, KvK-nummer, medewerkers en de contactpersonen. Vul aan wat je weet. Daaronder kies je:
 
 - **Voeg toe aan prospectreis**: de reis (of het voorstel van Dealtrace dat bij de doelgroep past) en de fase waarin het account start. Zonder vinkje komt het account bij je prospects zonder reis.
-- **Maak een eerste taak aan**: het type (bellen in je eerstvolgende acquisitieblok, bellen, mailen, bezoek, LinkedIn, bericht of te doen), de datum en de contactpersoon.
+- **Maak een eerste taak aan**: het type (bellen in je eerstvolgende acquisitieblok, te doen, bellen, mailen, WhatsApp, SMS of LinkedIn; een bezoek plan je daarna als afspraak), de datum en de contactpersoon.
 - **Maak accountplan aan**: een leeg accountplan op jouw naam. Dit vinkje zie je als accountplannen voor jouw niveau aanstaan.
 
 Klik **Voeg toe**. Dealtrace maakt de prospect met het bewijs als notitie; de klasse komt uit het aantal medewerkers. Je krijgt een melding met een link naar de nieuwe accountkaart. Een salesmanager kan de lead voor een teamlid klaarzetten.

@@ -3,7 +3,7 @@
 import { expect, test } from '@playwright/test'
 import { ga, login } from './hulp'
 
-const TABS = ['tijdlijn', 'inzichten', 'taken', 'notities', 'mails', 'afspraken', 'verslagen', 'campagnes', 'documenten']
+const TABS = ['tijdlijn', 'inzichten', 'taken', 'notities', 'mails', 'afspraken', 'verslagen', 'documenten']
 
 test.describe('contactkaart', () => {
   test('kop, statstrook en dezelfde tabbladen als de accountkaart', async ({ page }) => {
@@ -19,48 +19,49 @@ test.describe('contactkaart', () => {
     const opContact = await labels()
     await expect(page.getByTestId('tab-kwalificatie')).toHaveCount(0)
     await expect(page.getByTestId('tab-accountplan')).toHaveCount(0)
+    await expect(page.getByTestId('tab-campagnes')).toHaveCount(0)
     await ga(page, '/accounts/pr-06')
-    // De accountkaart heeft dezelfde tabbladen, plus Accountplan als die functie aanstaat.
-    expect((await labels()).filter((l) => !l.startsWith('tab-accountplan:'))).toEqual(opContact)
+    // De accountkaart heeft dezelfde tabbladen.
+    expect(await labels()).toEqual(opContact)
 
-    // De tijdlijn van het contact: alleen momenten van dit contact; elk item met de naam van het contact
-    // (link naar de contactkaart) en de gebruiker in de metaregel.
+    // De tijdlijn van het contact: alleen momenten van dit contact; de metaregel noemt het contact zelf niet
+    // (je zit al op zijn kaart), wel de gebruiker.
     await ga(page, '/contacten/ct-07')
     await expect(page.getByTestId('tijdlijn')).toBeVisible()
-    const hrefs = await page.getByTestId('tijdlijn').getByTestId('tl-contact').evaluateAll((els) => els.map((e) => e.getAttribute('href')))
-    expect(hrefs.length).toBeGreaterThan(0)
-    expect(new Set(hrefs)).toEqual(new Set(['/contacten/ct-07']))
+    await expect(page.getByTestId('tijdlijn').getByTestId('tl-contact')).toHaveCount(0)
     await expect(page.getByTestId('tijdlijn').getByTestId('tl-door').first()).toHaveText(/^door \S+ \S+/)
     // Reis staat onder Meer, met de stand van het account en een link naar de accountkaart.
     await page.getByTestId('kop-meer').click()
     await page.getByTestId('meer-reis').click()
     await expect(page.getByTestId('reis-flyout').getByTestId('reis-blok')).toBeVisible()
-    await expect(page.getByTestId('naar-accountkaart')).toHaveAttribute('href', '/accounts/pr-06?meer=ritme')
+    await expect(page.getByTestId('naar-accountkaart')).toHaveAttribute('href', '/accounts/pr-06?meer=reis')
+    // Escape gaat terug naar Meer; nog een keer Escape sluit Meer.
     await page.keyboard.press('Escape')
+    await expect(page.getByTestId('meer-flyout')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('meer-flyout')).toHaveCount(0)
     // Deals en Eigen velden hebben geen tabblad meer; eigen velden staan in het Info-venster.
     await expect(page.getByTestId('tab-deals')).toHaveCount(0)
     await expect(page.getByTestId('tab-eigenvelden')).toHaveCount(0)
-    await page.getByTestId('kop-meer').click()
     await page.getByTestId('contact-info-knop').click()
     await expect(page.getByTestId('contact-info-flyout')).toBeVisible()
     await page.keyboard.press('Escape')
   })
 
-  test('kop: Zoeken, Vraag AI, Account en Meer op één regel op 1280; op 390 Account en Meer; de rest onder Meer', async ({ page }) => {
+  test('kop: Zoeken, Vraag AI, Info en Meer op één regel op 1280; op 390 Info en Meer; de rest onder Meer', async ({ page }) => {
     await login(page, 'u-01')
     await page.setViewportSize({ width: 1280, height: 900 })
     await ga(page, '/contacten/ct-07')
     const kop = await page.locator('.ck-acties [data-test]:not([data-test=kop-iconen]):visible').evaluateAll((els) => els.map((e) => ({ id: e.getAttribute('data-test'), top: Math.round(e.getBoundingClientRect().top), h: Math.round(e.getBoundingClientRect().height) })))
-    expect(kop.map((k) => k.id)).toEqual(['kop-zoeken', 'vraag-ai', 'kop-account', 'kop-meer'])
+    expect(kop.map((k) => k.id)).toEqual(['kop-zoeken', 'vraag-ai', 'contact-info-knop', 'kop-meer'])
     expect(new Set(kop.map((k) => k.top)).size).toBe(1)
     expect(kop.every((k) => k.h >= 44)).toBe(true)
-    await expect(page.getByTestId('kop-account')).toHaveAttribute('href', '/accounts/pr-06')
+    await expect(page.getByTestId('kop-account')).toHaveCount(0)
     await expect(page.getByTestId('hulp-knop')).toHaveCount(0)
     await page.getByTestId('kop-meer').click()
     const meer = page.getByTestId('meer-flyout')
-    for (const id of ['contact-info-knop', 'briefing-knop', 'knop-volgen', 'knop-invloed', 'meer-dossier', 'meer-kwalificatie', 'meer-reis']) await expect(meer.getByTestId(id)).toBeVisible()
-    await expect(meer.getByTestId('meer-ritme')).toHaveCount(0)
-    await expect(meer.getByTestId('bel-knop')).toHaveAttribute('href', /^tel:/)
+    for (const id of ['briefing-knop', 'knop-volgen', 'knop-invloed', 'meer-dossier', 'meer-kwalificatie', 'meer-reis', 'meer-campagnes']) await expect(meer.getByTestId(id)).toBeVisible()
+    for (const id of ['meer-ritme', 'bel-knop', 'contact-info-knop']) await expect(meer.getByTestId(id)).toHaveCount(0)
     // Kwalificatie: de rol van dit contact en BAND van het account.
     await meer.getByTestId('meer-kwalificatie').click()
     const kw = page.getByTestId('kwalificatie-flyout')
@@ -71,7 +72,7 @@ test.describe('contactkaart', () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await ga(page, '/contacten/ct-07')
     const rij = await page.locator('.ck-acties [data-test]:not([data-test=kop-iconen]):visible').evaluateAll((els) => els.map((e) => ({ id: e.getAttribute('data-test'), top: Math.round(e.getBoundingClientRect().top), h: Math.round(e.getBoundingClientRect().height) })))
-    expect(rij.map((k) => k.id)).toEqual(['kop-account', 'kop-meer'])
+    expect(rij.map((k) => k.id)).toEqual(['contact-info-knop', 'kop-meer'])
     expect(new Set(rij.map((k) => k.top)).size).toBe(1)
     expect(rij.every((k) => k.h >= 44)).toBe(true)
     await page.getByTestId('kop-meer').click()

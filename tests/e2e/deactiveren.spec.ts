@@ -19,8 +19,7 @@ test.describe('prospect deactiveren', () => {
     // Geen verwijderknop meer, ook niet in Info.
     await ga(page, `/accounts/${a.id}`)
     await expect(page.getByTestId('gedeactiveerd-balk')).toHaveCount(0)
-    await page.getByTestId('kop-meer').click()
-    await page.getByTestId('meer-flyout').getByTestId('info-knop').click()
+    await page.getByTestId('info-knop').click()
     await expect(page.getByTestId('if-deactiveer')).toBeVisible()
     await expect(page.getByTestId('verwijder')).toHaveCount(0)
     await expect(page.getByText('Verwijder account')).toHaveCount(0)

@@ -48,7 +48,7 @@ Reden: Tevreden met huidige leverancier, een landelijke groothandelsketen. Terug
 
 ## Zo doe je het in Dealtrace
 
-1. Kies bij het afronden van de taak de uitkomst **Geen interesse**, of klik op de accountkaart in het blok Ritme op **Zet nee**.
+1. Kies bij het afronden van de taak de uitkomst **Geen interesse**, of klik op de accountkaart bij **Meer**, **Reis** op **Zet nee**.
 2. Kies een van de zeven redenen: Geen behoefte, Tevreden met huidige leverancier, Geen budget, Verkeerd moment, Niet de beslisser, Niet geschikt of Anders. Bij Tevreden met huidige leverancier kies je bij wie.
 3. Klik **Zet op nee**. Je ziet tot wanneer het account op nee staat.
 

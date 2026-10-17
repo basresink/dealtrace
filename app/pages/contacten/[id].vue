@@ -1,9 +1,10 @@
 <script setup lang="ts">
 // Contactkaart (F04) in de opzet van DealDrive: kop met avatar en rol, kruimel, functie en account (link),
 // naam met rollabel, contactgegevens (mail, telefoon, mobiel, LinkedIn), de stuurstrip van het account en rechts
-// Zoeken, Vraag AI, Account en Meer. Meer opent een venster met korte kaders (Info, Briefing, Volgen, Invloed,
-// Belscript, Dossier, Kwalificatie, Reis, Klaarzetten en Bel) die elk hun eigen venster openen; ?meer=<id>
-// opent er direct een. Dossier, Kwalificatie en Reis tonen de stand van het account. Daaronder de statstrook en
+// Zoeken, Vraag AI, Info en Meer. Meer opent een venster met korte kaders (Briefing, Volgen, Invloed, Belscript,
+// Dossier, Kwalificatie, Reis, Campagnes, Accountplan als het contact in een plan staat, en Klaarzetten) die elk
+// hun eigen venster openen, met "Meer" terug in de kop; ?meer=<id> opent er direct een. Dossier, Kwalificatie en
+// Reis tonen de stand van het account. Bellen gaat via het nummer in de kop. Daaronder de statstrook en
 // dezelfde tabbladen als de accountkaart (KaartTabbladen), met alleen wat bij dit contact hoort; eigen velden
 // staan in het Info-venster. De avatar toont de foto van het contact (uploaden, wijzigen en verwijderen via het
 // potlood), anders de initialen. Op de telefoon een plakkende actiebalk.
@@ -37,19 +38,22 @@ const briefingOpen = ref(false)
 const volgenOpen = ref(false)
 // F8: de invloedskaart van het account, met dit contact geselecteerd.
 const invloedOpen = ref(false)
-// Meer: korte kaders die elk hun eigen venster openen. Op de telefoon gaat bellen via de actiebalk.
-const schermklasse = useSchermklasse()
-const telefoon = computed(() => schermklasse.value === 'telefoon')
+// Meer: korte kaders die elk hun eigen venster openen. Bellen gaat via het nummer in de kop en op de telefoon via de actiebalk.
 const meerOpen = ref(false)
 const belscriptOpen = ref(false)
 const dossierOpen = ref(false)
 const kwalificatieOpen = ref(false)
 const reisOpen = ref(false)
 const klaarOpen = ref(false)
+const campagnesOpen = ref(false)
+const accountplanOpen = ref(false)
+// De accountplannen waarin dit contact staat (als contactpersoon of met een actie); zonder de functie een lege lijst.
+const { data: plannen } = useLazyFetch<any>(() => `/api/contacten/${route.params.id}/accountplannen`, { server: false, default: () => ({ plannen: [] }) })
+const contactPlannen = computed<any[]>(() => plannen.value?.plannen ?? [])
 const kanKlaarzetten = computed(() => !!functie('bezoeken.klaarzetten')?.beschikbaar && me.value?.gebruiker.werkplek !== 'buitendienst')
 const datumKort = (d: string | null | undefined) => (d ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date(d)).replace('.', '') : '')
 const kaders = computed<MeerKader[]>(() => {
-  const k: MeerKader[] = [{ id: 'info', titel: 'Info', tekst: 'Contactgegevens, toestemming en Bel me niet', icoon: 'Info', test: 'contact-info-knop' }]
+  const k: MeerKader[] = []
   const x = a.value
   if (c.value?.account) {
     k.push({ id: 'briefing', titel: 'Briefing', tekst: `Wat je moet weten over ${c.value.account.naam}`, icoon: 'FileText', test: 'briefing-knop' })
@@ -62,14 +66,25 @@ const kaders = computed<MeerKader[]>(() => {
     k.push({ id: 'kwalificatie', titel: 'Kwalificatie', tekst: `BAND ${band.value} van 4 · rol ${CONTACTROL_LABEL[c.value.rol as ContactRol] ?? c.value.rol}`, icoon: 'ClipboardCheck', test: 'meer-kwalificatie' })
     k.push({ id: 'reis', titel: 'Reis', tekst: x.reis ? `${x.reis.naam} · ${x.reis.fase?.label ?? ''} · ${STATUS_LABEL[x.status] ?? x.status}` : x.soort === 'klant' ? 'Klanten lopen geen prospectreis' : 'Nog geen reis', icoon: 'Compass', test: 'meer-reis' })
   }
+  const nCamp = t.value.campagnes.length
+  k.push({ id: 'campagnes', titel: 'Campagnes', tekst: nCamp ? `${roepnaam.value} in ${nCamp} ${nCamp === 1 ? 'campagne' : 'campagnes'}` : 'In geen campagne', icoon: 'Megaphone', test: 'meer-campagnes' })
+  const p = contactPlannen.value[0]
+  if (p) k.push({ id: 'accountplan', titel: 'Accountplan', tekst: contactPlannen.value.length > 1 ? `${p.titel} en ${contactPlannen.value.length - 1} meer` : `${p.titel} · ${p.voortgang.klaar} van ${p.voortgang.totaal} acties klaar`, icoon: 'Target', test: 'meer-accountplan' })
   if (c.value?.account && kanKlaarzetten.value) k.push({ id: 'klaarzetten', titel: 'Klaarzetten', tekst: 'Zet klaar voor de regiodag van een collega', icoon: 'MapPin', test: 'klaarzetten-knop' })
-  const nummer = c.value && !c.value.belMeNiet ? c.value.mobiel ?? c.value.telefoon ?? null : null
-  if (!telefoon.value && nummer) k.push({ id: 'bel', titel: 'Bel', tekst: toonTelefoon(nummer), icoon: 'Phone', test: 'bel-knop', href: telLink(nummer) })
   return k
 })
-const OPEN: Record<string, Ref<boolean>> = { info: infoOpen, briefing: briefingOpen, volgen: volgenOpen, invloed: invloedOpen, belscript: belscriptOpen, dossier: dossierOpen, kwalificatie: kwalificatieOpen, reis: reisOpen, klaarzetten: klaarOpen }
-function kies(id: string) { meerOpen.value = false; const r = OPEN[id]; if (r) r.value = true }
-onMounted(() => { const q = route.query.meer; if (typeof q === 'string' && kaders.value.some((x) => x.id === q && !x.href)) kies(q) })
+const OPEN: Record<string, Ref<boolean>> = { info: infoOpen, briefing: briefingOpen, volgen: volgenOpen, invloed: invloedOpen, belscript: belscriptOpen, dossier: dossierOpen, kwalificatie: kwalificatieOpen, reis: reisOpen, campagnes: campagnesOpen, accountplan: accountplanOpen, klaarzetten: klaarOpen }
+// Een venster dat vanuit Meer opent, heeft "Meer" terug in de kop (FlyoutShell); Escape gaat ook terug.
+const meerTerug = maakMeerTerug(() => { meerOpen.value = true })
+function kies(id: string, uitMeer = true) { meerOpen.value = false; const r = OPEN[id]; if (!r) return; if (uitMeer) meerTerug.markeer(); r.value = true }
+// ?meer=<id> opent een venster direct; ?meer=info het Info-venster en het oude ?tab=campagnes het venster Campagnes.
+onMounted(() => {
+  const q = route.query.meer ?? (route.query.tab === 'campagnes' ? 'campagnes' : null)
+  if (q === 'info') { infoOpen.value = true; return }
+  if (typeof q === 'string' && kaders.value.some((x) => x.id === q && !x.href)) kies(q, false)
+})
+// Het accountplan-kader komt pas na het laden van de plannen; ?meer=accountplan wacht daarop.
+watch(contactPlannen, (l) => { if (l.length && route.query.meer === 'accountplan' && !accountplanOpen.value) kies('accountplan', false) })
 
 // Kop: avatar met initialen in een vaste kleur per naam, de rol als label met eigen icoon (kies via de keuzelijst eronder).
 const KLEUR = ['#194c8f', '#1e7c4a', '#c0392b', '#4c1d95', '#b45309', '#0a0a0a', '#0f766e']
@@ -130,15 +145,15 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
               <span v-if="!c.email && !c.telefoon && !c.mobiel && !linkedinUrl" class="meta">Nog geen contactgegevens. Vul ze in bij Info.</span>
             </div>
             <dl v-if="c.account" class="ck-stuurstrip alleen-groot" data-test="stuurstrip">
-              <div><dt>Account · laatste actie</dt><dd class="tnum">{{ datumLang(a?.stuur?.laatsteActie ?? c.account.laatsteContactOp) }}</dd></div>
-              <div><dt>Account · laatste call</dt><dd class="tnum">{{ datumLang(a?.stuur?.laatsteCall ?? c.account.laatsteCall) }}</dd></div>
-              <div><dt>Account · laatste bezoek</dt><dd class="tnum">{{ datumLang(a?.stuur?.laatsteBezoek) }}</dd></div>
+              <div><dt>Laatste actie</dt><dd class="tnum">{{ datumLang(a?.stuur?.laatsteActie ?? c.account.laatsteContactOp) }}</dd></div>
+              <div><dt>Laatste call</dt><dd class="tnum">{{ datumLang(a?.stuur?.laatsteCall ?? c.account.laatsteCall) }}</dd></div>
+              <div><dt>Laatste bezoek</dt><dd class="tnum">{{ datumLang(a?.stuur?.laatsteBezoek) }}</dd></div>
               <div v-if="a?.reis"><dt>Fase</dt><dd>{{ a.reis.fase?.label ?? '–' }}</dd></div>
             </dl>
           </div>
           <div class="ck-acties">
             <KopIconen zonder-hulp :ai="{ accountId: c.accountId, label: c.account?.naam ?? c.naam }" />
-            <NuxtLink v-if="c.account" :to="`/accounts/${c.accountId}`" class="dd-actie dd-actie--secundair" data-test="kop-account"><Icoon naam="Building2" class="dd-actie-icoon" />Account</NuxtLink>
+            <button type="button" class="dd-actie dd-actie--secundair" aria-haspopup="dialog" :aria-expanded="infoOpen" title="Contactgegevens, toestemming en Bel me niet" data-test="contact-info-knop" @click="infoOpen = true"><Icoon naam="Info" class="dd-actie-icoon" />Info</button>
             <button type="button" class="dd-actie dd-actie--secundair" aria-haspopup="dialog" :aria-expanded="meerOpen" data-test="kop-meer" @click="meerOpen = true"><Icoon naam="Ellipsis" class="dd-actie-icoon" />Meer</button>
           </div>
         </div>
@@ -182,9 +197,15 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
       </KaartFlyout>
       <KaartFlyout :open="reisOpen" kicker="Reis" :titel="a.naam" meta="De prospectreis van het account en elke fasewissel." test="reis-flyout" @sluit="reisOpen = false">
         <ReisOverzicht :account="a" />
-        <p class="meta"><NuxtLink :to="`/accounts/${c.accountId}?meer=ritme`" class="tekst-link" data-test="naar-accountkaart">Ritme en reis aanpassen op de accountkaart van {{ a.naam }} →</NuxtLink></p>
+        <p class="meta"><NuxtLink :to="`/accounts/${c.accountId}?meer=reis`" class="tekst-link" data-test="naar-accountkaart">Ritme en reis aanpassen op de accountkaart van {{ a.naam }} →</NuxtLink></p>
       </KaartFlyout>
     </template>
+    <KaartFlyout :open="campagnesOpen" kicker="Campagnes" :titel="c.naam" :meta="`De campagnes met een taak of contactmoment voor ${roepnaam}.`" test="campagnes-flyout" :account-id="c.accountId" @sluit="campagnesOpen = false">
+      <KaartCampagnes :campagnes="t.campagnes" op-contact />
+    </KaartFlyout>
+    <KaartFlyout v-if="contactPlannen.length" :open="accountplanOpen" kicker="Accountplan" :titel="c.naam" :meta="`De accountplannen waarin ${roepnaam} staat.`" test="accountplan-flyout" maat="breed" :account-id="c.accountId" @sluit="accountplanOpen = false">
+      <ContactAccountplannen :plannen="contactPlannen" :roepnaam="roepnaam" />
+    </KaartFlyout>
     <BelscriptFlyout v-if="c.account && functie('belscript.kiezen')?.beschikbaar" :open="belscriptOpen" :account-id="c.accountId" :naam="c.account.naam" :contact-id="c.id" @sluit="belscriptOpen = false" />
     <KlaarzetFlyout v-if="c.account" :open="klaarOpen" :account="{ id: c.accountId, naam: c.account.naam }" @sluit="klaarOpen = false" />
     <InvloedFlyout v-if="c.account" :open="invloedOpen" :account-id="c.accountId" :contact-id="c.id" @sluit="invloedOpen = false" @gewijzigd="ververs" />
@@ -253,6 +274,6 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
   .ck-contactstrip a { min-height: 44px; }
   .ck-stats { padding: 12px 0; }
 }
-/* Telefoon: Account en Meer op één regel (zoeken en AI staan in de mobiele kop). */
+/* Telefoon: Info en Meer op één regel (zoeken en AI staan in de mobiele kop). */
 @media (max-width: 767px) { .ck-acties { gap: 6px; } .ck-acties :deep(.dd-actie:not(.dd-actie--icoon)) { gap: 6px; padding-left: 10px; padding-right: 10px; } }
 </style>

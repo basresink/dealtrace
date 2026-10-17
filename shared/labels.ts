@@ -140,6 +140,24 @@ export const LABELS = {
     heet: zacht('Heet', 'oranje', 'Flame'),
     'regel-voorstel': rand('Regelvoorstel', 'Workflow'),
   },
+  /** Contractstatus van een klantorganisatie (platformbeheer); actief is de standaard. */
+  contract: {
+    actief: null,
+    proef: zacht('Proef', 'blauw', 'Hourglass'),
+    opgezegd: zacht('Opgezegd', 'oranje', 'CircleX'),
+  },
+  /** AVG-verzoek van een klant (platformbeheer): open met termijn, over tijd, afgehandeld. */
+  avgverzoek: {
+    open: rand('Open', 'Clock'),
+    over_tijd: zacht('Over tijd', 'rood', 'TriangleAlert'),
+    afgehandeld: zacht('Afgehandeld', 'groen', 'CircleCheck'),
+  },
+  /** Waar de AI-koppeling van een klant vandaan komt (platformbeheer). */
+  aikoppeling: {
+    eigen: rand('Eigen koppeling', 'KeyRound'),
+    platform: rand('Platformkoppeling'),
+    mock: leeg('Mock'),
+  },
   /** Gezondheid van een klantorganisatie (platformbeheer). */
   gezondheid: {
     gezond: zacht('Gezond', 'groen', 'CircleCheck'),

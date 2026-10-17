@@ -1,15 +1,16 @@
 <script setup lang="ts">
 // Accountkaart (F03, 8.5.5) in de opzet van DealDrive: kop met logovlak, kruimel, branche en plaats, naam met
-// klasselabel, website en de stuurstrip; rechts Zoeken, Vraag AI, Contacten en Meer. Meer opent een venster met
-// korte kaders (Info, Briefing, Volgen, Invloed, Belscript, Dossier, Kwalificatie, Ritme, Reis, Klaarzetten,
-// Overdragen en Deactiveren) die elk hun eigen venster openen; ?meer=<id> opent er direct een. Het logovlak
-// toont het logo (eigen logo-URL of het favicon van de website) en anders de initialen. Daaronder de
-// statstrook over de volle breedte, de stand van een overdracht en de tabbladen Tijdlijn, Inzichten, Taken,
-// Notities, E-mails, Afspraken, Gespreksverslagen, Campagnes, Accountplan en Documenten. Eigen velden en de
+// klasselabel, website en de stuurstrip; rechts Zoeken, Vraag AI, Contacten, Info en Meer. Meer opent een venster
+// met korte kaders (Briefing, Volgen, Invloed, Belscript, Dossier, Kwalificatie, Reis, Campagnes, Accountplan,
+// Klaarzetten, Overdragen en Deactiveren) die elk hun eigen venster openen, met "Meer" terug in de kop;
+// ?meer=<id> opent er direct een. Het logovlak toont het logo (eigen logo-URL of het favicon van de website) en
+// anders de initialen. Daaronder de statstrook over de volle breedte, de stand van een overdracht en de
+// tabbladen Tijdlijn, Inzichten, Taken, Notities, E-mails, Afspraken, Gespreksverslagen en Documenten. Eigen velden en de
 // huidige leverancier staan in het Info-venster. Het tabblad staat in de URL (?tab=); ze staan in
 // KaartTabbladen, gedeeld met de contactkaart, en tonen bij elk item het contact.
 // Op de telefoon compact met een plakkende actiebalk (Bellen, Mail, WhatsApp, Navigeer).
 import { CONTACTROL_LABEL, type ContactRol } from '~~/shared/contactgegevens'
+import { berichtKanaalLabel } from '~~/shared/taken'
 import type { Ref } from 'vue'
 import type { MeerKader } from '~/components/account/MeerFlyout.vue'
 import { STATUS_LABEL, datumKort, klasseKort, telLink, toonTelefoon } from '~/utils/accountWeergave'
@@ -90,8 +91,13 @@ const aantalContacten = computed(() => a.value?.contacten.filter((c: any) => c.s
 const meerOpen = ref(false)
 const dossierOpen = ref(false)
 const kwalificatieOpen = ref(false)
-const ritmeOpen = ref(false)
 const reisOpen = ref(false)
+const campagnesOpen = ref(false)
+const accountplanOpen = ref(false)
+const metAccountplan = computed(() => !!functie('nav.accountplannen')?.beschikbaar)
+// Het lopende accountplan voor de regel in Meer (alleen met de functie Accountplannen).
+const { data: plannen } = useLazyFetch<any>('/api/accountplannen', { query: { accountId: route.params.id }, server: false, immediate: metAccountplan.value, default: () => ({ plannen: [] }) })
+const lopendPlan = computed(() => plannen.value?.plannen?.find((p: any) => p.weergave === 'actueel') ?? plannen.value?.plannen?.[0] ?? null)
 const belscriptOpen = ref(false)
 const datumKortJaar = (d: string | null | undefined) => (d ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date(d)).replace('.', '') : '')
 const bandJa = computed(() => ['behoefte', 'autoriteit', 'noodzaak', 'draagvlak'].filter((k) => a.value?.band?.[k]?.ja).length)
@@ -99,36 +105,45 @@ const kaders = computed<MeerKader[]>(() => {
   const x = a.value
   const k: MeerKader[] = []
   if (kanOverdragen.value) k.push({ id: 'overdragen', titel: 'Overdragen', tekst: 'Draag dit account over na de eerste afspraak', icoon: 'ArrowRight', test: 'overdragen-knop', accent: true })
-  k.push({ id: 'info', titel: 'Info', tekst: 'Bedrijfsgegevens, leverancier en eigen velden', icoon: 'Info', test: 'info-knop' })
   k.push({ id: 'briefing', titel: 'Briefing', tekst: 'Wat je moet weten voor je volgende contact', icoon: 'FileText', test: 'briefing-knop' })
   if (functie('prospects.volgen')?.beschikbaar) k.push({ id: 'volgen', titel: 'Volgen', tekst: 'Volgende beste stap en opvolgreeks', icoon: 'Route', test: 'knop-volgen' })
   k.push({ id: 'invloed', titel: 'Invloed', tekst: `Wie beslist en wie beïnvloedt · ${aantalContacten.value} ${aantalContacten.value === 1 ? 'contact' : 'contacten'}`, icoon: 'Network', test: 'knop-invloed' })
   if (functie('belscript.kiezen')?.beschikbaar) k.push({ id: 'belscript', titel: 'Belscript', tekst: 'Het script voor je volgende gesprek', icoon: 'ScrollText', test: 'meer-belscript' })
   k.push({ id: 'dossier', titel: 'Dossier', tekst: x.dossier?.op ? `Wat de Verrijker vond · ververst ${datumKortJaar(x.dossier.op)}` : 'Nog geen dossier', icoon: 'Database', test: 'meer-dossier' })
   k.push({ id: 'kwalificatie', titel: 'Kwalificatie', tekst: `BAND ${bandJa.value} van 4 · buying committee`, icoon: 'ClipboardCheck', test: 'meer-kwalificatie' })
-  if (x.kan.reis) k.push({ id: 'ritme', titel: 'Ritme', tekst: x.terugkom?.tekst ?? (x.reis?.fase ? `Fase ${x.reis.fase.label}` : 'Nog geen reis'), icoon: 'Repeat', test: 'meer-ritme' })
-  k.push({ id: 'reis', titel: 'Reis', tekst: x.reis ? `${x.reis.naam} · ${x.reis.fase?.label ?? ''} · ${STATUS_LABEL[x.status] ?? x.status}` : x.soort === 'klant' ? 'Klanten lopen geen prospectreis' : 'Nog geen reis', icoon: 'Compass', test: 'meer-reis' })
+  k.push({ id: 'reis', titel: 'Reis', tekst: x.terugkom?.tekst ?? (x.reis ? `${x.reis.naam} · ${x.reis.fase?.label ?? ''} · ${STATUS_LABEL[x.status] ?? x.status}` : x.soort === 'klant' ? 'Klanten lopen geen prospectreis' : 'Nog geen reis'), icoon: 'Compass', test: 'meer-reis' })
+  const nCamp = t.value.campagnes.length
+  k.push({ id: 'campagnes', titel: 'Campagnes', tekst: nCamp ? `Loopt mee in ${nCamp} ${nCamp === 1 ? 'campagne' : 'campagnes'}` : 'Loopt in geen campagne mee', icoon: 'Megaphone', test: 'meer-campagnes' })
+  if (metAccountplan.value) k.push({ id: 'accountplan', titel: 'Accountplan', tekst: lopendPlan.value ? `${lopendPlan.value.titel} · ${lopendPlan.value.acties?.klaar ?? 0} van ${lopendPlan.value.acties?.totaal ?? 0} acties klaar` : 'Nog geen accountplan', icoon: 'Target', test: 'meer-accountplan' })
   if (kanKlaarzetten.value) k.push({ id: 'klaarzetten', titel: 'Klaarzetten', tekst: 'Zet klaar voor de regiodag van een collega', icoon: 'MapPin', test: 'klaarzetten-knop' })
   if (telefoon.value && functie('contact.visitekaartje')?.beschikbaar) k.push({ id: 'visitekaartje', titel: 'Scan visitekaartje', tekst: 'Maak een contact van een foto', icoon: 'Camera', test: 'scan-visitekaartje' })
   if (telefoon.value && !inPakket.value && functie('onderweg.dagpakket')?.beschikbaar) k.push({ id: 'offline', titel: 'Bewaar voor offline', tekst: 'Neem dit account mee zonder verbinding', icoon: 'Download', test: 'bewaar-offline' })
   if (x.kan.deactiveren) k.push({ id: 'deactiveren', titel: 'Deactiveren', tekst: 'Haal het account uit de motor, met een reden', icoon: 'Archive', test: 'deactiveer-knop' })
   return k
 })
-const OPEN: Record<string, Ref<boolean>> = { info: infoOpen, briefing: briefingOpen, volgen: volgenOpen, invloed: invloedOpen, belscript: belscriptOpen, dossier: dossierOpen, kwalificatie: kwalificatieOpen, ritme: ritmeOpen, reis: reisOpen, klaarzetten: klaarOpen, overdragen: overdragenOpen, visitekaartje: kaartjeOpen, deactiveren: deactiveerOpen }
-function kies(id: string) {
+const OPEN: Record<string, Ref<boolean>> = { info: infoOpen, briefing: briefingOpen, volgen: volgenOpen, invloed: invloedOpen, belscript: belscriptOpen, dossier: dossierOpen, kwalificatie: kwalificatieOpen, reis: reisOpen, campagnes: campagnesOpen, accountplan: accountplanOpen, klaarzetten: klaarOpen, overdragen: overdragenOpen, visitekaartje: kaartjeOpen, deactiveren: deactiveerOpen }
+// Een venster dat vanuit Meer opent, heeft "Meer" terug in de kop (FlyoutShell); Escape gaat ook terug.
+const meerTerug = maakMeerTerug(() => { meerOpen.value = true })
+function kies(id: string, uitMeer = true) {
   meerOpen.value = false
   if (id === 'offline') { bewaarOffline(); return }
   const r = OPEN[id]
-  if (r) r.value = true
+  if (!r) return
+  if (uitMeer) meerTerug.markeer()
+  r.value = true
 }
-// ?meer=<id> opent een venster direct (bijvoorbeeld vanaf de contactkaart); het oude ?tab=kwalificatie opent Kwalificatie.
+// ?meer=<id> opent een venster direct (bijvoorbeeld vanaf de contactkaart). Oude links: ?meer=ritme opent Reis
+// (Zet nee, Pauzeer, Terugkomdatum staan daar), ?tab=kwalificatie, ?tab=campagnes en ?tab=accountplan hun venster.
+const OUDE_TAB: Record<string, string> = { kwalificatie: 'kwalificatie', campagnes: 'campagnes', accountplan: 'accountplan' }
 onMounted(() => {
-  const q = route.query.meer ?? (route.query.tab === 'kwalificatie' ? 'kwalificatie' : null)
-  if (typeof q === 'string' && kaders.value.some((x) => x.id === q)) kies(q)
+  let q = route.query.meer ?? (typeof route.query.tab === 'string' ? OUDE_TAB[route.query.tab] ?? null : null)
+  if (q === 'ritme') q = 'reis'
+  if (q === 'info') { infoOpen.value = true; return }
+  if (typeof q === 'string' && kaders.value.some((x) => x.id === q)) kies(q, false)
 })
-// Een knop in Ritme opent zijn eigen venster; Ritme gaat dan dicht.
+// Een knop voor het ritme (in het venster Reis) opent zijn eigen venster; Reis gaat dan dicht.
 function ritmeActie(soort: 'nee' | 'pauzeer' | 'verplaats' | 'fase' | 'terugop') {
-  ritmeOpen.value = false
+  reisOpen.value = false
   if (soort === 'nee') neeOpen.value = true
   else handeling.value = soort
 }
@@ -208,6 +223,7 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
           <div class="ak-acties">
             <KopIconen zonder-hulp :ai="{ accountId: a.id, label: a.naam }" />
             <button type="button" class="dd-actie dd-actie--secundair" data-test="contacten-knop" @click="contactenOpen = true"><Icoon naam="Users" class="dd-actie-icoon" />Contacten<span v-if="aantalContacten" class="ak-teller tnum">{{ aantalContacten }}</span></button>
+            <button type="button" class="dd-actie dd-actie--secundair" aria-haspopup="dialog" :aria-expanded="infoOpen" title="Bedrijfsgegevens, leverancier en eigen velden" data-test="info-knop" @click="infoOpen = true"><Icoon naam="Info" class="dd-actie-icoon" />Info</button>
             <button type="button" class="dd-actie dd-actie--secundair" aria-haspopup="dialog" :aria-expanded="meerOpen" data-test="kop-meer" @click="meerOpen = true"><Icoon naam="Ellipsis" class="dd-actie-icoon" />Meer</button>
           </div>
         </div>
@@ -223,7 +239,7 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
             </li>
             <li v-if="!a.contacten.length" class="schakel-rij"><span class="meta">Geen contactpersoon</span></li>
           </ul>
-          <ul v-if="momenten.length" class="schakel-lijst kaart mt-8"><li v-for="x in momenten" :key="x.id" class="schakel-rij"><span>{{ SOORT[x.soort] ?? x.soort }}<template v-if="x.uitkomst"> · {{ x.uitkomst }}</template></span><span class="meta">{{ datumKort(x.op) }}</span></li></ul>
+          <ul v-if="momenten.length" class="schakel-lijst kaart mt-8"><li v-for="x in momenten" :key="x.id" class="schakel-rij"><span>{{ berichtKanaalLabel(x.soort, x.kanaal) ?? SOORT[x.soort] ?? x.soort }}<template v-if="x.uitkomst"> · {{ x.uitkomst }}</template></span><span class="meta">{{ datumKort(x.op) }}</span></li></ul>
         </div>
       </div>
     </header>
@@ -261,11 +277,7 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
     </section>
 
     <!-- Tabbladen: gedeeld met de contactkaart (KaartTabbladen). -->
-    <KaartTabbladen :account="{ id: a.id, naam: a.naam, soort: a.soort }" :tabbladen="t" :mail-aan="primair?.email ? primair.naam : null" :kan-overdragen="a.kanOverdragen" @ververs="ververs" @overdragen="overdragenOpen = true">
-      <template v-if="functie('nav.accountplannen')?.beschikbaar" #accountplan>
-        <AccountplanTab :account="{ id: a.id, naam: a.naam, soort: a.soort }" />
-      </template>
-    </KaartTabbladen>
+    <KaartTabbladen :account="{ id: a.id, naam: a.naam, soort: a.soort }" :tabbladen="t" :mail-aan="primair?.email ? primair.naam : null" :kan-overdragen="a.kanOverdragen" @ververs="ververs" @overdragen="overdragenOpen = true" />
 
     <!-- Telefoon: plakkende actiebalk (8.5.5). -->
     <div class="actiebalk" data-test="actiebalk">
@@ -282,9 +294,12 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
     <KaartFlyout :open="kwalificatieOpen" kicker="Kwalificatie" :titel="a.naam" meta="BAND en het buying committee van dit account." test="kwalificatie-flyout" maat="breed" @sluit="kwalificatieOpen = false">
       <KwalificatieBlokken :account="a" @gewijzigd="ververs" />
     </KaartFlyout>
-    <KaartFlyout v-if="a.kan.reis" :open="ritmeOpen" kicker="Ritme" :titel="a.naam" meta="Het hercontactritme van dit account en wat je eraan verandert." test="ritme-flyout" @sluit="ritmeOpen = false">
-      <article class="kaart" data-test="ritme">
-        <p class="kaart-meta"><template v-if="a.terugkom">{{ a.terugkom.tekst }}</template><template v-else-if="a.reis?.fase">Fase {{ a.reis.fase.label }}<template v-if="a.reis.fase.accent">: {{ a.reis.fase.accent }}</template></template><template v-else>Nog geen reis.</template></p>
+    <KaartFlyout :open="reisOpen" kicker="Reis" :titel="a.naam" meta="De prospectreis van dit account, het ritme en elke fasewissel." test="reis-flyout" :account-id="a.id" @sluit="reisOpen = false">
+      <ReisOverzicht :account="a" />
+      <!-- Het ritme (was het venster Ritme): Zet nee, Pauzeer, Verplaats, Fase corrigeren en Terugkomdatum. -->
+      <article v-if="a.kan.reis" class="kaart" data-test="ritme">
+        <header class="kaart-kop"><h2 class="kaart-titel">Ritme</h2></header>
+        <p class="kaart-meta">Zet het account op nee, pauzeer het of kies wanneer het terugkomt.</p>
         <div class="reis-knoppen mt-16">
           <button v-if="a.kan.nee" type="button" class="dd-act" data-test="zet-nee-knop" @click="ritmeActie('nee')">Zet nee</button>
           <button v-if="a.kan.pauzeer" type="button" class="dd-act" data-test="pauzeer-knop" @click="ritmeActie('pauzeer')">Pauzeer tot</button>
@@ -295,8 +310,11 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
         <p v-if="!a.kan.nee && !a.kan.pauzeer && !a.kan.verplaatsen && !a.kan.faseCorrigeren && !a.kan.terugOp" class="meta mt-8">Er is nu niets aan het ritme te veranderen.</p>
       </article>
     </KaartFlyout>
-    <KaartFlyout :open="reisOpen" kicker="Reis" :titel="a.naam" meta="De prospectreis van dit account en elke fasewissel." test="reis-flyout" @sluit="reisOpen = false">
-      <ReisOverzicht :account="a" />
+    <KaartFlyout :open="campagnesOpen" kicker="Campagnes" :titel="a.naam" meta="De campagnes waarin dit account meeloopt." test="campagnes-flyout" :account-id="a.id" @sluit="campagnesOpen = false">
+      <KaartCampagnes :campagnes="t.campagnes" />
+    </KaartFlyout>
+    <KaartFlyout v-if="metAccountplan" :open="accountplanOpen" kicker="Accountplan" :titel="a.naam" meta="Het lopende accountplan met samenvatting, acties en voortgang." test="accountplan-flyout" maat="breed" :account-id="a.id" @sluit="accountplanOpen = false">
+      <AccountplanTab :account="{ id: a.id, naam: a.naam, soort: a.soort }" in-flyout />
     </KaartFlyout>
     <BelscriptFlyout v-if="functie('belscript.kiezen')?.beschikbaar" :open="belscriptOpen" :account-id="a.id" :naam="a.naam" @sluit="belscriptOpen = false" />
     <ReisgeschiedenisFlyout v-if="a.kan.geschiedenis" :open="geschiedenisOpen" :account-id="a.id" :naam="a.naam" @sluit="geschiedenisOpen = false" />
@@ -370,6 +388,6 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
   .ak-kop { padding: 20px 0; }
   .ak-merk { margin-top: 20px; }
 }
-/* Telefoon: Contacten en Meer op één regel (zoeken en AI staan in de mobiele kop). */
+/* Telefoon: Contacten, Info en Meer op één regel (zoeken en AI staan in de mobiele kop). */
 @media (max-width: 767px) { .ak-acties { gap: 6px; } .ak-acties :deep(.dd-actie:not(.dd-actie--icoon)) { gap: 6px; padding-left: 10px; padding-right: 10px; } }
 </style>

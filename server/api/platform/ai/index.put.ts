@@ -17,6 +17,8 @@ export default defineEventHandler(async (event) => {
   return alsPlatform(async (tx) => {
     const [al] = (await tx.execute(org ? sql`select id, sleutel from llm_connections where organisation_id = ${org}` : sql`select id, sleutel from llm_connections where organisation_id is null`)).rows as any[]
     const versleuteld = sleutel ? versleutel({ sleutel }, 'llm') : al?.sleutel ?? null
+    // Een eigen Claude-koppeling zonder sleutel zou de platformkoppeling voor deze klant uitzetten.
+    if (org && (b.provider ?? 'claude') === 'claude' && !versleuteld) throw createError({ statusCode: 422, statusMessage: 'Een eigen koppeling heeft een sleutel nodig' })
     if (al) await tx.execute(sql`update llm_connections set provider = ${b.provider ?? 'claude'}, sleutel = ${versleuteld}, modellen = ${JSON.stringify(modellen)}::jsonb, regio = ${b.regio ?? 'EU'}, geen_training = ${b.geenTraining ?? true}, door = ${ctx.gebruiker.id}, op = now() where id = ${al.id}`)
     else await tx.execute(sql`insert into llm_connections (organisation_id, provider, sleutel, modellen, regio, geen_training, door) values (${org}, ${b.provider ?? 'claude'}, ${versleuteld}, ${JSON.stringify(modellen)}::jsonb, ${b.regio ?? 'EU'}, ${b.geenTraining ?? true}, ${ctx.gebruiker.id})`)
     await platformAudit(tx, event, ctx, { organisatieId: org, handeling: sleutel ? 'ai.sleutel' : 'ai.instellingen', object: org ?? 'platform', na: { provider: b.provider ?? 'claude', modellen, sleutelGewijzigd: !!sleutel } })

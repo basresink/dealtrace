@@ -3,7 +3,11 @@
 // BAND met Kwalificeer, het buying committee met "Stel voor met AI" (Profielbouwer, 3 credits),
 // contactpersonen zoeken via Datacollectief en de contactpersonen met hun rol. Op de contactkaart staat
 // bovenaan de rol van dat contact in het committee.
+// BAND uit de gespreksverslagen: de analyses van de Notulist leveren per letter een voorstel met citaat en
+// herkomst (welk verslag, welke datum); de gebruiker bevestigt, bewerkt of verwerpt per letter. Een letter die al
+// is ingevuld krijgt geen voorstel; met de hand ingevuld blijft leidend.
 import { CONTACTROL_LABEL, type ContactRol } from '~~/shared/contactgegevens'
+import { BAND_UITLEG, type BandVoorstel } from '~~/shared/bandUitVerslag'
 const props = defineProps<{ account: any; contact?: { naam: string; roepnaam?: string; rol: string; functie?: string | null } | null }>()
 const emit = defineEmits<{ gewijzigd: [] }>()
 const toast = useToast()
@@ -20,6 +24,34 @@ async function zetBand(letter: string, ja: boolean) {
     emit('gewijzigd')
   } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
+// Voorstellen uit de gespreksverslagen (GET /api/accounts/:id/band-voorstel).
+const magVoorstel = computed(() => !!functie('reis.kwalificeer')?.beschikbaar)
+const voorstellen = ref<BandVoorstel[]>([])
+const verslagen = ref(0)
+async function laadVoorstellen() {
+  try { const r = await $fetch<any>(`/api/accounts/${a.value.id}/band-voorstel`); voorstellen.value = r.voorstellen; verslagen.value = r.verslagen } catch { voorstellen.value = [] }
+}
+onMounted(laadVoorstellen)
+watch(() => JSON.stringify(a.value.band ?? {}), laadVoorstellen)
+const bewerkt = ref<string | null>(null)
+const concept = reactive({ ja: true, toelichting: '' })
+const besluitBezig = ref(false)
+function startBewerk(v: BandVoorstel) { bewerkt.value = v.letter; concept.ja = v.ja; concept.toelichting = v.citaat }
+async function besluit(v: BandVoorstel, soort: 'bevestig' | 'bewerk' | 'verwerp') {
+  besluitBezig.value = true
+  try {
+    const r = await $fetch<any>(`/api/accounts/${a.value.id}/band-voorstel`, { method: 'POST', body: { letter: v.letter, besluit: soort, bronId: v.bron.id, ...(soort === 'bewerk' ? { ja: concept.ja, toelichting: concept.toelichting } : {}) } })
+    bewerkt.value = null
+    toast.toon(soort === 'verwerp' ? `Voorstel voor ${label(v.letter).toLowerCase()} verworpen.` : r.gemeld?.gewisseld ? 'BAND 3 van 4: gekwalificeerd.' : `${label(v.letter)} ingevuld uit het verslag.`)
+    await laadVoorstellen()
+    emit('gewijzigd')
+  } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { besluitBezig.value = false }
+}
+async function ongedaan(letter: string) {
+  try { await $fetch(`/api/accounts/${a.value.id}/band-voorstel`, { method: 'POST', body: { letter, besluit: 'ongedaan' } }); emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') }
+}
+const dagKort = (d: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Amsterdam' }).format(new Date(d)).replace('.', '')
+const bronLabel = (b: { soort: string; datum: string }) => `${b.soort === 'afspraak' ? 'Verslag' : 'Belverslag'} ${dagKort(b.datum)}`
 async function kwalificeer() {
   try {
     const r = await $fetch<any>('/api/reis/gebeurtenis', { method: 'POST', body: { accountId: a.value.id, gebeurtenis: 'gekwalificeerd' } })
@@ -59,8 +91,41 @@ const ontbrekend = computed(() => ((a.value.ontbrekendeRollen ?? []) as string[]
       <li v-for="k in BAND" :key="k" class="band-rij">
         <label v-if="magBand" class="schakel-naam kb-vink"><input type="checkbox" :checked="!!a.band?.[k]?.ja" :data-test="`band-${k}`" @change="zetBand(k, ($event.target as HTMLInputElement).checked)"> {{ label(k) }}</label>
         <template v-else>{{ label(k) }}: {{ a.band?.[k]?.ja ? `ja (${a.band[k].bron ?? 'bron onbekend'})` : 'nog niet' }}</template>
+        <span v-if="a.band?.[k]?.herkomst" class="kb-herkomst" :data-test="`band-herkomst-${k}`">
+          <span class="kb-chip"><Icoon naam="FileText" :grootte="12" />Gebaseerd op {{ bronLabel(a.band[k].herkomst) }} · {{ a.band[k].herkomst.titel }}</span>
+          <span v-if="a.band[k].toelichting" class="kb-citaat">"{{ a.band[k].toelichting }}"</span>
+          <button v-if="magVoorstel" type="button" class="kb-link" :data-test="`band-ongedaan-${k}`" @click="ongedaan(k)">Ongedaan maken</button>
+        </span>
       </li>
     </ul>
+    <section v-if="magVoorstel && voorstellen.length" class="kb-voorstellen" data-test="band-voorstellen">
+      <h3 class="kb-voorstellen-titel"><Label soort="ai" waarde="voorstel" /> Uit je gespreksverslagen</h3>
+      <p class="kaart-meta">De Notulist las {{ verslagen }} {{ verslagen === 1 ? 'verslag' : 'verslagen' }}. Bevestig, bewerk of verwerp per letter; er wordt niets vanzelf ingevuld.</p>
+      <article v-for="v in voorstellen" :key="v.letter" class="kb-voorstel" :data-test="`band-voorstel-${v.letter}`">
+        <header class="kb-voorstel-kop">
+          <strong>{{ label(v.letter) }}</strong><span class="meta">{{ BAND_UITLEG[v.letter] }}</span>
+          <span class="kb-oordeel" :class="v.ja ? 'kb-oordeel--ja' : 'kb-oordeel--nee'" data-test="band-voorstel-oordeel">{{ v.ja ? 'Ja' : 'Nee' }}</span>
+        </header>
+        <p class="kb-citaat">"{{ v.citaat }}"</p>
+        <span class="kb-chip" data-test="band-voorstel-bron"><Icoon naam="FileText" :grootte="12" />Gebaseerd op {{ bronLabel(v.bron) }} · {{ v.bron.titel }}</span>
+        <form v-if="bewerkt === v.letter" class="kb-bewerk" data-test="band-voorstel-bewerk" @submit.prevent="besluit(v, 'bewerk')">
+          <fieldset class="kb-keuze"><legend class="veld-label">{{ label(v.letter) }}</legend>
+            <label class="kb-vink"><input v-model="concept.ja" type="radio" :value="true" name="kb-ja"> Ja</label>
+            <label class="kb-vink"><input v-model="concept.ja" type="radio" :value="false" name="kb-ja" data-test="band-voorstel-nee"> Nee</label>
+          </fieldset>
+          <label class="veld"><span class="veld-label">Toelichting</span><textarea v-model="concept.toelichting" class="invoer" rows="2" maxlength="300" data-test="band-voorstel-toelichting" /></label>
+          <div class="kb-acties">
+            <button type="submit" class="dd-act dd-act--primair" :disabled="besluitBezig" data-test="band-voorstel-bewaar">Bewaar</button>
+            <button type="button" class="dd-act" @click="bewerkt = null">Annuleer</button>
+          </div>
+        </form>
+        <div v-else class="kb-acties">
+          <button type="button" class="dd-act dd-act--primair" :disabled="besluitBezig" data-test="band-voorstel-bevestig" @click="besluit(v, 'bevestig')"><Icoon naam="Check" class="dd-act-icoon" />Bevestig</button>
+          <button type="button" class="dd-act" :disabled="besluitBezig" data-test="band-voorstel-bewerk-knop" @click="startBewerk(v)"><Icoon naam="Pencil" class="dd-act-icoon" />Bewerk</button>
+          <button type="button" class="dd-act" :disabled="besluitBezig" data-test="band-voorstel-verwerp" @click="besluit(v, 'verwerp')"><Icoon naam="X" class="dd-act-icoon" />Verwerp</button>
+        </div>
+      </article>
+    </section>
     <button v-if="a.kan?.kwalificeer" type="button" class="dd-act dd-act--primair mt-16" data-test="kwalificeer" @click="kwalificeer">Kwalificeer</button>
   </article>
   <section class="kb-committee">
@@ -80,4 +145,20 @@ const ontbrekend = computed(() => ((a.value.ontbrekendeRollen ?? []) as string[]
 <style scoped>
 .kb-vink { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; }
 .kb-committee { margin-top: 8px; }
+.band-rij { flex-wrap: wrap; }
+.kb-herkomst { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; width: 100%; margin: 0 0 6px 26px; font-size: 12px; }
+.kb-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border: 1px solid var(--border-strong); border-radius: 2px; font-size: 11px; font-weight: 600; color: var(--ink-soft); background: var(--wit); }
+.kb-citaat { margin: 0; font-size: 13px; font-style: italic; line-height: 1.45; color: var(--ink-soft); overflow-wrap: anywhere; }
+.kb-link { min-height: 28px; padding: 0 2px; background: none; border: 0; font: inherit; font-size: 12px; font-weight: 700; color: var(--ink); text-decoration: underline; cursor: pointer; }
+.kb-voorstellen { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
+.kb-voorstellen-titel { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 700; }
+.kb-voorstel { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; border: 1px dashed var(--purple); border-radius: 2px; background: var(--wit); }
+.kb-voorstel-kop { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; width: 100%; }
+.kb-oordeel { margin-left: auto; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.kb-oordeel--ja { color: var(--green); }
+.kb-oordeel--nee { color: var(--red); }
+.kb-acties { display: flex; flex-wrap: wrap; gap: 8px; }
+.kb-bewerk { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.kb-keuze { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; padding: 0; border: 0; }
+@media (max-width: 767px) { .kb-acties .dd-act, .kb-link { min-height: 44px; } }
 </style>

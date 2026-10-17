@@ -21,6 +21,7 @@ import { seedConcepten } from './seedConcepten'
 import { seedTeam } from './seedTeam'
 import { seedEva } from './seedEva'
 import { seedEvaUitgebreid } from './seedEvaUitgebreid'
+import { seedEvaTerug } from './seedEvaTerug'
 import { seedKennisbank } from './seedKennisbank'
 import { seedSignaalradar } from './seedSignaalradar'
 import { versleutel } from '../utils/geheimen'
@@ -187,6 +188,8 @@ export async function vulTestdataAan(client: pg.Client, orgId: string) {
   await seedEva(client, orgId)
   // Eva uitgebreid: 72 extra prospects, drie klanten en acht weken werk eromheen (een drukke werkweek op elke pagina).
   await seedEvaUitgebreid(client, orgId)
+  // Vier verloren prospects van Eva die deze week terug in beeld komen (Terug in beeld).
+  await seedEvaTerug(client, orgId)
   // Kennisbank: vijf fictieve documenten, een paar gekoppeld aan prospects en een contact.
   await seedKennisbank(client, orgId)
   // Signaalradar (F5): fictieve inzichten over zeven perioden, zodat er golven te zien zijn.

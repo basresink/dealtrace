@@ -9,6 +9,7 @@ import {
   TOEWIJZING_STANDAARD, type CrmBedrijf, type CrmContact, type CrmGebeurtenis, type CrmObject, type CrmSoort, type Richting, type Toewijzing,
 } from '../../shared/crm'
 import { volgendePoging } from '../../shared/funnel'
+import { berichtKanaalLabel } from '../../shared/taken'
 import type { LeadFeiten } from '../../shared/leadGenerator'
 import { normaliseerDomein, zoekDuplicaat, type AccountKandidaat } from '../../shared/ontdubbelen'
 import { schrijfAudit } from './audit'
@@ -250,7 +251,7 @@ async function herkenVerloren(tx: Tx, org: string, soort: CrmSoort, nu: Date) {
   }
 }
 
-const KANAAL_LABEL: Record<string, string> = { gebeld: 'Gebeld', mail: 'Mail', bericht: 'Bericht', afspraak: 'Afspraak', bezoek: 'Bezoek', linkedin: 'LinkedIn', whatsapp: 'WhatsApp', kaart: 'Kaart' }
+const KANAAL_LABEL: Record<string, string> = { gebeld: 'Gebeld', mail: 'Mail', bericht: 'Bericht', afspraak: 'Afspraak', bezoek: 'Bezoek', linkedin: 'LinkedIn', whatsapp: 'WhatsApp', sms: 'SMS', kaart: 'Kaart' }
 /** Schrijven volgens de richting: bedrijven (gemarkeerd bij Neem over), hun contacten en de uitkomsten sinds schrijven aan staat. */
 async function schrijfNaarCrm(tx: Tx, org: string, k: Rij, i: CrmInstellingen, adapter: CrmAdapter, nu: Date, fouten: { record?: string; melding: string; soort?: 'fout' | 'verschil' }[]) {
   const soort = k.soort as CrmSoort
@@ -277,7 +278,7 @@ async function schrijfNaarCrm(tx: Tx, org: string, k: Rij, i: CrmInstellingen, a
       } else {
         const [x] = await rijen(tx, sql`select x.*, a.data->'extern'->${soort}->>'id' as bedrijf, a.name from activiteiten x join accounts a on a.id = x.account_id where x.id = ${s.id}`)
         if (!x?.bedrijf) continue
-        const r = await adapter.schrijfActiviteit({ sleutel: `dealtrace-activiteit:${x.id}`, bedrijfId: x.bedrijf, onderwerp: `${KANAAL_LABEL[x.soort] ?? x.soort}${x.uitkomst ? `: ${x.uitkomst}` : ''}`, tekst: x.data?.tekst ?? '', datum: new Date(x.op).toISOString(), kanaal: x.kanaal ?? x.soort, uitkomst: x.uitkomst ?? null })
+        const r = await adapter.schrijfActiviteit({ sleutel: `dealtrace-activiteit:${x.id}`, bedrijfId: x.bedrijf, onderwerp: `${berichtKanaalLabel(x.soort, x.kanaal) ?? KANAAL_LABEL[x.soort] ?? x.soort}${x.uitkomst ? `: ${x.uitkomst}` : ''}`, tekst: x.data?.tekst ?? '', datum: new Date(x.op).toISOString(), kanaal: x.kanaal ?? x.soort, uitkomst: x.uitkomst ?? null })
         await tx.execute(sql`insert into crm_records (organisation_id, soort, object, extern_id, bedrijf_extern, account_id, activiteit_id, data) values (${org}, ${soort}, 'activiteit', ${r.id}, ${x.bedrijf}, ${x.account_id}, ${x.id}, ${JSON.stringify({ soort: x.soort, uitkomst: x.uitkomst })}::jsonb)
           on conflict (organisation_id, soort, object, extern_id) do nothing`)
         n++

@@ -47,7 +47,7 @@ Op **Richting** staat onder **Concurrenten** een kaart per soort, ook voor "Niet
 
 Vanaf Gevorderd kies je op de accountkaart de **huidige leverancier**. Dan zie je meteen wat je zegt en welk bewijs je hebt. Staat het account in de fase gekwalificeerd, dan waarschuwt Dealtrace als je hier vaak van verliest.
 
-Blijft het een nee, klik dan in het blok Ritme op **Zet nee**, kies "Tevreden met huidige leverancier" en daarna bij wie. Klik **Zet op nee**. De afkoelperiode per kanaal gaat in en het account komt op de terugkomdatum vanzelf terug.
+Blijft het een nee, klik dan op de accountkaart bij **Meer**, **Reis** op **Zet nee**, kies "Tevreden met huidige leverancier" en daarna bij wie. Klik **Zet op nee**. De afkoelperiode per kanaal gaat in en het account komt op de terugkomdatum vanzelf terug.
 
 ## Controlevragen
 

@@ -37,6 +37,9 @@ export const BEZOEK_TYPE = { id: 'bezoek', label: 'Bezoek', icoon: 'MapPin' }
 export const taakTypeVan = (id: string | null | undefined) => (id === 'bezoek' ? BEZOEK_TYPE : TAAK_TYPES.find((x) => x.id === id) ?? TAAK_TYPES[0]!)
 /** De keuzes in een bewerkstand: de taakkiezer, plus Bezoek als de taak al een bezoektaak is (anders verdwijnt het type stil). */
 export const taakTypesVoor = (huidig: string | null | undefined) => (huidig === 'bezoek' ? [...TAAK_TYPES, BEZOEK_TYPE] : TAAK_TYPES)
+/** Het kanaal van een `bericht`-activiteit als woord (WhatsApp, SMS, LinkedIn); anders null. */
+export const berichtKanaalLabel = (soort: string | null | undefined, kanaal: string | null | undefined): string | null =>
+  soort === 'bericht' || soort === 'sms' || soort === 'whatsapp' ? ({ whatsapp: 'WhatsApp', sms: 'SMS', linkedin: 'LinkedIn' } as Record<string, string>)[kanaal ?? (soort === 'bericht' ? '' : soort)] ?? null : null
 export const STATUS_LABEL: Record<string, string> = { open: 'Open', bezig: 'Bezig', klaar: 'Klaar', geannuleerd: 'Geannuleerd' }
 export const HERHALING_LABEL: Record<string, string> = { werkdag: 'Elke werkdag', wekelijks: 'Wekelijks', omdeweek: 'Om de week', maandelijks: 'Maandelijks' }
 export const HERINNERING_KANAAL: Record<string, string> = { 'in-app': 'In de app', email: 'E-mail', beide: 'In de app en e-mail' }

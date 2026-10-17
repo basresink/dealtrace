@@ -239,7 +239,7 @@ export async function bewaarUitkomst(tx: Tx, o: { soort: 'afspraak' | 'taak'; id
 
 // ── Pitstop (Schrijver, mandaat A, soort concept) ───────────────────────────
 
-const TYPE_VAN: Record<string, 'mail' | 'linkedin' | 'whatsapp' | 'belscript' | 'briefing'> = { mailen: 'mail', linkedin: 'linkedin', bellen: 'belscript', bezoek: 'briefing', taak: 'briefing', bericht: 'whatsapp' }
+const TYPE_VAN: Record<string, 'mail' | 'linkedin' | 'whatsapp' | 'belscript' | 'briefing'> = { mailen: 'mail', linkedin: 'linkedin', bellen: 'belscript', bezoek: 'briefing', taak: 'briefing', bericht: 'whatsapp', sms: 'whatsapp' }
 const SCHEMA: Record<string, JsonSchema> = {
   mail: { type: 'object', required: ['onderwerp', 'tekst'], additionalProperties: false, properties: { onderwerp: { type: 'string', maxLength: 120 }, tekst: { type: 'string', maxLength: 1500 }, winpuntId: { type: 'string' } } },
   linkedin: { type: 'object', required: ['tekst'], additionalProperties: false, properties: { tekst: { type: 'string', maxLength: 900 }, winpuntId: { type: 'string' } } },

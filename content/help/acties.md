@@ -9,7 +9,8 @@ samenvatting: Al je taken op één plek, als horizon of lijst, met filters op on
 
 Bij **Taken** staan al je taken. Vanaf Gevorderd opent Taken met de horizon: Vandaag, Komende week en Week 2 en 3, met taken en afspraken samen. Als Beginner zie je de lijst in groepen (achterstallig, vandaag, deze week).
 
-- **Filters**: zoek, kies de eigenaar, prioriteit en actiesoort.
+- **Nieuwe taak**: met **+ Taak** kies je het type: Te doen, Bellen, Mailen, WhatsApp, SMS of LinkedIn. Een bezoek plan je met **+ Afspraak**; bezoektaken die er al stonden, blijven gewoon Bezoek.
+- **Filters**: zoek, kies de eigenaar, prioriteit en actiesoort (ook WhatsApp en SMS).
 - **Periode**: kies Vandaag, Morgen, Deze week of Volgende week, of een eigen periode met **Van** en **Tot**. Met een eigen periode kijk je ook terug: dan zie je ook de afgeronde en verlopen taken uit die periode, als lijst.
 - **Weergave**: kies in het filterpaneel **Horizon** of **Lijst** (vanaf Gevorderd). Je keuze staat in de link.
 - **Afronden**: klik op een taak. In het taakvenster kies je de uitkomst en rond je af.

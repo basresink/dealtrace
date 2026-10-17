@@ -16,6 +16,9 @@ export default defineEventHandler(async (event) => {
   return alsPlatform(async (tx) => {
     const [o] = await tx.select().from(schema.organisations).where(eq(schema.organisations.id, id))
     if (!o || o.status === 'systeem') throw createError({ statusCode: 404, statusMessage: 'Klant onbekend' })
+    // Opzeggen en intrekken gaan via PUT .../status (met herbevestiging), niet via het contractformulier.
+    const was = o.contract?.status ?? 'actief'
+    if (b.status && b.status !== was && (b.status === 'opgezegd' || was === 'opgezegd')) throw createError({ statusCode: 409, statusMessage: was === 'opgezegd' ? 'Trek eerst de opzegging in' : 'Opzeggen gaat via Organisatie opzeggen' })
     const toegestaan = ['status', 'seats', 'prijs', 'start', 'looptijdMaanden', 'opzegtermijnMaanden', 'proefTot'] as const
     const contract = { ...(o.contract ?? {}) } as schema.Contract
     for (const k of toegestaan) if (b[k] !== undefined) (contract as any)[k] = b[k]

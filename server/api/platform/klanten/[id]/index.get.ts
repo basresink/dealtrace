@@ -1,5 +1,6 @@
 // GET /api/platform/klanten/:id: de klantflyout (founder, aal2). Gebruikers met rol,
-// niveau en login; geen klantdata (accounts, contacten, activiteiten).
+// niveau en login; geen klantdata (accounts, contacten, activiteiten). Data en AVG, de eigen prompts en
+// de AI-koppeling van de klant komen als getallen en vingerafdrukken (pakket C, migratie 0075).
 import { desc, eq, sql } from 'drizzle-orm'
 import { FUNCTIES, pakketBevat } from '../../../../../shared/functies'
 import { schema } from '../../../../utils/db'
@@ -7,6 +8,7 @@ import { STARTSET } from '../../../../utils/orgStarter'
 import { alsPlatform, requireFounder } from '../../../../utils/platform'
 import { ontsleutel } from '../../../../utils/geheimen'
 import { vingerafdruk } from '../../../../utils/salesdnaWebhook'
+import { avgTellingen, klantAi, klantPrompts, klantTermijnen, leesAvgData, vandaagNL } from '../../../../utils/platformAvg'
 
 export default defineEventHandler(async (event) => {
   await requireFounder(event)
@@ -39,6 +41,10 @@ export default defineEventHandler(async (event) => {
       gebruikers, aanvragen, gezondheid: g ?? null, functies: groepen,
       startset: STARTSET.map((s) => ({ sleutel: s.sleutel, naam: s.naam, op: (o.data?.startset as any)?.[s.sleutel] ?? null })),
       audit,
+      vandaag: vandaagNL(),
+      ai: await klantAi(tx, id),
+      prompts: await klantPrompts(tx, id),
+      avg: { tellingen: await avgTellingen(tx, id), bewaren: await klantTermijnen(tx, id), ...leesAvgData(o.data) },
     }
   })
 })

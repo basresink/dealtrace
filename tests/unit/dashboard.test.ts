@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  activiteitReeks, asMax, dashboardPeriode, dashboardTitel, delta, doelStand, funnelTegels, kanaalVan, maandenTerug, normRegels,
+  activiteitReeks, asMax, DASH_KANALEN, KANAAL_LABEL, dashboardPeriode, dashboardTitel, delta, doelStand, funnelTegels, kanaalVan, maandenTerug, normRegels,
   prospectDekking, uitkomsten, uitvalTotaal,
 } from '../../shared/dashboard'
 import { kpi, type KpiActiviteit } from '../../shared/team'
@@ -70,9 +70,24 @@ describe('activiteitReeks', () => {
     expect(r.punten[0]!.totaal).toBe(2)
     expect(r.punten.find((x) => x.sleutel === '2026-08-10')!.totaal).toBe(1)
   })
-  it('kanaalVan groepeert WhatsApp en kaartjes als bericht', () => {
-    expect(kanaalVan({ soort: 'whatsapp' })).toBe('bericht')
+  it('kanaalVan: WhatsApp en SMS los, op het kanaal van een bericht; een kaart is overig', () => {
+    expect(kanaalVan({ soort: 'whatsapp' })).toBe('whatsapp')
+    expect(kanaalVan({ soort: 'bericht', kanaal: 'whatsapp' })).toBe('whatsapp')
+    expect(kanaalVan({ soort: 'bericht' })).toBe('whatsapp')
+    expect(kanaalVan({ soort: 'bericht', kanaal: 'sms' })).toBe('sms')
+    expect(kanaalVan({ soort: 'bericht', kanaal: 'linkedin' })).toBe('linkedin')
     expect(kanaalVan({ soort: 'bezoek' })).toBe('bezoek')
+    expect(kanaalVan({ soort: 'kaart' })).toBe('overig')
+  })
+  it('een afgeronde WhatsApp- en SMS-taak staan per dag in hun eigen kanaal', () => {
+    const r = activiteitReeks([
+      act('2026-10-02', 'bericht', 'verzonden', { kanaal: 'whatsapp' }), act('2026-10-02', 'bericht', 'verzonden', { kanaal: 'sms' }),
+      act('2026-10-02', 'bericht', 'gesproken', { kanaal: 'sms' }),
+    ], p, 'u')
+    expect(r.punten[1]!.delen).toMatchObject({ whatsapp: 1, sms: 2, bezoek: 0, overig: 0 })
+    expect(r.punten[1]!).toMatchObject({ totaal: 3, gesprekken: 1 })
+    expect(Object.keys(r.punten[1]!.delen)).toEqual([...DASH_KANALEN])
+    expect(DASH_KANALEN.map((k) => KANAAL_LABEL[k])).toEqual(['Bellen', 'Mail', 'LinkedIn', 'WhatsApp', 'SMS', 'Bezoek', 'Overig'])
   })
   it('asMax rondt naar 1, 2, 5 of 10 maal een macht van tien', () => {
     expect([0, 3, 7, 12, 48, 51].map(asMax)).toEqual([1, 5, 10, 20, 50, 100])

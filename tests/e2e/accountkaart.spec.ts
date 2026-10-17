@@ -9,9 +9,9 @@ test.describe('accountkaart', () => {
     await ga(page, '/accounts/pr-06')
     await expect(page.getByTestId('account-naam')).toContainText('Testtechniek Gevelpunt')
     await expect(page.getByTestId('statstrook')).toContainText('Open acties')
-    for (const t of ['tijdlijn', 'inzichten', 'taken', 'notities', 'mails', 'afspraken', 'verslagen', 'campagnes', 'documenten']) await expect(page.getByTestId(`tab-${t}`)).toBeVisible()
-    // Reis en kwalificatie staan onder Meer; Accountplan alleen met de functie (Expert).
-    for (const t of ['deals', 'eigenvelden', 'kwalificatie', 'reis', 'accountplan']) await expect(page.getByTestId(`tab-${t}`)).toHaveCount(0)
+    for (const t of ['tijdlijn', 'inzichten', 'taken', 'notities', 'mails', 'afspraken', 'verslagen', 'documenten']) await expect(page.getByTestId(`tab-${t}`)).toBeVisible()
+    // Reis, kwalificatie, campagnes en accountplan staan onder Meer.
+    for (const t of ['deals', 'eigenvelden', 'kwalificatie', 'reis', 'campagnes', 'accountplan']) await expect(page.getByTestId(`tab-${t}`)).toHaveCount(0)
     // Geen knop Bel in de kop en geen fase met dagen in de stuurstrip.
     await expect(page.locator('.ak-acties').getByText('Bel', { exact: true })).toHaveCount(0)
     await expect(page.getByTestId('stuurstrip')).not.toContainText('Fase')
@@ -32,13 +32,13 @@ test.describe('accountkaart', () => {
     await expect(page.getByTestId('briefing-flyout')).toBeVisible()
   })
 
-  test('kop op één regel op 1280 en 390: Zoeken, Vraag AI, Contacten en Meer; geen hulp, Waarom nu of leverancier onder de kop', async ({ page }) => {
+  test('kop op één regel op 1280 en 390: Zoeken, Vraag AI, Contacten, Info en Meer; geen hulp, Waarom nu of leverancier onder de kop', async ({ page }) => {
     await login(page, 'u-07')
     await page.setViewportSize({ width: 1280, height: 900 })
     await ga(page, '/accounts/eva-a04')
     // Laptop: vier knoppen op één regel, in deze volgorde; de rest staat onder Meer.
     const kop = await page.locator('.ak-acties [data-test]:not([data-test=kop-iconen]):visible').evaluateAll((els) => els.map((e) => ({ id: e.getAttribute('data-test'), top: Math.round(e.getBoundingClientRect().top), h: Math.round(e.getBoundingClientRect().height) })))
-    expect(kop.map((k) => k.id)).toEqual(['kop-zoeken', 'vraag-ai', 'contacten-knop', 'kop-meer'])
+    expect(kop.map((k) => k.id)).toEqual(['kop-zoeken', 'vraag-ai', 'contacten-knop', 'info-knop', 'kop-meer'])
     expect(new Set(kop.map((k) => k.top)).size).toBe(1)
     expect(kop.every((k) => k.h >= 44)).toBe(true)
     await expect(page.getByTestId('hulp-knop')).toHaveCount(0)
@@ -55,11 +55,12 @@ test.describe('accountkaart', () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await ga(page, '/accounts/eva-a04')
     const rij = await page.locator('.ak-acties [data-test]:not([data-test=kop-iconen]):visible').evaluateAll((els) => els.map((e) => ({ id: e.getAttribute('data-test'), top: Math.round(e.getBoundingClientRect().top), h: Math.round(e.getBoundingClientRect().height) })))
-    expect(rij.map((k) => k.id)).toEqual(['contacten-knop', 'kop-meer'])
+    expect(rij.map((k) => k.id)).toEqual(['contacten-knop', 'info-knop', 'kop-meer'])
     expect(new Set(rij.map((k) => k.top)).size).toBe(1)
     expect(rij.every((k) => k.h >= 44)).toBe(true)
     await page.getByTestId('kop-meer').click()
-    for (const id of ['briefing-knop', 'info-knop']) await expect(page.getByTestId('meer-flyout').getByTestId(id)).toBeVisible()
+    await expect(page.getByTestId('meer-flyout').getByTestId('briefing-knop')).toBeVisible()
+    await expect(page.getByTestId('meer-flyout').getByTestId('info-knop')).toHaveCount(0)
     for (const h of await page.locator('[data-test=meer-flyout] .mf-kader').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) expect(h).toBeGreaterThanOrEqual(44)
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
   })

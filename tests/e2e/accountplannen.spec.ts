@@ -236,12 +236,14 @@ test.describe('accountplannen', () => {
   test('accountkaart: de plannen van het account en + Accountplan met het account ingevuld', async ({ page }) => {
     await login(page, 'u-07')
     await ga(page, '/accounts/eva-a07')
-    // Het tabblad Accountplan staat direct rechts van Campagnes.
-    const tabs = await page.locator('[data-test^=tab-]').evaluateAll((els) => els.map((e) => e.getAttribute('data-test')))
-    expect(tabs.indexOf('tab-accountplan')).toBe(tabs.indexOf('tab-campagnes') + 1)
-    await page.getByTestId('tab-accountplan').click()
-    await expect(page).toHaveURL(/tab=accountplan/)
-    const blok = page.getByTestId('ak-accountplannen')
+    // Accountplan staat onder Meer, direct na Campagnes; het tabblad is weg.
+    await expect(page.getByTestId('tab-accountplan')).toHaveCount(0)
+    await page.getByTestId('kop-meer').click()
+    const ids = await page.getByTestId('meer-flyout').locator('.mf-kader').evaluateAll((els) => els.map((e) => e.getAttribute('data-test')))
+    expect(ids.indexOf('meer-accountplan')).toBe(ids.indexOf('meer-campagnes') + 1)
+    await expect(page.getByTestId('meer-accountplan').locator('.mf-regel')).toContainText(/\d+ van \d+ acties klaar/)
+    await page.getByTestId('meer-accountplan').click()
+    const blok = page.getByTestId('accountplan-flyout').getByTestId('ak-accountplannen')
     await expect(blok.getByTestId('ak-accountplan-eva-plan-01')).toHaveAttribute('href', '/accountplannen/eva-plan-01')
     // Het lopende plan: samenvatting, acties met de voortgang en de link naar het plan.
     await expect(blok.getByTestId('apt-lopend')).toContainText('Lopend accountplan')
@@ -253,26 +255,28 @@ test.describe('accountplannen', () => {
     await expect(page.getByTestId('apn-gekozen')).toContainText('Testtechniek Leusden')
   })
 
-  test('accountkaart: lege staat met Maak accountplan; zonder de functie geen tabblad', async ({ page }) => {
+  test('accountkaart: lege staat met Maak accountplan; zonder de functie geen kader', async ({ page }) => {
     await login(page, 'u-07')
     const naam = `${crypto.randomUUID().slice(0, 10)} Planloos`
     const a = await (await page.request.post('/api/accounts', { data: { naam } })).json()
+    // Een oude link naar het tabblad opent het venster Accountplan.
     await ga(page, `/accounts/${a.id}?tab=accountplan`)
-    const blok = page.getByTestId('ak-accountplannen')
+    const blok = page.getByTestId('accountplan-flyout').getByTestId('ak-accountplannen')
     await expect(blok.getByTestId('apt-leeg')).toContainText('Nog geen accountplan')
     await blok.getByTestId('ak-accountplan-nieuw').click()
     await expect(page.getByTestId('apn-gekozen')).toContainText(naam)
-    // Een Gevorderde heeft geen accountplannen en dus geen tabblad.
+    // Een Gevorderde heeft geen accountplannen en dus geen kader Accountplan.
     await login(page, 'u-01')
     await ga(page, '/accounts/pr-06')
-    await expect(page.getByTestId('tab-campagnes')).toBeVisible()
-    await expect(page.getByTestId('tab-accountplan')).toHaveCount(0)
+    await page.getByTestId('kop-meer').click()
+    await expect(page.getByTestId('meer-flyout').getByTestId('meer-campagnes')).toBeVisible()
+    await expect(page.getByTestId('meer-flyout').getByTestId('meer-accountplan')).toHaveCount(0)
   })
 
   test('een plan is voor een topprospect: geen + Accountplan bij een klant, de API weigert een klant, de zoeker toont alleen prospects', async ({ page }) => {
     await login(page, 'u-07')
-    await ga(page, '/accounts/eva-k01?tab=accountplan')
-    const blok = page.getByTestId('ak-accountplannen')
+    await ga(page, '/accounts/eva-k01?meer=accountplan')
+    const blok = page.getByTestId('accountplan-flyout').getByTestId('ak-accountplannen')
     await expect(blok).toContainText('Een plan voor een klant maak je in DealDrive.')
     await expect(blok.getByTestId('ak-accountplan-nieuw')).toHaveCount(0)
     const r = await page.request.post('/api/accountplannen', { data: { accountId: 'eva-k01', titel: 'Plan voor een klant' } })

@@ -48,7 +48,7 @@ useHead({ title: 'Klanten · Platformbeheer · Dealtrace' })
             <tbody>
               <tr v-for="k in data.klanten" :key="k.id" :data-klant="k.id">
                 <td><strong>{{ k.naam }}</strong><span v-if="k.openAanvragen" class="pil pil--geel">{{ k.openAanvragen }} aanvraag</span></td>
-                <td>{{ PAKKET_LABEL[k.pakket as Pakket] }}<template v-if="k.status === 'proef'"> · proef</template></td>
+                <td>{{ PAKKET_LABEL[k.pakket as Pakket] }}<template v-if="k.status === 'proef'"> · proef</template><template v-else-if="k.status === 'opgezegd'"> · opgezegd<template v-if="k.einddatum"> per {{ datum(k.einddatum) }}</template></template></td>
                 <td class="tnum">{{ k.metLogin }}/{{ k.gebruikers }} met login</td>
                 <td>{{ datum(k.laatstActief) }}</td>
                 <td>–</td>

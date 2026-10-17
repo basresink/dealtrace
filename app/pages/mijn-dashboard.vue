@@ -4,7 +4,7 @@
 // per fase, uitkomsten, prospectdekking, de weektabel en de vergelijking met je team (vanaf Gevorderd,
 // zonder namen), en onderaan de afspraken uit je coachingsgesprek en "Wat kan ik deze week beter doen?"
 // (Expert). Eén databron: GET /api/resultaten/dashboard. De periode staat in de URL.
-import { DASHBOARD_PERIODE_OPTIES, EIGEN_PERIODE_LABEL } from '~~/shared/dashboard'
+import { DASHBOARD_PERIODE_OPTIES, EIGEN_PERIODE_LABEL, KANAAL_ALLEEN_GEVULD, KANAAL_LABEL } from '~~/shared/dashboard'
 
 const toast = useToast()
 const route = useRoute()
@@ -29,13 +29,18 @@ const KLEUR: Record<string, string> = { inReis: 'groen', nieuw: 'geel', wacht: '
 const deel = (n: number) => (data.value?.prospects.totaal ? Math.round((n / data.value.prospects.totaal) * 100) : 0)
 const kort = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', timeZone: 'UTC' })
 
-const SERIES = [
-  { sleutel: 'bellen', label: 'Bellen', kleur: 'blauw' },
-  { sleutel: 'mail', label: 'Mail', kleur: 'groen' },
-  { sleutel: 'bezoek', label: 'Bezoek', kleur: 'geel' },
-  { sleutel: 'linkedin', label: 'LinkedIn', kleur: 'paars' },
-  { sleutel: 'bericht', label: 'Bericht', kleur: 'inkt' },
+// Activiteiten per dag: WhatsApp en SMS staan los. Bezoek (een afgerond bezoek als contactpoging) en Overig
+// (bijvoorbeeld een kaart) staan alleen in de legenda als er in de periode iets in zit.
+const ALLE_SERIES = [
+  { sleutel: 'bellen', label: KANAAL_LABEL.bellen, kleur: 'blauw' },
+  { sleutel: 'mail', label: KANAAL_LABEL.mail, kleur: 'groen' },
+  { sleutel: 'linkedin', label: KANAAL_LABEL.linkedin, kleur: 'paars' },
+  { sleutel: 'whatsapp', label: KANAAL_LABEL.whatsapp, kleur: 'oranje' },
+  { sleutel: 'sms', label: KANAAL_LABEL.sms, kleur: 'inkt' },
+  { sleutel: 'bezoek', label: KANAAL_LABEL.bezoek, kleur: 'geel' },
+  { sleutel: 'overig', label: KANAAL_LABEL.overig, kleur: 'grijs' },
 ] as const
+const SERIES = computed(() => ALLE_SERIES.filter((s) => !KANAAL_ALLEEN_GEVULD.includes(s.sleutel) || (data.value?.activiteit?.punten ?? []).some((p: any) => p.delen?.[s.sleutel])))
 const reisRijen = computed(() => (data.value?.funnel?.fases ?? []).map((f: any) => ({ sleutel: f.faseId, label: f.label, aantal: f.aantal, waarde: f.conversie != null ? `${f.conversie}% door` : null, sub: [f.norm != null ? `norm ${f.norm}%` : null, f.faseId === 'afspraak-gepland' && gemPoging.value ? `gem. poging ${gemPoging.value}` : null].filter(Boolean).join(' · ') || null, kleur: f.hoofdfase === 'Vinden' ? 'inkt' : f.hoofdfase === 'Bewerken' ? 'geel' : 'groen', markeer: f.stok })))
 const UIT_KLEUR: Record<string, string> = { afspraak: 'groen', gesproken: 'blauw', later: 'geel', nee: 'rood', geen: 'inkt', voicemail: 'inkt', verzonden: 'paars', fout: 'oranje', overig: 'inkt' }
 const uitkomstRijen = computed(() => {

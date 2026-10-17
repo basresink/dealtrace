@@ -53,5 +53,6 @@ create or replace function dealtrace_platform_prompts(p_org text)
 revoke execute on function dealtrace_platform_avg(text), dealtrace_platform_prompts(text) from public;
 grant execute on function dealtrace_platform_avg(text), dealtrace_platform_prompts(text) to dealtrace_platform;
 
--- "Gebruik de platformkoppeling": de founder haalt de eigen AI-koppeling van een klant weg.
+-- "Gebruik de platformkoppeling": de founder haalt de eigen AI-koppeling van een klant weg. Een eigen rij
+-- zonder sleutel gaat in dealtrace_llm_koppeling vóór die van het platform, dus weghalen is de enige weg terug.
 grant delete on llm_connections to dealtrace_platform;

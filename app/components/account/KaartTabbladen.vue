@@ -1,13 +1,13 @@
 <script setup lang="ts">
 // De tabbladen van de accountkaart en de contactkaart (opzet uit DealDrive), één component voor beide:
 // Tijdlijn (met filter en + Taak, + Afspraak, + Mail), Inzichten, Taken, Notities, E-mails, Afspraken,
-// Gespreksverslagen, Campagnes, Accountplan (alleen de accountkaart) en Documenten, met de vensters. Deals en eigen velden
-// hebben geen eigen tabblad meer: deals staan in de tijdlijn, eigen velden in het Info-venster.
+// Gespreksverslagen en Documenten, met de vensters. Deals en eigen velden hebben geen eigen tabblad meer: deals
+// staan in de tijdlijn, eigen velden in het Info-venster. Campagnes en Accountplan staan onder Meer.
 // Het tabblad staat in de URL (?tab=). De data komt van GET /api/accounts/:id/tabbladen of
 // GET /api/contacten/:id/tabbladen. Op de accountkaart staat bij elk item de naam van het contact met een
-// link naar de contactkaart; op de contactkaart hoort alles bij dat ene contact. De inhoud van Reis en
-// Accountplan levert de pagina (slot); zonder slot geen tabblad. Reis en kwalificatie staan onder Meer.
-import { ACTIE_LABEL, isDringend } from '~~/shared/taken'
+// link naar de contactkaart; op de contactkaart hoort alles bij dat ene contact en staat zijn naam dus niet in de
+// metaregel (wel wie het deed). Reis, kwalificatie, campagnes en accountplan staan onder Meer.
+import { ACTIE_LABEL, berichtKanaalLabel, isDringend } from '~~/shared/taken'
 /** Status in de tijdlijn als label: klaar groen, open een rand, te laat gevuld rood. */
 const tlStatus = (soort: string | undefined, tekst: string) => (soort === 'klaar' ? { soort: 'status', waarde: 'afgerond', tekst } : soort === 'laat' ? { soort: 'urgentie', waarde: 'achterstallig', tekst } : { soort: 'status', waarde: 'nieuw', tekst })
 
@@ -35,23 +35,20 @@ const SOORT: Record<string, string> = { gebeld: 'Gebeld', mail: 'Mail', notitie:
 const VORM: Record<string, string> = { bezoek: 'Bezoek', online: 'Online', telefoon: 'Telefoon' }
 const AFSPRAAK_STATUS: Record<string, string> = { gepland: 'Gepland', afgerond: 'Gehouden', geannuleerd: 'Geannuleerd', 'no-show': 'Niet verschenen' }
 const DEAL_FASE: Record<string, string> = { overgedragen: 'Overgedragen', lopend: 'Loopt in DealDrive', gewonnen: 'Gewonnen', verloren: 'Verloren', klaar: 'Klaar', verstuurd: 'Verstuurd', bevestigd: 'Bevestigd', mislukt: 'Mislukt' }
-const CAMP_KOLOM: Record<string, string> = { klaar: 'Klaar', bezig: 'Bezig', afspraak: 'Afspraak', nee: 'Nee', 'geen-reactie': 'Geen reactie', later: 'Later' }
 const datumLang = (d: string | null) => (d ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Amsterdam' }).format(new Date(d)).replace('.', '') : '–')
 const wanneer = (d: string | null) => (d ? new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(d)) : 'geen datum')
 const grootte = (b: number) => (b > 1e6 ? `${(b / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} kB`)
 const tlDatum = (ms: number) => (ms ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date(ms)).replace('.', '') : '')
 /** De contactnaam bij een item (voornaam en achternaam), op de accountkaart en op de contactkaart. */
-const contactVan = (x: any) => (x?.contactId && x?.contactNaam ? { id: x.contactId as string, naam: x.contactNaam as string } : null)
+const contactVan = (x: any) => (!props.contact && x?.contactId && x?.contactNaam ? { id: x.contactId as string, naam: x.contactNaam as string } : null)
 
 const momenten = computed<any[]>(() => t.value.momenten ?? [])
 const notities = computed(() => momenten.value.filter((x) => x.soort === 'notitie'))
 const openTaken = computed(() => t.value.taken.filter((x: any) => ['open', 'bezig'].includes(x.status)))
 
 // Tabbladen, met het actieve tabblad in de URL.
-type Tab = 'tijdlijn' | 'inzichten' | 'taken' | 'notities' | 'mails' | 'afspraken' | 'verslagen' | 'campagnes' | 'accountplan' | 'documenten'
-const slots = useSlots()
-const metAccountplan = computed(() => !!slots.accountplan)
-const TABS = computed<Tab[]>(() => ['tijdlijn', 'inzichten', 'taken', 'notities', 'mails', 'afspraken', 'verslagen', 'campagnes', ...(metAccountplan.value ? ['accountplan' as const] : []), 'documenten'])
+type Tab = 'tijdlijn' | 'inzichten' | 'taken' | 'notities' | 'mails' | 'afspraken' | 'verslagen' | 'documenten'
+const TABS = computed<Tab[]>(() => ['tijdlijn', 'inzichten', 'taken', 'notities', 'mails', 'afspraken', 'verslagen', 'documenten'])
 const tab = computed<Tab>(() => (TABS.value.includes(route.query.tab as Tab) ? route.query.tab as Tab : 'tijdlijn'))
 function kiesTab(x: Tab) { router.replace({ query: { ...route.query, tab: x === 'tijdlijn' ? undefined : x } }) }
 
@@ -71,7 +68,9 @@ const tlAlles = computed<TlItem[]>(() => {
   // Een belactiviteit van een afgeronde beltaak toont ook het gespreksverslag en opent het (met transcript).
   for (const x of momenten.value.filter((m) => m.soort !== 'notitie')) {
     const v = x.verslag || x.transcript ? t.value.verslagen.find((r: any) => r.id === `bel-${x.id}`) : null
-    uit.push({ key: `c-${x.id}`, soort: 'contact', soortLabel: 'Contact', typeLabel: SOORT[x.soort] ?? x.soort, titel: [SOORT[x.soort] ?? x.soort, x.uitkomst ? String(x.uitkomst).replace(/_/g, ' ') : null].filter(Boolean).join(' · '), tekst: [x.tekst, x.verslag ? `Verslag: ${x.verslag}` : null, x.transcript ? 'Met transcript' : null].filter(Boolean).join(' · ') || null, ms: Date.parse(x.op), contact: contactVan(x), door: x.gebruiker, open: v ? () => { verslag.value = v } : undefined })
+    // Een bericht heet naar zijn kanaal: WhatsApp, SMS of LinkedIn.
+    const soortNaam = berichtKanaalLabel(x.soort, x.kanaal) ?? SOORT[x.soort] ?? x.soort
+    uit.push({ key: `c-${x.id}`, soort: 'contact', soortLabel: 'Contact', typeLabel: soortNaam, titel: [soortNaam, x.uitkomst ? String(x.uitkomst).replace(/_/g, ' ') : null].filter(Boolean).join(' · '), tekst: [x.tekst, x.verslag ? `Verslag: ${x.verslag}` : null, x.transcript ? 'Met transcript' : null].filter(Boolean).join(' · ') || null, ms: Date.parse(x.op), contact: contactVan(x), door: x.gebruiker, open: v ? () => { verslag.value = v } : undefined })
   }
   return uit.sort((p, q) => q.ms - p.ms)
 })
@@ -122,8 +121,6 @@ const tabs = computed(() => [
   { id: 'mails' as const, label: 'E-mails', n: t.value.mails.length },
   { id: 'afspraken' as const, label: 'Afspraken', n: t.value.afspraken.length },
   { id: 'verslagen' as const, label: 'Gespreksverslagen', n: t.value.verslagen.length },
-  { id: 'campagnes' as const, label: 'Campagnes', n: t.value.campagnes.length },
-  ...(metAccountplan.value ? [{ id: 'accountplan' as const, label: 'Accountplan', n: 0 }] : []),
   { id: 'documenten' as const, label: 'Documenten', n: t.value.documenten.length },
 ])
 </script>
@@ -266,31 +263,9 @@ const tabs = computed(() => [
           </ul>
         </template>
 
-        <!-- Campagnes -->
-        <template v-else-if="tab === 'campagnes'">
-          <div class="ak-tabkop"><h2 class="ak-tabtitel">Campagnes ({{ t.campagnes.length }})</h2><NuxtLink to="/campagnes" class="dd-actie dd-actie--secundair">Alle campagnes →</NuxtLink></div>
-          <p class="meta ak-hint">{{ opContact ? 'De campagnes met een taak of contactmoment voor dit contact, met de stand op het campagnebord.' : 'De campagnes waarin dit account meeloopt, met de stand op het campagnebord.' }}</p>
-          <p v-if="!t.campagnes.length" class="ak-leeg">{{ opContact ? 'Dit contact' : 'Dit account' }} loopt in geen enkele campagne mee. Voeg het account toe op een campagnebord onder <NuxtLink to="/campagnes" class="tekst-link">Campagnes</NuxtLink>.</p>
-          <ul v-else class="ak-rijen">
-            <li v-for="c in t.campagnes" :key="c.id">
-              <NuxtLink :to="`/campagnes/${c.id}`" class="ak-rij" :data-test="`ak-campagne-${c.id}`">
-                <span class="tl-soort tl-soort--taak">{{ c.soort }}</span>
-                <span class="ak-rij-info"><span class="ak-rij-titel">{{ c.naam }}</span><span class="meta">{{ c.status }}<template v-if="c.doel"> · {{ c.doel }}</template><template v-if="c.volgendeStap"> · volgende stap: {{ c.volgendeStap }}</template></span></span>
-                <span class="pil" :class="c.gehaald ? 'pil--groen' : 'pil--grijs'">{{ c.gehaald ? 'Doel gehaald' : CAMP_KOLOM[c.kolom] ?? c.kolom }}</span>
-                <span class="ak-rij-cta">Bord →</span>
-              </NuxtLink>
-            </li>
-          </ul>
-        </template>
-
         <!-- Documenten: gedeeld met de kennisbank (DocumentenTab). -->
         <template v-else-if="tab === 'documenten'">
           <DocumentenTab :account="accountRef" :contact="contact ? { id: contact.id, naam: contact.naam } : null" :documenten="t.documenten" :afspraak-bijlagen="t.afspraakBijlagen ?? []" @ververs="ververs" />
-        </template>
-
-        <!-- Accountplan: de inhoud levert de accountkaart. -->
-        <template v-else-if="tab === 'accountplan'">
-          <slot name="accountplan" />
         </template>
 
       </div>

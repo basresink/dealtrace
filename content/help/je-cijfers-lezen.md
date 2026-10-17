@@ -41,7 +41,8 @@ Marloes belt genoeg, maar spreekt te weinig beslissers en stopt te vroeg. Ze vra
 
 Bij **Mijn dashboard** zie je je eigen cijfers. Ze komen allemaal uit wat je in Dealtrace doet: pogingen, gesprekken, afspraken en overdrachten. Niemand vult ze met de hand in.
 
-- **Pogingen**: elke keer dat je belt, mailt, een bericht stuurt of langsgaat.
+- **Pogingen**: elke keer dat je belt, mailt, een WhatsApp, sms of LinkedIn-bericht stuurt of langsgaat.
+- **Activiteiten per dag**: je pogingen per dag (per week bij een lange periode), gestapeld per kanaal: Bellen, Mail, LinkedIn, WhatsApp en SMS. Bezoek en Overig (bijvoorbeeld een kaart) staan er alleen bij als je ze in die periode deed. Een afspraak telt bij Afspraken.
 - **Gesprekken**: pogingen waarin je iemand sprak.
 - **Gesprek naar afspraak**: welk deel van je gesprekken een afspraak opleverde. De norm is meer dan 15 procent.
 - **Beslisser bereikt**: welk deel van je gesprekken met een beslisser was. De norm is meer dan 20 procent.

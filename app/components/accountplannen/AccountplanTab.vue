@@ -1,10 +1,10 @@
 <script setup lang="ts">
-// Tabblad Accountplan op de accountkaart: het lopende accountplan van dit account met de samenvatting
+// Accountplan op de accountkaart (venster Accountplan onder Meer; inFlyout laat de eigen titel weg): het lopende accountplan van dit account met de samenvatting
 // (de ingevulde blokken), het actieplan met de voortgang en een link naar /accountplannen/:id. Eerdere
 // plannen staan eronder. Zonder plan een lege staat met "Maak accountplan" voor een prospect; een plan voor
 // een klant hoort in DealDrive. Alleen als nav.accountplannen aanstaat (de pagina toont het tabblad dan).
 import { ACCOUNTPLAN_SECTIES, WEERGAVE_LABEL, dagKort, geldigheidLabel } from '~~/shared/accountplannen'
-const props = defineProps<{ account: { id: string; naam: string; soort?: string | null } }>()
+const props = defineProps<{ account: { id: string; naam: string; soort?: string | null }; inFlyout?: boolean }>()
 const isKlant = computed(() => props.account.soort === 'klant')
 const { data: lijst } = await useFetch<any>('/api/accountplannen', { query: { accountId: props.account.id }, default: () => ({ plannen: [] }) })
 // Het lopende plan: het eerste actuele, anders het meest recente.
@@ -18,8 +18,8 @@ const acties = computed<any[]>(() => (plan.value?.acties ?? []).filter((x: any) 
 
 <template>
   <div class="apt" data-test="ak-accountplannen">
-    <div class="apt-tabkop">
-      <h2 class="apt-tabtitel">Accountplan</h2>
+    <div v-if="!inFlyout || (!isKlant && lijst.plannen.length)" class="apt-tabkop" :class="{ 'apt-tabkop--flyout': inFlyout }">
+      <h2 v-if="!inFlyout" class="apt-tabtitel">Accountplan</h2>
       <button v-if="!isKlant && lijst.plannen.length" type="button" class="dd-actie dd-actie--secundair" data-test="ak-accountplan-nieuw" @click="nieuwOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Accountplan</button>
     </div>
 
@@ -84,6 +84,7 @@ const acties = computed<any[]>(() => (plan.value?.acties ?? []).filter((x: any) 
 <style scoped>
 /* Kop van het tabblad, gelijk aan de andere tabbladen (KaartTabbladen). */
 .apt-tabkop { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 20px; }
+.apt-tabkop--flyout { justify-content: flex-end; margin-bottom: 0; }
 .apt-tabtitel { margin: 0; font-family: var(--font-serif); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); }
 .apt-plan { display: flex; flex-direction: column; gap: 18px; }
 .apt-kop { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }

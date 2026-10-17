@@ -26,4 +26,6 @@ Elke poging rond je af met een uitkomst. De uitkomst bepaalt de volgende stap.
 2. Kies de uitkomst.
 3. Klik **Afronden**. Je ziet direct wanneer de volgende poging is.
 
+Een taak van het type WhatsApp of SMS rond je net zo af. Hij telt als poging via dat kanaal en staat op Mijn dashboard bij Activiteiten per dag onder WhatsApp of SMS.
+
 Op de telefoon heb je na Afronden 5 seconden om het ongedaan te maken. Zonder verbinding bewaart Dealtrace je afronding en verstuurt hem zodra je weer online bent.

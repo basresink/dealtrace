@@ -70,7 +70,7 @@ export function berekenScore(ctx: ScoreContext): Score {
 
 /** Contactmomenten: welke activiteiten tellen als contact (gat 26). */
 export interface Moment { soort: string; op: string; status?: 'open' | 'afgerond' | 'gehouden' | 'gepland' | string; bron?: string }
-const CONTACT_SOORTEN = new Set(['gebeld', 'bel', 'mail', 'mail_verzonden', 'mail_ontvangen', 'bericht', 'whatsapp', 'afspraak', 'bezoek'])
+const CONTACT_SOORTEN = new Set(['gebeld', 'bel', 'mail', 'mail_verzonden', 'mail_ontvangen', 'bericht', 'whatsapp', 'sms', 'afspraak', 'bezoek'])
 
 /** Jongste contactmoment; open taken, toekomstige afspraken en import tellen niet. */
 export function laatsteContact(momenten: Moment[], nu: Date): string | null {

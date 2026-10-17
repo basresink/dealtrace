@@ -2,7 +2,7 @@
 // een noemer, zodat het herleidbaar is. Geen niveauvoorstellen of criteria voor een volgend niveau (B19).
 import { isWerkdag, plusDagen } from './datum'
 
-export const CONTACT_SOORTEN = ['gebeld', 'mail', 'bericht', 'bezoek', 'linkedin', 'whatsapp', 'kaart'] as const
+export const CONTACT_SOORTEN = ['gebeld', 'mail', 'bericht', 'bezoek', 'linkedin', 'whatsapp', 'sms', 'kaart'] as const
 const NIET_GESPROKEN = new Set(['geen_reactie', 'voicemail', 'verzonden', 'niet_bereikt', 'verkeerd_nummer', 'bezet', '', null, undefined])
 
 /** Normen uit hoofdstuk 16; pogingen per werkdag per werkplek is een voorstel (niet vastgelegd). */
@@ -38,7 +38,7 @@ export function werkdagen(p: Periode): number {
   return n
 }
 
-export interface KpiActiviteit { id?: string; door: string | null; op: string; soort: string; uitkomst?: string | null; accountId?: string | null; beslisser?: boolean; intern?: boolean }
+export interface KpiActiviteit { id?: string; door: string | null; op: string; soort: string; kanaal?: string | null; uitkomst?: string | null; accountId?: string | null; beslisser?: boolean; intern?: boolean }
 export interface Metriek { waarde: number; noemer: number | null }
 export interface Kpi {
   werkdagen: number; pogingen: number; gesprekken: number; beslisser: number; afspraken: number; accounts: number

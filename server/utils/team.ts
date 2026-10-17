@@ -87,7 +87,7 @@ export type Metriek = typeof METRIEKEN[number]
 /** De records achter één cel; de cel is de lengte van deze lijst. */
 export function celRecords(r: Ruw, gebruikerId: string, m: Metriek): { id: string; titel: string; meta: string; link: string | null }[] {
   const d = (s: string) => new Date(s).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' })
-  const acts = r.activiteiten.filter((a) => a.door === gebruikerId && !a.intern && ['gebeld', 'mail', 'bericht', 'bezoek', 'linkedin', 'whatsapp', 'kaart'].includes(a.soort))
+  const acts = r.activiteiten.filter((a) => a.door === gebruikerId && !a.intern && ['gebeld', 'mail', 'bericht', 'bezoek', 'linkedin', 'whatsapp', 'sms', 'kaart'].includes(a.soort))
   const NIET = new Set(['geen_reactie', 'voicemail', 'verzonden', 'niet_bereikt', 'verkeerd_nummer', 'bezet', '', null, undefined])
   const act = (l: typeof acts) => l.map((a) => ({ id: a.id, titel: a.account ?? 'Zonder account', meta: `${a.soort}${a.uitkomst ? ` · ${a.uitkomst}` : ''} · ${d(a.op)}`, link: a.accountId ? `/accounts/${a.accountId}` : null }))
   switch (m) {

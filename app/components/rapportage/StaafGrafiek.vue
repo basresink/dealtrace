@@ -6,7 +6,7 @@
 import { asMax } from '~~/shared/dashboard'
 
 interface StaafPunt { sleutel: string; label: string; titel: string; kern?: boolean; totaal: number; delen: Record<string, number> }
-interface StaafSerie { sleutel: string; label: string; kleur: 'blauw' | 'geel' | 'groen' | 'paars' | 'oranje' | 'inkt' | 'rood' }
+interface StaafSerie { sleutel: string; label: string; kleur: 'blauw' | 'geel' | 'groen' | 'paars' | 'oranje' | 'inkt' | 'rood' | 'grijs' }
 const props = defineProps<{ titel: string; meta?: string; punten: StaafPunt[]; series: StaafSerie[]; hoogte?: number; leeg?: string }>()
 const top = computed(() => asMax(Math.max(0, ...props.punten.map((p) => p.totaal))))
 const h = computed(() => props.hoogte ?? 200)
@@ -71,6 +71,7 @@ const totaal = computed(() => props.punten.reduce((s, p) => s + p.totaal, 0))
 .sg-seg--oranje { background: var(--orange); }
 .sg-seg--inkt { background: var(--ink-soft); }
 .sg-seg--rood { background: var(--red); }
+.sg-seg--grijs { background: var(--muted-light); }
 .sg-label { font-size: var(--fs-label); color: var(--muted); font-feature-settings: "tnum"; white-space: nowrap; min-height: 1.2em; }
 .sg-vlak--veel .sg-label:not(.sg-label--kern) { visibility: hidden; }
 .chart-legend { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-top: 16px; font-size: 12px; font-weight: 600; color: var(--ink-soft); }

@@ -46,7 +46,7 @@ Lukt het, plan dan de eerste afspraak met **+ Afspraak** en kies de meetingsoort
 
 Noemt de prospect een later moment, zoals een project dat volgende maand begint, kies dan **Gesproken, later** met die datum.
 
-Blijft het een nee, klik dan op de accountkaart in het blok Ritme op **Zet nee**, kies de reden **Geen budget** en klik **Zet op nee**. Dealtrace stelt een terugkomdatum voor uit de terugkomregel van die reden, nooit binnen de afkoelperiode. Op die datum komt het account vanzelf terug in de reis.
+Blijft het een nee, klik dan op de accountkaart bij **Meer**, **Reis** op **Zet nee**, kies de reden **Geen budget** en klik **Zet op nee**. Dealtrace stelt een terugkomdatum voor uit de terugkomregel van die reden, nooit binnen de afkoelperiode. Op die datum komt het account vanzelf terug in de reis.
 
 ## Controlevragen
 

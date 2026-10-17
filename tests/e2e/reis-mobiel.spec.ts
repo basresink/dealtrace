@@ -18,10 +18,11 @@ test('Zet nee als schuifvenster, in hooguit 3 tikken, en offline precies één k
   expect(breed).toBeLessThanOrEqual(0)
 
   await context.setOffline(true)
-  await page.getByTestId('zet-nee-knop').click() // tik 1
+  await page.getByTestId('reis-flyout').getByTestId('zet-nee-knop').click() // tik 1
   const venster = page.getByTestId('zet-nee')
+  // Op de telefoon is elke flyout schermvullend (flyoutstandaard); Zet nee staat in het venster Reis.
   const kader = await venster.boundingBox()
-  expect(kader!.y).toBeGreaterThan(50) // schuift van onder in
+  expect(Math.round(kader!.width)).toBe(page.viewportSize()!.width)
   for (const r of await page.locator('.nee-reden').all()) expect((await r.boundingBox())!.height).toBeGreaterThanOrEqual(44)
   await page.locator('.nee-reden', { hasText: 'Geen behoefte' }).click() // tik 2
   const knop = page.getByTestId('zet-op-nee')

@@ -15,6 +15,12 @@ export interface Contract {
   opzegtermijnMaanden?: number
   proefTot?: string
   proefMeldingOp?: string
+  /** Opzeggen (Platformbeheer, klantflyout): laatste dag, wanneer en waarom, en vanaf wanneer de data weg mag. */
+  einddatum?: string
+  opgezegdOp?: string
+  opzegReden?: string
+  verwijderenOp?: string
+  statusVoorOpzeggen?: 'proef' | 'actief'
 }
 
 export interface OrganisatieData {

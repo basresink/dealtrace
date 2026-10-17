@@ -25,9 +25,9 @@ test.describe('prospectreis', () => {
     await expect(page.getByTestId('fasepil')).toHaveText('Gekwalificeerd')
     await expect(page.getByTestId('statuspil')).toHaveText('In reis')
     await page.getByTestId('kwalificatie-flyout-sluit').click()
-    // Zet nee staat in het venster Ritme.
+    // Zet nee staat in het venster Reis (het venster Ritme is weg).
     await page.getByTestId('kop-meer').click()
-    await page.getByTestId('meer-ritme').click()
+    await page.getByTestId('meer-reis').click()
     await page.getByTestId('zet-nee-knop').click()
     await expect(page.getByTestId('zet-op-nee')).toBeDisabled()
     await page.locator('.nee-reden', { hasText: 'Anders' }).click()

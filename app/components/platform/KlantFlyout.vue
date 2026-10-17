@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Klantflyout (F23), eigen URL ?klant=<id>: contact, contract en pakket, gebruikers
-// en aanvragen, functievlaggen per groep, gezondheid, startset en platformaudit.
+// en aanvragen, functievlaggen per groep, gezondheid, startset en platformaudit. Pakket C: AI-koppeling en
+// prompts van de klant (KlantAiBlok), Data en AVG (AvgBlok) en opzeggen met herbevestiging (OpzegBlok).
 import { STAND_LABEL, type Stand } from '~~/shared/gezondheid'
 import { NIVEAU_LABEL, PAKKETTEN, PAKKET_LABEL, ROL_LABEL, type Niveau, type Pakket, type Rol } from '~~/shared/types'
 const props = defineProps<{ id: string | null }>()
@@ -61,6 +62,7 @@ async function bewaarContract() {
 async function aanvraag(id: string, besluit: 'goedkeuren' | 'afwijzen') {
   try { await $fetch(String(`/api/platform/aanvragen/${id}/afhandelen`), { method: 'POST', body: { besluit } }); toast.toon(besluit === 'goedkeuren' ? 'Aanvraag goedgekeurd.' : 'Aanvraag afgewezen.'); await laad(); emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
+async function opzegGewijzigd() { await laad(); emit('gewijzigd') }
 async function startset() {
   try { await $fetch(String(`/api/platform/klanten/${props.id}/startset`), { method: 'POST' }); toast.toon('Startset aangevuld.'); await laad() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
@@ -80,7 +82,7 @@ const looptTot = computed(() => {
       <template #kop>
             <span class="fo-kicker">Klant</span>
             <h2 id="kf-titel" class="fo-titel">{{ klant?.naam ?? 'Laden…' }}</h2>
-            <p v-if="klant" class="fo-meta">{{ PAKKET_LABEL[klant.pakket as Pakket] }} · {{ klant.gebruikers.length }} gebruikers</p></template>
+            <p v-if="klant" class="fo-meta">{{ PAKKET_LABEL[klant.pakket as Pakket] }} · {{ klant.gebruikers.length }} gebruikers<template v-if="klant.contract.status === 'opgezegd'"> · opgezegd per {{ datum(klant.contract.einddatum) }}</template></p></template>
         <div v-if="klant" class="fo-body">
           <article class="fo-blok">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Gebruik en gezondheid</h3>
@@ -97,12 +99,13 @@ const looptTot = computed(() => {
               </div>
             </div>
             <div class="formulier-raster mt-16">
-              <label class="veld"><span class="veld-label">Status</span><select v-model="contract.status" class="invoer"><option value="proef">Proef</option><option value="actief">Actief</option><option value="opgezegd">Opgezegd</option></select></label>
+              <label class="veld"><span class="veld-label">Status</span><select v-model="contract.status" class="invoer" :disabled="klant.contract.status === 'opgezegd'" data-test="contract-status"><option value="proef">Proef</option><option value="actief">Actief</option><option value="opgezegd" disabled>Opgezegd</option></select></label>
               <label v-if="contract.status === 'proef'" class="veld"><span class="veld-label">Proef tot</span><input v-model="contract.proefTot" class="invoer" type="date"></label>
               <label class="veld"><span class="veld-label">Seats</span><input v-model.number="contract.seats" class="invoer" type="number" min="1"></label>
               <label class="veld"><span class="veld-label">Prijs per maand (€)</span><input v-model.number="contract.prijs" class="invoer" type="number" min="0"></label>
             </div>
-            <p v-if="looptTot" class="veld-uitleg">{{ looptTot }}</p>
+            <p v-if="klant.contract.status === 'opgezegd'" class="veld-uitleg">Opgezegd: de status wijzig je bij Organisatie opzeggen, onderaan.</p>
+            <p v-else-if="looptTot" class="veld-uitleg">{{ looptTot }}</p>
             <button type="button" class="dd-act mt-16" @click="bewaarContract">Contract opslaan</button>
           </article>
 
@@ -122,6 +125,7 @@ const looptTot = computed(() => {
               <li v-for="r in klant.dealdriveInrichting.runs" :key="r.start" class="veld-uitleg">{{ new Date(r.start).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) }} · {{ r.handeling }} · {{ r.ok ? 'gelukt' : r.fout }}</li>
             </ul>
           </article>
+          <KlantAiBlok :klant="klant" @gewijzigd="laad" />
           <article class="fo-blok">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Gebruikers en aanvragen</h3></header>
             <div class="veld"><span class="veld-label">Nieuwe gebruikers</span>
@@ -157,6 +161,7 @@ const looptTot = computed(() => {
             </div>
           </article>
 
+          <AvgBlok :klant-id="klant.id" :vandaag="klant.vandaag" :avg="klant.avg" @gewijzigd="laad" />
           <article class="fo-blok">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Startset</h3></header>
             <ul class="fo-tekst"><li v-for="s in klant.startset" :key="s.sleutel">{{ s.naam }}: {{ s.op ? datum(s.op) : 'nog niet' }}</li></ul>
@@ -168,6 +173,7 @@ const looptTot = computed(() => {
             <p v-if="!klant.audit.length" class="fo-tekst">Nog niets.</p>
             <ul v-else class="fo-tekst"><li v-for="a in klant.audit" :key="a.id">{{ datum(a.op) }} · {{ a.handeling }}<template v-if="a.reden"> · {{ a.reden }}</template></li></ul>
           </article>
+          <OpzegBlok :klant="klant" @gewijzigd="opzegGewijzigd" />
         </div>
       <template #voet>
         <footer class="fo-foot fs-voet">

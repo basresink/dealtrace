@@ -87,7 +87,7 @@ export function maandInJaar(datum: string, jaarStart: string): number {
 
 export interface PlanActiviteit { soort: string; uitkomst?: string | null; op: string }
 /** Echte pogingen; een import, notitie of reisregel telt niet. */
-export const POGING_SOORTEN = ['gebeld', 'mail', 'bericht', 'bezoek', 'linkedin', 'whatsapp', 'kaart'] as const
+export const POGING_SOORTEN = ['gebeld', 'mail', 'bericht', 'bezoek', 'linkedin', 'whatsapp', 'sms', 'kaart'] as const
 const NIET_GESPROKEN = new Set(['geen_reactie', 'voicemail', 'verzonden', 'niet_bereikt', 'verkeerd_nummer', 'bezet', null, undefined, ''])
 
 /** Benaderd en gesproken, alleen met echte pogingen in het lopende verkoopjaar. */

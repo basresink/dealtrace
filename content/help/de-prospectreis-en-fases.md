@@ -31,7 +31,7 @@ Staat een account in de verkeerde fase, bijvoorbeeld omdat een gesprek op een be
 ## Zo doe je het in Dealtrace
 
 1. Open de accountkaart.
-2. Kijk naar de fasepil en het Pitstop-accent in het blok Ritme.
+2. Kijk naar de fasepil en het Pitstop-accent in het venster Reis onder Meer.
 3. Leg je uitkomst vast; de fase schuift mee.
 
 ## Fase corrigeren

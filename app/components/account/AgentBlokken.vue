@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Accountkaart (P19): het dossier met "Laat opnieuw onderzoeken" (Gevorderd, 10 credits), het blok
-// "Wat de agents zagen" en "Bronnen om te volgen" (Expert).
+// "Wat de agents zagen". Eigen bronnen om te volgen staan als Extra bronnen in het Info-venster.
 import { CRITERIUM_LABEL, DOSSIER_CRITERIA } from '~~/shared/agents'
 const props = defineProps<{ account: any }>()
 const emit = defineEmits<{ gewijzigd: [] }>()
@@ -14,10 +14,6 @@ async function onderzoek() {
   try { const r = await $fetch<any>(`/api/accounts/${props.account.id}/onderzoek`, { method: 'POST' }); toast.toon(r.compleet ? 'Dossier ververst en compleet.' : 'Dossier ververst.'); emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezig.value = false }
 }
 const d = computed(() => props.account.dossier)
-const nieuweBron = reactive({ soort: 'url', waarde: '' })
-async function bewaarBronnen(lijst: any[]) {
-  try { await $fetch(`/api/accounts/${props.account.id}/volgbronnen`, { method: 'PUT', body: { bronnen: lijst } }); nieuweBron.waarde = ''; emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') }
-}
 const datum = (s: string | null) => (s ? new Date(s).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }) : '')
 </script>
 
@@ -41,17 +37,5 @@ const datum = (s: string | null) => (s ? new Date(s).toLocaleDateString('nl-NL',
     <ul v-else class="schakel-lijst">
       <li v-for="i in account.agentInzichten" :key="i.id" class="schakel-rij"><span><NuxtLink :to="`/acties?tab=inzichten&gelezen=alle`">{{ i.title }}</NuxtLink><br><span class="meta">{{ AGENT_NAAM[i.agent] ?? i.agent }}<template v-if="i.bronNaam && i.bronNaam !== AGENT_NAAM[i.agent]"> · {{ i.bronNaam }}</template> · {{ datum(i.op) }}</span></span></li>
     </ul>
-  </article>
-  <article v-if="account.kan?.bronnenVolgen" class="kaart" data-test="bronnen-volgen">
-    <header class="kaart-kop"><h2 class="kaart-titel">Bronnen om te volgen</h2></header>
-    <p v-if="!account.volgBronnen?.length" class="kaart-meta">Nog geen eigen bronnen. De Waarnemer volgt het profiel van de doelgroep.</p>
-    <ul v-else class="schakel-lijst">
-      <li v-for="(b, n) in account.volgBronnen" :key="n" class="schakel-rij"><span>{{ b.soort === 'url' ? 'URL' : 'Trefwoord' }}: {{ b.waarde }}</span><button type="button" class="dd-act" :aria-label="`${b.waarde} weghalen`" @click="bewaarBronnen(account.volgBronnen.filter((_: any, m: number) => m !== n))">Weg</button></li>
-    </ul>
-    <form class="filterbalk mt-8" @submit.prevent="bewaarBronnen([...(account.volgBronnen ?? []), { ...nieuweBron }])">
-      <select v-model="nieuweBron.soort" class="invoer invoer--klein" aria-label="Soort bron"><option value="url">URL</option><option value="trefwoord">Trefwoord</option></select>
-      <input v-model="nieuweBron.waarde" class="invoer invoer--klein" :placeholder="nieuweBron.soort === 'url' ? 'https://' : 'Trefwoord'" aria-label="Bron" data-test="nieuwe-bron">
-      <button type="submit" class="dd-act" :disabled="!nieuweBron.waarde.trim()">+ Bron</button>
-    </form>
   </article>
 </template>

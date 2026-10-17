@@ -13,7 +13,6 @@ test.describe('flyoutstandaard', () => {
     await login(page, 'u-07')
     await ga(page, '/accounts/eva-a04')
     const voor = await (await page.request.get('/api/accounts/eva-a04')).json()
-    await page.getByTestId('kop-meer').click()
     await page.getByTestId('info-knop').click()
     const fly = page.getByTestId('info-flyout')
     await expect(fly).toBeVisible({ timeout: 30_000 })
@@ -36,7 +35,6 @@ test.describe('flyoutstandaard', () => {
   test('Vraag AI opent de assistent met de context van de flyout, boven de flyout', async ({ page }) => {
     await login(page, 'u-07')
     await ga(page, '/accounts/eva-a04')
-    await page.getByTestId('kop-meer').click()
     await page.getByTestId('info-knop').click()
     const fly = page.getByTestId('info-flyout')
     await expect(fly).toBeVisible({ timeout: 30_000 })

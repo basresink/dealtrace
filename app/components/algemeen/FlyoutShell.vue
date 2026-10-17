@@ -9,6 +9,7 @@
 // Toegankelijk: role=dialog met aria-labelledby, focus gaat naar binnen en bij sluiten terug, Tab blijft
 // in de flyout, Escape sluit alleen de bovenste flyout. Op de telefoon is de flyout schermvullend.
 import type { FlyoutOpslag } from '~/composables/useFlyoutOpslag'
+import { MEER_TERUG } from '~/composables/useMeerTerug'
 
 export interface FlyoutAi { accountId?: string | null; label?: string; vraag?: string; voorstellen?: string[] }
 defineOptions({ inheritAttrs: false })
@@ -39,6 +40,17 @@ const paneel = ref<HTMLElement | null>(null)
 const vraag = ref(false)
 const bezig = ref(false)
 let terug: HTMLElement | null = null
+// Geopend vanuit Meer (accountkaart, contactkaart): een terugknop in de kop; terug en Escape openen Meer weer.
+const meerTerug = inject(MEER_TERUG, null)
+const terugLabel = ref<string | null>(null)
+let naarTerug = false
+function sluitNu() {
+  const terugNaar = naarTerug && !!terugLabel.value
+  naarTerug = false
+  emit('sluit')
+  if (terugNaar) meerTerug?.terug()
+}
+function gaTerug() { void vraagSluiten(true) }
 
 const aiZichtbaar = computed(() => !!props.ai && !props.aiInVoet && !!functie('assistent.chat')?.beschikbaar)
 const stand = computed(() => props.opslag?.stand ?? 'leeg')
@@ -53,14 +65,15 @@ function vraagAi() {
 }
 
 // Sluiten: een geplande opslag gaat eerst de deur uit; blijft er iets open, dan vraagt de flyout het.
-async function vraagSluiten() {
+async function vraagSluiten(terugNaarMeer = false) {
   if (bezig.value) return
+  naarTerug = terugNaarMeer
   const o = props.opslag
   if (o?.gepland) { bezig.value = true; try { await o.flush() } finally { bezig.value = false } }
   if (o?.open) { vraag.value = true; await nextTick(); paneel.value?.querySelector<HTMLElement>('[data-test="fs-bewaar"], [data-test="fs-weggooien"]')?.focus(); return }
-  emit('sluit')
+  sluitNu()
 }
-function weggooien() { vraag.value = false; props.opslag?.reset(); emit('sluit') }
+function weggooien() { vraag.value = false; props.opslag?.reset(); sluitNu() }
 // Opslaan in de bevestiging: de geplande opslag, opnieuw na een fout, of de hoofdactie van de flyout
 // (event bewaar). Lukt het, dan sluit de flyout; anders blijft hij open met de status in de kop.
 async function bewaarEnSluit() {
@@ -69,9 +82,9 @@ async function bewaarEnSluit() {
   if (o?.gepland) await o.flush()
   else if (o?.stand === 'fout') await o.opnieuw()
   else { emit('bewaar'); await new Promise((r) => setTimeout(r, 100)) }
-  if (!o) { if (props.open) emit('sluit'); return }
+  if (!o) { if (props.open) sluitNu(); return }
   if (o.stand === 'bezig') await new Promise<void>((klaar) => { const stop = watch(() => o.stand, (s) => { if (s !== 'bezig') { stop(); klaar() } }) })
-  if (!o.open && props.open) emit('sluit')
+  if (!o.open && props.open) sluitNu()
 }
 
 // De bovenste overlay op het scherm: hoogste z-index, bij gelijke de laatste in de pagina.
@@ -92,7 +105,7 @@ function toets(e: KeyboardEvent) {
     if (e.defaultPrevented) return
     e.preventDefault()
     if (vraag.value) { vraag.value = false; return }
-    void vraagSluiten()
+    void vraagSluiten(true)
     return
   }
   if (e.key !== 'Tab' || !paneel.value) return
@@ -126,6 +139,7 @@ watch(() => props.open, async (o) => {
   if (!import.meta.client) return
   if (o) {
     vraag.value = false
+    terugLabel.value = meerTerug?.claim() ? meerTerug.label : null
     terug = (document.activeElement as HTMLElement | null) ?? null
     props.opslag?.reset()
     await nextTick()
@@ -146,7 +160,7 @@ defineExpose({ vraagSluiten })
 
 <template>
   <Teleport to="body">
-    <div v-if="open" ref="overlay" class="fo-overlay fs-overlay" :class="[{ 'fo-overlay--boven': bovenop }, overlayKlasse]" @click.self="vraagSluiten">
+    <div v-if="open" ref="overlay" class="fo-overlay fs-overlay" :class="[{ 'fo-overlay--boven': bovenop }, overlayKlasse]" @click.self="vraagSluiten()">
       <aside
         ref="paneel" v-bind="$attrs" class="fo-panel fo-panel--schuif fs-paneel"
         :class="[{ 'fo-panel--smal': breedte === 'smal', 'fo-panel--breed': breedte === 'breed', 'fo-panel--analyse': breedte === 'analyse', 'fo-panel--vol': breedte === 'vol', 'fo-panel--hulp': breedte === 'hulp', 'fo-panel--editor': breedte === 'editor' }, paneelKlasse]"
@@ -155,6 +169,7 @@ defineExpose({ vraagSluiten })
       >
         <header class="fo-head fs-kop">
           <div class="fo-head-tekst fs-kop-tekst">
+            <button v-if="terugLabel" type="button" class="fs-terug" :aria-label="`Terug naar ${terugLabel}`" data-test="fs-terug" @click="gaTerug"><Icoon naam="ArrowLeft" :grootte="14" />{{ terugLabel }}</button>
             <slot name="kop">
               <span v-if="kicker || slots.kicker" class="fo-kicker"><slot name="kicker">{{ kicker }}</slot></span>
               <h2 :id="kopId" class="fo-titel"><slot name="titel">{{ titel }}</slot></h2>
@@ -168,7 +183,7 @@ defineExpose({ vraagSluiten })
             <span v-else-if="stand === 'fout'" class="fs-stand fs-stand--fout"><Icoon naam="CircleAlert" :grootte="14" /><span>Kon niet opslaan, <button type="button" class="fs-opnieuw" data-test="fs-opnieuw" @click="opslag.opnieuw()">probeer opnieuw</button></span></span>
           </span>
           <button v-if="aiZichtbaar" type="button" class="fs-ibtn fs-ai" title="Vraag AI" aria-label="Vraag AI" data-test="fs-vraag-ai" @click="vraagAi"><Icoon naam="Sparkles" :grootte="18" /></button>
-          <button type="button" class="fo-sluit fs-sluit" aria-label="Sluiten" :data-test="sluitTest" @click="vraagSluiten"><Icoon naam="X" /></button>
+          <button type="button" class="fo-sluit fs-sluit" aria-label="Sluiten" :data-test="sluitTest" @click="vraagSluiten()"><Icoon naam="X" /></button>
         </header>
         <slot />
         <div v-if="vraag" class="fs-wijzig" role="alert" data-test="fs-wijzig">
@@ -215,6 +230,11 @@ defineExpose({ vraagSluiten })
 .fs-kop .fs-ai { color: var(--purple); border-color: var(--purple); }
 .fs-kop .fs-ai:hover { background: var(--purple-zacht, var(--surface)); }
 
+/* Terug naar Meer, boven de kicker. */
+.fs-terug { display: flex; width: fit-content; align-items: center; gap: 4px; min-height: 32px; margin: -4px 0 6px -2px; padding: 0 8px 0 4px; background: none; border: 1px solid transparent; border-radius: var(--radius); font: inherit; font-size: 12px; font-weight: 700; color: var(--ink); cursor: pointer; }
+.fs-terug:hover { border-color: var(--border-strong); background: var(--wit); }
+.fs-terug:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
 /* Een formulier om de inhoud: de inhoud blijft het deel dat scrolt. */
 .fs-form { display: contents; }
 
@@ -239,6 +259,7 @@ defineExpose({ vraagSluiten })
   .fs-kop .fs-status { grid-column: 1 / -1; grid-row: 2; }
   .fs-paneel .fo-foot .dd-act, .fs-paneel .fo-foot .dd-actie, .fs-paneel .fo-foot button, .fs-paneel .fo-foot a.dd-act { min-height: var(--touch-target-min); }
   .fs-wijzig { padding: 10px 16px; }
+  .fs-terug { min-height: var(--touch-target-min); margin-top: -8px; }
   .fs-wijzig .dd-actie { min-height: var(--touch-target-min); }
 }
 </style>

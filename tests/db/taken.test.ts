@@ -33,6 +33,14 @@ describe('hercontactritmes en wachtrij', () => {
       await expect(app.query(`insert into mutaties (id, organisation_id, user_id, tabel, op, record_id, resultaat) values ('dubbel-1', 'org-voltvast', 'u-03', 'tasks', 'patch', 't1', '{}')`)).rejects.toThrow(/duplicate key/)
     })
   })
+  it('een taak van type sms en een SMS-activiteit passen in het schema (geen check blokkeert ze)', async () => {
+    await alsOrg('org-voltvast', async () => {
+      const t = await app.query(`insert into tasks (organisation_id, action_type, title) values ('org-voltvast', 'sms', 'SMS: testtaak') returning action_type`)
+      expect(t.rows[0].action_type).toBe('sms')
+      const a = await app.query(`insert into activiteiten (organisation_id, soort, kanaal, uitkomst) values ('org-voltvast', 'bericht', 'sms', 'verstuurd') returning kanaal`)
+      expect(a.rows[0].kanaal).toBe('sms')
+    })
+  })
   it('prospects in Gekwalificeerd lopen in een ritme (seed)', async () => {
     const r = await beheer.query(`select count(*)::int n from accounts where fase_id = 'gekwalificeerd' and nb_status = 'in reis' and not (data->'reis'->'ritme'->>'actief')::boolean`)
     expect(r.rows[0].n).toBe(0)

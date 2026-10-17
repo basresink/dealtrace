@@ -11,6 +11,7 @@ import { mockGids } from './assistent'
 import { mockOpdracht } from '../../shared/spraakOpdracht'
 import { mockDocumentAntwoord } from '../../shared/kennisbank'
 import { mockHouding } from '../../shared/invloed'
+import { bandUitAnalyse } from '../../shared/bandUitVerslag'
 import { promptVoor, providerVoor } from './aiKoppeling'
 import { metOrganisatie } from './db'
 
@@ -126,6 +127,8 @@ MOCK_GENERATOREN.notulist = (m) => {
     concurrenten: (m?.concurrenten ?? []).filter((c: any) => t.toLowerCase().includes(String(c.naam).toLowerCase().replace(/\s*b\.?v\.?$/i, ''))).map((c: any) => c.naam),
     actiepunten: zinnen.filter((z) => /sturen|bellen|mailen|plannen|terugkomen/i.test(z)).slice(0, 3),
     samenvatting: zinnen.slice(0, 2).join(' '),
+    // BAND per letter: alleen met een letterlijke zin als bewijs (shared/bandUitVerslag.ts leest hetzelfde).
+    band: Object.fromEntries(Object.entries(bandUitAnalyse({ koopsignalen: zinnen, bezwaren: zinnen.filter((z) => /duur|geen budget|geen haast/i.test(z)) })).map(([l, v]) => [l, { oordeel: v!.ja ? 'ja' : 'nee', citaat: v!.citaat }])),
   }
 }
 // De Coach (P21): punten uit de cijfers, elk met een bestaand artikel; onder het minimum geen vergelijking.

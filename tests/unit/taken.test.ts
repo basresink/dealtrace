@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { RITMES_STARTSET, afrondTekst, kiesRitme, ritmeRapport, startRitme, valideerRitme, verwerkUitkomst, type Ritme } from '../../shared/hercontact'
 import { nlMoment } from '../../shared/datum'
-import { PRIORITEITEN, PRIO_LABEL, TAAK_TYPES, groepVan, herhalingAantal, horizon, isDringend, isPrioriteit, ordenTaken, rondTaakAf, uitstellen, vervalLabel, volgendeStap, voorinvullingUitInzicht, type Taak } from '../../shared/taken'
+import { ACTIETYPES, ACTIE_LABEL, PRIORITEITEN, PRIO_LABEL, TAAK_TYPES, berichtKanaalLabel, taakTypeVan, taakTypesVoor, groepVan, herhalingAantal, horizon, isDringend, isPrioriteit, ordenTaken, rondTaakAf, uitstellen, vervalLabel, volgendeStap, voorinvullingUitInzicht, type Taak } from '../../shared/taken'
 import { kiesAanleidingVanDeDag, samenvattingsregel, vandaagKicker } from '../../shared/vandaag'
 
 const NU = new Date('2026-10-14T08:00:00Z') // woensdag 10:00 in Nederland
@@ -155,9 +155,29 @@ describe('nieuwe taak in de opzet van DealDrive', () => {
     const t = (id: string, priority: string) => ({ id, priority, dueDate: '2026-10-14T12:00:00Z' })
     expect(ordenTaken([t('a', 'hoog'), t('b', 'laag'), t('c', 'urgent'), t('d', 'middel')], NU).map((x) => x.id)).toEqual(['c', 'a', 'd', 'b'])
   })
-  it('type als knoppen: Te doen, Bellen, Mailen, Bericht, Bezoek en LinkedIn, elk een actiesoort', () => {
-    expect(TAAK_TYPES.map((x) => x.label)).toEqual(['Te doen', 'Bellen', 'Mailen', 'Bericht', 'Bezoek', 'LinkedIn'])
-    expect(TAAK_TYPES.map((x) => x.id)).toEqual(['taak', 'bellen', 'mailen', 'bericht', 'bezoek', 'linkedin'])
+  it('type als knoppen: Te doen, Bellen, Mailen, WhatsApp, SMS en LinkedIn, elk een actiesoort', () => {
+    expect(TAAK_TYPES.map((x) => x.label)).toEqual(['Te doen', 'Bellen', 'Mailen', 'WhatsApp', 'SMS', 'LinkedIn'])
+    expect(TAAK_TYPES.map((x) => x.id)).toEqual(['taak', 'bellen', 'mailen', 'bericht', 'sms', 'linkedin'])
+    expect(TAAK_TYPES.find((x) => x.id === 'sms')!.icoon).toBe('MessageSquare')
+    expect(TAAK_TYPES.find((x) => x.id === 'bericht')!.icoon).toBe('MessageCircle')
+    for (const id of TAAK_TYPES.map((x) => x.id)) expect(ACTIETYPES).toContain(id)
+  })
+  it('een bestaande bezoektaak blijft geldig en toont als Bezoek, ook in de bewerkstand', () => {
+    expect(ACTIETYPES).toContain('bezoek')
+    expect(taakTypeVan('bezoek').label).toBe('Bezoek')
+    expect(taakTypeVan('bericht').label).toBe('WhatsApp')
+    expect(taakTypeVan('onbekend').label).toBe('Te doen')
+    expect(taakTypesVoor('bezoek').map((x) => x.id)).toContain('bezoek')
+    expect(taakTypesVoor('bellen').map((x) => x.id)).not.toContain('bezoek')
+    expect([ACTIE_LABEL.bericht, ACTIE_LABEL.sms]).toEqual(['WHATSAPP', 'SMS'])
+  })
+  it('een afgeronde SMS- of WhatsApp-taak is een contactpoging op dat kanaal', () => {
+    const sms = rondTaakAf(taak({ actionType: 'sms' }), { uitkomst: 'verstuurd' }, { nu: NU })
+    expect(sms.fout).toBeUndefined()
+    expect(sms.activiteit).toMatchObject({ soort: 'bericht', kanaal: 'sms', uitkomst: 'verstuurd' })
+    expect(rondTaakAf(taak({ actionType: 'sms' }), {}, { nu: NU }).fout).toBe('Kies een uitkomst')
+    expect(rondTaakAf(taak({ actionType: 'bericht' }), { uitkomst: 'verstuurd' }, { nu: NU }).activiteit).toMatchObject({ soort: 'bericht', kanaal: 'whatsapp' })
+    expect([berichtKanaalLabel('bericht', 'sms'), berichtKanaalLabel('bericht', 'whatsapp'), berichtKanaalLabel('gebeld', null)]).toEqual(['SMS', 'WhatsApp', null])
   })
   it('herhalingAantal: wekelijks tot en met de einddatum, werkdagen zonder weekend, hooguit 52', () => {
     const eerste = '2026-10-14T08:00:00Z' // woensdag

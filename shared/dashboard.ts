@@ -88,21 +88,32 @@ export function delta(nu: number, vorige: number, wanneer: string): Delta {
 
 // ── Activiteiten per dag of week ────────────────────────────────────────────
 
-export const DASH_KANALEN = ['bellen', 'mail', 'bezoek', 'linkedin', 'bericht'] as const
+/**
+ * Kanalen in "Activiteiten per dag". WhatsApp (taaktype `bericht`) en SMS staan los; een bezoek dat als
+ * contactpoging is afgerond telt als Bezoek, en wat geen eigen kanaal heeft (een kaart) als Overig.
+ */
+export const DASH_KANALEN = ['bellen', 'mail', 'linkedin', 'whatsapp', 'sms', 'bezoek', 'overig'] as const
 export type Kanaal = typeof DASH_KANALEN[number]
-export const KANAAL_LABEL: Record<Kanaal, string> = { bellen: 'Bellen', mail: 'Mail', bezoek: 'Bezoek', linkedin: 'LinkedIn', bericht: 'Bericht' }
-/** De kanaalgroep van een contactpoging; WhatsApp en kaartjes zijn berichten. */
-export function kanaalVan(a: Pick<KpiActiviteit, 'soort'>): Kanaal {
+export const KANAAL_LABEL: Record<Kanaal, string> = { bellen: 'Bellen', mail: 'Mail', linkedin: 'LinkedIn', whatsapp: 'WhatsApp', sms: 'SMS', bezoek: 'Bezoek', overig: 'Overig' }
+/** Kanalen die alleen in de legenda staan als er in de periode iets in zit. */
+export const KANAAL_ALLEEN_GEVULD: readonly Kanaal[] = ['bezoek', 'overig']
+/**
+ * De kanaalgroep van een contactpoging. Een afgeronde taak schrijft soort `bericht` met het kanaal erbij
+ * (whatsapp, sms of linkedin); een `bericht` zonder kanaal is van voor de splitsing en was WhatsApp.
+ */
+export function kanaalVan(a: Pick<KpiActiviteit, 'soort' | 'kanaal'>): Kanaal {
   if (a.soort === 'gebeld') return 'bellen'
   if (a.soort === 'mail') return 'mail'
   if (a.soort === 'bezoek') return 'bezoek'
-  if (a.soort === 'linkedin') return 'linkedin'
-  return 'bericht'
+  if (a.soort === 'linkedin' || a.kanaal === 'linkedin') return 'linkedin'
+  if (a.soort === 'sms' || a.kanaal === 'sms') return 'sms'
+  if (a.soort === 'whatsapp' || a.kanaal === 'whatsapp' || a.soort === 'bericht') return 'whatsapp'
+  return 'overig'
 }
 
 export interface ReeksPunt { sleutel: string; label: string; titel: string; kern: boolean; totaal: number; gesprekken: number; delen: Record<Kanaal, number> }
 export interface Reeks { per: 'dag' | 'week'; punten: ReeksPunt[]; max: number; totaal: number }
-const leeg = (): Record<Kanaal, number> => ({ bellen: 0, mail: 0, bezoek: 0, linkedin: 0, bericht: 0 })
+const leeg = (): Record<Kanaal, number> => ({ bellen: 0, mail: 0, linkedin: 0, whatsapp: 0, sms: 0, bezoek: 0, overig: 0 })
 const maandagVan = (d: string) => plusDagen(d, -((new Date(`${d}T12:00:00Z`).getUTCDay() + 6) % 7))
 
 /**

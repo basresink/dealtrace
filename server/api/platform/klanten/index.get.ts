@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
     const klanten = orgs.map((o) => {
       const h = g.get(o.id)
       return {
-        id: o.id, naam: o.name, pakket: o.pakket, status: o.contract?.status ?? 'actief', seats: o.contract?.seats ?? null,
+        id: o.id, naam: o.name, pakket: o.pakket, status: o.contract?.status ?? 'actief', einddatum: o.contract?.einddatum ?? null, seats: o.contract?.seats ?? null,
         gebruikers: h?.gebruikers ?? 0, metLogin: h?.metLogin ?? 0, laatstActief: h?.laatstActief ?? null,
         stand: h?.stand ?? 'leeg', redenen: h?.redenen ?? [], aiKosten: null,
         openAanvragen: open.filter((a) => a.org === o.id).length,

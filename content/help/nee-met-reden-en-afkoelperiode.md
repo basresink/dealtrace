@@ -24,7 +24,7 @@ Dealtrace stelt een terugkomdatum voor uit de terugkomregel die bij de reden hoo
 
 ## Zo doe je het in Dealtrace
 
-1. Klik op de accountkaart in het blok Ritme op **Zet nee**.
+1. Klik op de accountkaart bij **Meer**, **Reis** op **Zet nee**.
 2. Kies de reden.
 3. Klik **Zet op nee**. Je ziet tot wanneer het account op nee staat.
 
