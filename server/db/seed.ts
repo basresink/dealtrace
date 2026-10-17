@@ -136,25 +136,7 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
     const p03 = await seedAccounts(client, org, voltvast)
 
     await seedReis(client, org.id, voltvast)
-    await seedDag(client, org.id)
-    await seedGebieden(client, org.id)
-    await seedCampagnes(client, org.id)
-    await seedFunnel(client, org.id)
-    await seedConcepten(client, org.id)
-    await seedTeam(client, org.id)
-    // Testgebruiker Eva Ervaren (u-07): een gevulde werkplek voor de komende vier weken. Na de
-    // campagnes en het team, zodat die sets niet veranderen.
-    await seedEva(client, org.id)
-    // Eva uitgebreid: 72 extra prospects, drie klanten en acht weken werk eromheen (een drukke werkweek op elke pagina).
-    await seedEvaUitgebreid(client, org.id)
-    // Kennisbank: vijf fictieve documenten, een paar gekoppeld aan prospects en een contact.
-    await seedKennisbank(client, org.id)
-    // Signaalradar (F5): fictieve inzichten over zeven perioden, zodat er golven te zien zijn.
-    await seedSignaalradar(client, org.id)
-    // Taken bij een account krijgen het primaire contact (de beslisser, anders het eerste actieve contact)
-    // als contact_id, zodat de tabbladen op de contactkaart gevuld zijn. Alleen waar nog geen contact staat.
-    await client.query(`update tasks t set contact_id = (select c.id from contacts c where c.account_id = t.account_id and c.status <> 'vertrokken' order by (c.rol = 'beslisser') desc, c.created_at, c.id limit 1)
-      where t.organisation_id = $1 and t.contact_id is null and t.account_id is not null`, [org.id])
+    await vulTestdataAan(client, org.id)
 
     // P11: Voltvast heeft een (mock-)KvK-sleutel; Tweede niet, zodat "niet gekoppeld" te zien is.
     // De buitendienst heeft een thuisbasis voor het werkgebied met een straal.
@@ -179,6 +161,40 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
   } finally {
     await client.end()
   }
+}
+
+/**
+ * Alle testdata na de accounts en de reis: dagwerk, gebieden, campagnes, funnel, concepten, team, Eva Ervaren
+ * (u-07) met haar uitgebreide set, kennisbank en Signaalradar. Alleen toevoegen (vaste id's, on conflict do nothing),
+ * dus veilig op een database die al gevuld is: de build op Netlify roept dit bij elke deploy aan, zodat testdata
+ * van latere rondes ook online verschijnt zonder dat iets wat online gewijzigd is, wordt overschreven.
+ */
+export async function vulTestdataAan(client: pg.Client, orgId: string) {
+  // Mira (beheerder) en Eva (Expert) kwamen later; online bestaan ze misschien nog niet. Nooit bijwerken.
+  await client.query(
+    `insert into users (id, organisation_id, email, name, role, niveau, team_id, werkplek, status) values
+       ('u-06', $1, 'mira@voltvast.test', 'Testgebruiker Mira Beheer', 'beheerder', 'expert', (select id from teams where id = 'team-organisatie'), 'binnendienst', 'actief'),
+       ('u-07', $1, 'eva@voltvast.test', 'Testgebruiker Eva Ervaren', 'accountmanager', 'expert', (select id from teams where id = 'team-binnendienst'), 'binnendienst', 'actief')
+     on conflict (id) do nothing`, [orgId])
+  await seedDag(client, orgId)
+  await seedGebieden(client, orgId)
+  await seedCampagnes(client, orgId)
+  await seedFunnel(client, orgId)
+  await seedConcepten(client, orgId)
+  await seedTeam(client, orgId)
+  // Testgebruiker Eva Ervaren (u-07): een gevulde werkplek voor de komende vier weken. Na de
+  // campagnes en het team, zodat die sets niet veranderen.
+  await seedEva(client, orgId)
+  // Eva uitgebreid: 72 extra prospects, drie klanten en acht weken werk eromheen (een drukke werkweek op elke pagina).
+  await seedEvaUitgebreid(client, orgId)
+  // Kennisbank: vijf fictieve documenten, een paar gekoppeld aan prospects en een contact.
+  await seedKennisbank(client, orgId)
+  // Signaalradar (F5): fictieve inzichten over zeven perioden, zodat er golven te zien zijn.
+  await seedSignaalradar(client, orgId)
+  // Taken bij een account krijgen het primaire contact (de beslisser, anders het eerste actieve contact)
+  // als contact_id, zodat de tabbladen op de contactkaart gevuld zijn. Alleen waar nog geen contact staat.
+  await client.query(`update tasks t set contact_id = (select c.id from contacts c where c.account_id = t.account_id and c.status <> 'vertrokken' order by (c.rol = 'beslisser') desc, c.created_at, c.id limit 1)
+    where t.organisation_id = $1 and t.contact_id is null and t.account_id is not null`, [orgId])
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
