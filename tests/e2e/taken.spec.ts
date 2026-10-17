@@ -501,6 +501,7 @@ test.describe('Taken: nieuwe URL, horizon in het filter en Briefings', () => {
     await expect(gekozen.getByTestId('briefing-contact-naam')).toHaveAttribute('href', `/contacten/${x.beslisser.id}`)
     // Herladen houdt de keuze.
     await page.reload()
+    await page.waitForLoadState('networkidle')
     await expect(page.getByTestId('briefing-contact')).toContainText('Petra')
     await expect(page.locator('#bfd-titel')).toContainText(x.accountNaam)
     // Contact wissen: weer de briefing van het account.

@@ -60,7 +60,9 @@ export async function laadRitmeBlokken(tx: Tx, g: RitmeGebruiker, nu: Date, o: R
     const ses = dagen.length ? await rijen(tx, sql`select id, start_op, eind_op, status, data->>'soort' as soort, data->>'verhouding' as verhouding from belblok_sessies
       where gebruiker_id = ${g.id} and start_op >= ${vanT} and start_op < ${eindDagenT} and status <> 'geannuleerd' order by start_op`) : []
     const inBlok = ses.length ? await rijen(tx, sql`select t.belblok_id, t.priority, coalesce(a.score, 0) as score from tasks t left join accounts a on a.id = t.account_id where t.belblok_id = any(string_to_array(${lijst(ses.map((s) => s.id))}, ','))`) : []
-    const pool = bouwBellijst(kandidaten.filter((k) => !k.belblokId), nu)
+    // Wie al in een belblok staat (ook met een tweede beltaak), komt niet in het voorstel.
+    const inEenBlok = new Set(kandidaten.filter((k) => k.belblokId).map((k) => k.accountId))
+    const pool = bouwBellijst(kandidaten.filter((k) => !k.belblokId && !inEenBlok.has(k.accountId)), nu)
     const blokken = vulVoorstellen(ses.map((s) => ({
       id: s.id, start: iso(s.start_op)!, eind: iso(s.eind_op)!, status: s.status, soort: (['koud', 'opvolging', 'gemengd'].includes(s.soort) ? s.soort : null) as BlokSoort | null,
       verhouding: s.verhouding != null && Number.isFinite(Number(s.verhouding)) ? Number(s.verhouding) : null,
@@ -142,7 +144,7 @@ export async function laadRitmeBlokken(tx: Tx, g: RitmeGebruiker, nu: Date, o: R
         const later = open.find((x) => !nu2.includes(x))
         return {
           id: p.id, titel: p.titel, accountId: p.account_id, accountNaam: p.name, geldigTot: p.geldig_tot ?? null,
-          voortgang: voortgang(a), open: nu2.length,
+          voortgang: voortgang(a as { status: string }[]), open: nu2.length,
           acties: nu2.slice(0, 3).map((x) => ({ id: x.id, titel: x.title, due: iso(x.due_date), teLaat: Date.parse(iso(x.due_date)!) < vandaagT })),
           volgende: later ? { id: later.id, titel: later.title, due: iso(later.due_date) } : null,
         }

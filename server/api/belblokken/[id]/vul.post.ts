@@ -20,7 +20,10 @@ export default defineEventHandler(async (event) => {
     if (s.status !== 'gepland') throw createError({ statusCode: 409, statusMessage: 'Dit blok loopt al of is klaar' })
     const nu = new Date()
     if (Date.parse(s.eindOp) <= nu.getTime()) throw createError({ statusCode: 422, statusMessage: 'Dit blok is al voorbij' })
-    const gekozen = bouwBellijst((await laadBelKandidaten(tx, ctx.gebruiker.id)).filter((k) => !k.belblokId && ids.includes(k.accountId)), nu)
+    const alle = await laadBelKandidaten(tx, ctx.gebruiker.id)
+    // Een account dat al in dit blok staat, komt er niet nog een keer in (ook niet met een tweede beltaak).
+    const alIn = new Set(alle.filter((k) => k.belblokId === s.id).map((k) => k.accountId))
+    const gekozen = bouwBellijst(alle.filter((k) => !k.belblokId && ids.includes(k.accountId) && !alIn.has(k.accountId)), nu)
       .sort((x, y) => ids.indexOf(x.accountId) - ids.indexOf(y.accountId))
     if (!gekozen.length) throw createError({ statusCode: 409, statusMessage: 'Deze gesprekken staan al in een belblok' })
     const taken = await hangAanBlok(tx, ctx.organisatie.id, ctx.gebruiker.id, s.id, s.startOp, gekozen)

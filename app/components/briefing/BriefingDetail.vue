@@ -316,7 +316,7 @@ onBeforeUnmount(() => { window.removeEventListener('keydown', opEscape); for (co
 @media (max-width: 719px) {
   .bfd-tab, .bf-contact-gegevens li, .bf-contact-gesprekken .dd-act, .bfd-voet .dd-act--icoon { min-height: var(--touch-target-min); }
   .bfd-voet .dd-act--icoon { min-width: var(--touch-target-min); }
-  .bfd-opslag { order: 3; width: 100%; margin-left: 0; }
+  .bf-blok-titel a, .bf-contact-gegevens a { display: inline-block; padding: 13px 0; margin: -13px 0; }
 }
 @media print {
   .bfd-tabs, .bfd-soort .bfd-pillen, .bfd-pitstop, .bf-doel, .bfd-opslag, .bfd-blok-kop .dd-act { display: none !important; }

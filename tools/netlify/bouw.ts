@@ -7,7 +7,7 @@ import pg from 'pg'
 import { migreer } from '../../server/db/migreer'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { seed } from '../../server/db/seed'
+import { seed, vulTestdataAan } from '../../server/db/seed'
 import { seedAccounts } from '../../server/db/seedAccounts'
 import { seedReis } from '../../server/db/seedReis'
 import { normaliseerUrl, verbindingsopties } from '../../shared/verbinding'
@@ -52,6 +52,16 @@ else {
   } else console.log('Testdata staat er al; seed overgeslagen.')
   // P05: verkoopverhaal, afkoeling en fases aanvullen (idempotent).
   await seedReis(c2, 'org-voltvast', JSON.parse(readFileSync(join(import.meta.dirname, '../../seed/voltvast.json'), 'utf8')))
+  // Testdata van latere rondes (o.a. Eva Ervaren, u-07): alleen toevoegen wat ontbreekt, in één transactie.
+  await c2.query('begin')
+  try {
+    await vulTestdataAan(c2, 'org-voltvast')
+    await c2.query('commit')
+    console.log('Testdata van latere rondes aangevuld waar die ontbrak.')
+  } catch (e) {
+    await c2.query('rollback')
+    throw e
+  }
   await c2.end()
 }
 

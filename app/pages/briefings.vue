@@ -225,14 +225,16 @@ useHead({ title: 'Briefings · Dealtrace' })
         </div>
       </section>
 
-      <BriefingDetail
-        v-if="open" :key="`${open.onderwerp}:${open.id}`" :onderwerp="open.onderwerp" :id="open.id" :tab="open.tab" :pitstop="open.pitstop"
-        @sluit="open = null" @gewijzigd="refresh()" @open-item="openItem" @gesprek="(g) => (open = { ...g, tab: 'hele' })"
-      />
-      <BriefingDetail
-        v-else-if="gekozen" :key="`account:${gekozen.id}:${gekozen.contact ?? ''}`" onderwerp="account" :id="gekozen.id" :contact-id="gekozen.contact" tab="hele"
-        @sluit="zet({ account: undefined, contact: undefined })" @wis-contact="zet({ contact: undefined })" @gesprek="vanuitAccount"
-      />
+      <ClientOnly>
+        <BriefingDetail
+          v-if="open" :key="`${open.onderwerp}:${open.id}`" :onderwerp="open.onderwerp" :id="open.id" :tab="open.tab" :pitstop="open.pitstop"
+          @sluit="open = null" @gewijzigd="refresh()" @open-item="openItem" @gesprek="(g) => (open = { ...g, tab: 'hele' })"
+        />
+        <BriefingDetail
+          v-else-if="gekozen" :key="`account:${gekozen.id}:${gekozen.contact ?? ''}`" onderwerp="account" :id="gekozen.id" :contact-id="gekozen.contact" tab="hele"
+          @sluit="zet({ account: undefined, contact: undefined })" @wis-contact="zet({ contact: undefined })" @gesprek="vanuitAccount"
+        />
+      </ClientOnly>
       <TaakFlyout :open="!!taakOpen" :taak-id="taakOpen" @sluit="taakOpen = null" @klaar="refresh()" @gewijzigd="refresh()" />
       <AfspraakFlyout :open="!!afspraakOpen" :afspraak-id="afspraakOpen" @sluit="afspraakOpen = null" @gewijzigd="refresh()" />
       <PlanAfspraakFlyout :open="planOpen" @sluit="planOpen = false" @gepland="gepland" />

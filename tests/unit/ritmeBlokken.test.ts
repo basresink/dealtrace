@@ -52,7 +52,7 @@ describe('ritmeBlokkenMail', () => {
     expect(regels).toContain('Belblokken om te vullen')
     expect(regels).toContain('- Testcampagne: 2 van 5 kaarten gedaan, 1 aan de beurt')
     expect(regels).not.toContain('Bel eerst')
-    expect(regels.join('\n')).not.toMatch(/[–—]/)
+    expect(regels.join('\n')).not.toMatch(/[\u2013\u2014]/)
     expect(ritmeBlokkenMail(null)).toEqual([])
   })
 })
