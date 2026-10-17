@@ -25,7 +25,7 @@ async function kies(x: any, v: string) {
   lijst.value = null
   try {
     const r: any = await $fetch('/api/instellingen/terugkomen/proef', { method: 'POST', body: { reden: { bronSoort: x.bronSoort, reden: x.reden, terugkomregelId: naar } } })
-    if (wacht.value?.rij === x) lijst.value = r.verschuivingen
+    if (wacht.value && sleutel(wacht.value.rij) === sleutel(x) && wacht.value.naar === naar) lijst.value = r.verschuivingen
   } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 const naam = (id: string | null) => (id ? regels.value.find((r) => r.id === id)?.reden ?? id : 'geen regel')

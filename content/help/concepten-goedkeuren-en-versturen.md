@@ -33,3 +33,7 @@ Elke eerste mail krijgt onderaan een afmeldlink en een verwijzing naar de privac
 Dealtrace verstuurt nooit een eerste bericht zonder jouw goedkeuring. Als Beginner keur je elk concept per stuk goed.
 
 De salesmanager ziet met **Ook van mijn team** de concepten van zijn teams. De beheerder koppelt de mail bij **Instellingen**, **Mail koppelen**, en beheert de **Mailsjablonen**.
+
+## Mailsjablonen (beheerder)
+
+Bij **Instellingen**, **Mailsjablonen** maakt de beheerder vaste opzetten per kanaal, met variabelen zoals {contact.voornaam}. Met de schakelaar bij een sjabloon zet je het aan of uit. Een sjabloon dat uit staat, blijft bewaard maar is niet te kiezen. Bovenaan zie je hoeveel sjablonen aanstaan. Aan- en uitzetten komt in de audit.

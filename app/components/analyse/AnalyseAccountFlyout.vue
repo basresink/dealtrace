@@ -49,7 +49,7 @@ const datum = (iso: string) => new Date(iso).toLocaleDateString('nl-NL', { day: 
 </template>
 
 <style scoped>
-.aaf { max-width: min(860px, 100vw); }
+:global(.fo-panel.aaf) { max-width: min(860px, 100vw); }
 .aaf-sub { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
 .aaf-laatst { white-space: nowrap; }
 .aaf-laatst--nooit { color: var(--red); font-weight: 700; }

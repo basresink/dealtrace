@@ -302,6 +302,6 @@ useHead({ title: computed(() => `${r.value?.naam ?? 'Reis'} · Prospectreizen ·
 .re-smal { width: 80px; }
 .re-mapping { width: auto; min-width: 200px; }
 .re-link { all: unset; cursor: pointer; text-decoration: underline dotted; }
-.re-560 { width: min(560px, 100vw); }
-.re-640 { width: min(640px, 100vw); }
+:global(.fo-panel.re-560) { width: min(560px, 100vw); }
+:global(.fo-panel.re-640) { width: min(640px, 100vw); }
 </style>

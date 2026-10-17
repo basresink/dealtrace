@@ -10,10 +10,14 @@ async function bewaar() {
   try { await $fetch('/api/mailsjablonen', { method: 'PUT', body: bewerk.value }); toast.toon('Sjabloon bewaard.'); bewerk.value = null; await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 // Aan of uit: een sjabloon dat uit staat, blijft bewaard maar is niet te kiezen.
+// useFetch geeft een shallowRef: de lijst vervangen, niet één veld wijzigen.
+function zetActief(id: string, actief: boolean) {
+  data.value = { ...data.value, sjablonen: data.value.sjablonen.map((x: any) => (x.id === id ? { ...x, actief } : x)) }
+}
 async function wissel(s: any, actief: boolean) {
   const oud = s.actief
-  s.actief = actief
-  try { await $fetch(`/api/mailsjablonen/${s.id}/actief`, { method: 'PUT', body: { actief } }); toast.toon(actief ? `${s.naam} staat aan.` : `${s.naam} staat uit.`) } catch (e) { s.actief = oud; toast.toon(foutTekst(e), 'fout') }
+  zetActief(s.id, actief)
+  try { await $fetch(`/api/mailsjablonen/${s.id}/actief`, { method: 'PUT', body: { actief } }); toast.toon(actief ? `${s.naam} staat aan.` : `${s.naam} staat uit.`) } catch (e) { zetActief(s.id, oud); toast.toon(foutTekst(e), 'fout') }
 }
 const telling = computed(() => {
   const n = data.value.sjablonen.length

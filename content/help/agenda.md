@@ -3,7 +3,7 @@ titel: Agenda
 categorie: Dagelijks werk
 collectie: product
 samenvatting: Je afspraken, belblokken en wat er in je gekoppelde agenda staat, per dag, week of maand.
-routes: /agenda
+routes: /agenda,/instellingen/koppelingen/agenda
 ---
 
 # Agenda
@@ -28,3 +28,7 @@ Onder **Filters** kies je de meetingsoort en de vorm. Een salesmanager kiest daa
 Vanaf Gevorderd staat er een vierde knop, **Wie moet ik spreken**. Daar staan hooguit acht voorstellen, elk met een reden en een vormadvies: een no-show opnieuw inplannen, een eerste gesprek dat nog niet is ingepland, of een ritme dat afloopt. Ook prospects zonder klasse of historie doen mee.
 
 Meer over plannen en afronden lees je in "Een afspraak plannen, afronden en overdragen".
+
+## Je agenda koppelen
+
+De beheerder zet de koppeling met Microsoft 365 en Google aan voor de organisatie bij **Instellingen**, **Koppelingen**, **Agenda**. Daarna koppelt ieder zijn eigen agenda bij **Account**, onder Gekoppelde agenda. Wat in je agenda staat, telt dan mee als bezet.

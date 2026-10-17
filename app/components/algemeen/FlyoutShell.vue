@@ -107,6 +107,7 @@ function toets(e: KeyboardEvent) {
 }
 
 watch(() => props.open, async (o) => {
+  if (!import.meta.client) return
   if (o) {
     vraag.value = false
     terug = (document.activeElement as HTMLElement | null) ?? null

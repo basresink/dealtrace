@@ -59,3 +59,13 @@ Bij **Niveaus** kiest de beheerder het niveau waarmee nieuwe gebruikers starten 
 ## Iedereen ziet alles
 
 Met de schakelaar **Iedereen ziet alles** staan voor iedereen alle functies uit het pakket aan. Rechten per rol blijven gelden.
+
+## Welke functie bij welk niveau hoort
+
+Onder de schakelaar staat **Functies per niveau**: per groep welke functie aanstaat bij Beginner, Gevorderd en Expert in jullie organisatie. Bovenaan zie je per niveau hoeveel functies aanstaan, bijvoorbeeld "75 van 176". Zoek een functie of kies **Verschilt per niveau**. Een keuze die Dealtrace speciaal voor jullie maakte, heet **Aangepast**. Functies die alleen bij een rol horen, staan als "Altijd aan voor salesmanager en beheerder"; functies buiten je pakket als "Niet in jullie pakket".
+
+Dit overzicht is alleen lezen. De indeling per niveau stelt Dealtrace in; wil je een functie eerder of later aan, vraag het aan Dealtrace. Het niveau per persoon kies je bij **Gebruikers en teams**.
+
+## Wie mag wat
+
+Onderaan staat **Wie mag wat**: per onderdeel wat een accountmanager, salesmanager en beheerder mag (lezen, wijzigen, verwijderen; alles, eigen teams of alleen eigen). Deze rechten staan vast. Een functie moet daarnaast ook aanstaan voor iemands niveau.

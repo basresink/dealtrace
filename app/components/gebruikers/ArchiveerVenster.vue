@@ -66,7 +66,7 @@ async function bevestig() {
               <span class="veld-label">Draag over aan <span class="veld-verplicht">verplicht</span></span>
               <select v-model="naar" class="invoer" data-test="archiveer-naar">
                 <option value="" disabled>Kies een collega</option>
-                <option v-for="o in stand.ontvangers" :key="o.id" :value="o.id">{{ o.naam }} · {{ ROL[o.rol] ?? o.rol }}{{ o.id === stand.standaard ? ' (manager van het team)' : '' }}</option>
+                <option v-for="o in stand.ontvangers" :key="o.id" :value="o.id">{{ o.naam }} · {{ ROL[o.rol] ?? o.rol }}{{ o.id === stand.standaard ? ' (teammanager)' : '' }}</option>
               </select>
             </label>
             <p class="veld-uitleg">Prospects gaan met hun open taken mee. Lopende reeksen lopen door op naam van de nieuwe eigenaar.</p>

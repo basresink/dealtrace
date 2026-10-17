@@ -200,8 +200,8 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
                   </td>
                   <td v-if="beheerder">
                     <div class="gb-acties">
-                      <button type="button" class="dd-act" :data-test="`wijzig-${g.id}`" :aria-label="`${g.naam} wijzigen`" @click="bewerken = g"><Icoon naam="Pencil" :grootte="14" />Wijzig</button>
-                      <button v-if="g.id !== me?.gebruiker.id" type="button" class="dd-act" :data-test="`archiveer-${g.id}`" :aria-label="`${g.naam} archiveren`" @click="archiveren = g"><Icoon naam="Archive" :grootte="14" />Archiveer</button>
+                      <button type="button" class="dd-act gb-ico" :data-test="`wijzig-${g.id}`" :aria-label="`${g.naam} wijzigen`" title="Wijzig naam, e-mail of portefeuille" @click="bewerken = g"><Icoon naam="Pencil" :grootte="16" /><span class="gb-ico-tekst">Wijzig</span></button>
+                      <button v-if="g.id !== me?.gebruiker.id" type="button" class="dd-act gb-ico" :data-test="`archiveer-${g.id}`" :aria-label="`${g.naam} archiveren`" title="Archiveer met overdracht" @click="archiveren = g"><Icoon naam="Archive" :grootte="16" /><span class="gb-ico-tekst">Archiveer</span></button>
                     </div>
                   </td>
                 </tr>
@@ -250,9 +250,13 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
 </template>
 
 <style scoped>
-.gb-acties { display: flex; flex-wrap: wrap; gap: 6px; }
-.gb-acties .dd-act { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-.gb-inlog { white-space: nowrap; color: var(--muted); font-size: 13px; }
+.gb-acties { display: flex; gap: 6px; }
+.gb-acties .dd-act { display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+.gb-ico { width: 36px; height: 36px; padding: 0; }
+.gb-ico-tekst { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.gb-tabel select.invoer { width: auto; max-width: 100%; }
+.gb-tabel th, .gb-tabel td { padding-left: 8px; padding-right: 8px; }
+.gb-inlog { min-width: 72px; color: var(--muted); font-size: 13px; }
 .gb-actief { font-size: 13px; color: var(--muted); }
 .gb-mobiel-label { display: none; }
 .gb-archief { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
@@ -264,6 +268,8 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
 @media (max-width: 767px) {
   .gb-mobiel-label { display: inline; }
   .gb-acties .dd-act { min-height: var(--touch-target-min); }
+  .gb-ico { width: auto; height: auto; padding: 0 14px; }
+  .gb-ico-tekst { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
   .gb-heractiveer { width: 100%; justify-content: center; }
 }
 </style>

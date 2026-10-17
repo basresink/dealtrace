@@ -29,10 +29,11 @@ test.describe('Terugkomen op 1280 px', () => {
     await expect(form.getByTestId('tk-dagen')).toHaveValue('61')
 
     // Alleen de aanpak wijzigen: er verschuift niets, wel een nieuwe versie. Daarna terugzetten.
-    const aanpak = await form.getByTestId('tk-aanpak').inputValue()
+    const aanpak = (await form.getByTestId('tk-aanpak').inputValue()).replace(/( Test\.)+$/, '')
     await form.getByTestId('tk-aanpak').fill(`${aanpak} Test.`)
     await form.getByTestId('tk-bewaar').click()
     await expect(page.locator('.toast-tekst').last()).toContainText(/Regel bewaard als versie \d+\. Er verschoof niets\./)
+    await expect(form.getByTestId('tk-bewaar')).toBeDisabled()
     await form.getByTestId('tk-aanpak').fill(aanpak)
     await form.getByTestId('tk-bewaar').click()
     await expect(form.getByTestId('tk-aanpak')).toHaveValue(aanpak)

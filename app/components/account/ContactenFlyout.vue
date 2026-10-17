@@ -83,8 +83,9 @@ const nummer = (c: any) => c.mobiel ?? c.telefoon ?? null
           </div>
         </div>
       <template #voet>
-        <footer class="fo-foot cf-voet">
-          <NuxtLink to="/contacten/alle" class="dd-actie dd-actie--secundair cf-alle" data-test="cf-alle" @click="emit('sluit')">Alle contacten →</NuxtLink>
+        <footer class="fo-foot fs-voet cf-voet">
+          <NuxtLink to="/contacten/alle" class="dd-actie dd-actie--zwart fs-hoofdactie cf-alle" data-test="cf-alle" @click="emit('sluit')"><Icoon naam="Users" :grootte="16" />Alle contacten</NuxtLink>
+          <span class="fo-foot-vul" />
         </footer>
       </template>
     </FlyoutShell>
@@ -116,8 +117,7 @@ const nummer = (c: any) => c.mobiel ?? c.telefoon ?? null
 .cf-form-annuleer { padding: 0; border: 0; background: none; font: inherit; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
 .cf-form-annuleer:hover { color: var(--red); }
 .cf-raster { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.cf-voet { justify-content: stretch; }
-.cf-alle { flex: 1; justify-content: center; text-decoration: none; }
+.cf-alle { text-decoration: none; }
 @media (max-width: 767px) {
   .cf-kaart { padding: 12px 16px 4px; min-height: 44px; }
   .cf-acties { padding: 4px 16px 12px 74px; }

@@ -99,7 +99,7 @@ const pil = (st: SuggestieStatus) => ({ concept: 'pil--leeg', vrijgegeven: 'pil-
 </template>
 
 <style scoped>
-.sg-panel { max-width: 640px; }
+:global(.fo-panel.sg-panel) { max-width: 640px; }
 .sg-rij { padding: 12px 0; border-top: 1px solid var(--border); display: grid; gap: 6px; }
 .sg-rij:first-of-type { border-top: 0; }
 .sg-kop { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
@@ -107,8 +107,4 @@ const pil = (st: SuggestieStatus) => ({ concept: 'pil--leeg', vrijgegeven: 'pil-
 .sg-citaten { margin: 0; padding-left: 16px; color: var(--muted); font-style: italic; }
 .sg-fout { color: var(--red); }
 .sg-knoppen .dd-act { min-height: 44px; }
-@media (max-width: 767px) {
-  .sg-panel { max-height: 92vh; }
-  .sg-panel .fo-foot { position: sticky; bottom: 0; background: var(--bg); }
-}
 </style>
