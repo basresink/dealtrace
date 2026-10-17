@@ -88,7 +88,7 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
 
 <template>
   <div>
-    <PaginaKop>
+    <PaginaKop :zonder-hulp="soort === 'prospect'">
       <template #kicker>
         <NuxtLink v-if="soort === 'prospect'" to="/prospects" class="kicker kicker--paars lijst-kruimel"><Icoon naam="ArrowLeft" :grootte="14" /> Prospects · {{ data.totaal }} prospects totaal</NuxtLink>
         <span v-else class="kicker kicker--streep">Alleen lezen · {{ data.totaal }} {{ data.totaal === 1 ? 'klant' : 'klanten' }} totaal</span>

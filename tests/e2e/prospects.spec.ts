@@ -16,6 +16,17 @@ test.describe('prospects', () => {
     await expect(page.getByTestId('aantal')).toHaveText(`${teller} ${teller === 1 ? 'resultaat' : 'resultaten'}`)
   })
 
+  test('geen hulpknop in de kop van /prospects en /prospects/alle; zoeken blijft, /klanten houdt hulp', async ({ page }) => {
+    await login(page, 'u-03')
+    for (const pad of ['/prospects', '/prospects/alle']) {
+      await ga(page, pad)
+      await expect(page.getByTestId('kop-knoppen').getByTestId('kop-zoeken')).toBeVisible()
+      await expect(page.getByTestId('hulp-knop')).toHaveCount(0)
+    }
+    await ga(page, '/klanten')
+    await expect(page.getByTestId('kop-knoppen').getByTestId('hulp-knop')).toBeVisible()
+  })
+
   test('nieuwe prospect: de dubbelcheck vangt een bestaand bedrijf', async ({ page }) => {
     await login(page, 'u-03')
     await ga(page, '/prospects/alle')

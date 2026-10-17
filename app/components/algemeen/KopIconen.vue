@@ -10,6 +10,8 @@ const props = defineProps<{
   ai?: { accountId?: string | null; label?: string; route?: string }
   /** Eigen zoekactie van de pagina (zoals het helpcenter) in plaats van het zoekvenster van de app. */
   zoeken?: { actie: () => void; aan?: boolean; label?: string; test?: string; controls?: string }
+  /** Zonder de hulpknop (zoals op Prospects en Contacten); zoeken en Vraag AI blijven. */
+  zonderHulp?: boolean
 }>()
 const { functie } = useMe()
 const aiAan = computed(() => !!functie('assistent.chat')?.beschikbaar)
@@ -23,7 +25,7 @@ const { toon: toonHulp } = useHulp()
     <button v-if="props.zoeken" type="button" class="dd-actie dd-actie--icoon kop-icoon" :class="{ 'kop-icoon--aan': props.zoeken.aan }" :aria-label="props.zoeken.label ?? 'Zoeken'" :title="props.zoeken.label ?? 'Zoeken'" :aria-expanded="!!props.zoeken.aan" :aria-controls="props.zoeken.controls" :data-test="props.zoeken.test ?? 'kop-zoeken'" @click="props.zoeken.actie()"><Icoon naam="Search" /></button>
     <button v-else type="button" class="dd-actie dd-actie--icoon kop-icoon kop-icoon--groot" aria-label="Zoeken" title="Zoeken" data-test="kop-zoeken" @click="zoekenOpen = true"><Icoon naam="Search" /></button>
     <button v-if="aiAan" type="button" class="dd-actie dd-actie--icoon kop-icoon kop-icoon--groot" aria-label="Vraag AI" title="Vraag AI" data-test="vraag-ai" @click="openAi(props.ai)"><Icoon naam="Sparkles" /></button>
-    <button type="button" class="dd-actie dd-actie--icoon kop-icoon" aria-label="Hulp bij dit scherm" title="Hulp" data-test="hulp-knop" @click="toonHulp(props.artikel)"><Icoon naam="CircleHelp" /></button>
+    <button v-if="!props.zonderHulp" type="button" class="dd-actie dd-actie--icoon kop-icoon" aria-label="Hulp bij dit scherm" title="Hulp" data-test="hulp-knop" @click="toonHulp(props.artikel)"><Icoon naam="CircleHelp" /></button>
   </span>
 </template>
 

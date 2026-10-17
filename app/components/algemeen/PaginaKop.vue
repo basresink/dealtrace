@@ -17,6 +17,8 @@ const props = defineProps<{
   ai?: { accountId?: string | null; label?: string; route?: string }
   /** Eigen zoekactie van de pagina in plaats van het zoekvenster van de app (zie KopIconen). */
   zoeken?: { actie: () => void; aan?: boolean; label?: string; test?: string; controls?: string }
+  /** Zonder de hulpknop in de kop (zie KopIconen). */
+  zonderHulp?: boolean
 }>()
 const emit = defineEmits<{ werkbalk: [actie: 'weergave' | 'filters' | 'sortering' | 'opgeslagen' | 'download'] }>()
 const { me } = useMe()
@@ -35,7 +37,7 @@ const subtitel = computed(() => (niveau.value === 'expert' && props.stand ? prop
           <slot name="onder" />
         </div>
         <div class="toolbar-buttons" data-test="kop-knoppen">
-          <KopIconen :artikel="helpartikel" :ai="ai" :zoeken="zoeken" />
+          <KopIconen :artikel="helpartikel" :ai="ai" :zoeken="zoeken" :zonder-hulp="zonderHulp" />
           <slot name="acties" />
           <template v-if="werkbalk && niveau !== 'beginner'">
             <button type="button" class="dd-actie dd-actie--secundair" @click="emit('werkbalk', 'filters')"><Icoon naam="Filter" class="dd-actie-icoon" />Filters</button>

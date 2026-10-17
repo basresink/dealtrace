@@ -64,8 +64,9 @@ test.describe('contacten', () => {
     for (const pad of ['/contacten/alle', '/prospects/alle']) {
       await ga(page, pad)
       const titel = await page.locator('h1.title').boundingBox()
-      // De knoppenrij begint met de icoonknoppen van de paginakop (zoeken, AI, hulp).
-      const knop = await page.locator('.toolbar-buttons [data-test=hulp-knop]').boundingBox()
+      // De knoppenrij begint met de icoonknoppen van de paginakop (zoeken en AI; hulp staat hier niet).
+      await expect(page.locator('.toolbar-buttons [data-test=hulp-knop]')).toHaveCount(0)
+      const knop = await page.locator('.toolbar-buttons [data-test=kop-zoeken], .toolbar-buttons [data-test=zoek-knop]').first().boundingBox()
       expect(knop!.y).toBeLessThan(titel!.y + titel!.height)
       expect(knop!.y + knop!.height).toBeGreaterThan(titel!.y)
     }
@@ -78,7 +79,7 @@ test.describe('contacten', () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await ga(page, '/contacten/alle')
     const titel = await page.locator('h1.title').boundingBox()
-    const knop = await page.locator('.toolbar-buttons [data-test=hulp-knop]').boundingBox()
+    const knop = await page.locator('.toolbar-buttons [data-test=zoek-knop]').boundingBox()
     expect(knop!.y).toBeGreaterThan(titel!.y + titel!.height - 1)
     expect(knop!.height).toBeGreaterThanOrEqual(44)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)

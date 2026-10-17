@@ -280,7 +280,7 @@ test.describe('nieuwe taak en taakvenster in de opzet van DealDrive', () => {
     const taak = (await (await page.request.get('/api/tasks?eigenaar=mij')).json()).groepen.flatMap((g: any) => g.taken).find((t: any) => t.title === titel)
     expect(taak).toMatchObject({ priority: 'urgent', actionType: 'bellen', account: { id: x.accountId }, contact: { id: x.beslisser.id } })
     // Filter op Urgent en de rij met de contactpersoon.
-    await ga(page, '/taken?prioriteit=urgent')
+    await ga(page, '/taken?weergave=lijst&prioriteit=urgent')
     await expect(page.getByTestId(`taak-${taak.id}`)).toContainText('Urgent')
     await expect(page.getByTestId(`taak-${taak.id}`).getByTestId('taak-contact')).toHaveAttribute('href', `/contacten/${x.beslisser.id}`)
     // Het taakvenster toont klant en contact met links.
@@ -438,8 +438,8 @@ test.describe('Taken: nieuwe URL, horizon in het filter en Briefings', () => {
     expect(viaMorgen.every((t: any) => t.dag === dag(1))).toBe(true)
 
     await login(page, 'u-03')
+    // Met een keuze in de URL staat het filterpaneel al open.
     await ga(page, '/taken?weergave=lijst')
-    await page.getByTestId('filters-knop').click()
     const paneel = page.getByTestId('taak-filters')
     await expect(paneel.getByRole('combobox', { name: 'Herkomst' })).toHaveCount(0)
     await page.getByTestId('periode-morgen').click()

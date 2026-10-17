@@ -22,7 +22,7 @@ async function leesKop(page: Page) {
 }
 
 test.describe('paginakop', () => {
-  for (const pad of ['/', '/agenda', '/meetings', '/prospects/alle', '/bezoeken', '/belblokken', '/campagnes/cp-01', '/taken', '/inzichten', '/mijn-dashboard', '/funnel']) {
+  for (const pad of ['/', '/agenda', '/meetings', '/bezoeken', '/belblokken', '/campagnes/cp-01', '/taken', '/inzichten', '/mijn-dashboard', '/funnel']) {
     test(`${pad}: zoeken, AI en hulp vooraan, knoppen op titelhoogte en uitleg niet onder de knoppen`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 900 })
       await login(page, 'u-01')
@@ -74,6 +74,24 @@ test.describe('paginakop', () => {
     await knoppen.getByTestId('hulp-knop').click()
     await expect(page.getByTestId('hulp-flyout').locator('#hulp-titel')).not.toHaveText(/Laden|Geen artikel/)
   })
+
+  // Op Prospects en Contacten (overzicht en Alle) staat geen hulpknop in de kop; zoeken en Vraag AI blijven.
+  for (const pad of ['/prospects', '/prospects/alle', '/contacten', '/contacten/alle']) {
+    test(`${pad}: zoeken en AI in de kop, geen hulpknop (1280 en 390)`, async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 900 })
+      await login(page, 'u-01')
+      await ga(page, pad)
+      const knoppen = page.locator('.sec-head--naast').first().locator('.toolbar-buttons').first()
+      const zoek = pad === '/contacten/alle' ? 'zoek-knop' : 'kop-zoeken'
+      await expect(knoppen.getByTestId(zoek)).toBeVisible()
+      await expect(knoppen.getByTestId('vraag-ai')).toBeVisible()
+      await expect(page.getByTestId('hulp-knop')).toHaveCount(0)
+      await page.setViewportSize({ width: 390, height: 844 })
+      await ga(page, pad)
+      await expect(page.getByTestId('hulp-knop')).toHaveCount(0)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+    })
+  }
 
   test('telefoon: knoppen onder de tekst, alleen hulp als icoon', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })

@@ -25,6 +25,7 @@ useHead({ title: 'Contacten · Dealtrace' })
       titel="Beslissers en beïnvloeders deze week"
       uitleg="De zes belangrijkste beslissers en beïnvloeders van deze week: wie een afspraak of open taak heeft staat bovenaan. Klik een kaart voor de contactkaart, of bekijk alle contacten."
       helpartikel="buying-committee"
+      zonder-hulp
     >
       <template #acties>
         <NuxtLink class="dd-actie dd-actie--zwart" to="/contacten/alle" data-test="alle-contacten">Alle contacten →</NuxtLink>

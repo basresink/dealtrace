@@ -21,6 +21,7 @@ useHead({ title: 'Prospects · Dealtrace' })
       titel="Belangrijkste prospects van deze week"
       uitleg="Hoge score, verse signalen en actieve aanleidingen: deze prospects verdienen nu een eerstvolgend contactmoment. Klik een kaart voor de prospectkaart, of bekijk alle prospects."
       helpartikel="de-accountkaart-lezen"
+      zonder-hulp
     >
       <template #acties>
         <NuxtLink class="dd-actie dd-actie--zwart" to="/prospects/alle" data-test="alle-prospects">Alle prospects →</NuxtLink>

@@ -116,7 +116,7 @@ const resultaat = computed(() => `${data.value.aantal} ${data.value.aantal === 1
             <p class="subtitle subtitle--groot">Zoek op naam, functie of bedrijf. Filter op rol om snel beslissers, champions of beïnvloeders te vinden.</p>
           </div>
           <div class="toolbar-buttons lijst-werkbalk" data-test="werkbalk">
-            <KopIconen artikel="contacten" :zoeken="{ actie: wisselZoek, aan: zoekOpen, label: 'Zoeken in contacten', test: 'zoek-knop' }" />
+            <KopIconen artikel="contacten" zonder-hulp :zoeken="{ actie: wisselZoek, aan: zoekOpen, label: 'Zoeken in contacten', test: 'zoek-knop' }" />
             <button type="button" class="dd-actie dd-actie--zwart" data-test="nieuw-contact-knop" @click="nieuwOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Contact</button>
             <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'dd-actie--filters-aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="filters-knop" @click="filtersOpen = !filtersOpen">
               <Icoon naam="Filter" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="pil-teller pil-teller--zwart">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="keuzemenu-pijl" :class="{ 'keuzemenu-pijl--open': filtersOpen }" />

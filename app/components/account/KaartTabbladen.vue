@@ -1,12 +1,12 @@
 <script setup lang="ts">
 // De tabbladen van de accountkaart en de contactkaart (opzet uit DealDrive), één component voor beide:
 // Tijdlijn (met filter en + Taak, + Afspraak, + Mail), Inzichten, Taken, Notities, E-mails, Afspraken,
-// Gespreksverslagen, Campagnes, Documenten en Reis en kwalificatie, met de vensters. Deals en eigen velden
+// Gespreksverslagen, Campagnes, Accountplan (alleen de accountkaart) en Documenten, met de vensters. Deals en eigen velden
 // hebben geen eigen tabblad meer: deals staan in de tijdlijn, eigen velden in het Info-venster.
 // Het tabblad staat in de URL (?tab=). De data komt van GET /api/accounts/:id/tabbladen of
 // GET /api/contacten/:id/tabbladen. Op de accountkaart staat bij elk item de naam van het contact met een
 // link naar de contactkaart; op de contactkaart hoort alles bij dat ene contact. De inhoud van Reis en
-// kwalificatie levert de pagina (slot).
+// Accountplan levert de pagina (slot); zonder slot geen tabblad. Reis en kwalificatie staan onder Meer.
 import { ACTIE_LABEL, HERKOMST_LABEL, PRIO_LABEL, isDringend } from '~~/shared/taken'
 
 const props = defineProps<{
@@ -35,42 +35,42 @@ const AFSPRAAK_STATUS: Record<string, string> = { gepland: 'Gepland', afgerond: 
 const DEAL_FASE: Record<string, string> = { overgedragen: 'Overgedragen', lopend: 'Loopt in DealDrive', gewonnen: 'Gewonnen', verloren: 'Verloren', klaar: 'Klaar', verstuurd: 'Verstuurd', bevestigd: 'Bevestigd', mislukt: 'Mislukt' }
 const PRIO = PRIO_LABEL
 const CAMP_KOLOM: Record<string, string> = { klaar: 'Klaar', bezig: 'Bezig', afspraak: 'Afspraak', nee: 'Nee', 'geen-reactie': 'Geen reactie', later: 'Later' }
-const kaal = (n: unknown) => String(n ?? '').replace(/^Testgebruiker /, '')
 const datumLang = (d: string | null) => (d ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Amsterdam' }).format(new Date(d)).replace('.', '') : '–')
 const wanneer = (d: string | null) => (d ? new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(d)) : 'geen datum')
 const grootte = (b: number) => (b > 1e6 ? `${(b / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} kB`)
 const tlDatum = (ms: number) => (ms ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date(ms)).replace('.', '') : '')
-/** De contactnaam bij een item, alleen op de accountkaart. */
-const contactVan = (x: any) => (!opContact.value && x?.contactId && x?.contactNaam ? { id: x.contactId as string, naam: x.contactNaam as string } : null)
+/** De contactnaam bij een item (voornaam en achternaam), op de accountkaart en op de contactkaart. */
+const contactVan = (x: any) => (x?.contactId && x?.contactNaam ? { id: x.contactId as string, naam: x.contactNaam as string } : null)
 
 const momenten = computed<any[]>(() => t.value.momenten ?? [])
 const notities = computed(() => momenten.value.filter((x) => x.soort === 'notitie'))
 const openTaken = computed(() => t.value.taken.filter((x: any) => ['open', 'bezig'].includes(x.status)))
 
 // Tabbladen, met het actieve tabblad in de URL.
-type Tab = 'tijdlijn' | 'inzichten' | 'taken' | 'notities' | 'mails' | 'afspraken' | 'verslagen' | 'campagnes' | 'documenten' | 'kwalificatie'
-const TABS: Tab[] = ['tijdlijn', 'inzichten', 'taken', 'notities', 'mails', 'afspraken', 'verslagen', 'campagnes', 'documenten', 'kwalificatie']
-const tab = computed<Tab>(() => (TABS.includes(route.query.tab as Tab) ? route.query.tab as Tab : 'tijdlijn'))
+type Tab = 'tijdlijn' | 'inzichten' | 'taken' | 'notities' | 'mails' | 'afspraken' | 'verslagen' | 'campagnes' | 'accountplan' | 'documenten'
+const slots = useSlots()
+const metAccountplan = computed(() => !!slots.accountplan)
+const TABS = computed<Tab[]>(() => ['tijdlijn', 'inzichten', 'taken', 'notities', 'mails', 'afspraken', 'verslagen', 'campagnes', ...(metAccountplan.value ? ['accountplan' as const] : []), 'documenten'])
+const tab = computed<Tab>(() => (TABS.value.includes(route.query.tab as Tab) ? route.query.tab as Tab : 'tijdlijn'))
 function kiesTab(x: Tab) { router.replace({ query: { ...route.query, tab: x === 'tijdlijn' ? undefined : x } }) }
-const kwalificatieLabel = computed(() => (props.account.soort === 'prospect' ? 'Reis en kwalificatie' : 'Kwalificatie'))
 
 // Tijdlijn: inzichten, taken, afspraken, deals en contactmomenten samen, nieuwste eerst.
 type TlSoort = 'inzicht' | 'taak' | 'afspraak' | 'deal' | 'contact'
-interface TlItem { key: string; soort: TlSoort; soortLabel: string; typeLabel: string; bron?: string | null; titel: string; tekst?: string | null; status?: string; statusSoort?: 'klaar' | 'laat' | 'open'; ms: number; contact: { id: string; naam: string } | null; open?: () => void }
+interface TlItem { key: string; soort: TlSoort; soortLabel: string; typeLabel: string; bron?: string | null; titel: string; tekst?: string | null; status?: string; statusSoort?: 'klaar' | 'laat' | 'open'; ms: number; contact: { id: string; naam: string } | null; door?: string | null; open?: () => void }
 const tlAlles = computed<TlItem[]>(() => {
   const uit: TlItem[] = []
-  for (const s of t.value.inzichten) uit.push({ key: `i-${s.id}`, soort: 'inzicht', soortLabel: 'Inzicht', typeLabel: s.agent ? s.agent : s.bron === 'extern' ? 'Extern' : 'Intern', bron: s.specifiekeBron, titel: s.title, tekst: s.waarom, ms: Date.parse(s.createdAt), contact: contactVan(s), open: () => { inzicht.value = s } })
+  for (const s of t.value.inzichten) uit.push({ key: `i-${s.id}`, soort: 'inzicht', soortLabel: 'Inzicht', typeLabel: s.agent ? s.agent : s.bron === 'extern' ? 'Extern' : 'Intern', bron: s.specifiekeBron, titel: s.title, tekst: s.waarom, ms: Date.parse(s.createdAt), contact: contactVan(s), door: s.gebruiker, open: () => { inzicht.value = s } })
   for (const x of t.value.taken) {
     const open = ['open', 'bezig'].includes(x.status)
-    uit.push({ key: `t-${x.id}`, soort: 'taak', soortLabel: 'Taak', typeLabel: ACTIE_LABEL[x.actionType] ?? 'Taak', titel: x.title, tekst: x.aanleiding, status: !open ? (x.status === 'geannuleerd' ? 'Geannuleerd' : 'Afgerond') : x.achterstallig ? 'Achterstallig' : 'Open', statusSoort: !open ? 'klaar' : x.achterstallig ? 'laat' : 'open', ms: Date.parse(x.afgerondOp ?? x.dueDate ?? '') || 0, contact: contactVan(x), open: () => { taakId.value = x.id } })
+    uit.push({ key: `t-${x.id}`, soort: 'taak', soortLabel: 'Taak', typeLabel: ACTIE_LABEL[x.actionType] ?? 'Taak', titel: x.title, tekst: x.aanleiding, status: !open ? (x.status === 'geannuleerd' ? 'Geannuleerd' : 'Afgerond') : x.achterstallig ? 'Achterstallig' : 'Open', statusSoort: !open ? 'klaar' : x.achterstallig ? 'laat' : 'open', ms: Date.parse(x.afgerondOp ?? x.dueDate ?? '') || 0, contact: contactVan(x), door: x.gebruiker, open: () => { taakId.value = x.id } })
   }
-  for (const x of t.value.afspraken) uit.push({ key: `a-${x.id}`, soort: 'afspraak', soortLabel: 'Afspraak', typeLabel: VORM[x.vorm] ?? x.vorm, titel: x.titel ?? (x.soort + (x.contact ? ` met ${x.contact}` : '')), tekst: x.locatie, status: AFSPRAAK_STATUS[x.status] ?? x.status, statusSoort: x.status === 'afgerond' ? 'klaar' : x.status === 'gepland' ? 'open' : 'laat', ms: Date.parse(x.start), contact: contactVan(x), open: () => { afspraakId.value = x.id } })
+  for (const x of t.value.afspraken) uit.push({ key: `a-${x.id}`, soort: 'afspraak', soortLabel: 'Afspraak', typeLabel: VORM[x.vorm] ?? x.vorm, titel: x.titel ?? (x.soort + (x.contact ? ` met ${x.contact}` : '')), tekst: x.locatie, status: AFSPRAAK_STATUS[x.status] ?? x.status, statusSoort: x.status === 'afgerond' ? 'klaar' : x.status === 'gepland' ? 'open' : 'laat', ms: Date.parse(x.start), contact: contactVan(x), door: x.gebruiker, open: () => { afspraakId.value = x.id } })
   // Deals horen bij het account; op de contactkaart staan ze alleen in het tabblad Deals.
-  if (!opContact.value) for (const d of t.value.deals) uit.push({ key: `d-${d.id}`, soort: 'deal', soortLabel: 'Deal', typeLabel: OV_NAAR[d.naar] ?? d.naar, titel: d.titel, tekst: d.eigenaar ? `Eigenaar in DealDrive: ${d.eigenaar}` : null, status: DEAL_FASE[d.fase] ?? d.fase, statusSoort: d.fase === 'gewonnen' ? 'klaar' : ['verloren', 'mislukt'].includes(d.fase) ? 'laat' : 'open', ms: Date.parse(d.op), contact: null })
+  if (!opContact.value) for (const d of t.value.deals) uit.push({ key: `d-${d.id}`, soort: 'deal', soortLabel: 'Deal', typeLabel: OV_NAAR[d.naar] ?? d.naar, titel: d.titel, tekst: d.eigenaar ? `Eigenaar in DealDrive: ${d.eigenaar}` : null, status: DEAL_FASE[d.fase] ?? d.fase, statusSoort: d.fase === 'gewonnen' ? 'klaar' : ['verloren', 'mislukt'].includes(d.fase) ? 'laat' : 'open', ms: Date.parse(d.op), contact: null, door: d.gebruiker })
   // Een belactiviteit van een afgeronde beltaak toont ook het gespreksverslag en opent het (met transcript).
   for (const x of momenten.value.filter((m) => m.soort !== 'notitie')) {
     const v = x.verslag || x.transcript ? t.value.verslagen.find((r: any) => r.id === `bel-${x.id}`) : null
-    uit.push({ key: `c-${x.id}`, soort: 'contact', soortLabel: 'Contact', typeLabel: SOORT[x.soort] ?? x.soort, titel: [SOORT[x.soort] ?? x.soort, x.uitkomst ? String(x.uitkomst).replace(/_/g, ' ') : null].filter(Boolean).join(' · '), tekst: [x.tekst, x.verslag ? `Verslag: ${x.verslag}` : null, x.transcript ? 'Met transcript' : null, x.door ? kaal(x.door) : null].filter(Boolean).join(' · ') || null, ms: Date.parse(x.op), contact: contactVan(x), open: v ? () => { verslag.value = v } : undefined })
+    uit.push({ key: `c-${x.id}`, soort: 'contact', soortLabel: 'Contact', typeLabel: SOORT[x.soort] ?? x.soort, titel: [SOORT[x.soort] ?? x.soort, x.uitkomst ? String(x.uitkomst).replace(/_/g, ' ') : null].filter(Boolean).join(' · '), tekst: [x.tekst, x.verslag ? `Verslag: ${x.verslag}` : null, x.transcript ? 'Met transcript' : null].filter(Boolean).join(' · ') || null, ms: Date.parse(x.op), contact: contactVan(x), door: x.gebruiker, open: v ? () => { verslag.value = v } : undefined })
   }
   return uit.sort((p, q) => q.ms - p.ms)
 })
@@ -122,8 +122,8 @@ const tabs = computed(() => [
   { id: 'afspraken' as const, label: 'Afspraken', n: t.value.afspraken.length },
   { id: 'verslagen' as const, label: 'Gespreksverslagen', n: t.value.verslagen.length },
   { id: 'campagnes' as const, label: 'Campagnes', n: t.value.campagnes.length },
+  ...(metAccountplan.value ? [{ id: 'accountplan' as const, label: 'Accountplan', n: 0 }] : []),
   { id: 'documenten' as const, label: 'Documenten', n: t.value.documenten.length },
-  { id: 'kwalificatie' as const, label: kwalificatieLabel.value, n: 0 },
 ])
 </script>
 
@@ -157,7 +157,7 @@ const tabs = computed(() => [
             <li v-for="i in tijdlijn" :key="i.key" class="tl-item">
               <span class="tl-spoor" :class="`tl-spoor--${i.soort}`" aria-hidden="true" />
               <div class="tl-kaart" :class="{ 'tl-kaart--klik': i.open }">
-                <span class="tl-kop"><span class="tl-soort" :class="`tl-soort--${i.soort}`">{{ i.soortLabel }}</span><span class="tl-type">{{ i.typeLabel }}</span><span v-if="i.bron" class="tl-bron">{{ i.bron }}</span><NuxtLink v-if="i.contact" :to="`/contacten/${i.contact.id}`" class="tl-contact" data-test="tl-contact"><Icoon naam="CircleUser" :grootte="12" />{{ i.contact.naam }}</NuxtLink><span class="tl-datum tnum">{{ tlDatum(i.ms) }}</span></span>
+                <span class="tl-kop"><span class="tl-soort" :class="`tl-soort--${i.soort}`">{{ i.soortLabel }}</span><span class="tl-type">{{ i.typeLabel }}</span><span v-if="i.bron" class="tl-bron">{{ i.bron }}</span><ItemMetaregel :contact="i.contact" :door="i.door" :datum="tlDatum(i.ms)" /></span>
                 <button v-if="i.open" type="button" class="tl-titel tl-strek" @click="i.open()">{{ i.titel }}</button>
                 <span v-else class="tl-titel">{{ i.titel }}</span>
                 <span v-if="i.tekst" class="tl-tekst">{{ i.tekst }}</span>
@@ -175,7 +175,7 @@ const tabs = computed(() => [
             <li v-for="s in t.inzichten" :key="s.id" class="tl-item">
               <span class="tl-spoor tl-spoor--inzicht" aria-hidden="true" />
               <div class="tl-kaart tl-kaart--klik">
-                <span class="tl-kop"><span class="tl-soort tl-soort--inzicht">{{ s.relevantie >= 75 ? 'Heet' : 'Inzicht' }}</span><span class="tl-type">{{ s.agent ?? (s.bron === 'extern' ? 'Extern' : 'Intern') }}</span><span v-if="s.specifiekeBron" class="tl-bron">{{ s.specifiekeBron }}</span><NuxtLink v-if="contactVan(s)" :to="`/contacten/${s.contactId}`" class="tl-contact" data-test="tl-contact"><Icoon naam="CircleUser" :grootte="12" />{{ s.contactNaam }}</NuxtLink><span class="tl-datum tnum">{{ tlDatum(Date.parse(s.createdAt)) }}</span></span>
+                <span class="tl-kop"><span class="tl-soort tl-soort--inzicht">{{ s.relevantie >= 75 ? 'Heet' : 'Inzicht' }}</span><span class="tl-type">{{ s.agent ?? (s.bron === 'extern' ? 'Extern' : 'Intern') }}</span><span v-if="s.specifiekeBron" class="tl-bron">{{ s.specifiekeBron }}</span><ItemMetaregel :contact="contactVan(s)" :door="s.gebruiker" :datum="tlDatum(Date.parse(s.createdAt))" /></span>
                 <button type="button" class="tl-titel tl-strek" :data-test="`ak-inzicht-${s.id}`" @click="inzicht = s">{{ s.title }}</button>
                 <span v-if="s.waarom" class="tl-tekst">{{ s.waarom }}</span>
                 <span class="tl-status" :class="s.status === 'nieuw' ? 'tl-status--open' : 'tl-status--klaar'">{{ s.status === 'nieuw' ? 'Ongezien' : s.status === 'omgezet' ? 'Taak gemaakt' : 'Gelezen' }}</span>
@@ -194,7 +194,7 @@ const tabs = computed(() => [
               <li v-for="x in g.items" :key="x.id" class="tl-item">
                 <span class="tl-spoor" :class="isDringend(x.priority) ? 'tl-spoor--urgent' : 'tl-spoor--taak'" aria-hidden="true" />
                 <div class="tl-kaart tl-kaart--klik">
-                  <span class="tl-kop"><span class="tl-soort tl-soort--taak">{{ ACTIE_LABEL[x.actionType] ?? 'Taak' }}</span><span class="tl-type">{{ PRIO[x.priority] ?? x.priority }}</span><span class="tl-type">{{ HERKOMST_LABEL[x.herkomst] ?? 'Handmatig' }}</span><NuxtLink v-if="contactVan(x)" :to="`/contacten/${x.contactId}`" class="tl-contact" data-test="tl-contact"><Icoon naam="CircleUser" :grootte="12" />{{ x.contactNaam }}</NuxtLink><span class="tl-datum tnum" :class="{ 'tl-datum--rood': x.achterstallig }">{{ wanneer(x.dueDate) }}</span></span>
+                  <span class="tl-kop"><span class="tl-soort tl-soort--taak">{{ ACTIE_LABEL[x.actionType] ?? 'Taak' }}</span><span class="tl-type">{{ PRIO[x.priority] ?? x.priority }}</span><span class="tl-type">{{ HERKOMST_LABEL[x.herkomst] ?? 'Handmatig' }}</span><ItemMetaregel :contact="contactVan(x)" :door="x.gebruiker" :datum="wanneer(x.dueDate)" :datum-rood="x.achterstallig" /></span>
                   <button type="button" class="tl-titel tl-strek" :data-test="`ak-taak-${x.id}`" @click="taakId = x.id">{{ x.title }}</button>
                   <span v-if="x.aanleiding || x.poging" class="tl-tekst">{{ [x.aanleiding, x.poging ? `poging ${x.poging.n} van ${x.poging.van}` : null].filter(Boolean).join(' · ') }}</span>
                   <span v-if="!['open', 'bezig'].includes(x.status)" class="tl-status tl-status--klaar">{{ x.status === 'geannuleerd' ? 'Geannuleerd' : 'Afgerond' }}<template v-if="x.uitkomst"> · {{ x.uitkomst }}</template></span>
@@ -210,7 +210,7 @@ const tabs = computed(() => [
           <div class="ak-tabkop"><h2 class="ak-tabtitel">Notities ({{ notities.length }})</h2></div>
           <form class="kaart" @submit.prevent="bewaarNotitie"><label class="veld"><span class="veld-label">Nieuwe notitie<template v-if="opContact"> over {{ onderwerp }}</template></span><textarea v-model="notitie" class="invoer" rows="3" data-test="notitie" /></label><button type="submit" class="dd-act dd-act--geel mt-16" data-test="notitie-bewaar" :disabled="!notitie.trim()">Notitie bewaren</button></form>
           <ol v-if="notities.length" class="tl-lijst mt-16">
-            <li v-for="n in notities" :key="n.id" class="tl-item"><span class="tl-spoor tl-spoor--contact" aria-hidden="true" /><div class="tl-kaart"><span class="tl-kop"><span class="tl-soort tl-soort--contact">Notitie</span><span class="tl-bron">{{ kaal(n.door) }}</span><NuxtLink v-if="contactVan(n)" :to="`/contacten/${n.contactId}`" class="tl-contact" data-test="tl-contact"><Icoon naam="CircleUser" :grootte="12" />{{ n.contactNaam }}</NuxtLink><span class="tl-datum tnum">{{ datumLang(n.op) }}</span></span><span class="tl-tekst tl-tekst--vol">{{ n.tekst }}</span></div></li>
+            <li v-for="n in notities" :key="n.id" class="tl-item"><span class="tl-spoor tl-spoor--contact" aria-hidden="true" /><div class="tl-kaart"><span class="tl-kop"><span class="tl-soort tl-soort--contact">Notitie</span><ItemMetaregel :contact="contactVan(n)" :door="n.gebruiker" :datum="datumLang(n.op)" /></span><span class="tl-tekst tl-tekst--vol">{{ n.tekst }}</span></div></li>
           </ol>
         </template>
 
@@ -222,7 +222,7 @@ const tabs = computed(() => [
             <li v-for="m in t.mails" :key="m.id" class="tl-item">
               <span class="tl-spoor" :class="m.concept ? 'tl-spoor--inzicht' : 'tl-spoor--mail'" aria-hidden="true" />
               <div class="tl-kaart" :class="{ 'tl-kaart--klik': m.concept }">
-                <span class="tl-kop"><span class="tl-soort" :class="m.concept ? 'tl-soort--inzicht' : 'tl-soort--mail'">{{ m.concept ? 'Concept' : 'Mail' }}</span><span class="tl-type">{{ m.status }}</span><NuxtLink v-if="contactVan(m)" :to="`/contacten/${m.contactId}`" class="tl-contact" data-test="tl-contact"><Icoon naam="CircleUser" :grootte="12" />aan {{ m.contactNaam }}</NuxtLink><span class="tl-datum tnum">{{ tlDatum(Date.parse(m.op)) }}</span></span>
+                <span class="tl-kop"><span class="tl-soort" :class="m.concept ? 'tl-soort--inzicht' : 'tl-soort--mail'">{{ m.concept ? 'Concept' : 'Mail' }}</span><span class="tl-type">{{ m.status }}</span><ItemMetaregel :contact="contactVan(m)" :door="m.gebruiker" :datum="tlDatum(Date.parse(m.op))" /></span>
                 <NuxtLink v-if="m.concept" to="/concepten" class="tl-titel tl-strek">{{ m.onderwerp }}</NuxtLink>
                 <span v-else class="tl-titel">{{ m.onderwerp }}</span>
                 <span v-if="m.tekst" class="tl-tekst">{{ m.tekst.length > 220 ? `${m.tekst.slice(0, 220)}...` : m.tekst }}</span>
@@ -239,9 +239,9 @@ const tabs = computed(() => [
             <li v-for="x in t.afspraken" :key="x.id" class="tl-item">
               <span class="tl-spoor tl-spoor--afspraak" aria-hidden="true" />
               <div class="tl-kaart tl-kaart--klik">
-                <span class="tl-kop"><span class="tl-soort tl-soort--afspraak">{{ x.soort }}</span><span class="tl-type">{{ VORM[x.vorm] ?? x.vorm }}</span><NuxtLink v-if="contactVan(x)" :to="`/contacten/${x.contactId}`" class="tl-contact" data-test="tl-contact"><Icoon naam="CircleUser" :grootte="12" />{{ x.contactNaam }}</NuxtLink><span class="tl-datum tnum">{{ wanneer(x.start) }}</span></span>
+                <span class="tl-kop"><span class="tl-soort tl-soort--afspraak">{{ x.soort }}</span><span class="tl-type">{{ VORM[x.vorm] ?? x.vorm }}</span><ItemMetaregel :contact="contactVan(x)" :door="x.gebruiker" :datum="wanneer(x.start)" /></span>
                 <button type="button" class="tl-titel tl-strek" :data-test="`ak-afspraak-${x.id}`" @click="afspraakId = x.id"><template v-if="x.titel">{{ x.titel }}</template><template v-else>{{ x.soort }}<template v-if="x.contact"> met {{ x.contact }}</template></template></button>
-                <span v-if="x.locatie || x.eigenaar" class="tl-tekst">{{ [x.locatie, x.eigenaar].filter(Boolean).join(' · ') }}</span>
+                <span v-if="x.locatie" class="tl-tekst">{{ x.locatie }}</span>
                 <span class="tl-status" :class="x.status === 'afgerond' ? 'tl-status--klaar' : x.status === 'gepland' ? 'tl-status--open' : 'tl-status--laat'">{{ AFSPRAAK_STATUS[x.status] ?? x.status }}<template v-if="x.heeftVerslag"> · verslag</template></span>
               </div>
             </li>
@@ -258,7 +258,7 @@ const tabs = computed(() => [
               <span class="tl-type">{{ v.typeLabel }}</span>
               <span class="ak-rij-info">
                 <button type="button" class="ak-rij-titel tl-strek" :data-test="`ak-verslag-${v.id}`" @click="verslag = v">{{ v.titel }}</button>
-                <span class="meta tnum">{{ datumLang(v.datum) }}<template v-if="contactVan(v)"> · <NuxtLink :to="`/contacten/${v.contactId}`" class="tl-contact tl-contact--los" data-test="tl-contact">{{ v.contactNaam }}</NuxtLink></template><template v-else-if="v.contact && !opContact"> · {{ v.contact }}</template> · {{ v.woorden }} woorden</span>
+                <span class="ak-rij-meta"><ItemMetaregel los :contact="contactVan(v)" :door="v.gebruiker" :datum="datumLang(v.datum)" /><span class="meta tnum">{{ v.woorden }} woorden</span></span>
               </span>
               <span class="ak-rij-cta">Open →</span>
             </li>
@@ -287,10 +287,9 @@ const tabs = computed(() => [
           <DocumentenTab :account="accountRef" :contact="contact ? { id: contact.id, naam: contact.naam } : null" :documenten="t.documenten" :afspraak-bijlagen="t.afspraakBijlagen ?? []" @ververs="ververs" />
         </template>
 
-        <!-- Reis en kwalificatie: de inhoud levert de pagina. -->
-        <template v-else-if="tab === 'kwalificatie'">
-          <div class="ak-tabkop"><h2 class="ak-tabtitel">{{ kwalificatieLabel }}</h2></div>
-          <slot name="kwalificatie" />
+        <!-- Accountplan: de inhoud levert de accountkaart. -->
+        <template v-else-if="tab === 'accountplan'">
+          <slot name="accountplan" />
         </template>
 
       </div>
@@ -360,11 +359,8 @@ const tabs = computed(() => [
 .tl-soort--contact { background: var(--surface); color: var(--muted); border: 1px solid var(--border-strong); }
 .tl-type { background: var(--surface); color: var(--ink-soft); border: 1px solid var(--border); }
 .tl-bron { font-size: 11px; color: var(--muted); }
-.tl-contact { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 4px; min-height: 24px; font-size: 12px; font-weight: 700; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--yellow); }
-.tl-contact:hover { color: var(--ink-soft); border-bottom-color: var(--ink); }
-.tl-contact--los { display: inline; min-height: 0; }
-.tl-datum { margin-left: auto; font-size: 11px; color: var(--muted); white-space: nowrap; }
-.tl-datum--rood { font-weight: 700; color: var(--red); }
+.ak-rij-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; }
+.ak-rij-meta > .meta::before { content: '·'; margin-right: 6px; }
 .tl-titel { margin: 0 0 3px; font-family: var(--font-serif); font-size: 15px; font-weight: 700; line-height: 1.35; color: var(--ink); }
 .tl-tekst { font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
 .tl-tekst--vol { white-space: pre-wrap; }
@@ -386,8 +382,5 @@ const tabs = computed(() => [
 
 @media (max-width: 719px) {
   .ak-tabs-binnen { gap: 18px; }
-  .tl-datum { margin-left: 0; }
-  .tl-contact { min-height: 44px; }
-  .tl-contact--los { min-height: 0; padding: 12px 0; }
 }
 </style>

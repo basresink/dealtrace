@@ -5,7 +5,7 @@ import { apiLogin, ga, login } from './hulp'
 test.describe.configure({ mode: 'serial' })
 
 const ROUTES = [
-  '/', '/taken', '/taken?weergave=horizon', '/inzichten', '/prospects', '/contacten', '/reizen', '/notificaties', '/mij', '/leadgenerator', '/helpcenter',
+  '/', '/taken', '/taken?weergave=horizon', '/inzichten', '/reizen', '/notificaties', '/mij', '/leadgenerator', '/helpcenter',
   '/instellingen', '/instellingen/regels', '/instellingen/ritme', '/instellingen/agents', '/instellingen/gebruikers', '/instellingen/niveaus',
   '/instellingen/audit', '/instellingen/eigen-velden', '/instellingen/nee-redenen', '/instellingen/organisatie', '/instellingen/abonnement', '/planning',
 ]

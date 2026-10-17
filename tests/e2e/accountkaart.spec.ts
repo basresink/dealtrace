@@ -76,3 +76,45 @@ test.describe('accountkaart', () => {
     await expect(rij).toHaveCount(0)
   })
 })
+
+// Bij elk item in de tabbladen: de naam van het contact (link naar de contactkaart) en de gebruiker die het
+// deed of de eigenaar is, in één metaregel: "Wietse Testsma · door Anouk Noorderveld · 14 okt".
+test.describe('accountkaart: contact en gebruiker per item', () => {
+  test('de API levert contact en gebruiker bij elk item', async ({ page }) => {
+    await login(page, 'u-01')
+    const api = await (await page.request.get('/api/accounts/pr-06/tabbladen')).json()
+    for (const soort of ['taken', 'inzichten', 'afspraken', 'mails', 'verslagen', 'momenten']) {
+      expect(api[soort].every((x: any) => 'contactId' in x && 'contactNaam' in x && 'gebruiker' in x), soort).toBe(true)
+    }
+    const metContact = [...api.taken, ...api.verslagen, ...api.momenten].filter((x: any) => x.contactId === 'ct-07')
+    expect(metContact.length).toBeGreaterThan(0)
+    expect(metContact.every((x: any) => x.contactNaam === 'Wietse Testsma')).toBe(true)
+    expect(api.taken.every((x: any) => x.gebruiker === null || !/^Testgebruiker /.test(x.gebruiker))).toBe(true)
+  })
+
+  for (const breedte of [1280, 390]) {
+    test(`${breedte} px: tijdlijn, taken en verslagen tonen contactlink en gebruiker in de metaregel`, async ({ page }) => {
+      await page.setViewportSize({ width: breedte, height: breedte === 390 ? 844 : 900 })
+      await login(page, 'u-01')
+      await ga(page, '/accounts/pr-06')
+      const meta = page.getByTestId('tijdlijn').getByTestId('item-meta').filter({ hasText: 'Wietse Testsma' }).first()
+      await expect(meta).toHaveText(/^Wietse Testsma\s*·\s*door \S+ \S+.*·\s*\d{1,2} \w+/)
+      const link = meta.getByTestId('tl-contact')
+      await expect(link).toHaveAttribute('href', '/contacten/ct-07')
+      await expect(meta.getByTestId('tl-door')).toHaveText(/^door \S+ \S+/)
+      await expect(meta.getByTestId('tl-door')).not.toContainText('Testgebruiker')
+      if (breedte === 390) expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
+
+      for (const tab of ['taken', 'verslagen']) {
+        await page.getByTestId(`tab-${tab}`).click()
+        const m = page.getByTestId('item-meta').filter({ hasText: 'Wietse Testsma' }).first()
+        await expect(m.getByTestId('tl-contact')).toHaveAttribute('href', '/contacten/ct-07')
+        await expect(m.getByTestId('tl-door')).toHaveText(/^door \S+ \S+/)
+      }
+      await page.getByTestId('tab-tijdlijn').click()
+      await page.getByTestId('tijdlijn').getByTestId('tl-contact').filter({ hasText: 'Wietse Testsma' }).first().click()
+      await expect(page).toHaveURL(/\/contacten\/ct-07/)
+    })
+  }
+})

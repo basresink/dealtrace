@@ -20,10 +20,14 @@ test.describe('contactkaart', () => {
     await ga(page, '/accounts/pr-06')
     expect(await labels()).toEqual(opContact)
 
-    // De tijdlijn van het contact: alleen momenten van dit contact, zonder contactlink.
+    // De tijdlijn van het contact: alleen momenten van dit contact; elk item met de naam van het contact
+    // (link naar de contactkaart) en de gebruiker in de metaregel.
     await ga(page, '/contacten/ct-07')
     await expect(page.getByTestId('tijdlijn')).toBeVisible()
-    await expect(page.getByTestId('tl-contact')).toHaveCount(0)
+    const hrefs = await page.getByTestId('tijdlijn').getByTestId('tl-contact').evaluateAll((els) => els.map((e) => e.getAttribute('href')))
+    expect(hrefs.length).toBeGreaterThan(0)
+    expect(new Set(hrefs)).toEqual(new Set(['/contacten/ct-07']))
+    await expect(page.getByTestId('tijdlijn').getByTestId('tl-door').first()).toHaveText(/^door \S+ \S+/)
     await page.getByTestId('tab-kwalificatie').click()
     await expect(page).toHaveURL(/tab=kwalificatie/)
     await expect(page.getByTestId('naar-accountkaart')).toHaveAttribute('href', '/accounts/pr-06?tab=kwalificatie')

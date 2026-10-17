@@ -1,17 +1,19 @@
 <script setup lang="ts">
 // Contactkaart (F04) in de opzet van DealDrive: kop met avatar en rol, kruimel, functie en account (link),
 // naam met rolpil, contactgegevens (mail, telefoon, mobiel, LinkedIn), de stuurstrip van het account en rechts
-// Briefing, Volgen en Invloed, met Info en Bel onder Meer. Daaronder de statstrook en dezelfde tabbladen als de accountkaart
-// (KaartTabbladen), met alleen wat bij dit contact hoort. Reis en kwalificatie tonen de stand van het account
-// met een verwijzing naar de accountkaart; eigen velden staan in het Info-venster. De avatar toont de foto van
-// het contact (uploaden, wijzigen en verwijderen via het potlood), anders de initialen. Op de telefoon een
-// plakkende actiebalk.
+// Zoeken, Vraag AI, Account en Meer. Meer opent een venster met korte kaders (Info, Briefing, Volgen, Invloed,
+// Belscript, Dossier, Kwalificatie, Reis, Klaarzetten en Bel) die elk hun eigen venster openen; ?meer=<id>
+// opent er direct een. Dossier, Kwalificatie en Reis tonen de stand van het account. Daaronder de statstrook en
+// dezelfde tabbladen als de accountkaart (KaartTabbladen), met alleen wat bij dit contact hoort; eigen velden
+// staan in het Info-venster. De avatar toont de foto van het contact (uploaden, wijzigen en verwijderen via het
+// potlood), anders de initialen. Op de telefoon een plakkende actiebalk.
 import { CONTACTROL_LABEL, ROLLEN_CONTACT, type ContactRol } from '~~/shared/contactgegevens'
-import type { KopMeerItem } from '~/components/algemeen/KopMeer.vue'
+import type { Ref } from 'vue'
+import type { MeerKader } from '~/components/account/MeerFlyout.vue'
 import { STATUS_LABEL, initialen, telLink, toonTelefoon } from '~/utils/accountWeergave'
 const route = useRoute()
 const toast = useToast()
-const { functie } = useMe()
+const { functie, me } = useMe()
 if (!functie('contacten.basis')?.beschikbaar) throw createError({ statusCode: 403, statusMessage: 'Geen toegang' })
 const leeg = { taken: [], inzichten: [], afspraken: [], mails: [], verslagen: [], deals: [], gebeurtenissen: [], campagnes: [], documenten: [], momenten: [] }
 const [{ data: c, refresh }, { data: t, refresh: refreshTabs }] = await Promise.all([
@@ -35,19 +37,39 @@ const briefingOpen = ref(false)
 const volgenOpen = ref(false)
 // F8: de invloedskaart van het account, met dit contact geselecteerd.
 const invloedOpen = ref(false)
-// Kop: Briefing, Volgen en Invloed in de rij; Info en Bel onder Meer, zodat de rij op 1280 px op één regel
-// past. Op de telefoon staan hulp, Volgen, Invloed en Meer in de rij en Briefing onder Meer; bellen gaat
-// daar via de actiebalk.
+// Meer: korte kaders die elk hun eigen venster openen. Op de telefoon gaat bellen via de actiebalk.
 const schermklasse = useSchermklasse()
 const telefoon = computed(() => schermklasse.value === 'telefoon')
-const meerItems = computed<KopMeerItem[]>(() => {
-  const items: KopMeerItem[] = []
-  if (telefoon.value && c.value?.account) items.push({ label: 'Briefing', icoon: 'FileText', test: 'briefing-knop', actie: () => { briefingOpen.value = true } })
-  items.push({ label: 'Info', icoon: 'Info', test: 'contact-info-knop', actie: () => { infoOpen.value = true } })
+const meerOpen = ref(false)
+const belscriptOpen = ref(false)
+const dossierOpen = ref(false)
+const kwalificatieOpen = ref(false)
+const reisOpen = ref(false)
+const klaarOpen = ref(false)
+const kanKlaarzetten = computed(() => !!functie('bezoeken.klaarzetten')?.beschikbaar && me.value?.gebruiker.werkplek !== 'buitendienst')
+const datumKort = (d: string | null | undefined) => (d ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date(d)).replace('.', '') : '')
+const kaders = computed<MeerKader[]>(() => {
+  const k: MeerKader[] = [{ id: 'info', titel: 'Info', tekst: 'Contactgegevens, toestemming en Bel me niet', icoon: 'Info', test: 'contact-info-knop' }]
+  const x = a.value
+  if (c.value?.account) {
+    k.push({ id: 'briefing', titel: 'Briefing', tekst: `Wat je moet weten over ${c.value.account.naam}`, icoon: 'FileText', test: 'briefing-knop' })
+    if (functie('prospects.volgen')?.beschikbaar) k.push({ id: 'volgen', titel: 'Volgen', tekst: `Volgende beste stap met ${roepnaam.value}`, icoon: 'Route', test: 'knop-volgen' })
+    k.push({ id: 'invloed', titel: 'Invloed', tekst: `${roepnaam.value} op de invloedskaart`, icoon: 'Network', test: 'knop-invloed' })
+    if (functie('belscript.kiezen')?.beschikbaar) k.push({ id: 'belscript', titel: 'Belscript', tekst: `Het script voor je gesprek met ${roepnaam.value}`, icoon: 'ScrollText', test: 'meer-belscript' })
+  }
+  if (x) {
+    k.push({ id: 'dossier', titel: 'Dossier', tekst: x.dossier?.op ? `Wat de Verrijker vond · ververst ${datumKort(x.dossier.op)}` : 'Nog geen dossier', icoon: 'Database', test: 'meer-dossier' })
+    k.push({ id: 'kwalificatie', titel: 'Kwalificatie', tekst: `BAND ${band.value} van 4 · rol ${CONTACTROL_LABEL[c.value.rol as ContactRol] ?? c.value.rol}`, icoon: 'ClipboardCheck', test: 'meer-kwalificatie' })
+    k.push({ id: 'reis', titel: 'Reis', tekst: x.reis ? `${x.reis.naam} · ${x.reis.fase?.label ?? ''} · ${STATUS_LABEL[x.status] ?? x.status}` : x.soort === 'klant' ? 'Klanten lopen geen prospectreis' : 'Nog geen reis', icoon: 'Compass', test: 'meer-reis' })
+  }
+  if (c.value?.account && kanKlaarzetten.value) k.push({ id: 'klaarzetten', titel: 'Klaarzetten', tekst: 'Zet klaar voor de regiodag van een collega', icoon: 'MapPin', test: 'klaarzetten-knop' })
   const nummer = c.value && !c.value.belMeNiet ? c.value.mobiel ?? c.value.telefoon ?? null : null
-  if (!telefoon.value && nummer) items.push({ label: 'Bel', icoon: 'Phone', test: 'bel-knop', href: telLink(nummer) })
-  return items
+  if (!telefoon.value && nummer) k.push({ id: 'bel', titel: 'Bel', tekst: toonTelefoon(nummer), icoon: 'Phone', test: 'bel-knop', href: telLink(nummer) })
+  return k
 })
+const OPEN: Record<string, Ref<boolean>> = { info: infoOpen, briefing: briefingOpen, volgen: volgenOpen, invloed: invloedOpen, belscript: belscriptOpen, dossier: dossierOpen, kwalificatie: kwalificatieOpen, reis: reisOpen, klaarzetten: klaarOpen }
+function kies(id: string) { meerOpen.value = false; const r = OPEN[id]; if (r) r.value = true }
+onMounted(() => { const q = route.query.meer; if (typeof q === 'string' && kaders.value.some((x) => x.id === q && !x.href)) kies(q) })
 
 // Kop: avatar met initialen in een vaste kleur per naam, de rol als gekleurde pil.
 const KLEUR = ['#194c8f', '#1e7c4a', '#c0392b', '#4c1d95', '#b45309', '#0a0a0a', '#0f766e']
@@ -70,7 +92,6 @@ const laatsteContact = computed(() => {
   const dagen = Math.floor((Date.now() - Date.parse(d)) / 864e5)
   return dagen < 1 ? 'vandaag' : dagen < 31 ? `${dagen} ${dagen === 1 ? 'dag' : 'dagen'}` : `${Math.floor(dagen / 30)} mnd`
 })
-const ontbrekend = computed(() => ((a.value?.ontbrekendeRollen ?? []) as string[]).map((r) => CONTACTROL_LABEL[r as ContactRol] ?? r).join(', '))
 const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter((b: any) => b?.ja).length : 0))
 </script>
 
@@ -116,11 +137,9 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
             </dl>
           </div>
           <div class="ck-acties">
-            <KopIconen :ai="{ accountId: c.accountId, label: c.account?.naam ?? c.naam }" />
-            <button v-if="c.account && !telefoon" type="button" class="dd-actie dd-actie--zwart" data-test="briefing-knop" @click="briefingOpen = true">Briefing</button>
-            <button v-if="c.account && functie('prospects.volgen')?.beschikbaar" type="button" class="dd-actie dd-actie--secundair" data-test="knop-volgen" @click="volgenOpen = true"><Icoon naam="Route" class="dd-actie-icoon" />Volgen</button>
-            <button v-if="c.account" type="button" class="dd-actie dd-actie--secundair" data-test="knop-invloed" @click="invloedOpen = true"><Icoon naam="Network" class="dd-actie-icoon" />Invloed</button>
-            <KopMeer :items="meerItems" />
+            <KopIconen zonder-hulp :ai="{ accountId: c.accountId, label: c.account?.naam ?? c.naam }" />
+            <NuxtLink v-if="c.account" :to="`/accounts/${c.accountId}`" class="dd-actie dd-actie--secundair" data-test="kop-account"><Icoon naam="Building2" class="dd-actie-icoon" />Account</NuxtLink>
+            <button type="button" class="dd-actie dd-actie--secundair" aria-haspopup="dialog" :aria-expanded="meerOpen" data-test="kop-meer" @click="meerOpen = true"><Icoon naam="Ellipsis" class="dd-actie-icoon" />Meer</button>
           </div>
         </div>
       </div>
@@ -140,28 +159,6 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
 
     <!-- Tabbladen: dezelfde als op de accountkaart, voor dit contact. -->
     <KaartTabbladen :account="{ id: c.accountId, naam: c.account?.naam ?? '', soort: a?.soort ?? c.account?.soort ?? null }" :tabbladen="t" :contact="{ id: c.id, naam: c.naam, email: c.email }" @ververs="ververs">
-      <template #kwalificatie>
-        <div class="ck-blokken" data-test="kwalificatie-account">
-          <article class="kaart">
-            <header class="kaart-kop"><h2 class="kaart-titel">{{ roepnaam }} in het buying committee</h2></header>
-            <p class="kaart-meta">Rol: <strong>{{ CONTACTROL_LABEL[c.rol as ContactRol] ?? c.rol }}</strong><template v-if="c.functie"> · {{ c.functie }}</template></p>
-            <p v-if="a?.ontbrekendeRollen?.length" class="kaart-meta mt-8">Nog niet bekend bij {{ c.account?.naam }}: {{ ontbrekend }}.</p>
-          </article>
-          <article v-if="a" class="kaart">
-            <header class="kaart-kop"><h2 class="kaart-titel">Reis van {{ a.naam }}</h2></header>
-            <p v-if="a.reis" class="kaart-meta"><strong>{{ a.reis.naam }}</strong> · {{ a.reis.fase?.label }} · {{ STATUS_LABEL[a.status] ?? a.status }}</p>
-            <p v-else class="kaart-meta">{{ a.soort === 'klant' ? 'Klanten lopen geen prospectreis; het vervolg loopt in DealDrive of je CRM.' : 'Nog geen reis.' }}</p>
-            <p v-if="a.terugkom" class="kaart-meta mt-8">{{ a.terugkom.tekst }}</p>
-          </article>
-          <article v-if="a" class="kaart">
-            <header class="kaart-kop"><h2 class="kaart-titel">Kwalificatie BAND {{ band }}/4</h2></header>
-            <ul class="kaart-meta band-lijst">
-              <li v-for="k in ['behoefte', 'autoriteit', 'noodzaak', 'draagvlak']" :key="k" class="band-rij">{{ k.charAt(0).toUpperCase() + k.slice(1) }}: {{ a.band?.[k]?.ja ? 'ja' : 'nog niet' }}</li>
-            </ul>
-          </article>
-        </div>
-        <p class="meta mt-16">Reis, ritme en kwalificatie horen bij het account. <NuxtLink :to="`/accounts/${c.accountId}?tab=kwalificatie`" class="tekst-link" data-test="naar-accountkaart">Open de accountkaart van {{ c.account?.naam }} →</NuxtLink></p>
-      </template>
     </KaartTabbladen>
 
     <!-- Telefoon: plakkende actiebalk. -->
@@ -175,6 +172,21 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
     <ContactInfoFlyout :open="infoOpen" :contact="c" @sluit="infoOpen = false" @gewijzigd="ververs" />
     <BriefingFlyout v-if="c.account" :open="briefingOpen" :account="{ id: c.accountId, naam: c.account.naam }" @sluit="briefingOpen = false" />
     <VolgenFlyout v-if="c.account && functie('prospects.volgen')?.beschikbaar" :open="volgenOpen" :account-id="c.accountId" :naam="c.account.naam" :contact-id="c.id" :contact-naam="c.naam" @sluit="volgenOpen = false" @gewijzigd="ververs" />
+    <MeerFlyout :open="meerOpen" :onderwerp="c.naam" :kaders="kaders" @sluit="meerOpen = false" @kies="kies" />
+    <template v-if="a">
+      <KaartFlyout :open="dossierOpen" kicker="Dossier" :titel="a.naam" :meta="`Het dossier van het account van ${roepnaam}.`" test="dossier-flyout" maat="breed" @sluit="dossierOpen = false">
+        <AgentBlokken :account="a" @gewijzigd="refreshAccount" />
+      </KaartFlyout>
+      <KaartFlyout :open="kwalificatieOpen" kicker="Kwalificatie" :titel="a.naam" meta="BAND en het buying committee horen bij het account." test="kwalificatie-flyout" maat="breed" @sluit="kwalificatieOpen = false">
+        <KwalificatieBlokken :account="a" :contact="{ naam: c.naam, roepnaam, rol: c.rol, functie: c.functie }" @gewijzigd="ververs" />
+      </KaartFlyout>
+      <KaartFlyout :open="reisOpen" kicker="Reis" :titel="a.naam" meta="De prospectreis van het account en elke fasewissel." test="reis-flyout" @sluit="reisOpen = false">
+        <ReisOverzicht :account="a" />
+        <p class="meta"><NuxtLink :to="`/accounts/${c.accountId}?meer=ritme`" class="tekst-link" data-test="naar-accountkaart">Ritme en reis aanpassen op de accountkaart van {{ a.naam }} →</NuxtLink></p>
+      </KaartFlyout>
+    </template>
+    <BelscriptFlyout v-if="c.account && functie('belscript.kiezen')?.beschikbaar" :open="belscriptOpen" :account-id="c.accountId" :naam="c.account.naam" :contact-id="c.id" @sluit="belscriptOpen = false" />
+    <KlaarzetFlyout v-if="c.account" :open="klaarOpen" :account="{ id: c.accountId, naam: c.account.naam }" @sluit="klaarOpen = false" />
     <InvloedFlyout v-if="c.account" :open="invloedOpen" :account-id="c.accountId" :contact-id="c.id" @sluit="invloedOpen = false" @gewijzigd="ververs" />
   </div>
 </template>
@@ -237,7 +249,6 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
 .ck-stat-voet { font-size: 10px; letter-spacing: 0.04em; color: var(--muted); }
 .ck-stat-voet--rood { font-weight: 700; color: var(--red); }
 
-.ck-blokken { display: grid; gap: var(--kaart-gap, 16px); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 
 @media (max-width: 719px) {
   .ck-kop { padding: 16px 0 20px; }
@@ -253,6 +264,6 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
   .ck-contactstrip a { min-height: 44px; }
   .ck-stats { padding: 12px 0; }
 }
-/* Telefoon: Volgen, Invloed en Meer passen naast hulp op één regel. */
+/* Telefoon: Account en Meer op één regel (zoeken en AI staan in de mobiele kop). */
 @media (max-width: 767px) { .ck-acties { gap: 6px; } .ck-acties :deep(.dd-actie:not(.dd-actie--icoon)) { gap: 6px; padding-left: 10px; padding-right: 10px; } }
 </style>

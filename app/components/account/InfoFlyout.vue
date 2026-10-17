@@ -47,6 +47,8 @@ async function kopieer() {
   try { await navigator.clipboard.writeText(props.account.id); gekopieerd.value = true; setTimeout(() => { gekopieerd.value = false }, 2000) } catch { /* klembord geblokkeerd: het id staat leesbaar in beeld */ }
 }
 const klasseOpties = computed(() => [{ waarde: '', label: 'Geen klasse' }, ...(props.account?.klassen ?? []).map((k: any) => ({ waarde: k.id, label: k.naam }))])
+// De huidige leverancier (stond eerder onder de kop van de accountkaart): een concurrent uit Richting.
+const leverancierOpties = computed(() => [{ waarde: '', label: 'Onbekend' }, ...(props.account?.concurrenten ?? []).map((c: any) => ({ waarde: c.id, label: c.naam }))])
 const eigenaarOpties = computed(() => [{ waarde: '', label: 'Niemand' }, ...(props.account?.gebruikers ?? []).map((u: any) => ({ waarde: u.id, label: u.naam }))])
 const ondertitel = computed(() => [props.account?.officieleNaam && props.account.officieleNaam !== props.account.naam ? props.account.officieleNaam : null, props.account?.branche, props.account?.plaats].filter(Boolean).join(' · '))
 </script>
@@ -105,6 +107,15 @@ const ondertitel = computed(() => [props.account?.officieleNaam && props.account
             <BewerkVeld label="Klasse" :waarde="account.klasse ?? ''" type="select" :opties="klasseOpties" :uit="!account.kan.klasse" leeg="+ Kies een klasse" test="if-klasse" @bewaar="bewaar({ klasse: $event || null })" />
             <BewerkVeld label="Eigenaar" :waarde="account.eigenaar?.id ?? ''" type="select" :opties="eigenaarOpties" :uit="!account.kan.eigenaar" test="eigenaar" @bewaar="bewaar({ eigenaarId: $event || null })" />
             <BewerkVeld label="Bedrijfsnaam" :waarde="account.naam" test="if-naam" @bewaar="bewaarNaam" />
+            <template v-if="account.soort === 'prospect' && (account.concurrenten?.length || account.huidigeLeverancier)">
+              <BewerkVeld label="Huidige leverancier" :waarde="account.huidigeLeverancier?.id ?? ''" type="select" :opties="leverancierOpties" :uit="!account.kanLeverancier" leeg="+ Kies de huidige leverancier" test="if-leverancier" @bewaar="bewaar({ huidigeLeverancierId: $event || null })" />
+              <p v-if="account.huidigeLeverancier?.verwijderd" class="meta" data-test="leverancier-verwijderd">{{ account.huidigeLeverancier.naam }} · {{ account.huidigeLeverancier.verwijderd }}</p>
+              <div v-if="account.huidigeLeverancier?.zoZegJeHet" class="if-zo-zeg" data-test="zo-zeg-je-het">
+                <p><strong>Zo zeg je het:</strong> {{ account.huidigeLeverancier.zoZegJeHet }}</p>
+                <p v-if="account.huidigeLeverancier.bewijs"><strong>Bewijs:</strong> {{ account.huidigeLeverancier.bewijs }}</p>
+                <p v-if="account.huidigeLeverancier.wanneerVerliezen && account.reis?.fase?.id === 'gekwalificeerd'" class="veld-fout" data-test="verlies-waarschuwing">Let op: hier verliezen we vaak van {{ account.huidigeLeverancier.naam }}. {{ account.huidigeLeverancier.wanneerVerliezen }}</p>
+              </div>
+            </template>
             <template v-if="!beginner || meer">
               <BewerkVeld label="Officiële naam" :waarde="account.officieleNaam" @bewaar="veld('officieleNaam')($event)" />
               <BewerkVeld label="KvK" :waarde="account.kvk" leeg="+ Voeg KvK-nummer toe" @bewaar="veld('kvk')($event)" />
@@ -168,4 +179,6 @@ const ondertitel = computed(() => [props.account?.officieleNaam && props.account
   .if-vast { grid-template-columns: 1fr; gap: 2px; }
   .if-kopieer, .if-logo-knop { min-width: 44px; min-height: 44px; }
 }
+.if-zo-zeg { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 8px; padding: 10px 12px; border-left: 3px solid var(--yellow); background: var(--bg); font-size: 13px; }
+.if-zo-zeg p { margin: 0; }
 </style>
