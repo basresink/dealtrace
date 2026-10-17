@@ -12,6 +12,9 @@ const props = defineProps<{
   account?: Klant | null
   teamleden?: { id: string; naam: string }[]
   actiesoort?: string
+  /** Vooraf ingevulde titel en aanleiding (bv. "+ Bel taak" op Prospectplanning); anders dan voorgevuld geen herkomst assistent. */
+  titel?: string
+  aanleiding?: string
   voorgevuld?: { accountId?: string | null; titel?: string; actiesoort?: string; aanleiding?: string } | null
   contact?: Contact | null
 }>()
@@ -38,7 +41,7 @@ const fout = ref('')
 watch(() => props.open, async (o) => {
   if (!o) return
   const v = props.voorgevuld
-  Object.assign(f, leeg(), props.actiesoort ? { actionType: props.actiesoort } : {}, v?.titel ? { title: v.titel } : {}, v?.actiesoort ? { actionType: v.actiesoort } : {}, v?.aanleiding ? { aanleiding: v.aanleiding } : {})
+  Object.assign(f, leeg(), props.actiesoort ? { actionType: props.actiesoort } : {}, props.titel ? { title: props.titel } : {}, props.aanleiding ? { aanleiding: props.aanleiding } : {}, v?.titel ? { title: v.titel } : {}, v?.actiesoort ? { actionType: v.actiesoort } : {}, v?.aanleiding ? { aanleiding: v.aanleiding } : {})
   klant.value = props.account ? { ...props.account } : null
   contact.value = props.contact ? { accountId: props.account?.id ?? null, ...props.contact } : null
   fout.value = ''; bezig.value = false

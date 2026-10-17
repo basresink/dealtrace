@@ -136,7 +136,7 @@ export const FUNCTIES: readonly Functie[] = [
   },
   {
     sleutel: 'nav.richting', naam: 'Richting', pakket: 'starter', rollen: 'iedereen', helpartikel: 'richting', startNiveau: 'beginner',
-    zijbalk: { groep: 'Planning', route: '/richting', icoon: 'Compass', beginnerLabel: 'lezen' },
+    zijbalk: { groep: 'Start', route: '/richting', icoon: 'Compass', beginnerLabel: 'lezen', na: 'nav.agenda' },
     uitleg: { watHetDoet: 'Het verkoopverhaal van je organisatie: verhaal, belofte, concurrenten, winpunten.', totDieTijd: 'Niets; Richting is voor iedereen te lezen.' },
   },
   {

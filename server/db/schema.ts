@@ -690,7 +690,10 @@ export interface LeadData extends Partial<import('../../shared/leadGenerator').L
   score?: number
   beoordeeld?: number
   afwijsreden?: string | null
+  /** De eigen tekst bij "Andere reden". */
+  afwijsToelichting?: string | null
   afgewezenDoor?: string | null
+  afgewezenOp?: string | null
   vvBrancheId?: string | null
   /** Bronzin uit de zoekronde, met URL. */
   bronzin?: string | null

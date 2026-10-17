@@ -124,5 +124,8 @@ describe('capaciteit in de komende belblokken', () => {
     expect(capaciteitTekst({ eigen: 6, collegas: 2, plekken: 10, bezet: 7 })).toMatchObject({ past: 'deels' })
     expect(capaciteitTekst({ eigen: 3, collegas: 0, plekken: 0, bezet: 0 }).tekst).toContain('geen belblok')
     expect(capaciteitTekst({ eigen: 0, collegas: 4, plekken: 20, bezet: 0 })).toMatchObject({ past: 'nee' })
+    // Vol: geen enkele plek vrij is niet "past deels".
+    expect(capaciteitTekst({ eigen: 5, collegas: 0, plekken: 70, bezet: 83 })).toMatchObject({ past: 'nee' })
+    expect(capaciteitTekst({ eigen: 5, collegas: 0, plekken: 70, bezet: 83 }).tekst).toMatch(/^Past niet: .*zitten vol/)
   })
 })

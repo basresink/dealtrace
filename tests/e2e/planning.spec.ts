@@ -17,11 +17,12 @@ test('Jaarplanning: knelpunten, kalender en maanddetail; Plan in belblokken met 
   await expect(page.getByText(/belpogingen ingepland/)).toBeVisible()
 })
 
-test('Opzet DealDrive: tellers, Jaar of Kwartaal, maanddetail met Toon ook benaderde', async ({ page }) => {
+test('Opzet DealDrive: tellers, Kwartaal of Jaar in het filterpaneel, maanddetail met Toon ook benaderde', async ({ page }) => {
   await login(page, 'u-07')
   await ga(page, '/planning')
   await expect(page.getByTestId('plan-tellers')).toContainText('Ingedeeld')
   await expect(page.getByTestId('teller-telaat')).toContainText('Te laat')
+  await page.getByTestId('planning-filters-knop').click()
   await page.getByTestId('weergave-kwartaal').click()
   await expect(page.getByTestId('kwartalen').locator('[data-test^="kwartaal-"]')).toHaveCount(4)
   await expect(page.getByTestId('kalender').locator('.maandtegel')).toHaveCount(3)
@@ -68,15 +69,15 @@ test('Beginner: Prospectplanning met hercontactritme en terugkomregels staat aan
 })
 
 for (const breedte of [375, 390, 412]) {
-  test(`${breedte} px: geen horizontale scroll; Bel en Plan bezoek minstens 44 px; Bel is een tel-link`, async ({ page }) => {
+  test(`${breedte} px: geen horizontale scroll; + Bel taak minstens 44 px`, async ({ page }) => {
     await page.setViewportSize({ width: breedte, height: 800 })
     await login(page, 'u-07')
     await ga(page, '/planning')
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(breedte)
-    const bel = page.locator('.plan-rij [data-test="bel"]').first()
+    const bel = page.locator('.plan-rij [data-test="bel-taak"]').first()
     await expect(bel).toBeVisible()
     expect((await bel.boundingBox())!.height).toBeGreaterThanOrEqual(44)
-    expect((await page.locator('.plan-rij [data-test="plan-bezoek"]').first().boundingBox())!.height).toBeGreaterThanOrEqual(44)
+    await expect(page.locator('.plan-rij [data-test="plan-bezoek"]')).toHaveCount(0)
     await page.goto('/planning?tab=terugkom'); await page.waitForLoadState('networkidle')
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(breedte)
   })

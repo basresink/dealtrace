@@ -153,7 +153,7 @@ test.describe('Belscript Studio', () => {
     await expect(page).toHaveURL(new RegExp(`/belscripts\\?tab=prospect&prospect=${p.accountId}`))
   })
 
-  test('zonder besluit over een AI-blok geen versie (422); Belblokken linkt naar Belscripts', async ({ page, request }) => {
+  test('zonder besluit over een AI-blok geen versie (422); Belscripts blijft bereikbaar', async ({ page, request }) => {
     await apiLogin(request, 'u-01')
     const keuze = await (await request.get('/api/belscripts/prospecten')).json()
     test.skip(!keuze.prospecten.length, 'Geen prospects')
@@ -162,9 +162,10 @@ test.describe('Belscript Studio', () => {
     const c = await r.json()
     if (c.data.blokken.some((b: any) => b.status === 'voorgesteld')) expect((await request.post(`/api/belscripts/prospect/${c.conceptId}/bewaar`, { data: { blokken: [] } })).status()).toBe(422)
     await login(page, 'u-01')
+    // Belblokken heeft geen knop Meer met Belscripts meer; de Studio is direct en via Instellingen bereikbaar.
     await ga(page, '/belblokken')
-    await page.getByTestId('kop-meer').click()
-    await page.getByTestId('naar-belscripts').click()
+    await expect(page.getByTestId('naar-belscripts')).toHaveCount(0)
+    await ga(page, '/belscripts')
     await expect(page).toHaveURL(/\/belscripts/)
   })
 })

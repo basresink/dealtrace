@@ -46,12 +46,12 @@ async function reikwijdte(tx: Tx, g: RadarGebruiker, r: RadarReikwijdte): Promis
   return r === 'org' ? { label: 'Hele organisatie', mijLabel, filter: sql`true` } : { label: mijLabel, mijLabel, filter: mij }
 }
 
-interface Geladen { signalen: (RadarSignaal & { titel: string; bronNaam: string | null; url: string | null })[]; accounts: Map<string, { naam: string; eigenaarId: string | null; eigenaar: string | null }> }
+interface Geladen { signalen: (RadarSignaal & { titel: string; bronNaam: string | null; url: string | null; eigenaarId: string | null })[]; accounts: Map<string, { naam: string; eigenaarId: string | null; eigenaar: string | null }> }
 
 /** De telbare inzichten van de laatste zeven perioden met branche en soort. */
 async function laad(tx: Tx, filter: ReturnType<typeof sql>, mapping: { brancheId: string; sbiCodes: string[]; trefwoorden: string[] }[], branches: Set<string>, nu: Date): Promise<Geladen> {
   const vanaf = new Date(nu.getTime() - (RADAR.perioden + 1) * RADAR.periodeDagen * 864e5).toISOString()
-  const rs = await rijen(tx, sql`select s.id, s.account_id, s.type, s.title, s.bron, s.agent, s.status, s.signaalsoort, s.data->>'waarom' as waarom, s.data->'bron'->>'naam' as bron_naam, s.data->'bron'->>'url' as bron_url, s.created_at,
+  const rs = await rijen(tx, sql`select s.id, s.account_id, s.owner_id as signaal_eigenaar, s.type, s.title, s.bron, s.agent, s.status, s.signaalsoort, s.data->>'waarom' as waarom, s.data->'bron'->>'naam' as bron_naam, s.data->'bron'->>'url' as bron_url, s.created_at,
       a.name, a.owner_id, u.name as eigenaar, a.vv_branche_id, a.data->'sbi' as sbi
     from signals s join accounts a on a.id = s.account_id left join users u on u.id = a.owner_id
     where s.created_at >= ${vanaf} and a.gedeactiveerd_op is null and ${filter}`)
@@ -64,7 +64,7 @@ async function laad(tx: Tx, filter: ReturnType<typeof sql>, mapping: { brancheId
     accounts.set(r.account_id, { naam: r.name, eigenaarId: r.owner_id ?? null, eigenaar: r.eigenaar ?? null })
     signalen.push({
       id: r.id, accountId: r.account_id, brancheId: br && branches.has(br) ? br : null, soort: signaalsoortVan({ signaalsoort: r.signaalsoort, type: r.type, title: r.title, waarom: r.waarom }),
-      createdAt: isoVan(r.created_at), titel: r.title, bronNaam: r.bron_naam ?? null, url: r.bron_url ?? null,
+      createdAt: isoVan(r.created_at), titel: r.title, bronNaam: r.bron_naam ?? null, url: r.bron_url ?? null, eigenaarId: r.signaal_eigenaar ?? null,
     })
   }
   return { signalen, accounts }
@@ -96,7 +96,7 @@ export async function radarRaster(tx: Tx, g: RadarGebruiker, r: RadarReikwijdte,
 const brancheNaam = (id: string | null, rijenUit: { id: string | null; naam: string }[]) => rijenUit.find((b) => b.id === id)?.naam ?? 'Zonder branche'
 const celTitel = (c: Pick<Cel, 'aantal' | 'soort' | 'brancheId'>, rijenUit: { id: string | null; naam: string }[]) => `${c.aantal} ${c.aantal === 1 ? 'account' : 'accounts'} in ${brancheNaam(c.brancheId, rijenUit)} ${SOORT_INFO[c.soort].zin}.`
 
-/** Plekken en bezette plekken in de komende twee weken voor de gebruiker. */
+/** Plekken en bezette plekken in de komende twee weken voor de gebruiker; net als de plekken alleen blokken voor koude acquisitie. */
 async function capaciteit(tx: Tx, g: RadarGebruiker, nu: Date) {
   const [u] = await rijen(tx, sql`select werkplek, data from users where id = ${g.id}`)
   const [wd] = await rijen(tx, sql`select value from org_settings where key = 'werkdagen'`)
@@ -104,7 +104,7 @@ async function capaciteit(tx: Tx, g: RadarGebruiker, nu: Date) {
   const { plekken } = plekkenInBlokken(blokken, nu, 14, (wd?.value ?? {}) as any)
   const tot = new Date(nu.getTime() + 14 * 864e5).toISOString()
   const [b] = await rijen(tx, sql`select count(*)::int as n from tasks t join belblok_sessies s on s.id = t.belblok_id
-    where s.gebruiker_id = ${g.id} and s.status = 'gepland' and s.start_op >= ${nu.toISOString()} and s.start_op < ${tot} and t.status in ('open', 'bezig')`)
+    where s.gebruiker_id = ${g.id} and s.status = 'gepland' and coalesce(s.data->>'soort', 'koud') <> 'opvolging' and s.start_op >= ${nu.toISOString()} and s.start_op < ${tot} and t.status in ('open', 'bezig')`)
   return { plekken, bezet: Number(b?.n ?? 0), blokken, werkdagen: (wd?.value ?? {}) as any }
 }
 
@@ -128,7 +128,7 @@ export async function radarCel(tx: Tx, g: RadarGebruiker, p: { reikwijdte: Radar
   const lijst = c.accountIds.map((id) => {
     const a = accounts.get(id)!
     const s = recent.find((x) => x.accountId === id)!
-    return { id, naam: a.naam, eigenaar: a.eigenaar, eigen: a.eigenaarId === g.id, signaal: { titel: s.titel, op: s.createdAt, bron: s.bronNaam, url: s.url }, signalen: recent.filter((x) => x.accountId === id).length }
+    return { id, naam: a.naam, eigenaar: a.eigenaar, eigen: a.eigenaarId === g.id, signaal: { id: s.id, titel: s.titel, op: s.createdAt, bron: s.bronNaam, url: s.url, mijnInzicht: s.eigenaarId === g.id }, signalen: recent.filter((x) => x.accountId === id).length }
   }).sort((a, b) => Number(b.eigen) - Number(a.eigen) || b.signaal.op.localeCompare(a.signaal.op))
   const wb = (await rijen(tx, sql`select winpunt_id, branche_id from vv_winpunt_branche`)).map((r) => ({ winpuntId: r.winpunt_id as string, brancheId: r.branche_id as string }))
   const wp = winpuntVoorGolf(p.soort, p.brancheId, stand.winpunten ?? [], wb)

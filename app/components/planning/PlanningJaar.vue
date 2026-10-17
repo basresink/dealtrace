@@ -1,9 +1,9 @@
 <script setup lang="ts">
 // Tabblad Jaarplanning (F13) in de opzet van DealDrive Prospectplanning: tellers, "Wat knelt er nu"
-// met inplannen in belblokken en indelen, de jaarkalender (jaar of kwartaal) met legenda per
-// potentie, het maanddetail met wat aan de beurt is en wat is blijven liggen, en de prospects
-// buiten de planning. De rekenregels staan in shared/planning.ts; hier alleen de weergave.
-import { telLink } from '~/utils/accountWeergave'
+// met inplannen in belblokken en indelen, de kalender (maand, kwartaal of jaar; de keuze staat in het
+// filterpaneel van de pagina, ?weergave=) met legenda per potentie, het maanddetail met wat aan de
+// beurt is en wat is blijven liggen (per prospect "+ Bel taak"), en de prospects buiten de planning.
+// De rekenregels staan in shared/planning.ts; hier alleen de weergave.
 import { POTENTIES, POTENTIE_LABEL, maandInJaar, type Potentie } from '~~/shared/planning'
 const toast = useToast()
 const route = useRoute()
@@ -52,8 +52,8 @@ const toonBenaderde = ref(false)
 const benaderdInMaand = computed(() => detail.value.blokken.reduce((s, b) => s + b.groep.benaderd, 0))
 const zichtbaar = (g: Groep) => (toonBenaderde.value ? g.rijen : g.rijen.filter((a: any) => !benaderd(a)))
 
-// Jaar of kwartaal: het kwartaal volgt de gekozen maand.
-const weergave = ref<'jaar' | 'kwartaal'>('jaar')
+// Maand, kwartaal of jaar (in de URL): het kwartaal en de maand volgen de gekozen maand.
+const weergave = computed<'maand' | 'kwartaal' | 'jaar'>(() => (route.query.weergave === 'maand' || route.query.weergave === 'kwartaal' ? route.query.weergave : 'jaar'))
 const kwartaal = computed(() => Math.ceil(gekozen.value / 3))
 const kwartalen = computed(() => [1, 2, 3, 4].map((q) => {
   const ms = maanden.value.slice((q - 1) * 3, q * 3)
@@ -61,7 +61,8 @@ const kwartalen = computed(() => [1, 2, 3, 4].map((q) => {
   const gs = groepen.value.filter((g) => ps.has(g.potentie))
   return { q, label: `Q${q}`, maanden: `${ms[0]!.naam} tot ${ms[2]!.naam}`, totaal: gs.reduce((s, g) => s + g.totaal, 0), benaderd: gs.reduce((s, g) => s + g.benaderd, 0), achterstand: Math.max(...ms.map((m) => m.achterstand)) }
 }))
-const zichtbareMaanden = computed(() => (weergave.value === 'jaar' ? maanden.value : maanden.value.slice((kwartaal.value - 1) * 3, kwartaal.value * 3)))
+const zichtbareMaanden = computed(() => (weergave.value === 'jaar' ? maanden.value : weergave.value === 'maand' ? [detail.value] : maanden.value.slice((kwartaal.value - 1) * 3, kwartaal.value * 3)))
+function stapMaand(d: number) { maand.value = Math.min(12, Math.max(1, gekozen.value + d)) }
 function kiesKwartaal(q: number) { maand.value = Math.ceil(huidig.value / 3) === q ? huidig.value : q * 3 - 2 }
 
 // Tellers boven de planning.
@@ -110,7 +111,8 @@ const zonderKlasse = computed(() => (data.value?.accounts ?? []).filter((a: any)
 async function deelIn(a: any, klasse: string) {
   try { await $fetch(`/api/accounts/${a.id}`, { method: 'PUT', body: { klasse } }); toast.toon(`${a.naam} is ingedeeld.`); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
-const bezoek = ref<{ id: string; naam: string } | null>(null)
+// + Bel taak: het venster Nieuwe taak met type Bellen, de prospect en het primaire contact.
+const belTaak = ref<{ account: { id: string; naam: string }; contact: { id: string; naam: string; functie: string | null } | null } | null>(null)
 </script>
 
 <template>
@@ -155,15 +157,16 @@ const bezoek = ref<{ id: string; naam: string } | null>(null)
       <section class="pj-blok">
         <header class="pj-kop pj-kop--rij">
           <div>
-            <span class="pj-eyebrow">Twaalf maanden · klik een maand voor de prospects</span>
-            <h2 class="pj-titel">Jaarkalender {{ data.jaar.jaar }}</h2>
+            <span class="pj-eyebrow">{{ weergave === 'maand' ? 'Eén maand · blader met de pijlen' : weergave === 'kwartaal' ? 'Drie maanden · klik een maand voor de prospects' : 'Twaalf maanden · klik een maand voor de prospects' }}</span>
+            <h2 class="pj-titel" data-test="kalender-titel">{{ weergave === 'maand' ? `${hoofd(detail.naam)} ${data.jaar.jaar}` : weergave === 'kwartaal' ? `Kwartaal ${kwartaal} van ${data.jaar.jaar}` : `Jaarkalender ${data.jaar.jaar}` }}</h2>
             <ul class="pj-legenda">
               <li v-for="g in groepen.filter((x) => x.totaal)" :key="g.potentie"><span class="groep-pil" :class="`groep-pil--${g.potentie}`">{{ g.label }}</span><span class="meta"><strong>{{ NOEMER[g.potentie][1] }}</strong> · {{ vensterTekst(g) }} <span class="tnum">({{ g.totaal }})</span></span></li>
             </ul>
           </div>
-          <div class="keuzegroep keuzegroep--klein" role="group" aria-label="Weergave">
-            <button type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': weergave === 'jaar' }" data-test="weergave-jaar" @click="weergave = 'jaar'">Jaar</button>
-            <button type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': weergave === 'kwartaal' }" data-test="weergave-kwartaal" @click="weergave = 'kwartaal'">Kwartaal</button>
+          <div v-if="weergave === 'maand'" class="pj-maandnav" role="group" aria-label="Maand kiezen" data-test="maandnav">
+            <button type="button" class="dd-act pj-pijl" :disabled="gekozen <= 1" aria-label="Vorige maand" title="Vorige maand" data-test="maand-vorige" @click="stapMaand(-1)"><Icoon naam="ChevronLeft" /></button>
+            <span class="pj-maandnav-naam" data-test="maand-naam">{{ hoofd(detail.naam) }} <span class="meta tnum">maand {{ detail.nr }} van 12</span></span>
+            <button type="button" class="dd-act pj-pijl" :disabled="gekozen >= 12" aria-label="Volgende maand" title="Volgende maand" data-test="maand-volgende" @click="stapMaand(1)"><Icoon naam="ChevronRight" /></button>
           </div>
         </header>
         <div v-if="weergave === 'kwartaal'" class="pj-kwartalen" data-test="kwartalen">
@@ -173,12 +176,15 @@ const bezoek = ref<{ id: string; naam: string } | null>(null)
             <span v-if="q.achterstand" class="pj-laat tnum">{{ q.achterstand }} te laat</span>
           </button>
         </div>
-        <div class="pj-maanden" :class="{ 'pj-maanden--kwartaal': weergave === 'kwartaal' }" data-test="kalender">
+        <div class="pj-maanden" :class="{ 'pj-maanden--kwartaal': weergave === 'kwartaal', 'pj-maanden--maand': weergave === 'maand' }" data-test="kalender" :data-weergave="weergave">
           <button v-for="m in zichtbareMaanden" :key="m.nr" type="button" class="maandtegel pj-maand" :class="{ 'pj-maand--nu': m.isHuidig, 'pj-maand--aan': m.nr === gekozen, 'pj-maand--voorbij': m.voorbij }" :aria-pressed="m.nr === gekozen" :data-maand="m.nr" @click="maand = m.nr">
             <span class="pj-maand-top"><span class="pj-maand-nr tnum">{{ m.nr }}</span><span class="pj-maand-naam">{{ m.naam }}</span><span v-if="m.isHuidig" class="pj-nu">Nu</span></span>
             <span class="pj-maand-pillen"><span v-for="g in m.actief" :key="g.potentie" class="groep-pil" :class="`groep-pil--${g.potentie}`">{{ g.label }}</span><span v-if="!m.actief.length" class="meta">Niets aan de beurt</span></span>
             <span v-if="m.totaal" class="pj-maand-stat"><span class="tnum">{{ m.benaderd }}/{{ m.totaal }}</span> benaderd</span>
             <span v-if="m.achterstand" class="pj-laat tnum">{{ m.achterstand }} te laat</span>
+            <span v-if="weergave === 'maand'" class="pj-maand-groepen">
+              <span v-for="b in m.blokken" :key="b.key" class="pj-maand-groep">{{ b.teLaat ? 'Te laat: ' : '' }}{{ b.teLaat ? b.groep.open : b.groep.totaal }} {{ NOEMER[b.groep.potentie][b.groep.totaal === 1 && !b.teLaat ? 0 : 1] }}{{ b.teLaat ? ' nog niet benaderd' : `, ${b.groep.benaderd} benaderd` }}</span>
+            </span>
           </button>
         </div>
       </section>
@@ -203,9 +209,7 @@ const bezoek = ref<{ id: string; naam: string } | null>(null)
               <span class="pj-status" :class="benaderd(a) ? 'pj-status--ja' : 'pj-status--nee'">{{ a.status }}</span>
               <span class="pj-contact tnum">{{ a.pogingen }} {{ a.pogingen === 1 ? 'contactmoment' : 'contactmomenten' }}</span>
               <span class="pj-acties">
-                <a v-if="a.telefoon" class="dd-act" :href="telLink(a.telefoon)" data-test="bel"><Icoon naam="Phone" />Bel</a>
-                <NuxtLink v-else class="dd-act" :to="`/accounts/${a.id}`" data-test="bel"><Icoon naam="Phone" />Bel</NuxtLink>
-                <button type="button" class="dd-act" data-test="plan-bezoek" @click="bezoek = { id: a.id, naam: a.naam }">Plan bezoek</button>
+                <button type="button" class="dd-act" data-test="bel-taak" :title="`Beltaak voor ${a.naam}${a.contact ? ` met ${a.contact.naam}` : ''}`" @click="belTaak = { account: { id: a.id, naam: a.naam }, contact: a.contact ?? null }"><Icoon naam="Plus" />Bel taak</button>
               </span>
             </li>
           </ul>
@@ -224,7 +228,7 @@ const bezoek = ref<{ id: string; naam: string } | null>(null)
       </section>
     </template>
     <BevestigVenster :open="!!bevestig" titel="Inplannen in belblokken?" :tekst="bevestig?.tekst ?? ''" bevestig="Plan in" @geannuleerd="bevestig = null" @bevestigd="planIn" />
-    <NieuweTaakFlyout :open="!!bezoek" :account="bezoek" actiesoort="bezoek" @sluit="bezoek = null" @gemaakt="bezoek = null" />
+    <NieuweTaakFlyout :open="!!belTaak" :account="belTaak?.account" :contact="belTaak?.contact" actiesoort="bellen" :titel="belTaak ? `Bel ${belTaak.contact?.naam ?? belTaak.account.naam}` : undefined" aanleiding="Blijven liggen in de jaarplanning" @sluit="belTaak = null" @gemaakt="belTaak = null; refresh()" />
   </div>
 </template>
 
@@ -290,6 +294,12 @@ const bezoek = ref<{ id: string; naam: string } | null>(null)
 @media (min-width: 900px) { .pj-maanden:not(.pj-maanden--kwartaal) { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (min-width: 1100px) { .pj-maanden:not(.pj-maanden--kwartaal) { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 .pj-maanden--kwartaal .pj-maand { min-height: 120px; }
+.pj-maanden.pj-maanden--maand { grid-template-columns: minmax(0, 1fr); }
+.pj-maand-groepen { display: grid; gap: 2px; font-size: var(--fs-meta); color: var(--ink-soft); }
+.pj-maandnav { display: flex; align-items: center; gap: 8px; }
+.pj-maandnav-naam { min-width: 150px; text-align: center; font-weight: 800; }
+.pj-pijl { min-width: 44px; min-height: 44px; justify-content: center; }
+.pj-pijl:disabled { opacity: .45; cursor: not-allowed; }
 .pj-maand { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-height: var(--touch-target-comfortable); padding: 12px; background: var(--wit); border: 1px solid var(--border); font: inherit; color: var(--ink); text-align: left; cursor: pointer; }
 .pj-maand:hover { border-color: var(--border-strong); }
 .pj-maand--voorbij { background: var(--surface); color: var(--muted); }
