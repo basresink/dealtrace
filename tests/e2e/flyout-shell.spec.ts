@@ -141,7 +141,7 @@ test.describe('flyoutstandaard', () => {
     await expect(fly).toBeVisible({ timeout: 30_000 })
     const voet = fly.locator('.fo-foot')
     await expect(voet.getByTestId('af-rond-af')).toHaveClass(/dd-actie--zwart/)
-    for (const naam of ['Verplaatsen', 'Niet verschenen', 'Afspraak annuleren']) await expect(voet.getByRole('button', { name: naam })).toHaveAttribute('title', naam)
+    for (const naam of ['Wijzigen', 'Niet verschenen', 'Afspraak annuleren']) await expect(voet.getByRole('button', { name: naam })).toHaveAttribute('title', naam)
     if (await fly.getByTestId('fs-vraag-ai').count()) await expect(fly.getByTestId('fs-vraag-ai')).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(fly).toHaveCount(0)

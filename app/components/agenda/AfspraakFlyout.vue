@@ -279,7 +279,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
           <span class="fo-foot-vul" />
           <button v-if="afronden" type="button" class="dd-actie dd-actie--secundair" @click="afronden = false">Terug</button>
           <template v-else>
-            <button type="button" class="fs-ibtn" title="Wijzigen" aria-label="Afspraak wijzigen" data-test="af-verplaats" @click="startVerplaatsen"><Icoon naam="Pencil" :grootte="18" /></button>
+            <button type="button" class="fs-ibtn" title="Wijzigen" aria-label="Wijzigen" data-test="af-verplaats" @click="startVerplaatsen"><Icoon naam="Pencil" :grootte="18" /></button>
             <button type="button" class="fs-ibtn" title="Niet verschenen" aria-label="Niet verschenen" data-test="af-niet-verschenen" @click="zetStatus('niet_verschenen')"><Icoon naam="UserX" :grootte="18" /></button>
             <button type="button" class="fs-ibtn fs-ibtn--rood" title="Afspraak annuleren" aria-label="Afspraak annuleren" data-test="af-annuleer" @click="zetStatus('geannuleerd')"><Icoon naam="Ban" :grootte="18" /></button>
             <NuxtLink v-if="a.account && !opKlantkaart" :to="`/accounts/${a.account.id}`" class="fs-ibtn" title="Open accountkaart" aria-label="Open accountkaart" @click="emit('sluit')"><Icoon naam="ArrowRight" :grootte="18" /></NuxtLink>

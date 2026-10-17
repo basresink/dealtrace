@@ -45,10 +45,10 @@ for (const breedte of [1280, 390]) {
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 
       // De tabbalk plakt bovenaan (op de telefoon onder de mobiele kop).
-      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-      const top = await page.getByTestId('ri-tabs').evaluate((el) => el.getBoundingClientRect().top)
-      expect(top).toBeLessThanOrEqual(breedte < 768 ? 60 : 4)
-      expect(top).toBeGreaterThanOrEqual(0)
+      await page.mouse.wheel(0, 3000)
+      const top = () => page.getByTestId('ri-tabs').evaluate((el) => el.getBoundingClientRect().top)
+      await expect.poll(top).toBeLessThanOrEqual(breedte < 768 ? 60 : 4)
+      expect(await top()).toBeGreaterThanOrEqual(0)
     })
 
     test('concurrenten: filter per soort, gesprek en Stel voor bij Expert', async ({ page }) => {
