@@ -471,10 +471,12 @@ test.describe('Taken: nieuwe URL, horizon in het filter en Briefings', () => {
     await expect(page.getByTestId('briefing-zoeken')).toBeVisible()
     // Het overzicht van komende gesprekken blijft.
     await expect(page.getByTestId('briefings').or(page.getByText('Geen briefings in deze periode.'))).toBeVisible()
-    // Hooguit zes treffers in de lijst.
+    // Zes treffers in beeld, de rest scrolt (ZoekKiezer).
     await page.getByTestId('bf-klant').fill('te')
     await expect(page.getByTestId('bf-klant-optie').first()).toBeVisible()
-    expect(await page.getByTestId('bf-klant-optie').count()).toBeLessThanOrEqual(6)
+    const lijstHoogte = await page.getByTestId('zoekkiezer-lijst').evaluate((e) => e.clientHeight)
+    const rijHoogte = await page.getByTestId('bf-klant-optie').first().evaluate((e) => e.getBoundingClientRect().height)
+    expect(Math.round(lijstHoogte / rijHoogte)).toBeLessThanOrEqual(6)
     await page.getByTestId('bf-klant').fill(x.accountNaam.slice(0, 12))
     await page.getByTestId('bf-klant-optie').filter({ hasText: x.accountNaam }).click()
     await expect(page).toHaveURL(new RegExp(`account=${x.accountId}`))

@@ -46,6 +46,8 @@ const gevorderd = computed(() => !!functie('taken.herhaling')?.beschikbaar)
 const belVerslag = ref('')
 const isBeltaak = computed(() => t.value?.actionType === 'bellen')
 async function herlaadTaak() { if (t.value) t.value = await $fetch(`/api/tasks/${t.value.id}`) }
+const uitstelOpen = ref(false)
+const verwijderVraag = ref(false)
 // De taak in beeld: begint bij taakId van de ouder; Volgende schuift door zonder dat de ouder iets hoeft.
 const huidig = ref<string | null>(props.taakId)
 watch(() => [props.open, props.taakId], () => { huidig.value = props.taakId }, { flush: 'sync' })
@@ -150,12 +152,10 @@ function vraagAi() {
   openAi({ accountId: x.account?.id ?? null, label: x.account?.naam ?? `taak ${x.title}`, vraag: `Help me met mijn taak "${x.title}" (${typeVan(x.actionType).label.toLowerCase()}${bij}${met}${wanneer})${x.aanleiding ? `. Aanleiding: ${x.aanleiding}` : ''}. Wat is de beste aanpak?` })
   emit('sluit')
 }
-const uitstelOpen = ref(false)
 const uitstelHouder = ref<HTMLElement | null>(null)
 function kiesAnnuleren() { uitstelOpen.value = false; annuleren.value = true; nextTick(() => document.querySelector<HTMLElement>('[data-test="annuleer-reden"]')?.focus()) }
 function kiesAfspraak() { uitstelOpen.value = false; planOpen.value = true }
 function buitenUitstel(e: MouseEvent) { if (uitstelOpen.value && uitstelHouder.value && !uitstelHouder.value.contains(e.target as Node)) uitstelOpen.value = false }
-const verwijderVraag = ref(false)
 const eigenLijst = ref<string[] | null>(null)
 const volgendeId = computed(() => {
   if (!props.lijst) return null

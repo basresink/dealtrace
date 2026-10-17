@@ -69,7 +69,7 @@ useHead({ title: 'Kennisbank · Dealtrace' })
           </div>
           <div v-if="filtersOpen" id="kb-filterpaneel" class="kb-paneel" data-test="kb-filterpaneel">
             <div class="kb-groep"><label class="filter-label" for="kb-zoek-invoer">Zoeken</label>
-              <span class="kb-zoek"><Icoon naam="Search" :grootte="16" class="kb-zoek-icoon" /><input id="kb-zoek-invoer" v-model="zoekTekst" type="search" class="invoer" placeholder="Naam, beschrijving, inhoud of bedrijf (minstens 2 tekens)" data-test="kb-zoek"></span>
+              <span class="kb-zoek"><Icoon naam="Search" :grootte="16" class="kb-zoek-icoon" /><input id="kb-zoek-invoer" v-model="zoekTekst" type="search" class="invoer" placeholder="Naam, inhoud of bedrijf (minstens 2 tekens)" data-test="kb-zoek"></span>
             </div>
             <div class="kb-groep" role="group" aria-label="Van wie"><span class="filter-label">Van wie</span>
               <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': !q('eigen') }" :aria-pressed="!q('eigen')" @click="zet({ eigen: undefined })">Iedereen</button>
@@ -123,7 +123,7 @@ useHead({ title: 'Kennisbank · Dealtrace' })
 </template>
 
 <style scoped>
-.kb-werkbalk-sectie { padding: 0 0 8px; }
+.kb-werkbalk-sectie { padding: 16px 0 8px; }
 .kb-zoek { position: relative; flex: 1 1 320px; max-width: 560px; display: flex; align-items: center; }
 .kb-zoek .invoer { width: 100%; padding-left: 34px; }
 .kb-zoek-icoon { position: absolute; left: 10px; color: var(--ink-soft); pointer-events: none; }
