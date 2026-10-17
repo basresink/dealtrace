@@ -46,12 +46,12 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
 
 <style scoped>
 .mf-lijst { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.mf-kader { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 2px; background: var(--wit); color: var(--ink); font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.mf-kader { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 2px; background: var(--wit); color: var(--ink); font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
 .mf-kader:hover { border-color: var(--ink); }
 .mf-kader:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .mf-kader--accent { border-left: 3px solid var(--yellow); }
-.mf-icoon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 36px; height: 36px; background: var(--bg); color: var(--ink); }
-.mf-tekst { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+.mf-icoon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 32px; height: 32px; background: var(--bg); color: var(--ink); }
+.mf-tekst { display: flex; flex: 1; flex-direction: column; gap: 0; min-width: 0; line-height: 1.35; }
 .mf-titel { font-size: 14px; font-weight: 700; }
 .mf-regel { overflow: hidden; font-size: 12px; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
 .mf-pijl { flex: none; color: var(--muted); }

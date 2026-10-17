@@ -137,6 +137,22 @@ test.describe('Belscript Studio', () => {
     }
   })
 
+  test('accountkaart: Meer, Belscript toont de bewaarde versie van het prospect met een link naar de studio', async ({ page }) => {
+    await login(page, 'u-01')
+    const { prospecten } = await (await page.request.get('/api/belscripts/prospecten')).json()
+    const p = prospecten.find((x: any) => x.versies > 0)
+    expect(p, 'een eerdere test bewaarde een versie').toBeTruthy()
+    const ctx = await (await page.request.get('/api/belscripts/prospect', { params: { accountId: p.accountId } })).json()
+    await ga(page, `/accounts/${p.accountId}`)
+    await page.getByTestId('kop-meer').click()
+    await page.getByTestId('meer-belscript').click()
+    const f = page.getByTestId('belscript-flyout')
+    await expect(f.getByTestId('bsf-stand')).toContainText(`Versie ${ctx.versies[0].versie}`, { timeout: 60_000 })
+    await expect(f.getByTestId('bsf-blokken').locator('li').first()).toBeVisible()
+    await f.getByTestId('bsf-studio').click()
+    await expect(page).toHaveURL(new RegExp(`/belscripts\\?tab=prospect&prospect=${p.accountId}`))
+  })
+
   test('zonder besluit over een AI-blok geen versie (422); Belblokken linkt naar Belscripts', async ({ page, request }) => {
     await apiLogin(request, 'u-01')
     const keuze = await (await request.get('/api/belscripts/prospecten')).json()

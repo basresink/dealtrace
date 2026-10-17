@@ -19,8 +19,8 @@ const acties = computed<any[]>(() => (plan.value?.acties ?? []).filter((x: any) 
 
 <template>
   <div class="apt" data-test="ak-accountplannen">
-    <div class="ak-tabkop">
-      <h2 class="ak-tabtitel">Accountplan</h2>
+    <div class="apt-tabkop">
+      <h2 class="apt-tabtitel">Accountplan</h2>
       <button v-if="!isKlant && lijst.plannen.length" type="button" class="dd-actie dd-actie--secundair" data-test="ak-accountplan-nieuw" @click="nieuwOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Accountplan</button>
     </div>
 
@@ -83,6 +83,9 @@ const acties = computed<any[]>(() => (plan.value?.acties ?? []).filter((x: any) 
 </template>
 
 <style scoped>
+/* Kop van het tabblad, gelijk aan de andere tabbladen (KaartTabbladen). */
+.apt-tabkop { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 20px; }
+.apt-tabtitel { margin: 0; font-family: var(--font-serif); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); }
 .apt-plan { display: flex; flex-direction: column; gap: 18px; }
 .apt-kop { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .apt-kop-tekst { display: flex; flex-direction: column; gap: 4px; min-width: 0; }

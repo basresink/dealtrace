@@ -20,6 +20,7 @@ import { seedFunnel } from './seedFunnel'
 import { seedConcepten } from './seedConcepten'
 import { seedTeam } from './seedTeam'
 import { seedEva } from './seedEva'
+import { seedEvaUitgebreid } from './seedEvaUitgebreid'
 import { seedKennisbank } from './seedKennisbank'
 import { seedSignaalradar } from './seedSignaalradar'
 import { versleutel } from '../utils/geheimen'
@@ -144,6 +145,8 @@ export async function seed(url = BEHEER_URL, opties: { stil?: boolean } = {}) {
     // Testgebruiker Eva Ervaren (u-07): een gevulde werkplek voor de komende vier weken. Na de
     // campagnes en het team, zodat die sets niet veranderen.
     await seedEva(client, org.id)
+    // Eva uitgebreid: 72 extra prospects, drie klanten en acht weken werk eromheen (een drukke werkweek op elke pagina).
+    await seedEvaUitgebreid(client, org.id)
     // Kennisbank: vijf fictieve documenten, een paar gekoppeld aan prospects en een contact.
     await seedKennisbank(client, org.id)
     // Signaalradar (F5): fictieve inzichten over zeven perioden, zodat er golven te zien zijn.

@@ -19,7 +19,7 @@ Een topprospect win je niet met losse acties. Met een plan weet je bij elke stap
 
 ## Zo doe je het
 
-1. Open de accountkaart van de prospect en kies in het tabblad **Reis en kwalificatie** **+ Accountplan**. Of ga naar **Accountplannen**.
+1. Open de accountkaart van de prospect en kies in het tabblad **Accountplan** **Maak accountplan**. Of ga naar **Accountplannen**.
 2. Geef het plan een titel met de periode, zoals "Accountplan 2027", en vul **Geldig van** en **Geldig tot** in.
 3. Vul de zes blokken: bedrijfsinformatie, doelen (SMART), kansen, bedreigingen, strategieën en evaluatie.
 4. Zet onder **Beslissers** de contactpersonen die meebeslissen.

@@ -21,7 +21,7 @@ Elke kaart toont of het account een prospect of een klant is (een oud plan kan b
 
 ## Een plan maken
 
-Kies **+ Accountplan** op het overzicht, of **+ Accountplan** op de accountkaart van de prospect, in het tabblad **Reis en kwalificatie**. Vanaf de accountkaart staat de prospect al ingevuld; op het overzicht zoek je alleen prospects. Geef het plan een titel met de periode erin, zoals "Accountplan 2027", en vul **Geldig van** en **Geldig tot** in. Na de einddatum staat het plan vanzelf bij Verlopen.
+Kies **+ Accountplan** op het overzicht, of **+ Accountplan** op de accountkaart van de prospect, in het tabblad **Accountplan** (rechts van Campagnes). Daar zie je ook het lopende plan met de samenvatting, de acties en de voortgang. Vanaf de accountkaart staat de prospect al ingevuld; op het overzicht zoek je alleen prospects. Geef het plan een titel met de periode erin, zoals "Accountplan 2027", en vul **Geldig van** en **Geldig tot** in. Na de einddatum staat het plan vanzelf bij Verlopen.
 
 ## De blokken
 

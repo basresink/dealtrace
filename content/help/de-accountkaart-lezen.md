@@ -10,10 +10,10 @@ routes: /prospects,/accounts
 
 De accountkaart toont één account:
 
-- **Kop**: naam, fase en eigenaar, met knoppen zoals **Zet fase** en **Zet nee**.
-- **Volgende stap**: de eerstvolgende taak en de poging in het ritme.
+- **Kop**: naam, fase en eigenaar, met rechts **Zoeken**, **Vraag AI**, **Contacten** en **Meer**.
+- **Meer**: korte kaders die elk een eigen venster openen: Info (ook de huidige leverancier), Briefing, Volgen, Invloed, Belscript, Dossier, Kwalificatie (BAND en het buying committee), Ritme (zoals **Zet nee** en **Fase corrigeren**) en Reis met de geschiedenis.
 - **Contactpersonen**: met hun rol in het buying committee.
-- **Geschiedenis**: activiteiten en fasewissels.
+- **Tabbladen**: de tijdlijn met activiteiten, taken, mails, afspraken, verslagen, campagnes, het lopende **Accountplan** (Expert) en documenten.
 - **Score**: hoe kansrijk het account is (de opbouw zie je als Expert).
 
 In de lijst **Prospects** filter je op fase, klasse en eigenaar, en sla je een filter op (Gevorderd).

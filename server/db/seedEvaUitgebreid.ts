@@ -51,7 +51,7 @@ const LEVERANCIER: Record<string, string> = { 'cc-01': 'Landelijke groothandelsk
 // Namen sorteren achter "Testplanning": elke stam begint met Testr tot en met Testz.
 const STAMMEN: Record<string, string[]> = {
   'br-01': ['Testwarmtetechniek', 'Testwoninginstall', 'Testsanitair', 'Testverwarming', 'Testwarmtepompen', 'Testrenovatie', 'Testverduurzaming', 'Testwoonklimaat'],
-  'br-02': ['Testutiliteit', 'Testregeltechniek', 'Testventilatie', 'Teststroom', 'Testschakeltechniek', 'Testtechniekgroep', 'Testluchtbehandeling', 'Testsprinkler'],
+  'br-02': ['Testutiliteit', 'Testregeltechniek', 'Testventilatie', 'Teststroom', 'Testschakeltechniek', 'Testtechniekgroep', 'Testutiliteitstechniek', 'Testsprinkler'],
   'br-03': ['Testwonen', 'Teststichting Wonen', 'Testwoonbeheer', 'Testwoongoed', 'Testwoonstede'],
   'br-04': ['Testzonnestroom', 'Testzonnedak', 'Testsolar', 'Testzonkracht', 'Testzonnewerk'],
 }
@@ -254,6 +254,7 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
   const accVan = new Map(alle.map((a) => [a.id, a]))
 
   // Fasedatums (werkdagen terug), ritme, leverancier, aanleiding en de gedeactiveerde.
+  let benaderdTeller = 0
   for (const a of accs) {
     const f = a.fase!
     if (f === 'geparkeerd') a.tot = r() < 0.6 ? 'benaderd' : 'in-gesprek'
@@ -269,7 +270,7 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
     if (len > 1 && a.sinds - a.S < (len - 1) * 2) a.S = Math.max(-40, a.sinds - (len - 1) * 3)
     if (a.sinds <= a.S && len > 1) a.sinds = Math.min(-1, a.S + (len - 1) * 2)
     const groot = a.klasse === 'kl-a-prospects' || a.klasse === 'kl-b-prospects'
-    a.ritme = !!koudRitme && ((groot && (f === 'benaderd' || f === 'in-gesprek')) || (!groot && (f === 'gekwalificeerd' || f === 'benaderd') && r() < 0.5))
+    a.ritme = !!koudRitme && ((groot && (f === 'benaderd' || f === 'in-gesprek')) || (!groot && f === 'gekwalificeerd' && r() < 0.5) || (!groot && f === 'benaderd' && ++benaderdTeller % 3 === 0))
     if (PAD.indexOf(f) >= 1 || f === 'geparkeerd' || f === 'verloren') a.leverancier = r() < 0.8 ? kies(r, ['cc-01', 'cc-01', 'cc-02', 'cc-03', 'cc-04', 'cc-05']) : null
     if (r() < 0.45) a.aanleiding = { tekst: kies(r, AANLEIDINGEN[a.branche]!), dagen: tussen(r, 1, 45), heet: r() < 0.25, bron: kies(r, ['web', 'web', 'notitie', 'linkedin']) }
   }
@@ -361,7 +362,10 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
       const eind = volgendeNa('afspraak-gehouden')
       if (!nee && op['afspraak-gehouden'] + 1 <= -1 && (!eind || op['afspraak-gehouden'] + 1 < eind)) voeg({ acc: a.id, dag: op['afspraak-gehouden'] + 1, soort: 'mail', uitkomst: 'verzonden', contact: 0, onderwerp: T_VERSLAGMAIL[0], tekst: vul(T_VERSLAGMAIL[1], woorden(a)), herkomst: 'afspraak' })
       // Een vervolgafspraak (demo of inventarisatie) in de komende weken voor een deel van de gehouden afspraken.
-      if (f === 'afspraak-gehouden' && r() < 0.7) wensen.push({ id: nieuwAp(), acc: a.id, dag: tussen(r, 2, 18), wens: wensMin(), slug: r() < 0.5 ? 'demo-op-locatie' : 'demo', vorm: 'online', duur: 45, status: 'gepland', contact: a.contacten.length > 1 ? 1 : 0, data: { aanleiding: 'Vervolg op de kennismaking: het leverplan laten zien' } })
+      if (f === 'afspraak-gehouden' && r() < 0.7) {
+        const opLocatie = r() < 0.5
+        wensen.push({ id: nieuwAp(), acc: a.id, dag: tussen(r, 2, 18), wens: wensMin(), slug: opLocatie ? 'demo-op-locatie' : 'demo', vorm: opLocatie ? 'bezoek' : 'online', duur: opLocatie ? 60 : 45, status: 'gepland', contact: a.contacten.length > 1 ? 1 : 0, data: { aanleiding: 'Vervolg op de kennismaking: het leverplan laten zien' } })
+      }
     }
     if (op.overgedragen !== undefined) voeg({ acc: a.id, dag: op.overgedragen, soort: 'notitie', uitkomst: null, contact: null, tekst: 'Overgedragen aan Bram Middelkamp (buitendienst) met het leverplan per bouwfase als vervolgstap.' })
     if (f === 'geparkeerd') voeg({ acc: a.id, dag: a.sinds, soort: 'notitie', uitkomst: null, contact: null, tekst: `Geparkeerd na ${n} pogingen zonder vervolg. Terugkomen met een nieuwe aanleiding.` })
@@ -403,12 +407,30 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
   const bezet = new Map<string, [number, number][]>()
   const voegBezet = (dag: string, s: number, e: number) => { const l = bezet.get(dag) ?? []; l.push([s, e]); bezet.set(dag, l) }
   const minVan = (iso: string) => { const m = nlMoment(new Date(iso)); return m.uur * 60 + m.minuut }
-  for (const x of (await client.query(`select start_at as s, end_at as e from appointments where owner_id = $1 and status <> 'geannuleerd' and start_at >= $2 and start_at < $3
-    union all select start_op, eind_op from belblok_sessies where gebruiker_id = $1 and status <> 'geannuleerd' and start_op >= $2 and start_op < $3`, [EVA, om(wd(-45), 0), om(wd(25), 23)])).rows) {
+  const sessieStarts = new Set<string>()
+  for (const x of (await client.query(`select start_at as s, end_at as e, false as sessie from appointments where owner_id = $1 and status <> 'geannuleerd' and start_at >= $2 and start_at < $3
+    union all select start_op, eind_op, true from belblok_sessies where gebruiker_id = $1 and status <> 'geannuleerd' and start_op >= $2 and start_op < $3`, [EVA, om(wd(-45), 0), om(wd(25), 23)])).rows) {
     const s = new Date(x.s).toISOString()
-    voegBezet(nlMoment(new Date(s)).datum, minVan(s), minVan(new Date(x.e).toISOString()))
+    const dag = nlMoment(new Date(s)).datum
+    voegBezet(dag, minVan(s), minVan(new Date(x.e).toISOString()))
+    if (x.sessie) sessieStarts.add(`${dag}|${minVan(s)}`)
   }
   const overlapt = (dag: string, s: number, e: number) => (bezet.get(dag) ?? []).some(([a, b]) => s < b && e > a)
+  // Vaste belblokken tot vier weken vooruit (alleen waar nog geen sessie op dat moment staat), vóór de afspraken hun plek krijgen.
+  const geplandeSessies: Record<string, unknown>[] = []
+  for (let n = 0; n <= 20; n++) {
+    const dag = wd(n)
+    const w = weekdag(dag)
+    const blokken = w === 5 ? [BLOK.vrijdag] : [BLOK.ochtend, ...([1, 3, 4].includes(w) ? [BLOK.middag] : [])]
+    for (const b of blokken) {
+      const s = b.uur * 60 + b.minuut
+      if (sessieStarts.has(`${dag}|${s}`) || overlapt(dag, s, s + b.minuten)) continue
+      voegBezet(dag, s, s + b.minuten)
+      const start = nlTijdstip(dag, b.uur, b.minuut)
+      geplandeSessies.push({ id: `eva-bb-g${dag.replaceAll('-', '')}${b.code}`, organisation_id: orgId, gebruiker_id: EVA, vast_blok_id: b.vast, start_op: start.toISOString(), eind_op: new Date(start.getTime() + b.minuten * 60_000).toISOString(), status: 'gepland',
+        data: { plek: b.plek, soort: b.soort, ...(b.soort === 'gemengd' ? { verhouding: 70 } : {}), scriptId: null, gesprekken: [], herkomst: 'seed' } })
+    }
+  }
   const sessieGroepen = new Map<string, Ev[]>()
   for (const e of evs) if (e.soort === 'gebeld' && e.slot && e.slot !== 'los') { const k = `${wd(e.dag)}|${e.slot}`; sessieGroepen.set(k, [...(sessieGroepen.get(k) ?? []), e]) }
   interface Sessie { id: string; dag: string; start: number; minuten: number; vast: string; soort: string; plek: string; gesprekken: Ev[] }
@@ -559,7 +581,6 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
   const verslagRijen: Record<string, unknown>[] = []
   let tk = 0
   let ax = 0
-  const actVanAfspraak = new Map<string, string>()
   const gesprekVanEv = new Map<Ev, Gesprek & { op: string }>()
   for (const e of [...evs].sort((x, y) => x.dag - y.dag || (x.min ?? 0) - (y.min ?? 0) || x.acc.localeCompare(y.acc))) {
     const a = accVan.get(e.acc)!
@@ -577,8 +598,8 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
         data: { herkomst: { bron: herkomst, actiesoort: actie[0], uitvoerder: EVA }, ...(e.poging && actie[0] === 'bellen' ? { poging: { n: e.poging, van: 5, kanaal: 'bellen' } } : {}), ...(s ? { belblokId: s.id } : {}), afronding: { uitkomst: e.uitkomst, op: opIso }, ...(e.onderwerp ? { concept: { onderwerp: e.onderwerp, tekst: e.tekst } } : {}) } })
       if (s) gesprekVanEv.set(e, { taskId, accountId: a.id, contactRol: BEANTWOORD.has(e.uitkomst ?? '') ? a.contacten[e.contact ?? 0]!.rol : null, knop: KNOP[e.uitkomst ?? ''] ?? 'geen_gehoor', duurSec: BEANTWOORD.has(e.uitkomst ?? '') ? tussen(r, 180, 520) : tussen(r, 25, 110), geschatMin: 8, op: opIso })
     }
-    const [, soort, kanaal] = actie ?? [null, e.soort, e.soort === 'afspraak' ? accRijen.length && afspraken.find((w) => w.id === e.afspraak)?.vorm : e.soort === 'reactie' ? 'mail' : null]
-    if (e.afspraak) actVanAfspraak.set(e.afspraak, actId)
+    const soort = actie ? actie[1] : e.soort
+    const kanaal = actie ? actie[2] : e.soort === 'afspraak' ? afspraken.find((w) => w.id === e.afspraak)?.vorm ?? null : e.soort === 'reactie' ? 'mail' : null
     actRijen.push({ id: actId, organisation_id: orgId, account_id: a.id, contact_id: contactId, task_id: taskId, uitvoerder: 'mens', kanaal, soort, uitkomst: e.uitkomst, door: EVA, op: opIso,
       data: { seed: 'eva', ...(e.tekst ? { tekst: e.tekst } : {}), ...(e.onderwerp ? { onderwerp: e.onderwerp } : {}), ...(e.afspraak ? { afspraakId: e.afspraak, soort: afspraken.find((w) => w.id === e.afspraak)?.slug } : {}) } })
     if (e.verslag && e.soort === 'gebeld') {
@@ -651,20 +672,7 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
   const nAfspraken = await zet(client, 'appointments', apRijen)
   await zet(client, 'transcripten', transcriptRijen)
 
-  // ── 8. Vaste belblokken tot vier weken vooruit en de sessies per dag ──
-  const geplandeSessies: Record<string, unknown>[] = []
-  for (let n = 0; n <= 20; n++) {
-    const dag = wd(n)
-    const w = weekdag(dag)
-    const blokken = w === 5 ? [BLOK.vrijdag] : [BLOK.ochtend, ...([1, 3, 4].includes(w) ? [BLOK.middag] : [])]
-    for (const b of blokken) {
-      const s = b.uur * 60 + b.minuut
-      if (overlapt(dag, s, s + b.minuten) && (bezet.get(dag) ?? []).some(([x]) => x === s)) continue
-      const start = nlTijdstip(dag, b.uur, b.minuut)
-      geplandeSessies.push({ id: `eva-bb-g${dag.replaceAll('-', '')}${b.code}`, organisation_id: orgId, gebruiker_id: EVA, vast_blok_id: b.vast, start_op: start.toISOString(), eind_op: new Date(start.getTime() + b.minuten * 60_000).toISOString(), status: 'gepland',
-        data: { plek: b.plek, soort: b.soort, ...(b.soort === 'gemengd' ? { verhouding: 70 } : {}), scriptId: null, gesprekken: [], herkomst: 'seed' } })
-    }
-  }
+  // ── 8. De geplande vaste belblokken en de sessie per dag en blok ──
   await zet(client, 'belblok_sessies', geplandeSessies)
   const sessieOp = new Map<string, string>()
   for (const x of (await client.query(`select id, start_op, vast_blok_id from belblok_sessies where gebruiker_id = $1 and status = 'gepland' and vast_blok_id is not null and start_op >= $2 and start_op < $3 order by id`, [EVA, om(vandaag, 0), om(wd(21), 0)])).rows) {
@@ -1038,7 +1046,7 @@ export async function seedEvaUitgebreid(client: pg.Client, orgId: string, nu = n
       const gegevens = prospectGegevens({ aanleiding: a.aanleiding ? { tekst: a.aanleiding.tekst, bron: a.aanleiding.bron, op: uurGeleden(a.aanleiding.dagen * 24) } : null, branche: { naam: BRANCHE_NAAM[a.branche]!, kernzin: 'Levering per bouwfase, zodat je monteurs niet wachten.' }, leverancier: a.leverancier ? { naam: LEVERANCIER[a.leverancier]! } : null,
         winpunt: { titel: 'Gratis projectschouw binnen 48 uur', argument: 'Binnen 48 uur een leverplan per bouwfase' }, contact: { naam: `${c.voor} ${c.achter}`, functie: c.functie, rol: c.rol }, agendaGekoppeld: false })
       const w = { bedrijf: a.naam, focus: FOCUS[a.branche]!, plaats: a.plaats, aanleiding: (a.aanleiding?.tekst ?? 'groeien in het aantal projecten').toLowerCase() }
-      const ai = Object.fromEntries(aiBlokkenVan(script).map((b) => [b.id, { tekst: vul(VOOR[b.soort] ?? VOOR.vrij!, w).replace('{contact', '{contact') }]))
+      const ai = Object.fromEntries(aiBlokkenVan(script).map((b) => [b.id, { tekst: vul(VOOR[b.soort] ?? VOOR.vrij!, w) }]))
       const concept = prospectConcept(script, gegevens, ai)
       const aantalVersies = i % 4 === 0 ? 2 : 1
       for (let v = 1; v <= aantalVersies; v++) {
