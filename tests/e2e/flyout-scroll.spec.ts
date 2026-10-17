@@ -36,6 +36,7 @@ test.describe('flyout en paginascroll', () => {
     await expect.poll(() => scrollbaar(page)).toBe(true)
     expect(await inhoudBreedte(page)).toBe(breedte)
 
+    await page.getByTestId('kop-meer').click()
     await page.getByTestId('knop-volgen').click()
     await expect(page.getByTestId('volgen-flyout')).toBeVisible({ timeout: 20_000 })
     await expect.poll(() => scrollbaar(page)).toBe(false)

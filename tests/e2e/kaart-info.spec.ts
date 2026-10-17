@@ -78,7 +78,6 @@ test.describe('kaart info', () => {
 
     // In het venster Contacten van het account: kicker, uitleg, foto en de link naar de contactkaart.
     await ga(page, '/accounts/pr-06')
-    await page.getByTestId('kop-meer').click()
     await page.getByTestId('contacten-knop').click()
     const fly = page.getByTestId('contacten-flyout')
     await expect(fly.getByTestId('cf-kicker')).toHaveText(/Contactpersonen · \d+/)

@@ -46,8 +46,8 @@ test.describe('accountkaart', () => {
     await expect(page.getByTestId('leverancier')).toHaveCount(0)
     await expect(page.getByText('Waarom nu:')).toHaveCount(0)
     await page.getByTestId('contacten-knop').click()
-    await expect(page.locator('[role=dialog]').filter({ hasText: 'Contactpersonen' })).toBeVisible()
-    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('contacten-flyout')).toBeVisible()
+    await page.getByTestId('contacten-flyout').locator('.fo-sluit').click()
     // In de tijdlijn alleen + Taak geel, + Mail met rand.
     await expect(page.getByTestId('tl-taak')).toHaveClass(/dd-actie--primair/)
     if (await page.getByTestId('tl-mail').count()) await expect(page.getByTestId('tl-mail')).toHaveClass(/dd-actie--secundair/)

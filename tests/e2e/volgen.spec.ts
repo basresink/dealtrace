@@ -21,6 +21,7 @@ async function fixture(request: APIRequestContext) {
 
 async function openVolgen(page: Page, pad: string) {
   await ga(page, pad)
+  await page.getByTestId('kop-meer').click()
   await page.getByTestId('knop-volgen').click()
   const f = page.getByTestId('volgen-flyout')
   await expect(f.getByTestId('vs-titel')).toBeVisible({ timeout: 60_000 })
@@ -33,9 +34,10 @@ test.describe('volgen', () => {
   test('volgende beste stap: weging, Bewaker, herkomst, alternatieven en Niet nu', async ({ page, request }) => {
     const { id } = await fixture(request)
     await login(page, 'u-01')
-    // De knop staat vóór Invloed in de kop.
+    // Het kader Volgen staat onder Meer, vóór Invloed.
     await ga(page, `/accounts/${id}`)
-    const knoppen = await page.locator('.ak-acties [data-test]').evaluateAll((els) => els.map((e) => e.getAttribute('data-test')))
+    await page.getByTestId('kop-meer').click()
+    const knoppen = await page.locator('[data-test=meer-flyout] .mf-kader').evaluateAll((els) => els.map((e) => e.getAttribute('data-test')))
     const iv = knoppen.indexOf('knop-invloed')
     if (iv >= 0) expect(knoppen.indexOf('knop-volgen')).toBeLessThan(iv)
     const f = await openVolgen(page, `/accounts/${id}`)

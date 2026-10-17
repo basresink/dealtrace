@@ -39,8 +39,7 @@ test.describe('prospects', () => {
 
   test('snel contactpersoon als beslisser vult het buying committee', async ({ page }) => {
     await login(page, 'u-03')
-    await ga(page, '/accounts/pr-03?tab=kwalificatie')
-    await page.getByTestId('kop-meer').click()
+    await ga(page, '/accounts/pr-03')
     await page.getByTestId('contacten-knop').click()
     await page.getByTestId('snel-contact').click()
     const naam = `Testbeslisser${Date.now() % 100000}`
@@ -52,7 +51,10 @@ test.describe('prospects', () => {
     await page.waitForTimeout(200)
     if (await page.locator('.fo-overlay').count()) await page.keyboard.press('Escape')
     await expect(page.locator('.fo-overlay')).toHaveCount(0)
-    await expect(page.locator('[data-rol="champion"]')).toContainText(naam)
+    // Het buying committee staat in het venster Kwalificatie onder Meer.
+    await page.getByTestId('kop-meer').click()
+    await page.getByTestId('meer-kwalificatie').click()
+    await expect(page.getByTestId('kwalificatie-flyout').locator('[data-rol="champion"]')).toContainText(naam)
   })
 
   test('een klant staat in /klanten en niet in de prospectlijst; geen promoveren', async ({ request }) => {

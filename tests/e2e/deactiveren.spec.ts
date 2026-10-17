@@ -20,7 +20,7 @@ test.describe('prospect deactiveren', () => {
     await ga(page, `/accounts/${a.id}`)
     await expect(page.getByTestId('gedeactiveerd-balk')).toHaveCount(0)
     await page.getByTestId('kop-meer').click()
-    await page.getByTestId('kop-meer-menu').getByTestId('info-knop').click()
+    await page.getByTestId('meer-flyout').getByTestId('info-knop').click()
     await expect(page.getByTestId('if-deactiveer')).toBeVisible()
     await expect(page.getByTestId('verwijder')).toHaveCount(0)
     await expect(page.getByText('Verwijder account')).toHaveCount(0)
@@ -30,7 +30,7 @@ test.describe('prospect deactiveren', () => {
 
     // Deactiveren via Meer: zonder reden kan het niet, bij Overig is een toelichting verplicht.
     await page.getByTestId('kop-meer').click()
-    await page.getByTestId('kop-meer-menu').getByTestId('deactiveer-knop').click()
+    await page.getByTestId('meer-flyout').getByTestId('deactiveer-knop').click()
     const venster = page.getByTestId('deactiveer-venster')
     await expect(venster).toBeVisible()
     await expect(page.getByTestId('deactiveer-bevestig')).toBeDisabled()
@@ -57,7 +57,7 @@ test.describe('prospect deactiveren', () => {
     expect(t?.status).toBe('geannuleerd')
     // Meer biedt geen Deactiveren meer zolang hij gedeactiveerd is.
     await page.getByTestId('kop-meer').click()
-    await expect(page.getByTestId('kop-meer-menu').getByTestId('deactiveer-knop')).toHaveCount(0)
+    await expect(page.getByTestId('meer-flyout').getByTestId('deactiveer-knop')).toHaveCount(0)
     await page.keyboard.press('Escape')
 
     // Alle prospects: standaard weg, terug met het filter Status.
