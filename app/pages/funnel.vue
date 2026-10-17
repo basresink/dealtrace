@@ -9,7 +9,6 @@ import { EIGEN_PERIODE_LABEL } from '~~/shared/dashboard'
 
 const { functie } = useMe()
 const aan = !!functie('funnel.eigen')?.beschikbaar
-const { toon: toonUitleg } = useNietAangezet()
 const route = useRoute()
 const router = useRouter()
 const query = computed(() => Object.fromEntries(Object.entries(route.query).filter(([, v]) => typeof v === 'string' && v)))
@@ -86,9 +85,6 @@ useHead({ title: 'Funnel · Dealtrace' })
           <label class="fr-keuze"><span class="filter-label">Reis</span><select class="invoer" :value="route.query.reis ?? ''" @change="zet('reis', ($event.target as HTMLSelectElement).value)"><option value="">Alle</option><option v-for="r in reizen.reizen" :key="r.id" :value="r.id">{{ r.naam }}</option></select></label>
           <label class="fr-keuze"><span class="filter-label">Campagne</span><select class="invoer" :value="route.query.campagne ?? ''" data-test="filter-campagne" @change="zet('campagne', ($event.target as HTMLSelectElement).value)"><option value="">Alle</option><option v-for="c in campagnes.campagnes" :key="c.id" :value="c.id">{{ c.naam }}</option></select></label>
           <label v-if="data.kan?.vergelijken" class="fr-keuze alleen-groot"><span class="filter-label">Vergelijk met reis</span><select class="invoer" :value="route.query.reis2 ?? ''" @change="zet('reis2', ($event.target as HTMLSelectElement).value)"><option value="">Geen</option><option v-for="r in reizen.reizen" :key="r.id" :value="r.id">{{ r.naam }}</option></select></label>
-        </div>
-        <div v-else class="filter-groep">
-          <button type="button" class="dd-act knop-slot" data-test="filters-slot" @click="toonUitleg('funnel.filters')"><Icoon naam="Lock" :grootte="14" /> Doelgroep, reis en campagne</button>
         </div>
       </RapportPeriode>
 

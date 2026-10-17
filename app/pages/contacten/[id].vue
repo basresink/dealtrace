@@ -115,7 +115,7 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
     <!-- Kop -->
     <header class="ck-kop">
       <div class="container">
-        <NuxtLink to="/contacten/alle" class="ck-kruimel" data-test="kruimel"><Icoon naam="ArrowLeft" :grootte="12" /> Alle contacten</NuxtLink>
+        <FunctieLink als-tekst to="/contacten/alle" class="ck-kruimel" data-test="kruimel"><Icoon naam="ArrowLeft" :grootte="12" /> Alle contacten</FunctieLink>
         <div class="ck-kop-binnen">
           <div class="ck-avatar" :class="{ 'ck-avatar--foto': c.fotoUrl && !fotoMislukt }" :style="{ background: kleur }" data-test="contact-avatar">
             <img v-if="c.fotoUrl && !fotoMislukt" :src="c.fotoUrl" :alt="`Foto van ${c.naam}`" class="ck-foto" data-test="contact-foto" @error="fotoMislukt = true">

@@ -82,7 +82,7 @@ function sluit() { open.value = false }
           <div v-for="b in berichten" :key="b.id" class="ai-bericht" :class="`ai-bericht--${b.rol}`" :data-test="`ai-${b.rol}`">
             <p class="ai-tekst">{{ b.tekst }}</p>
             <div v-if="b.bronnen?.length" class="ai-bronnen">
-              <template v-for="(x, i) in b.bronnen" :key="i"><NuxtLink v-if="bronLink(x)" :to="bronLink(x)!" class="chip ai-bron" data-test="ai-bron">{{ x.label }}</NuxtLink><span v-else class="chip ai-bron" data-test="ai-bron">{{ x.label }}</span></template>
+              <template v-for="(x, i) in b.bronnen" :key="i"><FunctieLink v-if="bronLink(x)" :to="bronLink(x)!" class="chip ai-bron" data-test="ai-bron">{{ x.label }}</FunctieLink><span v-else class="chip ai-bron" data-test="ai-bron">{{ x.label }}</span></template>
             </div>
             <div v-if="b.acties?.length" class="ai-acties">
               <button v-for="(a, i) in b.acties" :key="i" type="button" class="dd-act" :data-test="`ai-actie-${a.soort}`" @click="actie(a)">{{ a.label }}</button>

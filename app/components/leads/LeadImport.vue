@@ -148,7 +148,7 @@ const datum = (t: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', 
       <h2 class="kaart-titel">Import klaar</h2>
       <p class="kaart-meta">{{ klaar.nieuw }} nieuw · {{ klaar.samengevoegd }} samengevoegd · {{ klaar.overgeslagen }} overgeslagen · {{ klaar.contacten }} contactpersonen<template v-if="klaar.verhuisd"> · {{ klaar.verhuisd }} verhuisd</template><template v-if="klaar.kvkVerrijkt != null"> · {{ klaar.kvkVerrijkt }} verrijkt via KvK</template><template v-if="klaar.dcContacten != null"> · {{ klaar.dcContacten }} contactpersonen uit Datacollectief</template></p>
     <p v-if="klaar.kvkMelding" class="veld-uitleg">{{ klaar.kvkMelding }}</p>
-      <div class="dd-acties mt-16"><NuxtLink class="dd-act dd-act--primair" to="/prospects/alle">Naar je prospects</NuxtLink><button type="button" class="dd-act" @click="opnieuw">Nog een bestand</button></div>
+      <div class="dd-acties mt-16"><FunctieLink class="dd-act dd-act--primair" to="/prospects/alle">Naar je prospects</FunctieLink><button type="button" class="dd-act" @click="opnieuw">Nog een bestand</button></div>
     </div>
     <div class="mt-32">
       <span class="kicker kicker--streep">Importbatches</span>

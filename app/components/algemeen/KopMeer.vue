@@ -6,7 +6,9 @@ export interface KopMeerItem { label: string; icoon?: string; to?: string; href?
 const props = withDefaults(defineProps<{ items: KopMeerItem[]; label?: string; test?: string }>(), { label: 'Meer', test: 'kop-meer' })
 const open = ref(false)
 const houder = ref<HTMLElement | null>(null)
-const zichtbaar = computed(() => props.items.filter(Boolean))
+// Een item naar een scherm dat uit staat, staat er niet.
+const { magNaar } = useFunctie()
+const zichtbaar = computed(() => props.items.filter((i) => !!i && (!i.to || magNaar(i.to))))
 const lijst = ref<HTMLElement | null>(null)
 const links = ref(false)
 // Rechts uitgelijnd onder de knop; past dat niet (de knop staat links, zoals op de telefoon), dan links.

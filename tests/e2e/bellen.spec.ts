@@ -64,12 +64,11 @@ test.describe('Belblokken en belmodus', () => {
     expect((await request.post(`/api/belblokken/${p.sessieId}/gesprek`, { data: { taskId: vrij[0].taskId ?? 'x', knop: 'geen_interesse' } })).status()).toBe(vrij[0].taskId ? 422 : 404)
   })
 
-  test('Beginner: Top 5 en Zelf kiezen, Top 10 met slot en uitleg, geen eigen blokken, handsfree op slot', async ({ page }) => {
+  test('Beginner: Top 5 en Zelf kiezen, geen Top 10 (uit), geen eigen blokken', async ({ page }) => {
     await login(page, 'u-02')
     await ga(page, '/belblokken')
-    await page.getByTestId('top-10').click()
-    await expect(page.getByTestId('niet-aangezet-flyout')).toContainText('Gevorderd')
-    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('top-10')).toHaveCount(0)
+    await expect(page.getByTestId('zelf-kiezen').first()).toBeVisible()
     await expect(page.getByTestId('nieuw-vast-blok')).toHaveCount(0)
     expect((await page.request.put('/api/mij/belblokken', { data: { blokken: [] } })).status()).toBe(403)
   })

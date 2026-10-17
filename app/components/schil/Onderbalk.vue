@@ -4,8 +4,9 @@
 import { tabsVoor, tabVoorRoute } from '~~/shared/onderbalk'
 const route = useRoute()
 const { me } = useMe()
+const { magNaar } = useFunctie()
 const meer = useState<boolean>('meerOpen', () => false)
-const tabs = computed(() => tabsVoor(me.value?.gebruiker.werkplek, me.value?.gebruiker.rol ?? 'accountmanager', me.value?.gebruiker.eigenPortefeuille !== false))
+const tabs = computed(() => tabsVoor(me.value?.gebruiker.werkplek, me.value?.gebruiker.rol ?? 'accountmanager', me.value?.gebruiker.eigenPortefeuille !== false, magNaar))
 const actief = computed(() => (meer.value ? tabs.value.length - 1 : tabVoorRoute(route.path, tabs.value)))
 watch(() => route.fullPath, () => { meer.value = false })
 </script>

@@ -127,7 +127,7 @@ useHead({ title: computed(() => `${r.value?.naam ?? 'Reis'} · Prospectreizen ·
               <button v-if="r.kan.voorstel" type="button" class="dd-actie dd-actie--secundair" data-test="stel-voor" @click="stelVoor"><Icoon naam="Sparkles" class="dd-actie-icoon" />Stel fases voor</button>
             </template>
             <template v-else>
-              <NuxtLink v-if="r.conceptId" class="dd-actie dd-actie--secundair" :to="`/reizen/${r.conceptId}`">Open concept</NuxtLink>
+              <FunctieLink v-if="r.conceptId" class="dd-actie dd-actie--secundair" :to="`/reizen/${r.conceptId}`">Open concept</FunctieLink>
               <button v-else-if="r.kan.concept" type="button" class="dd-actie dd-actie--primair" data-test="maak-concept" @click="maakConcept">Maak concept</button>
               <template v-if="r.kan.beheer">
                 <button v-if="r.versies.length > 1" type="button" class="dd-actie dd-actie--secundair" data-test="terugdraaien" @click="terugdraaien">Draai terug</button>
@@ -160,7 +160,7 @@ useHead({ title: computed(() => `${r.value?.naam ?? 'Reis'} · Prospectreizen ·
               <select v-model="c.doelgroepId" class="invoer" :disabled="!bewerken" data-test="reis-doelgroep"><option :value="null">Geen (de standaard)</option><option v-for="d in r.doelgroepen" :key="d.id" :value="d.id">{{ d.naam }} · prioriteit {{ d.prioriteit }}</option></select></label>
             <p v-if="telling" class="kaart kaart--vlak mt-8" data-test="doelgroep-telling">{{ telling.aantal }} accounts vallen in deze doelgroep, waarvan {{ telling.inAndereReis }} al in een andere reis.</p>
             <p v-if="doelgroep?.data?.ambitieToets" class="meta mt-8">Past bij onze ambitie: {{ doelgroep.data.ambitieToets }}</p>
-            <p class="meta mt-8">Een doelgroep maak of wijzig je bij <NuxtLink to="/reizen">Prospectreizen</NuxtLink>, met branches, klassen, gebieden, bron en de ambitievraag.</p>
+            <p class="meta mt-8">Een doelgroep maak of wijzig je bij <FunctieLink als-tekst to="/reizen">Prospectreizen</FunctieLink>, met branches, klassen, gebieden, bron en de ambitievraag.</p>
           </div>
 
           <div v-else-if="tab === 'fases'" class="mt-16" data-test="fases">

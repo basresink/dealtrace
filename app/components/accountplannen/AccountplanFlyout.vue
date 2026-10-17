@@ -196,7 +196,7 @@ const conceptVoorAi = computed(() => ({ ...concept.secties, geldigTot: concept.g
             <button v-if="plan.kan.verwijderen" type="button" class="dd-actie dd-actie--gevaar" data-test="apf-verwijder" @click="vraagVerwijder = true">Verwijderen</button>
             <span class="fo-foot-vul" />
             <button v-if="kan" type="button" class="dd-actie dd-actie--secundair" data-test="apf-wijzig" @click="startBewerken">Wijzigen</button>
-            <NuxtLink :to="`/accountplannen/${plan.id}`" class="dd-actie dd-actie--secundair" data-test="apf-open">Open accountplan</NuxtLink>
+            <FunctieLink :to="`/accountplannen/${plan.id}`" class="dd-actie dd-actie--secundair" data-test="apf-open">Open accountplan</FunctieLink>
             <button type="button" class="dd-actie dd-actie--zwart" data-test="apf-sluiten" @click="emit('sluit')">Sluiten</button>
           </template>
         </footer>

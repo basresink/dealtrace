@@ -78,7 +78,7 @@ async function belblok() {
               </span>
             </div>
             <p class="rd-meta">Perioden van 30 dagen; normaal is het gemiddelde van de zes ervoor ({{ getal(d.normaal) }}).</p>
-            <NuxtLink v-if="!d.golf" to="/inzichten" class="rd-link" data-test="sr-naar-inzichten">De signalen staan per account bij Inzichten <Icoon naam="ArrowRight" :grootte="14" /></NuxtLink>
+            <FunctieLink v-if="!d.golf" to="/inzichten" class="rd-link" data-test="sr-naar-inzichten">De signalen staan per account bij Inzichten <Icoon naam="ArrowRight" :grootte="14" /></FunctieLink>
           </div>
 
           <template v-if="d.golf">
@@ -124,7 +124,7 @@ async function belblok() {
               </span>
               <span class="item-acties rd-rij-acties">
                 <span v-if="a.signalen > 1" class="pil pil--paars">{{ a.signalen }} SIGNALEN</span>
-                <NuxtLink v-if="a.signaal.mijnInzicht" :to="`/inzichten?inzicht=${a.signaal.id}`" class="rd-ibtn" :aria-label="`Open het inzicht van ${a.naam}`" title="Open het inzicht" :data-test="`sr-signaal-${a.signaal.id}`"><Icoon naam="Lightbulb" :grootte="16" /></NuxtLink>
+                <FunctieLink v-if="a.signaal.mijnInzicht" :to="`/inzichten?inzicht=${a.signaal.id}`" class="rd-ibtn" :aria-label="`Open het inzicht van ${a.naam}`" title="Open het inzicht" :data-test="`sr-signaal-${a.signaal.id}`"><Icoon naam="Lightbulb" :grootte="16" /></FunctieLink>
                 <a v-else-if="a.signaal.url" :href="a.signaal.url" target="_blank" rel="noopener" class="rd-ibtn" :aria-label="`Open de bron van het signaal bij ${a.naam}`" title="Open de bron" :data-test="`sr-signaal-${a.signaal.id}`"><Icoon naam="ExternalLink" :grootte="16" /></a>
               </span>
             </li>

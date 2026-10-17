@@ -19,7 +19,6 @@ export interface BelRij {
 const props = defineProps<{ rijen: BelRij[]; kop: string; topOpties: number[] }>()
 const top = defineModel<number | 'zelf'>('top', { required: true })
 const zelf = defineModel<Set<string>>('zelf', { required: true })
-const { toon: toonUitleg } = useNietAangezet()
 
 const vandaag = nlMoment(new Date()).datum
 const datumKort = (iso: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date(iso))
@@ -32,7 +31,8 @@ function wanneer(k: BelRij): string | null {
 const inTop = (i: number) => top.value !== 'zelf' && i < top.value
 const gekozen = (k: BelRij, i: number) => (top.value === 'zelf' ? zelf.value.has(k.accountId) : inTop(i))
 function kies(id: string) { const n = new Set(zelf.value); n.has(id) ? n.delete(id) : n.add(id); zelf.value = n }
-function kiesTop(n: number) { props.topOpties.includes(n) ? (top.value = n) : toonUitleg('belblok.plannen') }
+// Alleen de lengtes die aanstaan, staan er (wens: geen knop naar een uitgezette functie).
+function kiesTop(n: number) { if (props.topOpties.includes(n)) top.value = n }
 /** Reden in de bellijst als label: urgent gevuld, een kans zacht oranje, de rest een rand. */
 const belLabel = (p: string) => (p === 'Urgent' ? { soort: 'prioriteit', waarde: 'urgent', tekst: p } : p === 'Kans' ? { soort: 'prioriteit', waarde: 'hoog', tekst: p } : { soort: 'actie', waarde: 'bellen', tekst: p })
 </script>
@@ -43,9 +43,9 @@ const belLabel = (p: string) => (p === 'Urgent' ? { soort: 'prioriteit', waarde:
       <h2 class="bl-titel" data-test="bellijst-kop">{{ kop }}</h2>
       <div class="bl-keuze" role="group" aria-label="Lengte bellijst">
         <button
-          v-for="n in [5, 10, 15]" :key="n" type="button" class="bl-keuzeknop keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': top === n, 'bl-keuzeknop--aan': top === n, 'bl-keuzeknop--slot': !topOpties.includes(n) }"
+          v-for="n in [5, 10, 15].filter((x) => topOpties.includes(x))" :key="n" type="button" class="bl-keuzeknop keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': top === n, 'bl-keuzeknop--aan': top === n }"
           :aria-pressed="top === n" :data-test="`top-${n}`" @click="kiesTop(n)"
-        ><Icoon v-if="!topOpties.includes(n)" naam="Lock" :grootte="12" /> Top {{ n }}</button>
+        >Top {{ n }}</button>
         <button type="button" class="bl-keuzeknop keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': top === 'zelf', 'bl-keuzeknop--aan': top === 'zelf' }" :aria-pressed="top === 'zelf'" data-test="zelf-kiezen" @click="top = 'zelf'">Zelf kiezen</button>
       </div>
     </div>

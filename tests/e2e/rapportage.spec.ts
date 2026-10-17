@@ -54,8 +54,10 @@ test.describe('Mijn dashboard', () => {
     await login(page, 'u-02')
     await ga(page, '/mijn-dashboard')
     await expect(page.getByTestId('tegel-pogingen')).toBeVisible()
-    await expect(page.getByTestId('dekking-slot')).toBeVisible()
-    await expect(page.getByTestId('trend-uit')).toBeVisible()
+    // Wat uit staat, staat er niet: geen slotknop en geen melding "Nog niet aangezet".
+    await expect(page.getByTestId('dekking-slot')).toHaveCount(0)
+    await expect(page.getByTestId('trend-uit')).toHaveCount(0)
+    await expect(page.getByText('Nog niet aangezet')).toHaveCount(0)
     await expect(page.getByTestId('mijn-trend')).toHaveCount(0)
     await expect(page.getByTestId('mijn-team')).toHaveCount(0)
     const api = await (await page.request.get('/api/resultaten/dashboard')).json()

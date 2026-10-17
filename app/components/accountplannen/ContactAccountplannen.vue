@@ -12,7 +12,7 @@ defineProps<{ plannen: any[]; roepnaam: string }>()
     <article v-for="p in plannen" :key="p.id" class="kaart cap-plan" :data-test="`contact-accountplan-${p.id}`">
       <header class="cap-kop">
         <span class="cap-kicker">{{ p.weergave === 'actueel' ? 'Lopend accountplan' : 'Accountplan' }}</span>
-        <NuxtLink :to="`/accountplannen/${p.id}`" class="cap-titel">{{ p.titel }}</NuxtLink>
+        <FunctieLink als-tekst :to="`/accountplannen/${p.id}`" class="cap-titel">{{ p.titel }}</FunctieLink>
         <span class="cap-meta tnum"><Label soort="plan" :waarde="p.weergave" :tekst="WEERGAVE_LABEL[p.weergave as 'actueel']" /> {{ geldigheidLabel(p) }}<template v-if="p.eigenaar"> · {{ p.eigenaar.naam.replace(/^Testgebruiker /, '') }}</template></span>
       </header>
       <p class="cap-rol">{{ p.alsContactpersoon ? `${roepnaam} is contactpersoon in dit plan.` : `${roepnaam} heeft een actie in het actieplan.` }} {{ p.voortgang.totaal ? `${p.voortgang.klaar} van ${p.voortgang.totaal} acties klaar.` : 'Nog geen acties.' }}</p>
@@ -22,7 +22,7 @@ defineProps<{ plannen: any[]; roepnaam: string }>()
           <span><span class="cap-actie-titel">{{ x.titel }}</span><span class="meta"> · {{ x.dueDate ? dagKort(String(x.dueDate).slice(0, 10)) : 'geen datum' }}</span></span>
         </li>
       </ul>
-      <NuxtLink :to="`/accountplannen/${p.id}`" class="dd-actie dd-actie--zwart cap-open" data-test="contact-accountplan-open">Open accountplan<Icoon naam="ArrowRight" class="dd-actie-icoon" /></NuxtLink>
+      <FunctieLink :to="`/accountplannen/${p.id}`" class="dd-actie dd-actie--zwart cap-open" data-test="contact-accountplan-open">Open accountplan<Icoon naam="ArrowRight" class="dd-actie-icoon" /></FunctieLink>
     </article>
   </div>
 </template>

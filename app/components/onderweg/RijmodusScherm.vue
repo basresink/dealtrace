@@ -20,8 +20,8 @@ function leesVoor() {
     <p class="kicker kicker--streep">Rijmodus</p>
     <p class="kaart-meta">Meldingen wachten tot je stopt.</p>
     <button type="button" class="dd-act dd-act--primair rijmodus-knop" data-test="rm-lees" @click="leesVoor"><Icoon naam="Volume2" />{{ spreekt ? 'Stop met voorlezen' : 'Lees voor' }}</button>
-    <button type="button" class="dd-act rijmodus-knop" data-test="rm-inspreken" @click="spraakOpen = true"><Icoon naam="Mic" />Inspreken</button>
-    <NuxtLink to="/bellen" class="dd-act rijmodus-knop" data-test="rm-bel" @click="zet(false)"><Icoon naam="Phone" />Bel volgende</NuxtLink>
+    <button v-if="$aan('spraak.opdracht')" type="button" class="dd-act rijmodus-knop" data-test="rm-inspreken" @click="spraakOpen = true"><Icoon naam="Mic" />Inspreken</button>
+    <FunctieLink to="/bellen" class="dd-act rijmodus-knop" data-test="rm-bel" @click="zet(false)"><Icoon naam="Phone" />Bel volgende</FunctieLink>
     <button type="button" class="dd-act rijmodus-knop mt-auto" data-test="rm-stop" @click="zet(false)">Stop rijmodus</button>
   </div>
 </template>

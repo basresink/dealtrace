@@ -88,7 +88,7 @@ const titelKicker = computed(() => (props.contactId ? `Volgen · ${props.contact
               <div class="vl-tags">
                 <span class="pil" :class="SOORT_PIL[d.stap.soort]" data-test="vs-soort">{{ STAP_SOORT_LABEL[d.stap.soort as keyof typeof STAP_SOORT_LABEL] }}</span>
                 <Label soort="score" :waarde="d.stap.score" :tekst="`${d.stap.score} punten`" data-test="vs-score" />
-                <NuxtLink v-if="d.stap.contactId && d.stap.contactId !== contactId" :to="`/contacten/${d.stap.contactId}`" class="tekst-link vl-contact" @click="sluit">{{ d.stap.contactNaam }}</NuxtLink>
+                <FunctieLink v-if="d.stap.contactId && d.stap.contactId !== contactId" :to="`/contacten/${d.stap.contactId}`" class="tekst-link vl-contact" @click="sluit">{{ d.stap.contactNaam }}</FunctieLink>
               </div>
               <ul class="vl-factoren" data-test="vs-factoren" aria-label="Weging">
                 <li v-for="(f, i) in d.stap.factoren" :key="i" class="vl-factor">

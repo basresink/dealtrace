@@ -16,7 +16,7 @@ beschikbaar = pakket bevat de functie  EN  rol mag de functie  EN  functie staat
 
 Staat hij uit, dan krijg je een reden terug: `pakket`, `rol` of `niveau`.
 
-- Reden **niveau**: de functie staat in de zijbalk onder "Nog niet aangezet" met een slotje. Een klik opent de uitleg (Wat het doet, Tot die tijd). Een directe link toont dezelfde uitleg.
+- Reden **niveau**: de functie is nergens te zien (geen menu-item, knop of link; zie "Uitgezette functies zie je niet"). Een directe link toont de pagina "Nog niet aangezet" met de uitleg (Wat het doet, Tot die tijd). Wat er nog komt, zie je bij Instellingen, Niveaus (Functies per niveau).
 - Reden **pakket** of **rol**: de functie is onzichtbaar; een directe link geeft "Geen toegang".
 - De API weigert met 403 en `data.reden`, zodat de server dezelfde regel volgt als het scherm.
 
@@ -819,3 +819,14 @@ Eén scherm `/instellingen/terugkomen` (kaart Terugkomen op de instellingenhub) 
 - **Migratie** `0075_platform_avg.sql`: de security-definer-functies `dealtrace_platform_avg(text)` en `dealtrace_platform_prompts(text)` (alleen `dealtrace_platform` mag ze aanroepen) en `delete` op `llm_connections` voor de platformrol. Zonder de migratie toont de flyout "De aantallen verschijnen zodra migratie 0075 is toegepast" in plaats van een fout (`server/utils/platformAvg.ts`, savepoint en code 42883).
 - **Rechten**: alle nieuwe routes staan onder `/api/platform/**` (middleware 404 en `requireFounder` per endpoint, `pnpm check:platform`).
 - **Tests**: `tests/unit/platformAvg.test.ts`, `tests/db/platformAvg.test.ts` (tellingen gelijk aan wat de klant ziet, laatste export, platformrol leest geen klantrecords en geen prompttekst, app-rol kan de functies niet aanroepen, koppeling weghalen), `tests/e2e/platform-beheer.spec.ts` (404 voor accountmanager en beheerder op elke nieuwe route, agentmaximum zetten en terugzien, Data en AVG, AI per klant, opzeggen met herbevestiging op 390 px).
+
+## Uitgezette functies zie je niet
+
+Wens van de opdrachtgever: staat een functie uit (niveau, pakket, rol, of de founder zette hem uit voor de organisatie), dan toont de app de functie niet, en ook geen knop of link ernaartoe.
+
+- **Eén register**: `shared/functieRoutes.ts` koppelt elk scherm aan zijn functie(s) (`ROUTE_FUNCTIES`: de zijbalkroutes uit de catalogus plus schermen met een eigen functie, zoals `/dagstart`, `/belblokken` en `/instellingen/gebieden`). `magNaarPad(pad, aan)` zegt of een link getoond mag worden; elke regel die bij het pad past moet een functie hebben die aanstaat. `pnpm check:functies` controleert dat het register alleen bestaande functies noemt.
+- **Client**: `useFunctie()` geeft `aan(sleutel)` voor een knop of blok en `magNaar(pad)` voor een link; in templates ook als `$aan()` en `$magNaar()` (plugin `app/plugins/functie.ts`). `<FunctieLink>` is een NuxtLink die verdwijnt als het scherm uit staat, of met `als-tekst` alleen de tekst toont (een naam in een rij). Geen losse niveau-checks.
+- **Waar**: zijbalk en Meer (geen groep "Nog niet aangezet" meer), onderbalk (`tabsVoor(..., mag)`), kopmenu's (`KopMeer`), Meer op de account- en contactkaart (`MeerFlyout` per kader een functie), de Instellingen-hub (kaarten van uitgezette functies weg), Vandaag, Taken, Agenda, Meetings, Bezoeken, de dagritmepagina's, dashboards en tegels, en helpartikelen ("Probeer het" alleen naar een scherm dat aanstaat). Slotknoppen met uitleg (Top 10, Bereid voor, Handsfree, Campagne maken) staan er niet meer.
+- **Server**: de zijbalk (`zijbalkVoor`) en de zoekbron Pagina's tonen alleen wat aanstaat, ook de functie van het scherm zelf. De dagritmemails tonen alleen blokken van functies die aanstaan (`kan` per blok). Elke API blijft weigeren met `vereisFunctie` (403 met `data.reden`).
+- **Directe URL**: de layout toont voor een scherm waarvan de functie voor je niveau of je organisatie uit staat de pagina "Nog niet aangezet" (`NietAangezetKop`; zonder niveau waarop hij aangaat: "Deze functie staat voor je organisatie nog niet aan").
+- **Tests**: `tests/unit/functieRoutes.test.ts` (register, per niveau, founder zet uit, menu en onderbalk) en `tests/e2e/functies-zichtbaar.spec.ts` (Beginner en Gevorderd op 1280 en 390 px; de founder zet Belscript uit en de ingangen verdwijnen).

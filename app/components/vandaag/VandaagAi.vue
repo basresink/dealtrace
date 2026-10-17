@@ -39,7 +39,7 @@ async function keurGoed(x: any) {
           <span class="kicker">Klaargezet door AI</span>
           <h2 id="va-klaar" class="va-titel">{{ klaargezet.totaal ? `${klaargezet.totaal} ${klaargezet.totaal === 1 ? 'voorstel wacht' : 'voorstellen wachten'} op jou` : 'Niets wacht op je goedkeuring' }}</h2>
         </div>
-        <NuxtLink to="/concepten" class="va-link">Alle concepten →</NuxtLink>
+        <FunctieLink to="/concepten" class="va-link">Alle concepten →</FunctieLink>
       </header>
       <p v-if="!zichtbaar.length" class="va-leeg">De Schrijver zet hier mails, belscripts en taakvoorstellen klaar zodra er een aanleiding is. Niets gaat zonder jou de deur uit.</p>
       <ul v-else class="va-lijst">
@@ -52,13 +52,13 @@ async function keurGoed(x: any) {
           <span class="va-knoppen">
             <button v-if="x.bron === 'taak'" type="button" class="dd-act" @click="emit('open', x.id)">Bekijk</button>
             <template v-else>
-              <NuxtLink :to="`/concepten${x.type && x.type !== 'taak' ? `?type=${x.type}` : ''}`" class="dd-act">Bekijk</NuxtLink>
+              <FunctieLink :to="`/concepten${x.type && x.type !== 'taak' ? `?type=${x.type}` : ''}`" class="dd-act">Bekijk</FunctieLink>
               <button type="button" class="dd-act dd-act--primair" :data-test="`goedkeuren-${x.id}`" @click="keurGoed(x)">Goedkeuren</button>
             </template>
           </span>
         </li>
       </ul>
-      <NuxtLink v-if="klaargezet.totaal > zichtbaar.length + weg.size" to="/concepten" class="va-meer">nog {{ klaargezet.totaal - zichtbaar.length - weg.size }} meer →</NuxtLink>
+      <FunctieLink v-if="klaargezet.totaal > zichtbaar.length + weg.size" to="/concepten" class="va-meer">nog {{ klaargezet.totaal - zichtbaar.length - weg.size }} meer →</FunctieLink>
     </section>
 
     <section v-if="belscript" class="va-blok" data-test="belscript" aria-labelledby="va-belscript">
@@ -78,7 +78,7 @@ async function keurGoed(x: any) {
       <p v-else class="va-leeg">Er staat nog geen belscript voor je klaar. In de Belscript Studio kies je een template als basis of vraag je je salesmanager er een te activeren.</p>
       <p v-if="belscript.script?.eigen" class="va-meta">Dit is je eigen variant.</p>
       <p v-else-if="belscript.aantalActief > 1" class="va-meta">Er {{ belscript.aantalActief - 1 === 1 ? 'staat nog 1 ander script' : `staan nog ${belscript.aantalActief - 1} andere scripts` }} voor je klaar.</p>
-      <NuxtLink :to="studio" class="dd-actie dd-actie--secundair va-studio" data-test="belscript-studio"><Icoon naam="Phone" class="dd-actie-icoon" />Open Belscript Studio</NuxtLink>
+      <FunctieLink :to="studio" class="dd-actie dd-actie--secundair va-studio" data-test="belscript-studio"><Icoon naam="Phone" class="dd-actie-icoon" />Open Belscript Studio</FunctieLink>
     </section>
   </div>
 </template>

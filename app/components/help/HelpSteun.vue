@@ -26,11 +26,11 @@ const { openen: openAi } = useAssistent()
           <p class="hs-kaart-tekst">Van het DealDrive-team: korte tips om sneller en slimmer te werken in Dealtrace.</p>
           <span class="hs-cta">Open de tips</span>
         </NuxtLink>
-        <NuxtLink v-if="props.zonder !== 'ingangen'" to="/kennisbank" class="hs-kaart" data-test="help-steun-kennisbank">
+        <FunctieLink v-if="props.zonder !== 'ingangen'" to="/kennisbank" class="hs-kaart" data-test="help-steun-kennisbank">
           <h3 class="hs-kaart-titel">Kennisbank</h3>
           <p class="hs-kaart-tekst">De documenten van je organisatie: cases, offertes, presentaties en productinfo, te doorzoeken en te bevragen met de AI.</p>
           <span class="hs-cta">Open de kennisbank</span>
-        </NuxtLink>
+        </FunctieLink>
         <button v-if="aiAan" type="button" class="hs-kaart" data-test="help-steun-ai" @click="openAi({ label: 'Helpcenter', route: '/helpcenter', accountId: null })">
           <h3 class="hs-kaart-titel">Vraag de AI-assistent</h3>
           <p class="hs-kaart-tekst">Hij zoekt in het helpcenter en noemt het artikel erbij.</p>
@@ -38,7 +38,7 @@ const { openen: openAi } = useAssistent()
         </button>
         <div class="hs-kaart hs-kaart--rustig">
           <h3 class="hs-kaart-titel">Contact met support</h3>
-          <p class="hs-kaart-tekst">Kom je er niet uit? Mail naar <a href="mailto:support@dealtrace.test" class="hs-mail">support@dealtrace.test</a> of dien een wens in op de <NuxtLink to="/roadmap" class="hs-mail">roadmap</NuxtLink>.</p>
+          <p class="hs-kaart-tekst">Kom je er niet uit? Mail naar <a href="mailto:support@dealtrace.test" class="hs-mail">support@dealtrace.test</a> of dien een wens in op de <FunctieLink to="/roadmap" class="hs-mail">roadmap</FunctieLink>.</p>
           <span class="hs-badge">Reactie binnen 1 werkdag</span>
         </div>
       </div>

@@ -4,13 +4,13 @@
 // ernaast als link. Alleen wat voor je aanstaat.
 import type { Vorm } from '~~/shared/dagritme'
 const props = defineProps<{ vorm: Vorm | null | undefined }>()
-const { functie } = useMe()
+const { magNaar } = useFunctie()
 const KAARTEN = [
   { vorm: 'dagstart', sleutel: 'dagritme.dagstart', route: '/dagstart', naam: 'Dagstart', icoon: 'Sunrise', kicker: 'Dagstart', titel: 'Je dag staat klaar.', tekst: 'Afspraken vast, bezoeken op route en belblokken op het uur waarop je doelgroep opneemt.', knop: 'Bekijk je dag' },
   { vorm: 'weekstart', sleutel: 'dagritme.weekstart', route: '/weekstart', naam: 'Weekstart', icoon: 'CalendarRange', kicker: 'Weekstart', titel: 'Je weekplan staat klaar.', tekst: 'Afspraken, belblokken, je voornemens van vrijdag en je tempo tegen je doel.', knop: 'Bekijk je week' },
   { vorm: 'weekafsluiting', sleutel: 'dagritme.weekreview', route: '/weekreview', naam: 'Weekreview', icoon: 'NotebookPen', kicker: 'Vrijdag', titel: 'Je weekreview staat klaar.', tekst: 'Wat bewoog, wat werkte, wat bleef liggen en drie voornemens. Vijf minuten.', knop: 'Begin' },
 ] as const
-const zichtbaar = computed(() => KAARTEN.filter((k) => functie(k.sleutel)?.beschikbaar))
+const zichtbaar = computed(() => KAARTEN.filter((k) => magNaar(k.route)))
 const hoofd = computed(() => zichtbaar.value.find((k) => k.vorm === (props.vorm ?? 'dagstart')) ?? zichtbaar.value[0] ?? null)
 const rest = computed(() => zichtbaar.value.filter((k) => k !== hoofd.value))
 </script>

@@ -67,7 +67,7 @@ useHead({ title: 'Kanalen en consent · Dealtrace' })
               <tbody><tr v-for="k in data.kanalen" :key="k.kanaal"><td data-label="Kanaal">{{ KANAAL_LABEL[k.kanaal as Kanaal] }}</td>
                 <td data-label="Afkoelperiode"><input v-model.number="afk[k.kanaal]" type="number" min="0" max="730" class="invoer kn-afk" disabled :aria-label="`Afkoelperiode ${KANAAL_LABEL[k.kanaal as Kanaal]} in dagen`" :data-test="`afk-${k.kanaal}`"> dagen</td>
                 <td data-label="Aan"><Schakelaar :aan="!uit.includes(k.kanaal)" :label="`${KANAAL_LABEL[k.kanaal as Kanaal]} aan`" @wissel="wissel(k.kanaal, $event)" /></td></tr></tbody></table>
-            <p class="kaart-meta mt-8" data-test="afkoeling-lezen">De afkoeling pas je aan op <NuxtLink to="/instellingen/terugkomen?tab=afkoeling" class="tekst-link">Instellingen, Terugkomen</NuxtLink>; daar zie je ook wat er verschuift.</p>
+            <p class="kaart-meta mt-8" data-test="afkoeling-lezen">De afkoeling pas je aan op <FunctieLink to="/instellingen/terugkomen?tab=afkoeling" class="tekst-link">Instellingen, Terugkomen</FunctieLink>; daar zie je ook wat er verschuift.</p>
             <div class="formulier-raster mt-16">
               <label class="veld"><span class="veld-label">Frequentieplafond: hooguit</span><input v-model.number="fp.maxBerichten" type="number" min="1" max="5" class="invoer"><span class="veld-uitleg">bericht per kanaal</span></label>
               <label class="veld"><span class="veld-label">per</span><input v-model.number="fp.werkdagen" type="number" min="1" max="10" class="invoer" data-test="fp-werkdagen"><span class="veld-uitleg">werkdagen, buiten het ritme</span></label>
@@ -83,7 +83,7 @@ useHead({ title: 'Kanalen en consent · Dealtrace' })
               <li class="schakel-rij"><span>Afmeldlink in elke eerste mail</span><span class="pil pil--groen">Aan</span></li>
               <li class="schakel-rij"><span>Onderdrukkingslijst (gehasht)</span><span class="meta tnum">{{ data.mail.onderdrukt }} {{ data.mail.onderdrukt === 1 ? 'adres' : 'adressen' }}</span></li>
             </ul>
-            <NuxtLink to="/instellingen/mail" class="dd-act mt-8">Mail koppelen</NuxtLink>
+            <FunctieLink to="/instellingen/mail" class="dd-act mt-8">Mail koppelen</FunctieLink>
           </article>
 
           <article v-if="waMag" class="kaart" data-test="kanalen-whatsapp">

@@ -36,7 +36,7 @@ async function zet(body: Record<string, unknown>, melding: string) {
     <template #kop>
           <span class="fo-kicker" data-test="ivp-kicker">{{ rolLabel(p.rol) }} · {{ zekerheidTekst }}</span>
           <h2 id="ivp-titel" class="fo-titel">{{ p.functie ?? p.naam }}</h2>
-          <p class="fo-meta"><NuxtLink v-if="!p.onbekend" :to="`/contacten/${p.id}`" class="fo-link" data-test="ivp-contact">{{ p.naam }}</NuxtLink><template v-else>Naam onbekend</template></p></template>
+          <p class="fo-meta"><FunctieLink v-if="!p.onbekend" :to="`/contacten/${p.id}`" class="fo-link" data-test="ivp-contact">{{ p.naam }}</FunctieLink><template v-else>Naam onbekend</template></p></template>
       <div class="fo-body">
         <article class="fo-blok">
           <dl class="ivp-defs">

@@ -12,7 +12,7 @@ const per = (r: string) => props.contacten.filter((c) => c.rol === r && c.status
     <div v-for="r in rollen" :key="r" class="committee-vak" :class="{ 'committee-vak--leeg': ontbrekend.includes(r) }" :data-rol="r">
       <span class="veld-label">{{ CONTACTROL_LABEL[r as ContactRol] }}</span>
       <template v-if="per(r).length">
-        <NuxtLink v-for="c in per(r)" :key="c.id" :to="`/contacten/${c.id}`" class="committee-naam">{{ c.naam }}</NuxtLink>
+        <FunctieLink als-tekst v-for="c in per(r)" :key="c.id" :to="`/contacten/${c.id}`" class="committee-naam">{{ c.naam }}</FunctieLink>
         <span v-for="c in per(r)" :key="`b${c.id}`" class="veld-uitleg">{{ c.bron ?? 'ingevoerd' }}<template v-if="c.zekerheid !== null && c.zekerheid < 60"> · vermoedelijk</template></span>
       </template>
       <template v-else>

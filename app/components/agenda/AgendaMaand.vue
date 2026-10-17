@@ -27,9 +27,9 @@ const cellen = computed(() => props.dagen.map((d) => {
           <button v-if="i.soort === 'afspraak'" type="button" class="am-item" :class="[`am-kleur--${i.kleur}`, { 'am-item--klaar': i.klaar }]" :title="`${tijd(i.start)} · ${i.titel}`" :data-test="`maand-afspraak-${i.id}`" @click="emit('afspraak', i.id)">
             <span class="am-tijd tnum">{{ tijd(i.start) }}</span><span class="am-titel">{{ i.titel }}</span>
           </button>
-          <NuxtLink v-else :to="`/belblokken/${i.id}`" class="am-item am-item--belblok" :class="{ 'am-item--afgerond': i.klaar }" :title="`${tijd(i.start)} · ${i.titel}`">
+          <FunctieLink als-tekst v-else :to="`/belblokken/${i.id}`" class="am-item am-item--belblok" :class="{ 'am-item--afgerond': i.klaar }" :title="`${tijd(i.start)} · ${i.titel}`">
             <span class="am-tijd tnum">{{ tijd(i.start) }}</span><span class="am-titel">{{ i.titel }}</span>
-          </NuxtLink>
+          </FunctieLink>
         </template>
         <button v-if="c.items.length > 3" type="button" class="am-meer tnum" @click="emit('dag', c.iso)">+{{ c.items.length - 3 }} meer</button>
         <span v-if="c.taken" class="am-taken">{{ c.taken }} {{ c.taken === 1 ? 'taak' : 'taken' }}</span>

@@ -16,17 +16,17 @@ const initialen = (n: string) => n.replace(/^Test(bedrijf|installatie)?\s*/i, ''
         <span class="kicker kicker--streep">Inzichten prospects · laatste 48 uur</span>
         <h2 class="title">Wat gebeurt bij je prospects vandaag?</h2>
       </div>
-      <NuxtLink to="/inzichten" class="ps-link">Inzichten prospects →</NuxtLink>
+      <FunctieLink to="/inzichten" class="ps-link">Inzichten prospects →</FunctieLink>
     </div>
     <p v-if="!lijst.length" class="ps-leeg">Nog geen prospect-signalen in de laatste 48 uur. De Waarnemer kijkt mee; plan intussen een belblok of start een campagne.</p>
     <div v-else class="ps-raster">
-      <NuxtLink v-for="s in lijst" :key="s.id" :to="`/inzichten?inzicht=${s.id}`" class="ps-kaart" :data-test="`prospect-signaal-${s.id}`">
+      <FunctieLink als-tekst v-for="s in lijst" :key="s.id" :to="`/inzichten?inzicht=${s.id}`" class="ps-kaart" :data-test="`prospect-signaal-${s.id}`">
         <span class="ps-vlak" :class="{ 'ps-vlak--extern': s.bron === 'extern' }"><span class="ps-mark">{{ initialen(s.account.naam) }}</span></span>
         <span class="ps-kicker"><span class="ps-groep" :class="{ 'ps-groep--extern': s.bron === 'extern' }">{{ s.bron === 'extern' ? 'Extern' : 'Intern' }}</span><span class="tnum">{{ s.bronNaam }} · {{ wanneer(s.op) }}</span></span>
         <span class="ps-titel">{{ s.titel }}</span>
         <span v-if="s.tekst" class="ps-tekst">{{ s.tekst }}</span>
         <span class="ps-meta"><span>{{ s.account.naam }}</span><span class="tnum">relevantie {{ s.relevantie }}</span></span>
-      </NuxtLink>
+      </FunctieLink>
     </div>
   </section>
 </template>

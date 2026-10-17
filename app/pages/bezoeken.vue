@@ -113,8 +113,8 @@ useHead({ title: 'Bezoeken · Dealtrace' })
   <div>
     <PaginaKop :kicker="kicker" :titel="titel" uitleg="Bezoeken op de kaart en op tijd gesorteerd. Het volgende bezoek pulseert rood; kansen langs je route neem je onderweg mee." helpartikel="bezoeken-en-kansen-langs-de-route">
       <template #acties>
-        <button type="button" class="dd-actie dd-actie--zwart" data-test="plus-bezoek" @click="nieuweAfspraak"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
-        <NuxtLink v-if="data?.kan.analyse" to="/bezoek-analyse" class="dd-actie dd-actie--secundair" data-test="bezoekanalyse-knop"><Icoon naam="ChartLine" class="dd-actie-icoon" />Analyse</NuxtLink>
+        <button v-if="$aan('agenda.basis')" type="button" class="dd-actie dd-actie--zwart" data-test="plus-bezoek" @click="nieuweAfspraak"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+        <FunctieLink v-if="data?.kan.analyse" to="/bezoek-analyse" class="dd-actie dd-actie--secundair" data-test="bezoekanalyse-knop"><Icoon naam="ChartLine" class="dd-actie-icoon" />Analyse</FunctieLink>
         <button v-if="heeftFilters" type="button" class="dd-actie dd-actie--secundair" :class="{ 'bz-toggle--aan': filtersOpen || filterTeller }" :aria-expanded="filtersOpen" data-test="bz-filters" @click="filtersOpen = !filtersOpen">
           <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="filterTeller" class="pil-teller pil-teller--geel">{{ filterTeller }}</span><Icoon naam="ChevronDown" :grootte="14" class="bz-caret" :class="{ 'bz-caret--open': filtersOpen }" />
         </button>
@@ -210,13 +210,13 @@ useHead({ title: 'Bezoeken · Dealtrace' })
       </div>
     </section>
 
-    <section v-if="data" id="bellijst" class="section section--alt">
+    <section v-if="data && data.kan.bellijst" id="bellijst" class="section section--alt">
       <div class="container" data-test="bellijst-naast">
         <BelPrioriteit :lijst="data.bellijst ?? []" :kan="!!data.kan.bellijst" uitleg="Dezelfde lijst als op Belblokken, zonder de accounts die je vandaag al bezoekt. Tijdens reistijd de top 5, voor een lege middag de top 10." @taak="taak = $event" />
       </div>
     </section>
 
-    <section v-if="data" class="section section--laatste">
+    <section v-if="data && data.kan.teplannen" class="section section--laatste">
       <div class="container" data-test="te-plannen">
         <header class="bz-blokkop">
           <div>
@@ -225,8 +225,7 @@ useHead({ title: 'Bezoeken · Dealtrace' })
             <p class="bz-subtitel">Open bezoektaken uit de motor en handmatig. Plan elk bezoek met één klik als afspraak, of cluster ze per regio tot een volle dag.</p>
           </div>
         </header>
-        <NietAangezetKop v-if="!data.kan.teplannen" sleutel="bezoeken.teplannen" />
-        <ol v-else-if="data.teplannen.length" class="bz-plan">
+        <ol v-if="data.teplannen.length" class="bz-plan">
           <DagKaart v-for="t in data.teplannen" :key="t.id" tag="li" class="bz-plan-kaart" :data-test="`plan-kaart-${t.id}`">
             <div class="dp-kaart-kop"><button type="button" class="dp-kaart-titel" :data-test="`plan-open-${t.id}`" @click="taak = t.id">{{ t.accountNaam ?? t.titel }}</button></div>
             <p v-if="t.accountNaam" class="dp-kaart-tekst">{{ t.titel }}</p>

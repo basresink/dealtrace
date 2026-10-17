@@ -68,7 +68,7 @@ useHead({ title: 'Terug in beeld · Dealtrace' })
     <template v-else>
       <PaginaKop kicker="Planning · Terug in beeld" titel="Terug in beeld" uitleg="Prospects die je verloor, komen hier terug zodra jullie terugkomregel het toestaat. Per prospect zie je waarom hij terugkomt, wanneer, via welk kanaal en met welke aanpak. Start het hercontact met één knop." helpartikel="wanneer-we-iemand-terugbellen">
         <template #acties>
-          <NuxtLink to="/planning?tab=terugkom" class="dd-actie dd-actie--secundair" data-test="tib-regels">Terugkomregels<Icoon naam="ArrowRight" class="dd-actie-icoon" /></NuxtLink>
+          <FunctieLink to="/planning?tab=terugkom" class="dd-actie dd-actie--secundair" data-test="tib-regels">Terugkomregels<Icoon naam="ArrowRight" class="dd-actie-icoon" /></FunctieLink>
         </template>
       </PaginaKop>
 
@@ -105,7 +105,7 @@ useHead({ title: 'Terug in beeld · Dealtrace' })
 
           <div aria-live="polite">
             <LegeStaat v-if="!alle.length" class="mt-16" kicker="Nog niets" titel="Nog niemand terug in beeld" tekst="Zodra je een prospect verliest met een reden, zie je hier wanneer je hem weer mag benaderen en hoe. Jullie regels staan bij Terugkomregels." data-test="tib-leeg">
-              <NuxtLink to="/planning?tab=terugkom" class="dd-actie dd-actie--secundair">Bekijk de terugkomregels</NuxtLink>
+              <FunctieLink to="/planning?tab=terugkom" class="dd-actie dd-actie--secundair">Bekijk de terugkomregels</FunctieLink>
             </LegeStaat>
             <LegeStaat v-else-if="!zicht.length" class="mt-16" titel="Niemand past bij deze filters" :tekst="`Er ${alle.length === 1 ? 'is 1 prospect' : `zijn ${alle.length} prospects`} terug in beeld, maar geen enkele met deze combinatie.`" data-test="tib-geen-treffers">
               <button type="button" class="dd-actie dd-actie--secundair" data-test="tib-wis" @click="wisFilters">Wis de filters</button>

@@ -84,7 +84,7 @@ const datum = (d: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', 
       <header class="kaart-kop"><h3 class="kaart-titel">Datacollectief</h3><span v-if="dcStatusPil" class="pil" :class="dcStatusPil.c" data-test="dc-status">{{ dcStatusPil.t }}</span></header>
       <p class="tekst">Bedrijven en contactpersonen met functie, direct nummer en zakelijk e-mailadres. Selecties op doelgroep, en contactpersonen zoeken bij een account. Nooit privégegevens.</p>
       <template v-if="dc">
-        <p v-if="!dc.pakketPlafond" class="meta mt-8" data-test="dc-pakket">Onderdeel van Compleet.<NuxtLink v-if="dc.magInrichten" to="/instellingen/abonnement"> Bekijk het abonnement</NuxtLink></p>
+        <p v-if="!dc.pakketPlafond" class="meta mt-8" data-test="dc-pakket">Onderdeel van Compleet.<FunctieLink als-tekst v-if="dc.magInrichten" to="/instellingen/abonnement"> Bekijk het abonnement</FunctieLink></p>
         <template v-else>
           <p class="meta mt-8" data-test="dc-teller">Datacollectief-records deze maand {{ fmt(dc.gebruikt) }} / {{ fmt(dc.plafond) }}<template v-if="dc.tegoed != null"> · tegoed {{ fmt(dc.tegoed) }}</template></p>
           <p v-if="dc.vingerafdruk" class="meta">Sleutel met vingerafdruk <code>{{ dc.vingerafdruk }}</code></p>

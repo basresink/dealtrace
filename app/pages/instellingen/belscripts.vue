@@ -34,7 +34,7 @@ useHead({ title: 'Belscripts · Instellingen · Dealtrace' })
     <template v-else>
       <PaginaKop kicker="Instellingen · Verkoop" titel="Belscripts" uitleg="Standaardscripts die je team kiest in het belpaneel. AI vult per account de aanleiding en het winpunt in." helpartikel="belscripts-maken">
         <template #acties>
-          <NuxtLink v-if="!data.kan.beheer" to="/belscripts" class="dd-actie dd-actie--secundair" data-test="naar-studio"><Icoon naam="ScrollText" class="dd-actie-icoon" />Belscript Studio</NuxtLink>
+          <FunctieLink v-if="!data.kan.beheer" to="/belscripts" class="dd-actie dd-actie--secundair" data-test="naar-studio"><Icoon naam="ScrollText" class="dd-actie-icoon" />Belscript Studio</FunctieLink>
           <template v-else>
           <button type="button" class="dd-actie dd-actie--primair" data-test="nieuw-script" @click="nieuw"><Icoon naam="Plus" class="dd-actie-icoon" />Nieuw script</button>
           <button type="button" class="dd-actie dd-actie--secundair" data-test="ai-opzet" @click="opzet"><Icoon naam="Sparkles" class="dd-actie-icoon" />AI-opzet</button>
@@ -46,7 +46,7 @@ useHead({ title: 'Belscripts · Instellingen · Dealtrace' })
       <section class="section section--laatste">
         <div class="container">
           <p class="alleen-groot-melding kaart kaart--geel">Beter op een groot scherm.</p>
-          <p v-if="!data.kan.beheer" class="kaart kaart--geel mt-8">Je kunt meekijken. Je salesmanager maakt en activeert de scripts.<template v-if="data.kan.variant"> Een eigen variant maak je bij <NuxtLink to="/instellingen/mijn-scripts">Mijn scripts</NuxtLink>.</template></p>
+          <p v-if="!data.kan.beheer" class="kaart kaart--geel mt-8">Je kunt meekijken. Je salesmanager maakt en activeert de scripts.<template v-if="data.kan.variant"> Een eigen variant maak je bij <FunctieLink als-tekst to="/instellingen/mijn-scripts">Mijn scripts</FunctieLink>.</template></p>
           <div class="stat-grid stat-grid--4 mt-16">
             <button type="button" class="stat-card" :class="{ 'stat-card--actief': filter.status === 'actief' }" @click="zet({ status: filter.status === 'actief' ? undefined : 'actief' })"><span class="stat-label">Actief</span><span class="stat-num tnum">{{ data.tellers.actief ?? 0 }}</span></button>
             <button type="button" class="stat-card" :class="{ 'stat-card--actief': filter.status === 'concept' }" @click="zet({ status: filter.status === 'concept' ? undefined : 'concept' })"><span class="stat-label">Concept</span><span class="stat-num tnum">{{ data.tellers.concept ?? 0 }}</span></button>

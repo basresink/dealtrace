@@ -19,7 +19,7 @@ useHead({ title: 'Coaching · Dealtrace' })
           <LegeStaat v-if="!data.leden.length" titel="Je bent nog geen eigenaar van een team." tekst="Vraag je beheerder om je aan een team te koppelen." />
           <ul v-else class="schakel-lijst kaart" data-test="coaching-lijst">
             <li v-for="l in data.leden" :key="l.id" class="schakel-rij">
-              <NuxtLink :to="`/coaching/${l.id}`" class="cg-rij"><strong>{{ l.naam.replace(/^Testgebruiker /, '') }}</strong><span class="meta">{{ NIVEAU_LABEL[l.niveau as 'beginner'] }} · {{ l.werkplek }}</span></NuxtLink>
+              <FunctieLink als-tekst :to="`/coaching/${l.id}`" class="cg-rij"><strong>{{ l.naam.replace(/^Testgebruiker /, '') }}</strong><span class="meta">{{ NIVEAU_LABEL[l.niveau as 'beginner'] }} · {{ l.werkplek }}</span></FunctieLink>
               <span class="meta">{{ l.laatsteGesprek ? `Laatste gesprek ${dagen(l.laatsteGesprek)} dagen geleden` : 'Nog geen gesprek' }}<template v-if="l.openAfspraken"> · {{ l.openAfspraken }} open {{ l.openAfspraken === 1 ? 'afspraak' : 'afspraken' }}</template></span>
               <span v-if="!l.laatsteGesprek || (dagen(l.laatsteGesprek) ?? 0) > 14" class="pil pil--rood">Gesprek plannen</span>
             </li>

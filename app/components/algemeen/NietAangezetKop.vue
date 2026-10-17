@@ -6,9 +6,10 @@ import { NIVEAU_LABEL, type Niveau } from '~~/shared/types'
 const props = defineProps<{ sleutel: string }>()
 const { functie: meFunctie } = useMe()
 const f = computed(() => functie(props.sleutel))
+// Zonder niveau waarop hij aangaat, staat de functie voor de hele organisatie uit (de founder zette hem uit).
 const niveau = computed(() => {
   const n = meFunctie(props.sleutel)?.aanVanaf as Niveau | null | undefined
-  return n ? NIVEAU_LABEL[n] : 'Gevorderd'
+  return n ? NIVEAU_LABEL[n] : null
 })
 </script>
 
@@ -17,7 +18,7 @@ const niveau = computed(() => {
     <div class="container container--smal">
       <span class="kicker kicker--streep">Nog niet aangezet</span>
       <h1 class="title title--groot">{{ f.naam }}</h1>
-      <p class="subtitle subtitle--groot">Deze functie hoort bij {{ niveau }}.</p>
+      <p class="subtitle subtitle--groot">{{ niveau ? `Deze functie hoort bij ${niveau}.` : 'Deze functie staat voor je organisatie nog niet aan.' }}</p>
       <div class="kaart mt-16">
         <h2 class="kop-kaart">Wat het doet</h2>
         <p class="tekst mt-8">{{ f.uitleg.watHetDoet }}</p>

@@ -152,7 +152,7 @@ defineExpose({ bewaarVerslag })
         <div class="gv-an-blok" :data-test="tid('actiepunten')"><span class="gv-an-label">Actiepunten</span>
           <ul v-if="analyse.actiepunten.length"><li v-for="p in analyse.actiepunten" :key="p">{{ p }}</li></ul>
           <p v-else class="meta">Geen actiepunten gevonden.</p>
-          <p v-if="analyse.actiepunten.length" class="meta">Staan als concepttaak klaar in <NuxtLink to="/concepten" class="tekst-link" @click="emit('sluit')">Concepten</NuxtLink>.</p>
+          <p v-if="analyse.actiepunten.length" class="meta">Staan als concepttaak klaar in <FunctieLink to="/concepten" class="tekst-link" @click="emit('sluit')">Concepten</FunctieLink>.</p>
         </div>
         <div class="gv-an-blok" :data-test="tid('koopsignalen')"><span class="gv-an-label">Koopsignalen</span>
           <ul v-if="analyse.koopsignalen.length"><li v-for="k in analyse.koopsignalen" :key="k">{{ k }}</li></ul>

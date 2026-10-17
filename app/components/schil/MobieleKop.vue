@@ -27,7 +27,7 @@ const teller = computed(() => (ongelezen.value > 9 ? '9+' : String(ongelezen.val
     <div class="mk-knoppen">
       <button type="button" class="mk-knop" aria-label="Zoeken" data-test="mk-zoeken" @click="zoekenOpen = true"><Icoon naam="Search" :grootte="22" /></button>
       <button v-if="aiAan" type="button" class="mk-knop" aria-label="Vraag AI" data-test="mk-ai" @click="openAi()"><Icoon naam="Sparkles" :grootte="22" /></button>
-      <button type="button" class="mk-knop" aria-label="Inspreken" data-test="mk-inspreken" @click="inspreken = true"><Icoon naam="Mic" :grootte="22" /></button>
+      <button v-if="$aan('spraak.opdracht')" type="button" class="mk-knop" aria-label="Inspreken" data-test="mk-inspreken" @click="inspreken = true"><Icoon naam="Mic" :grootte="22" /></button>
       <NuxtLink to="/notificaties" class="mk-knop" aria-label="Meldingen" data-test="mk-meldingen"><Icoon naam="Bell" :grootte="22" /><span v-if="ongelezen" class="mk-teller">{{ teller }}</span></NuxtLink>
     </div>
   </header>

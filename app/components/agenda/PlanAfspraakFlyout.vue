@@ -214,7 +214,6 @@ async function plan() {
           </div>
 
           <label v-if="voorCollega && voorWieLijst.length" class="veld"><span class="veld-label">Voor wie</span><select v-model="f.voorWie" class="invoer" data-test="pa-voor-wie"><option value="">Mij</option><option v-for="u in voorWieLijst" :key="u.id" :value="u.id">{{ u.naam.replace(/^Testgebruiker /, '') }}<template v-if="u.werkplek"> · {{ u.werkplek }}</template></option></select></label>
-          <p v-else-if="!voorCollega" class="veld-uitleg pa-krap" data-test="pa-voor-wie-uit">Plannen voor een collega: nog niet aangezet.</p>
 
           <div v-if="collegas.length" class="veld">
             <label for="pa-collega" class="veld-label">Collega's uitnodigen</label>

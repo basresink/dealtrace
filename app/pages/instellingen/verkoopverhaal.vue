@@ -89,7 +89,7 @@ useHead({ title: 'Verkoopverhaal · Instellingen · Dealtrace' })
 <template>
   <div>
     <PaginaKop kicker="Instellingen · Verkoop" titel="Verkoopverhaal" uitleg="Waar elk script, elke boodschap en elke briefing uit leest. Alleen bevestigde inhoud gaat naar buiten." helpartikel="ons-verhaal">
-      <template #acties><NuxtLink to="/richting" class="dd-act">Bekijk Richting</NuxtLink></template>
+      <template #acties><FunctieLink to="/richting" class="dd-act">Bekijk Richting</FunctieLink></template>
     </PaginaKop>
     <section class="section section--laatste">
       <div class="container">

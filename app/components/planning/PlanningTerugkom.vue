@@ -36,7 +36,7 @@ const datumLang = (d: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeri
       <h2 class="title">Wanneer we terugkomen</h2>
       <span class="pil pil--leeg" data-test="bron">{{ data.bron.tekst }}</span>
       <span class="dd-acties-vul" />
-      <NuxtLink v-if="data.kan.inrichten" class="dd-act" to="/instellingen">Inrichten</NuxtLink>
+      <FunctieLink v-if="data.kan.inrichten" class="dd-act" to="/instellingen">Inrichten</FunctieLink>
     </div>
     <p v-if="data.bron.soort === 'spiegel'" class="meta mt-8">Wijzigen doe je in SalesDNA.</p>
     <LegeStaat v-if="data.leeg" class="mt-16" titel="Jullie terugkomregels zijn nog niet vastgelegd." tekst="Tot dan is de afkoelperiode per kanaal de enige termijn." />

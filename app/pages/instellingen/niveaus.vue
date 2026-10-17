@@ -34,7 +34,7 @@ useHead({ title: 'Niveaus · Instellingen · Dealtrace' })
               <button v-for="niv in NIVEAUS" :key="niv" type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': n.standaardNiveauNieuweGebruiker === niv }" :aria-pressed="n.standaardNiveauNieuweGebruiker === niv" @click="n.standaardNiveauNieuweGebruiker = niv">{{ NIVEAU_LABEL[niv] }}</button>
             </div>
           </div>
-          <p class="veld-uitleg mt-16">Welke functies bij Beginner, Gevorderd en Expert horen, stelt Dealtrace in; je ziet het hieronder. Het niveau per persoon zet je bij <NuxtLink to="/instellingen/gebruikers">Gebruikers</NuxtLink>.</p>
+          <p class="veld-uitleg mt-16">Welke functies bij Beginner, Gevorderd en Expert horen, stelt Dealtrace in; je ziet het hieronder. Het niveau per persoon zet je bij <FunctieLink als-tekst to="/instellingen/gebruikers">Gebruikers</FunctieLink>.</p>
         </article>
         <FunctiesPerNiveau v-if="overzicht" class="mt-16" :overzicht="overzicht" />
         <WieMagWat v-if="overzicht" class="mt-16" :rechten="overzicht.rechten" />

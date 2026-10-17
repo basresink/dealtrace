@@ -13,7 +13,6 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ ververs: [] }>()
 const toast = useToast()
-const { toon: toonUitleg } = useNietAangezet()
 
 const lijst = ref<VastBlok[]>([])
 watch(() => props.blokken, (b) => { lijst.value = (b ?? []).map(kaalBlok) }, { immediate: true })
@@ -73,7 +72,6 @@ const volgende = (b: VastBlok) => props.gepland.find((s) => s.vastBlokId === b.i
             </div>
             <div class="vb-schakel">
               <Schakelaar v-if="kanAutomatisch" :aan="b.automatisch" :label="b.automatisch ? 'Vult zichzelf' : 'Ik vul zelf'" @wissel="wissel(b, $event)" />
-              <button v-else type="button" class="vb-slot" :aria-label="'Vult zichzelf staat op slot'" @click="toonUitleg('belblok.automatisch')"><Icoon naam="Lock" :grootte="14" /></button>
               <span class="vb-stand">{{ b.automatisch ? 'Vult zichzelf' : 'Ik vul zelf' }}</span>
             </div>
           </header>

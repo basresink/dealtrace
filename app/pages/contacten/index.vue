@@ -26,7 +26,7 @@ useHead({ title: 'Contacten · Dealtrace' })
       zonder-hulp
     >
       <template #acties>
-        <NuxtLink class="dd-actie dd-actie--zwart" to="/contacten/alle" data-test="alle-contacten">Alle contacten →</NuxtLink>
+        <FunctieLink class="dd-actie dd-actie--zwart" to="/contacten/alle" data-test="alle-contacten">Alle contacten →</FunctieLink>
       </template>
     </PaginaKop>
     <section class="section section--alt section--laatste">
@@ -40,7 +40,7 @@ useHead({ title: 'Contacten · Dealtrace' })
               <span v-else class="portret-initialen" aria-hidden="true">{{ initialen(c.naam) }}</span>
             </div>
             <div class="portret-body">
-              <h2 class="portret-naam"><NuxtLink :to="`/contacten/${c.id}`" class="portret-link">{{ c.naam }}</NuxtLink></h2>
+              <h2 class="portret-naam"><FunctieLink :to="`/contacten/${c.id}`" class="portret-link">{{ c.naam }}</FunctieLink></h2>
               <p class="portret-functie">{{ c.functie || 'Functie onbekend' }} · <NuxtLink :to="`/accounts/${c.account.id}`" class="portret-account">{{ c.account.naam }}</NuxtLink></p>
               <p class="portret-activiteit tnum">Inzichten: {{ c.inzichten }} · Laatste activiteit: {{ datumActiviteit(c.laatsteActiviteitOp) }}</p>
               <p v-if="c.reden" class="portret-reden" data-test="portret-reden">{{ c.reden }}</p>

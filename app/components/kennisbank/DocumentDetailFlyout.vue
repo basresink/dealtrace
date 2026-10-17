@@ -82,7 +82,7 @@ function vraagDocument() {
                   <dd><ul v-if="doc.accounts.length" class="ddf-links"><li v-for="a in doc.accounts" :key="a.id"><NuxtLink :to="`/accounts/${a.id}`" class="ddf-link" data-test="ddf-klant" @click="emit('sluit')">{{ a.naam }}</NuxtLink></li></ul><span v-else class="meta">Geen</span></dd>
                 </div>
                 <div class="def-rij"><dt>Gekoppelde contacten</dt>
-                  <dd><ul v-if="doc.contacten.length" class="ddf-links"><li v-for="c in doc.contacten" :key="c.id"><NuxtLink :to="`/contacten/${c.id}`" class="ddf-link" data-test="ddf-contact" @click="emit('sluit')">{{ c.naam }}</NuxtLink></li></ul><span v-else class="meta">Geen</span></dd>
+                  <dd><ul v-if="doc.contacten.length" class="ddf-links"><li v-for="c in doc.contacten" :key="c.id"><FunctieLink :to="`/contacten/${c.id}`" class="ddf-link" data-test="ddf-contact" @click="emit('sluit')">{{ c.naam }}</FunctieLink></li></ul><span v-else class="meta">Geen</span></dd>
                 </div>
               </dl>
             </article>

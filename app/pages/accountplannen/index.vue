@@ -89,7 +89,7 @@ useHead({ title: 'Accountplannen · Dealtrace' })
                       <span class="ap-balk" aria-hidden="true"><span class="ap-vul" :style="{ width: `${p.acties.percentage}%` }" /></span>
                     </span>
                   </button>
-                  <NuxtLink :to="`/accountplannen/${p.id}`" class="ap-open" :data-test="`ap-open-${p.id}`">Open accountplan <Icoon naam="ArrowRight" :grootte="14" /></NuxtLink>
+                  <FunctieLink als-tekst :to="`/accountplannen/${p.id}`" class="ap-open" :data-test="`ap-open-${p.id}`">Open accountplan <Icoon naam="ArrowRight" :grootte="14" /></FunctieLink>
                 </li>
               </ul>
             </div>

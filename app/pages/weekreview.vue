@@ -107,7 +107,7 @@ useHead({ title: 'Weekreview · Dealtrace' })
       <PaginaKop :kicker="`Mijn dashboard · Weekreview · week ${r.week.nummer}`" :titel="r.titel" :uitleg="r.moment" helpartikel="weekreview">
         <template #acties>
           <button v-if="!r.verzet && !r.afgerondOp && !r.volgende.ingepland.length" type="button" class="dd-actie dd-actie--secundair" data-test="wr-verzet" @click="verzet"><Icoon naam="Clock" class="dd-actie-icoon" />Verzet naar maandag</button>
-          <NuxtLink to="/weekstart" class="dd-actie dd-actie--secundair" data-test="wr-naar-weekstart"><Icoon naam="CalendarRange" class="dd-actie-icoon" />Weekstart</NuxtLink>
+          <FunctieLink to="/weekstart" class="dd-actie dd-actie--secundair" data-test="wr-naar-weekstart"><Icoon naam="CalendarRange" class="dd-actie-icoon" />Weekstart</FunctieLink>
         </template>
       </PaginaKop>
 

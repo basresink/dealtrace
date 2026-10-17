@@ -20,7 +20,7 @@ const delen = computed(() => [props.contact ? 'contact' : null, props.door ? 'do
   <span v-if="delen.length" class="item-meta" :class="{ 'item-meta--los': los }" data-test="item-meta">
     <span v-for="(d, i) in delen" :key="d" class="item-meta-deel">
       <span v-if="i" class="item-meta-punt" aria-hidden="true">·</span>
-      <NuxtLink v-if="d === 'contact'" :to="`/contacten/${contact!.id}`" class="item-meta-contact" data-test="tl-contact"><Icoon naam="CircleUser" :grootte="12" />{{ contact!.naam }}</NuxtLink>
+      <FunctieLink v-if="d === 'contact'" :to="`/contacten/${contact!.id}`" class="item-meta-contact" data-test="tl-contact"><Icoon naam="CircleUser" :grootte="12" />{{ contact!.naam }}</FunctieLink>
       <span v-else-if="d === 'door'" class="item-meta-door" data-test="tl-door">door {{ door }}</span>
       <span v-else class="item-meta-datum tnum" :class="{ 'item-meta-datum--rood': datumRood }">{{ datum }}</span>
     </span>

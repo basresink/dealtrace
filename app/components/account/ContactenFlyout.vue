@@ -42,7 +42,7 @@ const nummer = (c: any) => c.mobiel ?? c.telefoon ?? null
           <p v-if="!contacten.length" class="cf-leeg">Nog geen contactpersonen aan dit account gekoppeld.</p>
           <ul v-else class="cf-lijst">
             <li v-for="c in gesorteerd" :key="c.id" class="cf-rij" :class="{ 'cf-rij--vertrokken': c.status === 'vertrokken' }" :data-contact="c.id">
-              <NuxtLink :to="`/contacten/${c.id}`" class="cf-kaart" data-test="cf-contact" @click="emit('sluit')">
+              <FunctieLink als-tekst :to="`/contacten/${c.id}`" class="cf-kaart" data-test="cf-contact" @click="emit('sluit')">
                 <ContactFoto :naam="c.naam" :foto-url="c.fotoUrl" :grootte="44" />
                 <span class="cf-info">
                   <span class="cf-regel">
@@ -53,7 +53,7 @@ const nummer = (c: any) => c.mobiel ?? c.telefoon ?? null
                   <span v-if="c.functie" class="cf-functie">{{ c.functie }}</span>
                   <span v-if="c.email" class="cf-meta">{{ c.email }}</span>
                 </span>
-              </NuxtLink>
+              </FunctieLink>
               <div class="cf-acties">
                 <select class="invoer invoer--klein cf-rolkeuze" :value="c.rol" :aria-label="`Rol van ${c.naam}`" data-test="cf-rol" @change="wijzig(c, { rol: ($event.target as HTMLSelectElement).value })">
                   <option v-for="r in ROLLEN_CONTACT" :key="r" :value="r">{{ CONTACTROL_LABEL[r] }}</option>
@@ -84,7 +84,7 @@ const nummer = (c: any) => c.mobiel ?? c.telefoon ?? null
         </div>
       <template #voet>
         <footer class="fo-foot fs-voet cf-voet">
-          <NuxtLink to="/contacten/alle" class="dd-actie dd-actie--zwart fs-hoofdactie cf-alle" data-test="cf-alle" @click="emit('sluit')"><Icoon naam="Users" :grootte="16" />Alle contacten</NuxtLink>
+          <FunctieLink to="/contacten/alle" class="dd-actie dd-actie--zwart fs-hoofdactie cf-alle" data-test="cf-alle" @click="emit('sluit')"><Icoon naam="Users" :grootte="16" />Alle contacten</FunctieLink>
           <span class="fo-foot-vul" />
         </footer>
       </template>

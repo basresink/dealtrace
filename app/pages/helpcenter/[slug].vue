@@ -13,6 +13,9 @@ const { me } = useMe()
 const beheerder = computed(() => me.value?.gebruiker?.rol === 'beheerder')
 const alsNiveau = computed(() => (route.query.alsNiveau as string) || undefined)
 const { data: a, error } = await useFetch<any>(() => `/api/help/${route.params.slug}`, { query: computed(() => ({ alsNiveau: alsNiveau.value })) })
+// "Probeer het" opent het eerste scherm van het artikel dat voor je aanstaat; anders geen knop.
+const { magNaar } = useFunctie()
+const probeerRoute = computed<string | null>(() => (a.value?.routes ?? []).find((r: string) => magNaar(r)) ?? null)
 const html = computed(() => (a.value ? markdownNaarHtml(a.value.inhoud, { zonderTitel: a.value.titel }) : ''))
 // De inhoud in blokken: alles vóór de eerste kop is de inleiding, daarna één genummerd blok per kop.
 const blokken = computed(() => {
@@ -89,7 +92,7 @@ useHead({ title: () => `${a.value?.titel ?? 'Artikel'} · Helpcenter · Dealtrac
         <p v-if="a.nietAan" class="ha-voorwie" data-test="niet-aan"><span class="ha-voorwie-label">Let op</span>{{ a.nietAan }}</p>
         <div v-if="beheerder" class="ha-bekijkals" data-test="bekijk-als"><span class="ha-bekijkals-label">Bekijk als</span>
           <NuxtLink v-for="n in ['beginner', 'gevorderd', 'expert']" :key="n" :to="{ query: { alsNiveau: alsNiveau === n ? undefined : n } }" class="filter-pil" :class="{ 'filter-pil--aan': alsNiveau === n }">{{ NIVEAU_LABEL[n as Niveau] }}</NuxtLink></div>
-        <NuxtLink v-if="a.routes?.[0]" :to="a.routes[0]" class="dd-actie dd-actie--zwart ha-probeer" data-test="probeer-het">Probeer het<Icoon naam="ArrowRight" class="dd-actie-icoon" /></NuxtLink>
+        <NuxtLink v-if="probeerRoute" :to="probeerRoute" class="dd-actie dd-actie--zwart ha-probeer" data-test="probeer-het">Probeer het<Icoon naam="ArrowRight" class="dd-actie-icoon" /></NuxtLink>
 
         <div class="help-tekst ha-inhoud" data-test="artikel-inhoud">
           <!-- eslint-disable-next-line vue/no-v-html -->
@@ -138,7 +141,7 @@ useHead({ title: () => `${a.value?.titel ?? 'Artikel'} · Helpcenter · Dealtrac
           <ul class="ha-verwant-lijst" role="list"><li v-for="g in a.gerelateerd" :key="g.slug"><NuxtLink :to="helpLink(g.slug)" class="ha-verwant-link">{{ g.titel }}</NuxtLink></li></ul>
         </nav>
 
-        <p class="ha-voet">Laatst bijgewerkt op {{ datum(a.bijgewerktOp) }}. Klopt er iets niet, of mis je een stap? Mail <a href="mailto:support@dealtrace.test" class="ha-inline">support@dealtrace.test</a> of dien een wens in op de <NuxtLink to="/roadmap" class="ha-inline">roadmap</NuxtLink>.</p>
+        <p class="ha-voet">Laatst bijgewerkt op {{ datum(a.bijgewerktOp) }}. Klopt er iets niet, of mis je een stap? Mail <a href="mailto:support@dealtrace.test" class="ha-inline">support@dealtrace.test</a> of dien een wens in op de <FunctieLink als-tekst to="/roadmap" class="ha-inline">roadmap</FunctieLink>.</p>
       </div>
     </section>
   </div>

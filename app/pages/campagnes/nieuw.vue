@@ -117,7 +117,7 @@ useHead({ title: 'Nieuwe campagne · Dealtrace' })
               <p class="cp-groot"><strong>{{ v.mee.length }}</strong> {{ v.mee.length === 1 ? 'account gaat' : 'accounts gaan' }} mee<template v-if="v.overgeslagen.length">, {{ v.overgeslagen.length }} overgeslagen</template>.</p>
               <ul v-if="v.samenvatting.length" class="cp-overgeslagen" data-test="overgeslagen"><li v-for="s in v.samenvatting" :key="s">{{ s }}</li></ul>
               <p v-if="v.omvang" class="kaart kaart--geel">{{ v.omvang }}</p>
-              <p v-if="v.brancheMelding" class="kaart kaart--geel" data-test="branche-melding">{{ v.brancheMelding }} <NuxtLink to="/instellingen/verkoopverhaal" class="filter-link">Naar de inrichting</NuxtLink></p>
+              <p v-if="v.brancheMelding" class="kaart kaart--geel" data-test="branche-melding">{{ v.brancheMelding }} <FunctieLink to="/instellingen/verkoopverhaal" class="filter-link">Naar de inrichting</FunctieLink></p>
               <p v-if="v.brancheAdvies" class="kaart kaart--geel" data-test="branche-advies">{{ v.brancheAdvies }}</p>
             </div>
             <p v-else-if="rekent" class="rij-sub mt-16">Rekenen…</p>

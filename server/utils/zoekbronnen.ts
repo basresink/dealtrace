@@ -3,6 +3,7 @@
 
 import { ilike, or } from 'drizzle-orm'
 import { FUNCTIES, beschikbaar } from '../../shared/functies'
+import { magNaarPad } from '../../shared/functieRoutes'
 import { metOrganisatie, schema } from './db'
 import type { Context } from './sessie'
 
@@ -10,7 +11,7 @@ export interface ZoekRij {
   titel: string
   detail?: string
   link: string
-  /** Functie staat niet aan voor dit niveau: tonen met slot. */
+  /** Verouderd: een functie die uit staat, komt niet meer in de resultaten (wens opdrachtgever). */
   slot?: boolean
   /** Een korte tag naast de titel, zoals "Gedeactiveerd" (0064). */
   label?: string
@@ -32,11 +33,11 @@ export const zoekBronnen: ZoekBron[] = [
     label: "Pagina's",
     async zoek(q, ctx) {
       const n = normaliseer(q)
-      return FUNCTIES.filter((f) => f.zijbalk && normaliseer(f.naam).includes(n)).flatMap((f): ZoekRij[] => {
-        const b = beschikbaar(f.sleutel, ctx.gebruiker, ctx.organisatie, ctx.stand)
-        if (!b.ok && b.reden !== 'niveau') return []
-        return [{ titel: f.naam, link: f.zijbalk!.route, slot: !b.ok }]
-      })
+      // Alleen pagina's die aanstaan; ook de functie van het scherm zelf moet aanstaan.
+      const aan = (s: string) => beschikbaar(s, ctx.gebruiker, ctx.organisatie, ctx.stand).ok
+      return FUNCTIES.filter((f) => f.zijbalk && f.sleutel !== 'nav.platform' && normaliseer(f.zijbalk.naam ?? f.naam).includes(n))
+        .filter((f) => aan(f.sleutel) && magNaarPad(f.zijbalk!.route, aan))
+        .map((f): ZoekRij => ({ titel: f.zijbalk!.naam ?? f.naam, link: f.zijbalk!.route }))
     },
   },
   {
@@ -51,7 +52,7 @@ export const zoekBronnen: ZoekBron[] = [
         .map((u) => ({
           titel: u.naam,
           detail: u.email,
-          link: ['beheerder', 'salesmanager'].includes(ctx.gebruiker.rol) ? `/instellingen/gebruikers?gebruiker=${u.id}` : '/',
+          link: ['beheerder', 'salesmanager'].includes(ctx.gebruiker.rol) && magNaarPad('/instellingen/gebruikers', (s) => beschikbaar(s, ctx.gebruiker, ctx.organisatie, ctx.stand).ok) ? `/instellingen/gebruikers?gebruiker=${u.id}` : '/',
         }))
     },
   },

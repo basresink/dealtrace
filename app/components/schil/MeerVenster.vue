@@ -1,17 +1,16 @@
 <script setup lang="ts">
-// "Meer" (P27, 8.4): de rest van de zijbalk van je niveau in dezelfde groepen en volgorde,
-// "Nog niet aangezet" ingeklapt onderaan; Instellingen en Platformbeheer met "Beter op een
-// groot scherm". Een schuifvenster van onderen.
+// "Meer" (P27, 8.4): de rest van de zijbalk van je niveau in dezelfde groepen en volgorde;
+// Instellingen en Platformbeheer met "Beter op een groot scherm". Een schuifvenster van onderen.
+// Wat uit staat, staat er niet (ook geen groep "Nog niet aangezet").
 import { meerItems, tabsVoor } from '~~/shared/onderbalk'
-const { me, functie } = useMe()
-const { toon: toonNietAangezet } = useNietAangezet()
+const { me } = useMe()
+const { aan, magNaar } = useFunctie()
 const open = useState<boolean>('meerOpen', () => false)
-const uitgeklapt = ref(false)
 const conceptenTeller = useState<number>('conceptenTeller', () => 0)
 const ongelezen = useState<number>('ongelezen', () => 0)
-const aiAan = computed(() => !!functie('assistent.chat')?.beschikbaar)
+const aiAan = computed(() => aan('assistent.chat'))
 const { openen: openAi } = useAssistent()
-const lijst = computed(() => me.value ? meerItems(me.value.zijbalk, tabsVoor(me.value.gebruiker.werkplek, me.value.gebruiker.rol, me.value.gebruiker.eigenPortefeuille !== false)) : { groepen: [], nietAangezet: [] })
+const lijst = computed(() => me.value ? meerItems(me.value.zijbalk, tabsVoor(me.value.gebruiker.werkplek, me.value.gebruiker.rol, me.value.gebruiker.eigenPortefeuille !== false, magNaar)) : { groepen: [], nietAangezet: [] })
 async function uitloggen() {
   await $fetch('/api/auth/uitloggen', { method: 'POST', body: {} })
   await navigateTo('/login', { external: true })
@@ -33,19 +32,13 @@ async function uitloggen() {
           </section>
           <section class="meer-groep">
             <h3 class="meer-kop">Jij</h3>
-            <NuxtLink v-if="functie('concepten.inbox')?.beschikbaar" to="/concepten" class="meer-item" data-route="/concepten" @click="open = false"><Icoon naam="Inbox" :grootte="20" /><span>Concepten</span><span v-if="conceptenTeller" class="pil-teller">{{ conceptenTeller }}</span></NuxtLink>
+            <NuxtLink v-if="magNaar('/concepten')" to="/concepten" class="meer-item" data-route="/concepten" @click="open = false"><Icoon naam="Inbox" :grootte="20" /><span>Concepten</span><span v-if="conceptenTeller" class="pil-teller">{{ conceptenTeller }}</span></NuxtLink>
             <NuxtLink to="/notificaties" class="meer-item" data-route="/notificaties" @click="open = false"><Icoon naam="Bell" :grootte="20" /><span>Meldingen</span><span v-if="ongelezen" class="pil-teller">{{ ongelezen > 9 ? '9+' : ongelezen }}</span></NuxtLink>
             <NuxtLink to="/helpcenter" class="meer-item" data-route="/helpcenter" @click="open = false"><Icoon naam="CircleHelp" :grootte="20" /><span>Helpcenter</span></NuxtLink>
             <NuxtLink to="/mij" class="meer-item" data-route="/mij" @click="open = false"><Icoon naam="CircleUser" :grootte="20" /><span>Account</span></NuxtLink>
             <NuxtLink to="/mijn-instellingen" class="meer-item" data-route="/mijn-instellingen" @click="open = false"><Icoon naam="Settings" :grootte="20" /><span>Mijn instellingen</span></NuxtLink>
-            <NuxtLink to="/roadmap" class="meer-item" data-route="/roadmap" @click="open = false"><Icoon naam="Route" :grootte="20" /><span>Roadmap</span></NuxtLink>
+            <NuxtLink v-if="magNaar('/roadmap')" to="/roadmap" class="meer-item" data-route="/roadmap" @click="open = false"><Icoon naam="Route" :grootte="20" /><span>Roadmap</span></NuxtLink>
             <button type="button" class="meer-item" data-test="meer-uitloggen" @click="uitloggen"><Icoon naam="LogOut" :grootte="20" /><span>Uitloggen</span></button>
-          </section>
-          <section v-if="lijst.nietAangezet.length" class="meer-groep" data-test="meer-niet-aangezet">
-            <button type="button" class="meer-kop meer-kop--knop" :aria-expanded="uitgeklapt" @click="uitgeklapt = !uitgeklapt">Nog niet aangezet <span class="pil-teller">{{ lijst.nietAangezet.length }}</span></button>
-            <template v-if="uitgeklapt">
-              <button v-for="i in lijst.nietAangezet" :key="i.sleutel" type="button" class="meer-item meer-item--slot" @click="open = false; toonNietAangezet(i.sleutel)"><Icoon naam="Lock" :grootte="18" /><span>{{ i.naam }}</span></button>
-            </template>
           </section>
         </div>
       </section>

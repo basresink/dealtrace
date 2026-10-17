@@ -32,10 +32,10 @@ const acties = computed<any[]>(() => (plan.value?.acties ?? []).filter((x: any) 
         <header class="apt-kop">
           <div class="apt-kop-tekst">
             <span class="apt-kicker">{{ plan.weergave === 'actueel' ? 'Lopend accountplan' : 'Laatste accountplan' }}</span>
-            <NuxtLink :to="`/accountplannen/${plan.id}`" class="apt-titel" :data-test="`ak-accountplan-${plan.id}`">{{ plan.titel }}</NuxtLink>
+            <FunctieLink als-tekst :to="`/accountplannen/${plan.id}`" class="apt-titel" :data-test="`ak-accountplan-${plan.id}`">{{ plan.titel }}</FunctieLink>
             <span class="apt-meta tnum"><Label soort="plan" :waarde="plan.weergave" :tekst="WEERGAVE_LABEL[plan.weergave as 'actueel']" /> {{ geldigheidLabel(plan) }}<template v-if="plan.eigenaar"> · {{ plan.eigenaar.naam.replace(/^Testgebruiker /, '') }}</template></span>
           </div>
-          <NuxtLink :to="`/accountplannen/${plan.id}`" class="dd-actie dd-actie--zwart" data-test="apt-open">Open accountplan<Icoon naam="ArrowRight" class="dd-actie-icoon" /></NuxtLink>
+          <FunctieLink :to="`/accountplannen/${plan.id}`" class="dd-actie dd-actie--zwart" data-test="apt-open">Open accountplan<Icoon naam="ArrowRight" class="dd-actie-icoon" /></FunctieLink>
         </header>
 
         <div class="apt-voortgang" data-test="apt-voortgang">
@@ -68,10 +68,10 @@ const acties = computed<any[]>(() => (plan.value?.acties ?? []).filter((x: any) 
         <header class="kaart-kop"><h3 class="kaart-titel">Andere plannen</h3></header>
         <ul class="apt-lijst" role="list">
           <li v-for="p in overige" :key="p.id">
-            <NuxtLink :to="`/accountplannen/${p.id}`" class="apt-link" :data-test="`ak-accountplan-${p.id}`">
+            <FunctieLink :to="`/accountplannen/${p.id}`" class="apt-link" :data-test="`ak-accountplan-${p.id}`">
               <span class="apt-link-naam">{{ p.titel }}</span>
               <span class="apt-meta tnum"><Label soort="plan" :waarde="p.weergave" :tekst="WEERGAVE_LABEL[p.weergave as 'actueel']" /> {{ geldigheidLabel(p) }} · {{ p.acties.klaar }} van {{ p.acties.totaal }} acties klaar</span>
-            </NuxtLink>
+            </FunctieLink>
           </li>
         </ul>
       </article>

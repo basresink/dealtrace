@@ -23,7 +23,7 @@ const nummers = computed(() => [c.value.mobiel, c.value.telefoon].filter((n, i, 
     <span class="ct-avatar" :style="{ background: kleurUitNaam(c.naam) }" aria-hidden="true"><img v-if="c.fotoUrl" :src="c.fotoUrl" alt="" class="ct-foto" loading="lazy" data-test="contact-foto"><template v-else>{{ initialen(c.naam) }}</template></span>
     <div class="ct-info">
       <div class="ct-regel1">
-        <h3 class="ct-naam"><NuxtLink :to="`/contacten/${c.id}`" class="ct-link">{{ c.naam }}</NuxtLink></h3>
+        <h3 class="ct-naam"><FunctieLink :to="`/contacten/${c.id}`" class="ct-link">{{ c.naam }}</FunctieLink></h3>
         <Label v-if="c.belMeNiet" soort="urgentie" waarde="bel-me-niet" data-test="bel-me-niet-pil" />
         <Label soort="rol" :waarde="c.rol || 'onbekend'" data-test="rol-pil" />
         <Label v-if="vertrokken" soort="status" waarde="vertrokken" />

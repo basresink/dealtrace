@@ -31,13 +31,15 @@ test('onderbalk per profiel, gelijk op elk niveau', async ({ page }) => {
   expect(await labels(page)).toEqual(['Team', 'Coaching', 'Taken', 'Prospects', 'Meer'])
 })
 
-test('Meer: Agenda, Inzichten en "Nog niet aangezet" voor een Beginner; Agenda laat Meer oplichten', async ({ page }) => {
+test('Meer: Agenda voor een Beginner, zonder Inzichten en zonder "Nog niet aangezet"; Agenda laat Meer oplichten', async ({ page }) => {
   await login(page, 'u-02')
   await page.getByTestId('onderbalk').locator('[data-tab="meer"]').click()
   const meer = page.getByTestId('meer-venster')
   await expect(meer).toBeVisible()
   await expect(meer.locator('[data-route="/agenda"]')).toBeVisible()
-  await expect(meer.getByTestId('meer-niet-aangezet')).toBeVisible()
+  await expect(meer.getByTestId('meer-niet-aangezet')).toHaveCount(0)
+  await expect(meer.locator('[data-route="/inzichten"]')).toHaveCount(0)
+  await expect(meer.getByText('Nog niet aangezet')).toHaveCount(0)
   await expect(meer.locator('[data-route="/prospects"]')).toHaveCount(0)
   await meer.locator('[data-route="/agenda"]').click()
   await page.waitForURL(/\/agenda/)

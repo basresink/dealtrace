@@ -139,7 +139,7 @@ useHead({ title: 'Accountmatrix · Instellingen · Dealtrace' })
           <div class="formulier-raster">
             <label v-for="k in data.afkoeling" :key="k.id" class="veld"><span class="veld-label">{{ k.label }} (dagen na nee)</span><input v-model.number="k.dagen" type="number" min="0" max="730" class="invoer" disabled></label>
           </div>
-          <p class="kaart-meta mt-8" data-test="afkoeling-lezen">De afkoeling pas je aan op <NuxtLink to="/instellingen/terugkomen?tab=afkoeling" class="tekst-link">Instellingen, Terugkomen</NuxtLink>; daar zie je ook wat er verschuift.</p>
+          <p class="kaart-meta mt-8" data-test="afkoeling-lezen">De afkoeling pas je aan op <FunctieLink to="/instellingen/terugkomen?tab=afkoeling" class="tekst-link">Instellingen, Terugkomen</FunctieLink>; daar zie je ook wat er verschuift.</p>
           <div class="formulier-raster mt-16">
             <label class="veld"><span class="veld-label">Frequentieplafond: berichten per kanaal</span><input v-model.number="data.frequentieplafond.maxBerichten" type="number" min="0" class="invoer" :disabled="!beheer" @input="zetPlafond"></label>
             <label class="veld"><span class="veld-label">per aantal werkdagen (buiten het ritme)</span><input v-model.number="data.frequentieplafond.werkdagen" type="number" min="1" class="invoer" :disabled="!beheer" @input="zetPlafond"></label>

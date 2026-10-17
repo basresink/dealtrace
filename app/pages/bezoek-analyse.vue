@@ -84,13 +84,13 @@ useHead({ title: 'Bezoekanalyse · Dealtrace' })
     <template v-else>
       <PaginaKop helpartikel="gebieden-en-regiodagen">
         <template #kicker>
-          <nav class="breadcrumb" aria-label="Kruimelpad"><NuxtLink to="/bezoeken" class="breadcrumb-link ba-terug" data-test="ba-terug">← Terug naar Bezoeken</NuxtLink></nav>
+          <nav class="breadcrumb" aria-label="Kruimelpad"><FunctieLink to="/bezoeken" class="breadcrumb-link ba-terug" data-test="ba-terug">← Terug naar Bezoeken</FunctieLink></nav>
           <span class="kicker kicker--streep" data-test="ba-kicker">{{ kicker }}</span>
         </template>
         <template #titel><h1 class="title title--groot">Waar laat je omzet liggen?</h1></template>
         <template #uitleg><p class="subtitle subtitle--groot">Per regio: hoeveel accounts, wie je in de periode bezocht en wie stil ligt. De regio's staan gesorteerd op wat er stil ligt, niet op alfabet.</p></template>
         <template #acties>
-          <button type="button" class="dd-actie dd-actie--zwart" data-test="ba-afspraak" @click="nieuweAfspraak()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+          <button v-if="$aan('agenda.basis')" type="button" class="dd-actie dd-actie--zwart" data-test="ba-afspraak" @click="nieuweAfspraak()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
           <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'ba-filterknop--aan': filtersOpen || filterTeller }" :aria-expanded="filtersOpen" data-test="ba-filters" @click="filtersOpen = !filtersOpen">
             <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="filterTeller" class="pil-teller pil-teller--geel">{{ filterTeller }}</span><Icoon naam="ChevronDown" :grootte="14" class="ba-caret" :class="{ 'ba-caret--open': filtersOpen }" />
           </button>
@@ -112,7 +112,7 @@ useHead({ title: 'Bezoekanalyse · Dealtrace' })
         <section v-if="data.kpi.inBeeld" class="section section--alt" data-test="ba-regios">
           <div class="container">
             <LegeStaat v-if="data.geenRegios" kicker="GEEN GEBIEDSINDELING" titel="Er is nog geen gebiedsindeling." tekst="Deze pagina rekent, hij richt niets in. Zolang er geen regio's zijn, valt elk account onder Zonder regio en valt er niets te vergelijken.">
-              <NuxtLink v-if="magInrichten" to="/instellingen/gebieden" class="dd-actie dd-actie--primair mt-16">Gebiedsindeling instellen</NuxtLink>
+              <FunctieLink v-if="magInrichten" to="/instellingen/gebieden" class="dd-actie dd-actie--primair mt-16">Gebiedsindeling instellen</FunctieLink>
               <p v-else class="meta mt-8">Vraag je beheerder om de regio's in te richten onder Instellingen, Gebieden en regiodagen.</p>
             </LegeStaat>
             <template v-else>

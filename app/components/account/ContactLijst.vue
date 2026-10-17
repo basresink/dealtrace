@@ -111,7 +111,7 @@ const resultaat = computed(() => `${data.value.aantal} ${data.value.aantal === 1
       <div class="container">
         <div class="sec-head sec-head--naast">
           <div class="sec-head-tekst">
-            <NuxtLink to="/contacten" class="kicker kicker--paars lijst-kruimel" data-test="kruimel"><Icoon naam="ArrowLeft" :grootte="14" /> Contacten · {{ data.totaal }} contacten totaal</NuxtLink>
+            <FunctieLink als-tekst to="/contacten" class="kicker kicker--paars lijst-kruimel" data-test="kruimel"><Icoon naam="ArrowLeft" :grootte="14" /> Contacten · {{ data.totaal }} contacten totaal</FunctieLink>
             <h1 class="title title--groot">Alle contacten</h1>
             <p class="subtitle subtitle--groot">Zoek op naam, functie of bedrijf. Filter op rol om snel beslissers, champions of beïnvloeders te vinden.</p>
           </div>
@@ -178,15 +178,15 @@ const resultaat = computed(() => `${data.value.aantal} ${data.value.aantal === 1
     </section>
     <Teleport to="body">
       <div v-if="menu" class="contextmenu" :style="{ left: `${menu.x}px`, top: `${menu.y}px` }" role="menu" data-test="contextmenu" @click.stop>
-        <NuxtLink role="menuitem" :to="`/contacten/${menu.c.id}`">Open contact</NuxtLink>
+        <FunctieLink als-tekst role="menuitem" :to="`/contacten/${menu.c.id}`">Open contact</FunctieLink>
         <NuxtLink role="menuitem" :to="`/accounts/${menu.c.accountId}`">Open {{ menu.c.bedrijf }}</NuxtLink>
         <a v-if="nummer(menu.c) && !menu.c.belMeNiet" role="menuitem" :href="telLink(nummer(menu.c))">Bel {{ menu.c.voornaam || menu.c.naam }}</a>
         <a v-if="menu.c.email && menu.c.consent?.email?.status !== 'nee'" role="menuitem" :href="`mailto:${menu.c.email}`">Stuur e-mail</a>
-        <button type="button" role="menuitem" @click="taakVoor(menu.c); menu = null">Nieuwe taak</button>
-        <button type="button" role="menuitem" @click="afspraakVoor(menu.c); menu = null">Plan afspraak</button>
+        <button v-if="$aan('taken.basis')" type="button" role="menuitem" @click="taakVoor(menu.c); menu = null">Nieuwe taak</button>
+        <button v-if="$aan('agenda.basis')" type="button" role="menuitem" @click="afspraakVoor(menu.c); menu = null">Plan afspraak</button>
         <button type="button" role="menuitem" data-test="menu-bel-me-niet" @click="wijzig(menu.c, { belMeNiet: !menu.c.belMeNiet }, menu.c.belMeNiet ? 'Bel me niet staat uit.' : 'Staat op de bel-me-niet-lijst.'); menu = null">{{ menu.c.belMeNiet ? 'Bel me niet uitzetten' : 'Bel me niet' }}</button>
         <button type="button" role="menuitem" @click="wijzig(menu.c, { status: menu.c.status === 'vertrokken' ? 'actief' : 'vertrokken' }, menu.c.status === 'vertrokken' ? 'Weer actief.' : 'Gemarkeerd als vertrokken.'); menu = null">{{ menu.c.status === 'vertrokken' ? 'Weer actief' : 'Markeer als vertrokken' }}</button>
-        <NuxtLink v-if="data.kan?.verhuizen" role="menuitem" :to="`/contacten/${menu.c.id}`">Verhuis naar ander bedrijf</NuxtLink>
+        <FunctieLink als-tekst v-if="data.kan?.verhuizen" role="menuitem" :to="`/contacten/${menu.c.id}`">Verhuis naar ander bedrijf</FunctieLink>
       </div>
     </Teleport>
     <NieuwContactFlyout :open="nieuwOpen" @sluit="nieuwOpen = false" @aangemaakt="aangemaakt" />

@@ -36,6 +36,8 @@ const SCHERMEN: readonly RouteFunctie[] = [
   { pad: '/campagnes/nieuw', eenVan: ['campagnes.maken'] },
   { pad: '/leadgenerator', eenVan: ['nav.leadgenerator', 'leads.overnemen', 'leads.kvk', 'leads.aiZoeker'] },
   { pad: '/prospects', eenVan: ['prospects.lijst'] },
+  { pad: '/onderweg', eenVan: ['onderweg.route'] },
+  { pad: '/roadmap', eenVan: ['roadmap'] },
   { pad: '/klanten', eenVan: ['prospects.lijst'] },
   { pad: '/contacten', eenVan: ['contacten.basis'] },
   { pad: '/instellingen', eenVan: ['nav.instellingen'], exact: true },

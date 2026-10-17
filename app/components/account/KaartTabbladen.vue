@@ -140,8 +140,8 @@ const tabs = computed(() => [
           <div class="ak-tabkop">
             <h2 class="ak-tabtitel">{{ opContact ? `Tijdlijn met ${onderwerp}` : 'Tijdlijn' }} ({{ tijdlijn.length }})</h2>
             <div class="toolbar-buttons">
-              <button type="button" class="dd-actie dd-actie--primair" data-test="tl-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
-              <button type="button" class="dd-actie dd-actie--zwart" data-test="tl-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+              <button v-if="$aan('taken.basis')" type="button" class="dd-actie dd-actie--primair" data-test="tl-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
+              <button v-if="$aan('agenda.basis')" type="button" class="dd-actie dd-actie--zwart" data-test="tl-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
               <button v-if="kanMail" type="button" class="dd-actie dd-actie--secundair" data-test="tl-mail" @click="mailOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Mail</button>
               <button type="button" class="dd-actie dd-actie--secundair" :aria-expanded="tlFiltersOpen" data-test="tl-filters" @click="tlFiltersOpen = !tlFiltersOpen"><Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="tlFilter !== 'alles'" class="ak-teller">1</span><Icoon naam="ChevronDown" :grootte="14" /></button>
             </div>
@@ -184,7 +184,7 @@ const tabs = computed(() => [
 
         <!-- Taken -->
         <template v-else-if="tab === 'taken'">
-          <div class="ak-tabkop"><h2 class="ak-tabtitel">Acties voor {{ onderwerp }} ({{ openTaken.length }} open)</h2><button type="button" class="dd-actie dd-actie--primair" data-test="taken-nieuw" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button></div>
+          <div class="ak-tabkop"><h2 class="ak-tabtitel">Acties voor {{ onderwerp }} ({{ openTaken.length }} open)</h2><button v-if="$aan('taken.basis')" type="button" class="dd-actie dd-actie--primair" data-test="taken-nieuw" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button></div>
           <p v-if="!t.taken.length" class="ak-leeg">Nog geen acties voor {{ dit }}. Klik op <strong>+ Taak</strong> hierboven.</p>
           <template v-for="g in takenGroepen" :key="g.label">
             <header class="ak-groepkop"><h3>{{ g.label }}</h3><span class="tnum">{{ g.items.length }}</span></header>
@@ -221,7 +221,7 @@ const tabs = computed(() => [
               <span class="tl-spoor" :class="m.concept ? 'tl-spoor--inzicht' : 'tl-spoor--mail'" aria-hidden="true" />
               <div class="tl-kaart" :class="{ 'tl-kaart--klik': m.concept }">
                 <span class="tl-kop"><span class="tl-soort" :class="m.concept ? 'tl-soort--inzicht' : 'tl-soort--mail'">{{ m.concept ? 'Concept' : 'Mail' }}</span><span class="tl-type">{{ m.status }}</span><ItemMetaregel :contact="contactVan(m)" :door="m.gebruiker" :datum="tlDatum(Date.parse(m.op))" /></span>
-                <NuxtLink v-if="m.concept" to="/concepten" class="tl-titel tl-strek">{{ m.onderwerp }}</NuxtLink>
+                <FunctieLink als-tekst v-if="m.concept" to="/concepten" class="tl-titel tl-strek">{{ m.onderwerp }}</FunctieLink>
                 <span v-else class="tl-titel">{{ m.onderwerp }}</span>
                 <span v-if="m.tekst" class="tl-tekst">{{ m.tekst.length > 220 ? `${m.tekst.slice(0, 220)}...` : m.tekst }}</span>
               </div>
@@ -231,7 +231,7 @@ const tabs = computed(() => [
 
         <!-- Afspraken -->
         <template v-else-if="tab === 'afspraken'">
-          <div class="ak-tabkop"><h2 class="ak-tabtitel">Afspraken met {{ onderwerp }} ({{ t.afspraken.length }})</h2><button type="button" class="dd-actie dd-actie--zwart" data-test="afspraken-nieuw" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button></div>
+          <div class="ak-tabkop"><h2 class="ak-tabtitel">Afspraken met {{ onderwerp }} ({{ t.afspraken.length }})</h2><button v-if="$aan('agenda.basis')" type="button" class="dd-actie dd-actie--zwart" data-test="afspraken-nieuw" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button></div>
           <p v-if="!t.afspraken.length" class="ak-leeg">Nog geen afspraken voor {{ dit }}. Klik op <strong>+ Afspraak</strong> hierboven.<template v-if="opContact"> Alle afspraken bij {{ account.naam }} staan op de <NuxtLink :to="`/accounts/${account.id}?tab=afspraken`" class="tekst-link">accountkaart</NuxtLink>.</template></p>
           <ol v-else class="tl-lijst">
             <li v-for="x in t.afspraken" :key="x.id" class="tl-item">

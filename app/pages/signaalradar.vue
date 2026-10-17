@@ -67,11 +67,11 @@ useHead({ title: 'Signaalradar · Dealtrace' })
       <section class="section section--laatste">
         <div class="container">
           <LegeStaat v-if="data && data.zonderBranches" kicker="Nog niets" titel="Je verkoopverhaal heeft nog geen branches." tekst="De radar telt per branche. Zet de branches en hun SBI-codes in het verkoopverhaal; daarna verschijnen hier de signalen per branche." data-test="sr-geen-branches">
-            <NuxtLink to="/richting" class="dd-actie dd-actie--secundair">Naar Richting</NuxtLink>
+            <FunctieLink to="/richting" class="dd-actie dd-actie--secundair">Naar Richting</FunctieLink>
           </LegeStaat>
           <LegeStaat v-else-if="data && data.leeg" kicker="Nog niets" titel="Nog geen signalen met bron." :tekst="`De Waarnemer zoekt per account naar vacatures, nieuws en vergunningen. Zodra er inzichten met bron zijn in ${reikwijdte === 'org' ? 'je organisatie' : data.mijLabel.toLowerCase()}, telt de radar ze hier op per branche en soort.`" data-test="sr-leeg">
             <button v-if="reikwijdte === 'mij'" type="button" class="dd-actie dd-actie--secundair" @click="zetReikwijdte('org')">Bekijk de hele organisatie</button>
-            <NuxtLink v-else to="/inzichten" class="dd-actie dd-actie--secundair">Naar Inzichten</NuxtLink>
+            <FunctieLink v-else to="/inzichten" class="dd-actie dd-actie--secundair">Naar Inzichten</FunctieLink>
           </LegeStaat>
           <div v-else-if="data" class="sr-indeling">
             <div class="sr-raster-kaart">

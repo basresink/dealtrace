@@ -107,9 +107,9 @@ if (import.meta.client && route.query.melding === 'gekoppeld') toast.toon('Agend
   <div>
     <PaginaKop kicker="Planning · Agenda" :titel="titel" helpartikel="agenda">
       <template #acties>
-        <button type="button" class="dd-actie dd-actie--zwart" data-test="plan-afspraak-knop" @click="plan()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
-        <NuxtLink v-if="weekstartAan" to="/weekstart" class="dd-actie dd-actie--secundair" data-test="agenda-weekstart"><Icoon naam="CalendarRange" class="dd-actie-icoon" />Weekstart</NuxtLink>
-        <NuxtLink v-if="weekreviewAan" to="/weekreview" class="dd-actie dd-actie--secundair" data-test="agenda-weekreview"><Icoon naam="NotebookPen" class="dd-actie-icoon" />Weekreview</NuxtLink>
+        <button v-if="$aan('agenda.basis')" type="button" class="dd-actie dd-actie--zwart" data-test="plan-afspraak-knop" @click="plan()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+        <FunctieLink v-if="weekstartAan" to="/weekstart" class="dd-actie dd-actie--secundair" data-test="agenda-weekstart"><Icoon naam="CalendarRange" class="dd-actie-icoon" />Weekstart</FunctieLink>
+        <FunctieLink v-if="weekreviewAan" to="/weekreview" class="dd-actie dd-actie--secundair" data-test="agenda-weekreview"><Icoon naam="NotebookPen" class="dd-actie-icoon" />Weekreview</FunctieLink>
       </template>
     </PaginaKop>
     <section class="section section--laatste ag-sectie">

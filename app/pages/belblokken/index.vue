@@ -28,9 +28,9 @@ useHead({ title: 'Belblokken · Dealtrace' })
     <template v-else>
       <PaginaKop kicker="Plannen · Belblokken" titel="Een blok is een blok. Wie het vult, kies jij." uitleg="Vaste belblokken die zichzelf vullen, én de mogelijkheid om er nu een Top 5 in te schuiven. Wat niet past schuift door naar het eerstvolgende blok." helpartikel="belblokken">
         <template #acties>
-          <NuxtLink v-if="volgende" :to="`/belblokken/${volgende.id}`" class="dd-actie dd-actie--secundair" data-test="start-belblok" :title="`Volgende blok ${tijd(volgende.start)} · ${volgende.open} gesprekken`"><Icoon naam="Phone" class="dd-actie-icoon" />Start belblok</NuxtLink>
-          <button type="button" class="dd-actie dd-actie--zwart" data-test="belblokken-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
-          <button type="button" class="dd-actie dd-actie--primair" data-test="belblokken-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
+          <FunctieLink v-if="volgende" :to="`/belblokken/${volgende.id}`" class="dd-actie dd-actie--secundair" data-test="start-belblok" :title="`Volgende blok ${tijd(volgende.start)} · ${volgende.open} gesprekken`"><Icoon naam="Phone" class="dd-actie-icoon" />Start belblok</FunctieLink>
+          <button v-if="$aan('agenda.basis')" type="button" class="dd-actie dd-actie--zwart" data-test="belblokken-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+          <button v-if="$aan('taken.basis')" type="button" class="dd-actie dd-actie--primair" data-test="belblokken-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
         </template>
       </PaginaKop>
 
@@ -59,7 +59,7 @@ useHead({ title: 'Belblokken · Dealtrace' })
                 <h3 class="bb-gepland-tijd">{{ tijd(s.start) }}</h3>
                 <p class="bb-gepland-sub">{{ s.open }} van {{ s.gesprekken }} gesprekken open · {{ s.plek ?? 'Kantoor' }}{{ s.vastBlokId ? ' · vast blok' : '' }}{{ s.status === 'bezig' ? ' · loopt' : '' }}</p>
               </div>
-              <NuxtLink :to="`/belblokken/${s.id}`" class="dd-act dd-act--vast" :data-test="`open-blok-${s.id}`">{{ s.status === 'bezig' ? 'Verder bellen' : 'Start' }}</NuxtLink>
+              <FunctieLink :to="`/belblokken/${s.id}`" class="dd-act dd-act--vast" :data-test="`open-blok-${s.id}`">{{ s.status === 'bezig' ? 'Verder bellen' : 'Start' }}</FunctieLink>
             </li>
           </ul>
         </div>

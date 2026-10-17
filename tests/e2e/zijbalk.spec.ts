@@ -12,8 +12,9 @@ test.describe('zijbalk per niveau', () => {
     await expect(items).toHaveCount(15)
     const sleutels = await items.evaluateAll((els) => els.map((e) => e.getAttribute('data-sleutel')))
     expect(sleutels.indexOf('nav.bezoeken')).toBeLessThan(sleutels.indexOf('nav.belblokken'))
-    // Nog niet aangezet: Inzichten, Briefings, Accountplannen, Leadgenerator, Signaalradar en Prospectreizen.
-    await expect(page.locator('.sb-slotgroep-teller')).toHaveText('6')
+    // Wat uit staat (Inzichten, Briefings, Accountplannen, Leadgenerator, Signaalradar, Prospectreizen) staat nergens in het menu.
+    await expect(page.locator('.sb-slotgroep')).toHaveCount(0)
+    for (const s of ['nav.inzichten', 'briefing.bewerken', 'nav.accountplannen', 'nav.leadgenerator', 'nav.signaalradar', 'nav.reizen']) await expect(page.locator(`[data-sleutel="${s}"]`)).toHaveCount(0)
     await expect(page.getByTestId('gebruikersblok')).toHaveText('ACCOUNTMANAGER · BEGINNER')
   })
 
@@ -91,18 +92,15 @@ test.describe('zijbalk per niveau', () => {
     await expect(page.getByTestId('mijn-cijfers')).toBeVisible()
   })
 
-  test('Nog niet aangezet opent de uitlegflyout', async ({ page }) => {
+  test('geen groep Nog niet aangezet; een directe link toont de uitlegpagina', async ({ page }) => {
     await login(page, 'u-02')
-    await page.click('.sb-slotgroep-kop')
-    // aria-disabled: Playwright ziet het item als uitgeschakeld, maar een klik opent bewust de uitleg.
-    await page.click('.sb-link--slot[data-sleutel="nav.leadgenerator"]', { force: true })
-    const flyout = page.getByTestId('niet-aangezet-flyout')
-    await expect(flyout).toBeVisible()
-    await expect(flyout).toContainText('Gevorderd · nog niet aangezet')
-    await expect(flyout).toContainText('Wat het doet')
-    await expect(flyout).toContainText('Tot die tijd')
-    await page.keyboard.press('Escape')
-    await expect(flyout).toBeHidden()
+    await expect(page.getByText('Nog niet aangezet')).toHaveCount(0)
+    await ga(page, '/leadgenerator')
+    const uitleg = page.getByTestId('niet-aangezet-pagina')
+    await expect(uitleg).toBeVisible()
+    await expect(uitleg).toContainText('Deze functie hoort bij Gevorderd')
+    await expect(uitleg).toContainText('Wat het doet')
+    await expect(uitleg).toContainText('Tot die tijd')
   })
 
   test('directe link naar een functie die nog niet aanstaat toont de uitleg', async ({ page }) => {

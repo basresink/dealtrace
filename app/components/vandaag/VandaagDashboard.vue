@@ -16,7 +16,7 @@ const tempoPct = computed(() => Math.min(100, props.c.gesprekken.procent))
         <h2 id="vd-kop" class="vd-titel" data-test="dashboard-kop">{{ c.kop }}</h2>
         <p class="vd-duiding">{{ c.duiding }}</p>
       </div>
-      <NuxtLink to="/mijn-dashboard" class="vd-link" data-test="dashboard-link">Mijn dashboard →</NuxtLink>
+      <FunctieLink to="/mijn-dashboard" class="vd-link" data-test="dashboard-link">Mijn dashboard →</FunctieLink>
     </header>
 
     <div class="vd-raster">

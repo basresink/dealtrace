@@ -9,6 +9,16 @@ const ongelezen = useState<number>('ongelezen', () => 0)
 const concepten = useState<number>('conceptenTeller', () => 0)
 useSchermklasse()
 
+// Een directe URL naar een scherm waarvan de functie voor je niveau uit staat: de pagina
+// "Nog niet aangezet" in plaats van het scherm (één register: shared/functieRoutes.ts).
+const route = useRoute()
+const { blokkeert } = useFunctie()
+const { functie: meFunctie } = useMe()
+const geblokt = computed(() => {
+  const s = blokkeert(route.path)
+  return s && meFunctie(s)?.reden === 'niveau' ? s : null
+})
+
 // Het bovenste schuifvenster sluit met Escape of door omlaag te vegen over de kop.
 // Bovenste = hoogste z-index, bij gelijke de laatste in de pagina (de assistent ligt boven een flyout).
 function sluitBovenste() {
@@ -59,7 +69,8 @@ onBeforeUnmount(() => { window.removeEventListener('keydown', toets); document.r
     <main id="inhoud" class="app-shell-main">
       <WerkInBalk />
       <OfflineStrook />
-      <slot />
+      <NietAangezetKop v-if="geblokt" :sleutel="geblokt" />
+      <slot v-else />
     </main>
     <NietAangezetFlyout />
     <HulpFlyout />

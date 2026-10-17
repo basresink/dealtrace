@@ -52,6 +52,7 @@ const stijl = (x: { s: number; e: number; baan: number; banen: number }) => ({
   left: `calc(${(100 / x.banen) * x.baan}% + ${x.baan ? 2 : 0}px)`, width: `calc(${100 / x.banen}% - ${x.banen > 1 ? 2 : 0}px)`,
 })
 const Link = resolveComponent('NuxtLink')
+const { magNaar } = useFunctie()
 const ICOON: Record<string, string> = { afspraak: 'Handshake', bezoek: 'MapPin', reis: 'Car', kans: 'Compass', bel: 'Phone', voorbereiding: 'BookOpen', lunch: 'Utensils', focus: 'SquareCheck', bezet: 'Lock' }
 const ICOON_KLASSE: Record<string, string> = { bel: 'item-icoon--call', bezoek: 'item-icoon--visit', kans: 'item-icoon--visit', afspraak: 'item-icoon--email' }
 
@@ -118,7 +119,7 @@ useHead({ title: 'Dagstart · Dealtrace' })
         <template #titel><h1 class="title title--groot" data-test="ds-titel">{{ d.titel }}</h1></template>
         <template #uitleg><p class="subtitle subtitle--groot" data-test="ds-lede">{{ d.lede }}</p></template>
         <template #acties>
-          <NuxtLink to="/agenda" class="dd-actie dd-actie--secundair"><Icoon naam="Calendar" class="dd-actie-icoon" />Agenda</NuxtLink>
+          <FunctieLink to="/agenda" class="dd-actie dd-actie--secundair"><Icoon naam="Calendar" class="dd-actie-icoon" />Agenda</FunctieLink>
           <span class="ds-werkplek-rij"><span class="pil pil--grijs ds-werkplek" data-test="ds-werkplek">{{ d.modus === 'buiten' ? 'Buitendienst' : 'Binnendienst' }} · je werkplek</span></span>
         </template>
       </PaginaKop>
@@ -139,7 +140,7 @@ useHead({ title: 'Dagstart · Dealtrace' })
               </div>
               <ul class="ds-lijst" data-test="ds-blokken">
                 <li v-for="b in d.plan.blokken.filter((x: any) => x.soort !== 'reis')" :key="b.id" :data-test="`ds-blok-${b.soort}`">
-                  <component :is="b.href ? Link : 'div'" :to="b.href ?? undefined" class="item-rij">
+                  <component :is="b.href && magNaar(b.href) ? Link : 'div'" :to="b.href && magNaar(b.href) ? b.href : undefined" class="item-rij">
                     <span class="item-tijd">{{ tijd(b.start) }}<small>{{ tijd(b.eind) }}</small></span>
                     <span class="item-icoon" :class="ICOON_KLASSE[b.soort]"><Icoon :naam="ICOON[b.soort] ?? 'Clock'" /></span>
                     <span class="item-body"><span class="item-naam">{{ b.titel }}</span><span v-if="b.sub" class="item-meta">{{ b.sub }}</span><span v-if="b.voorstel" class="pil pil--geel">Voorstel</span></span>
@@ -221,9 +222,9 @@ useHead({ title: 'Dagstart · Dealtrace' })
             <DagplanningVoorkeur compact @gewijzigd="refresh()" />
 
             <nav class="kaart ds-links" aria-label="Meer van je ritme">
-              <NuxtLink to="/weekstart" class="tekst-link">Weekstart</NuxtLink>
-              <NuxtLink to="/weekreview" class="tekst-link">Weekreview</NuxtLink>
-              <NuxtLink to="/" class="tekst-link">Vandaag</NuxtLink>
+              <FunctieLink to="/weekstart" class="tekst-link">Weekstart</FunctieLink>
+              <FunctieLink to="/weekreview" class="tekst-link">Weekreview</FunctieLink>
+              <FunctieLink to="/" class="tekst-link">Vandaag</FunctieLink>
             </nav>
           </div>
         </div>

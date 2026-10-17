@@ -35,7 +35,7 @@ useHead({ title: 'Richting · Dealtrace' })
       <template #acties>
         <span class="pil pil--leeg vv-bron" data-test="vv-bron">{{ data.bron === 'salesdna' ? `Uit SalesDNA${data.bronBijgewerkt ? ` · bijgewerkt ${datum(data.bronBijgewerkt)}` : ''}` : 'Eigen inrichting' }}</span>
         <span v-if="data.kan.inrichten && st?.bron === 'salesdna'" class="meta vv-bron" data-test="wijzig-in-salesdna">Wijzigen doe je in SalesDNA</span>
-        <NuxtLink v-else-if="data.kan.inrichten" class="dd-act" to="/instellingen/verkoopverhaal" data-test="inrichten">Inrichten</NuxtLink>
+        <FunctieLink v-else-if="data.kan.inrichten" class="dd-act" to="/instellingen/verkoopverhaal" data-test="inrichten">Inrichten</FunctieLink>
       </template>
     </PaginaKop>
     <section class="section section--laatste">

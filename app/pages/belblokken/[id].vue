@@ -11,7 +11,6 @@ import type { ScriptStaat } from '~~/shared/belscripts'
 import { reeksStrip, reeksUitkomstVan, sjabloonVoorUitkomst } from '~~/shared/opvolgreeks'
 const route = useRoute()
 const toast = useToast()
-const { toon: toonUitleg } = useNietAangezet()
 const id = route.params.id as string
 const { data, error } = await useFetch<any>(() => `/api/belblokken/${id}`)
 const items = ref<any[]>([])
@@ -120,16 +119,15 @@ useHead({ title: 'Belmodus · Dealtrace' })
       <strong>Belmodus</strong>
       <span v-if="data">{{ new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(new Date(data.sessie.start)) }} · <span data-test="teller">gesprek {{ Math.min(index + 1, items.length) }} van {{ items.length }}</span> · nog {{ resterendMin }} min</span>
       <label v-if="data?.kan.handsfree" class="rijtje"><Schakelaar :aan="handsfree" label="Handsfree" @wissel="wisselHandsfree" /><span>Handsfree</span></label>
-      <button v-else type="button" class="dd-act knop-slot" data-test="handsfree-slot" @click="toonUitleg('bellen.handsfree')"><Icoon naam="Lock" :grootte="14" /> Handsfree</button>
       <button v-if="!resultaat" type="button" class="dd-act" data-test="stop-blok" @click="stop">Stop blok</button>
-      <NuxtLink to="/belblokken" class="dd-act" aria-label="Sluiten"><Icoon naam="X" class="dd-act-icoon" />Sluiten</NuxtLink>
+      <FunctieLink to="/belblokken" class="dd-act" aria-label="Sluiten"><Icoon naam="X" class="dd-act-icoon" />Sluiten</FunctieLink>
     </div>
     <div v-if="error" class="belmodus-raster"><div><p>Dit belblok bestaat niet (meer).</p></div></div>
     <div v-else-if="resultaat" class="belmodus-raster belmodus-raster--resultaat">
       <article class="fo-blok fo-blok--accent" data-test="blokresultaat">
         <header class="fo-blok-kop"><h3 class="fo-blok-titel">Blokresultaat</h3></header>
         <p class="fo-tekst">{{ resultaat.gevoerd }} gesprekken gevoerd · {{ resultaat.bereikt }} bereikt · {{ resultaat.beslisserBereikt }} beslisser bereikt · {{ resultaat.afspraken }} {{ resultaat.afspraken === 1 ? 'afspraak' : 'afspraken' }} · {{ resultaat.terugbellen }} terugbellen · gemiddeld {{ Math.round(resultaat.gemiddeldeDuurSec / 60) }} min, geschat {{ Math.round(resultaat.geschatSec / 60) }} min.</p>
-        <NuxtLink to="/belblokken" class="dd-act mt-8">Plan resterende in</NuxtLink>
+        <FunctieLink to="/belblokken" class="dd-act mt-8">Plan resterende in</FunctieLink>
       </article>
     </div>
     <template v-else-if="huidig">

@@ -58,7 +58,7 @@ opslag.volg(() => [f, klant.value?.id ?? null])
               <label class="veld"><span class="veld-label">Mobiel</span><input v-model="f.mobiel" class="invoer" type="tel"></label>
               <label class="veld"><span class="veld-label">LinkedIn</span><input v-model="f.linkedin" class="invoer" type="url" placeholder="linkedin.com/in/..."></label>
             </div>
-            <p v-if="dubbel" class="fo-tekst mt-16" role="alert" data-test="nc-dubbel">{{ dubbel.naam }} staat al in je bestand. <NuxtLink :to="`/contacten/${dubbel.id}`" class="tekst-link" @click="emit('sluit')">Open contact →</NuxtLink></p>
+            <p v-if="dubbel" class="fo-tekst mt-16" role="alert" data-test="nc-dubbel">{{ dubbel.naam }} staat al in je bestand. <FunctieLink :to="`/contacten/${dubbel.id}`" class="tekst-link" @click="emit('sluit')">Open contact →</FunctieLink></p>
           </article>
         </div>
         </form>

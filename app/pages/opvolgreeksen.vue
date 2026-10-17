@@ -57,7 +57,7 @@ useHead({ title: 'Opvolgreeksen · Dealtrace' })
     <template v-else>
       <PaginaKop kicker="Activiteiten · Opvolgreeksen" :titel="data?.kop ?? 'Opvolgreeksen'" :uitleg="data?.week" helpartikel="volgen">
         <template #acties>
-          <NuxtLink v-if="kanBeheren" to="/instellingen/opvolgreeksen" class="dd-actie dd-actie--secundair" data-test="or-sjablonen"><Icoon naam="Settings" class="dd-actie-icoon" />Sjablonen</NuxtLink>
+          <FunctieLink v-if="kanBeheren" to="/instellingen/opvolgreeksen" class="dd-actie dd-actie--secundair" data-test="or-sjablonen"><Icoon naam="Settings" class="dd-actie-icoon" />Sjablonen</FunctieLink>
           <button type="button" class="dd-actie dd-actie--primair" data-test="or-start" @click="startOpen = true"><Icoon naam="Repeat" class="dd-actie-icoon" />Start reeks</button>
         </template>
       </PaginaKop>

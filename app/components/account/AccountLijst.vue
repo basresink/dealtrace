@@ -91,7 +91,7 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
   <div>
     <PaginaKop :zonder-hulp="soort === 'prospect'">
       <template #kicker>
-        <NuxtLink v-if="soort === 'prospect'" to="/prospects" class="kicker kicker--paars lijst-kruimel"><Icoon naam="ArrowLeft" :grootte="14" /> Prospects · {{ data.totaal }} prospects totaal</NuxtLink>
+        <FunctieLink als-tekst v-if="soort === 'prospect'" to="/prospects" class="kicker kicker--paars lijst-kruimel"><Icoon naam="ArrowLeft" :grootte="14" /> Prospects · {{ data.totaal }} prospects totaal</FunctieLink>
         <span v-else class="kicker kicker--streep">Alleen lezen · {{ data.totaal }} {{ data.totaal === 1 ? 'klant' : 'klanten' }} totaal</span>
       </template>
       <template #titel><h1 class="title title--groot">{{ soort === 'prospect' ? 'Alle prospects' : 'Bestaande klanten (uit DealDrive)' }}</h1></template>
@@ -100,7 +100,7 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
         <p v-else class="subtitle subtitle--groot">Klanten komen uit DealDrive of je CRM en zijn hier alleen te lezen: als bron voor kansen langs de route en warme introducties, en om klanten uit je prospectlijsten te houden. Dealtrace maakt zelf geen klant van een prospect.</p>
       </template>
       <template #acties>
-        <button v-if="soort === 'prospect'" type="button" class="dd-actie dd-actie--zwart" data-test="nieuwe-prospect" @click="nieuwOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Prospect</button>
+        <button v-if="soort === 'prospect' && $aan('prospects.nieuw')" type="button" class="dd-actie dd-actie--zwart" data-test="nieuwe-prospect" @click="nieuwOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Prospect</button>
         <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'dd-actie--filters-aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="filters-knop" @click="wisselFilters">
           <Icoon naam="Filter" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="pil-teller pil-teller--zwart">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="keuzemenu-pijl" :class="{ 'keuzemenu-pijl--open': filtersOpen }" />
         </button>
@@ -160,8 +160,8 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
         <NuxtLink role="menuitem" :to="`/accounts/${menu.rij.id}`">Open kaart</NuxtLink>
         <a v-if="primair(menu.rij)?.telefoon || menu.rij.telefoon" role="menuitem" :href="telLink(primair(menu.rij)?.telefoon ?? menu.rij.telefoon)">Bel primaire contact</a>
         <a v-if="primair(menu.rij)?.email" role="menuitem" :href="`mailto:${primair(menu.rij).email}`">Stuur e-mail</a>
-        <button type="button" role="menuitem" @click="taakVoor(menu.rij)">Nieuwe taak</button>
-        <button type="button" role="menuitem" @click="afspraakVoor(menu.rij)">Plan afspraak</button>
+        <button v-if="$aan('taken.basis')" type="button" role="menuitem" @click="taakVoor(menu.rij)">Nieuwe taak</button>
+        <button v-if="$aan('agenda.basis')" type="button" role="menuitem" @click="afspraakVoor(menu.rij)">Plan afspraak</button>
       </div>
     </Teleport>
     <NieuweProspectFlyout :open="nieuwOpen" @sluit="nieuwOpen = false" @aangemaakt="aangemaakt" @bestaand="(id) => navigateTo(`/accounts/${id}`)" />

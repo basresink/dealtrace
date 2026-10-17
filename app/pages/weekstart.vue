@@ -22,8 +22,8 @@ useHead({ title: 'Weekstart · Dealtrace' })
     <template v-else-if="w">
       <PaginaKop :kicker="w.kicker" :titel="w.titel" :uitleg="w.samenvatting" helpartikel="weekstart">
         <template #acties>
-          <NuxtLink to="/dagstart" class="dd-actie dd-actie--zwart" data-test="ws-naar-dagstart"><Icoon naam="Sunrise" class="dd-actie-icoon" />Dagstart</NuxtLink>
-          <NuxtLink v-if="reviewAan" to="/weekreview" class="dd-actie dd-actie--secundair" data-test="ws-naar-weekreview"><Icoon naam="NotebookPen" class="dd-actie-icoon" />Weekreview</NuxtLink>
+          <FunctieLink to="/dagstart" class="dd-actie dd-actie--zwart" data-test="ws-naar-dagstart"><Icoon naam="Sunrise" class="dd-actie-icoon" />Dagstart</FunctieLink>
+          <FunctieLink v-if="reviewAan" to="/weekreview" class="dd-actie dd-actie--secundair" data-test="ws-naar-weekreview"><Icoon naam="NotebookPen" class="dd-actie-icoon" />Weekreview</FunctieLink>
         </template>
       </PaginaKop>
 
@@ -39,14 +39,14 @@ useHead({ title: 'Weekstart · Dealtrace' })
             <span class="kicker">Wat openstaat</span>
             <p class="ws-groot tnum">{{ w.open.totaal }} <small>taken</small></p>
             <p class="meta">{{ w.open.tekst }}</p>
-            <NuxtLink to="/taken" class="tekst-link ws-link">Naar Taken</NuxtLink>
+            <FunctieLink to="/taken" class="tekst-link ws-link">Naar Taken</FunctieLink>
           </article>
           <article class="kaart ws-tegel" data-test="ws-voornemens">
             <span class="kicker">Je voornemens</span>
             <ul v-if="w.voornemens.length" class="ws-vn">
               <li v-for="v in w.voornemens" :key="v.id"><span>{{ v.tekst }}</span><span class="pil" :class="v.stand.klaar ? 'pil--groen' : 'pil--grijs'">{{ v.stand.tekst }}</span></li>
             </ul>
-            <p v-else class="meta" data-test="ws-geen-voornemens">Geen voornemens uit de weekreview van vrijdag.<template v-if="reviewAan">{{ ' ' }}<NuxtLink to="/weekreview" class="tekst-link">Doe je weekreview</NuxtLink></template></p>
+            <p v-else class="meta" data-test="ws-geen-voornemens">Geen voornemens uit de weekreview van vrijdag.<template v-if="reviewAan">{{ ' ' }}<FunctieLink to="/weekreview" class="tekst-link">Doe je weekreview</FunctieLink></template></p>
           </article>
         </div>
       </section>
@@ -58,11 +58,11 @@ useHead({ title: 'Weekstart · Dealtrace' })
               <header class="ws-dag-kop"><b>{{ dag.label }}</b><span v-if="dag.vandaag" class="pil">Vandaag</span><span v-else-if="!dag.werkdag" class="pil pil--grijs">Vrij</span></header>
               <ul v-if="dag.items.length" class="ws-items">
                 <li v-for="i in dag.items" :key="i.id">
-                  <NuxtLink v-if="i.soort === 'belblok'" :to="`/belblokken/${i.id}`" class="item-rij">
+                  <FunctieLink v-if="i.soort === 'belblok'" :to="`/belblokken/${i.id}`" class="item-rij">
                     <span class="item-tijd">{{ i.tijd }}</span>
                     <span class="item-icoon" :class="ICOON_KLASSE[i.soort]"><Icoon :naam="ICOON[i.soort] ?? 'Clock'" /></span>
                     <span class="item-body"><span class="item-naam">{{ i.titel }}</span><span v-if="i.sub" class="item-meta">{{ i.sub }}</span></span>
-                  </NuxtLink>
+                  </FunctieLink>
                   <button v-else type="button" class="item-rij" :data-test="`ws-afspraak-${i.id}`" @click="afspraak = i.id">
                     <span class="item-tijd">{{ i.tijd }}</span>
                     <span class="item-icoon" :class="ICOON_KLASSE[i.soort]"><Icoon :naam="ICOON[i.soort] ?? 'Clock'" /></span>
@@ -86,11 +86,11 @@ useHead({ title: 'Weekstart · Dealtrace' })
             <header class="kaart-kop"><h2 class="kaart-titel">Belangrijkste aanleidingen</h2></header>
             <ul v-if="w.aanleidingen.length" class="ws-items">
               <li v-for="a in w.aanleidingen" :key="a.id">
-                <NuxtLink :to="`/inzichten?inzicht=${a.id}`" class="item-rij">
+                <FunctieLink als-tekst :to="`/inzichten?inzicht=${a.id}`" class="item-rij">
                   <span class="item-tijd tnum">{{ a.relevantie }}</span>
                   <span class="item-icoon"><Icoon naam="Lightbulb" /></span>
                   <span class="item-body"><span class="item-naam">{{ a.titel }}</span><span v-if="a.accountNaam" class="item-meta">{{ a.accountNaam }}</span></span>
-                </NuxtLink>
+                </FunctieLink>
               </li>
             </ul>
             <p v-else class="meta">Geen open aanleidingen bij je eigen prospects. Nieuwe inzichten zie je op Vandaag.</p>

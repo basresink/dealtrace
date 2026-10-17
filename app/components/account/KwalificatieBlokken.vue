@@ -138,7 +138,7 @@ const ontbrekend = computed(() => ((a.value.ontbrekendeRollen ?? []) as string[]
       <button type="button" class="dd-act dc-knop" :disabled="dcBezig || !online" data-test="dc-zoek" @click="zoekContacten">{{ online ? 'Zoek contactpersonen' : 'Niet beschikbaar zonder verbinding' }}</button>
       <span class="meta">Datacollectief · kost tot 5 records</span>
     </div>
-    <ul v-if="a.contacten?.length" class="schakel-lijst kaart mt-16"><li v-for="c in a.contacten" :key="c.id" class="schakel-rij"><NuxtLink :to="`/contacten/${c.id}`">{{ c.naam }}</NuxtLink><span class="meta">{{ CONTACTROL_LABEL[c.rol as ContactRol] }}<template v-if="c.functie"> · {{ c.functie }}</template><template v-if="c.status === 'vertrokken'"> · vertrokken</template><template v-if="c.herkomst?.bron === 'datacollectief'"> · Datacollectief · {{ c.herkomst.op.slice(0, 10) }}</template></span></li></ul>
+    <ul v-if="a.contacten?.length" class="schakel-lijst kaart mt-16"><li v-for="c in a.contacten" :key="c.id" class="schakel-rij"><FunctieLink als-tekst :to="`/contacten/${c.id}`">{{ c.naam }}</FunctieLink><span class="meta">{{ CONTACTROL_LABEL[c.rol as ContactRol] }}<template v-if="c.functie"> · {{ c.functie }}</template><template v-if="c.status === 'vertrokken'"> · vertrokken</template><template v-if="c.herkomst?.bron === 'datacollectief'"> · Datacollectief · {{ c.herkomst.op.slice(0, 10) }}</template></span></li></ul>
   </section>
 </template>
 

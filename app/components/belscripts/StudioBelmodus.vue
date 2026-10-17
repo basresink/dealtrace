@@ -40,8 +40,8 @@ const scriptNaam = (id: string) => p.value?.scripts.find((s: any) => s.id === id
     <div v-else class="sb mt-12" data-test="studio-belmodus">
       <div class="sb-balk">
         <strong>Belmodus</strong><span>Voorbeeld voor {{ p.account.naam }}</span>
-        <NuxtLink v-if="volgend" :to="`/belblokken/${volgend.id}`" class="dd-act sb-open" data-test="sb-open-blok"><Icoon naam="Phone" :grootte="14" />Open je belblok</NuxtLink>
-        <NuxtLink v-else to="/belblokken" class="dd-act sb-open">Naar Belblokken</NuxtLink>
+        <FunctieLink v-if="volgend" :to="`/belblokken/${volgend.id}`" class="dd-act sb-open" data-test="sb-open-blok"><Icoon naam="Phone" :grootte="14" />Open je belblok</FunctieLink>
+        <FunctieLink v-else to="/belblokken" class="dd-act sb-open">Naar Belblokken</FunctieLink>
       </div>
       <div class="sb-raster">
         <div class="sb-script">

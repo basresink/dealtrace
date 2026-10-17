@@ -24,7 +24,7 @@ useHead({ title: 'Prospects · Dealtrace' })
       zonder-hulp
     >
       <template #acties>
-        <NuxtLink class="dd-actie dd-actie--zwart" to="/prospects/alle" data-test="alle-prospects">Alle prospects →</NuxtLink>
+        <FunctieLink class="dd-actie dd-actie--zwart" to="/prospects/alle" data-test="alle-prospects">Alle prospects →</FunctieLink>
       </template>
     </PaginaKop>
     <section class="section section--alt section--laatste">

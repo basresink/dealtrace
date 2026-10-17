@@ -114,7 +114,7 @@ test('Zet in belblok zet eigen accounts in het volgende belblok (API)', async ({
   expect(geen.status()).toBe(409)
 })
 
-test('Beginner ziet Signaalradar bij Nog niet aangezet; de API weigert', async ({ page }) => {
+test('Beginner ziet Signaalradar niet in het menu; de API weigert', async ({ page }) => {
   await apiLogin(page.request, 'u-02')
   const r = await page.request.get('/api/signaalradar')
   expect(r.status()).toBe(403)

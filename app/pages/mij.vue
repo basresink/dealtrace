@@ -173,7 +173,7 @@ useHead({ title: 'Account · Dealtrace' })
               </dl>
               <p class="veld-uitleg">
                 {{ profiel.magOrganisatieBeheren ? 'Je organisatie, teams, rollen en niveaus stel je in bij Instellingen.' : 'Je team, rol, niveau en werkplek stelt je beheerder of salesmanager in.' }}
-                <NuxtLink v-if="profiel.magOrganisatieBeheren" to="/instellingen" class="tekst-link">Naar Instellingen</NuxtLink>
+                <FunctieLink v-if="profiel.magOrganisatieBeheren" to="/instellingen" class="tekst-link">Naar Instellingen</FunctieLink>
               </p>
             </section>
 
@@ -202,20 +202,19 @@ useHead({ title: 'Account · Dealtrace' })
           <article v-if="functie('regels.lezen')?.beschikbaar" class="kaart" data-test="mijn-regels">
             <header class="kaart-kop"><h2 class="kaart-titel">{{ functie('regels.persoonlijk')?.beschikbaar ? 'Mijn regels' : 'Regels bekijken' }}</h2></header>
             <p class="kaart-meta">Welke regels jouw taken en inzichten klaarzetten{{ functie('regels.persoonlijk')?.beschikbaar ? ', en je eigen regels voor je eigen accounts' : '' }}.</p>
-            <div class="reis-knoppen mt-16"><NuxtLink to="/instellingen/regels" class="dd-act">Naar de regels</NuxtLink><NuxtLink to="/instellingen/ritme" class="dd-act">Accountmatrix</NuxtLink></div>
+            <div class="reis-knoppen mt-16"><FunctieLink to="/instellingen/regels" class="dd-act">Naar de regels</FunctieLink><NuxtLink to="/instellingen/ritme" class="dd-act">Accountmatrix</NuxtLink></div>
           </article>
           <article class="kaart" data-test="mijn-routes">
             <header class="kaart-kop"><h2 class="kaart-titel">Routes en navigeren</h2></header>
             <label class="veld"><span class="veld-label">Thuisbasis voor routes</span><input v-model="thuisbasis" class="invoer" placeholder="Adres, postcode of plaats" data-test="thuisbasis" @change="bewaarRoute('thuisbasis')"><span class="veld-uitleg">Je route begint en eindigt hier. Je locatie zelf bewaart Dealtrace niet.</span></label>
             <label class="veld mt-16"><span class="veld-label">Kaartapp voor navigeren</span><select v-model="kaartapp" class="invoer" data-test="kaartapp" @change="bewaarRoute('kaartapp')"><option value="google">Google Maps</option><option value="apple">Apple Kaarten</option><option value="waze">Waze</option></select></label>
           </article>
-          <article v-if="agenda" id="agenda" class="kaart" data-test="gekoppelde-agenda">
+          <article v-if="agenda && (agenda.beheerder || agenda.magKoppelen)" id="agenda" class="kaart" data-test="gekoppelde-agenda">
             <header class="kaart-kop"><h2 class="kaart-titel">Gekoppelde agenda</h2></header>
             <p class="kaart-meta">Wat in je agenda staat, telt mee als bezet. Afspraken uit Dealtrace komen erin, met een Teams- of Meet-link bij online.</p>
             <p v-if="agenda.beheerder" class="meta" data-test="agenda-naar-instellingen">Voor de organisatie {{ agenda.aanDoorBeheerder ? 'aan' : 'uit' }}. <NuxtLink to="/instellingen/koppelingen/agenda">Wijzig in Instellingen</NuxtLink></p>
             <p v-if="!agenda.aanDoorBeheerder" class="meta">Je beheerder heeft de agendakoppeling nog niet aangezet.</p>
-            <p v-else-if="!agenda.magKoppelen" class="meta">Agenda koppelen: nog niet aangezet voor jouw niveau.</p>
-            <ul v-else class="schakel-lijst">
+            <ul v-else-if="agenda.magKoppelen" class="schakel-lijst">
               <li v-for="p in agenda.providers" :key="p.provider" class="schakel-rij">
                 <span>{{ p.naam }} <span class="meta">{{ p.status === 'actief' ? `gekoppeld${p.laatsteSync ? `, bijgewerkt ${new Date(p.laatsteSync).toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' })}` : ''}` : p.status === 'fout' ? 'ontkoppeld, koppel opnieuw' : 'niet gekoppeld' }}</span></span>
                 <button v-if="p.status === 'actief'" type="button" class="dd-act" :data-test="`ontkoppel-${p.provider}`" @click="ontkoppelAgenda(p.provider)">Ontkoppel</button>

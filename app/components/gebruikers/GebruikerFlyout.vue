@@ -51,7 +51,7 @@ async function bewaar() {
         </article>
         <article class="fo-blok">
           <p class="veld-uitleg">AI-plafond en dagplafond per gebruiker stel je in bij Verbruik.</p>
-          <NuxtLink to="/instellingen/verbruik" class="dd-act mt-8">Naar AI-verbruik</NuxtLink>
+          <FunctieLink to="/instellingen/verbruik" class="dd-act mt-8">Naar AI-verbruik</FunctieLink>
         </article>
         <p v-if="fout" class="gf-fout" role="alert" data-test="gf-fout">{{ fout }}</p>
       </div>

@@ -34,7 +34,7 @@ useHead({ title: 'Datakwaliteit · Dealtrace' })
     <template v-else>
       <PaginaKop kicker="Rapportages · Datakwaliteit" titel="Datakwaliteit" uitleg="Welke gegevens ontbreken, waarom dat ertoe doet en waar je het oplost." helpartikel="datakwaliteit">
         <template #acties>
-          <NuxtLink to="/mijn-dashboard" class="dd-actie dd-actie--secundair" data-test="naar-dashboard"><Icoon naam="ArrowLeft" class="dd-actie-icoon" />Mijn dashboard</NuxtLink>
+          <FunctieLink to="/mijn-dashboard" class="dd-actie dd-actie--secundair" data-test="naar-dashboard"><Icoon naam="ArrowLeft" class="dd-actie-icoon" />Mijn dashboard</FunctieLink>
         </template>
       </PaginaKop>
       <section class="section section--laatste">

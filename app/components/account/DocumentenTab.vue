@@ -36,10 +36,10 @@ async function verwijder() {
       <h2 class="ak-tabtitel">Documenten ({{ documenten.length }})</h2>
       <div class="dt-acties">
         <button type="button" class="dd-actie dd-actie--primair" data-test="document-uploaden" @click="uploadOpen = true"><Icoon naam="Upload" class="dd-actie-icoon" />Document uploaden</button>
-        <NuxtLink v-if="kennisbank" to="/kennisbank" class="dd-actie dd-actie--secundair" data-test="naar-kennisbank">Naar Kennisbank →</NuxtLink>
+        <FunctieLink v-if="kennisbank" to="/kennisbank" class="dd-actie dd-actie--secundair" data-test="naar-kennisbank">Naar Kennisbank →</FunctieLink>
       </div>
     </div>
-    <p class="meta ak-hint">Documenten zijn gedeeld met de kennisbank: wat hier verschijnt is ook zoekbaar onder <NuxtLink v-if="kennisbank" to="/kennisbank" class="tekst-link">Kennisbank</NuxtLink><template v-else>Kennisbank</template>. Klik een document voor de AI-bevraging.</p>
+    <p class="meta ak-hint">Documenten zijn gedeeld met de kennisbank: wat hier verschijnt is ook zoekbaar onder <FunctieLink v-if="kennisbank" to="/kennisbank" class="tekst-link">Kennisbank</FunctieLink><template v-else>Kennisbank</template>. Klik een document voor de AI-bevraging.</p>
     <p v-if="!documenten.length" class="ak-leeg" data-test="documenten-leeg">Nog geen documenten voor {{ dit }}. Klik <strong>Document uploaden</strong>. Het document verschijnt dan hier en in de kennisbank.</p>
     <ul v-else class="ak-rijen">
       <li v-for="d in documenten" :key="d.id" class="ak-doc">

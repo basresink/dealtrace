@@ -11,7 +11,7 @@ defineProps<{ titel: string; uitleg?: string; link?: string; linkTekst?: string 
         <h2 class="hg-titel">{{ titel }}</h2>
         <p v-if="uitleg" class="hg-uitleg">{{ uitleg }}</p>
       </div>
-      <NuxtLink v-if="link" :to="link" class="hg-link">{{ linkTekst ?? 'Bekijk alles' }}</NuxtLink>
+      <FunctieLink v-if="link" :to="link" class="hg-link">{{ linkTekst ?? 'Bekijk alles' }}</FunctieLink>
     </header>
     <div class="hg-raster"><slot /></div>
   </section>

@@ -9,7 +9,6 @@ import { DASHBOARD_PERIODE_OPTIES, EIGEN_PERIODE_LABEL, KANAAL_ALLEEN_GEVULD, KA
 const toast = useToast()
 const route = useRoute()
 const router = useRouter()
-const { toon: toonUitleg } = useNietAangezet()
 const { functie } = useMe()
 const query = computed(() => ({ periode: route.query.periode || undefined, van: route.query.van || undefined, tot: route.query.tot || undefined }))
 const { data, refresh } = await useFetch<any>('/api/resultaten/dashboard', { query, default: () => null })
@@ -68,8 +67,8 @@ const gemPoging = computed(() => (eersteAfspraak.value?.gemiddeld != null ? eers
   <div>
     <RapportKop v-model:open="filtersOpen" :kicker="`Mijn dashboard · ${data?.periode.label ?? 'Deze maand'}`" titel="Waar sta jij?" subtitel="Jouw pogingen, gesprekken, afspraken en reis over de gekozen periode. Activiteit telt op wat jij deed; prospects en dekking op wat jij in beheer hebt." :filter-aantal="filterAantal" helpartikel="je-cijfers-lezen">
       <template #acties>
-        <NuxtLink to="/data-kwaliteit" class="dd-actie dd-actie--secundair" data-test="knop-data" title="Datakwaliteit"><Icoon naam="Database" class="dd-actie-icoon" />Data</NuxtLink>
-        <NuxtLink v-if="funnelAan" :to="funnelLink" class="dd-actie dd-actie--secundair" data-test="knop-funnel"><Icoon naam="Filter" class="dd-actie-icoon" />Funnel</NuxtLink>
+        <FunctieLink to="/data-kwaliteit" class="dd-actie dd-actie--secundair" data-test="knop-data" title="Datakwaliteit"><Icoon naam="Database" class="dd-actie-icoon" />Data</FunctieLink>
+        <FunctieLink v-if="funnelAan" :to="funnelLink" class="dd-actie dd-actie--secundair" data-test="knop-funnel"><Icoon naam="Filter" class="dd-actie-icoon" />Funnel</FunctieLink>
       </template>
     </RapportKop>
     <RapportPeriode v-if="filtersOpen && data" :opties="DASHBOARD_PERIODE_OPTIES" :waarde="data.periode.sleutel" :van="data.periode.van" :tot="data.periode.tot" :vandaag="vandaag" :eigen-label="EIGEN_PERIODE_LABEL" :reset="data.periode.sleutel !== 'maand'" @kies="kiesPeriode" @datum="(van, tot) => zet({ periode: 'eigen', van, tot })" @reset="kiesPeriode('maand')" />
@@ -117,7 +116,7 @@ const gemPoging = computed(() => (eersteAfspraak.value?.gemiddeld != null ? eers
       <section class="section section--alt">
         <div class="container md-duo">
           <div v-if="data.kan.funnel && data.funnel" class="md-blok" data-test="grafiek-reis">
-            <header class="md-blok-kop"><h3 class="md-blok-titel">Je reis per fase</h3><NuxtLink :to="`/funnel${data.periode.sleutel === 'kwartaal' ? '?periode=kwartaal' : ''}`" class="md-blok-link">Open funnel →</NuxtLink></header>
+            <header class="md-blok-kop"><h3 class="md-blok-titel">Je reis per fase</h3><FunctieLink :to="`/funnel${data.periode.sleutel === 'kwartaal' ? '?periode=kwartaal' : ''}`" class="md-blok-link">Open funnel →</FunctieLink></header>
             <p class="md-blok-meta">{{ data.funnel.kop.titel }}</p>
             <BalkRijen v-if="data.funnel.aantalAccounts" :rijen="reisRijen" label="Accounts per reisfase" />
             <p v-else class="md-leeg">Nog geen accounts in deze periode.</p>
@@ -143,7 +142,6 @@ const gemPoging = computed(() => (eersteAfspraak.value?.gemiddeld != null ? eers
               <p class="md-voet">Laatste contact per actieve prospect (nieuw, gescoord of in reis).<template v-if="data.prospects.dekking.zonderContact"> <strong>{{ data.prospects.dekking.zonderContact }}</strong> {{ data.prospects.dekking.zonderContact === 1 ? 'prospect heeft' : 'prospects hebben' }} nog geen contactmoment: kandidaten voor je volgende belblok.</template></p>
               <p v-if="eersteAfspraak?.accounts" class="md-voet" data-test="dekking-eerste-afspraak">Je eerste afspraak kwam gemiddeld bij poging <strong>{{ gemPoging }}</strong>: {{ eersteAfspraak.verdeling['1'] }} bij poging 1, {{ eersteAfspraak.verdeling['2'] }} bij poging 2, {{ eersteAfspraak.verdeling['3'] }} bij poging 3 en {{ eersteAfspraak.verdeling['4+'] }} bij poging 4 of later.</p>
             </template>
-            <button v-else type="button" class="dd-act knop-slot" data-test="dekking-slot" @click="toonUitleg('funnel.filters')"><Icoon naam="Lock" :grootte="14" /> Prospectdekking komt vanaf Gevorderd</button>
           </div>
 
           <StaafGrafiek v-if="data.funnel?.pogingen" titel="Bij welke poging de eerste afspraak kwam" :meta="`${pogingTotaal} ${pogingTotaal === 1 ? 'afspraak' : 'afspraken'} · norm 4 tot 5 pogingen`" :punten="pogingPunten" :series="[{ sleutel: 'afspraken', label: 'Eerste afspraken', kleur: 'geel' }]" :hoogte="140" leeg="Nog geen eerste afspraken in deze periode." data-test="grafiek-pogingen" />
@@ -175,7 +173,6 @@ const gemPoging = computed(() => (eersteAfspraak.value?.gemiddeld != null ? eers
               </table>
             </div>
           </div>
-          <p v-if="!data.kan.trend" class="kaart kaart--vlak" data-test="trend-uit"><span class="kicker">Nog niet aangezet</span><br>De weektabel en de vergelijking met je team horen bij Gevorderd.</p>
         </div>
       </section>
 
@@ -201,7 +198,6 @@ const gemPoging = computed(() => (eersteAfspraak.value?.gemiddeld != null ? eers
                 <li v-for="(p, i) in zelf" :key="p.tekst" class="md-ai-tip"><span class="md-ai-num tnum">{{ i + 1 }}</span><span>{{ p.tekst }}<br><span class="md-ai-meta">{{ p.onderbouwing.cijfers.join(' · ') }} · <NuxtLink :to="`/helpcenter/${p.artikelSleutel}`">artikel</NuxtLink></span></span></li>
               </ol>
             </template>
-            <button v-else type="button" class="dd-act knop-slot md-ai-slot" data-test="zelfanalyse-slot" @click="toonUitleg('resultaten.zelfanalyse')"><Icoon naam="Lock" :grootte="14" /> Vraag de Coach</button>
           </article>
         </div>
       </section>

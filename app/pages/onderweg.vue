@@ -97,7 +97,7 @@ useHead({ title: 'Route · Dealtrace' })
         <div class="ow-knoppen">
           <a class="dd-act dd-act--primair" :href="kaartLink({ adres: volgende.stop.adres, punt: volgende.stop.punt }, app) ?? undefined" target="_blank" rel="noopener" data-test="ow-navigeer" @click="rij.zet(true)"><Icoon naam="Navigation" />Navigeer</a>
           <a class="dd-act" :class="{ 'knop-uit': !volgende.stop.telefoon }" :href="telLink(volgende.stop.telefoon)" :aria-disabled="!volgende.stop.telefoon" :title="volgende.stop.telefoon ? undefined : 'Geen telefoonnummer bekend'"><Icoon naam="Phone" />Bel</a>
-          <NuxtLink class="dd-act" :to="volgende.stop.soort === 'afspraak' ? `/agenda?afspraak=${volgende.stop.id}` : `/accounts/${volgende.stop.accountId}`">Pitstop</NuxtLink>
+          <FunctieLink class="dd-act" :to="volgende.stop.soort === 'afspraak' ? `/agenda?afspraak=${volgende.stop.id}` : `/accounts/${volgende.stop.accountId}`">Pitstop</FunctieLink>
         </div>
       </section>
       <LegeStaat v-if="!dag.stops.length" titel="Geen bezoeken vandaag." :tekst="functie('onderweg.inDeBuurt')?.beschikbaar ? 'Kansen in je regio vind je onder In de buurt.' : ''" />

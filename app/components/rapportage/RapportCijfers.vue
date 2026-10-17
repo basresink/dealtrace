@@ -12,7 +12,7 @@ defineProps<{ kicker: string; titel: string; duiding?: string | null; link?: { n
         <h2 id="rc-titel" class="rc-titel" data-test="cijfers-titel">{{ titel }}</h2>
         <p v-if="duiding" class="rc-duiding">{{ duiding }}</p>
       </div>
-      <NuxtLink v-if="link" :to="link.naar" class="rc-link">{{ link.tekst }}</NuxtLink>
+      <FunctieLink v-if="link" :to="link.naar" class="rc-link">{{ link.tekst }}</FunctieLink>
     </header>
     <div class="rc-raster" data-test="cijfers-raster">
       <slot />

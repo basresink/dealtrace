@@ -25,7 +25,7 @@ const datum = (d: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', 
       <p v-if="crm.laatsteSync" class="meta mt-8">Laatst gesynchroniseerd {{ datum(crm.laatsteSync) }}</p>
       <div class="dd-acties mt-16">
         <button v-if="crm.verbonden" type="button" class="dd-act" :disabled="bezig || !crm.kan.synchroniseren" :title="crm.kan.synchroniseren ? undefined : 'Synchroniseren kan vanaf Expert'" data-test="crm-sync" @click="sync"><Icoon v-if="!crm.kan.synchroniseren" naam="Lock" class="dd-actie-icoon" />Synchroniseer nu</button>
-        <NuxtLink v-if="crm.kan.inrichten" class="dd-act" to="/instellingen/koppelingen/crm">Inrichten</NuxtLink>
+        <FunctieLink v-if="crm.kan.inrichten" class="dd-act" to="/instellingen/koppelingen/crm">Inrichten</FunctieLink>
       </div>
     </template>
     <p v-else class="meta mt-8">De CRM-koppeling richt je beheerder in.</p>

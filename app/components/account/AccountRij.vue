@@ -72,12 +72,12 @@ const rolLabel = (rol: string) => CONTACTROL_LABEL[rol as keyof typeof CONTACTRO
       </div>
       <div v-if="regel && weergave !== 'compact'" class="acc-regel" :style="{ borderLeftColor: regel.kleur }" data-test="rij-regel">{{ regel.tekst }}</div>
       <div v-if="labels.length && weergave !== 'compact'" class="lbl-rij acc-labels" data-test="rij-labels"><Label v-for="l in labels" :key="l.soort" :soort="l.soort" :waarde="(l.waarde as string | null)" :tekst="l.tekst ?? null" /></div>
-      <NuxtLink v-if="rij.reeks" :to="`/opvolgreeksen?reeks=${rij.reeks.id}`" class="acc-reeks" :class="{ 'acc-reeks--wacht': rij.reeks.wacht }" data-test="rij-reeks"><Icoon naam="Repeat" :grootte="13" /><span>Opvolgreeks {{ reeksStrip(rij.reeks) }}<template v-if="rij.reeks.wacht"> · wacht op jou</template></span></NuxtLink>
+      <FunctieLink als-tekst v-if="rij.reeks" :to="`/opvolgreeksen?reeks=${rij.reeks.id}`" class="acc-reeks" :class="{ 'acc-reeks--wacht': rij.reeks.wacht }" data-test="rij-reeks"><Icoon naam="Repeat" :grootte="13" /><span>Opvolgreeks {{ reeksStrip(rij.reeks) }}<template v-if="rij.reeks.wacht"> · wacht op jou</template></span></FunctieLink>
     </div>
     <div class="acc-contacten">
       <template v-if="contacten.length">
         <template v-if="rij.kind === 'prospect'">
-          <NuxtLink v-for="c in contacten" :key="c.id" :to="`/contacten/${c.id}`" class="acc-contact acc-contact--link" :style="{ background: kleurUitNaam(c.id) }" :title="`${c.naam} · ${rolLabel(c.rol)}`" :aria-label="`Open contactpersoon ${c.naam}`" data-test="rij-contact"><img v-if="c.fotoUrl" :src="c.fotoUrl" alt="" class="acc-contact-foto" loading="lazy"><template v-else>{{ initialen(c.naam) }}</template></NuxtLink>
+          <FunctieLink v-for="c in contacten" :key="c.id" :to="`/contacten/${c.id}`" class="acc-contact acc-contact--link" :style="{ background: kleurUitNaam(c.id) }" :title="`${c.naam} · ${rolLabel(c.rol)}`" :aria-label="`Open contactpersoon ${c.naam}`" data-test="rij-contact"><img v-if="c.fotoUrl" :src="c.fotoUrl" alt="" class="acc-contact-foto" loading="lazy"><template v-else>{{ initialen(c.naam) }}</template></FunctieLink>
         </template>
         <template v-else>
           <span v-for="c in contacten" :key="c.id" class="acc-contact" :style="{ background: kleurUitNaam(c.id) }" :title="`${c.naam} · ${rolLabel(c.rol)}`"><img v-if="c.fotoUrl" :src="c.fotoUrl" alt="" class="acc-contact-foto" loading="lazy"><template v-else>{{ initialen(c.naam) }}</template><span class="sr-only">{{ c.naam }}</span></span>

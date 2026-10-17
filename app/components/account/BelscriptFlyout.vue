@@ -39,7 +39,7 @@ const datum = (s: string | null) => (s ? new Intl.DateTimeFormat('nl-NL', { day:
     </template>
     <template v-if="p && !laden && !fout" #voet>
       <footer class="fo-foot fs-voet">
-        <NuxtLink :to="studio" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="bsf-studio" @click="emit('sluit')"><Icoon naam="ScrollText" :grootte="16" />{{ versie ? 'Open in de Belscript Studio' : 'Maak een versie voor dit prospect' }}</NuxtLink>
+        <FunctieLink :to="studio" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="bsf-studio" @click="emit('sluit')"><Icoon naam="ScrollText" :grootte="16" />{{ versie ? 'Open in de Belscript Studio' : 'Maak een versie voor dit prospect' }}</FunctieLink>
         <span class="fo-foot-vul" />
       </footer>
     </template>

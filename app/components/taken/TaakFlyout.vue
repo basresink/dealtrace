@@ -244,7 +244,7 @@ onBeforeUnmount(() => { document.removeEventListener('keydown', toetsEerst, true
             <div class="def-rij"><dt>Vervaldatum</dt><dd :class="{ 'fo-over-tijd': overTijd }"><span class="tnum">{{ vervalDatum ?? 'geen' }}</span><span v-if="t.dueDate" class="tf-delta"> ({{ vervalLabel(t.dueDate, nu) }})</span></dd></div>
             <div v-if="t.eigenaar" class="def-rij"><dt>Toegewezen aan</dt><dd>{{ t.eigenaar.replace(/^Testgebruiker /, '') }}</dd></div>
             <div v-if="t.account" class="def-rij"><dt>Prospect</dt><dd><NuxtLink :to="`/accounts/${t.account.id}`" class="fo-link tf-tik" data-test="tf-account" @click="emit('sluit')">{{ t.account.naam }}</NuxtLink></dd></div>
-            <div v-if="t.contact" class="def-rij"><dt>Contactpersoon</dt><dd><NuxtLink :to="`/contacten/${t.contact.id}`" class="fo-link tf-tik" data-test="tf-contact" @click="emit('sluit')">{{ t.contact.naam }}<template v-if="t.contact.functie"> · {{ t.contact.functie }}</template></NuxtLink></dd></div>
+            <div v-if="t.contact" class="def-rij"><dt>Contactpersoon</dt><dd><FunctieLink :to="`/contacten/${t.contact.id}`" class="fo-link tf-tik" data-test="tf-contact" @click="emit('sluit')">{{ t.contact.naam }}<template v-if="t.contact.functie"> · {{ t.contact.functie }}</template></FunctieLink></dd></div>
             <div v-if="herinneringTekst" class="def-rij"><dt>Herinnering</dt><dd>{{ herinneringTekst }}</dd></div>
             <div v-if="t.herhaling" class="def-rij"><dt>Herhaling</dt><dd>{{ HERHALING_LABEL[t.herhaling.soort] ?? t.herhaling.soort }} · {{ t.herhaling.teller }} van {{ t.herhaling.max }}</dd></div>
             <div v-if="t.beschrijving" class="def-rij"><dt>Beschrijving</dt><dd>{{ t.beschrijving }}</dd></div>
@@ -252,7 +252,7 @@ onBeforeUnmount(() => { document.removeEventListener('keydown', toetsEerst, true
           <article v-if="t.aanleiding || t.waarom" class="fo-blok aanleiding-blok" data-test="aanleiding">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Aanleiding</h3><Label soort="herkomst" :waarde="t.herkomst ?? 'handmatig'" /></header>
             <p v-if="t.aanleiding">{{ t.aanleiding }}</p>
-            <p v-if="t.waarom" class="mt-8" data-test="waarom"><strong>Waarom krijg ik dit?</strong> {{ t.waarom }}<template v-if="t.regel"> <NuxtLink v-if="functie('regels.lezen')?.beschikbaar" :to="`/instellingen/regels`" class="tekst-link">Bekijk de regel</NuxtLink></template></p>
+            <p v-if="t.waarom" class="mt-8" data-test="waarom"><strong>Waarom krijg ik dit?</strong> {{ t.waarom }}<template v-if="t.regel"> <FunctieLink v-if="functie('regels.lezen')?.beschikbaar" :to="`/instellingen/regels`" class="tekst-link">Bekijk de regel</FunctieLink></template></p>
           </article>
           <article v-if="t.status !== 'klaar'" class="fo-blok fo-blok--accent" data-test="tf-volgende-stap">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Volgende stap</h3></header>

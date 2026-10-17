@@ -120,7 +120,7 @@ function naarActie() { if (tab.value !== 'plan') kiesTab('plan'); nextTick(() =>
         <span class="kicker kicker--streep">Onbekend accountplan</span>
         <h1 class="title title--groot">Dit accountplan bestaat niet (meer).</h1>
         <p class="subtitle">Misschien is het verwijderd.</p>
-        <NuxtLink to="/accountplannen" class="dd-actie dd-actie--secundair mt-16">Terug naar alle accountplannen</NuxtLink>
+        <FunctieLink to="/accountplannen" class="dd-actie dd-actie--secundair mt-16">Terug naar alle accountplannen</FunctieLink>
       </div>
     </section>
     <template v-else>
@@ -128,7 +128,7 @@ function naarActie() { if (tab.value !== 'plan') kiesTab('plan'); nextTick(() =>
         <div class="container">
           <div class="apd-kop-binnen">
             <div class="apd-kop-info">
-              <NuxtLink to="/accountplannen" class="apd-kruimel" data-test="apd-terug"><Icoon naam="ArrowLeft" :grootte="12" /> Alle accountplannen</NuxtLink>
+              <FunctieLink als-tekst to="/accountplannen" class="apd-kruimel" data-test="apd-terug"><Icoon naam="ArrowLeft" :grootte="12" /> Alle accountplannen</FunctieLink>
               <p class="apd-eyebrow">
                 <Label soort="plan" :waarde="p.weergave" :tekst="WEERGAVE_LABEL[p.weergave as 'actueel']" data-test="apd-status" />
                 <Label v-if="p.account" soort="account" :waarde="p.account.soort === 'klant' ? 'klant' : 'prospect'" />
@@ -185,7 +185,7 @@ function naarActie() { if (tab.value !== 'plan') kiesTab('plan'); nextTick(() =>
                   <label class="apd-vink"><input type="checkbox" :checked="a.klaar" :disabled="!kan" :aria-label="`Markeer ${a.titel} als klaar`" data-test="apd-vink" @change="zetActie(a, ($event.target as HTMLInputElement).checked)"></label>
                   <span class="apd-actie-tekst">
                     <button type="button" class="apd-actie-titel apd-linkknop" :class="{ 'apd-actie-titel--klaar': a.klaar }" :title="`Open taak ${a.titel}`" @click="taak = a.id">{{ a.titel }}</button>
-                    <span class="apd-actie-meta tnum"><span :class="{ 'apd-telaat': telaat(a) }">{{ dag(a.dueDate) }}</span><template v-if="a.contactNaam"> · <NuxtLink :to="`/contacten/${a.contactId}`" class="apd-link">{{ a.contactNaam }}</NuxtLink></template></span>
+                    <span class="apd-actie-meta tnum"><span :class="{ 'apd-telaat': telaat(a) }">{{ dag(a.dueDate) }}</span><template v-if="a.contactNaam"> · <FunctieLink :to="`/contacten/${a.contactId}`" class="apd-link">{{ a.contactNaam }}</FunctieLink></template></span>
                   </span>
                   <button v-if="kan" type="button" class="dd-act dd-act--icoon apd-weg" :aria-label="`Verwijder actie ${a.titel}`" title="Verwijder actie" @click="weg = a"><Icoon naam="Trash2" :grootte="14" /></button>
                 </li>
@@ -255,7 +255,7 @@ function naarActie() { if (tab.value !== 'plan') kiesTab('plan'); nextTick(() =>
         <!-- Tab Taken -->
         <div v-else-if="tab === 'taken'" class="container container--smal">
           <article class="kaart apd-blok" data-test="apd-tab-taken-inhoud">
-            <header class="kaart-kop"><h2 class="kaart-titel">Open taken bij deze prospect</h2><button type="button" class="dd-actie dd-actie--primair" data-test="apd-nieuwe-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button></header>
+            <header class="kaart-kop"><h2 class="kaart-titel">Open taken bij deze prospect</h2><button v-if="$aan('taken.basis')" type="button" class="dd-actie dd-actie--primair" data-test="apd-nieuwe-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button></header>
             <p class="apd-uitleg">Taken buiten het actieplan. De acties van het plan staan op het tabblad Plan.</p>
             <ul v-if="p.taken.length" class="apd-rijen" role="list">
               <li v-for="t in p.taken" :key="t.id"><button type="button" class="item-rij" :data-test="`apd-taak-${t.id}`" @click="taak = t.id">
@@ -271,7 +271,7 @@ function naarActie() { if (tab.value !== 'plan') kiesTab('plan'); nextTick(() =>
         <!-- Tab Afspraken -->
         <div v-else-if="tab === 'afspraken'" class="container container--smal">
           <article class="kaart apd-blok" data-test="apd-tab-afspraken-inhoud">
-            <header class="kaart-kop"><h2 class="kaart-titel">Afspraken bij deze prospect</h2><button type="button" class="dd-actie dd-actie--zwart" data-test="apd-nieuwe-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button></header>
+            <header class="kaart-kop"><h2 class="kaart-titel">Afspraken bij deze prospect</h2><button v-if="$aan('agenda.basis')" type="button" class="dd-actie dd-actie--zwart" data-test="apd-nieuwe-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button></header>
             <ul v-if="p.afspraken.length" class="apd-rijen" role="list">
               <li v-for="a in p.afspraken" :key="a.id"><button type="button" class="item-rij" :data-test="`apd-afspraak-${a.id}`" @click="afspraak = a.id">
                 <span class="item-tijd">{{ dagTijd(a.start) }}</span>

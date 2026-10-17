@@ -66,7 +66,7 @@ const { functie } = useMe()
     <article v-if="data.contact" class="bf-contact" data-test="briefing-contact">
       <header class="bf-contact-kop">
         <div>
-          <h4 class="bf-blok-titel"><NuxtLink :to="`/contacten/${data.contact.id}`" data-test="briefing-contact-naam">{{ data.contact.naam }}</NuxtLink></h4>
+          <h4 class="bf-blok-titel"><FunctieLink als-tekst :to="`/contacten/${data.contact.id}`" data-test="briefing-contact-naam">{{ data.contact.naam }}</FunctieLink></h4>
           <p class="meta">{{ [data.contact.functie, ROL[data.contact.rol] ?? null].filter(Boolean).join(' · ') || 'Geen functie bekend' }}</p>
         </div>
         <span v-if="data.contact.belMeNiet" class="pil pil--rood">Bel me niet</span>
@@ -108,7 +108,6 @@ const { functie } = useMe()
     <div v-if="gesprek" class="bf-pitstop">
       <ConceptKaart v-if="mijnConcept" :concept="mijnConcept" compact @gewijzigd="ververs()" />
       <button v-if="data.kan.pitstop && (!mijnConcept || data.kan.opnieuw)" type="button" class="dd-act" :disabled="bereidt" data-test="bereid-voor" @click="bereidVoor">{{ bereidt ? 'Bezig…' : mijnConcept ? 'Maak opnieuw' : 'Bereid voor' }}</button>
-      <button v-else-if="!data.kan.pitstop" type="button" class="dd-act knop-slot" data-test="bereid-voor-slot" @click="toonUitleg('pitstop.maken')"><Icoon naam="Lock" :grootte="14" /> Bereid voor</button>
     </div>
     <div v-if="gesprek" class="bf-doel" data-test="doel-gehaald">
       <span class="veld-label">Doel gehaald?</span>

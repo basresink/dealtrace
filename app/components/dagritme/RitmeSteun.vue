@@ -12,6 +12,7 @@ const LEDE: Record<RitmeMoment, string> = {
   weekreview: 'Wat je volgende week anders kunt doen.',
 }
 const Link = resolveComponent('NuxtLink')
+const { magNaar } = useFunctie()
 const tips = computed(() => props.steun?.tips ?? [])
 const artikelen = computed(() => props.steun?.artikelen ?? [])
 </script>
@@ -22,7 +23,7 @@ const artikelen = computed(() => props.steun?.artikelen ?? [])
       <header class="kaart-kop rs-kop"><h2 class="kaart-titel">Tips en tricks</h2><span class="meta">{{ LEDE[moment] }}</span></header>
       <ul class="rs-lijst">
         <li v-for="t in tips" :key="t.sleutel">
-          <component :is="t.href ? Link : 'div'" :to="t.href ?? undefined" :class="t.href ? 'rs-artikel' : 'rs-tip'" :data-test="`steun-tip-${t.sleutel}`">
+          <component :is="t.href && magNaar(t.href) ? Link : 'div'" :to="t.href && magNaar(t.href) ? t.href : undefined" :class="t.href ? 'rs-artikel' : 'rs-tip'" :data-test="`steun-tip-${t.sleutel}`">
             <span class="rs-icoon" aria-hidden="true"><Icoon naam="Lightbulb" :grootte="16" /></span>
             <span class="rs-body">
               <span class="rs-titel">{{ t.titel }}</span>

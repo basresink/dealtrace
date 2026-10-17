@@ -142,7 +142,7 @@ const uren = Array.from({ length: 25 }, (_, i) => i)
       <div class="ar-hoek ar-hoek--label">hele dag</div>
       <div v-for="k in kolommen" :key="`hd-${k.iso}`" class="ar-heledag-cel" :class="{ 'ar-heledag-cel--vandaag': k.vandaag }">
         <template v-for="h in k.heleDag" :key="h.id">
-          <NuxtLink v-if="h.link" :to="h.link" class="ar-chip" :class="`ar-chip--${h.soort}`" :title="h.titel" :data-test="`heledag-${h.id}`">{{ h.tekst }}</NuxtLink>
+          <FunctieLink als-tekst v-if="h.link" :to="h.link" class="ar-chip" :class="`ar-chip--${h.soort}`" :title="h.titel" :data-test="`heledag-${h.id}`">{{ h.tekst }}</FunctieLink>
           <button v-else-if="h.taakId" type="button" class="ar-chip" :class="`ar-chip--${h.soort}`" :title="h.titel" :data-test="`heledag-${h.id}`" @click="emit('taak', h.taakId)">{{ h.tekst }}</button>
           <span v-else class="ar-chip" :class="`ar-chip--${h.soort}`" :title="h.titel">{{ h.tekst }}</span>
         </template>
@@ -166,18 +166,18 @@ const uren = Array.from({ length: 25 }, (_, i) => i)
             <span v-if="b.data.geplandDoor && !b.krap" class="ar-sub ar-door">Gepland door {{ naam(b.data.geplandDoor) }}</span>
             <span v-if="conflict.has(b.id) && !b.kort" class="ar-merk">Conflict</span>
           </button>
-          <NuxtLink v-else-if="b.soort === 'belblok'" :to="`/belblokken/${b.id}`" class="ar-blok ar-blok--belblok" :class="{ 'ar-blok--kort': b.kort, 'ar-blok--krap': b.krap }" :style="b.stijl" :data-test="`belblok-${b.id}`" :title="`${tijd(b.data.start)} tot ${tijd(b.data.eind)} · Belblok${b.data.herkomst ? ` · ${b.data.herkomst}` : ''}`" @click.stop>
+          <FunctieLink als-tekst v-else-if="b.soort === 'belblok'" :to="`/belblokken/${b.id}`" class="ar-blok ar-blok--belblok" :class="{ 'ar-blok--kort': b.kort, 'ar-blok--krap': b.krap }" :style="b.stijl" :data-test="`belblok-${b.id}`" :title="`${tijd(b.data.start)} tot ${tijd(b.data.eind)} · Belblok${b.data.herkomst ? ` · ${b.data.herkomst}` : ''}`" @click.stop>
             <span class="ar-tijd tnum">{{ tijd(b.data.start) }}<template v-if="!b.kort">-{{ tijd(b.data.eind) }}</template></span>
             <span class="ar-titel">Belblok<template v-if="b.data.gesprekken"> · {{ b.data.gesprekken }} {{ b.data.gesprekken === 1 ? 'gesprek' : 'gesprekken' }}</template><template v-if="b.data.status === 'bezig'"> · loopt</template><template v-if="b.data.herkomst"> · {{ b.data.herkomst }}</template></span>
-          </NuxtLink>
+          </FunctieLink>
           <button v-else-if="b.soort === 'taak' && b.data.length === 1" type="button" class="ar-blok ar-blok--taak ar-blok--kort" :style="b.stijl" :data-test="`taak-${b.data[0].id}`" :title="`${tijd(b.data[0].due)} · ${b.data[0].titel}${b.data[0].accountNaam ? ` · ${b.data[0].accountNaam}` : ''}`" @click.stop="emit('taak', b.data[0].id)">
             <span class="ar-tijd tnum">{{ tijd(b.data[0].due) }}</span>
             <span class="ar-titel">{{ b.data[0].titel }}</span>
           </button>
-          <NuxtLink v-else-if="b.soort === 'taak'" to="/taken" class="ar-blok ar-blok--taak ar-blok--kort" :style="b.stijl" :data-test="`taken-${b.id}`" :title="`${b.data.length} taken om ${tijd(b.data[0].due)}`" @click.stop>
+          <FunctieLink als-tekst v-else-if="b.soort === 'taak'" to="/taken" class="ar-blok ar-blok--taak ar-blok--kort" :style="b.stijl" :data-test="`taken-${b.id}`" :title="`${b.data.length} taken om ${tijd(b.data[0].due)}`" @click.stop>
             <span class="ar-tijd tnum">{{ tijd(b.data[0].due) }}</span>
             <span class="ar-titel">{{ b.data.length }} taken</span>
-          </NuxtLink>
+          </FunctieLink>
           <span v-else class="ar-blok ar-blok--bezet" :style="b.stijl" :title="`${tijd(b.data.start)} tot ${tijd(b.data.eind)} · ${b.data.titel ?? 'Bezet'} · uit je gekoppelde agenda`" @click.stop>
             <span class="ar-titel">{{ b.data.titel ?? 'Bezet' }}</span>
           </span>

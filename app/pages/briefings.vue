@@ -160,7 +160,7 @@ useHead({ title: 'Briefings · Dealtrace' })
       <PaginaKop titel="Briefings" uitleg="Vijf minuten vooraf weten of jij het gesprek stuurt. Elke briefing vult zich uit de accountkaart, je verslagen en je verkoopverhaal; jij past aan wat niet klopt." helpartikel="briefing-en-pitstop">
         <template #kicker><span class="kicker kicker--streep" data-test="briefings-kicker">{{ kicker }}</span></template>
         <template #acties>
-          <button type="button" class="dd-actie dd-actie--zwart" data-test="briefings-afspraak" @click="planOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+          <button v-if="$aan('agenda.basis')" type="button" class="dd-actie dd-actie--zwart" data-test="briefings-afspraak" @click="planOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
           <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'bfp-filterknop--aan': filtersOpen || chips.length }" :aria-expanded="filtersOpen" data-test="briefings-filters" @click="filtersOpen = !filtersOpen">
             <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="chips.length" class="bfp-teller">{{ chips.length }}</span><Icoon naam="ChevronDown" :grootte="14" class="bfp-pijl" :class="{ 'bfp-pijl--open': filtersOpen }" />
           </button>

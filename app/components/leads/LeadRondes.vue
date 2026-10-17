@@ -26,7 +26,7 @@ const fmt = (n: number) => new Intl.NumberFormat('nl-NL').format(n)
       <table class="tabel tabel--kaarten" data-test="rondes">
         <thead><tr><th>Datum</th><th>Bron</th><th>Door</th><th class="cel-r">Gevonden</th><th class="cel-r">Overgenomen</th><th class="cel-r">Afgewezen</th><th class="cel-r">Naar afspraak</th></tr></thead>
         <tbody><tr v-for="r in data.lijst" :key="r.id">
-          <td class="tnum"><NuxtLink v-if="r.soort === 'ronde'" :to="`/leadgenerator?ronde=${r.id}`">{{ datum(r.op) }}</NuxtLink><template v-else>{{ datum(r.op) }}</template></td>
+          <td class="tnum"><FunctieLink als-tekst v-if="r.soort === 'ronde'" :to="`/leadgenerator?ronde=${r.id}`">{{ datum(r.op) }}</FunctieLink><template v-else>{{ datum(r.op) }}</template></td>
           <td>{{ r.bron }}<span v-if="r.automatisch" class="meta"> · automatisch</span><span v-if="r.kosten?.credits" class="meta"> · {{ r.kosten.credits }} credits</span></td>
           <td>{{ r.door?.replace(/^Testgebruiker /, '') }}</td>
           <td class="cel-r tnum">{{ r.gevonden }}</td><td class="cel-r tnum">{{ r.overgenomen }}</td><td class="cel-r tnum">{{ r.afgewezen }}</td>

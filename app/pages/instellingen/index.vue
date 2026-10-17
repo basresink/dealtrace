@@ -4,6 +4,8 @@
 // "Nog niet ingericht") uit GET /api/instellingen/overzicht; de groep Koppelingen telt wat actief is.
 // Beheerder ziet alles; salesmanager de onderdelen voor zijn teams.
 const { me, functie } = useMe()
+// Een kaart van een functie die uit staat, staat er niet (één register: shared/functieRoutes.ts).
+const { magNaar } = useFunctie()
 if (!functie('nav.instellingen')?.beschikbaar) throw createError({ statusCode: 403, statusMessage: 'Geen toegang tot instellingen' })
 const rol = computed(() => me.value?.gebruiker.rol)
 const beheerder = computed(() => rol.value === 'beheerder')
@@ -69,7 +71,7 @@ const GROEPEN = computed<{ naam: string; kaarten: Kaart[] }[]>(() => ([
       { titel: 'DealDrive', tekst: 'Overdracht na de eerste afspraak: stand, Test verbinding en mislukte overdrachten.', link: '/instellingen/koppelingen/dealdrive', toon: !!functie('koppelingen.dealdrive')?.beschikbaar },
     ],
   },
-] as { naam: string; kaarten: Kaart[] }[]).map((g) => ({ ...g, kaarten: g.kaarten.filter((k) => k.toon) })).filter((g) => g.kaarten.length))
+] as { naam: string; kaarten: Kaart[] }[]).map((g) => ({ ...g, kaarten: g.kaarten.filter((k) => k.toon && magNaar(k.link)) })).filter((g) => g.kaarten.length))
 useHead({ title: 'Instellingen · Dealtrace' })
 </script>
 
@@ -82,11 +84,11 @@ useHead({ title: 'Instellingen · Dealtrace' })
         <div v-for="g in GROEPEN" :key="g.naam" class="instellingen-groep">
           <div class="inst-groepkop"><span class="kicker kicker--streep">{{ g.naam }}</span><span v-if="overzicht.groepen[g.naam]" class="meta" :data-test="`groepstand-${g.naam}`">{{ overzicht.groepen[g.naam] }}</span></div>
           <div class="instellingen-raster mt-16">
-            <NuxtLink v-for="k in g.kaarten" :key="k.titel" :to="k.link" class="kaart kaart--klik" :data-test="`kaart-${k.titel}`">
+            <FunctieLink v-for="k in g.kaarten" :key="k.titel" :to="k.link" class="kaart kaart--klik" :data-test="`kaart-${k.titel}`">
               <header class="kaart-kop"><h2 class="kaart-titel">{{ k.titel }}</h2></header>
               <p class="kaart-meta">{{ k.tekst }}</p>
               <p v-if="overzicht.stand[k.link]" class="inst-stand" data-test="kaart-stand">{{ overzicht.stand[k.link] }}</p>
-            </NuxtLink>
+            </FunctieLink>
           </div>
         </div>
       </div>

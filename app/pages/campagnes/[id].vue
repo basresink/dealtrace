@@ -100,7 +100,7 @@ useHead(() => ({ title: `${c.value?.naam ?? 'Campagne'} · Dealtrace` }))
     <template v-else>
       <section class="section">
         <div class="container">
-          <nav class="cb-kruimel"><NuxtLink to="/campagnes" class="cb-kruimel-link" data-test="terug-campagnes"><Icoon naam="ArrowLeft" :grootte="14" />Alle campagnes</NuxtLink></nav>
+          <nav class="cb-kruimel"><FunctieLink to="/campagnes" class="cb-kruimel-link" data-test="terug-campagnes"><Icoon naam="ArrowLeft" :grootte="14" />Alle campagnes</FunctieLink></nav>
           <div class="cb-kop" data-test="bord-kop">
             <div class="cb-kop-tekst">
               <span class="kicker kicker--streep">{{ c.soortNaam }} · {{ STATUS[c.status] }}</span>
@@ -184,7 +184,7 @@ useHead(() => ({ title: `${c.value?.naam ?? 'Campagne'} · Dealtrace` }))
                   <NuxtLink :to="`/accounts/${i.accountId}`" class="cb-item-link"><span class="cb-item-merk" :class="`cb-item-merk--${faseKleur(i.faseId)}`">{{ initialen(i.naam) }}</span><span class="cb-item-naam">{{ i.naam }}</span></NuxtLink>
                   <div class="cb-item-poging">poging {{ i.poging }} van {{ i.pogingen }}</div>
                   <p v-if="i.volgendeStap" class="cb-item-noot">{{ i.volgendeStap }}<template v-if="i.volgendeOp"> · {{ datum(i.volgendeOp) }}</template></p>
-                  <NuxtLink v-if="i.taakId" :to="`/taken?taak=${i.taakId}`" class="cb-item-taak" :data-test="`taak-${i.accountId}`">Bekijk taak <Icoon naam="ArrowRight" :grootte="12" /></NuxtLink>
+                  <FunctieLink v-if="i.taakId" :to="`/taken?taak=${i.taakId}`" class="cb-item-taak" :data-test="`taak-${i.accountId}`">Bekijk taak <Icoon naam="ArrowRight" :grootte="12" /></FunctieLink>
                   <div class="kanban-kaart-voet"><span>{{ i.eigenaar ?? '' }}</span>
                     <select v-if="data.kan.slepen && c.status === 'actief'" class="cp-verplaats" :aria-label="`Verplaats ${i.naam}`" :value="i.kolom" :data-test="`verplaats-${i.accountId}`" @change="verplaats(i, ($event.target as HTMLSelectElement).value as Kolom)">
                       <option v-for="kk in KOLOMMEN" :key="kk" :value="kk">{{ KOLOM_LABEL[kk] }}</option>

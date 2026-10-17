@@ -1,9 +1,9 @@
 <script setup lang="ts">
 // Globale zoek (6.3): toets / of Ctrl K. Groepen per soort, pijltjes, Enter,
-// Escape; functies die niet aanstaan met slot. Onder de eigen resultaten de groep
+// Escape; functies die niet aanstaan, komen er niet in (de server laat ze weg). Onder de eigen resultaten de groep
 // "KvK-register" (8.6, KvK opzoeken vanaf Gevorderd): toevoegen met één tik, ontdubbeld.
 const { open } = useZoeken()
-const { toon: toonNietAangezet } = useNietAangezet()
+const { magNaar } = useFunctie()
 const q = ref('')
 const groepen = ref<{ soort: string; label: string; rijen: { titel: string; detail?: string; link: string; slot?: boolean; label?: string }[]; totaal: number }[]>([])
 const actief = ref(0)
@@ -42,7 +42,8 @@ let timer: ReturnType<typeof setTimeout> | undefined
 watch(q, (w) => {
   if (timer) clearTimeout(timer)
   timer = setTimeout(async () => {
-    groepen.value = w.trim() ? (await $fetch<any>('/api/zoeken', { query: { q: w } })).groepen : []
+    // De server laat uitgezette functies al weg; de client filtert voor de zekerheid op hetzelfde register.
+    groepen.value = w.trim() ? ((await $fetch<any>('/api/zoeken', { query: { q: w } })).groepen as typeof groepen.value).map((g) => ({ ...g, rijen: g.rijen.filter((r) => !r.slot && magNaar(r.link)) })).filter((g) => g.rijen.length) : []
     actief.value = 0
   }, 150)
 })
@@ -53,12 +54,8 @@ watch(open, async (o) => {
   }
 })
 
-function kies(r: { link: string; slot?: boolean }) {
+function kies(r: { link: string }) {
   open.value = false
-  if (r.slot) {
-    const sleutel = useMe().me.value?.zijbalk.nietAangezet.find((i) => i.route === r.link)?.sleutel
-    if (sleutel) return toonNietAangezet(sleutel)
-  }
   return navigateTo(r.link)
 }
 
@@ -95,8 +92,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', globaal))
               v-for="r in g.rijen" :key="r.link + r.titel" type="button" role="option" class="zoek-rij"
               :class="{ 'zoek-rij--actief': rijen.indexOf(r) === actief }" :aria-selected="rijen.indexOf(r) === actief" @click="kies(r)"
             >
-              <span class="zoek-rij-titel">{{ r.titel }} <Icoon v-if="r.slot" naam="Lock" :grootte="14" /><span v-if="r.label" class="pil pil--grijs zoek-rij-label" data-test="zoek-label">{{ r.label }}</span></span>
-              <span v-if="r.detail || r.slot" class="zoek-rij-detail">{{ r.slot ? 'Nog niet aangezet' : r.detail }}</span>
+              <span class="zoek-rij-titel">{{ r.titel }} <span v-if="r.label" class="pil pil--grijs zoek-rij-label" data-test="zoek-label">{{ r.label }}</span></span>
+              <span v-if="r.detail" class="zoek-rij-detail">{{ r.detail }}</span>
             </button>
           </section>
           <section v-if="kvkAan && kvk.gekoppeld && q.trim().length >= 3" class="zoek-groep kvk-groep" data-test="kvk-register">

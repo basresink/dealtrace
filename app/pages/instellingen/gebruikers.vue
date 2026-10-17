@@ -219,7 +219,7 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
               <button type="button" class="dd-actie dd-actie--secundair gb-heractiveer" :data-test="`heractiveer-${g.id}`" @click="heractiveer(g)"><Icoon naam="Undo2" :grootte="16" />Heractiveren</button>
               <p v-if="heractiveerFout?.id === g.id" class="gb-fout" role="alert" data-test="heractiveer-fout">
                 {{ heractiveerFout.tekst }}
-                <NuxtLink v-if="heractiveerFout.seats" to="/instellingen/abonnement">Naar Abonnement</NuxtLink>
+                <FunctieLink als-tekst v-if="heractiveerFout.seats" to="/instellingen/abonnement">Naar Abonnement</FunctieLink>
               </p>
             </li>
           </ul>

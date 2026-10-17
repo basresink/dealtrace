@@ -76,7 +76,7 @@ const TEMPO: Record<string, string> = { 'Voor op schema': 'voor', 'Op schema': '
             </span>
             <span class="item-acties">
               <button v-if="b.kanVullen" type="button" class="dd-act" :disabled="!!bezig" :data-test="`rb-vul-${b.id}`" @click="vul(b)"><Icoon naam="Plus" />Vul met {{ b.voorstel.length }}</button>
-              <NuxtLink :to="`/belblokken/${b.id}`" class="dd-act" :data-test="`rb-open-${b.id}`">Open</NuxtLink>
+              <FunctieLink :to="`/belblokken/${b.id}`" class="dd-act" :data-test="`rb-open-${b.id}`">Open</FunctieLink>
             </span>
           </div>
         </li>
@@ -95,7 +95,7 @@ const TEMPO: Record<string, string> = { 'Voor op schema': 'voor', 'Op schema': '
         </li>
       </ul>
       <LegeStaat v-else-if="bb.totaal" :titel="`Je belblokken ${periode} zijn vol.`" tekst="Elk gepland belblok heeft genoeg gesprekken. Nieuwe belacties schuiven naar je volgende blok." data-test="rb-belblokken-leeg" />
-      <LegeStaat v-else :titel="`Geen belblok ${periode}.`" tekst="Er is niemand om te bellen of geen vrij uur. Plan een blok zodra je bellijst groeit." data-test="rb-belblokken-leeg"><NuxtLink to="/belblokken" class="tekst-link rb-link">Naar Belblokken</NuxtLink></LegeStaat>
+      <LegeStaat v-else :titel="`Geen belblok ${periode}.`" tekst="Er is niemand om te bellen of geen vrij uur. Plan een blok zodra je bellijst groeit." data-test="rb-belblokken-leeg"><FunctieLink to="/belblokken" class="tekst-link rb-link">Naar Belblokken</FunctieLink></LegeStaat>
     </article>
 
     <!-- 2. Belprioriteit naast je afspraken -->
@@ -167,11 +167,11 @@ const TEMPO: Record<string, string> = { 'Voor op schema': 'voor', 'Op schema': '
       <p class="rb-waarom" data-test="rb-waarom">Een campagne loopt op tempo. Zo zie je welke kaarten {{ periode }} aan de beurt zijn, voordat je achter raakt.</p>
       <div v-if="cp.lopend.length" class="rb-groepen">
         <section v-for="c in cp.lopend" :key="c.id" class="rb-groep" :data-test="`rb-campagne-${c.id}`">
-          <NuxtLink :to="`/campagnes/${c.id}`" class="rb-groepkop">
+          <FunctieLink als-tekst :to="`/campagnes/${c.id}`" class="rb-groepkop">
             <span class="rb-groepnaam">{{ c.naam }}</span>
             <span class="meta">{{ c.kaarten.gedaan }} van {{ c.kaarten.totaal }} {{ c.kaarten.totaal === 1 ? 'kaart' : 'kaarten' }} gedaan<template v-if="c.dagenOver != null"> · nog {{ c.dagenOver === 1 ? '1 dag' : `${c.dagenOver} dagen` }}</template></span>
             <span class="pil-tags"><Label v-if="c.tempo" soort="tempo" :waarde="TEMPO[c.tempo.pil] ?? (c.tempo.pil.startsWith('Achter') ? 'achter' : 'op')" :tekst="c.tempo.pil" /><span class="pil" :class="c.aanDeBeurt ? 'pil--zwart' : 'pil--grijs'">{{ c.aanDeBeurt ? `${c.aanDeBeurt} aan de beurt` : 'Niets aan de beurt' }}</span></span>
-          </NuxtLink>
+          </FunctieLink>
           <span class="rb-staaf" role="img" :aria-label="`${c.kaarten.gedaan} van ${c.kaarten.totaal} kaarten gedaan`"><span :style="{ width: `${c.kaarten.totaal ? Math.round((c.kaarten.gedaan / c.kaarten.totaal) * 100) : 0}%` }" /></span>
           <ul v-if="c.taken.length" class="rb-lijst">
             <li v-for="t in c.taken" :key="t.id">
@@ -182,10 +182,10 @@ const TEMPO: Record<string, string> = { 'Voor op schema': 'voor', 'Op schema': '
               </button>
             </li>
           </ul>
-          <NuxtLink v-if="c.aanDeBeurt > c.taken.length" :to="`/campagnes/${c.id}`" class="tekst-link rb-link">Nog {{ c.aanDeBeurt - c.taken.length }} op het bord</NuxtLink>
+          <FunctieLink v-if="c.aanDeBeurt > c.taken.length" :to="`/campagnes/${c.id}`" class="tekst-link rb-link">Nog {{ c.aanDeBeurt - c.taken.length }} op het bord</FunctieLink>
         </section>
       </div>
-      <LegeStaat v-else titel="Geen lopende campagnes." tekst="Doe je mee aan een campagne, dan zie je hier je kaarten en wat aan de beurt is." data-test="rb-campagnes-leeg"><NuxtLink to="/campagnes" class="tekst-link rb-link">Naar Campagnes</NuxtLink></LegeStaat>
+      <LegeStaat v-else titel="Geen lopende campagnes." tekst="Doe je mee aan een campagne, dan zie je hier je kaarten en wat aan de beurt is." data-test="rb-campagnes-leeg"><FunctieLink to="/campagnes" class="tekst-link rb-link">Naar Campagnes</FunctieLink></LegeStaat>
     </article>
 
     <!-- 5. Lopende accountplannen -->
@@ -194,11 +194,11 @@ const TEMPO: Record<string, string> = { 'Voor op schema': 'voor', 'Op schema': '
       <p class="rb-waarom" data-test="rb-waarom">Een accountplan werkt alleen als de acties gebeuren. Dit staat {{ periode }} open in je eigen plannen.</p>
       <div v-if="ap.lopend.length" class="rb-groepen">
         <section v-for="p in ap.lopend" :key="p.id" class="rb-groep" :data-test="`rb-plan-${p.id}`">
-          <NuxtLink :to="`/accountplannen/${p.id}`" class="rb-groepkop">
+          <FunctieLink als-tekst :to="`/accountplannen/${p.id}`" class="rb-groepkop">
             <span class="rb-groepnaam">{{ p.accountNaam }}</span>
             <span class="meta">{{ p.titel }} · {{ p.voortgang.klaar }} van {{ p.voortgang.totaal }} {{ p.voortgang.totaal === 1 ? 'actie' : 'acties' }} klaar</span>
             <span class="pil-tags"><span class="pil" :class="p.open ? 'pil--zwart' : 'pil--grijs'">{{ p.open ? `${p.open} open ${periode}` : `Niets open ${periode}` }}</span></span>
-          </NuxtLink>
+          </FunctieLink>
           <span class="rb-staaf" role="img" :aria-label="`${p.voortgang.percentage} procent van het actieplan klaar`"><span :style="{ width: `${p.voortgang.percentage}%` }" /></span>
           <ul v-if="p.acties.length" class="rb-lijst">
             <li v-for="t in p.acties" :key="t.id">
@@ -213,7 +213,7 @@ const TEMPO: Record<string, string> = { 'Voor op schema': 'voor', 'Op schema': '
           <p v-else class="meta rb-dagleeg">Geen open acties. Voeg een actie toe in het plan.</p>
         </section>
       </div>
-      <LegeStaat v-else titel="Geen lopende accountplannen." tekst="Maak een plan voor een account waar je meer wilt halen. Hier zie je dan elke dag wat openstaat." data-test="rb-accountplannen-leeg"><NuxtLink to="/accountplannen" class="tekst-link rb-link">Naar Accountplannen</NuxtLink></LegeStaat>
+      <LegeStaat v-else titel="Geen lopende accountplannen." tekst="Maak een plan voor een account waar je meer wilt halen. Hier zie je dan elke dag wat openstaat." data-test="rb-accountplannen-leeg"><FunctieLink to="/accountplannen" class="tekst-link rb-link">Naar Accountplannen</FunctieLink></LegeStaat>
     </article>
 
     <TaakFlyout :open="!!taak" :taak-id="taak" @sluit="taak = null" @klaar="taak = null; emit('ververs')" @gewijzigd="emit('ververs')" />

@@ -106,7 +106,7 @@ const stapels = computed(() => d.value.volgorde.filter((k: string) => d.value.st
 
     <article v-if="t.signaal && weg !== t.signaal.sleutel" class="kaart vt-signaal" data-test="vt-signaal">
       <span class="kicker">{{ t.signaal.bron }}</span>
-      <p class="vt-signaal-titel"><NuxtLink v-if="t.signaal.link" :to="t.signaal.link">{{ t.signaal.titel }}</NuxtLink><template v-else>{{ t.signaal.titel }}</template></p>
+      <p class="vt-signaal-titel"><FunctieLink als-tekst v-if="t.signaal.link" :to="t.signaal.link">{{ t.signaal.titel }}</FunctieLink><template v-else>{{ t.signaal.titel }}</template></p>
       <p class="meta">{{ t.signaal.bewijs }}</p>
       <div class="vt-knoppen"><button type="button" class="dd-act" data-test="vt-gedaan" @click="besluit('gedaan')">Gedaan</button><button type="button" class="dd-act" data-test="vt-later" @click="besluit('later')">Later</button><button type="button" class="dd-act" data-test="vt-weg" @click="besluit('weg')">Weg</button></div>
     </article>

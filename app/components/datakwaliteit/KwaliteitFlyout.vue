@@ -57,7 +57,7 @@ const zichtbaar = computed(() => {
             <p v-if="fout" class="veld-fout" role="alert">{{ fout }}</p>
             <ul class="dkf-lijst" data-test="dk-flyout-lijst">
               <li v-for="r in zichtbaar" :key="r.id">
-                <NuxtLink :to="r.link" class="dkf-rij" data-test="dk-flyout-rij">
+                <FunctieLink als-tekst :to="r.link" class="dkf-rij" data-test="dk-flyout-rij">
                   <span class="dkf-rij-tekst">
                     <span class="dkf-naam">{{ r.naam }}</span>
                     <span v-if="r.account || r.plaats" class="dkf-sub">
@@ -66,7 +66,7 @@ const zichtbaar = computed(() => {
                     <span class="dkf-ontbreekt" data-test="dk-ontbreekt"><span class="dkf-ontbreekt-label">Ontbreekt</span>{{ r.ontbreekt }}</span>
                   </span>
                   <Icoon naam="ArrowRight" :grootte="16" class="dkf-pijl" />
-                </NuxtLink>
+                </FunctieLink>
               </li>
             </ul>
             <p v-if="zoek && !zichtbaar.length" class="meta">Niets gevonden voor "{{ zoek }}".</p>
@@ -76,7 +76,7 @@ const zichtbaar = computed(() => {
         </div>
       <template #voet>
         <footer class="fo-foot fs-voet">
-          <NuxtLink v-if="categorie.link" :to="categorie.link" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="dk-filter"><Icoon naam="Filter" :grootte="16" />Toon in lijst</NuxtLink>
+          <FunctieLink v-if="categorie.link" :to="categorie.link" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="dk-filter"><Icoon naam="Filter" :grootte="16" />Toon in lijst</FunctieLink>
           <span class="fo-foot-vul" />
         </footer>
       </template>

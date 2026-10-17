@@ -28,7 +28,7 @@ async function wissel(s: MeldingSoort, k: MeldingKanaal, aan: boolean) {
         <h2 class="nk-titel">Hoe krijg je je meldingen?</h2>
         <p class="nk-uitleg">Kies per soort: in de app, per e-mail of als push. Gelezen geldt op al je toestellen. Een soort die in de app uit staat, zie je hier niet.</p>
       </div>
-      <NuxtLink v-if="beheerKanalen" to="/instellingen/kanalen" class="nk-link" data-test="kanalen-organisatie">Kanalen van de organisatie</NuxtLink>
+      <FunctieLink v-if="beheerKanalen" to="/instellingen/kanalen" class="nk-link" data-test="kanalen-organisatie">Kanalen van de organisatie</FunctieLink>
     </header>
     <div v-if="pers" class="nk-raster">
       <span /><span v-for="k in MELDING_KANALEN" :key="k" class="nk-kanaal">{{ MELDING_KANAAL_LABEL[k] }}</span>

@@ -164,7 +164,7 @@ useHead({ title: 'Leadgenerator · Dealtrace' })
               <p class="lg-toegevoegd-tekst">{{ toegevoegd.tekst }}</p>
               <div class="rijtje">
                 <NuxtLink :to="`/accounts/${toegevoegd.id}`" class="dd-act dd-act--primair" data-test="toegevoegd-open">Open {{ toegevoegd.naam }}</NuxtLink>
-                <NuxtLink v-if="toegevoegd.accountplanId" :to="`/accountplannen/${toegevoegd.accountplanId}`" class="dd-act" data-test="toegevoegd-plan">Open accountplan</NuxtLink>
+                <FunctieLink v-if="toegevoegd.accountplanId" :to="`/accountplannen/${toegevoegd.accountplanId}`" class="dd-act" data-test="toegevoegd-plan">Open accountplan</FunctieLink>
                 <button type="button" class="dd-act" aria-label="Melding sluiten" @click="toegevoegd = null"><Icoon naam="X" :grootte="14" /></button>
               </div>
             </div>

@@ -3,6 +3,9 @@
 // periode (groen omhoog, rood omlaag; bij `omgekeerd` is minder beter). Breed is twee kolommen.
 const props = defineProps<{ label: string; waarde: string | number; hint?: string | null; delta?: { richting: 'op' | 'neer' | 'gelijk'; tekst: string } | null; breed?: boolean; omgekeerd?: boolean; link?: string | null }>()
 const Link = resolveComponent('NuxtLink')
+// Een tegel linkt alleen naar een scherm dat aanstaat.
+const { magNaar } = useFunctie()
+const doel = computed(() => (props.link && magNaar(props.link) ? props.link : null))
 const toon = computed(() => {
   if (!props.delta || props.delta.richting === 'gelijk') return 'gelijk'
   const goed = props.delta.richting === 'op' ? !props.omgekeerd : !!props.omgekeerd
@@ -11,7 +14,7 @@ const toon = computed(() => {
 </script>
 
 <template>
-  <component :is="link ? Link : 'article'" :to="link ?? undefined" class="rt" :class="{ 'rt--breed': breed, 'rt--link': link }">
+  <component :is="doel ? Link : 'article'" :to="doel ?? undefined" class="rt" :class="{ 'rt--breed': breed, 'rt--link': doel }">
     <span class="rt-label">{{ label }}</span>
     <span class="rt-num tnum">{{ waarde }}</span>
     <slot />

@@ -134,7 +134,7 @@ onBeforeUnmount(() => { for (const t of Object.values(timers)) clearTimeout(t); 
             <span class="fo-kicker"><span v-if="soort" class="bfd-stip" :class="`bfd-stip--${SOORT_KLEUR[soort]}`" />Briefing<template v-if="data"> · {{ data.soortLabel }}<template v-if="data.vastgezet"> · vastgezet</template></template></span>
             <h2 id="bfd-titel" class="fo-titel">{{ data?.account?.naam ?? 'Briefing' }}</h2>
             <p v-if="data" class="fo-meta">
-              <template v-if="data.contact"><NuxtLink :to="`/contacten/${data.contact.id}`" class="fo-link">{{ data.contact.naam }}</NuxtLink> · </template>
+              <template v-if="data.contact"><FunctieLink :to="`/contacten/${data.contact.id}`" class="fo-link">{{ data.contact.naam }}</FunctieLink> · </template>
               <template v-if="gesprek">{{ onderwerp === 'afspraak' ? 'Afspraak' : 'Taak' }} {{ wanneerTekst }}<template v-if="data.titel"> · {{ data.titel }}</template></template>
               <template v-else>{{ data.account.soort === 'klant' ? 'Klant' : 'Prospect' }} · briefing voor je volgende contact</template>
             </p>
@@ -167,7 +167,7 @@ onBeforeUnmount(() => { for (const t of Object.values(timers)) clearTimeout(t); 
               <article v-if="data.contact" class="bf-contact" data-test="briefing-contact">
                 <header class="bf-contact-kop">
                   <div>
-                    <h3 class="bf-blok-titel"><NuxtLink :to="`/contacten/${data.contact.id}`" data-test="briefing-contact-naam">{{ data.contact.naam }}</NuxtLink></h3>
+                    <h3 class="bf-blok-titel"><FunctieLink als-tekst :to="`/contacten/${data.contact.id}`" data-test="briefing-contact-naam">{{ data.contact.naam }}</FunctieLink></h3>
                     <p class="meta">{{ [data.contact.functie, ROL[data.contact.rol] ?? null].filter(Boolean).join(' · ') || 'Geen functie bekend' }}</p>
                   </div>
                   <span v-if="data.contact.belMeNiet" class="pil pil--rood">Bel me niet</span>
@@ -225,7 +225,6 @@ onBeforeUnmount(() => { for (const t of Object.values(timers)) clearTimeout(t); 
                 <p v-else class="meta">Laat Pitstop een belscript, mail of bezoekbriefing klaarzetten op basis van deze briefing. Het concept wacht op jouw goedkeuring.</p>
                 <div v-if="!bereidt" class="dd-acties">
                   <button v-if="data.kan.pitstop && (!concept || data.kan.opnieuw)" type="button" class="dd-act" data-test="bereid-voor" @click="bereidVoor"><Icoon naam="Sparkles" :grootte="14" />{{ concept ? 'Maak opnieuw' : 'Bereid voor' }}</button>
-                  <button v-else-if="!data.kan.pitstop" type="button" class="dd-act knop-slot" data-test="bereid-voor-slot" @click="toonUitleg('pitstop.maken')"><Icoon naam="Lock" :grootte="14" /> Bereid voor</button>
                 </div>
               </section>
 

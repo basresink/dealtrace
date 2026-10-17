@@ -2,7 +2,8 @@
 // een pakket, een recht, een helpartikel en uitleg voor de flyout "Nog niet aangezet".
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { FUNCTIES, startindeling } from '../../shared/functies'
+import { FUNCTIES, functie, startindeling } from '../../shared/functies'
+import { ROUTE_FUNCTIES } from '../../shared/functieRoutes'
 import { NIVEAUS, PAKKETTEN } from '../../shared/types'
 
 const fouten: string[] = []
@@ -22,6 +23,8 @@ for (const f of FUNCTIES) {
   if (!f.uitleg?.watHetDoet || !f.uitleg?.totDieTijd) fouten.push(`${f.sleutel}: uitleg ontbreekt`)
   if (f.zijbalk && !f.zijbalk.route.startsWith('/')) fouten.push(`${f.sleutel}: route begint niet met /`)
 }
+// Het register scherm naar functie (shared/functieRoutes.ts) noemt alleen bestaande functies.
+for (const r of ROUTE_FUNCTIES) for (const s of r.eenVan) if (!functie(s)) fouten.push(`${r.pad}: onbekende functie ${s} in functieRoutes`)
 if (fouten.length) {
   console.error(fouten.join('\n'))
   process.exit(1)

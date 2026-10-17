@@ -47,7 +47,7 @@ useHead({ title: computed(() => `Coaching ${kort(k.value?.persoon?.naam ?? '')} 
     <LegeStaat v-if="error" class="mt-16" titel="Deze persoon valt niet onder jou." tekst="Je ziet alleen de coachingkaarten van je eigen teams." />
     <template v-else-if="k">
       <PaginaKop :kicker="`Coaching · ${NIVEAU_LABEL[k.persoon.niveau as 'beginner']} · ${k.persoon.werkplek}`" :titel="kort(k.persoon.naam)" helpartikel="coachingsgesprek">
-        <template #acties><NuxtLink v-if="k.kan.niveau" class="dd-actie dd-actie--secundair" :to="`/team#niveaus`">Wijzig niveau</NuxtLink></template>
+        <template #acties><FunctieLink v-if="k.kan.niveau" class="dd-actie dd-actie--secundair" :to="`/team#niveaus`">Wijzig niveau</FunctieLink></template>
       </PaginaKop>
       <section class="section">
         <div class="container cg-kaart">

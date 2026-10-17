@@ -54,7 +54,7 @@ opslag.volg(() => [bewerk.value])
     <template v-else>
       <PaginaKop kicker="Instellingen · Werkwijze" titel="Sjablonen voor opvolgreeksen" uitleg="Een reeks van mail, LinkedIn en bellen die vanzelf stopt zodra de prospect reageert. De Schrijver maakt elke mail en elk bericht vlak voor de verzenddag; jij of je verkopers keuren goed." helpartikel="volgen">
         <template #acties>
-          <NuxtLink to="/opvolgreeksen" class="dd-actie dd-actie--secundair">Naar de reeksen</NuxtLink>
+          <FunctieLink to="/opvolgreeksen" class="dd-actie dd-actie--secundair">Naar de reeksen</FunctieLink>
           <button type="button" class="dd-actie dd-actie--primair" data-test="rsj-nieuw" @click="nieuw"><Icoon naam="Plus" class="dd-actie-icoon" />Sjabloon</button>
         </template>
       </PaginaKop>

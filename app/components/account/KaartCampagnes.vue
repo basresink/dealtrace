@@ -12,14 +12,14 @@ const CAMP_KOLOM: Record<string, string> = { klaar: 'Klaar', bezig: 'Bezig', afs
     <LegeStaat v-if="!campagnes.length" kicker="Campagnes" :titel="opContact ? 'Dit contact loopt in geen enkele campagne mee.' : 'Dit account loopt in geen enkele campagne mee.'" tekst="Voeg het account toe op een campagnebord onder Campagnes." data-test="kc-leeg" />
     <ul v-else class="kc-rijen" role="list">
       <li v-for="c in campagnes" :key="c.id">
-        <NuxtLink :to="`/campagnes/${c.id}`" class="kc-rij" :data-test="`ak-campagne-${c.id}`">
+        <FunctieLink als-tekst :to="`/campagnes/${c.id}`" class="kc-rij" :data-test="`ak-campagne-${c.id}`">
           <span class="kc-info"><span class="kc-titel">{{ c.naam }}</span><span class="meta">{{ c.soort }} · {{ c.status }}<template v-if="c.doel"> · {{ c.doel }}</template><template v-if="c.volgendeStap"> · volgende stap: {{ c.volgendeStap }}</template></span></span>
           <span class="pil" :class="c.gehaald ? 'pil--groen' : 'pil--grijs'">{{ c.gehaald ? 'Doel gehaald' : CAMP_KOLOM[c.kolom] ?? c.kolom }}</span>
           <Icoon naam="ChevronRight" :grootte="16" class="kc-pijl" />
-        </NuxtLink>
+        </FunctieLink>
       </li>
     </ul>
-    <NuxtLink to="/campagnes" class="dd-actie dd-actie--secundair kc-alle" data-test="kc-alle">Alle campagnes<Icoon naam="ArrowRight" class="dd-actie-icoon" /></NuxtLink>
+    <FunctieLink to="/campagnes" class="dd-actie dd-actie--secundair kc-alle" data-test="kc-alle">Alle campagnes<Icoon naam="ArrowRight" class="dd-actie-icoon" /></FunctieLink>
   </div>
 </template>
 

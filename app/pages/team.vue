@@ -92,7 +92,7 @@ useHead({ title: 'Team · Dealtrace' })
                 </tr></thead>
                 <tbody>
                   <tr v-for="r in rijen" :key="r.id" :data-test="`team-rij-${r.id}`">
-                    <td><NuxtLink :to="`/coaching/${r.id}`">{{ kort(r.naam) }}</NuxtLink><br><span class="meta">{{ NIVEAU_LABEL[r.niveau as 'beginner'] }} · {{ r.werkplek }}</span></td>
+                    <td><FunctieLink als-tekst :to="`/coaching/${r.id}`">{{ kort(r.naam) }}</FunctieLink><br><span class="meta">{{ NIVEAU_LABEL[r.niveau as 'beginner'] }} · {{ r.werkplek }}</span></td>
                     <td v-for="k in KOLOMMEN" :key="k.k" class="tnum"><button type="button" class="tm-cel" :data-test="`cel-${r.id}-${k.cel}`" @click="openCel(r, k.cel!, k.label)">{{ tekstCel(r, k.k) }}</button></td>
                     <td><span class="pil" :class="r.tempo.stand === 'op schema' ? 'pil--groen' : r.tempo.stand === 'achter' ? 'pil--rood' : 'pil--leeg'">{{ r.tempo.stand === 'geen' ? 'Geen werkdag' : r.tempo.stand === 'op schema' ? 'Op schema' : 'Achter op schema' }}</span></td>
                   </tr>
@@ -116,7 +116,7 @@ useHead({ title: 'Team · Dealtrace' })
                 <p v-if="!data.goedkeuringen.length && !sg?.open" class="kaart-meta">Niets.</p>
                 <ul class="schakel-lijst">
                   <li v-if="suggestiesAan && sgRegel" class="schakel-rij" data-test="suggesties-regel"><button type="button" class="tekst-link" @click="sgOpen = true">{{ sgRegel }}</button><span class="meta">SalesDNA</span></li>
-                  <li v-for="g in data.goedkeuringen" :key="g.id" class="schakel-rij"><NuxtLink :to="g.link">{{ g.titel }}</NuxtLink><span class="meta">{{ g.soort }}</span></li>
+                  <li v-for="g in data.goedkeuringen" :key="g.id" class="schakel-rij"><FunctieLink als-tekst :to="g.link">{{ g.titel }}</FunctieLink><span class="meta">{{ g.soort }}</span></li>
                 </ul>
               </article>
             </div>
@@ -136,7 +136,7 @@ useHead({ title: 'Team · Dealtrace' })
       <FlyoutShell v-if="cel || persoon" open titel-id="fs-team0" breedte="smal" data-test="team-venster" @sluit="cel = null; persoon = null">
           <template #kop><span class="fo-kicker">{{ cel ? `${cel.records.length} records` : 'Cijfers' }}</span><h2 id="fs-team0" class="fo-titel">{{ cel?.titel ?? kort(persoon.naam) }}</h2></template>
             <div class="fo-body">
-              <ul v-if="cel" class="schakel-lijst" data-test="cel-lijst"><li v-for="x in cel.records" :key="x.id" class="schakel-rij"><span><NuxtLink v-if="x.link" :to="x.link">{{ x.titel }}</NuxtLink><template v-else>{{ x.titel }}</template><br><span class="meta">{{ x.meta }}</span></span></li></ul>
+              <ul v-if="cel" class="schakel-lijst" data-test="cel-lijst"><li v-for="x in cel.records" :key="x.id" class="schakel-rij"><span><FunctieLink als-tekst v-if="x.link" :to="x.link">{{ x.titel }}</FunctieLink><template v-else>{{ x.titel }}</template><br><span class="meta">{{ x.meta }}</span></span></li></ul>
               <ul v-else class="schakel-lijst">
                 <li v-for="k in KOLOMMEN" :key="k.k" class="schakel-rij"><button type="button" class="tm-persoon" @click="openCel(persoon, k.cel!, k.label); persoon = null"><span>{{ k.label }}</span><strong class="tnum">{{ tekstCel(persoon, k.k) }}</strong></button></li>
               </ul>

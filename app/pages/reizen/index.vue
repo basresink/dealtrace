@@ -64,20 +64,20 @@ useHead({ title: 'Prospectreizen · Dealtrace' })
         </div>
         <article v-if="rz.kan?.publiceren && wacht.length" class="kaart kaart--geel mt-16" data-test="wacht-op-publicatie">
           <h2 class="kaart-titel">Wacht op publicatie</h2>
-          <ul class="schakel-lijst"><li v-for="r in wacht" :key="r.id" class="schakel-rij"><NuxtLink :to="`/reizen/${r.id}`">{{ r.naam }}</NuxtLink><span class="meta">aangevraagd {{ new Date(r.publicatieAangevraagd.op).toLocaleDateString('nl-NL') }}</span></li></ul>
+          <ul class="schakel-lijst"><li v-for="r in wacht" :key="r.id" class="schakel-rij"><FunctieLink als-tekst :to="`/reizen/${r.id}`">{{ r.naam }}</FunctieLink><span class="meta">aangevraagd {{ new Date(r.publicatieAangevraagd.op).toLocaleDateString('nl-NL') }}</span></li></ul>
         </article>
         <div class="sec-head mt-16"><span class="kicker kicker--streep">Reizen</span>
           <select v-model="statusFilter" class="invoer invoer--klein rz-filter" aria-label="Status"><option value="">Alle statussen</option><option v-for="(l, k) in STATUS" :key="k" :value="k">{{ l }}</option></select></div>
         <LegeStaat v-if="rz.reizen.length === 1" class="mt-16" titel="Je werkt nu met de standaardreis." tekst="Maak een eigen reis als een doelgroep anders koopt." />
         <div class="mt-16 ak-blokken">
-          <NuxtLink v-for="r in reizen" :key="r.id" :to="`/reizen/${r.id}`" class="kaart top-kaart" :data-test="`reis-${r.isStandaard ? 'standaard' : r.id}`">
+          <FunctieLink als-tekst v-for="r in reizen" :key="r.id" :to="`/reizen/${r.id}`" class="kaart top-kaart" :data-test="`reis-${r.isStandaard ? 'standaard' : r.id}`">
             <header class="kaart-kop"><h2 class="kaart-titel">{{ r.naam }}</h2><span class="pil" :class="r.isStandaard ? 'pil--zwart' : 'pil--leeg'">{{ r.isStandaard ? 'Standaard' : `v${r.versie}` }}</span></header>
             <p class="kaart-meta">{{ r.totaal }} accounts · {{ STATUS[r.status] }}<template v-if="r.doelgroepId"> · {{ dg.doelgroepen.find((d: any) => d.id === r.doelgroepId)?.naam ?? '' }}</template></p>
             <div class="rz-funnel" aria-label="Accounts per hoofdfase">
               <div v-for="h in HOOFDFASEN" :key="h" class="rz-kolom"><div class="rz-balk" :style="{ height: `${((r.hoofdfasen?.[h] ?? 0) / maxHoofd(r)) * 100}%` }" /><span class="meta tnum">{{ r.hoofdfasen?.[h] ?? 0 }}</span><span class="meta">{{ HOOFDFASE_LABEL[h] }}</span></div>
             </div>
             <span class="dd-act mt-8">Open</span>
-          </NuxtLink>
+          </FunctieLink>
         </div>
       </div>
     </section>

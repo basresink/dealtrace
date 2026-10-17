@@ -5,6 +5,7 @@
 // je prospects van de laatste 48 uur en voor de salesmanager "Team vandaag". Dashboard en de twee blokken
 // staan ook op de telefoon, onder de dagweergave.
 const toast = useToast()
+const { aan } = useFunctie()
 const { versie } = useAfronden()
 const motorVersie = useState('motorVersie', () => 0)
 const route = useRoute()
@@ -37,9 +38,9 @@ useHead({ title: 'Vandaag · Dealtrace' })
         <p class="subtitle subtitle--groot" data-test="samenvatting">{{ v.kop.samenvatting }}</p>
       </template>
       <template #acties>
-        <button type="button" class="dd-actie dd-actie--primair" data-test="vandaag-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
-        <button type="button" class="dd-actie dd-actie--zwart" data-test="vandaag-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
-        <NuxtLink to="/dagstart" class="dd-actie dd-actie--secundair" data-test="vandaag-dagstart"><Icoon naam="Sunrise" class="dd-actie-icoon" />Dagstart</NuxtLink>
+        <button v-if="aan('taken.basis')" type="button" class="dd-actie dd-actie--primair" data-test="vandaag-taak" @click="nieuweTaak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
+        <button v-if="aan('agenda.basis')" type="button" class="dd-actie dd-actie--zwart" data-test="vandaag-afspraak" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+        <FunctieLink to="/dagstart" class="dd-actie dd-actie--secundair" data-test="vandaag-dagstart"><Icoon naam="Sunrise" class="dd-actie-icoon" />Dagstart</FunctieLink>
       </template>
     </PaginaKop>
     <section v-if="v.aanleiding" class="section vd-hero">

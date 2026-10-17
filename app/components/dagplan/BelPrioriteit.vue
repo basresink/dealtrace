@@ -37,8 +37,7 @@ const zichtbaar = computed(() => props.lijst.slice(0, top.value))
         <button type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': top === 10 }" :aria-pressed="top === 10" data-test="bel-top-10" @click="top = 10">Top 10</button>
       </div>
     </header>
-    <NietAangezetKop v-if="!kan" :sleutel="sleutel" />
-    <ol v-else-if="zichtbaar.length" class="bp-raster" :class="{ 'bp-raster--smal': smal }">
+    <ol v-if="kan && zichtbaar.length" class="bp-raster" :class="{ 'bp-raster--smal': smal }">
       <DagKaart v-for="(b, i) in zichtbaar" :key="b.accountId" tag="li" :data-test="`bel-kaart-${b.accountId}`">
         <div class="dp-kaart-kop">
           <span class="bp-rang tnum">{{ Number(i) + 1 }}</span>
@@ -49,7 +48,7 @@ const zichtbaar = computed(() => props.lijst.slice(0, top.value))
         <span class="dp-kaart-pillen"><Label soort="score" :waarde="b.score" :tekst="`Score ${b.score}`" /><span v-if="b.openTaken" class="pil">{{ b.openTaken }} open {{ b.openTaken === 1 ? 'taak' : 'taken' }}</span><Label v-if="b.heet" soort="status" waarde="heet" /><span v-if="!b.taskId" class="pil pil--grijs">Geen taak</span></span>
       </DagKaart>
     </ol>
-    <p v-else class="bp-leeg">Niemand om te bellen.</p>
+    <p v-else-if="kan" class="bp-leeg">Niemand om te bellen.</p>
   </div>
 </template>
 

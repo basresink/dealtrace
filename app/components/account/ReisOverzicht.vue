@@ -17,7 +17,7 @@ const datum = (t: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', 
 
 <template>
   <article class="kaart" data-test="reis-blok">
-    <header class="kaart-kop"><h2 class="kaart-titel">Reis</h2><NuxtLink v-if="a.reis && a.kan?.reisBekijken" :to="`/reizen/${a.reis.id}`" class="tekst-link" data-test="reis-overzicht-link">Bekijk de reis</NuxtLink></header>
+    <header class="kaart-kop"><h2 class="kaart-titel">Reis</h2><FunctieLink v-if="a.reis && a.kan?.reisBekijken" :to="`/reizen/${a.reis.id}`" class="tekst-link" data-test="reis-overzicht-link">Bekijk de reis</FunctieLink></header>
     <template v-if="a.reis">
       <p class="kaart-meta"><strong>{{ a.reis.naam }}</strong> · {{ a.reis.fase?.label }} · {{ STATUS_LABEL[a.status] ?? a.status }}<template v-if="a.dagenInFase !== null && a.dagenInFase !== undefined"> · {{ a.dagenInFase }} dagen in fase</template></p>
       <p v-if="a.reis.fase?.accent" class="fasekaart-accent">{{ a.reis.fase.accent }}</p>

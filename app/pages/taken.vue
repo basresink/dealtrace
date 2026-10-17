@@ -82,8 +82,8 @@ const nieuweAfspraak = ref(false)
         <p v-else class="subtitle subtitle--groot">Je open taken op volgorde van vervaldatum.</p>
       </template>
       <template #acties>
-        <button type="button" class="dd-actie dd-actie--primair" data-test="taak-nieuw" @click="nieuw = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
-        <button type="button" class="dd-actie dd-actie--zwart" data-test="afspraak-nieuw" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+        <button v-if="$aan('taken.basis')" type="button" class="dd-actie dd-actie--primair" data-test="taak-nieuw" @click="nieuw = true"><Icoon naam="Plus" class="dd-actie-icoon" />Taak</button>
+        <button v-if="$aan('agenda.basis')" type="button" class="dd-actie dd-actie--zwart" data-test="afspraak-nieuw" @click="nieuweAfspraak = true"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
         <button type="button" class="dd-actie dd-actie--secundair" :aria-expanded="filtersOpen" data-test="filters-knop" @click="filtersOpen = !filtersOpen"><Icoon naam="Filter" class="dd-actie-icoon" />Filters</button>
       </template>
     </PaginaKop>

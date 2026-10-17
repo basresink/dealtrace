@@ -25,7 +25,7 @@ async function zetRol(c: PlanContact, rol: string) {
     <ul v-if="gekozen.length" class="apc-lijst" role="list">
       <li v-for="c in gekozen" :key="c.id" class="apc-rij" :data-test="`${prefix}-contact-${c.id}`">
         <span class="apc-tekst">
-          <NuxtLink :to="`/contacten/${c.id}`" class="apc-naam">{{ c.naam }}</NuxtLink>
+          <FunctieLink als-tekst :to="`/contacten/${c.id}`" class="apc-naam">{{ c.naam }}</FunctieLink>
           <span class="apc-meta">{{ c.functie || 'Functie onbekend' }}<template v-if="c.vertrokken"> · vertrokken</template></span>
         </span>
         <span v-if="rolKiezen" class="lbl-kies">

@@ -63,7 +63,7 @@ useHead({ title: 'Mijn instellingen · Dealtrace' })
           <article v-if="scriptsAan" id="scripts" class="kaart mi-sectie" data-test="mijn-scripts-kaart">
             <header class="kaart-kop"><h2 class="kaart-titel">Mijn scripts</h2></header>
             <p class="kaart-meta">Je eigen varianten van de belscripts van je team.</p>
-            <div class="reis-knoppen mt-16"><NuxtLink to="/instellingen/mijn-scripts" class="dd-act">Naar mijn scripts</NuxtLink><NuxtLink to="/belscripts" class="dd-act" data-test="mijn-scripts-studio">Open Belscript Studio</NuxtLink></div>
+            <div class="reis-knoppen mt-16"><FunctieLink to="/instellingen/mijn-scripts" class="dd-act">Naar mijn scripts</FunctieLink><FunctieLink to="/belscripts" class="dd-act" data-test="mijn-scripts-studio">Open Belscript Studio</FunctieLink></div>
           </article>
           <article v-if="ai" id="ai-verbruik" class="kaart mi-sectie" data-test="mijn-ai-verbruik">
             <header class="kaart-kop"><h2 class="kaart-titel">Jouw AI-verbruik deze maand</h2></header>

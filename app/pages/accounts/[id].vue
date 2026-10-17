@@ -189,7 +189,7 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
         <div class="ak-kop-binnen">
           <AccountLogo class="ak-merk" :naam="a.naam" :initialen="initialen" :kleur="merkKleur ?? 'var(--ink)'" :logo-url="a.logoUrl" :website="a.website" :domein="a.domein" :logo-uit="a.logoUit" :grootte="logoMaat" />
           <div class="ak-kop-info">
-            <NuxtLink :to="a.soort === 'klant' ? '/klanten' : '/prospects/alle'" class="ak-kruimel"><Icoon naam="ArrowLeft" :grootte="12" /> {{ a.soort === 'klant' ? 'Bestaande klanten' : 'Alle prospects' }}</NuxtLink>
+            <FunctieLink als-tekst :to="a.soort === 'klant' ? '/klanten' : '/prospects/alle'" class="ak-kruimel"><Icoon naam="ArrowLeft" :grootte="12" /> {{ a.soort === 'klant' ? 'Bestaande klanten' : 'Alle prospects' }}</FunctieLink>
             <p class="ak-eyebrow"><span v-for="(c, i) in [a.branche, a.plaats, a.land, a.vvBranche?.naam].filter(Boolean)" :key="i"><template v-if="i"> · </template>{{ c }}</span></p>
             <h1 class="ak-titel" data-test="account-naam">{{ a.naam }}
               <span v-if="a.kan.klasse" class="lbl-kies"><Label soort="klasse" :waarde="a.klasse ? klasseNaam : null" data-test="klasse-label" /><Icoon naam="ChevronDown" :grootte="12" /><select :value="a.klasse ?? ''" aria-label="Klasse" data-test="klasse" @change="zetKlasse(($event.target as HTMLSelectElement).value)">
@@ -216,13 +216,13 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
               <div><dt>Laatste actie</dt><dd class="tnum">{{ datumLang(a.stuur.laatsteActie) }}</dd></div>
               <div><dt>Laatste call</dt><dd class="tnum">{{ datumLang(a.stuur.laatsteCall) }}</dd></div>
               <div><dt>Laatste bezoek</dt><dd class="tnum">{{ datumLang(a.stuur.laatsteBezoek) }}</dd></div>
-              <div><dt>Reis</dt><dd><NuxtLink v-if="a.reis && a.kan.reisBekijken" :to="`/reizen/${a.reis.id}`" data-test="reis-link">{{ a.reis.naam }}</NuxtLink><template v-else>{{ a.reis?.naam ?? 'Geen reis' }}</template></dd></div>
+              <div><dt>Reis</dt><dd><FunctieLink als-tekst v-if="a.reis && a.kan.reisBekijken" :to="`/reizen/${a.reis.id}`" data-test="reis-link">{{ a.reis.naam }}</FunctieLink><template v-else>{{ a.reis?.naam ?? 'Geen reis' }}</template></dd></div>
               <div v-if="a.terugkom"><dt>Terug op</dt><dd data-test="terug-op">{{ a.terugkom.tekst.replace(/^Terug op /, '').split(' · ').slice(0, 2).join(' · ') }}</dd></div>
             </dl>
           </div>
           <div class="ak-acties">
             <KopIconen zonder-hulp :ai="{ accountId: a.id, label: a.naam }" />
-            <button type="button" class="dd-actie dd-actie--secundair" data-test="contacten-knop" @click="contactenOpen = true"><Icoon naam="Users" class="dd-actie-icoon" />Contacten<span v-if="aantalContacten" class="ak-teller tnum">{{ aantalContacten }}</span></button>
+            <button v-if="$aan('contacten.basis')" type="button" class="dd-actie dd-actie--secundair" data-test="contacten-knop" @click="contactenOpen = true"><Icoon naam="Users" class="dd-actie-icoon" />Contacten<span v-if="aantalContacten" class="ak-teller tnum">{{ aantalContacten }}</span></button>
             <button type="button" class="dd-actie dd-actie--secundair" aria-haspopup="dialog" :aria-expanded="infoOpen" title="Bedrijfsgegevens, leverancier en eigen velden" data-test="info-knop" @click="infoOpen = true"><Icoon naam="Info" class="dd-actie-icoon" />Info</button>
             <button type="button" class="dd-actie dd-actie--secundair" aria-haspopup="dialog" :aria-expanded="meerOpen" data-test="kop-meer" @click="meerOpen = true"><Icoon naam="Ellipsis" class="dd-actie-icoon" />Meer</button>
           </div>

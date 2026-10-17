@@ -42,7 +42,7 @@ const ROL: Record<string, string> = { beslisser: 'Beslisser', champion: 'Champio
             <div v-if="c.contact" class="cf-rij">
               <Icoon naam="CircleUser" :grootte="16" />
               <div class="cf-rij-tekst">
-                <NuxtLink :to="`/contacten/${c.contact.id}`" class="cf-link" data-test="concept-contact">{{ c.contact.naam }}</NuxtLink>
+                <FunctieLink :to="`/contacten/${c.contact.id}`" class="cf-link" data-test="concept-contact">{{ c.contact.naam }}</FunctieLink>
                 <span class="meta">{{ [c.contact.functie, ROL[c.contact.rol] ?? null].filter(Boolean).join(' · ') }}<template v-if="c.contact.functie || ROL[c.contact.rol]"> · </template>{{ VIA[c.contact.via] ?? '' }}</span>
                 <span v-if="c.contact.email" class="meta">{{ c.contact.email }}</span>
               </div>

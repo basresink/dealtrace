@@ -106,10 +106,10 @@ useHead({ title: 'Meetings · Dealtrace' })
     <PaginaKop helpartikel="agenda">
       <template #kicker><span class="kicker kicker--streep" data-test="meetings-kicker">Meetings · 30 dagen<template v-if="vandaagAantal"> · {{ vandaagAantal }} vandaag</template></span></template>
       <template #titel><h1 class="title title--groot">Elk gesprek op het juiste moment.</h1></template>
-      <template #uitleg><p class="subtitle subtitle--groot">Online meetings, belafspraken en intern overleg rond je prospects. Voor bezoeken op locatie is er <NuxtLink to="/bezoeken" class="mt-sublink" data-test="meetings-bezoeken">Bezoeken</NuxtLink>.</p></template>
+      <template #uitleg><p class="subtitle subtitle--groot">Online meetings, belafspraken en intern overleg rond je prospects. Voor bezoeken op locatie is er <FunctieLink to="/bezoeken" class="mt-sublink" data-test="meetings-bezoeken">Bezoeken</FunctieLink>.</p></template>
       <template #acties>
-        <button type="button" class="dd-actie dd-actie--zwart" data-test="meetings-afspraak" @click="plan()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
-        <NuxtLink v-if="analyseAan" to="/meeting-analyse" class="dd-actie dd-actie--secundair" data-test="meetings-analyse"><Icoon naam="ChartLine" class="dd-actie-icoon" />Analyse</NuxtLink>
+        <button v-if="$aan('agenda.basis')" type="button" class="dd-actie dd-actie--zwart" data-test="meetings-afspraak" @click="plan()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+        <FunctieLink v-if="analyseAan" to="/meeting-analyse" class="dd-actie dd-actie--secundair" data-test="meetings-analyse"><Icoon naam="ChartLine" class="dd-actie-icoon" />Analyse</FunctieLink>
         <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'mt-filterknop--aan': filtersOpen || filterAantal }" :aria-expanded="filtersOpen" data-test="meetings-filterknop" @click="filtersOpen = !filtersOpen">
           <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="filterAantal" class="mt-teller">{{ filterAantal }}</span><Icoon naam="ChevronDown" class="mt-caret" :class="{ 'mt-caret--open': filtersOpen }" />
         </button>
@@ -178,7 +178,7 @@ useHead({ title: 'Meetings · Dealtrace' })
       </div>
     </section>
 
-    <section class="section">
+    <section v-if="bel.kan" class="section">
       <div class="container" data-test="meetings-bellijst">
         <BelPrioriteit :lijst="bel.bellijst" :kan="bel.kan" titel="Bel-prioriteit bij je meetings" uitleg="Dezelfde lijst als op Belblokken, zonder wie je die dag al spreekt. Een klik opent de beltaak; is die er nog niet, dan maakt Dealtrace hem eerst." @taak="taak = $event" />
       </div>
@@ -200,7 +200,7 @@ useHead({ title: 'Meetings · Dealtrace' })
             <p class="dp-kaart-tekst">{{ v.uitleg }}</p>
             <span class="dp-kaart-pillen"><span class="pil pil--geel" :data-test="`beurt-advies-${v.accountId}`">{{ v.adviesLabel }}</span></span>
             <div class="dp-kaart-acties">
-              <NuxtLink v-if="v.advies === 'belblok'" to="/belblokken" class="dd-act" :data-test="`beurt-plan-${v.accountId}`">Naar belblok</NuxtLink>
+              <FunctieLink v-if="v.advies === 'belblok'" to="/belblokken" class="dd-act" :data-test="`beurt-plan-${v.accountId}`">Naar belblok</FunctieLink>
               <button v-else type="button" class="dd-act" :data-test="`beurt-plan-${v.accountId}`" @click="planBeurt(v)">{{ (PLAN[v.advies] ?? PLAN.belafspraak!).knop }}</button>
             </div>
           </DagKaart>

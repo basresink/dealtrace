@@ -67,13 +67,13 @@ useHead({ title: 'Meetinganalyse · Dealtrace' })
     <template v-else>
       <PaginaKop helpartikel="agenda">
         <template #kicker>
-          <nav class="breadcrumb" aria-label="Kruimelpad"><NuxtLink to="/meetings" class="breadcrumb-link ma-terug" data-test="ma-terug">← Terug naar Meetings</NuxtLink></nav>
+          <nav class="breadcrumb" aria-label="Kruimelpad"><FunctieLink to="/meetings" class="breadcrumb-link ma-terug" data-test="ma-terug">← Terug naar Meetings</FunctieLink></nav>
           <span class="kicker kicker--streep" data-test="ma-kicker">{{ kicker }}</span>
         </template>
         <template #titel><h1 class="title title--groot">{{ titel }}</h1></template>
         <template #uitleg><p class="subtitle subtitle--groot">Spreek je iedereen zo vaak als je je had voorgenomen? Hier zie je per accountklasse wie online of aan de telefoon aandacht kreeg en wie stilviel. Precies daar zit je volgende meeting.</p></template>
         <template #acties>
-          <button type="button" class="dd-actie dd-actie--zwart" data-test="ma-afspraak" @click="nieuweAfspraak()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
+          <button v-if="$aan('agenda.basis')" type="button" class="dd-actie dd-actie--zwart" data-test="ma-afspraak" @click="nieuweAfspraak()"><Icoon naam="Plus" class="dd-actie-icoon" />Afspraak</button>
           <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'ma-filterknop--aan': filtersOpen || filterTeller }" :aria-expanded="filtersOpen" data-test="ma-filters" @click="filtersOpen = !filtersOpen">
             <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="filterTeller" class="pil-teller pil-teller--geel">{{ filterTeller }}</span><Icoon naam="ChevronDown" :grootte="14" class="ma-caret" :class="{ 'ma-caret--open': filtersOpen }" />
           </button>
@@ -148,7 +148,7 @@ useHead({ title: 'Meetinganalyse · Dealtrace' })
               <h2 class="ma-bloktitel">Combineer met een regiodag</h2>
               <p class="ma-subtitel">Ga je toch fysiek langs in een gebied? Hier zie je per regio hoe de meetingdekking ervoor staat. Plan de stille accounts online in terwijl je er toch bent.</p>
             </header>
-            <p v-if="data.geenRegios" class="meta">Er is nog geen gebiedsindeling. Richt regio's in bij <NuxtLink to="/instellingen/gebieden" class="tabel-link">Gebieden en regiodagen</NuxtLink>.</p>
+            <p v-if="data.geenRegios" class="meta">Er is nog geen gebiedsindeling. Richt regio's in bij <FunctieLink to="/instellingen/gebieden" class="tabel-link">Gebieden en regiodagen</FunctieLink>.</p>
             <div v-else class="tabel-wrap">
               <table class="tabel" data-test="ma-regiotabel">
                 <thead><tr><th>Regio</th><th>Vaste dag</th><th class="cel-r">Prospects</th><th class="ma-balkkolom">Meetingdekking</th><th class="cel-r">Achter / nooit</th><th aria-label="Openen" /></tr></thead>

@@ -6,7 +6,6 @@
 const { functie } = useMe()
 const aan = !!functie('campagnes.meedoen')?.beschikbaar
 const maken = !!functie('campagnes.maken')?.beschikbaar
-const { toon: toonUitleg } = useNietAangezet()
 const route = useRoute()
 const router = useRouter()
 const filter = computed(() => ({ status: (route.query.status as string) || 'alle', soort: (route.query.soort as string) || 'alle', eigenaar: (route.query.eigenaar as string) || 'mij' }))
@@ -44,8 +43,7 @@ useHead({ title: 'Campagnes · Dealtrace' })
     <template v-else>
       <PaginaKop :kicker="`Campagnes · ${data.actief} actief`" titel="Eén lijst, één doel, elke dag een stap." uitleg="Een campagne is geen lijst om af te vinken maar een reeks gesprekken: elke stap die je vandaag zet, scheelt er morgen twee." helpartikel="campagnes">
         <template #acties>
-          <NuxtLink v-if="maken" to="/campagnes/nieuw" class="dd-actie dd-actie--primair" data-test="campagne-nieuw"><Icoon naam="Plus" class="dd-actie-icoon" />Campagne</NuxtLink>
-          <button v-else type="button" class="dd-actie dd-actie--secundair knop-slot" data-test="campagne-nieuw-slot" @click="toonUitleg('campagnes.maken')"><Icoon naam="Lock" class="dd-actie-icoon" />Campagne</button>
+          <FunctieLink v-if="maken" to="/campagnes/nieuw" class="dd-actie dd-actie--primair" data-test="campagne-nieuw"><Icoon naam="Plus" class="dd-actie-icoon" />Campagne</FunctieLink>
           <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'co-filters--aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="campagne-filters" @click="filtersOpen = !filtersOpen">
             <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="co-teller">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="co-pijl" :class="{ 'co-pijl--open': filtersOpen }" />
           </button>
@@ -93,7 +91,7 @@ useHead({ title: 'Campagnes · Dealtrace' })
           </LegeStaat>
           <ul v-else class="co-lijst" role="list" data-test="campagne-lijst">
             <li v-for="c in data.campagnes" :key="c.id" class="co-kaart" :class="`co-kaart--${c.status}`">
-              <NuxtLink :to="`/campagnes/${c.id}`" class="co-link" :data-test="`campagne-${c.id}`">
+              <FunctieLink :to="`/campagnes/${c.id}`" class="co-link" :data-test="`campagne-${c.id}`">
                 <header class="co-kop">
                   <div class="co-pillen">
                     <Label class="co-soort" soort="actie" :waarde="KANAAL_ACTIE[soortKleur(c.soort)] ?? 'taak'" :tekst="soortNaam(c.soort)" />
@@ -122,7 +120,7 @@ useHead({ title: 'Campagnes · Dealtrace' })
                   </div>
                 </div>
                 <span class="co-open">Open campagnebord <Icoon naam="ArrowRight" :grootte="14" /></span>
-              </NuxtLink>
+              </FunctieLink>
             </li>
           </ul>
         </div>

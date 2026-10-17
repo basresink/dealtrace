@@ -39,7 +39,7 @@ async function inloop(a: { id: string; naam: string }) {
     <section v-if="hier" class="aankomst-kaart" data-test="aankomst-kaart">
       <p class="ow-status">Aangekomen</p>
       <h2 class="kop-blok">Je bent bij {{ hier.accountNaam }}</h2>
-      <p class="dd-acties"><NuxtLink class="dd-act" :to="`/agenda?afspraak=${hier.id}`">Pitstop</NuxtLink><button type="button" class="dd-act dd-act--primair" @click="rondAf(hier)">Bezoek afronden</button></p>
+      <p class="dd-acties"><FunctieLink class="dd-act" :to="`/agenda?afspraak=${hier.id}`">Pitstop</FunctieLink><button type="button" class="dd-act dd-act--primair" @click="rondAf(hier)">Bezoek afronden</button></p>
     </section>
     <button v-if="deel === 'inloop' && functie('onderweg.inloop')?.beschikbaar" type="button" class="dd-act dd-act--geel ow-knop-groot mt-8" data-test="vandaag-inloop" @click="inloopOpen = true"><Icoon naam="Plus" />Inloop</button>
     <BezoekAfrondenVenster :open="!!afronden" :afspraak="afronden" @sluit="afronden = null" />

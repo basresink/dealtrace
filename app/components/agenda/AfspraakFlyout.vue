@@ -134,7 +134,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
             <span class="fo-kicker af-kicker" data-test="af-kicker"><span v-if="a" class="af-stip" :style="{ background: KLEUR[a.soort.kleur] ?? 'var(--ink)' }" aria-hidden="true" />{{ kicker }}</span>
             <h2 id="af-titel" class="fo-titel" data-test="af-titel">{{ a ? a.titel : 'Laden…' }}</h2>
             <p v-if="a?.account" class="taak-meta af-kop-links">
-              <NuxtLink :to="`/accounts/${a.account.id}`" class="tekst-link" data-test="af-kop-account" @click="emit('sluit')">{{ a.account.naam }}</NuxtLink><template v-if="a.contact"> · <NuxtLink :to="`/contacten/${a.contact.id}`" class="tekst-link" data-test="af-kop-contact" @click="emit('sluit')">{{ a.contact.naam }}</NuxtLink></template>
+              <NuxtLink :to="`/accounts/${a.account.id}`" class="tekst-link" data-test="af-kop-account" @click="emit('sluit')">{{ a.account.naam }}</NuxtLink><template v-if="a.contact"> · <FunctieLink :to="`/contacten/${a.contact.id}`" class="tekst-link" data-test="af-kop-contact" @click="emit('sluit')">{{ a.contact.naam }}</FunctieLink></template>
             </p>
             <p v-if="a" class="taak-meta">{{ wanneer }} · {{ VORM[a.vorm] }} · {{ eigenaar }}</p>
             <p v-if="a?.geplandDoor" class="taak-meta"><span class="pil pil--leeg" data-test="af-gepland-door">Gepland door {{ a.geplandDoor.replace(/^Testgebruiker /, '') }}</span></p>
@@ -156,7 +156,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
             <div class="af-def"><dt>Wanneer</dt><dd class="tnum">{{ wanneer }} <span class="meta">· {{ duurLabel }}</span></dd></div>
             <div class="af-def"><dt>Toegewezen aan</dt><dd>{{ eigenaar }}</dd></div>
             <div v-if="a.account" class="af-def"><dt>Prospect</dt><dd><NuxtLink :to="`/accounts/${a.account.id}`" class="tekst-link" data-test="af-account" @click="emit('sluit')">{{ a.account.naam }}</NuxtLink></dd></div>
-            <div v-if="a.account" class="af-def"><dt>Contactpersoon</dt><dd><NuxtLink v-if="a.contact" :to="`/contacten/${a.contact.id}`" class="tekst-link" data-test="af-contact" @click="emit('sluit')">{{ a.contact.naam }}</NuxtLink><span v-if="a.contact && (a.contact.functie || a.contact.rol)" class="meta">&nbsp;· {{ a.contact.functie ?? a.contact.rol }}</span><span v-if="!a.contact" class="meta">Geen contactpersoon gekoppeld</span></dd></div>
+            <div v-if="a.account" class="af-def"><dt>Contactpersoon</dt><dd><FunctieLink v-if="a.contact" :to="`/contacten/${a.contact.id}`" class="tekst-link" data-test="af-contact" @click="emit('sluit')">{{ a.contact.naam }}</FunctieLink><span v-if="a.contact && (a.contact.functie || a.contact.rol)" class="meta">&nbsp;· {{ a.contact.functie ?? a.contact.rol }}</span><span v-if="!a.contact" class="meta">Geen contactpersoon gekoppeld</span></dd></div>
             <div v-if="a.beschrijving" class="af-def"><dt>Beschrijving</dt><dd class="af-pre">{{ a.beschrijving }}</dd></div>
             <div v-if="a.locatie" class="af-def"><dt>Locatie</dt><dd>{{ a.locatie }}</dd></div>
             <div v-if="a.meetinglink" class="af-def"><dt>Meeting</dt><dd><a :href="a.meetinglink" target="_blank" rel="noopener" class="tekst-link">Open de meetinglink</a></dd></div>
@@ -181,7 +181,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Wie zit erbij</h3></header>
             <ul class="schakel-lijst">
               <li v-for="c in a.wieZitErbij" :key="c.id" class="schakel-rij">
-                <NuxtLink :to="`/contacten/${c.id}`" class="tekst-link" @click="emit('sluit')">{{ c.naam }}</NuxtLink>
+                <FunctieLink :to="`/contacten/${c.id}`" class="tekst-link" @click="emit('sluit')">{{ c.naam }}</FunctieLink>
                 <span class="meta">{{ [c.id === a.contact?.id ? 'gekoppeld' : null, c.rol, c.functie].filter(Boolean).join(' · ') }}</span>
               </li>
             </ul>

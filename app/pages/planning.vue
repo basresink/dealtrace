@@ -34,7 +34,7 @@ useHead({ title: 'Prospectplanning · Dealtrace' })
       <PaginaKop :kicker="kicker" :titel="KOP[tab!]!.titel" :uitleg="KOP[tab!]!.uitleg" :helpartikel="KOP[tab!]!.hulp">
         <template #acties>
           <button v-if="tab === 'jaar'" type="button" class="dd-actie dd-actie--secundair" :aria-expanded="filtersOpen" data-test="planning-filters-knop" @click="filtersOpen = !filtersOpen"><Icoon naam="Filter" class="dd-actie-icoon" />Filters<span v-if="filterAantal" class="pil-teller" data-test="planning-filter-teller">{{ filterAantal }}</span></button>
-          <NuxtLink to="/prospects" class="dd-actie dd-actie--secundair" data-test="alle-prospects">Alle prospects<Icoon naam="ArrowRight" class="dd-actie-icoon" /></NuxtLink>
+          <FunctieLink to="/prospects" class="dd-actie dd-actie--secundair" data-test="alle-prospects">Alle prospects<Icoon naam="ArrowRight" class="dd-actie-icoon" /></FunctieLink>
         </template>
       </PaginaKop>
       <section class="section section--laatste">

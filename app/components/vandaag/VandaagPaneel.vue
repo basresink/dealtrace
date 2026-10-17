@@ -23,7 +23,7 @@ function label(t: any) {
     <header class="vp-kop">
       <h2 class="vp-titel">Vandaag</h2>
       <span class="vp-datum tnum">{{ datum }}</span>
-      <NuxtLink to="/agenda" class="vp-agenda"><Icoon naam="Calendar" :grootte="16" />Agenda</NuxtLink>
+      <FunctieLink to="/agenda" class="vp-agenda"><Icoon naam="Calendar" :grootte="16" />Agenda</FunctieLink>
     </header>
     <div class="vp-raster">
       <div class="vp-kolom" data-test="kolom-taken">
@@ -37,7 +37,7 @@ function label(t: any) {
             <Label class="vp-tag" v-bind="label(t)" />
           </span>
         </button>
-        <NuxtLink v-if="taken.meer" to="/taken" class="vp-meer" data-test="nog-meer">nog {{ taken.meer }} meer →</NuxtLink>
+        <FunctieLink v-if="taken.meer" to="/taken" class="vp-meer" data-test="nog-meer">nog {{ taken.meer }} meer →</FunctieLink>
       </div>
       <div class="vp-kolom" data-test="kolom-afspraken">
         <div class="vp-kolomkop"><span>Afspraken</span><span class="vp-num tnum">{{ afspraken.length }}</span></div>
@@ -54,14 +54,14 @@ function label(t: any) {
       <div class="vp-kolom vp-kolom--prio" data-test="kolom-prio">
         <div class="vp-kolomkop"><span>Prio</span><span class="vp-num tnum">{{ prio.length }}</span></div>
         <p v-if="!prio.length" class="vp-leeg">Niets dringends.</p>
-        <NuxtLink v-for="(p, i) in prio" :key="i" :to="p.link" class="vp-item">
+        <FunctieLink v-for="(p, i) in prio" :key="i" :to="p.link" class="vp-item">
           <span class="vp-tijd"><Icoon naam="TriangleAlert" :grootte="16" class="vp-let-op" /></span>
           <span class="vp-body">
             <span class="vp-naam">{{ p.naam ?? p.tekst }}</span>
             <span v-if="p.reden && p.reden !== p.naam" class="vp-meta">{{ p.reden }}</span>
             <Label v-if="p.label" class="vp-tag" v-bind="prioLabel(p)" />
           </span>
-        </NuxtLink>
+        </FunctieLink>
       </div>
     </div>
   </section>

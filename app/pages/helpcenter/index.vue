@@ -41,7 +41,7 @@ useHead({ title: 'Helpcenter · Dealtrace' })
   <div>
     <PaginaKop kicker="Ondersteuning" titel="Helpcenter" uitleg="Uitleg over elk scherm, de new business-academie en tips om slimmer te werken. Kom je er niet uit? Vraag de AI-assistent of mail support." helpartikel="helpcenter" :zoeken="{ actie: wisselZoeken, aan: zoekOpen, label: 'Zoeken in het helpcenter', test: 'help-zoekicoon', controls: 'hc-zoekpaneel' }">
       <template #acties>
-        <NuxtLink v-if="beheerAan" to="/instellingen/help" class="dd-actie dd-actie--secundair" data-test="help-beheer"><Icoon naam="Pencil" class="dd-actie-icoon" />Artikelen beheren</NuxtLink>
+        <FunctieLink v-if="beheerAan" to="/instellingen/help" class="dd-actie dd-actie--secundair" data-test="help-beheer"><Icoon naam="Pencil" class="dd-actie-icoon" />Artikelen beheren</FunctieLink>
       </template>
       <template #na>
         <div v-if="zoekOpen" id="hc-zoekpaneel" class="hc-zoekrij" role="search" data-test="help-zoekpaneel">
@@ -106,12 +106,12 @@ useHead({ title: 'Helpcenter · Dealtrace' })
               <p class="hc-ingang-tekst">Van het DealDrive-team: korte tips die je direct tijd schelen, van je dag starten tot offline werken.</p>
               <span class="hc-cta">Open de tips</span>
             </NuxtLink>
-            <NuxtLink to="/kennisbank" class="hc-ingang" data-test="ingang-kennisbank">
+            <FunctieLink to="/kennisbank" class="hc-ingang" data-test="ingang-kennisbank">
               <span class="hc-ingang-label">{{ kennisbankAan ? 'Documenten' : 'Vanaf Gevorderd' }}</span>
               <h2 class="hc-ingang-titel">Kennisbank</h2>
               <p class="hc-ingang-tekst">De documenten van je organisatie: cases, offertes, presentaties, productinfo en contracten. Zoek, koppel aan een account en stel de AI een vraag.</p>
               <span class="hc-cta">Open de kennisbank</span>
-            </NuxtLink>
+            </FunctieLink>
           </div>
 
           <HelpGroep titel="Hoe werkt Dealtrace" uitleg="Per onderwerp de uitleg over de schermen." link="/helpcenter/instructies" link-tekst="Alle instructies" class="mt-32">

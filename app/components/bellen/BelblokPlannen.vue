@@ -134,7 +134,7 @@ async function plan() {
   <aside class="bp" data-test="planpaneel">
     <div class="bp-kop">
       <h2 class="bp-titel">Belblok plannen</h2>
-      <NuxtLink to="/agenda" class="bp-link">Agenda <Icoon naam="ArrowRight" :grootte="14" /></NuxtLink>
+      <FunctieLink to="/agenda" class="bp-link">Agenda <Icoon naam="ArrowRight" :grootte="14" /></FunctieLink>
     </div>
     <p class="bp-sub" data-test="aantal-gekozen">{{ gekozen.length }} {{ gekozen.length === 1 ? 'gesprek' : 'gesprekken' }} geselecteerd</p>
 

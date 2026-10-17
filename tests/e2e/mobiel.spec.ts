@@ -23,7 +23,7 @@ test('beheerder: gebruikers en instellingen zonder horizontale scroll', async ({
 
 test('tikvlakken in de zijbalk zijn minstens 44 px', async ({ page }) => {
   await login(page, 'u-02')
-  // Ingeklapte items (Nog niet aangezet) zijn verborgen en tellen niet mee.
+  // Alleen zichtbare items tellen mee (Planning kan ingeklapt zijn).
   const hoogtes = await page.locator('.sb-nav .sb-link:visible').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))
   for (const h of hoogtes) expect(h).toBeGreaterThanOrEqual(44)
 })
