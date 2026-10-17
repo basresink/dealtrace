@@ -129,7 +129,7 @@ function startIso() {
 }
 const kanPlannen = computed(() => !!f.meetingsoortId && (!!klant.value || intern.value) && !!f.titel.trim() && !!f.datum && !!f.start)
 async function plan() {
-  if (!kanPlannen.value) { fout.value = !klant.value && !intern.value ? 'Kies eerst een klant.' : 'Vul een titel, datum en starttijd in.'; return }
+  if (!kanPlannen.value) { fout.value = !klant.value && !intern.value ? 'Kies eerst een prospect.' : 'Vul een titel, datum en starttijd in.'; return }
   bezig.value = true; fout.value = ''
   try {
     const r: any = await $fetch('/api/afspraken', { method: 'POST', body: {
@@ -150,19 +150,19 @@ async function plan() {
           <div class="fo-head-tekst">
             <span class="fo-kicker">Nieuwe afspraak<template v-if="soort"> · {{ soort.naam }}</template></span>
             <h2 id="pa-titel-kop" class="fo-titel">Plan een afspraak in</h2>
-            <p class="taak-meta" data-test="pa-uitleg"><template v-if="f.vorm === 'bezoek'">Verschijnt in de agenda en op de route van die dag.</template><template v-else>Verschijnt in de agenda en op Meetings.</template> Voeg een briefing toe vanuit de klantkaart.</p>
+            <p class="taak-meta" data-test="pa-uitleg"><template v-if="f.vorm === 'bezoek'">Verschijnt in de agenda en op de route van die dag.</template><template v-else>Verschijnt in de agenda en op Meetings.</template> Voeg een briefing toe vanuit de accountkaart.</p>
           </div>
           <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
         </header>
         <div class="fo-body fo-body--formulier pa-body">
-          <!-- Klant en contactpersoon: zoekvelden, bewust als eerste. -->
+          <!-- Prospect en contactpersoon: zoekvelden, bewust als eerste. -->
           <div class="veld">
-            <span id="pa-klant-label" class="veld-label">Klant <span v-if="!intern" class="veld-verplicht">*</span></span>
+            <span id="pa-klant-label" class="veld-label">Prospect <span v-if="!intern" class="veld-verplicht">*</span></span>
             <div v-if="klant" class="pa-keuze" data-test="pa-klant-gekozen">
               <span class="pa-keuze-tekst"><strong>{{ klant.naam }}</strong><span v-if="klant.plaats" class="meta"> · {{ klant.plaats }}</span></span>
-              <button v-if="!account" type="button" class="pa-wis" aria-label="Wis gekozen klant" data-test="pa-klant-wis" @click="wisKlant"><Icoon naam="X" :grootte="16" /></button>
+              <button v-if="!account" type="button" class="pa-wis" aria-label="Wis gekozen prospect" data-test="pa-klant-wis" @click="wisKlant"><Icoon naam="X" :grootte="16" /></button>
             </div>
-            <ZoekKiezer v-else :zoek="zoekKlant" placeholder="Zoek op klantnaam" labelledby="pa-klant-label" data-test="pa-klant" :optie-test="(x) => `pa-klant-${x.id}`" :sub="(x) => x.plaats" leeg="Geen klant gevonden." @kies="kiesKlant" />
+            <ZoekKiezer v-else :zoek="zoekKlant" placeholder="Zoek op prospectnaam" labelledby="pa-klant-label" data-test="pa-klant" :optie-test="(x) => `pa-klant-${x.id}`" :sub="(x) => x.plaats" leeg="Geen klant gevonden." @kies="kiesKlant" />
           </div>
 
           <div class="veld">
@@ -175,7 +175,7 @@ async function plan() {
               v-else :zoek="zoekContact" :min="klant ? 0 : 2" :sleutel="`${klant?.id ?? ''}:${klantContacten.length}`"
               :placeholder="klant ? `Zoek een contact bij ${klant.naam}` : 'Zoek op contactnaam'" labelledby="pa-contact-label" data-test="pa-contact"
               :optie-test="(c) => `pa-contact-${c.id}`" :sub="(c) => [c.functie ?? c.rol, klant ? null : c.accountNaam].filter(Boolean).join(' · ')"
-              :leeg="klant ? (klantContacten.length ? 'Geen contactpersoon gevonden.' : 'Deze klant heeft nog geen contactpersonen.') : 'Geen contactpersoon gevonden.'"
+              :leeg="klant ? (klantContacten.length ? 'Geen contactpersoon gevonden.' : 'Deze prospect heeft nog geen contactpersonen.') : 'Geen contactpersoon gevonden.'"
               @kies="kiesContact"
             />
           </div>
@@ -225,7 +225,7 @@ async function plan() {
             <p v-if="f.deelnemers.length" class="veld-uitleg">De afspraak komt ook in de agenda van {{ f.deelnemers.length === 1 ? 'deze collega' : 'deze collega\'s' }} te staan.</p>
           </div>
 
-          <label class="veld"><span class="veld-label">{{ f.vorm === 'bezoek' ? 'Locatie' : 'Locatie of meetinglink' }}</span><input v-model="f.locatie" class="invoer" data-test="pa-locatie" :placeholder="f.vorm === 'bezoek' ? 'Leeg is het adres van de klant' : f.vorm === 'online' ? 'Komt uit je gekoppelde agenda' : ''"></label>
+          <label class="veld"><span class="veld-label">{{ f.vorm === 'bezoek' ? 'Locatie' : 'Locatie of meetinglink' }}</span><input v-model="f.locatie" class="invoer" data-test="pa-locatie" :placeholder="f.vorm === 'bezoek' ? 'Leeg is het adres van de prospect' : f.vorm === 'online' ? 'Komt uit je gekoppelde agenda' : ''"></label>
           <label class="veld"><span class="veld-label">Herinnering</span><select v-model.number="f.herinneringMin" class="invoer"><option :value="0">Geen</option><option :value="10">10 minuten vooraf</option><option :value="15">15 minuten vooraf</option><option :value="30">30 minuten vooraf</option><option :value="60">1 uur vooraf</option><option :value="1440">1 dag vooraf</option></select></label>
           <label class="veld"><span class="veld-label">Aanleiding of context</span><input v-model="f.aanleiding" class="invoer" placeholder="Bijvoorbeeld: inzicht nieuwe vestiging" data-test="pa-aanleiding"></label>
           <label class="veld"><span class="veld-label">Beschrijving</span><textarea v-model="f.beschrijving" class="invoer" rows="3" placeholder="Optioneel: doel, agendapunten, voorbereiding" data-test="pa-beschrijving" /></label>

@@ -9,7 +9,7 @@ export const SETTING_KEYS = [
   'klassen', // [{id, naam, omschrijving, tabblad}] (F03, gat 2)
   'afkoeling', // {bellen, mail, linkedin, whatsapp, bezoek, kaart} in dagen (7.2, P05)
   // P06: accountmatrix (F16). De accountklassen zijn 'klassen'.
-  'belmatrix', // {prospect: {A: {aantal, periode}}, klant: {...}}; null = niet ingesteld, 0 = bewust uit
+  'belmatrix', // {prospect: {A: {aantal, periode}}}; geen rij klant (onderhoud loopt in DealDrive); null = niet ingesteld, 0 = bewust uit
   'afspraakmatrix', // {meeting: {...}, bezoek: {...}}
   'frequentieplafond', // {werkdagen, maxBerichten}
   'segmenten', // [{id, naam, filters: [{sleutel, vergelijking, waarde}]}]

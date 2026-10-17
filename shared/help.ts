@@ -26,18 +26,18 @@ export const CATEGORIEEN_PRODUCT = ['Aan de slag', 'Dagelijks werk', 'Prospects'
 /** Het vak zelf: het eerste hoofdstuk van de new business-academie. */
 export const CATEGORIEEN_VAK = ['Fundament', 'Voorbereiden', 'Bellen', 'Bezwaren', 'Schrijven', 'Op pad', 'Volhouden', 'Van afspraak naar overdracht', 'Jezelf verbeteren'] as const
 /**
- * Nieuwe klanten werven: een hoofdstuk van de academie met artikelen uit eigen vakliteratuur (eerst de
- * whitepaper The Perfect Pitch, later het boek Sales Hunter). Elk artikel noemt zijn bron (frontmatter
- * "bron"). Een nieuwe bron krijgt een regel in WERVEN_BRONNEN en zo nodig een categorie hier.
+ * Nieuwe klanten werven: een hoofdstuk van de academie met artikelen uit eigen vakliteratuur (de whitepaper
+ * The Perfect Pitch over je pitch en het boek Sales Hunter over het werven zelf). Elk artikel noemt zijn
+ * bron (frontmatter "bron"). Een nieuwe bron krijgt een regel in WERVEN_BRONNEN en zo nodig een categorie hier.
  */
-export const CATEGORIEEN_WERVEN = ['Waarom klanten kopen', 'Je pitch onderzoeken', 'Je verhaal schrijven', 'Openen en presenteren'] as const
-export const WERVEN_BRONNEN = { perfectPitch: 'Uit de whitepaper The Perfect Pitch' } as const
+export const CATEGORIEEN_WERVEN = ['Waarom klanten kopen', 'Je pitch onderzoeken', 'Je verhaal schrijven', 'Openen en presenteren', 'Je werving plannen', 'Zichtbaar worden', 'Kanalen inzetten', 'Kwalificeren en opvolgen'] as const
+export const WERVEN_BRONNEN = { perfectPitch: 'Uit de whitepaper The Perfect Pitch', salesHunter: 'Uit het boek Sales Hunter' } as const
 /** Alle categorieën van de academie (collectie newbusiness): eerst het vak, dan Nieuwe klanten werven. */
 export const CATEGORIEEN_NEWBUSINESS = [...CATEGORIEEN_VAK, ...CATEGORIEEN_WERVEN] as const
 /** De hoofdstukken van de academie, in deze volgorde op /helpcenter/academie (anker #<sleutel>). */
 export const ACADEMIE_HOOFDSTUKKEN = [
   { sleutel: 'vak', naam: 'Het vak', uitleg: 'Bellen, schrijven, bezwaren en op pad: zo doe je het, met voorbeelden en controlevragen.', categorieen: CATEGORIEEN_VAK as readonly string[] },
-  { sleutel: 'werven', naam: 'Nieuwe klanten werven', uitleg: 'Uit eigen vakliteratuur: je pitch onderzoeken, schrijven en presenteren. Elk artikel noemt zijn bron.', categorieen: CATEGORIEEN_WERVEN as readonly string[] },
+  { sleutel: 'werven', naam: 'Nieuwe klanten werven', uitleg: 'Uit eigen vakliteratuur: je pitch onderzoeken, schrijven en presenteren (The Perfect Pitch) en je werving plannen, zichtbaar worden, kanalen inzetten en opvolgen (Sales Hunter). Elk artikel noemt zijn bron.', categorieen: CATEGORIEEN_WERVEN as readonly string[] },
 ] as const
 /** Het hoofdstuk van de academie waar een categorie in staat, of null. */
 export const hoofdstukVan = (categorie: string) => ACADEMIE_HOOFDSTUKKEN.find((h) => h.categorieen.includes(categorie)) ?? null
@@ -263,6 +263,10 @@ export const CATEGORIE_UITLEG: Record<string, string> = {
   'Je pitch onderzoeken': 'Van eigenschap naar voordeel, klantsituaties, waardestatements en je klanten zelf vragen.',
   'Je verhaal schrijven': 'Factoids en humanizers, je eigen testimonial, een userstory en je pitch in één zin.',
   'Openen en presenteren': 'Aandacht vragen, de entree, de foray met je vragen en je product als oplossing.',
+  'Je werving plannen': 'De mindset van een jager, hoofd- en subkanaal, lead of prospect, prekwalificatie, de DMU en je prospectjaar.',
+  'Zichtbaar worden': 'Personal branding, een LinkedIn-profiel dat werkt, social selling en van lauw contact naar een gesprek.',
+  'Kanalen inzetten': 'Je belscript in vijf stappen, koud langsgaan, de beurs, een direct mailing, gericht mailen en webinars.',
+  'Kwalificeren en opvolgen': 'Een bezwaar in vier stappen, BANT en CHAMP, strategische prospects en opvolgen na een nee.',
   'Je dag en je week': 'Vandaag, belblokken die zichzelf vullen, de terugkomdatum, de horizon en je dashboard.',
   'Rond het gesprek': 'De Pitstop, je verslag inspreken, transcripten, inzichten als taak en contacten aan taken.',
   'Onderweg en sneller': 'Kansen langs de route, offline werken, de rijmodus, zoeken met Ctrl K en concepten in één tik.',

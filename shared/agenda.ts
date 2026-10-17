@@ -97,7 +97,7 @@ export function meetingUitkomst(afspraak: { accountNaam?: string | null; start: 
   const u = soort.data.uitkomsten.find((x) => x.code === code)
   if (!u) return { ...leeg, fout: soort.data.uitkomsten.length ? 'Kies een uitkomst' : 'Deze meetingsoort heeft geen uitkomsten' }
   const vandaag = nlMoment(opties.nu).datum
-  const naam = afspraak.accountNaam ?? 'de klant'
+  const naam = afspraak.accountNaam ?? 'de prospect'
   switch (u.gevolg.type) {
     case 'gehouden':
       if (!afspraak.eerste) return { ...leeg, taken: [{ titel: `Vervolg met ${naam}: ${opties.vervolgstap?.trim() || 'afgesproken vervolgstap'}`, actiesoort: 'taak', dueDatum: plusDagen(vandaag, 1) }] }

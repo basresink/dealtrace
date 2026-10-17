@@ -88,8 +88,10 @@ export async function maakAccountplan(tx: Tx, organisationId: string, g: PlanGeb
   const { patch, fouten } = controleerPlan(b, true)
   if (fouten.length) throw fout(422, fouten[0]!)
   const accountId = typeof b.accountId === 'string' ? b.accountId : ''
-  const [a] = accountId ? await tx.select({ id: schema.accounts.id, naam: schema.accounts.name }).from(schema.accounts).where(eq(schema.accounts.id, accountId)) : []
-  if (!a) throw fout(422, 'Kies een klant of prospect')
+  const [a] = accountId ? await tx.select({ id: schema.accounts.id, naam: schema.accounts.name, soort: schema.accounts.accountKind }).from(schema.accounts).where(eq(schema.accounts.id, accountId)) : []
+  if (!a) throw fout(422, 'Kies een prospect')
+  // Een plan is voor een topprospect; een plan voor een klant hoort in DealDrive.
+  if (a.soort === 'klant') throw fout(422, 'Een plan voor een klant maak je in DealDrive')
   if (patch.contactIds) await controleerContacten(tx, a.id, patch.contactIds)
   const [p] = await tx.insert(schema.accountplannen).values({
     organisationId, accountId: a.id, ownerId: g.id, titel: patch.titel!, status: 'actueel', geldigVan: patch.geldigVan ?? null, geldigTot: patch.geldigTot ?? null,

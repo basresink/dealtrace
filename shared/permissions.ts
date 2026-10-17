@@ -24,10 +24,11 @@ const TEAM: Rij = { lezen: 'team', schrijven: 'team', verwijderen: 'team' }
  * De salesmanager ziet alleen zijn teams; dat is vanaf sprint 1 server-side.
  */
 export const MATRIX: Matrix = {
+  // Prospects verwijdert niemand meer (0064): deactiveren is schrijven, met de eigen controle in server/utils/deactiveren.ts.
   prospects: {
     accountmanager: { lezen: 'alles', schrijven: 'alles' },
-    salesmanager: { lezen: 'alles', schrijven: 'alles', verwijderen: 'team' },
-    beheerder: ALLES,
+    salesmanager: { lezen: 'alles', schrijven: 'alles' },
+    beheerder: { lezen: 'alles', schrijven: 'alles', beheren: 'alles' },
   },
   leads: {
     accountmanager: { lezen: 'alles', schrijven: 'eigen' },

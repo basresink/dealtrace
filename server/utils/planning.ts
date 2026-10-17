@@ -38,7 +38,7 @@ export async function jaarplanning(tx: Tx, eigenaren: string[] | null, nu = new 
   const inst = await planInstelling(tx)
   const jaar = verkoopjaar(nu, inst.startmaand)
   const klassen = ((await instelling(tx, 'klassen')) ?? []) as Klasse[]
-  const rijen = await tx.select().from(schema.accounts).where(and(eq(schema.accounts.accountKind, 'prospect'), inArray(schema.accounts.nbStatus, ['nieuw', 'in reis', 'wachtend']), eigenaren ? inArray(schema.accounts.ownerId, eigenaren.length ? eigenaren : ['-']) : undefined))
+  const rijen = await tx.select().from(schema.accounts).where(and(eq(schema.accounts.accountKind, 'prospect'), inArray(schema.accounts.nbStatus, ['nieuw', 'in reis', 'wachtend']), sql`${schema.accounts.gedeactiveerdOp} is null`, eigenaren ? inArray(schema.accounts.ownerId, eigenaren.length ? eigenaren : ['-']) : undefined))
   const ids = rijen.map((r) => r.id)
   const acts = ids.length ? (await tx.execute(sql`select account_id, soort, uitkomst, op from activiteiten where op >= ${jaar.start} and soort in ${[...POGING_SOORTEN]} and account_id in ${ids}`)).rows as any[] : []
   const per = new Map<string, any[]>()
@@ -154,7 +154,7 @@ export async function terugkomOverzicht(tx: Tx, gebruikerId: string, nu = new Da
   })
   return {
     bron: (vv as any).spiegel ? { soort: 'spiegel', tekst: `Uit SalesDNA · bijgewerkt ${(vv as any).spiegel.op?.slice(0, 10) ?? ''}` } : { soort: 'eigen', tekst: 'Eigen inrichting' },
-    leeg: !vv.terugkomregels.length, kpi, verloren: regels.filter((r) => r.lijst === 'verloren'), slapend: regels.filter((r) => r.lijst === 'slapend'), binnenkort, slapendeKlanten: [] as unknown[],
+    leeg: !vv.terugkomregels.length, kpi, verloren: regels.filter((r) => r.lijst === 'verloren'), slapend: regels.filter((r) => r.lijst === 'slapend'), binnenkort,
   }
 }
 

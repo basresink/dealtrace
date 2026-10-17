@@ -21,11 +21,17 @@ export const KLASSEN_STANDAARD: Klasse[] = [
 ]
 
 const c = (aantal: number, periode: Periode): MatrixCel => ({ aantal, periode })
-/** Belmatrix: prospect A en B maandelijks, C per kwartaal, D per halfjaar; klant A maandelijks, B per kwartaal, C per halfjaar, D jaarlijks. */
+/**
+ * Belmatrix: prospect A en B maandelijks, C per kwartaal, D per halfjaar. Er is geen rij Klant: het
+ * onderhoudsritme van klanten hoort in DealDrive, de motor maakt geen beltaken voor klanten.
+ */
 export const BELMATRIX_STANDAARD: Matrix = {
   prospect: { A: c(1, 'maand'), B: c(1, 'maand'), C: c(1, 'kwartaal'), D: c(1, 'halfjaar') },
-  klant: { A: c(1, 'maand'), B: c(1, 'kwartaal'), C: c(1, 'halfjaar'), D: c(1, 'jaar') },
 }
+/** De rijen van de belmatrix; een oude rij (zoals klant) valt bij lezen en opslaan weg. */
+export const BELMATRIX_RIJEN = ['prospect'] as const
+/** Het tabblad van klassen voor klanten (uit DealDrive of het CRM); geen onderdeel van de accountmatrix. */
+export const KLANT_TABBLAD = 'Klanten'
 /** Afspraakmatrix: meeting (online) en bezoek; A per kwartaal, B per halfjaar, C jaarlijks, D alleen bezoek jaarlijks. */
 export const AFSPRAAKMATRIX_STANDAARD: Matrix = {
   meeting: { A: c(1, 'kwartaal'), B: c(1, 'halfjaar'), C: c(1, 'jaar'), D: c(0, 'jaar') },
@@ -207,7 +213,7 @@ export function ritmeAfrekening(
     telling.set(a.accountId, (telling.get(a.accountId) ?? 0) + 1)
   }
   return accounts.map((a) => {
-    const cel = geldendeCel(matrix, a.type, a.klasseCode, a.type === 'klant' ? BELMATRIX_STANDAARD : BELMATRIX_STANDAARD)
+    const cel = a.type === 'klant' ? null : geldendeCel(matrix, a.type, a.klasseCode, BELMATRIX_STANDAARD)
     const j = jaartotaal(cel)
     const gedaan = telling.get(a.id) ?? 0
     if (!j) return { accountId: a.id, verwacht: 0, gedaan, stand: 'uit' as const }

@@ -80,3 +80,87 @@ describe('opvolgreeks', () => {
     expect(valideerSjabloon({ naam: '', stappen: [], einde: { dag: 0, wachtDagen: 0 } })).toEqual(['Naam ontbreekt', 'Een reeks heeft minstens één stap', 'Het einde ligt na de laatste stap', 'Kies na hoeveel dagen het ritme verder gaat'])
   })
 })
+
+// F7 compleet: het overzicht, stopregels per sjabloon, uitkomsten, de strip en het herkennen van een antwoord.
+describe('opvolgreeks: overzicht, stopregels en mailbox', async () => {
+  const o = await import('../../shared/opvolgreeks')
+  const NU = new Date('2026-10-15T10:00:00Z') // donderdag
+
+  it('overzichtStand: concept, open, loopt, raak en gestopt', () => {
+    const loopt = { status: 'loopt' as const }
+    expect(o.overzichtStand(loopt, [{ status: 'open', kanaal: 'mail', conceptStatus: 'klaar' }, { status: 'gepland', kanaal: 'bellen' }])).toBe('concept')
+    expect(o.overzichtStand(loopt, [{ status: 'open', kanaal: 'mail', conceptStatus: 'goedgekeurd' }])).toBe('open')
+    expect(o.overzichtStand(loopt, [{ status: 'open', kanaal: 'bellen' }])).toBe('open')
+    expect(o.overzichtStand(loopt, [{ status: 'gedaan', kanaal: 'mail' }, { status: 'gepland', kanaal: 'bellen' }])).toBe('loopt')
+    expect(o.overzichtStand({ status: 'gepauzeerd' }, [{ status: 'gepland', kanaal: 'mail' }])).toBe('loopt')
+    expect(o.overzichtStand({ status: 'gestopt', stopreden: 'reactie' }, [])).toBe('raak')
+    expect(o.overzichtStand({ status: 'gestopt', stopreden: 'afspraak' }, [])).toBe('raak')
+    expect(o.overzichtStand({ status: 'gestopt', stopreden: 'nee' }, [])).toBe('gestopt')
+    expect(o.overzichtStand({ status: 'klaar' }, [])).toBe('gestopt')
+  })
+
+  it('sorteerOverzicht: wat op jou wacht bovenaan, gestopte nieuwste eerst', () => {
+    const r = (id: string, stand: any, extra: any = {}) => ({ id, stand, gestartOp: '2026-10-01T08:00:00Z', ...extra })
+    const lijst = o.sorteerOverzicht([r('a', 'gestopt', { gestoptOp: '2026-10-02T08:00:00Z' }), r('b', 'loopt', { volgendeOp: '2026-10-20T07:00:00Z' }), r('c', 'concept'), r('d', 'gestopt', { gestoptOp: '2026-10-09T08:00:00Z' }), r('e', 'open'), r('f', 'loopt', { volgendeOp: '2026-10-16T07:00:00Z' }), r('g', 'raak')])
+    expect(lijst.map((x) => x.id)).toEqual(['c', 'e', 'f', 'b', 'g', 'd', 'a'])
+  })
+
+  it('overzichtKop en weekRegel in woorden', () => {
+    expect(o.overzichtKop(11, 2)).toBe('11 reeksen lopen, 2 wachten op jou.')
+    expect(o.overzichtKop(1, 1)).toBe('1 reeks loopt, 1 wacht op jou.')
+    expect(o.overzichtKop(0, 0)).toBe('Geen reeks loopt, niets wacht op jou.')
+    expect(o.maandagVan(NU)).toBe('2026-10-12')
+    const stops = [{ stopreden: 'reactie' as const, gestoptOp: '2026-10-13T09:00:00Z' }, { stopreden: 'reactie' as const, gestoptOp: '2026-10-14T09:00:00Z' }, { stopreden: 'afspraak' as const, gestoptOp: '2026-10-15T08:00:00Z' }, { stopreden: 'reactie' as const, gestoptOp: '2026-10-09T09:00:00Z' }]
+    expect(o.weekRegel(stops, NU)).toBe('Deze week: 2 reacties, 1 afspraak uit een reeks.')
+    expect(o.weekRegel([], NU)).toBe('Deze week nog geen reactie of afspraak uit een reeks.')
+  })
+
+  it('stopregels per sjabloon: uitgezette regels stoppen niet, een afmelding altijd', () => {
+    const start = '2026-10-12T08:00:00Z'
+    const s = { afspraken: [{ createdAt: '2026-10-13T08:00:00Z', status: 'gepland' }], nbStatus: 'in reis', afgemeld: false, momenten: [] }
+    expect(o.stopReden(start, s)).toBe('afspraak')
+    expect(o.stopReden(start, s, { afspraak: false })).toBeNull()
+    expect(o.stopReden(start, { ...s, afspraken: [], afgemeld: true }, { reactie: false, afspraak: false, nee: false })).toBe('afmelding')
+    const mail = { ...s, afspraken: [], momenten: [{ op: '2026-10-13T09:00:00Z', soort: 'reactie', uitkomst: 'reactie' }] }
+    expect(o.stopReden(start, mail)).toBe('reactie')
+    expect(o.stopReden(start, mail, { reactie: false })).toBeNull()
+  })
+
+  it('uitkomsten: het sjabloon bij voicemail, later en informatie', () => {
+    const sj = o.STARTSJABLONEN.map((x, i) => ({ id: `s${i}`, uitkomsten: x.uitkomsten }))
+    expect(o.sjabloonVoorUitkomst(sj, o.reeksUitkomstVan('voicemail'))?.id).toBe('s1')
+    expect(o.sjabloonVoorUitkomst(sj, o.reeksUitkomstVan('later'))?.id).toBe('s2')
+    expect(o.sjabloonVoorUitkomst(sj, 'informatie')?.id).toBe('s0')
+    expect(o.reeksUitkomstVan('geen_reactie')).toBeNull()
+    expect(o.sjabloonVoorUitkomst(sj, null)).toBeNull()
+  })
+
+  it('valideerSjabloon: onbekende uitkomst, te veel stappen en te lange teksten', () => {
+    const basis = { naam: 'Eigen', stappen: [{ dag: 0, kanaal: 'mail' as const, titel: 'Mail' }], einde: { dag: 5, wachtDagen: 30 } }
+    expect(o.valideerSjabloon(basis)).toEqual([])
+    expect(o.valideerSjabloon({ ...basis, uitkomsten: ['onzin' as any] })).toContain('Onbekende uitkomst onzin')
+    expect(o.valideerSjabloon({ ...basis, stappen: [{ dag: 0, kanaal: 'mail', titel: 'Mail', instructie: 'x'.repeat(601) }] })).toContain('De instructie van stap 1 is langer dan 600 tekens')
+    expect(o.valideerSjabloon({ ...basis, stappen: Array.from({ length: 13 }, (_, i) => ({ dag: i, kanaal: 'mail' as const, titel: 'Mail' })), einde: { dag: 20, wachtDagen: 30 } })).toContain('Een reeks heeft hooguit 12 stappen')
+  })
+
+  it('planReeks neemt het onderwerp van een stap mee', () => {
+    const p = o.planReeks({ stappen: [{ dag: 0, kanaal: 'mail', titel: 'Mail', onderwerp: 'Het overzicht' }], einde: { dag: 4, wachtDagen: 30 } }, START)
+    expect(p[0]!.onderwerp).toBe('Het overzicht')
+  })
+
+  it('reeksStrip: stap x van y en de volgende stap', () => {
+    expect(o.reeksStrip({ naam: 'Na informatie', status: 'loopt', stap: 2, van: 4, volgende: { kanaal: 'bellen', titel: 'Bellen', geplandOp: '2026-10-20T07:00:00Z' } })).toBe('Na informatie · stap 2 van 4 · volgende: Bellen di 20 okt')
+    expect(o.reeksStrip({ naam: 'Na voicemail', status: 'gepauzeerd', stap: 1, van: 4, volgende: null })).toBe('Na voicemail · stap 1 van 4 · gepauzeerd')
+  })
+
+  it('mailAdres en isAutoAntwoord', () => {
+    expect(o.mailAdres('Mira Proefhuis <Mira@Rietpunt.test>')).toBe('mira@rietpunt.test')
+    expect(o.mailAdres('mira@rietpunt.test')).toBe('mira@rietpunt.test')
+    expect(o.mailAdres('geen adres')).toBeNull()
+    expect(o.isAutoAntwoord({ onderwerp: 'Re: kostenoverzicht', van: 'mira@rietpunt.test' })).toBe(false)
+    expect(o.isAutoAntwoord({ onderwerp: 'Automatisch antwoord: afwezig tot maandag' })).toBe(true)
+    expect(o.isAutoAntwoord({ onderwerp: 'Out of office' })).toBe(true)
+    expect(o.isAutoAntwoord({ onderwerp: 'Re: vraag', headers: { 'Auto-Submitted': 'auto-replied' } })).toBe(true)
+    expect(o.isAutoAntwoord({ onderwerp: 'Hallo', van: 'MAILER-DAEMON@rietpunt.test' })).toBe(true)
+  })
+})

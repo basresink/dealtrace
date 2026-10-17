@@ -10,8 +10,8 @@ import { isWerkdag, nlMoment, nlTijdstip, volgendWerkmoment, type WerkdagInstell
 import { volgendVastBlok } from '../../shared/belblokken'
 import { magBenaderen } from '../../shared/nbStatus'
 import {
-  REEKS_ACTIE, STARTSJABLONEN, STOPREDEN_LABEL, aanDeBeurt, belTerugNa, mandaatKeuzes, planReeks, reeksStand, schuifOp, stopReden,
-  type ReeksKanaal, type ReeksMandaat, type ReeksStap, type ReeksStatus, type Stopreden,
+  REEKS_ACTIE, STANDAARD_STOPREGELS, STARTSJABLONEN, STOPREDEN_LABEL, aanDeBeurt, belTerugNa, mandaatKeuzes, planReeks, reeksStand, schuifOp, stopReden,
+  type ReeksKanaal, type ReeksMandaat, type ReeksStap, type ReeksStatus, type SjabloonStap, type Stopreden, type Stopregels,
 } from '../../shared/opvolgreeks'
 import { laadAgentStand, mandaatVoor, toets } from './agents/bewaker'
 import { schrijfAudit } from './audit'
@@ -37,19 +37,31 @@ async function werkdagen(tx: Tx): Promise<WerkdagInstelling> {
 export async function zorgVoorSjablonen(tx: Tx, org: string) {
   if ((await rijen(tx, sql`select 1 from reekssjablonen limit 1`)).length) return 0
   for (const s of STARTSJABLONEN) {
-    await tx.execute(sql`insert into reekssjablonen (organisation_id, sleutel, naam, omschrijving, na, stappen, einde)
-      values (${org}, ${s.sleutel}, ${s.naam}, ${s.omschrijving}, ${s.na}, ${JSON.stringify(s.stappen)}::jsonb, ${JSON.stringify(s.einde)}::jsonb) on conflict (organisation_id, sleutel) do nothing`)
+    await tx.execute(sql`insert into reekssjablonen (organisation_id, sleutel, naam, omschrijving, na, stappen, einde, uitkomsten)
+      values (${org}, ${s.sleutel}, ${s.naam}, ${s.omschrijving}, ${s.na}, ${JSON.stringify(s.stappen)}::jsonb, ${JSON.stringify(s.einde)}::jsonb, ${`{${(s.uitkomsten ?? []).join(',')}}`}::text[]) on conflict (organisation_id, sleutel) do nothing`)
   }
   return STARTSJABLONEN.length
 }
 
-export async function sjablonen(tx: Tx, org: string) {
+/** Een sjabloonrij voor scherm en server. */
+export const sjabloonUit = (s: Rij) => ({
+  id: s.id as string, sleutel: s.sleutel as string, naam: s.naam as string, omschrijving: s.omschrijving as string | null, na: s.na as string | null,
+  stappen: s.stappen as SjabloonStap[], einde: s.einde as { dag: number; wachtDagen: number },
+  uitkomsten: (s.uitkomsten ?? []) as string[], stopregels: { ...STANDAARD_STOPREGELS, ...(s.stopregels ?? {}) } as Stopregels, actief: s.actief !== false,
+})
+
+/** De sjablonen van de organisatie: standaard alleen de actieve (startset eerst), met `alle` ook de uitgezette. */
+export async function sjablonen(tx: Tx, org: string, opties: { alle?: boolean } = {}) {
   await zorgVoorSjablonen(tx, org)
   const volgorde = (k: string) => { const i = STARTSJABLONEN.findIndex((x) => x.sleutel === k); return i < 0 ? 99 : i }
-  return (await rijen(tx, sql`select * from reekssjablonen where actief order by created_at, naam`)).sort((x, y) => volgorde(x.sleutel) - volgorde(y.sleutel)).map((s) => ({
-    id: s.id as string, sleutel: s.sleutel as string, naam: s.naam as string, omschrijving: s.omschrijving as string | null, na: s.na as string | null,
-    stappen: s.stappen as { dag: number; kanaal: ReeksKanaal; titel: string }[], einde: s.einde as { dag: number; wachtDagen: number },
-  }))
+  const lijst = opties.alle ? await rijen(tx, sql`select * from reekssjablonen order by created_at, naam`) : await rijen(tx, sql`select * from reekssjablonen where actief order by created_at, naam`)
+  return lijst.sort((x, y) => volgorde(x.sleutel) - volgorde(y.sleutel)).map(sjabloonUit)
+}
+
+/** Is het account gedeactiveerd (migratie 0064, kolom gedeactiveerd_op)? Via to_jsonb, zodat het ook zonder die kolom werkt. */
+export async function isGedeactiveerd(tx: Tx, accountId: string): Promise<boolean> {
+  const [a] = await rijen(tx, sql`select to_jsonb(a) ->> 'gedeactiveerd_op' as op from accounts a where a.id = ${accountId}`)
+  return !!a?.op
 }
 
 const stapUit = (s: Rij): ReeksStap & { gedaanOp: string | null; data: any } => ({
@@ -80,7 +92,7 @@ export async function reeksVanAccount(tx: Tx, accountId: string, nu = new Date()
   return reeksUit(tx, r, nu)
 }
 
-async function reeksUit(tx: Tx, r: Rij, nu: Date) {
+export async function reeksUit(tx: Tx, r: Rij, nu: Date) {
   const stappen = await stappenVan(tx, r.id)
   const conceptIds = stappen.map((s) => s.conceptId).filter(Boolean) as string[]
   const taskIds = stappen.map((s) => s.taskId).filter(Boolean) as string[]
@@ -92,7 +104,8 @@ async function reeksUit(tx: Tx, r: Rij, nu: Date) {
     id: r.id as string, naam: r.naam as string, status: r.status as ReeksStatus, mandaat: r.mandaat as ReeksMandaat, stopreden: (r.stopreden ?? null) as Stopreden | null,
     stopLabel: r.stopreden ? STOPREDEN_LABEL[r.stopreden as Stopreden] : null, gestartOp: iso(r.gestart_op)!, gestoptOp: iso(r.gestopt_op), eigenaar: (r.eigenaar ?? null) as string | null, ownerId: r.owner_id as string,
     contact: r.contact_id ? { id: r.contact_id as string, naam: [r.first_name, r.last_name].filter(Boolean).join(' ') } : null,
-    stand, belTerugTaakId: (r.data?.belTerugTaakId ?? null) as string | null, aanleiding: (r.data?.aanleiding ?? null) as string | null,
+    stand, belTerugTaakId: (r.data?.belTerugTaakId ?? null) as string | null, aanleiding: (r.data?.aanleiding ?? null) as string | null, accountId: r.account_id as string,
+    viaMail: !!r.data?.viaMail, mailOnderwerp: (r.data?.mailOnderwerp ?? null) as string | null, stopToelichting: (r.data?.stopToelichting ?? null) as string | null, belTerugReden: (r.data?.belTerugReden ?? null) as string | null,
     volgende: volgende ? { kanaal: volgende.kanaal, titel: volgende.titel, geplandOp: volgende.geplandOp } : null,
     stappen: stappen.map((s) => {
       const c = s.conceptId ? concepten.get(s.conceptId) : null
@@ -114,6 +127,7 @@ export async function startReeks(tx: Tx, org: string, g: ReeksGebruiker, account
   if (!(await magVolgen(tx, g, a!.ownerId))) fout(403, 'Alleen de eigenaar, zijn salesmanager of de beheerder start een reeks op dit account')
   if (a!.nbStatus === 'overgedragen') fout(422, 'Dit account is overgedragen; het vervolg loopt in DealDrive of het CRM')
   if (a!.nbStatus === 'nee') fout(422, 'Dit account staat op nee; de afkoeling loopt nog')
+  if (await isGedeactiveerd(tx, accountId)) fout(422, 'Deze prospect is gedeactiveerd; een gedeactiveerde prospect krijgt geen reeks')
   await zorgVoorSjablonen(tx, org)
   const [s] = await rijen(tx, sql`select * from reekssjablonen where id = ${b.sjabloonId ?? ''} and actief`)
   if (!s) fout(422, 'Kies een sjabloon')
@@ -127,10 +141,10 @@ export async function startReeks(tx: Tx, org: string, g: ReeksGebruiker, account
   const id = crypto.randomUUID()
   const ritme = (a!.data as any)?.reis?.ritme ?? null
   await tx.execute(sql`insert into reeksen (id, organisation_id, account_id, contact_id, sjabloon_id, naam, owner_id, mandaat, status, gestart_op, data)
-    values (${id}, ${org}, ${accountId}, ${contact?.id ?? null}, ${s!.id}, ${s!.naam}, ${g.id}, ${mandaat}, 'loopt', ${nu.toISOString()}, ${JSON.stringify({ ritmeVoor: ritme?.actief ? ritme : null, aanleiding: b.aanleiding ?? s!.na ?? null, wachtDagen: s!.einde?.wachtDagen ?? 30 })}::jsonb)`)
+    values (${id}, ${org}, ${accountId}, ${contact?.id ?? null}, ${s!.id}, ${s!.naam}, ${g.id}, ${mandaat}, 'loopt', ${nu.toISOString()}, ${JSON.stringify({ ritmeVoor: ritme?.actief ? ritme : null, aanleiding: b.aanleiding ?? s!.na ?? null, wachtDagen: s!.einde?.wachtDagen ?? 30, stopregels: { ...STANDAARD_STOPREGELS, ...(s!.stopregels ?? {}) } })}::jsonb)`)
   for (const st of planReeks({ stappen: s!.stappen, einde: s!.einde }, nu, await werkdagen(tx))) {
-    await tx.execute(sql`insert into reeksstappen (organisation_id, reeks_id, volgnummer, dag, kanaal, titel, instructie, gepland_op)
-      values (${org}, ${id}, ${st.volgnummer}, ${st.dag}, ${st.kanaal}, ${st.titel}, ${st.instructie ?? null}, ${st.geplandOp})`)
+    await tx.execute(sql`insert into reeksstappen (organisation_id, reeks_id, volgnummer, dag, kanaal, titel, instructie, gepland_op, data)
+      values (${org}, ${id}, ${st.volgnummer}, ${st.dag}, ${st.kanaal}, ${st.titel}, ${st.instructie ?? null}, ${st.geplandOp}, ${JSON.stringify(st.onderwerp ? { onderwerp: st.onderwerp } : {})}::jsonb)`)
   }
   // Nooit twee ritmes op één account: het hercontactritme staat stil en open ritmepogingen vervallen.
   if (ritme?.actief) {
@@ -184,8 +198,22 @@ export async function logReactie(tx: Tx, org: string, g: ReeksGebruiker, id: str
   return reeksVanAccount(tx, r.account_id, nu)
 }
 
+/**
+ * Een reactie uit de gekoppelde mailbox (webhook of mock-adapter): de mail komt als reactie in de activiteitenlog en de
+ * reeks stopt met een taak "bel terug binnen twee uur". Geeft de id van die taak terug (of null als de Bewaker bellen
+ * tegenhoudt). Doet niets als de reeks al niet meer loopt.
+ */
+export async function stopDoorMail(tx: Tx, org: string, reeksId: string, m: { van: string; onderwerp?: string | null; fragment?: string | null; contactId?: string | null }, nu = new Date()) {
+  const r = await leesReeks(tx, reeksId)
+  if (!['loopt', 'gepauzeerd'].includes(r.status)) return { gestopt: false, belTerugTaakId: null as string | null }
+  await tx.insert(schema.activiteiten).values({ organisationId: org, accountId: r.account_id, contactId: m.contactId ?? r.contact_id, soort: 'reactie', kanaal: 'mail', uitkomst: 'reactie', door: null, op: nu.toISOString(), data: { reeksId, bron: 'mailbox', onderwerp: m.onderwerp ?? null, ...(m.fragment ? { tekst: m.fragment.slice(0, 500) } : {}) } })
+  await stopReeks(tx, org, r, 'reactie', r.owner_id, nu, { viaMail: true, onderwerp: m.onderwerp ?? null })
+  const [na] = await rijen(tx, sql`select data from reeksen where id = ${reeksId}`)
+  return { gestopt: true, belTerugTaakId: (na?.data?.belTerugTaakId ?? null) as string | null }
+}
+
 /** Stoppen: open stappen vallen weg, open taken van de reeks worden geannuleerd, en na een reactie een taak "bel terug". */
-async function stopReeks(tx: Tx, org: string, r: Rij, reden: Stopreden, door: string, nu: Date) {
+async function stopReeks(tx: Tx, org: string, r: Rij, reden: Stopreden, door: string, nu: Date, extra: { viaMail?: boolean; onderwerp?: string | null; toelichting?: string | null; gedeactiveerd?: boolean } = {}) {
   const stappen = await stappenVan(tx, r.id)
   const open = stappen.filter((s) => s.status === 'gepland' || s.status === 'open')
   await tx.execute(sql`update reeksstappen set status = 'overgeslagen', reden = ${STOPREDEN_LABEL[reden]} where reeks_id = ${r.id} and status in ('gepland', 'open')`)
@@ -206,23 +234,24 @@ async function stopReeks(tx: Tx, org: string, r: Rij, reden: Stopreden, door: st
       const m2 = nlMoment(twee)
       const due = isWerkdag(m2.datum, inst) && m2.uur >= 8 && m2.uur < 18 ? twee : volgendWerkmoment(twee, inst)
       const naam = c ? [c.firstName, c.lastName].filter(Boolean).join(' ') : a.name
-      const titel = reden === 'afspraak' ? `Bel ${naam}: bevestig de afspraak` : reden === 'afmelding' ? `Bel terug: ${naam} meldde zich af voor mail` : `Bel terug: ${naam} reageerde`
+      const titel = reden === 'afspraak' ? `Bel ${naam}: bevestig de afspraak` : reden === 'afmelding' ? `Bel terug: ${naam} meldde zich af voor mail` : extra.viaMail ? `Bel terug: ${naam} antwoordde op je mail` : `Bel terug: ${naam} reageerde`
       const [t] = await tx.insert(schema.tasks).values({
         organisationId: org, ownerId: r.owner_id, accountId: a.id, contactId: r.contact_id ?? null, actionType: 'bellen', priority: 'hoog', dueDate: due.toISOString(), onderwerp: `${a.id}:reeks-${r.id}-terugbellen`,
-        title: titel, data: { waarom: `${STOPREDEN_LABEL[reden]}; de opvolgreeks ${r.naam} is gestopt.`, herkomst: { bron: 'reeks', actiesoort: 'bellen', uitvoerder: r.owner_id }, reeks: { id: r.id, terugbellen: true } },
+        title: titel, data: { waarom: `${extra.viaMail ? `Antwoord in de mailbox${extra.onderwerp ? `: "${extra.onderwerp.slice(0, 120)}"` : ''}` : STOPREDEN_LABEL[reden]}; de opvolgreeks ${r.naam} is gestopt. Bel terug binnen twee uur.`, herkomst: { bron: 'reeks', actiesoort: 'bellen', uitvoerder: r.owner_id }, reeks: { id: r.id, terugbellen: true } },
         createdAt: nu.toISOString(), updatedAt: nu.toISOString(),
       }).returning({ id: schema.tasks.id })
       belTerugTaakId = t!.id
     } else belTerugReden = m.reden ?? null
   }
   await tx.execute(sql`update reeksen set status = 'gestopt', stopreden = ${reden}, gestopt_op = ${nu.toISOString()}, updated_at = now(),
-    data = data || ${JSON.stringify({ belTerugTaakId, belTerugReden })}::jsonb where id = ${r.id}`)
-  // Handmatig gestopt: het ritme gaat verder waar het was. Na een reactie gaat het gesprek voor.
-  if (a && reden === 'handmatig') await terugNaarRitme(tx, a, r, nu, 0)
+    data = data || ${JSON.stringify({ belTerugTaakId, belTerugReden, ...(extra.viaMail ? { viaMail: true, mailOnderwerp: extra.onderwerp ?? null } : {}), ...(extra.toelichting ? { stopToelichting: extra.toelichting } : {}) })}::jsonb where id = ${r.id}`)
+  // Handmatig gestopt: het ritme gaat verder waar het was. Na een reactie gaat het gesprek voor. Een gedeactiveerde
+  // prospect krijgt geen ritme terug.
+  if (a && reden === 'handmatig' && !extra.gedeactiveerd) await terugNaarRitme(tx, a, r, nu, 0)
   if (reden !== 'handmatig') {
-    await tx.insert(schema.notificaties).values({ id: crypto.randomUUID(), organisationId: org, gebruikerId: r.owner_id, soort: 'hot', titel: `Opvolgreeks gestopt: ${a?.name ?? 'account'}`, tekst: `${STOPREDEN_LABEL[reden]}.${belTerugTaakId ? ' Bel terug binnen twee uur.' : ''}`, link: `/accounts/${r.account_id}?volgen=1`, op: nu.toISOString(), data: { reeksId: r.id } })
+    await tx.insert(schema.notificaties).values({ id: crypto.randomUUID(), organisationId: org, gebruikerId: r.owner_id, soort: 'hot', titel: `Opvolgreeks gestopt: ${a?.name ?? 'account'}`, tekst: `${extra.viaMail ? 'Antwoord in de mailbox' : STOPREDEN_LABEL[reden]}.${belTerugTaakId ? ' Bel terug binnen twee uur.' : ''}`, link: `/accounts/${r.account_id}?volgen=1`, op: nu.toISOString(), data: { reeksId: r.id } })
   }
-  await schrijfAudit(tx, { organisationId: org, actorId: door, action: 'reeks.gestopt', resourceType: 'reeks', resourceId: r.id, changes: { reden, belTerugTaakId } })
+  await schrijfAudit(tx, { organisationId: org, actorId: door, action: 'reeks.gestopt', resourceType: 'reeks', resourceId: r.id, changes: { reden, belTerugTaakId, ...(extra.viaMail ? { bron: 'mailbox' } : {}), ...(extra.gedeactiveerd ? { bron: 'gedeactiveerd' } : {}) } })
 }
 
 /** Het einde van de reeks zonder reactie (of handmatig gestopt): het hercontactritme gaat verder. */
@@ -259,12 +288,16 @@ export async function werkReeksBij(tx: Tx, org: string, id: string, nu = new Dat
     } else if (t?.status === 'geannuleerd') await tx.execute(sql`update reeksstappen set status = 'overgeslagen', reden = 'De taak is geannuleerd' where id = ${s.id}`)
   }
 
-  // 2. Stopregels.
+  // 2. Stopregels. Een gedeactiveerde prospect krijgt geen reeks: de reeks stopt zonder bel terug en zonder ritme.
+  if (await isGedeactiveerd(tx, a.id)) {
+    await stopReeks(tx, org, r, 'handmatig', opties.gebruiker?.id ?? r.owner_id, nu, { gedeactiveerd: true, toelichting: 'De prospect is gedeactiveerd' })
+    return { gestopt: 'handmatig' as Stopreden, klaargezet: 0, verstuurd: 0 }
+  }
   const gestart = iso(r.gestart_op)!
   const afspraken = (await rijen(tx, sql`select created_at, status from appointments where account_id = ${a.id} and created_at > ${gestart}`)).map((x) => ({ createdAt: iso(x.created_at)!, status: x.status }))
   const momenten = (await rijen(tx, sql`select op, soort, uitkomst from activiteiten where account_id = ${a.id} and uitvoerder = 'mens' and op > ${gestart} and soort in ('gebeld', 'mail', 'bericht', 'bezoek', 'reactie')`)).map((x) => ({ op: iso(x.op)!, soort: x.soort, uitkomst: x.uitkomst }))
   const afgemeld = !!c?.email && await isAfgemeld(tx, c.email)
-  const reden = stopReden(gestart, { afspraken, nbStatus: a.nbStatus, afgemeld, momenten })
+  const reden = stopReden(gestart, { afspraken, nbStatus: a.nbStatus, afgemeld, momenten }, r.data?.stopregels ?? null)
   if (reden) { await stopReeks(tx, org, r, reden, opties.gebruiker?.id ?? r.owner_id, nu); return { gestopt: reden, klaargezet: 0, verstuurd: 0 } }
 
   // 3. Wat aan de beurt is, klaarzetten.
@@ -300,7 +333,7 @@ export async function werkReeksBij(tx: Tx, org: string, id: string, nu = new Dat
     let reden: string | null = null
     if (s.kanaal !== 'bellen') {
       // De Schrijver via de AI-schil met credits: altijd een concept dat de mens goedkeurt.
-      const k = await bereidVoor(tx, org, { id: eigenaar.id, niveau: eigenaar.niveau, data: eigenaar.data }, { soort: 'taak', id: t!.id }, nu, { automatisch: !handmatig }).catch((e: any) => ({ id: null, status: 'mislukt', reden: e?.statusMessage ?? e?.message ?? 'Geen concept' }))
+      const k = await bereidVoor(tx, org, { id: eigenaar.id, niveau: eigenaar.niveau, data: eigenaar.data }, { soort: 'taak', id: t!.id }, nu, { automatisch: !handmatig, stap: { instructie: s.instructie ?? null, onderwerp: s.data?.onderwerp ?? null } }).catch((e: any) => ({ id: null, status: 'mislukt', reden: e?.statusMessage ?? e?.message ?? 'Geen concept' }))
       if (k.status === 'klaar') conceptId = k.id
       else reden = `Nog geen concept: ${k.reden ?? 'de Schrijver gaf geen antwoord'}. Maak het concept zelf.`
     }
@@ -317,7 +350,7 @@ export async function werkReeksBij(tx: Tx, org: string, id: string, nu = new Dat
       if (b.uitvoering !== 'direct') { await tx.execute(sql`update reeksstappen set data = data || ${JSON.stringify({ autoMislukt: b.reden ?? 'Per stuk goedkeuren' })}::jsonb where id = ${s.id}`); continue }
       try {
         await besluit(tx, { id: eigenaar.id, rol: eigenaar.rol }, s.conceptId!, { besluit: 'goedkeuren' })
-        await verstuurConcept(tx, org, { id: eigenaar.id, rol: eigenaar.rol, niveau: eigenaar.niveau, data: eigenaar.data }, s.conceptId!, opties.basisUrl ?? process.env.URL ?? 'http://localhost:3000', nu)
+        await verstuurConcept(tx, org, { id: eigenaar.id, rol: eigenaar.rol, niveau: eigenaar.niveau, data: eigenaar.data }, s.conceptId!, opties.basisUrl ?? process.env.URL ?? 'http://localhost:3000', nu, { terugval: true })
         await tx.execute(sql`update reeksstappen set status = 'gedaan', gedaan_op = ${nu.toISOString()} where id = ${s.id}`)
         await tx.execute(sql`update tasks set status = 'klaar', updated_at = now() where id = ${s.taskId} and status in ('open', 'bezig')`)
         verstuurd++
@@ -348,14 +381,14 @@ export async function stapActie(tx: Tx, org: string, g: ReeksGebruiker, reeksId:
   let tekst = 'Klaar.'
   if (b.actie === 'concept') {
     if (stap.kanaal === 'bellen' || !stap.taskId) fout(422, 'Deze stap heeft geen concept')
-    const k = await bereidVoor(tx, org, { id: g.id, niveau: g.niveau, data: g.data }, { soort: 'taak', id: stap.taskId! }, nu)
+    const k = await bereidVoor(tx, org, { id: g.id, niveau: g.niveau, data: g.data }, { soort: 'taak', id: stap.taskId! }, nu, { stap: { instructie: stap.instructie ?? null, onderwerp: stap.data?.onderwerp ?? null } })
     if (k.status !== 'klaar') fout(502, k.reden ?? 'De Schrijver gaf geen bruikbaar antwoord')
     await tx.execute(sql`update reeksstappen set concept_id = ${k.id}, reden = null where id = ${stap.id}`)
     tekst = 'Concept klaar.'
   } else if (b.actie === 'verstuur') {
     if (stap.kanaal !== 'mail' || !stap.conceptId) fout(422, 'Deze stap heeft geen mailconcept')
     await besluit(tx, { id: g.id, rol: g.rol }, stap.conceptId!, { besluit: 'goedkeuren', tekst: b.tekst ?? null, onderwerp: b.onderwerp ?? null })
-    await verstuurConcept(tx, org, { id: g.id, rol: g.rol, niveau: g.niveau, data: g.data }, stap.conceptId!, basisUrl, nu)
+    await verstuurConcept(tx, org, { id: g.id, rol: g.rol, niveau: g.niveau, data: g.data }, stap.conceptId!, basisUrl, nu, { terugval: true })
     await tx.execute(sql`update reeksstappen set status = 'gedaan', gedaan_op = ${nu.toISOString()} where id = ${stap.id}`)
     await tx.execute(sql`update tasks set status = 'klaar', updated_at = now() where id = ${stap.taskId} and status in ('open', 'bezig')`)
     tekst = 'Goedgekeurd en verstuurd.'

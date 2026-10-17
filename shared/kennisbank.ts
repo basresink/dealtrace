@@ -80,13 +80,13 @@ export function previewSoort(mime: string, heeftTekst: boolean): 'afbeelding' | 
 /** Drie voorgestelde vragen per type; de derde is altijd de samenvatting of de vervolgvraag. */
 export function voorgesteldeVragen(type: DocumentType): string[] {
   switch (type) {
-    case 'offerte': return ['Wat zijn de prijs, de looptijd en de voorwaarden?', 'Welke bezwaren kan de klant hebben bij deze offerte?', 'Vat dit document samen in drie punten.']
+    case 'offerte': return ['Wat zijn de prijs, de looptijd en de voorwaarden?', 'Welke bezwaren kan de prospect hebben bij deze offerte?', 'Vat dit document samen in drie punten.']
     case 'case': return ['Wat is de belangrijkste les uit deze case?', 'Bij welke prospects kan ik deze case gebruiken?', 'Vat dit document samen in drie punten.']
     case 'contract': return ['Wat zijn de opzegtermijn en de verlenging?', 'Welke afwijkende voorwaarden staan erin?', 'Vat dit document samen in drie punten.']
     case 'productinfo':
-    case 'prijslijst': return ['Wat zijn de belangrijkste specificaties of prijzen?', 'Voor welk soort klant past dit het best?', 'Vat dit document samen in drie punten.']
-    case 'presentatie': return ['Vat de kernboodschap samen in drie punten.', 'Welke argumenten kan ik in een gesprek gebruiken?', 'Welke vragen kan ik de klant hierover stellen?']
-    default: return ['Vat dit document samen in drie punten.', 'Welke vragen kan ik de klant stellen op basis hiervan?', 'Wat is het belangrijkste punt voor een gesprek?']
+    case 'prijslijst': return ['Wat zijn de belangrijkste specificaties of prijzen?', 'Voor welk soort bedrijf past dit het best?', 'Vat dit document samen in drie punten.']
+    case 'presentatie': return ['Vat de kernboodschap samen in drie punten.', 'Welke argumenten kan ik in een gesprek gebruiken?', 'Welke vragen kan ik de prospect hierover stellen?']
+    default: return ['Vat dit document samen in drie punten.', 'Welke vragen kan ik de prospect stellen op basis hiervan?', 'Wat is het belangrijkste punt voor een gesprek?']
   }
 }
 

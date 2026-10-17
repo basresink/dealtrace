@@ -4,7 +4,10 @@ import { STANDAARD_GEHEIM, TOEGANG_COOKIE, gelijk, ontbrekendeInstellingen, toeg
 
 // /api/motor/run-all heeft een eigen geheim (x-motor-secret) voor de geplande functie; de
 // SalesDNA-webhook, de DealDrive-koppeling (v1) en de Stripe- en WhatsApp-webhook controleren zelf de handtekening; de afmeldlink is ondertekend (P18).
-const VRIJ = ['/toegang', '/_nuxt/', '/favicon.ico', '/robots.txt', '/manifest.webmanifest', '/iconen/', '/api/motor/run-all', '/api/motor/reminders-sweep', '/api/motor/onderweg-meldingen', '/api/koppelingen/salesdna/webhook', '/api/koppelingen/salesdna/webhook/', '/api/koppelingen/dealdrive/v1/', '/api/stripe/webhook', '/api/afmelden', '/api/whatsapp/webhook']
+// De reeksen-sweep heeft het motorgeheim; de webhook voor inkomende mail een ondertekende URL per organisatie (F7).
+// De dagplanning heeft het motorgeheim; de melding van de gekoppelde agenda een ondertekend token (F3).
+// De dagritme-mail (weekreview, weekstart, dagstart) heeft het motorgeheim.
+const VRIJ = ['/toegang', '/_nuxt/', '/favicon.ico', '/robots.txt', '/manifest.webmanifest', '/iconen/', '/api/motor/run-all', '/api/motor/reminders-sweep', '/api/motor/onderweg-meldingen', '/api/koppelingen/salesdna/webhook', '/api/koppelingen/salesdna/webhook/', '/api/koppelingen/dealdrive/v1/', '/api/stripe/webhook', '/api/afmelden', '/api/whatsapp/webhook', '/api/motor/reeksen-sweep', '/api/mail/inkomend', '/api/motor/dagplanning', '/api/motor/dagritme-mail', '/api/koppelingen/agenda/melding']
 
 export default defineEventHandler((event) => {
   const config = useRuntimeConfig(event)

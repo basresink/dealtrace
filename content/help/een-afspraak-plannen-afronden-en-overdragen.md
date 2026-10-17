@@ -12,7 +12,7 @@ Elke afspraak heeft een **meetingsoort**, zoals Kennismaking, Inventarisatie of 
 ## Plannen
 
 1. Klik **+ Afspraak** in de agenda, of open een taak en klik **+ Afspraak**.
-2. Kies de **klant** en de **meetingsoort**. De contactpersoon staat al klaar; beslissers staan bovenaan.
+2. Kies de **prospect** en de **meetingsoort**. De contactpersoon staat al klaar; beslissers staan bovenaan.
 3. Kies de vorm: **Bezoek**, **Online** of **Telefoon**. Bij een bezoek staat het adres van het account al bij locatie.
 4. Kies datum en start. Onder de tijd zie je je **vrije momenten**; tik er een aan.
 5. Klik **Plan afspraak**.
@@ -66,7 +66,7 @@ Op de telefoon kies je in **Bezoek afronden** meteen naar wie je overdraagt; ook
 
 ## Niet verschenen of geannuleerd
 
-Kwam de klant niet, klik dan **Niet verschenen**. Bij de eerste afspraak gaat de fase terug naar In gesprek en verschijnt het account in "Wie moet ik spreken" met "No-show opnieuw inplannen". Je krijgt ook het inzicht "Gat in je agenda".
+Kwam de prospect niet, klik dan **Niet verschenen**. Bij de eerste afspraak gaat de fase terug naar In gesprek en verschijnt het account in "Wie moet ik spreken" met "No-show opnieuw inplannen". Je krijgt ook het inzicht "Gat in je agenda".
 
 ## Zonder verbinding
 

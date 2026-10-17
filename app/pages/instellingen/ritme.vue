@@ -2,7 +2,7 @@
 // Accountmatrix en ritmes (F16): klassen, segmenten, belmatrix, afspraakmatrix,
 // afkoeling en frequentieplafond, overschrijven per reis. Iedereen kijkt mee; de
 // beheerder wijzigt. "niet ingesteld" (leeg) en "bewust uit (0)" zijn verschillend.
-import { PERIODEN, ritmeLabel } from '~~/shared/ritmematrix'
+import { KLANT_TABBLAD, PERIODEN, ritmeLabel } from '~~/shared/ritmematrix'
 const toast = useToast()
 const { data, refresh } = await useFetch<any>('/api/ritme', { default: () => ({ klassen: [], codes: [], belmatrix: {}, afspraakmatrix: {}, afkoeling: [], segmenten: [], reizen: [], kan: {}, waarschuwingen: [] }) })
 const klein = ref(false)
@@ -55,7 +55,10 @@ function voegSegmentToe() {
 function zetPlafond() { bewaarLater('frequentieplafond', () => data.value.frequentieplafond) }
 function zetCapaciteit() { bewaarLater('capaciteit', () => data.value.capaciteit) }
 function zetAfkoeling() { bewaarLater('afkoeling', () => Object.fromEntries(data.value.afkoeling.map((k: any) => [k.id, k.dagen]))) }
-const RIJ_LABEL: Record<string, string> = { prospect: 'Prospect', klant: 'Klant', meeting: 'Meeting (online)', bezoek: 'Bezoek' }
+const RIJ_LABEL: Record<string, string> = { prospect: 'Prospect', meeting: 'Meeting (online)', bezoek: 'Bezoek' }
+// Klassen op het tabblad Klanten (uit DealDrive of het CRM) staan niet in de accountmatrix: het onderhoudsritme
+// van klanten hoort in DealDrive. Ze blijven bewaard, zodat de lijst Bestaande klanten ze kan tonen.
+const prospectKlassen = computed(() => data.value.klassen.filter((k: any) => k.tabblad !== KLANT_TABBLAD))
 useHead({ title: 'Accountmatrix · Instellingen · Dealtrace' })
 </script>
 
@@ -84,17 +87,14 @@ useHead({ title: 'Accountmatrix · Instellingen · Dealtrace' })
             <button type="button" class="dd-act dd-act--primair mt-8" data-test="klasse-toepassen" @click="stelVoor(true)">Pas toe</button>
           </div>
           <table class="tabel tabel--kaarten">
-            <thead><tr><th>Code</th><th>Naam</th><th>Vanaf (medewerkers)</th><th>Tot en met</th><th>Omschrijving</th><th>Tabblad</th><th>Accounts</th></tr></thead>
-            <tbody><tr v-for="k in data.klassen" :key="k.id" :data-test="`klasse-${k.id}`">
+            <thead><tr><th>Code</th><th>Naam</th><th>Vanaf (medewerkers)</th><th>Tot en met</th><th>Omschrijving</th><th>Accounts</th></tr></thead>
+            <tbody><tr v-for="k in prospectKlassen" :key="k.id" :data-test="`klasse-${k.id}`">
               <td><input v-model="k.code" class="invoer invoer--klein" maxlength="2" :disabled="!beheer" aria-label="Code" @input="zetKlassen"></td>
               <td><input v-model="k.naam" class="invoer invoer--klein" :disabled="!beheer" aria-label="Naam" @input="zetKlassen"></td>
-              <template v-if="(k.tabblad ?? 'Prospects') !== 'Klanten'">
-                <td><input class="invoer invoer--klein" type="number" min="0" :value="k.minMedewerkers ?? ''" :placeholder="k.standaardGrenzen?.min != null ? String(k.standaardGrenzen.min) : ''" :disabled="!beheer" :aria-label="`${k.naam || 'Klasse'} vanaf`" data-test="klasse-vanaf" @input="zetGrens(k, 'minMedewerkers', ($event.target as HTMLInputElement).value)"></td>
-                <td><input class="invoer invoer--klein" type="number" min="0" :value="k.maxMedewerkers ?? ''" :placeholder="k.standaardGrenzen ? (k.standaardGrenzen.max != null ? String(k.standaardGrenzen.max) : 'geen') : 'geen'" :disabled="!beheer" :aria-label="`${k.naam || 'Klasse'} tot en met`" data-test="klasse-tot" @input="zetGrens(k, 'maxMedewerkers', ($event.target as HTMLInputElement).value)"></td>
-              </template>
-              <template v-else><td class="meta">n.v.t.</td><td class="meta">n.v.t.</td></template>
+              <td><input class="invoer invoer--klein" type="number" min="0" :value="k.minMedewerkers ?? ''" :placeholder="k.standaardGrenzen?.min != null ? String(k.standaardGrenzen.min) : ''" :disabled="!beheer" :aria-label="`${k.naam || 'Klasse'} vanaf`" data-test="klasse-vanaf" @input="zetGrens(k, 'minMedewerkers', ($event.target as HTMLInputElement).value)"></td>
+              <td><input class="invoer invoer--klein" type="number" min="0" :value="k.maxMedewerkers ?? ''" :placeholder="k.standaardGrenzen ? (k.standaardGrenzen.max != null ? String(k.standaardGrenzen.max) : 'geen') : 'geen'" :disabled="!beheer" :aria-label="`${k.naam || 'Klasse'} tot en met`" data-test="klasse-tot" @input="zetGrens(k, 'maxMedewerkers', ($event.target as HTMLInputElement).value)"></td>
               <td><input v-model="k.omschrijving" class="invoer invoer--klein" :disabled="!beheer" aria-label="Omschrijving" @input="zetKlassen"></td>
-              <td>{{ k.tabblad ?? 'Prospects' }}</td><td class="tnum">{{ k.aantal }}</td>
+              <td class="tnum">{{ k.aantal }}</td>
             </tr></tbody>
           </table>
           <p class="kaart-meta mt-8" data-test="klasse-uitleg">De klasse volgt uit het aantal medewerkers met deze grenzen. Valt een bedrijf onder de laagste grens, dan krijgt het de laagste klasse; zonder aantal medewerkers blijft de klasse leeg. Een met de hand gekozen klasse blijft staan.</p>

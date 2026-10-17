@@ -224,9 +224,10 @@ export function bereikVoorDoelgroep(pogingen: BereikPoging[], branches: string[]
   return { ...bereikbaarheid(pogingen), bron: 'alle' }
 }
 
-export type PlanSoort = 'afspraak' | 'bezoek' | 'reis' | 'kans' | 'bel' | 'voorbereiding' | 'lunch' | 'focus'
-export interface PlanBlok { id: string; soort: PlanSoort; start: string; eind: string; titel: string; sub: string | null; vast: boolean; voorstel: boolean; accountId?: string | null; href?: string | null }
-export interface VastPunt { id: string; soort: 'afspraak' | 'bezoek'; start: string; eind: string; titel: string; sub?: string | null; accountId?: string | null; reisMinuten?: number | null; eerste?: boolean }
+export type PlanSoort = 'afspraak' | 'bezoek' | 'reis' | 'kans' | 'bel' | 'voorbereiding' | 'lunch' | 'focus' | 'bezet'
+export interface PlanBlok { id: string; soort: PlanSoort; start: string; eind: string; titel: string; sub: string | null; vast: boolean; voorstel: boolean; accountId?: string | null; href?: string | null; dagplanner?: string | null }
+/** Een vast punt: een afspraak of bezoek, of bezet in de gekoppelde agenda (privé, lunch, extern overleg). */
+export interface VastPunt { id: string; soort: 'afspraak' | 'bezoek' | 'bezet'; start: string; eind: string; titel: string; sub?: string | null; accountId?: string | null; reisMinuten?: number | null; eerste?: boolean }
 export interface PlanInput {
   dag: string; nu: Date; modus: 'buiten' | 'binnen'
   werkdag?: { start: number; eind: number }
@@ -237,6 +238,8 @@ export interface PlanInput {
   belTaken: number
   acties?: number
   bereik: Bereikbaarheid
+  /** Blokken die al vastliggen en niet opnieuw ingedeeld worden (wat de Dagplanner eerder vandaag al deed). */
+  extra?: PlanBlok[]
 }
 export interface Dagplan { blokken: PlanBlok[]; belUur: number | null; belUitleg: string; voorstellen: PlanBlok[]; samenvatting: string }
 
@@ -264,12 +267,13 @@ export function planDag(p: PlanInput): Dagplan {
       blokken.push({ id: `reis:${v.id}`, soort: 'reis', start: iso2(s), eind: v.start, titel: `Reistijd ${v.reisMinuten} min`, sub: null, vast: true, voorstel: false })
       bezet.push({ s, e: Date.parse(v.start) })
     }
-    zet({ id: v.id, soort: v.soort, start: v.start, eind: v.eind, titel: v.titel, sub: v.sub ?? null, vast: true, voorstel: false, accountId: v.accountId ?? null, href: `/agenda?weergave=dag&afspraak=${v.id}` })
+    zet({ id: v.id, soort: v.soort, start: v.start, eind: v.eind, titel: v.titel, sub: v.sub ?? null, vast: true, voorstel: false, accountId: v.accountId ?? null, href: v.soort === 'bezet' ? null : `/agenda?weergave=dag&afspraak=${v.id}` })
   }
+  for (const b of p.extra ?? []) zet(b)
   for (const b of p.belblokken) zet({ id: b.id, soort: 'bel', start: b.start, eind: b.eind, titel: 'Belblok', sub: b.gesprekken ? meervoud(b.gesprekken, 'gesprek', 'gesprekken') : 'Staat in je agenda', vast: true, voorstel: false, href: '/belblokken' })
 
   // Voorbereiding: 30 minuten voor de eerste afspraak (voor de reistijd), anders aan het begin van de dag.
-  const eerste = vast.find((v) => Date.parse(v.start) > nuT)
+  const eerste = vast.find((v) => v.soort !== 'bezet' && Date.parse(v.start) > nuT)
   if (eerste) {
     const voor = Date.parse(eerste.start) - (eerste.soort === 'bezoek' ? (eerste.reisMinuten ?? 0) : 0) * MIN
     const kandidaten = [voor - 30 * MIN, dagStart]
@@ -278,7 +282,9 @@ export function planDag(p: PlanInput): Dagplan {
   }
 
   // Lunch: om 12:00 als het vrij is, anders het eerste vrije moment tussen 11:30 en 14:00.
-  if (p.lunch !== null) {
+  // Een lunch in de gekoppelde agenda (of eerder vandaag al ingedeeld) telt als de lunch.
+  const heeftLunch = vast.some((v) => v.soort === 'bezet' && /lunch/i.test(v.titel)) || (p.extra ?? []).some((b) => b.soort === 'lunch')
+  if (p.lunch !== null && !heeftLunch) {
     const l = p.lunch ?? { uur: 12, minuut: 0, minuten: 45 }
     const opties = [ts(p.dag, l.uur, l.minuut), ts(p.dag, 11, 30), ts(p.dag, 12, 30), ts(p.dag, 13, 0), ts(p.dag, 13, 15)]
     const s = opties.find((x) => vrij(x, x + l.minuten * MIN))

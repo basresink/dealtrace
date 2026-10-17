@@ -2,7 +2,7 @@
 // Kennisbank in de opzet van DealDrive (/kennisbank): de documenten van de organisatie (cases, offertes,
 // presentaties, productinfo, contracten, prijslijsten) met zoeken op woord, een strook met het type en tellers,
 // achter Filters je eigen uploads en wel of geen koppeling, en een raster van kaarten (3 per rij, 2 op een
-// tablet, 1 op de telefoon). "+ Document" opent de upload met koppeling aan klanten en contacten; een kaart
+// tablet, 1 op de telefoon). "+ Document" opent de upload met koppeling aan bedrijven en contacten; een kaart
 // opent het venster met de datavelden, de preview en de AI-vragen. Filters en het open document staan in de URL
 // (zoek, type, eigen, koppeling, document). Vanaf Gevorderd.
 import { DOCUMENT_TYPES, TYPE_ICOON, TYPE_LABEL, TYPE_MEERVOUD, grootteLabel, type DocumentType } from '~~/shared/kennisbank'
@@ -60,7 +60,7 @@ useHead({ title: 'Kennisbank · Dealtrace' })
       <section class="kb-werkbalk-sectie">
         <div class="container">
           <div class="kb-werkbalk">
-            <label class="zoekveld kb-zoek"><span class="sr-only">Zoek in de kennisbank</span><Icoon naam="Search" :grootte="18" class="kb-zoek-icoon" /><input v-model="zoekTekst" type="search" class="zoekinvoer" placeholder="Zoek in naam, beschrijving, inhoud of klant (minstens 2 tekens)" data-test="kb-zoek"></label>
+            <label class="zoekveld kb-zoek"><span class="sr-only">Zoek in de kennisbank</span><Icoon naam="Search" :grootte="18" class="kb-zoek-icoon" /><input v-model="zoekTekst" type="search" class="zoekinvoer" placeholder="Zoek in naam, beschrijving, inhoud of bedrijf (minstens 2 tekens)" data-test="kb-zoek"></label>
             <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'kb-filters--aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="kb-filters" @click="filtersOpen = !filtersOpen">
               <Icoon naam="SlidersHorizontal" class="dd-actie-icoon" />Filters<span v-if="actieveFilters" class="kb-teller">{{ actieveFilters }}</span><Icoon naam="ChevronDown" :grootte="14" class="kb-pijl" :class="{ 'kb-pijl--open': filtersOpen }" />
             </button>
@@ -76,7 +76,7 @@ useHead({ title: 'Kennisbank · Dealtrace' })
             </div>
             <div class="kb-groep" role="group" aria-label="Koppeling"><span class="filter-label">Koppeling</span>
               <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': !q('koppeling') }" :aria-pressed="!q('koppeling')" @click="zet({ koppeling: undefined })">Alle</button>
-              <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('koppeling') === 'met' }" :aria-pressed="q('koppeling') === 'met'" data-test="kb-koppeling-met" @click="zet({ koppeling: 'met' })">Bij een klant of contact</button>
+              <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('koppeling') === 'met' }" :aria-pressed="q('koppeling') === 'met'" data-test="kb-koppeling-met" @click="zet({ koppeling: 'met' })">Bij een bedrijf of contact</button>
               <button type="button" class="filter-pil" :class="{ 'filter-pil--aan': q('koppeling') === 'zonder' }" :aria-pressed="q('koppeling') === 'zonder'" data-test="kb-koppeling-zonder" @click="zet({ koppeling: 'zonder' })">Algemeen</button>
             </div>
             <div v-if="actieveFilters" class="kb-groep kb-groep--eind"><button type="button" class="dd-act" data-test="kb-reset" @click="resetFilters">Reset filters</button></div>

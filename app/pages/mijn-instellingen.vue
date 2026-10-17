@@ -25,6 +25,7 @@ const onderdelen = computed(() => [
   { id: 'ai-verbruik', titel: 'Jouw AI-verbruik', tekst: 'Hoeveel credits je deze maand gebruikte, per soort.', icoon: 'Sparkles', toon: !!ai.value },
   { id: 'toestellen', titel: 'Toestellen en sessies', tekst: 'Waar je bent ingelogd, en uitloggen per toestel of overal.', icoon: 'Smartphone', toon: true },
   { id: 'telefoon', titel: 'Telefoon', tekst: 'Handschoen- en zonlichtmodus voor onderweg.', icoon: 'Phone', toon: true },
+  { id: 'dagplanning', titel: 'Dagplanning', tekst: 'Laat de Dagplanner je dag elke werkdag zelf indelen.', icoon: 'CalendarClock', toon: !!functie('dagritme.dagstart')?.beschikbaar },
   { id: 'dagritme-mail', titel: 'Je ritme per mail', tekst: 'Weekreview, weekstart en dagstart in je mailbox, op jouw tijd.', icoon: 'Mail', toon: !!functie('dagritme.mail')?.beschikbaar },
   { id: 'onderweg', titel: 'Meldingen onderweg', tekst: 'Push op dit toestel, stille uren, dagstart en rijmodus.', icoon: 'Bell', toon: onderwegAan.value },
   { id: 'offline', titel: 'Offline', tekst: 'Je dagpakket voor onderweg en versturen via wifi.', icoon: 'WifiOff', toon: offlineAan.value },
@@ -71,6 +72,7 @@ useHead({ title: 'Mijn instellingen · Dealtrace' })
           </article>
           <MijnToestellen />
           <OnderwegMeldingen :pers="pers ?? null" />
+          <div id="dagplanning" class="mi-sectie"><DagplanningVoorkeur /></div>
           <div id="dagritme-mail" class="mi-sectie"><DagritmeMailVoorkeuren /></div>
           <article v-if="offlineAan" id="offline" class="kaart mi-sectie" data-test="mijn-offline">
             <header class="kaart-kop"><h2 class="kaart-titel">Offline</h2></header>

@@ -74,10 +74,10 @@ useHead({ title: 'Richting · Dealtrace' })
 
           <div v-else-if="tab.k === 'belofte'" class="stapel mt-16" data-test="vv-belofte">
             <div class="kaart"><h3 class="kop-kaart">Kernbelofte</h3><p class="title mt-8">{{ tekst('kernbelofte') }}</p>
-              <details class="mt-8"><summary>Als de klant doorvraagt</summary><p class="tekst mt-8">{{ tekst('waardestatement') }}</p></details></div>
+              <details class="mt-8"><summary>Als de prospect doorvraagt</summary><p class="tekst mt-8">{{ tekst('waardestatement') }}</p></details></div>
             <p class="meta" data-test="dekking-belofte">{{ data.dekking.belofte.tekst }}</p>
             <article v-for="b in data.branches" :key="b.id" class="kaart"><h3 class="kop-kaart">{{ b.naam }}</h3>
-              <template v-if="tekst('kernbelofte', b.id)"><p class="tekst mt-8">{{ tekst('kernbelofte', b.id) }}</p><details v-if="tekst('waardestatement', b.id)" class="mt-8"><summary>Als de klant doorvraagt</summary><p class="tekst mt-8">{{ tekst('waardestatement', b.id) }}</p></details></template>
+              <template v-if="tekst('kernbelofte', b.id)"><p class="tekst mt-8">{{ tekst('kernbelofte', b.id) }}</p><details v-if="tekst('waardestatement', b.id)" class="mt-8"><summary>Als de prospect doorvraagt</summary><p class="tekst mt-8">{{ tekst('waardestatement', b.id) }}</p></details></template>
               <p v-else class="meta mt-8">Geen eigen belofte; de algemene geldt.</p>
             </article>
           </div>
@@ -97,8 +97,8 @@ useHead({ title: 'Richting · Dealtrace' })
                   <template v-if="c.zwak"><dt>Zwak</dt><dd>{{ c.zwak }}</dd></template>
                   <template v-if="c.onderscheid"><dt>Onderscheid</dt><dd>{{ c.onderscheid }}</dd></template>
                   <template v-if="c.zoZegJeHet"><dt>Zo zeg je het</dt><dd>{{ c.zoZegJeHet }}</dd></template>
-                  <template v-if="leesAlsDeKlantZegt(c.alsDeKlantZegt)"><dt>Als de klant zegt</dt><dd>"{{ leesAlsDeKlantZegt(c.alsDeKlantZegt)!.bezwaar }}" Antwoord: "{{ leesAlsDeKlantZegt(c.alsDeKlantZegt)!.antwoord }}"</dd></template>
-                  <template v-else-if="c.alsDeKlantZegt"><dt>Als de klant zegt</dt><dd>{{ c.alsDeKlantZegt }}</dd></template>
+                  <template v-if="leesAlsDeKlantZegt(c.alsDeKlantZegt)"><dt>Als de prospect zegt</dt><dd>"{{ leesAlsDeKlantZegt(c.alsDeKlantZegt)!.bezwaar }}" Antwoord: "{{ leesAlsDeKlantZegt(c.alsDeKlantZegt)!.antwoord }}"</dd></template>
+                  <template v-else-if="c.alsDeKlantZegt"><dt>Als de prospect zegt</dt><dd>{{ c.alsDeKlantZegt }}</dd></template>
                   <template v-if="c.bewijs"><dt>Bewijs</dt><dd>{{ c.bewijs }}</dd></template>
                   <template v-if="c.wanneerVerliezen"><dt>Wanneer we verliezen</dt><dd>{{ c.wanneerVerliezen }}</dd></template>
                 </dl>

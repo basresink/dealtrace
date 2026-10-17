@@ -4,6 +4,7 @@
 // (aanleiding, achterstallige next-action of fase) en rechts de contactpersonen.
 // De naam is de link; de streklink maakt de hele rij klikbaar zonder geneste links.
 import { CONTACTROL_LABEL } from '~~/shared/contactgegevens'
+import { reeksStrip } from '~~/shared/opvolgreeks'
 import { STATUS_LABEL, datumActiviteit, initialen, klasseKleur, klasseLabel, kleurUitNaam, telLink, toonTelefoon } from '~/utils/accountWeergave'
 
 const props = defineProps<{
@@ -53,6 +54,7 @@ const rolLabel = (rol: string) => CONTACTROL_LABEL[rol as keyof typeof CONTACTRO
         <NuxtLink :to="`/accounts/${rij.id}`" class="acc-link">{{ rij.name }}</NuxtLink>
         <span v-if="rij.klasse" class="klasse-pil" :class="`klasse-pil--${klasseKleur(rij.klasse, klassen)}`">{{ klasseLabel(rij.klasse, klassen) }}</span>
         <span v-else class="klasse-pil klasse-pil--geen">Geen klasse</span>
+        <span v-if="rij.gedeactiveerd" class="pil pil--grijs" data-test="rij-gedeactiveerd">Gedeactiveerd</span>
       </h3>
       <div class="acc-sub">
         <a v-if="website" :href="website" target="_blank" rel="noopener" class="acc-kanaal" :title="rij.website" :aria-label="`Website van ${rij.name}`"><Icoon naam="Globe" :grootte="13" /></a>
@@ -67,6 +69,7 @@ const rolLabel = (rol: string) => CONTACTROL_LABEL[rol as keyof typeof CONTACTRO
         <span v-if="toonScore" class="tnum">Score {{ rij.score }}</span>
       </div>
       <div v-if="regel && weergave !== 'compact'" class="acc-regel" :style="{ borderLeftColor: regel.kleur }" data-test="rij-regel">{{ regel.tekst }}</div>
+      <NuxtLink v-if="rij.reeks" :to="`/opvolgreeksen?reeks=${rij.reeks.id}`" class="acc-reeks" :class="{ 'acc-reeks--wacht': rij.reeks.wacht }" data-test="rij-reeks"><Icoon naam="Repeat" :grootte="13" /><span>Opvolgreeks {{ reeksStrip(rij.reeks) }}<template v-if="rij.reeks.wacht"> · wacht op jou</template></span></NuxtLink>
     </div>
     <div class="acc-contacten">
       <template v-if="contacten.length">
@@ -79,6 +82,11 @@ const rolLabel = (rol: string) => CONTACTROL_LABEL[rol as keyof typeof CONTACTRO
 </template>
 
 <style scoped>
+/* F7: de lopende opvolgreeks onder de regel (stap x van y en de volgende stap). */
+.acc-reeks { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; line-height: 1.4; color: var(--purple); text-decoration: none; }
+.acc-reeks:hover span { text-decoration: underline; }
+.acc-reeks--wacht { font-weight: 700; }
+@media (max-width: 719px) { .acc-reeks { min-height: var(--touch-target-min); } }
 .acc-contact { overflow: hidden; }
 .acc-contact-foto { width: 100%; height: 100%; object-fit: cover; }
 </style>

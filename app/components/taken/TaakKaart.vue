@@ -29,7 +29,7 @@ function eind() {
     <span class="item-icoon" :class="`item-icoon--${soort}`" aria-hidden="true"><Icoon :naam="ICOON[soort]!" :grootte="16" /></span>
     <div class="item-body">
       <button type="button" class="taak-titel item-naam" data-test="taak-titel" @click="emit('open')">{{ taak.title }}</button>
-      <div v-if="taak.account || taak.poging" class="item-meta"><NuxtLink v-if="taak.account" :to="`/accounts/${taak.account.id}`">{{ taak.account.naam }}</NuxtLink><template v-if="taak.contact"> · <NuxtLink :to="`/contacten/${taak.contact.id}`" data-test="taak-contact">{{ taak.contact.naam }}</NuxtLink></template><span v-if="taak.poging" data-test="poging"><template v-if="taak.account"> · </template>poging {{ taak.poging.n }} van {{ taak.poging.van }}</span></div>
+      <div v-if="taak.account || taak.poging || taak.reeks" class="item-meta"><NuxtLink v-if="taak.account" :to="`/accounts/${taak.account.id}`">{{ taak.account.naam }}</NuxtLink><template v-if="taak.contact"> · <NuxtLink :to="`/contacten/${taak.contact.id}`" data-test="taak-contact">{{ taak.contact.naam }}</NuxtLink></template><span v-if="taak.poging" data-test="poging"><template v-if="taak.account"> · </template>poging {{ taak.poging.n }} van {{ taak.poging.van }}</span><span v-if="taak.reeks" data-test="taak-reeks"><template v-if="taak.account || taak.poging"> · </template>stap {{ taak.reeks.n }} van {{ taak.reeks.van }}</span></div>
       <div v-if="taak.aanleiding" class="item-meta">{{ taak.aanleiding }}</div>
       <div class="taak-labels">
         <span class="pil pil--blauw">{{ ACTIE_LABEL[taak.actionType] ?? 'TAAK' }}</span>

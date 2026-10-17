@@ -5,7 +5,7 @@ import { isSettingKey, isVerborgen } from '../../../shared/settingKeys'
 import { rolMag } from '../../../shared/permissions'
 import { KANALEN } from '../../../shared/nbStatus'
 import { AGENT_INSTELLINGEN } from '../../../shared/mandaat'
-import { klasseGrensFouten, valideerMatrix } from '../../../shared/ritmematrix'
+import { BELMATRIX_RIJEN, klasseGrensFouten, valideerMatrix } from '../../../shared/ritmematrix'
 import { overlap, valideerRegios, type Regio } from '../../../shared/gebieden'
 import { schrijfAudit } from '../../utils/audit'
 import { wijsRegiosToe } from '../../utils/bezoeken'
@@ -27,6 +27,8 @@ export default defineEventHandler(async (event) => {
   if (key === 'belmatrix' || key === 'afspraakmatrix') {
     const fouten = valideerMatrix(value)
     if (fouten.length) throw createError({ statusCode: 422, statusMessage: fouten.join('; ') })
+    // De belmatrix kent alleen prospects: een oude rij (zoals klant) bewaren we niet meer.
+    if (key === 'belmatrix' && value && typeof value === 'object') for (const rij of Object.keys(value)) if (!(BELMATRIX_RIJEN as readonly string[]).includes(rij)) delete (value as Record<string, unknown>)[rij]
   }
   if (key === 'capaciteit') {
     const v = value as any

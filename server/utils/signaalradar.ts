@@ -54,7 +54,7 @@ async function laad(tx: Tx, filter: ReturnType<typeof sql>, mapping: { brancheId
   const rs = await rijen(tx, sql`select s.id, s.account_id, s.type, s.title, s.bron, s.agent, s.status, s.signaalsoort, s.data->>'waarom' as waarom, s.data->'bron'->>'naam' as bron_naam, s.data->'bron'->>'url' as bron_url, s.created_at,
       a.name, a.owner_id, u.name as eigenaar, a.vv_branche_id, a.data->'sbi' as sbi
     from signals s join accounts a on a.id = s.account_id left join users u on u.id = a.owner_id
-    where s.created_at >= ${vanaf} and ${filter}`)
+    where s.created_at >= ${vanaf} and a.gedeactiveerd_op is null and ${filter}`)
   const accounts: Geladen['accounts'] = new Map()
   const signalen: Geladen['signalen'] = []
   for (const r of rs) {

@@ -35,7 +35,7 @@ describe('accountplannen', () => {
     await inOrg(ORG, async (tx) => {
       const l = await ap.accountplanLijst(tx)
       const p = l.plannen.find((x: any) => x.id === 'eva-plan-01')!
-      expect(p).toMatchObject({ weergave: 'actueel', account: { id: 'eva-k01', soort: 'klant' }, eigenaar: { id: 'u-07' }, acties: { totaal: 3, klaar: 1, percentage: 33 } })
+      expect(p).toMatchObject({ weergave: 'actueel', account: { id: 'eva-a07', soort: 'prospect' }, eigenaar: { id: 'u-07' }, acties: { totaal: 3, klaar: 1, percentage: 33 } })
       expect(l.actueel).toBeGreaterThanOrEqual(1)
       const d = await ap.accountplanDetail(tx, 'eva-plan-01', eva)
       expect(d.beslissers).toHaveLength(2)
@@ -65,9 +65,9 @@ describe('accountplannen', () => {
 
   it('een actie is een taak op het account met contact; afvinken rondt af, uit het plan halen annuleert', async () => {
     await inOrg(ORG, async (tx) => {
-      const t = await ap.voegPlanActieToe(tx, ORG, 'eva-plan-01', eva, { titel: 'Offerte bespreken met inkoop', datum: '2026-11-10', contactId: 'eva-k01-c1' })
+      const t = await ap.voegPlanActieToe(tx, ORG, 'eva-plan-01', eva, { titel: 'Offerte bespreken met inkoop', datum: '2026-11-10', contactId: 'eva-a07-c1' })
       const taak = await rij(tx, sql`select account_id, contact_id, owner_id, status, accountplan_id, action_type from tasks where id = ${t.id}`)
-      expect(taak).toEqual({ account_id: 'eva-k01', contact_id: 'eva-k01-c1', owner_id: 'u-07', status: 'open', accountplan_id: 'eva-plan-01', action_type: 'taak' })
+      expect(taak).toEqual({ account_id: 'eva-a07', contact_id: 'eva-a07-c1', owner_id: 'u-07', status: 'open', accountplan_id: 'eva-plan-01', action_type: 'taak' })
       await expect(ap.voegPlanActieToe(tx, ORG, 'eva-plan-01', eva, { titel: 'Contact van een ander account', contactId: 'eva-a09-c1' })).rejects.toMatchObject({ statusCode: 422 })
       await ap.zetPlanActie(tx, 'eva-plan-01', t.id, eva, true)
       expect((await rij(tx, sql`select status from tasks where id = ${t.id}`)).status).toBe('klaar')

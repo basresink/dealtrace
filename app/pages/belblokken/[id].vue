@@ -8,6 +8,7 @@ import { UITKOMST_KNOPPEN, uitkomstNaarCode, type KnopSleutel } from '~~/shared/
 import { herkenAntwoord, spreekBelOpening } from '~~/shared/spreek'
 import { NEE_REDENEN } from '~~/shared/nbStatus'
 import type { ScriptStaat } from '~~/shared/belscripts'
+import { reeksStrip, reeksUitkomstVan, sjabloonVoorUitkomst } from '~~/shared/opvolgreeks'
 const route = useRoute()
 const toast = useToast()
 const { toon: toonUitleg } = useNietAangezet()
@@ -35,16 +36,31 @@ onMounted(async () => {
 const resterendMin = computed(() => (data.value ? Math.max(0, Math.round((Date.parse(data.value.sessie.eind) - Date.now()) / 60000)) : 0))
 const morgen = new Date(Date.now() + 864e5).toISOString().slice(0, 10)
 
+// F7: na Voicemail of Gesproken, later kan een opvolgreeks starten (keuze uit de sjablonen; het sjabloon van die
+// uitkomst staat klaar). Niet als er al een reeks loopt.
+const reeksKeuze = ref('')
+const reeksMogelijk = (knop: KnopSleutel | null) => !!knop && (knop === 'voicemail' || knop === 'later') && !!data.value?.reeksSjablonen?.length && !huidig.value?.reeks
+watch(gekozenKnop, (k) => { reeksKeuze.value = reeksMogelijk(k) ? sjabloonVoorUitkomst<{ id: string; uitkomsten: string[] }>(data.value.reeksSjablonen, reeksUitkomstVan(k))?.id ?? '' : '' })
+async function startReeksNa(item: any, knop: KnopSleutel, sjabloonId: string) {
+  try {
+    const r = await $fetch<any>(`/api/volgen/${item.accountId}/reeks`, { method: 'POST', body: { sjabloonId, contactId: item.contactId ?? null, aanleiding: LABEL[knop] } })
+    toast.toon(`${item.accountNaam}: opvolgreeks ${r?.naam ?? ''} gestart.`)
+  } catch (e) { toast.toon(`${item.accountNaam}: ${foutTekst(e)}`, 'fout') }
+}
 async function uitkomst(knop: KnopSleutel) {
   const v = uitkomstNaarCode(knop)!
+  if (reeksMogelijk(knop) && gekozenKnop.value !== knop) { gekozenKnop.value = knop; return }
   if ((v.vraagtDatum && !laterOp.value) || (v.vraagtReden && !reden.value)) { gekozenKnop.value = knop; return }
   const item = huidig.value
   if (!item) return
+  const reeksSjabloon = reeksMogelijk(knop) ? reeksKeuze.value : ''
   const body = { taskId: item.taskId, knop, laterOp: v.vraagtDatum ? laterOp.value : null, reden: v.vraagtReden ? reden.value : null, duurSec: Math.round((Date.now() - gestart.value) / 1000), notitie: notitie.value || null, sleutel: crypto.randomUUID(), script: staat.value, vv: { winpuntId: item.winpuntId, concurrentId: item.concurrentId } }
   // Direct door naar het volgende gesprek; de server rondt op de achtergrond af.
   gedaan.value.push({ accountNaam: item.accountNaam, knop })
   volgende()
-  try { await $fetch(`/api/belblokken/${id}/gesprek`, { method: 'POST', body }) } catch (e) { toast.toon(`${item.accountNaam}: ${foutTekst(e)}`, 'fout') }
+  let afgerond = false
+  try { await $fetch(`/api/belblokken/${id}/gesprek`, { method: 'POST', body }); afgerond = true } catch (e) { toast.toon(`${item.accountNaam}: ${foutTekst(e)}`, 'fout') }
+  if (afgerond && reeksSjabloon) await startReeksNa(item, knop, reeksSjabloon)
   if (index.value >= items.value.length) await stop()
 }
 function volgende() {
@@ -129,6 +145,7 @@ useHead({ title: 'Belmodus · Dealtrace' })
           <a v-if="huidig.telefoon" class="dd-actie dd-actie--primair mt-8" :href="telLink(huidig.telefoon)" data-test="bel-link"><Icoon naam="Phone" class="dd-actie-icoon" />Bel {{ huidig.telefoon }}</a>
           <p v-else class="meta mt-8">Geen telefoonnummer bekend.</p>
           <p class="rij-aanleiding mt-16" :class="{ 'rij-aanleiding--heet': huidig.heet }">{{ huidig.reden }}</p>
+          <p v-if="huidig.reeks" class="bm-reeks mt-8" data-test="bm-reeks"><Icoon naam="Repeat" :grootte="14" /><span>Opvolgreeks {{ reeksStrip(huidig.reeks) }}</span></p>
           <dl class="defs mt-12">
             <div class="def-rij"><dt>Laatste uitkomsten</dt><dd>{{ huidig.kaart.laatste.length ? huidig.kaart.laatste.map((l: any) => `${datum(l.op)} ${l.uitkomst}`).join(' · ') : 'nog geen' }}</dd></div>
             <div v-if="huidig.waarden['concurrent.naam']" class="def-rij"><dt>Huidige leverancier</dt><dd>{{ huidig.waarden['concurrent.naam'] }}</dd></div>
@@ -152,6 +169,7 @@ useHead({ title: 'Belmodus · Dealtrace' })
         <div v-if="gekozenKnop" class="rijtje mb-8" data-test="uitkomst-extra">
           <template v-if="uitkomstNaarCode(gekozenKnop)?.vraagtDatum"><label class="veld"><span class="veld-label">{{ LABEL[gekozenKnop] }}: wanneer?</span><input v-model="laterOp" type="date" :min="morgen" class="invoer" data-test="later-op"></label></template>
           <template v-if="uitkomstNaarCode(gekozenKnop)?.vraagtReden"><label class="veld"><span class="veld-label">Reden</span><select v-model="reden" class="invoer" data-test="nee-reden"><option value="" disabled>Kies een reden</option><option v-for="r in NEE_REDENEN" :key="r">{{ r }}</option></select></label></template>
+          <label v-if="reeksMogelijk(gekozenKnop)" class="veld"><span class="veld-label">Opvolgreeks starten</span><select v-model="reeksKeuze" class="invoer" data-test="bm-reeks-keuze"><option value="">Geen reeks</option><option v-for="s in data.reeksSjablonen" :key="s.id" :value="s.id">{{ s.naam }}{{ s.na ? ` (na: ${s.na.toLowerCase()})` : '' }}</option></select></label>
           <button type="button" class="dd-act dd-act--primair" data-test="uitkomst-bevestig" @click="uitkomst(gekozenKnop)">Afronden</button>
           <button type="button" class="dd-act" @click="gekozenKnop = null">Annuleren</button>
         </div>
@@ -163,3 +181,8 @@ useHead({ title: 'Belmodus · Dealtrace' })
     <div v-else class="belmodus-raster belmodus-raster--resultaat"><div><p>Er staan geen gesprekken meer in dit blok.</p><button type="button" class="dd-act mt-8" @click="stop">Toon het blokresultaat</button></div></div>
   </div>
 </template>
+
+<style scoped>
+/* F7: de lopende opvolgreeks op de gesprekskaart. */
+.bm-reeks { display: flex; align-items: center; gap: 6px; margin-bottom: 0; font-size: 13px; color: var(--purple); }
+</style>

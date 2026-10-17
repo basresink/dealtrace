@@ -2,7 +2,7 @@
 titel: Kennisbank
 categorie: Plannen en sturen
 collectie: product
-samenvatting: Alle documenten van je organisatie op één plek. Zo zoek en filter je, upload je een document, koppel je het aan een klant of contact en stel je de AI een vraag over de inhoud.
+samenvatting: Alle documenten van je organisatie op één plek. Zo zoek en filter je, upload je een document, koppel je het aan een bedrijf of contact en stel je de AI een vraag over de inhoud.
 routes: /kennisbank
 ---
 
@@ -12,7 +12,7 @@ De kennisbank is de bibliotheek van je organisatie: cases, offertes, presentatie
 
 ## Zoeken en filteren
 
-Typ minstens twee tekens in het zoekveld. Je zoekt in de naam, de beschrijving, de tekst van het document en de namen van de gekoppelde klanten en contacten. Met **Filters** kies je een type (bijvoorbeeld alleen Cases), alleen je eigen uploads, of documenten met of zonder koppeling. Achter elk filter staat hoeveel documenten erbij horen.
+Typ minstens twee tekens in het zoekveld. Je zoekt in de naam, de beschrijving, de tekst van het document en de namen van de gekoppelde bedrijven en contacten. Met **Filters** kies je een type (bijvoorbeeld alleen Cases), alleen je eigen uploads, of documenten met of zonder koppeling. Achter elk filter staat hoeveel documenten erbij horen.
 
 ## Een document uploaden
 
@@ -22,13 +22,13 @@ Kies **+ Document**. Sleep een bestand in het venster of klik om er een te kieze
 2. Kies het **type**. Laat je het op Automatisch staan, dan raadt Dealtrace het uit de naam.
 3. Vul de **versie** in, bijvoorbeeld 2 voor de tweede versie van een offerte.
 4. Schrijf eventueel in één zin wanneer je het document gebruikt.
-5. Koppel het aan een of meer **klanten** of **contacten**. Het document staat dan ook op hun tabblad Documenten.
+5. Koppel het aan een of meer **bedrijven** (meestal prospects) of **contacten**. Het document staat dan ook op hun tabblad Documenten.
 
 ## Het document openen
 
 Klik op een document. Het venster toont:
 
-- **Datavelden**: type, versie, bestand, bijgewerkt, wie het uploadde en de gekoppelde klanten en contacten. Deze velden gaan mee naar de AI.
+- **Datavelden**: type, versie, bestand, bijgewerkt, wie het uploadde en de gekoppelde bedrijven en contacten. Deze velden gaan mee naar de AI.
 - **Preview**: een afbeelding of PDF zie je direct; van andere bestanden de tekst die Dealtrace heeft uitgelezen. Is er geen voorbeeld, dan staat dat er.
 - **Vraag de AI over dit document**: drie voorgestelde vragen en **Stel je eigen vraag**.
 

@@ -39,7 +39,7 @@ test.describe('nieuwe prospect', () => {
       expect(a.klasse).toBe('kl-c-prospects')
     } finally {
       await apiLogin(request, 'u-06')
-      await request.delete(`/api/accounts/${id}`)
+      await request.post(`/api/accounts/${id}/deactiveren`, { data: { reden: 'overig', toelichting: 'Opruimen na de test' } })
     }
   })
 
@@ -61,7 +61,7 @@ test.describe('nieuwe prospect', () => {
       expect((await request.post('/api/accounts', { data: { naam: uniekeNaam(), kvk: '1234567' } })).status()).toBe(400)
     } finally {
       await apiLogin(request, 'u-06')
-      for (const id of ids) await request.delete(`/api/accounts/${id}`)
+      for (const id of ids) await request.post(`/api/accounts/${id}/deactiveren`, { data: { reden: 'overig', toelichting: 'Opruimen na de test' } })
     }
   })
 
@@ -97,7 +97,7 @@ test.describe('nieuwe prospect', () => {
       expect(a.klasse).toBe('kl-c-prospects')
     } finally {
       await apiLogin(request, 'u-06')
-      await request.delete(`/api/accounts/${id}`)
+      await request.post(`/api/accounts/${id}/deactiveren`, { data: { reden: 'overig', toelichting: 'Opruimen na de test' } })
     }
   })
 
@@ -126,7 +126,7 @@ test.describe('nieuwe prospect', () => {
       expect((await request.post('/api/accounts', { data: { naam: `${basis} Omvang12`, plaats: 'Utrecht' } })).status()).toBe(409)
     } finally {
       await apiLogin(request, 'u-06')
-      for (const id of ids) await request.delete(`/api/accounts/${id}`)
+      for (const id of ids) await request.post(`/api/accounts/${id}/deactiveren`, { data: { reden: 'overig', toelichting: 'Opruimen na de test' } })
     }
   })
 })

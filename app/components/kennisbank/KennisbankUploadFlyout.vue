@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Een document toevoegen aan de kennisbank (opzet van DealDrive KennisbankUploadFlyout): bestand slepen of
-// kiezen, naam, type (of automatisch herkennen), versie, beschrijving en de koppeling aan klanten en contacten.
+// kiezen, naam, type (of automatisch herkennen), versie, beschrijving en de koppeling aan bedrijven en contacten.
 // Vanaf de account- of contactkaart staat die koppeling al vast. Het document verschijnt dan op het tabblad
 // Documenten van die kaarten en blijft in de kennisbank zoekbaar.
 import { DOCUMENT_TYPES, MAX_GROOTTE, TYPE_LABEL, grootteLabel, raadType } from '~~/shared/kennisbank'
@@ -62,7 +62,7 @@ async function bewaar() {
           <div class="fo-head-tekst">
             <span class="fo-kicker"><Icoon naam="Upload" :grootte="12" /> Kennisbank · upload</span>
             <h2 id="kbu-titel" class="fo-titel">{{ contact ? contact.naam : account ? account.naam : 'Document toevoegen' }}</h2>
-            <p class="fo-meta">{{ vast ? 'Het document komt in de kennisbank en staat op het tabblad Documenten van deze kaart.' : 'Koppel het aan klanten of contacten: dan staat het ook op hun tabblad Documenten en blijft het in de kennisbank zoekbaar.' }}</p>
+            <p class="fo-meta">{{ vast ? 'Het document komt in de kennisbank en staat op het tabblad Documenten van deze kaart.' : 'Koppel het aan bedrijven of contacten: dan staat het ook op hun tabblad Documenten en blijft het in de kennisbank zoekbaar.' }}</p>
           </div>
           <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
         </header>
@@ -86,9 +86,9 @@ async function bewaar() {
 
           <template v-if="!vast">
             <div class="veld">
-              <span class="veld-label">Koppel aan klant of prospect</span>
+              <span class="veld-label">Koppel aan een bedrijf</span>
               <div v-if="accounts.length" class="kbu-chips"><span v-for="a in accounts" :key="a.id" class="chip" data-test="kbu-account-chip">{{ a.naam }}<button type="button" class="chip-weg" :aria-label="`${a.naam} ontkoppelen`" @click="accounts = accounts.filter((x) => x.id !== a.id)">×</button></span></div>
-              <ZoekKiezer :zoek="zoekAccounts" placeholder="Zoek op naam van de klant of prospect…" label="Zoek een klant of prospect" data-test="kbu-account" :optie-test="() => 'kbu-account-optie'" :sub="(a) => a.plaats" leeg="Geen klant of prospect gevonden." @kies="voegAccountToe" />
+              <ZoekKiezer :zoek="zoekAccounts" placeholder="Zoek op naam van de prospect of klant…" label="Zoek een bedrijf" data-test="kbu-account" :optie-test="() => 'kbu-account-optie'" :sub="(a) => a.plaats" leeg="Geen bedrijf gevonden." @kies="voegAccountToe" />
             </div>
             <div class="veld">
               <span class="veld-label">Koppel aan contact</span>

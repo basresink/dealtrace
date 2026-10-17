@@ -183,7 +183,7 @@ useHead({ title: 'Verkoopverhaal · Instellingen · Dealtrace' })
                   <label class="veld"><span class="veld-label">Naam *</span><input v-model="x.naam" class="invoer" @input="bewaar(o)"></label>
                   <label class="veld"><span class="veld-label">Soort *</span><select v-model="x.soort" class="invoer" @change="bewaar(o)"><option v-for="(l, k) in CONCURRENT_SOORTEN" :key="k" :value="k">{{ l }}</option></select></label>
                 </div>
-                <label v-for="[k, l] in [['sterk', 'Sterk'], ['zwak', 'Zwak'], ['onderscheid', 'Onderscheid *'], ['zoZegJeHet', 'Zo zeg je het *'], ['alsDeKlantZegt', 'Als de klant zegt *'], ['antwoord', 'Antwoord'], ['bewijs', 'Bewijs'], ['wanneerVerliezen', 'Wanneer we verliezen']]" :key="k" class="veld"><span class="veld-label">{{ l }}</span>
+                <label v-for="[k, l] in [['sterk', 'Sterk'], ['zwak', 'Zwak'], ['onderscheid', 'Onderscheid *'], ['zoZegJeHet', 'Zo zeg je het *'], ['alsDeKlantZegt', 'Als de prospect zegt *'], ['antwoord', 'Antwoord'], ['bewijs', 'Bewijs'], ['wanneerVerliezen', 'Wanneer we verliezen']]" :key="k" class="veld"><span class="veld-label">{{ l }}</span>
                   <textarea v-model="x[k]" class="invoer" @input="bewaar(o)" /></label>
                 <button type="button" class="dd-act" @click="verwijder(o, Number(i))">Verwijder</button>
               </div>

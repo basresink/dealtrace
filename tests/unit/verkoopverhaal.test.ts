@@ -81,7 +81,7 @@ describe('minimale velden en verouderingsregel', () => {
     expect(ontbrekendeVelden('golden_circle', LEEG_CONCEPT.golden_circle)).toEqual(['Waarom', 'Hoe'])
     expect(ontbrekendeVelden('ambitie', {})).toEqual(['Visie'])
     expect(ontbrekendeVelden('branches', { items: [] })).toEqual(['Minstens één branche'])
-    expect(ontbrekendeVelden('concurrenten', { items: [{ id: 'x', naam: 'Keten', soort: 'direct' }] })).toEqual(['Keten: onderscheid', 'Keten: Zo zeg je het', 'Keten: Als de klant zegt'])
+    expect(ontbrekendeVelden('concurrenten', { items: [{ id: 'x', naam: 'Keten', soort: 'direct' }] })).toEqual(['Keten: onderscheid', 'Keten: Zo zeg je het', 'Keten: Als de prospect zegt'])
   })
   it('de startset is compleet behalve de golden circle', () => {
     expect(ontbrekendeVelden('golden_circle', c.golden_circle).length).toBe(2)

@@ -2,13 +2,13 @@
 titel: Accountmatrix
 categorie: Inrichten
 collectie: product
-samenvatting: Hoeveel aandacht elk account verdient: klassen, belmatrix en capaciteit.
+samenvatting: Hoeveel aandacht elke prospect verdient: klassen, belmatrix en capaciteit.
 routes: /instellingen/ritme
 ---
 
 # Accountmatrix
 
-De accountmatrix legt vast hoeveel aandacht elk account krijgt. De regels voeren het uit.
+De accountmatrix legt vast hoeveel aandacht elke prospect krijgt. De regels voeren het uit. Klanten staan er niet in: het onderhoudsritme van klanten loopt in DealDrive, en Dealtrace maakt geen beltaken voor klanten.
 
 ## Klassen
 
@@ -16,7 +16,7 @@ Elke organisatie heeft accountklassen, bijvoorbeeld A Corporate (250 of meer med
 
 ## Belmatrix en afspraakmatrix
 
-Per accounttype en klasse kies je hoe vaak je belt, en per klasse hoe vaak je een meeting of bezoek plant. Dealtrace rekent het om naar een ritme, bijvoorbeeld "12×/jaar = elke 4 weken".
+Per klasse kies je hoe vaak je een prospect belt, en per klasse hoe vaak je een meeting of bezoek plant. Dealtrace rekent het om naar een ritme, bijvoorbeeld "12×/jaar = elke 4 weken".
 
 - **Leeg** betekent "niet ingesteld": de standaard geldt.
 - **0** betekent "bewust uit": Dealtrace maakt voor die combinatie geen ritmetaken.

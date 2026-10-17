@@ -53,9 +53,14 @@ test.describe('prospects', () => {
     expect((await request.put('/api/accounts/pr-02', { data: { status: 'klant' } })).status()).toBe(400)
   })
 
-  test('verwijderen: alleen met recht', async ({ request }) => {
+  test('verwijderen kan niemand meer (0064); deactiveren alleen met recht', async ({ request }) => {
+    // pr-02 is van u-01: een collega (u-03) mag hem niet deactiveren; verwijderen kan zelfs de beheerder niet.
     await apiLogin(request, 'u-03')
-    expect((await request.delete('/api/accounts/pr-g03')).status()).toBe(403)
+    expect((await request.delete('/api/accounts/pr-02')).status()).toBe(405)
+    expect((await request.post('/api/accounts/pr-02/deactiveren', { data: { reden: 'dubbel' } })).status()).toBe(403)
+    await apiLogin(request, 'u-06')
+    expect((await request.delete('/api/accounts/pr-02')).status()).toBe(405)
+    expect((await (await request.get('/api/accounts/pr-02')).json()).gedeactiveerd).toBeNull()
   })
 
   test('eigen veld "vanaf Gevorderd" is voor een Beginner onzichtbaar, ook in de API', async ({ request }) => {

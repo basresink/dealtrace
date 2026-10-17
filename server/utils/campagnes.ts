@@ -31,11 +31,12 @@ export async function soorten(tx: Tx): Promise<(Campagnesoort & { id: string; ac
 export type Bron = { soort: 'doelgroep' | 'fase' | 'importbatch' | 'leadronde' | 'vrij'; id?: string | null; accountIds?: string[] }
 /** Accounts uit de gekozen bron: doelgroep, fase in een reis, importbatch, leadronde of een vrije keuze. */
 export async function bronAccounts(tx: Tx, b: Bron, eigenaar: string | null): Promise<string[]> {
-  const eigen = eigenaar ? sql`and owner_id = ${eigenaar}` : sql``
+  // 0064: gedeactiveerde accounts komen niet uit een doelgroep, fase of importbatch mee.
+  const eigen = eigenaar ? sql`and owner_id = ${eigenaar} and gedeactiveerd_op is null` : sql`and gedeactiveerd_op is null`
   switch (b.soort) {
     case 'doelgroep': return (await rijen(tx, sql`select id from accounts where doelgroep_id = ${b.id ?? ''} and account_kind = 'prospect' ${eigen}`)).map((r) => r.id)
     case 'fase': return (await rijen(tx, sql`select id from accounts where fase_id = ${b.id ?? ''} and account_kind = 'prospect' ${eigen}`)).map((r) => r.id)
-    case 'importbatch': return (await rijen(tx, sql`select id from accounts where data->>'importBatchId' = ${b.id ?? ''}`)).map((r) => r.id)
+    case 'importbatch': return (await rijen(tx, sql`select id from accounts where data->>'importBatchId' = ${b.id ?? ''} and gedeactiveerd_op is null`)).map((r) => r.id)
     case 'leadronde': return (await rijen(tx, sql`select distinct account_id as id from leads where ronde_id = ${b.id ?? ''} and account_id is not null`)).map((r) => r.id)
     default: return [...new Set(b.accountIds ?? [])].slice(0, 500)
   }
@@ -45,13 +46,13 @@ export async function bronAccounts(tx: Tx, b: Bron, eigenaar: string | null): Pr
 async function kandidaten(tx: Tx, ids: string[]) {
   if (!ids.length) return []
   const l = ids.join(',')
-  const rows = await rijen(tx, sql`select a.id, a.name, a.nb_status, a.owner_id, a.gebied_id, a.vv_branche_id, a.data->'nee' as nee, (a.data->'reis'->'ritme'->>'actief')::boolean as ritme, a.data->>'partnerId' as partner, a.data->>'adres' as adres, a.city,
+  const rows = await rijen(tx, sql`select a.id, a.name, a.gedeactiveerd_op is not null as gedeactiveerd, a.nb_status, a.owner_id, a.gebied_id, a.vv_branche_id, a.data->'nee' as nee, (a.data->'reis'->'ritme'->>'actief')::boolean as ritme, a.data->>'partnerId' as partner, a.data->>'adres' as adres, a.city,
       exists (select 1 from contacts c where c.account_id = a.id and c.status <> 'vertrokken' and coalesce(c.data->>'telefoon', c.data->>'mobiel', '') <> '') or coalesce(a.data->>'telefoon', '') <> '' as telefoon,
       exists (select 1 from contacts c where c.account_id = a.id and c.status <> 'vertrokken' and coalesce(c.email, '') <> '') as email,
       exists (select 1 from contacts c where c.account_id = a.id and c.status <> 'vertrokken' and coalesce(c.data->>'linkedin', '') <> '') as linkedin,
       (select array_agg(ci.campagne_id) from campagne_items ci join campagnes cp on cp.id = ci.campagne_id where ci.account_id = a.id and cp.status in ('wacht', 'actief') and ci.kolom not in ('afspraak', 'geparkeerd', 'afgewezen')) as campagnes
     from accounts a where a.id = any(string_to_array(${l}, ','))`)
-  return rows.map((r) => ({ id: r.id as string, naam: r.name as string, nbStatus: r.nb_status, ownerId: r.owner_id, regioId: r.gebied_id, brancheId: r.vv_branche_id, ritmeActief: !!r.ritme, partner: r.partner, campagneIds: (r.campagnes ?? []) as string[], nee: r.nee, telefoon: !!r.telefoon, email: !!r.email, linkedin: !!r.linkedin, adres: !!(r.adres || r.city) }))
+  return rows.map((r) => ({ id: r.id as string, naam: r.name as string, gedeactiveerd: !!r.gedeactiveerd, nbStatus: r.nb_status, ownerId: r.owner_id, regioId: r.gebied_id, brancheId: r.vv_branche_id, ritmeActief: !!r.ritme, partner: r.partner, campagneIds: (r.campagnes ?? []) as string[], nee: r.nee, telefoon: !!r.telefoon, email: !!r.email, linkedin: !!r.linkedin, adres: !!(r.adres || r.city) }))
 }
 
 /** Beschikbare uren per week van de eigenaars: koude belblokken (binnendienst) of regiodagen (buitendienst, 6 uur per dag). */
@@ -155,7 +156,7 @@ export async function maakTaken(tx: Tx, org: string, id: string, itemIds: string
   if (!c || c.status !== 'actief') fout(409, 'Activeer de campagne eerst')
   const soort = (await soorten(tx)).find((s) => s.sleutel === c!.soort)!
   const items = await rijen(tx, sql`select ci.account_id, ci.eigenaar_id, a.name, a.gebied_id, u.werkplek, u.data as udata from campagne_items ci join accounts a on a.id = ci.account_id left join users u on u.id = ci.eigenaar_id
-    where ci.campagne_id = ${id} and ci.kolom not in ('afspraak', 'geparkeerd', 'afgewezen') ${itemIds?.length ? sql`and ci.account_id = any(string_to_array(${itemIds.join(',')}, ','))` : sql``}
+    where ci.campagne_id = ${id} and a.gedeactiveerd_op is null and ci.kolom not in ('afspraak', 'geparkeerd', 'afgewezen') ${itemIds?.length ? sql`and ci.account_id = any(string_to_array(${itemIds.join(',')}, ','))` : sql``}
     and not exists (select 1 from tasks t where t.campaign_id = ${id} and t.account_id = ci.account_id and t.status in ('open', 'bezig'))`)
   // Spreiden vanaf vandaag (of de latere startdatum) tot de einddatum; nooit in het verleden.
   const vandaag = nlMoment(nu).datum

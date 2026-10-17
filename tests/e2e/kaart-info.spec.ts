@@ -63,7 +63,7 @@ test.describe('kaart info', () => {
     const lijst = await (await request.get(`/api/accounts?eigenaar=iedereen&q=${encodeURIComponent(naam)}`)).json()
     expect(lijst.rijen.find((x: any) => x.id === id)?.logoUrl).toBe('https://bouwstaal-logo.test/logo.png')
     await apiLogin(request, 'u-06')
-    await request.delete(`/api/accounts/${id}`)
+    await request.post(`/api/accounts/${id}/deactiveren`, { data: { reden: 'overig', toelichting: 'Opruimen na de test' } })
   })
 
   test('foto van een contact uploaden, tonen en verwijderen; contactenvenster in de opzet van DealDrive', async ({ page }) => {

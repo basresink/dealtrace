@@ -5,6 +5,7 @@
 // auditregel in dezelfde transactie.
 import { sql } from 'drizzle-orm'
 import { bereikVoorDoelgroep, bouwWeekstart, planDag, planModus, watSchoof, weekVan, type BereikPoging, type PlanBlok, type VastPunt } from '../../shared/dagritme'
+import { blokkenMetItems, dagplanningKop, dagplanningVoorkeur, SCHRIJFT_IN_AGENDA, type PlanItem, type VastStand } from '../../shared/dagplanning'
 import { DAGRITME_MAILS, DAGRITME_MAIL_ROUTE, dagstartMail, mailAanDeBeurt, mailSleutel, mailVoorkeuren, weekreviewMail, weekstartMail, type DagritmeMail } from '../../shared/dagritmeMail'
 import { isWerkdag, nlMoment, nlTijdstip, plusDagen, type WerkdagInstelling } from '../../shared/datum'
 import { regiodagVan } from '../../shared/gebieden'
@@ -14,6 +15,7 @@ import { CONTACT_SOORTEN, isGesproken } from '../../shared/team'
 import { BLIJVER_VANAF, belblokMomenten, controleerVoornemens, eersteWerkdag, maandagVan, voornaam, voornemenStand, weekreview, type BlijverBesluit, type VoornemenBron } from '../../shared/weekreview'
 import { schrijfAudit } from './audit'
 import { hangAanBlok, sessieOp } from './bellen'
+import { bezetExtern } from './agenda'
 import { bezoekDag, gebiedenInstelling } from './bezoeken'
 import { gebruikDb } from './db'
 import { stuurMeldingMail } from './mailer'
@@ -307,29 +309,49 @@ async function belpogingen(tx: Tx, nu: Date): Promise<BereikPoging[]> {
   return r.map((x) => ({ op: iso(x.op)!, brancheId: x.vv_branche_id ?? null, gesproken: isGesproken({ soort: x.soort, uitkomst: x.uitkomst }) }))
 }
 
-export async function laadDagstart(tx: Tx, gebruikerId: string, nu = new Date(), opties: { dag?: string | null; modus?: string | null; branche?: string | null; org?: string; bewaar?: boolean } = {}) {
-  const g = await gebruikerVan(tx, gebruikerId)
-  const w = await werkdagen(tx)
-  const vandaag = nlMoment(nu).datum
-  const dag = opties.dag ?? vandaag
+export interface PlanBronOpties {
+  modus?: string | null; branche?: string | null
+  /** Sessies van de Dagplanner die opnieuw ingedeeld mogen worden: ze tellen niet als vast en hun belacties doen weer mee. */
+  zonderSessies?: string[]
+  /** Wat de Dagplanner eerder vandaag al deed en vast blijft (begonnen of voorbij). */
+  extra?: PlanBlok[]
+}
+
+/**
+ * De bron van de dagindeling voor één gebruiker en dag: afspraken (vast), bezet in de gekoppelde agenda
+ * (privé, lunch), belblokken, belacties (zonder gedeactiveerde prospects), kansen langs de route en de
+ * bereikbaarheid van de doelgroep. Dagstart, de mail en de Dagplanner gebruiken dezelfde bron.
+ */
+export async function planBron(tx: Tx, g: DagritmeGebruiker, dag: string, nu: Date, opties: PlanBronOpties = {}) {
   const van = nlTijdstip(dag, 0).toISOString()
   const tot = nlTijdstip(plusDagen(dag, 1), 0).toISOString()
-  const afs = await rijen(tx, sql`select ap.id, ap.start_at, ap.end_at, ap.vorm, ap.account_id, m.naam as soort, a.name, a.fase_id, a.lat, a.lng, c.first_name, c.last_name from appointments ap join meetingsoorten m on m.id = ap.meetingsoort_id
+  const alleAfs = await rijen(tx, sql`select ap.id, ap.start_at, ap.end_at, ap.vorm, ap.status, ap.account_id, ap.data->>'titel' as eigen_titel, m.naam as soort, a.name, a.fase_id, a.lat, a.lng, c.first_name, c.last_name from appointments ap join meetingsoorten m on m.id = ap.meetingsoort_id
     left join accounts a on a.id = ap.account_id left join contacts c on c.id = ap.contact_id
-    where ap.owner_id = ${g.id} and ap.status in ('gepland', 'afgerond') and ap.start_at >= ${van} and ap.start_at < ${tot} order by ap.start_at`)
+    where ap.owner_id = ${g.id} and ap.status in ('gepland', 'afgerond', 'geannuleerd', 'niet_verschenen') and ap.start_at >= ${van} and ap.start_at < ${tot} order by ap.start_at`)
+  const afs = alleAfs.filter((a) => a.status === 'gepland' || a.status === 'afgerond')
   const modus = planModus(g.werkplek, opties.modus, afs.filter((a) => a.vorm === 'bezoek').length)
   // Reistijd naar elk bezoek: vanaf het vorige bezoek, anders vanaf de thuisbasis (schatting).
   let vorige: Punt | null = g.data?.thuisbasis?.lat != null ? { lat: g.data.thuisbasis.lat, lng: g.data.thuisbasis.lng } : null
+  const titelVan = (a: Rij) => (a.eigen_titel || (a.name ? `${a.soort} ${a.name}` : a.soort)) as string
   const vast: VastPunt[] = afs.map((a) => {
     const punt: Punt | null = a.lat != null ? { lat: a.lat, lng: a.lng } : null
     let reis: number | null = null
     if (a.vorm === 'bezoek' && punt) { if (vorige) reis = schatReistijd(vorige, punt).minuten; vorige = punt }
     const wie = [a.first_name, a.last_name].filter(Boolean).join(' ')
-    return { id: a.id, soort: a.vorm === 'bezoek' ? 'bezoek' : 'afspraak', start: iso(a.start_at)!, eind: iso(a.end_at)!, titel: a.name ? `${a.soort} ${a.name}` : a.soort, sub: [a.fase_id === 'afspraak-gepland' ? 'Eerste afspraak' : null, wie || null, a.vorm === 'online' ? 'Online' : a.vorm === 'telefoon' ? 'Telefonisch' : null].filter(Boolean).join(' · ') || null, accountId: a.account_id, reisMinuten: reis, eerste: a.fase_id === 'afspraak-gepland' }
+    return { id: a.id, soort: a.vorm === 'bezoek' ? 'bezoek' : 'afspraak', start: iso(a.start_at)!, eind: iso(a.end_at)!, titel: titelVan(a), sub: [a.fase_id === 'afspraak-gepland' ? 'Eerste afspraak' : null, wie || null, a.vorm === 'online' ? 'Online' : a.vorm === 'telefoon' ? 'Telefonisch' : null].filter(Boolean).join(' · ') || null, accountId: a.account_id, reisMinuten: reis, eerste: a.fase_id === 'afspraak-gepland' }
   })
-  const bb = await rijen(tx, sql`select s.id, s.start_op, s.eind_op, (select count(*)::int from tasks t where t.belblok_id = s.id) as n from belblok_sessies s where s.gebruiker_id = ${g.id} and s.start_op >= ${van} and s.start_op < ${tot} and s.status in ('gepland', 'bezig', 'klaar') order by s.start_op`)
-  const bel = await rijen(tx, sql`select t.id, a.vv_branche_id from tasks t left join accounts a on a.id = t.account_id where t.owner_id = ${g.id} and t.status in ('open', 'bezig') and t.action_type = 'bellen' and t.belblok_id is null and (t.due_date is null or t.due_date < ${tot})`)
-  const [ac] = await rijen(tx, sql`select count(*)::int as n from tasks where owner_id = ${g.id} and status in ('open', 'bezig') and action_type not in ('bellen', 'bezoek') and (due_date is null or due_date < ${tot}) and coalesce(data->>'soort', '') <> 'afspraak'`)
+  // Bezet in de gekoppelde agenda (privé, lunch, extern overleg) blijft staan.
+  const bezet = (await bezetExtern(tx, g.id, new Date(van), new Date(tot)).catch(() => [])).map((b, i): VastPunt => ({ id: `bezet:${b.start}:${i}`, soort: 'bezet', start: b.start, eind: b.eind, titel: b.titel || 'Bezet', sub: 'In je agenda' }))
+  const vastStand: VastStand[] = [
+    ...alleAfs.map((a) => ({ id: a.id as string, soort: a.vorm === 'bezoek' ? 'bezoek' : 'afspraak', start: iso(a.start_at)!, eind: iso(a.end_at)!, titel: titelVan(a), status: a.status as string })),
+    ...bezet.map((b) => ({ id: `bezet:${b.start}:${b.eind}`, soort: 'bezet', start: b.start, eind: b.eind, titel: b.titel })),
+  ]
+  const zonder = opties.zonderSessies ?? []
+  const bb = (await rijen(tx, sql`select s.id, s.start_op, s.eind_op, (select count(*)::int from tasks t where t.belblok_id = s.id) as n from belblok_sessies s where s.gebruiker_id = ${g.id} and s.start_op >= ${van} and s.start_op < ${tot} and s.status in ('gepland', 'bezig', 'klaar') order by s.start_op`))
+    .filter((b) => !zonder.includes(b.id))
+  const bel = await rijen(tx, sql`select t.id, a.vv_branche_id from tasks t left join accounts a on a.id = t.account_id where t.owner_id = ${g.id} and t.status in ('open', 'bezig') and t.action_type = 'bellen'
+    and (t.belblok_id is null ${zonder.length ? sql`or t.belblok_id = any(string_to_array(${zonder.join(',')}, ','))` : sql``}) and (t.due_date is null or t.due_date < ${tot}) and a.gedeactiveerd_op is null`)
+  const [ac] = await rijen(tx, sql`select count(*)::int as n from tasks where owner_id = ${g.id} and status in ('open', 'bezig') and action_type not in ('bellen', 'bezoek') and (due_date is null or due_date < ${tot}) and coalesce(data->>'soort', '') <> 'afspraak' and coalesce(data->'herkomst'->>'bron', '') <> 'dagplanner'`)
   // Doelgroep: de branche waar de meeste belacties van vandaag in vallen, of de gekozen branche.
   const branches = await rijen(tx, sql`select extern_id as id, naam from vv_branches where actief order by volgorde, naam`)
   const tel = new Map<string, number>()
@@ -338,34 +360,69 @@ export async function laadDagstart(tx: Tx, gebruikerId: string, nu = new Date(),
   const doelBranche = opties.branche && branches.some((b) => b.id === opties.branche) ? opties.branche : opties.branche === 'alle' ? null : meest
   const bereik = bereikVoorDoelgroep(await belpogingen(tx, nu), doelBranche ? [doelBranche] : [])
   const doelgroep = bereik.bron === 'doelgroep' ? branches.find((b) => b.id === doelBranche)?.naam ?? null : null
-  // Kansen langs de route alleen in de buitendienststand en als er bezoeken zijn.
+  // Kansen langs de route alleen in de buitendienststand en als er bezoeken zijn; nooit een gedeactiveerde prospect.
   let kansen: { id: string; naam: string; start: string | null; sub: string | null; accountId: string }[] = []
   if (modus === 'buiten' && vast.some((v) => v.soort === 'bezoek')) {
     try {
       const b = await bezoekDag(tx, { id: g.id, naam: g.naam, werkplek: g.werkplek, data: g.data, niveau: g.niveau }, dag, { alleenMijn: false, alleenProspects: false, maxOmrij: 20, aantal: 5, ongepland: false }, nu, { bellijst: false, teplannen: false, kansenAlle: false })
       kansen = b.kansen.map((k: any) => ({ id: k.id, naam: k.naam, start: k.momentStart ?? null, sub: `${k.omrij} min omrijden · score ${k.score}`, accountId: k.id }))
+      const ids = kansen.map((k) => k.accountId)
+      const uit = ids.length ? new Set((await rijen(tx, sql`select id from accounts where gedeactiveerd_op is not null and id = any(string_to_array(${ids.join(',')}, ','))`)).map((r) => r.id as string)) : new Set<string>()
+      kansen = kansen.filter((k) => !uit.has(k.accountId))
     } catch { kansen = [] }
   }
   const werk = { start: 8, eind: 18, ...((await rijen(tx, sql`select value from org_settings where key = 'dagritme'`))[0]?.value ?? {}) } as Record<string, any>
-  const plan = planDag({ dag, nu, modus, werkdag: { start: Number(werk.werkdagStart ?? 8), eind: Number(werk.werkdagEind ?? 18) }, vast, kansen, belblokken: bb.map((b) => ({ id: b.id, start: iso(b.start_op)!, eind: iso(b.eind_op)!, gesprekken: b.n })), belTaken: bel.length, acties: ac?.n ?? 0, bereik })
+  const plan = planDag({ dag, nu, modus, werkdag: { start: Number(werk.werkdagStart ?? 8), eind: Number(werk.werkdagEind ?? 18) }, vast: [...vast, ...bezet], kansen, belblokken: bb.map((b) => ({ id: b.id, start: iso(b.start_op)!, eind: iso(b.eind_op)!, gesprekken: b.n })), belTaken: bel.length, acties: ac?.n ?? 0, bereik, extra: opties.extra })
+  return { modus, vast, vastStand, plan, bereik, doelBranche, doelgroep, branches, belTaken: bel.length, bezoeken: vast.filter((v) => v.soort === 'bezoek').length }
+}
+
+export async function laadDagstart(tx: Tx, gebruikerId: string, nu = new Date(), opties: { dag?: string | null; modus?: string | null; branche?: string | null; org?: string; bewaar?: boolean } = {}) {
+  const g = await gebruikerVan(tx, gebruikerId)
+  const w = await werkdagen(tx)
+  const vandaag = nlMoment(nu).datum
+  const dag = opties.dag ?? vandaag
+  const label = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${dag}T12:00:00Z`))
+  // De Dagplanner deelde vandaag zelf in: toon wat hij schreef. Veranderden de vaste punten intussen
+  // (bijvoorbeeld in de gekoppelde agenda), dan plant hij eerst de rest van de dag opnieuw.
+  let dp = dag === vandaag ? (await rijen(tx, sql`select * from dagplanningen where gebruiker_id = ${g.id} and datum = ${dag}`))[0] : undefined
+  if (dp?.status === 'gepland' && opties.org && !opties.modus && !opties.branche) {
+    const { herplanAlsNodig } = await import('./agents/dagplanner')
+    if (await herplanAlsNodig(tx, opties.org, g.id, nu, 'agenda')) dp = (await rijen(tx, sql`select * from dagplanningen where gebruiker_id = ${g.id} and datum = ${dag}`))[0]
+  }
+  const voorkeur = dagplanningVoorkeur((await rijen(tx, sql`select data->'dagplanning' as d from persoonlijke_instellingen where id = ${g.id}`))[0]?.d)
+  const bron = await planBron(tx, g, dag, nu, { modus: opties.modus, branche: opties.branche })
+  const { plan, bereik, doelBranche, doelgroep, branches } = bron
+  const dagplanning = {
+    automatisch: voorkeur.automatisch, tijd: voorkeur.tijd, status: (dp?.status ?? 'geen') as 'geen' | 'gepland' | 'ongedaan' | 'voorstel',
+    geplandOp: iso(dp?.gepland_op), herplandOp: iso(dp?.herpland_op),
+    items: ((dp?.data?.items ?? []) as PlanItem[]).filter((i) => i.status === 'actief').map((i) => ({ sleutel: i.sleutel, soort: i.soort, start: i.start, eind: i.eind, titel: i.titel, sub: i.sub, agenda: SCHRIJFT_IN_AGENDA.includes(i.soort) })),
+    wijzigingen: (dp?.data?.wijzigingen ?? []) as { op: string; aanleiding: string; regels: string[] }[],
+  }
+  const basis = {
+    dag, vandaag: dag === vandaag, werkdag: isWerkdag(dag, w), werkplek: g.werkplek, kicker: `Planning · Dagstart · ${label}`,
+    bereik: { uren: bereik.uren, pogingen: bereik.pogingen, genoeg: bereik.genoeg, bron: bereik.bron, doelgroep, brancheId: doelBranche },
+    branches: branches.map((b) => ({ id: b.id as string, naam: b.naam as string })), belTaken: bron.belTaken, dagplanning,
+  }
+  if (dp?.status === 'gepland' && !opties.modus && !opties.branche) {
+    const items = (dp.data?.items ?? []) as PlanItem[]
+    const blokken = blokkenMetItems(plan, items)
+    const schoof = dagplanning.wijzigingen.flatMap((x) => x.regels)
+    const kop = dagplanningKop({ geplandOp: iso(dp.gepland_op)!, herplandOp: iso(dp.herpland_op), wijzigingen: dagplanning.wijzigingen.length ? dagplanning.wijzigingen[dagplanning.wijzigingen.length - 1]!.regels.filter((r) => r !== 'Je planning hoefde niet te veranderen.' && r !== 'Niets schoof naar een andere dag.').length : 0, samenvatting: dp.data?.samenvatting ?? plan.samenvatting })
+    return { ...basis, modus: dp.modus as 'buiten' | 'binnen', titel: kop.titel, lede: kop.lede, plan: { ...plan, blokken, voorstellen: [], belUur: dp.data?.belUur ?? plan.belUur, belUitleg: dp.data?.belUitleg ?? plan.belUitleg }, schoof }
+  }
   // De eerste indeling van de dag blijft bewaard; daartegen zie je wat er schoof.
   let snap = await moment(tx, g.id, 'dagstart', dag)
-  const kaal = (l: PlanBlok[]) => l.filter((b) => b.soort !== 'reis').map((b) => ({ id: b.id, soort: b.soort, start: b.start, titel: b.titel, voorstel: b.voorstel }))
+  const kaal = (l: PlanBlok[]) => l.filter((b) => b.soort !== 'reis' && b.soort !== 'bezet').map((b) => ({ id: b.id, soort: b.soort, start: b.start, titel: b.titel, voorstel: b.voorstel }))
   if (!snap?.blokken && opties.org && opties.bewaar !== false && dag === vandaag) {
     snap = { blokken: kaal(plan.blokken), op: nu.toISOString() }
     await zetMoment(tx, opties.org, g.id, 'dagstart', dag, snap)
   }
   const schoof = watSchoof(snap?.blokken ?? null, plan.blokken)
-  const label = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${dag}T12:00:00Z`))
   return {
-    dag, vandaag: dag === vandaag, werkdag: isWerkdag(dag, w), modus, werkplek: g.werkplek,
-    kicker: `Planning · Dagstart · ${label}`,
+    ...basis, modus: bron.modus,
     titel: schoof.length ? 'Je dag is opnieuw ingedeeld.' : 'Je dag staat klaar.',
     lede: schoof.length ? `Herpland om ${hhmm(nu.toISOString())} · ${schoof.length === 1 ? '1 wijziging' : `${schoof.length} wijzigingen`}` : `${snap?.op ? `Ingedeeld om ${hhmm(snap.op)}` : 'Voorstel'} · ${plan.samenvatting}`,
     plan, schoof,
-    bereik: { uren: bereik.uren, pogingen: bereik.pogingen, genoeg: bereik.genoeg, bron: bereik.bron, doelgroep, brancheId: doelBranche },
-    branches: branches.map((b) => ({ id: b.id as string, naam: b.naam as string })),
-    belTaken: bel.length,
   }
 }
 

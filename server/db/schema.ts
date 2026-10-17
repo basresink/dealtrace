@@ -236,6 +236,9 @@ export interface AccountData {
   wachtendTot?: string | null
   pauzeReden?: string | null
   terugkom?: { datum: string; regelId?: string | null; reden?: string | null; aanpak?: string | null; kanaal?: string | null } | null
+  /** 0064: de lopende deactivering (wie, wanneer, reden) en eerdere rondes; de vlag zelf is de kolom gedeactiveerd_op. */
+  gedeactivering?: import('../../shared/deactiveren').Gedeactivering | null
+  deactiveringen?: import('../../shared/deactiveren').AfgerondeDeactivering[]
   [k: string]: unknown
 }
 
@@ -265,6 +268,8 @@ export const accounts = pgTable('accounts', {
   huidigeLeverancierId: text('huidige_leverancier_id'),
   terugOp: text('terug_op'),
   terugRegelId: text('terug_regel_id'),
+  /** 0064: gedeactiveerd (niet verwijderd); null is actief. Details in data.gedeactivering. */
+  gedeactiveerdOp: ts('gedeactiveerd_op'),
   data: jsonb('data').$type<AccountData>().notNull().default({}),
   createdAt: ts('created_at').defaultNow().notNull(),
   updatedAt: ts('updated_at').defaultNow().notNull(),

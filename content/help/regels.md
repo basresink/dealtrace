@@ -13,7 +13,7 @@ Een regel is een als-dan-afspraak. Als er bij een account iets waar is, zet Deal
 ## De drie blokken
 
 - **Wat en wanneer**: categorie, omschrijving, inzicht of taak, hoe vaak hij mag vuren (cadans) en prioriteit.
-- **Sturing**: de trigger (bijvoorbeeld "al 45 dagen geen contact") en voor welke accounts hij geldt: prospect of klant, status, reis en fase, doelgroep, campagne en klasse.
+- **Sturing**: de trigger (bijvoorbeeld "al 45 dagen geen contact") en voor welke prospects hij geldt: status, reis en fase, doelgroep, campagne en klasse.
 - **Gevolg**: wat er moet gebeuren (bellen, mailen, bezoek), wie het doet, binnen welke termijn en hoe de taak heet.
 
 ## Droogloop

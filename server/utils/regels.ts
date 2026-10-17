@@ -37,7 +37,8 @@ export function schoonRegel(b: any, basis?: Partial<Regel>): Omit<Regel, 'id'> {
       specifiekeBron: String(d.specifiekeBron ?? '').slice(0, 80) || undefined,
       trigger: { patroon, parameters: params },
       afbakening: {
-        accounttypes: lijst(d.afbakening?.accounttypes).filter((x) => x === 'prospect' || x === 'klant') as any,
+        // Alleen prospects: de motor maakt nooit taken voor klanten; een oude keuze klant valt weg.
+        accounttypes: lijst(d.afbakening?.accounttypes).filter((x) => x === 'prospect') as any,
         statussen: lijst(d.afbakening?.statussen), reisIds: lijst(d.afbakening?.reisIds), faseIds: lijst(d.afbakening?.faseIds),
         doelgroepIds: lijst(d.afbakening?.doelgroepIds), campagneIds: lijst(d.afbakening?.campagneIds), klassen: lijst(d.afbakening?.klassen),
       },

@@ -50,7 +50,9 @@ async function overdrachtOpnieuw() {
   try { const r = await $fetch<any>(`/api/overdrachten/${a.value.overdracht.id}/opnieuw`, { method: 'POST' }); toast.toon(r.status === 'mislukt' ? 'Opnieuw mislukt.' : 'Overdracht opnieuw verstuurd.'); await ververs() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 const contactenOpen = ref(false)
-const verwijderOpen = ref(false)
+// 0064: deactiveren in plaats van verwijderen, met een balk en Heractiveren bovenaan de kaart.
+const deactiveerOpen = ref(false)
+const heractiveerBezig = ref(false)
 // P05: reis, fase en status
 const geschiedenisOpen = ref(false)
 const neeOpen = ref(false)
@@ -93,11 +95,12 @@ const navigeer = computed(() => {
 async function zetKlasse(k: string) {
   try { await $fetch(`/api/accounts/${a.value.id}`, { method: 'PUT', body: { klasse: k || null } }); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
-async function verwijder() {
-  verwijderOpen.value = false
-  try { await $fetch(`/api/accounts/${a.value.id}`, { method: 'DELETE' }); toast.toon(`${a.value.naam} is verwijderd.`); await navigateTo('/prospects/alle') } catch (e) { toast.toon(foutTekst(e), 'fout') }
+async function gedeactiveerd(tekst: string) { deactiveerOpen.value = false; infoOpen.value = false; toast.toon(tekst); await ververs() }
+async function heractiveer() {
+  heractiveerBezig.value = true
+  try { await $fetch(`/api/accounts/${a.value.id}/heractiveren`, { method: 'POST' }); toast.toon(`${a.value.naam} is weer actief.`); await ververs() } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { heractiveerBezig.value = false }
 }
-const SOORT: Record<string, string> = { gebeld: 'Gebeld', mail: 'Mail', notitie: 'Notitie', bericht: 'Bericht', linkedin: 'LinkedIn', afspraak: 'Afspraak', bezoek: 'Bezoek', 'account verwijderd': 'Verwijderd', reis: 'Reis', import: 'Import' }
+const SOORT: Record<string, string> = { gebeld: 'Gebeld', mail: 'Mail', notitie: 'Notitie', bericht: 'Bericht', linkedin: 'LinkedIn', afspraak: 'Afspraak', bezoek: 'Bezoek', 'account verwijderd': 'Verwijderd', gedeactiveerd: 'Gedeactiveerd', geheractiveerd: 'Heractiveerd', reis: 'Reis', import: 'Import' }
 const momenten = computed(() => a.value.tijdlijn.filter((x: any) => x.soort !== 'notitie').slice(0, 3))
 useHead({ title: computed(() => `${a.value?.naam ?? 'Account'} · Dealtrace`) })
 // P14: de binnendienst zet een prospect klaar voor de regiodag van een collega van de buitendienst.
@@ -127,6 +130,7 @@ const meerItems = computed<KopMeerItem[]>(() => {
   if (kanKlaarzetten.value) items.push({ label: 'Klaarzetten', icoon: 'MapPin', test: 'klaarzetten-knop', actie: () => { klaarOpen.value = true } })
   if (telefoon.value && functie('contact.visitekaartje')?.beschikbaar) items.push({ label: 'Scan visitekaartje', icoon: 'Camera', test: 'scan-visitekaartje', actie: () => { kaartjeOpen.value = true } })
   if (telefoon.value && !inPakket.value && functie('onderweg.dagpakket')?.beschikbaar) items.push({ label: 'Bewaar voor offline', icoon: 'Download', test: 'bewaar-offline', actie: bewaarOffline })
+  if (a.value?.kan.deactiveren) items.push({ label: 'Deactiveren', icoon: 'Archive', test: 'deactiveer-knop', actie: () => { deactiveerOpen.value = true } })
   return items
 })
 
@@ -158,13 +162,21 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
 
 <template>
   <div v-if="a" class="accountkaart">
+    <!-- 0064: gedeactiveerd. De historie blijft leesbaar; heractiveren voor wie mag. -->
+    <div v-if="a.gedeactiveerd" class="ak-gedeactiveerd" role="status" data-test="gedeactiveerd-balk">
+      <div class="container ak-gedeactiveerd-binnen">
+        <Icoon naam="Archive" :grootte="18" class="ak-gedeactiveerd-icoon" />
+        <p class="ak-gedeactiveerd-tekst"><strong>{{ a.gedeactiveerd.tekst }}.</strong> <span>De motor zet hier niets meer klaar; alles wat er gebeurde blijft hieronder te lezen.</span></p>
+        <button v-if="a.kan.heractiveren" type="button" class="dd-actie dd-actie--secundair ak-gedeactiveerd-knop" :disabled="heractiveerBezig" data-test="heractiveer-knop" @click="heractiveer"><Icoon naam="RefreshCw" class="dd-actie-icoon" />Heractiveren</button>
+      </div>
+    </div>
     <!-- Kop -->
     <header class="ak-kop">
       <div class="container">
         <div class="ak-kop-binnen">
           <AccountLogo class="ak-merk" :naam="a.naam" :initialen="initialen" :kleur="merkKleur ?? 'var(--ink)'" :logo-url="a.logoUrl" :website="a.website" :domein="a.domein" :logo-uit="a.logoUit" :grootte="logoMaat" />
           <div class="ak-kop-info">
-            <NuxtLink :to="a.soort === 'klant' ? '/klanten' : '/prospects/alle'" class="ak-kruimel"><Icoon naam="ArrowLeft" :grootte="12" /> {{ a.soort === 'klant' ? 'Klanten' : 'Alle prospects' }}</NuxtLink>
+            <NuxtLink :to="a.soort === 'klant' ? '/klanten' : '/prospects/alle'" class="ak-kruimel"><Icoon naam="ArrowLeft" :grootte="12" /> {{ a.soort === 'klant' ? 'Bestaande klanten' : 'Alle prospects' }}</NuxtLink>
             <p class="ak-eyebrow"><span v-for="(c, i) in [a.branche, a.plaats, a.land, a.vvBranche?.naam].filter(Boolean)" :key="i"><template v-if="i"> · </template>{{ c }}</span></p>
             <h1 class="ak-titel" data-test="account-naam">{{ a.naam }}
               <select v-if="a.kan.klasse" class="ak-klasse" :class="`ak-klasse--${klasseKleur}`" :value="a.klasse ?? ''" aria-label="Klasse" data-test="klasse" @change="zetKlasse(($event.target as HTMLSelectElement).value)">
@@ -270,7 +282,7 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
     <KaartTabbladen :account="{ id: a.id, naam: a.naam, soort: a.soort }" :tabbladen="t" :mail-aan="primair?.email ? primair.naam : null" :kan-overdragen="a.kanOverdragen" @ververs="ververs" @overdragen="overdragenOpen = true">
       <template #kwalificatie>
         <div class="ak-blokken">
-          <AccountplanBlok :account="{ id: a.id, naam: a.naam }" />
+          <AccountplanBlok :account="{ id: a.id, naam: a.naam, soort: a.soort }" />
           <AgentBlokken :account="a" @gewijzigd="refresh" />
           <article class="kaart" data-test="band"><header class="kaart-kop"><h2 class="kaart-titel">Kwalificatie BAND {{ Object.values(a.band).filter((b: any) => b?.ja).length }}/4</h2></header>
             <ul class="kaart-meta band-lijst">
@@ -327,12 +339,12 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
     <ReisgeschiedenisFlyout v-if="a.kan.geschiedenis" :open="geschiedenisOpen" :account-id="a.id" :naam="a.naam" @sluit="geschiedenisOpen = false" />
     <ZetNeeFlyout v-if="a.kan.nee" :open="neeOpen" :account="{ id: a.id, naam: a.naam }" :concurrenten="a.concurrenten" @sluit="neeOpen = false" @klaar="klaar" />
     <ReisHandelingFlyout v-if="handeling" :open="!!handeling" :soort="handeling" :account="a" @sluit="handeling = null" @klaar="klaar" />
-    <InfoFlyout :open="infoOpen" :account="a" @sluit="infoOpen = false" @gewijzigd="refresh" @verwijder="verwijderOpen = true" />
+    <InfoFlyout :open="infoOpen" :account="a" @sluit="infoOpen = false" @gewijzigd="refresh" @deactiveer="deactiveerOpen = true" />
     <ContactenFlyout :open="contactenOpen" :account="{ id: a.id, naam: a.naam }" :contacten="a.contacten" @sluit="contactenOpen = false" @gewijzigd="refresh" />
     <BriefingFlyout :open="briefingOpen" :account="{ id: a.id, naam: a.naam }" @sluit="briefingOpen = false" />
     <VolgenFlyout v-if="functie('prospects.volgen')?.beschikbaar" :open="volgenOpen" :account-id="a.id" :naam="a.naam" @sluit="volgenOpen = false" @gewijzigd="ververs" />
     <InvloedFlyout :open="invloedOpen" :account-id="a.id" @sluit="invloedOpen = false" @gewijzigd="refresh" />
-    <BevestigVenster :open="verwijderOpen" :titel="`${a.naam} verwijderen?`" tekst="Het account en zijn contacten worden verwijderd. De activiteitenlog blijft bewaard." bevestig="Verwijderen" @geannuleerd="verwijderOpen = false" @bevestigd="verwijder" />
+    <DeactiveerFlyout v-if="a.kan.deactiveren" :open="deactiveerOpen" :account="{ id: a.id, naam: a.naam }" @sluit="deactiveerOpen = false" @klaar="gedeactiveerd" />
     <VisitekaartjeVenster :open="kaartjeOpen" :account="a ? { id: a.id, naam: a.naam } : null" @sluit="kaartjeOpen = false" @bewaard="refresh()" />
     <KlaarzetFlyout :open="klaarOpen" :account="a ? { id: a.id, naam: a.naam } : null" @sluit="klaarOpen = false" />
     <OverdrachtVenster :open="overdragenOpen" :account-id="a?.id ?? null" :account-naam="a?.naam ?? ''" @sluit="overdragenOpen = false" @overgedragen="ververs()" />
@@ -341,6 +353,13 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
 </template>
 
 <style scoped>
+/* 0064: balk bij een gedeactiveerde prospect, boven de kop. */
+.ak-gedeactiveerd { background: var(--surface); border-bottom: 1px solid var(--border-strong); padding: 12px 0; }
+.ak-gedeactiveerd-binnen { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ak-gedeactiveerd-icoon { flex: none; color: var(--muted); }
+.ak-gedeactiveerd-tekst { flex: 1 1 280px; margin: 0; font-size: 14px; }
+.ak-gedeactiveerd-tekst span { color: var(--muted); }
+.ak-gedeactiveerd-knop { flex: none; }
 /* Kop (opzet uit DealDrive: klant-header) */
 .ak-kop { padding: 28px 0; background: var(--wit); border-bottom: 1px solid var(--border); }
 .ak-kop-binnen { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: start; }

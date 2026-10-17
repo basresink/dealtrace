@@ -28,6 +28,9 @@ const uitkomst = ref<string>('')
 const laterOp = ref('')
 const reden = ref('')
 const toelichting = ref('')
+// F7: na Voicemail of Gesproken, later kan een opvolgreeks starten (ReeksNaUitkomst).
+const reeksSjabloon = ref('')
+const reeksKan = computed(() => !!t.value?.account && (uitkomst.value === 'voicemail' || uitkomst.value === 'later') && !!functie('prospects.volgen')?.beschikbaar)
 const bewerken = ref(false)
 const belpaneel = ref<any>(null)
 async function laadBelpaneel() { if (!belpaneel.value && t.value) belpaneel.value = await $fetch(`/api/bellen/taak/${t.value.id}`).catch(() => ({ item: null })) }
@@ -41,7 +44,7 @@ const isBeltaak = computed(() => t.value?.actionType === 'bellen')
 async function herlaadTaak() { if (t.value) t.value = await $fetch(`/api/tasks/${t.value.id}`) }
 watch(() => [props.open, props.taakId], async ([o]) => {
   if (!o || !props.taakId) return
-  uitkomst.value = ''; laterOp.value = ''; reden.value = ''; toelichting.value = ''; bewerken.value = false; annuleren.value = false; belpaneel.value = null
+  uitkomst.value = ''; laterOp.value = ''; reden.value = ''; toelichting.value = ''; reeksSjabloon.value = ''; bewerken.value = false; annuleren.value = false; belpaneel.value = null
   laden.value = true
   try { t.value = await $fetch(`/api/tasks/${props.taakId}`) } catch { t.value = props.basis ? { ...props.basis, kan: { afronden: true }, account: props.basis.account ?? null } : null } finally { laden.value = false }
   belVerslag.value = t.value?.verslag?.tekst ?? ''
@@ -54,11 +57,15 @@ async function doeAfronden(volgende: boolean) {
   bezig.value = true
   const body = { uitkomst: uitkomst.value || (contact.value ? null : 'gedaan'), laterOp: laterOp.value || null, reden: reden.value || null, toelichting: toelichting.value || null }
   const id = t.value.id
+  const reeks = reeksKan.value && reeksSjabloon.value ? { accountId: t.value.account.id as string, sjabloonId: reeksSjabloon.value, contactId: (t.value.contact?.id ?? null) as string | null, aanleiding: UITKOMST_LABEL[uitkomst.value as keyof typeof UITKOMST_LABEL] ?? null } : null
   // Een nog niet bewaard belverslag gaat eerst mee, zodat het bij de belactiviteit staat.
   if (isBeltaak.value && belVerslag.value.trim() !== String(t.value.verslag?.tekst ?? '').trim() && (!import.meta.client || navigator.onLine)) await $fetch(`/api/tasks/${id}/verslag`, { method: 'PUT', body: { tekst: belVerslag.value } }).catch(() => null)
   emit('sluit')
   const ok = await rondAf(id, body, { mobiel: mobiel() })
   bezig.value = false
+  if (ok && reeks) {
+    try { const r = await $fetch<any>(`/api/volgen/${reeks.accountId}/reeks`, { method: 'POST', body: { sjabloonId: reeks.sjabloonId, contactId: reeks.contactId, aanleiding: reeks.aanleiding } }); toast.toon(`Opvolgreeks ${r?.naam ?? ''} gestart.`) } catch (e) { toast.toon(foutTekst(e), 'fout') }
+  }
   if (ok) emit('klaar', volgende, id)
 }
 async function stelUit(periode: 'werkdag' | 'week') {
@@ -179,7 +186,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
             <div class="def-rij"><dt>Type</dt><dd><span class="tf-type-pil"><Icoon :naam="typeVan(t.actionType).icoon" :grootte="14" />{{ typeVan(t.actionType).label }}</span></dd></div>
             <div class="def-rij"><dt>Vervaldatum</dt><dd :class="{ 'fo-over-tijd': overTijd }"><span class="tnum">{{ vervalDatum ?? 'geen' }}</span><span v-if="t.dueDate" class="tf-delta"> ({{ vervalLabel(t.dueDate, nu) }})</span></dd></div>
             <div v-if="t.eigenaar" class="def-rij"><dt>Toegewezen aan</dt><dd>{{ t.eigenaar.replace(/^Testgebruiker /, '') }}</dd></div>
-            <div v-if="t.account" class="def-rij"><dt>Klant</dt><dd><NuxtLink :to="`/accounts/${t.account.id}`" class="fo-link tf-tik" data-test="tf-account" @click="emit('sluit')">{{ t.account.naam }}</NuxtLink></dd></div>
+            <div v-if="t.account" class="def-rij"><dt>Prospect</dt><dd><NuxtLink :to="`/accounts/${t.account.id}`" class="fo-link tf-tik" data-test="tf-account" @click="emit('sluit')">{{ t.account.naam }}</NuxtLink></dd></div>
             <div v-if="t.contact" class="def-rij"><dt>Contactpersoon</dt><dd><NuxtLink :to="`/contacten/${t.contact.id}`" class="fo-link tf-tik" data-test="tf-contact" @click="emit('sluit')">{{ t.contact.naam }}<template v-if="t.contact.functie"> · {{ t.contact.functie }}</template></NuxtLink></dd></div>
             <div v-if="herinneringTekst" class="def-rij"><dt>Herinnering</dt><dd>{{ herinneringTekst }}</dd></div>
             <div v-if="t.herhaling" class="def-rij"><dt>Herhaling</dt><dd>{{ HERHALING_LABEL[t.herhaling.soort] ?? t.herhaling.soort }} · {{ t.herhaling.teller }} van {{ t.herhaling.max }}</dd></div>
@@ -212,7 +219,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
             <button v-if="t.executorStatus === 'concept-klaar'" type="button" class="dd-act dd-act--primair mt-8" data-test="concept-goedkeuren" @click="keurGoed">Goedkeuren en versturen</button>
           </article>
           <article v-if="t.account" class="fo-blok" data-test="tf-klant">
-            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Klant in context</h3></header>
+            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Prospect in context</h3></header>
             <div class="tf-klant">
               <span class="tf-merk" aria-hidden="true">{{ initialen }}</span>
               <div class="tf-klant-tekst">
@@ -235,6 +242,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
             <p v-else class="taak-meta">Deze taak heeft geen uitkomst nodig.</p>
             <button v-if="uitkomst === 'afspraak' && kanPlannen" type="button" class="dd-act dd-act--primair mt-16" data-test="taak-plan-afspraak" @click="planOpen = true">Plan de afspraak</button>
             <label v-if="uitkomst === 'later'" class="veld mt-16"><span class="veld-label">Wanneer terug? <span class="veld-verplicht">*</span></span><input v-model="laterOp" type="date" class="invoer" :min="morgen" data-test="later-op"></label>
+            <ReeksNaUitkomst v-if="reeksKan" v-model="reeksSjabloon" class="mt-16" :account-id="t.account.id" :uitkomst="uitkomst" />
             <template v-if="uitkomst === 'geen_interesse'">
               <label class="veld mt-16"><span class="veld-label">Reden <span class="veld-verplicht">*</span></span><select v-model="reden" class="invoer" data-test="uitkomst-reden"><option value="" disabled>Kies een reden</option><option v-for="r in NEE_REDENEN.filter((x) => x !== 'Niet geschikt')" :key="r" :value="r">{{ r }}</option></select></label>
               <label v-if="reden === 'Anders'" class="veld mt-8"><span class="veld-label">Toelichting <span class="veld-verplicht">*</span></span><textarea v-model="toelichting" class="invoer" rows="2" /></label>
@@ -264,7 +272,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', toets))
         </footer>
         <footer v-else-if="t?.account" class="fo-foot dd-acties">
           <span class="dd-acties-vul fo-foot-vul" />
-          <NuxtLink :to="`/accounts/${t.account.id}`" class="dd-act" @click="emit('sluit')">Open klantkaart <Icoon naam="ArrowRight" /></NuxtLink>
+          <NuxtLink :to="`/accounts/${t.account.id}`" class="dd-act" @click="emit('sluit')">Open kaart <Icoon naam="ArrowRight" /></NuxtLink>
         </footer>
       </aside>
     </div>

@@ -5,7 +5,7 @@
 const { open } = useZoeken()
 const { toon: toonNietAangezet } = useNietAangezet()
 const q = ref('')
-const groepen = ref<{ soort: string; label: string; rijen: { titel: string; detail?: string; link: string; slot?: boolean }[]; totaal: number }[]>([])
+const groepen = ref<{ soort: string; label: string; rijen: { titel: string; detail?: string; link: string; slot?: boolean; label?: string }[]; totaal: number }[]>([])
 const actief = ref(0)
 const invoer = ref<HTMLInputElement>()
 
@@ -95,7 +95,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', globaal))
               v-for="r in g.rijen" :key="r.link + r.titel" type="button" role="option" class="zoek-rij"
               :class="{ 'zoek-rij--actief': rijen.indexOf(r) === actief }" :aria-selected="rijen.indexOf(r) === actief" @click="kies(r)"
             >
-              <span class="zoek-rij-titel">{{ r.titel }} <Icoon v-if="r.slot" naam="Lock" :grootte="14" /></span>
+              <span class="zoek-rij-titel">{{ r.titel }} <Icoon v-if="r.slot" naam="Lock" :grootte="14" /><span v-if="r.label" class="pil pil--grijs zoek-rij-label" data-test="zoek-label">{{ r.label }}</span></span>
               <span v-if="r.detail || r.slot" class="zoek-rij-detail">{{ r.slot ? 'Nog niet aangezet' : r.detail }}</span>
             </button>
           </section>
@@ -115,3 +115,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', globaal))
     </div>
   </Teleport>
 </template>
+
+<style scoped>
+/* 0064: tag naast een gedeactiveerde prospect. */
+.zoek-rij-label { margin-left: 8px; vertical-align: middle; }
+</style>

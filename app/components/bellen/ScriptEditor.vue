@@ -110,7 +110,7 @@ const STATUS: Record<string, string> = { concept: 'Concept', actief: 'Actief', g
               <article class="fo-blok">
                 <header class="fo-blok-kop"><h3 class="fo-blok-titel">Bezwaren</h3></header>
                 <div v-for="(z, i) in s.data.bezwaren" :key="z.id" class="scriptblok">
-                  <input v-model="z.bezwaar" class="invoer" placeholder="Als de klant zegt" :disabled="!kan.bewerken" aria-label="Bezwaar">
+                  <input v-model="z.bezwaar" class="invoer" placeholder="Als de prospect zegt" :disabled="!kan.bewerken" aria-label="Bezwaar">
                   <textarea v-model="z.antwoord" class="invoer mt-4" rows="2" placeholder="Antwoord" :disabled="!kan.bewerken" aria-label="Antwoord" />
                   <div class="rijtje mt-4"><input v-model="z.wedervraag" class="invoer" placeholder="Wedervraag" :disabled="!kan.bewerken" aria-label="Wedervraag"><button v-if="kan.bewerken" type="button" class="dd-act dd-act--gevaar" @click="s.data.bezwaren.splice(Number(i), 1)">Weg</button></div>
                 </div>

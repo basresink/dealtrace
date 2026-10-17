@@ -8,7 +8,9 @@ test.describe('zoekkiezer', () => {
   test('/inzichten: geen knop Klanten; + Inzicht met prospect en contact komt op de contactkaart', async ({ page }) => {
     await login(page, 'u-07')
     await ga(page, '/inzichten')
-    await expect(page.getByTestId('filter-soort').locator('button')).toHaveText(['Alle', 'Prospects'])
+    await expect(page.getByTestId('filter-soort').locator('button')).toHaveText(['Prospects', 'Ook klanten'])
+    // Standaard Prospects: klanten blijven buiten beeld.
+    await expect(page.getByTestId('filter-soort').getByRole('button', { name: 'Prospects' })).toHaveAttribute('aria-pressed', 'true')
     const knop = page.getByTestId('inzicht-met-bron-knop')
     await expect(knop).toHaveText('Inzicht')
     await knop.click()

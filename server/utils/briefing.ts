@@ -136,7 +136,7 @@ const SCHEMA: Record<string, JsonSchema> = {
 const KANAAL: Record<string, SchrijfKanaal> = { mail: 'mail', linkedin: 'linkedin', whatsapp: 'whatsapp', belscript: 'belscript', briefing: 'belscript' }
 
 /** "Bereid voor": een concept per actiesoort, binnen de lengtegrens en met stijlscore 7 of hoger (anders één keer opnieuw). */
-export async function bereidVoor(tx: Tx, org: string, gebruiker: any, o: { soort: 'afspraak' | 'taak'; id: string }, nu = new Date(), opties: { automatisch?: boolean } = {}) {
+export async function bereidVoor(tx: Tx, org: string, gebruiker: any, o: { soort: 'afspraak' | 'taak'; id: string }, nu = new Date(), opties: { automatisch?: boolean; stap?: { instructie?: string | null; onderwerp?: string | null } } = {}) {
   const agent = opties.automatisch ? { agent: 'schrijver' as const } : {}
   const c = await context(tx, o)
   const type = o.soort === 'afspraak' ? 'briefing' : TYPE_VAN[c.taak!.action_type] ?? 'briefing'
@@ -152,7 +152,7 @@ export async function bereidVoor(tx: Tx, org: string, gebruiker: any, o: { soort
     verslag: c.ctx.verslagen[0] ? filterNamen(c.ctx.verslagen[0].tekst, namen) : null,
   }
   const [pp] = await rijen(tx, sql`select value from org_settings where key = 'platformprompts'`)
-  const prompt = bouwPrompt({ platform: (pp?.value as any)?.schrijver ?? null, organisatie: c.ctx.faseAccent ? `Fase-accent: ${c.ctx.faseAccent}` : null, instructie: `Schrijf als Schrijver een ${type === 'briefing' ? 'voorbereiding per blok' : type} voor een eerste of volgend contact. Volgorde: waarom (de aanleiding), hoe (precies één winpunt met één bewijs), één vraag. Geen "wat" in de eerste alinea. Je-vorm, geen gedachtestreepjes, geen namen van personen. Fase-accent: ${c.ctx.faseAccent ?? 'geen'}.` }).volledig
+  const prompt = bouwPrompt({ platform: (pp?.value as any)?.schrijver ?? null, organisatie: c.ctx.faseAccent ? `Fase-accent: ${c.ctx.faseAccent}` : null, instructie: `Schrijf als Schrijver een ${type === 'briefing' ? 'voorbereiding per blok' : type} voor een eerste of volgend contact. Volgorde: waarom (de aanleiding), hoe (precies één winpunt met één bewijs), één vraag. Geen "wat" in de eerste alinea. Je-vorm, geen gedachtestreepjes, geen namen van personen. Fase-accent: ${c.ctx.faseAccent ?? 'geen'}.${opties.stap?.instructie ? ` Opdracht voor deze stap van de opvolgreeks: ${opties.stap.instructie}` : ''}${opties.stap?.onderwerp ? ` Onderwerp: ${opties.stap.onderwerp}.` : ''}` }).volledig
   let r = await voerAiStapUit<any>(tx, org, { soort: 'concept', prompt, schema: SCHEMA[type]!, materiaal, gebruiker, boekAls: 'schrijver', accountId: c.accountId, ...agent } as any, nu)
   const tekstVan = (x: any) => (type === 'briefing' ? Object.values(x?.blokken ?? {}).join(' ') : String(x?.tekst ?? ''))
   let stijl = r.ok ? stijlScore(tekstVan(r.antwoord)) : null
@@ -162,6 +162,8 @@ export async function bereidVoor(tx: Tx, org: string, gebruiker: any, o: { soort
     if (r.ok) { stijl = stijlScore(tekstVan(r.antwoord)); lengte = lengteBinnenGrens(tekstVan(r.antwoord), KANAAL[type]!) }
   }
   const id = crypto.randomUUID()
+  // Een opvolgreeks met een vast onderwerp per stap: dat onderwerp geldt voor het concept.
+  if (r.ok && opties.stap?.onderwerp && type === 'mail') r.antwoord.onderwerp = opties.stap.onderwerp
   const concept = r.ok ? { type, ...r.antwoord, winpuntId: r.antwoord.winpuntId ?? winpunt?.id ?? null, stijlscore: stijl!.score, woorden: lengte!.woorden, grens: lengte!.grens, vvVersies: versies, bronnen: [winpunt ? { soort: 'winpunt', titel: winpunt.titel } : null, c.ctx.account.aanleiding ? { soort: 'aanleiding', titel: c.ctx.account.aanleiding.tekst, bron: c.ctx.account.aanleiding.bron } : null].filter(Boolean), aanleiding: `Pitstop voor ${c.a.name}` } : null
   // Het logboek (agent_runs, alleen toevoegen) en het concept ter goedkeuring.
   await logAgentRun(tx, org, { agent: 'schrijver', handeling: `pitstop:${type}`, mandaat: 'A', uitkomst: r.ok ? 'uitgevoerd' : 'fout', gebruikerId: gebruiker.id, accountId: c.accountId, taskId: o.soort === 'taak' ? o.id : undefined, reden: r.ok ? undefined : r.reden, bronnen: concept?.bronnen ?? [] } as any, nu)
@@ -237,7 +239,7 @@ export async function besluit(tx: Tx, door: { id: string; rol: string }, id: str
 }
 
 /** Versturen van een goedgekeurd mailconcept via de mailkoppeling, langs de Bewaker (consent, afkoeling, werkuren). */
-export async function verstuurConcept(tx: Tx, org: string, door: { id: string; rol: string; niveau: string; data?: any }, id: string, basisUrl: string, nu = new Date()) {
+export async function verstuurConcept(tx: Tx, org: string, door: { id: string; rol: string; niveau: string; data?: any }, id: string, basisUrl: string, nu = new Date(), opties: { terugval?: boolean } = {}) {
   const [r] = await rijen(tx, sql`select * from concepten where id = ${id}`)
   if (!r || r.concept?.type !== 'mail') fout(404, 'Mailconcept niet gevonden')
   if (r!.gebruiker_id !== door.id) fout(403, 'Alleen de eigenaar verstuurt dit concept')
@@ -248,7 +250,8 @@ export async function verstuurConcept(tx: Tx, org: string, door: { id: string; r
   const eerder = (await rijen(tx, sql`select 1 from activiteiten where account_id = ${r!.account_id} and soort = 'mail' limit 1`)).length > 0
   const t = await toets(tx, org, { agent: 'verzender', handeling: 'mail.versturen', gebruiker: { id: door.id, niveau: door.niveau, data: door.data ?? {} }, accountId: r!.account_id, contactId: c!.id, kanaal: 'mail', naarBuiten: true, eersteBericht: !eerder } as any, nu)
   if (!t.mag) fout(403, t.reden ?? 'Tegengehouden door de Bewaker')
-  const v = await verstuurMail(tx, org, { aan: c!.email, onderwerp: r!.concept.onderwerp ?? 'Even voorstellen', tekst: r!.concept.tekst }, { eersteMail: !eerder, basisUrl }, nu)
+  const [afzender] = opties.terugval ? await rijen(tx, sql`select email from users where id = ${door.id}`) : []
+  const v = await verstuurMail(tx, org, { aan: c!.email, onderwerp: r!.concept.onderwerp ?? 'Even voorstellen', tekst: r!.concept.tekst }, { eersteMail: !eerder, basisUrl, terugval: opties.terugval, antwoordAan: afzender?.email ?? null }, nu)
   if (!v.ok) fout(v.status, v.tekst)
   await tx.execute(sql`update concepten set status = 'verstuurd' where id = ${id}`)
   await tx.execute(sql`insert into activiteiten (organisation_id, account_id, contact_id, soort, kanaal, uitkomst, door, op, data) values (${org}, ${r!.account_id}, ${c!.id}, 'mail', 'mail', 'verzonden', ${door.id}, ${nu.toISOString()}, ${JSON.stringify({ conceptId: id, onderwerp: r!.concept.onderwerp ?? null, eersteMail: !eerder, vvVersies: r!.concept.vvVersies ?? null })}::jsonb)`)

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Nieuw accountplan: klant of prospect (vast als je vanaf de accountkaart komt), titel en geldigheid. Na
+// Nieuw accountplan: een topprospect (vast als je vanaf de accountkaart komt), titel en geldigheid. Na
 // aanmaken ga je naar de pagina van het plan om de blokken en het actieplan in te vullen.
 import { nlMoment } from '~~/shared/datum'
 const props = defineProps<{ open: boolean; account?: { id: string; naam: string } | null }>()
@@ -18,7 +18,8 @@ watch(() => props.open, (o) => {
   van.value = vandaag
   tot.value = `${vandaag.slice(0, 4)}-12-31`
 })
-const zoek = (q: string) => zoekAccounts(q)
+// Alleen prospects: een plan voor een klant hoort in DealDrive.
+const zoek = (q: string) => zoekAccounts(q, 'prospect')
 function kies(a: { id: string; naam: string }) { gekozen.value = { id: a.id, naam: a.naam } }
 async function maak() {
   if (!gekozen.value) return
@@ -37,17 +38,17 @@ async function maak() {
     <div v-if="open" class="fo-overlay" @click.self="emit('sluit')" @keydown.esc="emit('sluit')">
       <form class="fo-panel" role="dialog" aria-modal="true" aria-labelledby="apn-titel" data-test="ap-nieuw-flyout" @submit.prevent="maak">
         <header class="fo-head">
-          <div class="fo-head-tekst"><span class="fo-kicker">Accountplan</span><h2 id="apn-titel" class="fo-titel">Nieuw accountplan</h2><p class="fo-meta">Eén plan per klant en per periode. De blokken en acties vul je daarna op de pagina van het plan in.</p></div>
+          <div class="fo-head-tekst"><span class="fo-kicker">Accountplan</span><h2 id="apn-titel" class="fo-titel">Nieuw accountplan</h2><p class="fo-meta">Eén plan per topprospect en per periode. De blokken en acties vul je daarna op de pagina van het plan in.</p></div>
           <button type="button" class="fo-sluit" aria-label="Sluiten" @click="emit('sluit')"><Icoon naam="X" /></button>
         </header>
         <div class="fo-body">
           <div class="veld">
-            <span class="veld-label">Klant of prospect</span>
+            <span class="veld-label">Prospect</span>
             <div v-if="gekozen" class="apn-gekozen" data-test="apn-gekozen">
               <span>{{ gekozen.naam }}</span>
-              <button v-if="!account" type="button" class="dd-act dd-act--icoon" aria-label="Andere klant kiezen" @click="gekozen = null"><Icoon naam="X" :grootte="14" /></button>
+              <button v-if="!account" type="button" class="dd-act dd-act--icoon" aria-label="Andere prospect kiezen" @click="gekozen = null"><Icoon naam="X" :grootte="14" /></button>
             </div>
-            <ZoekKiezer v-else :zoek="zoek" placeholder="Zoek een klant of prospect op naam" label="Zoek een klant of prospect" data-test="apn-zoek" :optie-test="(t) => `apn-kies-${t.id}`" :sub="(t) => t.plaats" leeg="Geen klant of prospect gevonden." @kies="kies" />
+            <ZoekKiezer v-else :zoek="zoek" placeholder="Zoek een prospect op naam" label="Zoek een prospect" data-test="apn-zoek" :optie-test="(t) => `apn-kies-${t.id}`" :sub="(t) => t.plaats" leeg="Geen prospect gevonden." @kies="kies" />
           </div>
           <label class="veld mt-16"><span class="veld-label">Titel</span><input v-model="titel" class="invoer" maxlength="160" required data-test="apn-titel"><span class="veld-uitleg">Zet de periode in de titel, dan zie je in elke lijst voor welk jaar het plan geldt.</span></label>
           <div class="apn-rij mt-16">

@@ -2,17 +2,17 @@ import { expect, test } from '@playwright/test'
 import { login } from './hulp'
 
 test.describe('zijbalk per niveau', () => {
-  test('Beginner buitendienst: 13 items met Planning open, en Bezoeken voor Belblokken', async ({ page }) => {
+  test('Beginner buitendienst: 14 items met Planning open, en Bezoeken voor Belblokken', async ({ page }) => {
     await login(page, 'u-02')
     const items = page.locator('.sb-nav .sb-groep:not(.sb-slotgroep) .sb-link')
-    // Planning is een uitklapmenu: dicht 8 items, open 13.
-    await expect(items).toHaveCount(8)
+    // Planning is een uitklapmenu: dicht 9 items (met Opvolgreeksen), open 15 (Prospectplanning staat sinds 0064 voor iedereen aan).
+    await expect(items).toHaveCount(9)
     await page.getByTestId('sb-planning').click()
-    await expect(items).toHaveCount(13)
+    await expect(items).toHaveCount(15)
     const sleutels = await items.evaluateAll((els) => els.map((e) => e.getAttribute('data-sleutel')))
     expect(sleutels.indexOf('nav.bezoeken')).toBeLessThan(sleutels.indexOf('nav.belblokken'))
-    // Nog niet aangezet: Inzichten, Kennisbank, Accountplannen, Leadgenerator, Signaalradar, Prospectplanning en Prospectreizen.
-    await expect(page.locator('.sb-slotgroep-teller')).toHaveText('7')
+    // Nog niet aangezet: Inzichten, Kennisbank, Accountplannen, Leadgenerator, Signaalradar en Prospectreizen.
+    await expect(page.locator('.sb-slotgroep-teller')).toHaveText('6')
     await expect(page.getByTestId('gebruikersblok')).toHaveText('ACCOUNTMANAGER · BEGINNER')
   })
 

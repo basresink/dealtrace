@@ -8,8 +8,8 @@ export type AccountplanWeergave = 'actueel' | 'verlopen' | 'afgerond'
 
 /** De zes blokken in leesvolgorde; `uitleg` staat onder de kop en is de placeholder van het veld. */
 export const ACCOUNTPLAN_SECTIES: readonly { sleutel: AccountplanSectie; titel: string; uitleg: string }[] = [
-  { sleutel: 'klantinformatie', titel: 'Klantinformatie', uitleg: 'Branche, grootte, kernactiviteiten en de beslissers. Wie zit er aan tafel en waar verdient dit bedrijf zijn geld?' },
-  { sleutel: 'doelstellingen', titel: 'Doelen (SMART)', uitleg: 'Wat wil je met deze klant bereiken? Specifiek, meetbaar, haalbaar, relevant en met een termijn.' },
+  { sleutel: 'klantinformatie', titel: 'Bedrijfsinformatie', uitleg: 'Branche, grootte, kernactiviteiten en de beslissers. Wie zit er aan tafel en waar verdient dit bedrijf zijn geld?' },
+  { sleutel: 'doelstellingen', titel: 'Doelen (SMART)', uitleg: 'Wat wil je met deze prospect bereiken? Specifiek, meetbaar, haalbaar, relevant en met een termijn.' },
   { sleutel: 'kansen', titel: 'Kansen', uitleg: 'Waar zit groei: nieuwe behoeften, andere vestigingen of afdelingen, aanvullende producten, een aanleiding die nu speelt.' },
   { sleutel: 'bedreigingen', titel: 'Bedreigingen', uitleg: 'Wat de samenwerking in de weg staat: concurrentie, budgetdruk, wisselende beslissers, ontevredenheid.' },
   { sleutel: 'strategieen', titel: 'Strategieën', uitleg: 'Hoe je de doelen haalt: welke route, welke gesprekspartners, welke argumenten en in welke volgorde.' },

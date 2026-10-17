@@ -6,7 +6,7 @@ import { UITKOMST_LABEL, verwerkUitkomst, type Ritme, type RitmeStand, type Uitk
 export const ACTIETYPES = ['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht', 'taak'] as const
 export const ACTIE_LABEL: Record<string, string> = { bellen: 'BEL', mailen: 'MAIL', linkedin: 'LINKEDIN', bezoek: 'BEZOEK', bericht: 'BERICHT', taak: 'TAAK', geen: 'TAAK' }
 export const CONTACT_ACTIES = new Set(['bellen', 'mailen', 'linkedin', 'bezoek', 'bericht'])
-export const HERKOMST_LABEL: Record<string, string> = { regel: 'Uit regel', inzicht: 'Uit inzicht', campagne: 'Campagne', ritme: 'Ritme', handmatig: 'Handmatig', startactiviteit: 'Uit regel', agent: 'Agent', reeks: 'Opvolgreeks', volgen: 'Volgende stap' }
+export const HERKOMST_LABEL: Record<string, string> = { regel: 'Uit regel', inzicht: 'Uit inzicht', campagne: 'Campagne', ritme: 'Ritme', handmatig: 'Handmatig', startactiviteit: 'Uit regel', agent: 'Agent', reeks: 'Opvolgreeks', volgen: 'Volgende stap', dagplanner: 'Dagplanner' }
 export const AFWIJS_REDENEN = ['Niet relevant', 'Al bekend', 'Verkeerd account', 'Te oud'] as const
 export const PRIO_VOLGORDE: Record<string, number> = { urgent: 0, hoog: 1, middel: 2, laag: 3 }
 /** Prioriteit van een taak: vier niveaus zoals DealDrive. Regels kennen er drie; urgent zet je zelf. */
@@ -166,7 +166,7 @@ export function herhalingAantal(eerste: string, soort: string, tot: string, inst
 
 /** "Volgende stap" in het taakvenster (DealDrive): één zin die zegt wat je nu met de taak doet. */
 export function volgendeStap(t: { priority: string; dueDate: string | null; herkomst?: string | null; status?: string; agent?: string | null; poging?: { n: number; van: number } | null }, nu: Date): string {
-  if (t.status === 'klaar') return 'Deze taak is afgerond. Kijk op de klantkaart wat er daarna gebeurde.'
+  if (t.status === 'klaar') return 'Deze taak is afgerond. Kijk op de accountkaart wat er daarna gebeurde.'
   if (t.priority === 'urgent') return 'Pak deze nu op. Urgent betekent niet doorschuiven.'
   if (isAchterstallig(t, nu)) return 'Deze taak is over tijd. Beslis nu: doen, uitstellen of annuleren met een reden.'
   if (t.poging && t.poging.n >= t.poging.van) return 'Laatste poging uit het ritme. Zonder reactie gaat het account daarna naar Geparkeerd.'

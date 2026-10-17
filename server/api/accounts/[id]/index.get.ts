@@ -5,13 +5,14 @@ import { ontbrekendeRollen, primairContact, sorteerContacten } from '../../../..
 import { telOpenTaken } from '../../../../shared/score'
 import { contactUit, effectiefNiveau, eigenVeldenVoor, kan, zichtbareCustomFields } from '../../../utils/accounts'
 import { metOrganisatie, schema } from '../../../utils/db'
-import { eigenTeams } from '../../../utils/gebruikers'
 import { fase as zoekFase, verblijfOverschreden } from '../../../../shared/reis'
 import { afkoelingTot, KANALEN, magBenaderen } from '../../../../shared/nbStatus'
 import { terugkomTekst } from '../../../../shared/verkoopverhaal'
 import { terugkomControleLui, verkoopverhaal } from '../../../utils/reis'
 import { vereisFunctie } from '../../../utils/sessie'
 import { extraBronnenUit } from '../../../utils/extraBronnen'
+import { magDitAccount } from '../../../utils/deactiveren'
+import { DEACTIVEER_REDEN_LABEL, deactiveerTekst } from '../../../../shared/deactiveren'
 
 export default defineEventHandler(async (event) => {
   const ctx = await vereisFunctie(event, 'prospects.kaart')
@@ -28,9 +29,15 @@ export default defineEventHandler(async (event) => {
     const gebruikers = await tx.select({ id: schema.users.id, naam: schema.users.name, rol: schema.users.role, teamId: schema.users.teamId, status: schema.users.status }).from(schema.users)
     const namen = new Map(gebruikers.map((u) => [u.id, u.naam]))
     const [klasseRij] = await tx.select().from(schema.orgSettings).where(eq(schema.orgSettings.key, 'klassen'))
-    const eigenaarTeam = gebruikers.find((u) => u.id === a.ownerId)?.teamId
-    const teams = ctx.gebruiker.rol === 'salesmanager' ? await eigenTeams(tx, ctx.gebruiker.id) : []
-    const magVerwijderen = kan(ctx, 'prospects.verwijderen') && (ctx.gebruiker.rol === 'beheerder' || (!!eigenaarTeam && teams.includes(eigenaarTeam)) || a.ownerId === ctx.gebruiker.id)
+    // 0064: niemand verwijdert een account; de eigenaar, zijn salesmanager en de beheerder deactiveren en heractiveren.
+    const magDeactiveren = kan(ctx, 'prospects.deactiveren') && await magDitAccount(tx, ctx.gebruiker, a)
+    const dg = a.gedeactiveerdOp ? a.data?.gedeactivering ?? null : null
+    const gedeactiveerd = a.gedeactiveerdOp ? {
+      op: a.gedeactiveerdOp, reden: dg?.reden ?? null, redenLabel: dg ? DEACTIVEER_REDEN_LABEL[dg.reden] ?? dg.reden : null, toelichting: dg?.toelichting ?? null,
+      door: dg?.door ? { id: dg.door, naam: namen.get(dg.door) ?? null } : null,
+      tekst: dg ? deactiveerTekst(dg, dg.door ? namen.get(dg.door) ?? null : null) : 'Gedeactiveerd',
+    } : null
+    const deactiveringen = (a.data?.deactiveringen ?? []).map((d) => ({ ...d, redenLabel: DEACTIVEER_REDEN_LABEL[d.reden] ?? d.reden, doorNaam: namen.get(d.door) ?? null, heractiveerdDoorNaam: namen.get(d.heractiveerdDoor) ?? null }))
     const primair = primairContact(contacten)
     const fase = a.faseSinds ? Math.floor((Date.now() - Date.parse(a.faseSinds)) / 864e5) : null
     // P05: reis, fase, status, dagen in fase en een lopende terugkomregel.
@@ -98,6 +105,7 @@ export default defineEventHandler(async (event) => {
       openTaken: telOpenTaken([], { accountId: id }),
       tijdlijn: acts.map((x) => ({ id: x.id, soort: x.soort, kanaal: x.kanaal, uitkomst: x.uitkomst, op: x.op, door: x.door ? namen.get(x.door) ?? x.door : null, tekst: (x.data as any)?.tekst ?? null, contactId: x.contactId })),
       overdracht, kanOverdragen: !!afv && a.nbStatus !== 'overgedragen' && (!ov || ov.status === 'mislukt' || !!ov.data?.alKlant),
+      gedeactiveerd, deactiveringen,
       reis: reisInfo, terugkom, nee: a.data?.nee ? { ...a.data.nee, tot: Object.fromEntries(KANALEN.map((k) => [k, afkoelingTot(a.data!.nee, k)])) } : null, wachtendTot: a.data?.wachtendTot ?? null, benaderen,
       reizen: kan(ctx, 'reis.verplaatsen') ? reizen.filter((r) => r.status === 'actief' && r.id !== a.reisId).map((r) => ({ id: r.id, naam: r.naam })) : [],
       concurrenten: vv?.concurrenten ?? [],
@@ -108,7 +116,7 @@ export default defineEventHandler(async (event) => {
       klassen: ((klasseRij?.value as any[]) ?? []).filter((k) => !k.tabblad || k.tabblad === (a.accountKind === 'klant' ? 'Klanten' : 'Prospects')),
       gebruikers: gebruikers.filter((u) => u.status !== 'gearchiveerd').map((u) => ({ id: u.id, naam: u.naam })),
       kan: {
-        klasse: kan(ctx, 'prospects.klasseZetten'), eigenaar: kan(ctx, 'prospects.eigenaarWijzigen'), verwijderen: magVerwijderen,
+        klasse: kan(ctx, 'prospects.klasseZetten'), eigenaar: kan(ctx, 'prospects.eigenaarWijzigen'), deactiveren: magDeactiveren && !a.gedeactiveerdOp, heractiveren: magDeactiveren && !!a.gedeactiveerdOp,
         samenvoegen: kan(ctx, 'prospects.samenvoegen'), scoreOpbouw: kan(ctx, 'prospects.scoreOpbouw'), voorstellen: kan(ctx, 'eigenVelden.voorstellen'),
         verhuizen: kan(ctx, 'contacten.verhuizen'),
         reis: kan(ctx, 'reis.zien') && a.accountKind === 'prospect',
@@ -116,8 +124,8 @@ export default defineEventHandler(async (event) => {
         faseCorrigeren: kan(ctx, 'reis.faseCorrigeren') && a.accountKind === 'prospect',
         geschiedenis: kan(ctx, 'reis.geschiedenis'),
         reisBekijken: kan(ctx, 'reis.overzicht'),
-        nee: kan(ctx, 'account.nee') && ['nieuw', 'in reis', 'wachtend', 'gescoord'].includes(a.nbStatus),
-        pauzeer: kan(ctx, 'account.nee') && ['nieuw', 'in reis'].includes(a.nbStatus),
+        nee: kan(ctx, 'account.nee') && !a.gedeactiveerdOp && ['nieuw', 'in reis', 'wachtend', 'gescoord'].includes(a.nbStatus),
+        pauzeer: kan(ctx, 'account.nee') && !a.gedeactiveerdOp && ['nieuw', 'in reis'].includes(a.nbStatus),
         verplaatsen: kan(ctx, 'reis.verplaatsen') && (eigen || manager) && a.accountKind === 'prospect',
         terugOp: kan(ctx, 'account.terugOpAanpassen') && !!a.terugOp,
         onderzoek: kan(ctx, 'account.opnieuwOnderzoeken'), bronnenVolgen: kan(ctx, 'account.bronnenVolgen'),

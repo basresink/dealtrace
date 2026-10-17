@@ -26,7 +26,7 @@ useHead({ title: 'Accountplannen · Dealtrace' })
   <div>
     <NietAangezetKop v-if="!aan" sleutel="nav.accountplannen" />
     <template v-else>
-      <PaginaKop :kicker="`Accountplannen · ${data.actueel} actueel`" titel="Eén plan per klant, elke stap aanwijsbaar." uitleg="Wie zijn grootste klanten een plan geeft, hoeft ze volgend jaar niet terug te winnen." helpartikel="accountplannen">
+      <PaginaKop :kicker="`Accountplannen · ${data.actueel} actueel`" titel="Eén plan per topprospect, elke stap aanwijsbaar." uitleg="Een topprospect win je niet met losse acties. Met een plan weet je bij elke stap waarom je hem zet. Plannen voor klanten horen in DealDrive." helpartikel="accountplannen">
         <template #acties>
           <button type="button" class="dd-actie dd-actie--primair" data-test="ap-nieuw" @click="nieuwOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Accountplan</button>
         </template>
@@ -34,7 +34,7 @@ useHead({ title: 'Accountplannen · Dealtrace' })
 
       <section class="section section--laatste">
         <div class="container">
-          <LegeStaat v-if="!data.plannen.length" kicker="Nog niets" titel="Er is nog geen accountplan." tekst="Begin bij de klant of prospect waar het meest op het spel staat. Eén plan per periode is genoeg. Een plan dat je niet evalueert, is een document en geen sturing." data-test="ap-leeg">
+          <LegeStaat v-if="!data.plannen.length" kicker="Nog niets" titel="Er is nog geen accountplan." tekst="Begin bij de prospect waar het meest op het spel staat. Eén plan per periode is genoeg. Een plan dat je niet evalueert, is een document en geen sturing." data-test="ap-leeg">
             <button type="button" class="dd-actie dd-actie--zwart" @click="nieuwOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Eerste accountplan</button>
           </LegeStaat>
           <template v-else>

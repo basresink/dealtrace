@@ -59,6 +59,12 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Al je taken op één plek, met uitkomst en volgende poging.', totDieTijd: 'Je taken van vandaag staan op Vandaag.' },
   },
   {
+    // F7: alle opvolgreeksen van de gebruiker (salesmanager ook van zijn team), met wat op jou wacht bovenaan.
+    sleutel: 'nav.opvolgreeksen', naam: 'Opvolgreeksen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'volgen', startNiveau: 'beginner',
+    zijbalk: { groep: 'Activiteiten', route: '/opvolgreeksen', icoon: 'Repeat' },
+    uitleg: { watHetDoet: 'Al je opvolgreeksen op één plek: wat op je goedkeuring wacht, wat vanzelf loopt en welke reeksen raak waren.', totDieTijd: 'De reeks van een account staat onder Volgen op de accountkaart.' },
+  },
+  {
     sleutel: 'nav.belblokken', naam: 'Belblokken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'belblokken', startNiveau: 'beginner',
     zijbalk: { groep: 'Planning', route: '/belblokken', icoon: 'Phone' },
     uitleg: { watHetDoet: 'Vaste tijdvakken om te bellen, met een gevulde bellijst en een gekozen script.', totDieTijd: 'Je salesmanager zet belblokken voor je klaar.' },
@@ -81,7 +87,7 @@ export const FUNCTIES: readonly Functie[] = [
   {
     sleutel: 'nav.accountplannen', naam: 'Accountplannen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'accountplannen', startNiveau: 'expert',
     zijbalk: { groep: 'Planning', route: '/accountplannen', icoon: 'ClipboardCheck' },
-    uitleg: { watHetDoet: 'Eén plan per klant of prospect: doelen, kansen, bedreigingen, strategie en een actieplan waarvan elke actie een taak op het account is.', totDieTijd: 'Leg je plannen vast in de notities en taken op de accountkaart.' },
+    uitleg: { watHetDoet: 'Eén plan per topprospect: doelen, kansen, bedreigingen, strategie en een actieplan waarvan elke actie een taak op het account is.', totDieTijd: 'Leg je plannen vast in de notities en taken op de accountkaart.' },
   },
   {
     sleutel: 'nav.prospects', naam: 'Prospects', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospects', startNiveau: 'beginner',
@@ -120,7 +126,7 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'De documenten van je organisatie op één plek: cases, offertes, presentaties, productinfo en contracten, te doorzoeken, gekoppeld aan accounts en contacten en te bevragen met de AI.', totDieTijd: 'Documenten bij een account of contact staan op het tabblad Documenten van de accountkaart.' },
   },
   {
-    sleutel: 'nav.planning', naam: 'Prospectplanning', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospectplanning', startNiveau: 'gevorderd',
+    sleutel: 'nav.planning', naam: 'Prospectplanning', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospectplanning', startNiveau: 'beginner',
     zijbalk: { groep: 'Planning', route: '/planning', icoon: 'CalendarRange' },
     uitleg: { watHetDoet: 'Je jaar- en maandplanning: wie je wanneer benadert, en wanneer een geparkeerd account terugkomt.', totDieTijd: 'De motor zet de volgende poging voor je klaar.' },
   },
@@ -209,7 +215,7 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Je eigen filters bewaren.', totDieTijd: 'Vraag een collega of je manager.' },
   },
   {
-    sleutel: 'prospects.klasseZetten', naam: 'Klasse zetten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-accountkaart-lezen', startNiveau: 'gevorderd',
+    sleutel: 'prospects.klasseZetten', naam: 'Klasse zetten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'de-accountkaart-lezen', startNiveau: 'beginner',
     uitleg: { watHetDoet: 'De klasse van een account kiezen.', totDieTijd: 'Vraag een collega of je manager.' },
   },
   {
@@ -225,8 +231,9 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Zien hoe de score is opgebouwd.', totDieTijd: 'Vraag een collega of je manager.' },
   },
   {
-    sleutel: 'prospects.verwijderen', naam: 'Accounts verwijderen', pakket: 'starter', rollen: ['salesmanager', 'beheerder'], helpartikel: 'de-accountkaart-lezen', startNiveau: 'gevorderd',
-    uitleg: { watHetDoet: 'Een account met zijn contacten verwijderen.', totDieTijd: 'Vraag een collega of je manager.' },
+    // Verwijderen bestaat niet meer (0064): de eigenaar, de salesmanager (eigen teams) en de beheerder deactiveren met een reden en heractiveren.
+    sleutel: 'prospects.deactiveren', naam: 'Deactiveren en heractiveren', pakket: 'starter', rollen: 'iedereen', helpartikel: 'een-prospect-deactiveren', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Een prospect met een reden deactiveren: de motor stopt, de historie blijft. Heractiveren kan altijd.', totDieTijd: 'Vraag je salesmanager.' },
   },
   {
     sleutel: 'prospects.eigenaarWijzigen', naam: 'Eigenaar wijzigen', pakket: 'starter', rollen: ['salesmanager', 'beheerder'], helpartikel: 'de-accountkaart-lezen', startNiveau: 'gevorderd',
@@ -341,11 +348,11 @@ export const FUNCTIES: readonly Functie[] = [
   },
   // P06: motor, regels en accountmatrix
   {
-    sleutel: 'regels.lezen', naam: 'Regels bekijken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'regels', startNiveau: 'gevorderd',
+    sleutel: 'regels.lezen', naam: 'Regels bekijken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'regels', startNiveau: 'beginner',
     uitleg: { watHetDoet: 'De regels lezen die je taken en inzichten klaarzetten, met droogloop.', totDieTijd: 'Bij elke taak staat "Waarom krijg ik dit?".' },
   },
   {
-    sleutel: 'regels.persoonlijk', naam: 'Persoonlijke regels', pakket: 'starter', rollen: 'iedereen', helpartikel: 'regels', startNiveau: 'expert',
+    sleutel: 'regels.persoonlijk', naam: 'Persoonlijke regels', pakket: 'starter', rollen: 'iedereen', helpartikel: 'regels', startNiveau: 'beginner',
     uitleg: { watHetDoet: 'Eigen regels maken voor je eigen accounts, en teamregels voorstellen.', totDieTijd: 'De regels van je organisatie gelden voor jou.' },
   },
   {
@@ -361,11 +368,11 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Regels die met AI signalen beoordelen (kansanalyse, vacatures, nieuws).', totDieTijd: 'De gewone regels draaien wel.' },
   },
   {
-    sleutel: 'matrix.klasseZetten', naam: 'Klasse zetten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'accountmatrix', startNiveau: 'gevorderd',
+    sleutel: 'matrix.klasseZetten', naam: 'Klasse zetten', pakket: 'starter', rollen: 'iedereen', helpartikel: 'accountmatrix', startNiveau: 'beginner',
     uitleg: { watHetDoet: 'De accountklasse van een account kiezen.', totDieTijd: 'Je ziet de klasse van een account.' },
   },
   {
-    sleutel: 'matrix.voorstellen', naam: 'Matrix voorstellen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'accountmatrix', startNiveau: 'expert',
+    sleutel: 'matrix.voorstellen', naam: 'Matrix voorstellen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'accountmatrix', startNiveau: 'beginner',
     uitleg: { watHetDoet: 'Een wijziging van de accountmatrix voorstellen aan de beheerder.', totDieTijd: 'Je kunt de matrix lezen.' },
   },
   {
@@ -422,7 +429,7 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Eigen sjablonen voor taken die je vaak maakt.', totDieTijd: 'Typ de taak zelf.' },
   },
   {
-    sleutel: 'ritme.lezen', naam: 'Hercontactritme lezen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'hercontactritme', startNiveau: 'gevorderd',
+    sleutel: 'ritme.lezen', naam: 'Hercontactritme lezen', pakket: 'starter', rollen: 'iedereen', helpartikel: 'hercontactritme', startNiveau: 'beginner',
     uitleg: { watHetDoet: 'De ritmes met hun stappen en wat ze opleveren.', totDieTijd: 'Je ziet "poging 3 van 5" bij je taken.' },
   },
   {
@@ -744,6 +751,11 @@ export const FUNCTIES: readonly Functie[] = [
     sleutel: 'instellingen.mailsjablonen', naam: 'Mailsjablonen', pakket: 'starter', rollen: ['beheerder'], helpartikel: 'concepten-goedkeuren-en-versturen', startNiveau: 'expert',
     uitleg: { watHetDoet: 'Sjablonen per kanaal met variabelen, voor campagnes en concepten.', totDieTijd: 'De Schrijver schrijft zonder sjabloon.' },
   },
+  {
+    // F7: sjablonen voor opvolgreeksen per organisatie (stappen, kanaal, instructie voor de Schrijver, stopregels).
+    sleutel: 'instellingen.opvolgreeksen', naam: 'Sjablonen voor opvolgreeksen', pakket: 'starter', rollen: MANAGERS, helpartikel: 'volgen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Sjablonen voor opvolgreeksen maken en wijzigen: stappen per dag, kanaal, onderwerp en instructie voor de Schrijver, stopregels en bij welke uitkomst ze starten.', totDieTijd: 'De drie startsjablonen gelden.' },
+  },
   // P33: AI-assistent en credits (F26, 11.4). Op alle niveaus; de credits begrenzen, niet het niveau.
   {
     sleutel: 'assistent.chat', naam: 'AI-assistent', pakket: 'starter', rollen: 'iedereen', helpartikel: 'chatten-met-de-ai-assistent', startNiveau: 'beginner',
@@ -848,11 +860,11 @@ export const FUNCTIES: readonly Functie[] = [
   },
   // P12: prospectplanning en terugkomregels (F13, F25).
   {
-    sleutel: 'planning.jaar', naam: 'Jaarplanning', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospectplanning', startNiveau: 'gevorderd',
+    sleutel: 'planning.jaar', naam: 'Jaarplanning', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospectplanning', startNiveau: 'beginner',
     uitleg: { watHetDoet: 'Zien wie dit verkoopjaar aan de beurt is per potentie, en wat er knelt.', totDieTijd: 'De motor zet je belpogingen klaar op Vandaag.' },
   },
   {
-    sleutel: 'planning.inplannen', naam: 'Plan in belblokken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospectplanning', startNiveau: 'gevorderd',
+    sleutel: 'planning.inplannen', naam: 'Plan in belblokken', pakket: 'starter', rollen: 'iedereen', helpartikel: 'prospectplanning', startNiveau: 'beginner',
     uitleg: { watHetDoet: 'Een achterstand met één klik verdelen over je koude belblokken.', totDieTijd: 'Plan je belblokken zelf of laat de motor het doen.' },
   },
   {
@@ -860,11 +872,11 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Startmaand, vensters en de potentie per klasse instellen.', totDieTijd: 'Vraag je salesmanager.' },
   },
   {
-    sleutel: 'terugkomen.lezen', naam: 'Terugkomregels', pakket: 'starter', rollen: 'iedereen', helpartikel: 'wanneer-we-iemand-terugbellen', startNiveau: 'gevorderd',
-    uitleg: { watHetDoet: 'Zien wanneer en hoe je terugkomt na een nee, een verlies of een slapende periode.', totDieTijd: 'Op de terugkomdatum staat een taak met de aanpak.' },
+    sleutel: 'terugkomen.lezen', naam: 'Terugkomregels', pakket: 'starter', rollen: 'iedereen', helpartikel: 'wanneer-we-iemand-terugbellen', startNiveau: 'beginner',
+    uitleg: { watHetDoet: 'Zien wanneer en hoe je terugkomt na een nee of een verlies.', totDieTijd: 'Op de terugkomdatum staat een taak met de aanpak.' },
   },
   {
-    sleutel: 'terugkomen.koppelenEnOpbrengst', naam: 'Opbrengst per terugkomregel', pakket: 'starter', rollen: 'iedereen', helpartikel: 'wanneer-we-iemand-terugbellen', startNiveau: 'expert',
+    sleutel: 'terugkomen.koppelenEnOpbrengst', naam: 'Opbrengst per terugkomregel', pakket: 'starter', rollen: 'iedereen', helpartikel: 'wanneer-we-iemand-terugbellen', startNiveau: 'beginner',
     uitleg: { watHetDoet: 'Per regel zien wat terugkomen opleverde, en een regel aan een ander ritme voorstellen.', totDieTijd: 'Je ziet de regels zelf.' },
   },
   // P11: leadgenerator, AI-zoeker en KvK (F02).

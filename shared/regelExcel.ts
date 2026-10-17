@@ -28,7 +28,7 @@ export const REGEL_KOLOMMEN: Kolom[] = [
   { kop: 'specifieke bron', uit: (r) => r.data.specifiekeBron ?? '', in: (r, w) => zetData(r, ['specifiekeBron'], w || undefined), toelichting: 'Bijvoorbeeld "Web: vacatures".' },
   { kop: 'triggerpatroon', uit: (r) => r.data.trigger.patroon, in: (r, w) => zetData(r, ['trigger', 'patroon'], w), keuzes: PATROON_SLEUTELS, toelichting: 'Zie de lijst met patronen.' },
   { kop: 'parameters', uit: (r) => JSON.stringify(r.data.trigger.parameters), in: (r, w) => zetData(r, ['trigger', 'parameters'], w ? JSON.parse(w) : {}), toelichting: 'JSON, bijvoorbeeld {"dagen": 30}.' },
-  { kop: 'accounttypes', uit: (r) => (r.data.afbakening.accounttypes ?? []).join(', '), in: (r, w) => zetData(r, ['afbakening', 'accounttypes'], lijst(w)), toelichting: 'prospect, klant; leeg is alle.' },
+  { kop: 'accounttypes', uit: (r) => (r.data.afbakening.accounttypes ?? []).join(', '), in: (r, w) => zetData(r, ['afbakening', 'accounttypes'], lijst(w)), toelichting: 'prospect; klanten neemt de motor nooit mee.' },
   { kop: 'statussen', uit: (r) => (r.data.afbakening.statussen ?? []).join(', '), in: (r, w) => zetData(r, ['afbakening', 'statussen'], lijst(w)), toelichting: 'nieuw, in reis, wachtend, nee, gescoord.' },
   { kop: 'reizen', uit: (r) => (r.data.afbakening.reisIds ?? []).join(', '), in: (r, w) => zetData(r, ['afbakening', 'reisIds'], lijst(w)), toelichting: 'Reis-id\'s.' },
   { kop: 'fases', uit: (r) => (r.data.afbakening.faseIds ?? []).join(', '), in: (r, w) => zetData(r, ['afbakening', 'faseIds'], lijst(w)), toelichting: 'Fase-id\'s, bijvoorbeeld gekwalificeerd.' },

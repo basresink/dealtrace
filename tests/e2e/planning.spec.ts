@@ -38,31 +38,33 @@ test('Opzet DealDrive: tellers, Jaar of Kwartaal, maanddetail met Toon ook benad
   }
 })
 
-test('Terugkomregels: zes regels in twee lijsten, hc-04 direct, alle klassen; slapende klanten leeg', async ({ page }) => {
+test('Terugkomregels: vier regels na een verlies of nee, alle klassen; geen slapende klanten (winback loopt in DealDrive)', async ({ page }) => {
   await login(page, 'u-07')
   await ga(page, '/planning?tab=terugkom')
-  await expect(page.locator('[data-regel]')).toHaveCount(6)
-  await expect(page.locator('[data-regel="hc-04"] [data-test="termijn"]')).toHaveText('direct')
+  await expect(page.locator('[data-regel]')).toHaveCount(4)
+  await expect(page.locator('[data-regel="hc-04"]')).toHaveCount(0)
+  await expect(page.getByTestId('regels-slapend')).toHaveCount(0)
   await expect(page.locator('[data-regel="hc-01"] [data-test="klassen"]')).toHaveText('alle klassen')
   await expect(page.getByTestId('kpi')).toContainText('Hercontact op tijd')
   await expect(page.locator('[data-test="opbrengst"]').first()).toBeVisible()
-  await expect(page.getByTestId('slapend-leeg')).toBeVisible()
+  await expect(page.getByText('Slapende klanten')).toHaveCount(0)
 })
 
-test('Gevorderd ziet geen opbrengst per regel', async ({ page }) => {
+test('Gevorderd ziet ook de opbrengst per regel (0064, de motor voor iedereen)', async ({ page }) => {
   await login(page, 'u-03')
   await ga(page, '/planning?tab=terugkom')
   await expect(page.locator('[data-regel]').first()).toBeVisible()
-  await expect(page.locator('[data-test="opbrengst"]')).toHaveCount(0)
+  await expect(page.locator('[data-test="opbrengst"]').first()).toBeVisible()
 })
 
-test('Beginner: geen Prospectplanning; de API geeft 403 met reden niveau', async ({ page }) => {
+test('Beginner: Prospectplanning met hercontactritme en terugkomregels staat aan (0064, de motor voor iedereen)', async ({ page }) => {
   await login(page, 'u-02')
   await ga(page, '/planning')
-  await expect(page.getByText('nog niet aangezet', { exact: false }).first()).toBeVisible()
-  const r = await page.request.get('/api/planning/jaar')
-  expect(r.status()).toBe(403)
-  expect((await r.json()).data.reden).toBe('niveau')
+  await expect(page.getByTestId('niet-aangezet-pagina')).toHaveCount(0)
+  for (const t of ['jaar', 'ritme', 'terugkom']) await expect(page.getByTestId(`tab-${t}`)).toBeVisible()
+  expect((await page.request.get('/api/planning/jaar')).status()).toBe(200)
+  expect((await page.request.get('/api/ritmes')).status()).toBe(200)
+  expect((await page.request.get('/api/planning/terugkomregels')).status()).toBe(200)
 })
 
 for (const breedte of [375, 390, 412]) {

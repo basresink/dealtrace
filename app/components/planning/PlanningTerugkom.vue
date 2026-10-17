@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Tabblad Terugkomregels (F13, F25): wanneer en hoe we terugkomen na een nee, een verlies of een
-// slapende periode, met de KPI "Hercontact op tijd", de opbrengst per regel (Expert) en wie
-// binnenkort terugkomt. Inrichten gebeurt bij het verkoopverhaal (P28).
+// Tabblad Terugkomregels (F13, F25): wanneer en hoe we terugkomen na een nee of een verlies, met de KPI "Hercontact op tijd", de opbrengst per regel (Expert) en wie
+// binnenkort terugkomt. Inrichten gebeurt bij het verkoopverhaal (P28). Slapende klanten en de regels na
+// een slapende periode staan hier niet: winback van klanten loopt in DealDrive (testronde, Prospects of klanten).
 const toast = useToast()
 const { data, refresh } = await useFetch<any>('/api/planning/terugkomregels', { default: () => null })
 const { data: ritmes } = await useFetch<any>('/api/ritmes', { default: () => ({ ritmes: [] }) })
@@ -44,8 +44,8 @@ const datumLang = (d: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeri
       <div class="stat-grid mt-16">
         <div class="stat-card" data-test="kpi"><span class="stat-label">Hercontact op tijd</span><span class="stat-num tnum">{{ data.kpi.procent == null ? 'nog geen' : `${data.kpi.procent}%` }}</span><span class="stat-foot"><span v-if="data.kpi.stand" class="pil" :class="STAND[data.kpi.stand]">{{ data.kpi.stand === 'gezond' ? 'Gezond' : data.kpi.stand === 'aandacht' ? 'Aandacht' : 'Risico' }}</span> norm 90 procent; eerste poging binnen 5 werkdagen</span></div>
       </div>
-      <template v-for="l in (['verloren', 'slapend'] as const)" :key="l">
-        <h3 class="kop-blok mt-32">{{ l === 'verloren' ? 'Na een verlies of nee' : 'Na een slapende periode' }} <span class="pil-teller">{{ data[l].length }}</span></h3>
+      <template v-for="l in (['verloren'] as const)" :key="l">
+        <h3 class="kop-blok mt-32">Na een verlies of nee <span class="pil-teller">{{ data[l].length }}</span></h3>
         <div class="stapel mt-12" :data-test="`regels-${l}`">
           <article v-for="r in data[l]" :key="r.id" class="kaart" :data-regel="r.id">
             <header class="kaart-kop"><h4 class="kaart-titel">{{ r.reden }}</h4><span class="pil pil--zwart" data-test="termijn">{{ r.termijnTekst }}</span></header>
@@ -69,8 +69,6 @@ const datumLang = (d: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeri
         <div class="rij-rechts"><button v-if="data.kan.aanpassen" type="button" class="dd-act" data-test="pas-datum-aan" @click="aanpassen = a; datum = a.terugOp">Pas datum aan</button></div>
       </div>
     </div>
-    <h3 class="kop-blok mt-32">Slapende klanten</h3>
-    <p class="meta mt-8" data-test="slapend-leeg">Slapende klanten verschijnen zodra jullie CRM of DealDrive gekoppeld is.</p>
 
     <div v-if="aanpassen" class="fo-overlay" @click.self="aanpassen = null">
       <form class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" data-test="datum-flyout" @submit.prevent="bewaarDatum">

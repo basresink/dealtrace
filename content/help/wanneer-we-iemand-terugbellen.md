@@ -28,7 +28,7 @@ Na een nee mag je een tijd niet bellen of mailen. Valt de terugkomdatum binnen d
 Bij **Prospectplanning**, tabblad **Terugkomregels**, zie je:
 
 - **Hercontact op tijd**: hoeveel accounts binnen vijf werkdagen na hun terugkomdatum weer benaderd zijn. Vanaf 90 procent is dat gezond, vanaf 70 procent vraagt het aandacht.
-- De regels na een verlies of nee en na een slapende periode, met termijn, kanaal, klassen en aanpak. Lege klassen betekent alle klassen; "direct" betekent dezelfde dag.
+- De regels na een verlies of nee, met termijn, kanaal, klassen en aanpak. Slapende klanten staan hier niet: winback van klanten loopt in DealDrive. Lege klassen betekent alle klassen; "direct" betekent dezelfde dag.
 - **Komt binnenkort terug**: jouw accounts die in de komende 30 dagen terugkomen. Met **Pas datum aan** kies je een andere datum met een reden.
 - Voor Expert de opbrengst per regel, en **Stel wijziging voor** om een regel aan een ander ritme te koppelen. Je salesmanager beslist.
 

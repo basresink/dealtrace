@@ -3,10 +3,10 @@
 // branche en plaats; blokken Adres, Bereik en Stamgegevens met per veld inline bewerken (potlood, en
 // "+ Voeg ... toe" als het leeg is). Eigen velden staan onder hun eigen kopje, of onder een vast kopje met
 // dezelfde naam. Daarna Extra bronnen (eigen webadressen die de agents volgen), en voor Expert de score en
-// de herkomst. Verwijderen staat onderaan de inhoud. Elke wijziging bewaart zichzelf.
+// de herkomst. Deactiveren (0064, verwijderen bestaat niet meer) staat onderaan de inhoud. Elke wijziging bewaart zichzelf.
 import { SCORE_DELEN } from '~/utils/accountWeergave'
 const props = defineProps<{ open: boolean; account: any }>()
-const emit = defineEmits<{ sluit: []; gewijzigd: []; verwijder: [] }>()
+const emit = defineEmits<{ sluit: []; gewijzigd: []; deactiveer: [] }>()
 const toast = useToast()
 const { me } = useMe()
 const meer = ref(false)
@@ -138,9 +138,9 @@ const ondertitel = computed(() => [props.account?.officieleNaam && props.account
           </template>
           <button v-else type="button" class="dd-act if-meer" data-test="if-meer" @click="meer = true">Meer gegevens</button>
 
-          <!-- Verwijderen onderaan de inhoud, niet in een vaste voet: bij het bewerken hoort geen rode knop in beeld. -->
-          <div v-if="account.kan.verwijderen" class="if-verwijder-vak">
-            <button type="button" class="dd-act dd-act--gevaar" data-test="verwijder" @click="emit('verwijder')"><Icoon naam="Trash2" class="dd-act-icoon" />Verwijder account</button>
+          <!-- Deactiveren onderaan de inhoud, niet in een vaste voet. Verwijderen kan niemand: de historie blijft. -->
+          <div v-if="account.kan.deactiveren" class="if-verwijder-vak">
+            <button type="button" class="dd-act" data-test="if-deactiveer" @click="emit('deactiveer')"><Icoon naam="Archive" class="dd-act-icoon" />Deactiveren</button>
           </div>
         </div>
       </aside>

@@ -29,7 +29,7 @@ const onderwerp = computed(() => props.contact?.naam ?? props.account.naam)
 const dit = computed(() => (opContact.value ? 'dit contact' : 'dit account'))
 
 const OV_NAAR: Record<string, string> = { dealdrive: 'DealDrive', crm: 'het CRM', collega: 'een collega' }
-const SOORT: Record<string, string> = { gebeld: 'Gebeld', mail: 'Mail', notitie: 'Notitie', bericht: 'Bericht', linkedin: 'LinkedIn', afspraak: 'Afspraak', bezoek: 'Bezoek', 'account verwijderd': 'Verwijderd', reis: 'Reis', import: 'Import' }
+const SOORT: Record<string, string> = { gebeld: 'Gebeld', mail: 'Mail', notitie: 'Notitie', bericht: 'Bericht', linkedin: 'LinkedIn', afspraak: 'Afspraak', bezoek: 'Bezoek', 'account verwijderd': 'Verwijderd', gedeactiveerd: 'Gedeactiveerd', geheractiveerd: 'Heractiveerd', reis: 'Reis', import: 'Import' }
 const VORM: Record<string, string> = { bezoek: 'Bezoek', online: 'Online', telefoon: 'Telefoon' }
 const AFSPRAAK_STATUS: Record<string, string> = { gepland: 'Gepland', afgerond: 'Gehouden', geannuleerd: 'Geannuleerd', 'no-show': 'Niet verschenen' }
 const DEAL_FASE: Record<string, string> = { overgedragen: 'Overgedragen', lopend: 'Loopt in DealDrive', gewonnen: 'Gewonnen', verloren: 'Verloren', klaar: 'Klaar', verstuurd: 'Verstuurd', bevestigd: 'Bevestigd', mislukt: 'Mislukt' }
@@ -62,7 +62,7 @@ const tlAlles = computed<TlItem[]>(() => {
   for (const s of t.value.inzichten) uit.push({ key: `i-${s.id}`, soort: 'inzicht', soortLabel: 'Inzicht', typeLabel: s.agent ? s.agent : s.bron === 'extern' ? 'Extern' : 'Intern', bron: s.specifiekeBron, titel: s.title, tekst: s.waarom, ms: Date.parse(s.createdAt), contact: contactVan(s), open: () => { inzicht.value = s } })
   for (const x of t.value.taken) {
     const open = ['open', 'bezig'].includes(x.status)
-    uit.push({ key: `t-${x.id}`, soort: 'taak', soortLabel: 'Taak', typeLabel: ACTIE_LABEL[x.actionType] ?? 'Taak', titel: x.title, tekst: x.aanleiding, status: !open ? 'Afgerond' : x.achterstallig ? 'Achterstallig' : 'Open', statusSoort: !open ? 'klaar' : x.achterstallig ? 'laat' : 'open', ms: Date.parse(x.afgerondOp ?? x.dueDate ?? '') || 0, contact: contactVan(x), open: () => { taakId.value = x.id } })
+    uit.push({ key: `t-${x.id}`, soort: 'taak', soortLabel: 'Taak', typeLabel: ACTIE_LABEL[x.actionType] ?? 'Taak', titel: x.title, tekst: x.aanleiding, status: !open ? (x.status === 'geannuleerd' ? 'Geannuleerd' : 'Afgerond') : x.achterstallig ? 'Achterstallig' : 'Open', statusSoort: !open ? 'klaar' : x.achterstallig ? 'laat' : 'open', ms: Date.parse(x.afgerondOp ?? x.dueDate ?? '') || 0, contact: contactVan(x), open: () => { taakId.value = x.id } })
   }
   for (const x of t.value.afspraken) uit.push({ key: `a-${x.id}`, soort: 'afspraak', soortLabel: 'Afspraak', typeLabel: VORM[x.vorm] ?? x.vorm, titel: x.titel ?? (x.soort + (x.contact ? ` met ${x.contact}` : '')), tekst: x.locatie, status: AFSPRAAK_STATUS[x.status] ?? x.status, statusSoort: x.status === 'afgerond' ? 'klaar' : x.status === 'gepland' ? 'open' : 'laat', ms: Date.parse(x.start), contact: contactVan(x), open: () => { afspraakId.value = x.id } })
   // Deals horen bij het account; op de contactkaart staan ze alleen in het tabblad Deals.
@@ -197,7 +197,7 @@ const tabs = computed(() => [
                   <span class="tl-kop"><span class="tl-soort tl-soort--taak">{{ ACTIE_LABEL[x.actionType] ?? 'Taak' }}</span><span class="tl-type">{{ PRIO[x.priority] ?? x.priority }}</span><span class="tl-type">{{ HERKOMST_LABEL[x.herkomst] ?? 'Handmatig' }}</span><NuxtLink v-if="contactVan(x)" :to="`/contacten/${x.contactId}`" class="tl-contact" data-test="tl-contact"><Icoon naam="CircleUser" :grootte="12" />{{ x.contactNaam }}</NuxtLink><span class="tl-datum tnum" :class="{ 'tl-datum--rood': x.achterstallig }">{{ wanneer(x.dueDate) }}</span></span>
                   <button type="button" class="tl-titel tl-strek" :data-test="`ak-taak-${x.id}`" @click="taakId = x.id">{{ x.title }}</button>
                   <span v-if="x.aanleiding || x.poging" class="tl-tekst">{{ [x.aanleiding, x.poging ? `poging ${x.poging.n} van ${x.poging.van}` : null].filter(Boolean).join(' · ') }}</span>
-                  <span v-if="!['open', 'bezig'].includes(x.status)" class="tl-status tl-status--klaar">Afgerond<template v-if="x.uitkomst"> · {{ x.uitkomst }}</template></span>
+                  <span v-if="!['open', 'bezig'].includes(x.status)" class="tl-status tl-status--klaar">{{ x.status === 'geannuleerd' ? 'Geannuleerd' : 'Afgerond' }}<template v-if="x.uitkomst"> · {{ x.uitkomst }}</template></span>
                   <span v-else-if="x.achterstallig" class="tl-status tl-status--laat">Achterstallig</span>
                 </div>
               </li>

@@ -101,12 +101,12 @@ useHead({ title: 'Meetinganalyse · Dealtrace' })
             <template v-else>
               <div class="tabel-wrap ma-groot">
                 <table class="tabel" data-test="klasse-tabel">
-                  <thead><tr><th>Accountklasse</th><th>Meetingdoel</th><th class="cel-r">Klanten</th><th class="cel-r">Prospects</th><th class="cel-r">Nog niet benaderd</th><th class="ma-balkkolom">Meetingdekking</th><th class="cel-r">Achter / nooit</th><th aria-label="Openen" /></tr></thead>
+                  <thead><tr><th>Accountklasse</th><th>Meetingdoel</th><th class="cel-r">Prospects</th><th class="cel-r">Nog niet benaderd</th><th class="ma-balkkolom">Meetingdekking</th><th class="cel-r">Achter / nooit</th><th aria-label="Openen" /></tr></thead>
                   <tbody>
                     <tr v-for="r in data.klassen" :key="r.code" :data-test="`klasse-rij-${r.code}`">
                       <td><strong>{{ r.label }}</strong><br><span class="ma-hint" :title="r.namen.join(' · ')">{{ r.ritme }}</span></td>
                       <td><span v-if="r.interval" class="pil pil--geel">{{ r.perJaar }}× per jaar</span><span v-else class="pil pil--grijs">Geen</span></td>
-                      <td class="cel-r">{{ r.klanten }}</td><td class="cel-r">{{ r.prospects }}</td><td class="cel-r">{{ r.nietBenaderd }}</td>
+                      <td class="cel-r">{{ r.prospects }}</td><td class="cel-r">{{ r.nietBenaderd }}</td>
                       <td><DekkingBalk v-if="r.interval" :gezien="r.opSchema" :stil="r.achter" :nooit="r.nooit" :titel="`${r.opSchema} op schema · ${r.achter} achter op ritme · ${r.nooit} nooit een meeting`" /><span v-else class="ma-hint">geen meetingdoel</span></td>
                       <td class="cel-r"><span v-if="!r.interval" class="ma-hint">—</span><span v-else :class="{ 'ma-rood': r.achter + r.nooit > 0 }">{{ r.achter + r.nooit }}</span></td>
                       <td><button type="button" class="dd-act" :disabled="!r.totaal" :data-test="`klasse-open-${r.code}`" @click="openKlasse(r)">Openen</button></td>
@@ -119,7 +119,7 @@ useHead({ title: 'Meetinganalyse · Dealtrace' })
                   <button type="button" class="ma-knop" :disabled="!r.totaal" @click="openKlasse(r)">
                     <span class="ma-knop-kop"><strong>{{ r.label }}</strong><span v-if="r.interval" class="tnum" :class="{ 'ma-rood': r.achter + r.nooit > 0 }">{{ r.achter + r.nooit }} achter of nooit</span><span v-else class="ma-hint">geen meetingdoel</span></span>
                     <DekkingBalk v-if="r.interval" :gezien="r.opSchema" :stil="r.achter" :nooit="r.nooit" />
-                    <span class="ma-hint">{{ r.interval ? `${r.perJaar}× per jaar` : 'Geen doel' }} · {{ r.klanten }} klanten · {{ r.prospects }} prospects</span>
+                    <span class="ma-hint">{{ r.interval ? `${r.perJaar}× per jaar` : 'Geen doel' }} · {{ r.prospects }} prospects</span>
                   </button>
                 </li>
               </ul>
@@ -134,7 +134,7 @@ useHead({ title: 'Meetinganalyse · Dealtrace' })
             <header class="ma-blokkop">
               <span class="kicker kicker--streep">Meetings {{ vensterTekst }}</span>
               <h2 class="ma-bloktitel">Wat leverden je gesprekken op?</h2>
-              <p class="ma-subtitel">Online meetings en belafspraken met klanten, met hun uitkomst, verslag, transcript en de analyse van de Notulist. Intern overleg telt niet mee. De doorlooptijd telt de dagen tot de volgende afspraak met hetzelfde account.</p>
+              <p class="ma-subtitel">Online meetings en belafspraken met prospects, met hun uitkomst, verslag, transcript en de analyse van de Notulist. Intern overleg telt niet mee. De doorlooptijd telt de dagen tot de volgende afspraak met hetzelfde account.</p>
             </header>
             <AnalyseTegels v-if="!data.vorm" klein :tegels="vormTegels" class="ma-vorm" />
             <AfspraakCijfersBlok :cijfers="data.cijfers" :per-soort="data.perSoort" eenheid="meetings" soort-kop="Meetingsoort" met-transcript :venster-tekst="vensterTekst" />
@@ -151,12 +151,12 @@ useHead({ title: 'Meetinganalyse · Dealtrace' })
             <p v-if="data.geenRegios" class="meta">Er is nog geen gebiedsindeling. Richt regio's in bij <NuxtLink to="/instellingen/gebieden" class="tabel-link">Gebieden en regiodagen</NuxtLink>.</p>
             <div v-else class="tabel-wrap">
               <table class="tabel" data-test="ma-regiotabel">
-                <thead><tr><th>Regio</th><th>Vaste dag</th><th class="cel-r">Klanten</th><th class="cel-r">Prospects</th><th class="ma-balkkolom">Meetingdekking</th><th class="cel-r">Achter / nooit</th><th aria-label="Openen" /></tr></thead>
+                <thead><tr><th>Regio</th><th>Vaste dag</th><th class="cel-r">Prospects</th><th class="ma-balkkolom">Meetingdekking</th><th class="cel-r">Achter / nooit</th><th aria-label="Openen" /></tr></thead>
                 <tbody>
                   <tr v-for="r in data.regios" :key="r.regioId">
                     <td><strong>{{ r.naam }}</strong></td>
                     <td><span class="pil" :class="r.regiodag ? 'pil--geel' : 'pil--grijs'">{{ r.regiodag ?? 'Geen' }}</span></td>
-                    <td class="cel-r">{{ r.klanten }}</td><td class="cel-r">{{ r.prospects }}</td>
+                    <td class="cel-r">{{ r.prospects }}</td>
                     <td><DekkingBalk :gezien="r.opSchema" :stil="r.achter" :nooit="r.nooit" /></td>
                     <td class="cel-r"><span :class="{ 'ma-rood': r.achter + r.nooit > 0 }">{{ r.achter + r.nooit }}</span></td>
                     <td><button type="button" class="dd-act" :disabled="!r.totaal" @click="openRegio(r)">Openen</button></td>

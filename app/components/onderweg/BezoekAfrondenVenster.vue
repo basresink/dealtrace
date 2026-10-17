@@ -28,7 +28,7 @@ const werkdagen = (n: number) => { const d = new Date(); let k = 0; while (k < n
 watch(() => f.uitkomst, () => {
   const t = gekozen.value?.gevolg.type
   if (t === 'later') Object.assign(f, { stapTitel: '', stapDatum: '', laterOp: werkdagen(20) })
-  else if (t === 'contactpersoon') { contactOpen.value = true; Object.assign(f, { stapTitel: `Nieuwe contactpersoon bellen bij ${props.afspraak?.accountNaam ?? 'de klant'}`, stapDatum: werkdagen(1) }) }
+  else if (t === 'contactpersoon') { contactOpen.value = true; Object.assign(f, { stapTitel: `Nieuwe contactpersoon bellen bij ${props.afspraak?.accountNaam ?? 'de prospect'}`, stapDatum: werkdagen(1) }) }
   else if (t === 'gehouden' && !props.afspraak?.eerste) Object.assign(f, { stapTitel: `Terugbellen ${props.afspraak?.accountNaam ?? ''}`.trim(), stapDatum: werkdagen(3) })
   else Object.assign(f, { stapTitel: '', stapDatum: '' })
 })

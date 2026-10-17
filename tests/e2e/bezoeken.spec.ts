@@ -18,7 +18,7 @@ test('Dag: kop, week met regiodagen, kaart, routelijst, statistiek, kansen, bell
   await expect(page.getByTestId('bz-week').locator('[data-test^="week-dag-"]')).toHaveCount(5)
   await expect(page.getByTestId('kaart')).toBeVisible()
   await expect(page.getByTestId('routelijst').locator('[data-test^="routedag-"]')).toHaveCount(1)
-  await expect(page.getByTestId('dagstat')).toContainText('Klantcontact')
+  await expect(page.getByTestId('dagstat')).toContainText('Contactmomenten')
   await expect(page.getByTestId('kansen')).toContainText('Kansen langs de route')
   await expect(page.getByTestId('te-plannen')).toContainText('Te plannen bezoeken')
   const bel = page.getByTestId('bellijst-naast')

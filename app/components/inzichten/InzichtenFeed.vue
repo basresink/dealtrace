@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Inzichtenfeed in de opzet van DealDrive (pagina /inzichten en het tabblad Inzichten van Acties):
-// werkbalk met Alle en Prospects, Filters (gelezen, bron, agent, periode, fase, tegengehouden),
+// werkbalk met Prospects (standaard: klanten blijven buiten beeld) en Ook klanten, Filters (gelezen, bron, agent, periode, fase, tegengehouden),
 // statkaarten die ook filteren, "+ Inzicht" (met prospect en optioneel een contact), "Waarom niet?" (Expert), een kopregel met het aantal en een raster van
 // InzichtKaart (3 per rij, 2 op een tablet, 1 op de telefoon). Alle filters staan in de URL.
 // Een klik op een kaart opent de InzichtFlyout; ?inzicht=<id> opent er meteen een.
@@ -16,7 +16,8 @@ const magMetBron = computed(() => !!functie('inzichten.handmatig')?.beschikbaar)
 
 const SLEUTELS = ['gelezen', 'soort', 'bron', 'agent', 'sinds', 'fase', 'teller'] as const
 const q = (k: string) => (typeof route.query[k] === 'string' ? (route.query[k] as string) : '')
-const query = computed(() => Object.fromEntries([...SLEUTELS, 'inzicht'].map((k) => [k, q(k) || undefined])))
+// Standaard alleen prospects; ?soort=alle toont ook de inzichten bij klanten.
+const query = computed(() => Object.fromEntries([...SLEUTELS, 'inzicht'].map((k) => [k, k === 'soort' ? (q(k) === 'alle' ? undefined : q(k) || 'prospect') : q(k) || undefined])))
 const { data, refresh } = await useFetch<any>('/api/signals', { query, default: () => ({ inzichten: [], tellers: {}, fases: [], uitgelicht: null }) })
 const versie = useState('motorVersie', () => 0)
 watch(versie, () => refresh())
@@ -30,7 +31,7 @@ const filtersOpen = ref(false)
 const actieveFilters = computed(() => ['gelezen', 'bron', 'agent', 'sinds', 'fase'].filter((k) => q(k)).length)
 function resetFilters() { zet(Object.fromEntries(SLEUTELS.map((k) => [k, undefined]))); toonTegengehouden(false) }
 
-const SOORTEN = [['', 'Alle'], ['prospect', 'Prospects']] as const
+const SOORTEN = [['', 'Prospects'], ['alle', 'Ook klanten']] as const
 const GELEZEN = [['', 'Ongelezen'], ['gelezen', 'Gelezen'], ['alle', 'Beide']] as const
 const BRONNEN = [['', 'Alle'], ['extern', 'Extern'], ['intern', 'Intern']] as const
 const PERIODES = [['', 'Alles'], ['vandaag', 'Vandaag'], ['week', 'Afgelopen week'], ['maand', 'Afgelopen maand'], ['kwartaal', 'Afgelopen kwartaal']] as const

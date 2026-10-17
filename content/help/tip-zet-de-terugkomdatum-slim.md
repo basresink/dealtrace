@@ -29,7 +29,7 @@ Jeroen van Drukkerij Paperclip zegt op 14 oktober: "Ons contract loopt tot eind 
 
 ## Valkuilen
 
-- **De voorgestelde datum laten staan terwijl je beter weet.** Gebruik wat de klant zei.
+- **De voorgestelde datum laten staan terwijl je beter weet.** Gebruik wat de prospect zei.
 - **Geen reden invullen.** Zonder reden weet je over drie maanden niet meer waarom je belt.
 - **Te vroeg terugkomen.** Binnen de afkoelperiode kan het niet; Dealtrace schuift de datum op.
 
@@ -49,5 +49,5 @@ Lees [Nee met reden en afkoelperiode](/helpcenter/nee-met-reden-en-afkoelperiode
    - [ ] Niets, de datum is genoeg
 3. Wanneer pas je de voorgestelde datum aan?
    - [ ] Altijd, de regel klopt nooit
-   - [x] Als de klant je een concreter moment noemde
+   - [x] Als de prospect je een concreter moment noemde
    - [ ] Alleen bij klanten, niet bij prospects

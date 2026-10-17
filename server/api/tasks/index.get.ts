@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
       id: t.id, title: t.title, status: t.status, actionType: t.actionType, priority: t.priority, dueDate: t.dueDate, ownerId: t.ownerId, accountId: t.accountId,
       contact: t.contactId && contactPer.has(t.contactId) ? { id: t.contactId, naam: contactPer.get(t.contactId)! } : null,
       account: t.accountId ? { id: t.accountId, naam: per.get(t.accountId)?.naam ?? null, fase: fase(per.get(t.accountId)), status: per.get(t.accountId)?.nbStatus ?? null } : null,
-      herkomst: herkomst(t), poging: (t.data as any)?.poging ?? null, waarom: (t.data as any)?.waarom ?? null, eigenaar: users.find((u) => u.id === t.ownerId)?.naam ?? null,
+      herkomst: herkomst(t), poging: (t.data as any)?.poging ?? null, reeks: (t.data as any)?.reeks?.n ? { id: (t.data as any).reeks.id, n: (t.data as any).reeks.n, van: (t.data as any).reeks.van } : null, waarom: (t.data as any)?.waarom ?? null, eigenaar: users.find((u) => u.id === t.ownerId)?.naam ?? null,
       achterstallig: isAchterstallig(t, nu), groep: groepVan(t, nu), aanleiding: (t.data as any)?.aanleiding ?? null,
     }))
     const v = nlMoment(nu).datum

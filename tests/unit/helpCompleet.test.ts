@@ -21,7 +21,7 @@ describe('de inhoud in content/help', () => {
   })
   it('elk new business-artikel heeft de vijf onderdelen en drie controlevragen, zonder offertes of pipeline', () => {
     const nb = alle.filter((a) => a.collectie === 'newbusiness')
-    expect(nb.length).toBeGreaterThanOrEqual(41)
+    expect(nb.length).toBeGreaterThanOrEqual(61)
     for (const a of nb) {
       expect(ontbrekendeOnderdelen(a.inhoud), a.slug).toEqual([])
       expect(a.vragen?.length, a.slug).toBe(3)
@@ -45,8 +45,8 @@ describe('de inhoud in content/help', () => {
 
 describe('Nieuwe klanten werven in de academie', () => {
   const werven = alle.filter((a) => (CATEGORIEEN_WERVEN as readonly string[]).includes(a.categorie))
-  it('twaalf artikelen uit The Perfect Pitch, allemaal in de academie, elk met de vijf onderdelen, drie controlevragen en een bekende bron', () => {
-    expect(werven.length).toBe(12)
+  it('twaalf artikelen uit The Perfect Pitch en twintig uit Sales Hunter, allemaal in de academie, elk met de vijf onderdelen, drie controlevragen en een bekende bron', () => {
+    expect(werven.length).toBe(32)
     const bronnen: string[] = Object.values(WERVEN_BRONNEN)
     for (const a of werven) {
       expect(a.collectie, a.slug).toBe('newbusiness')
@@ -55,6 +55,18 @@ describe('Nieuwe klanten werven in de academie', () => {
       expect(bronnen, a.slug).toContain(a.bron)
     }
     expect(werven.filter((a) => a.bron === WERVEN_BRONNEN.perfectPitch)).toHaveLength(12)
+    expect(werven.filter((a) => a.bron === WERVEN_BRONNEN.salesHunter)).toHaveLength(20)
+  })
+  it('Sales Hunter heeft vier eigen categorieën; elk artikel heeft een voorbeeld met fictieve data en linkt naar Dealtrace', () => {
+    const hunter = werven.filter((a) => a.bron === WERVEN_BRONNEN.salesHunter)
+    const cats = ['Je werving plannen', 'Zichtbaar worden', 'Kanalen inzetten', 'Kwalificeren en opvolgen']
+    expect([...new Set(hunter.map((a) => a.categorie))].sort()).toEqual([...cats].sort())
+    for (const a of hunter) {
+      expect(a.samenvatting.length, a.slug).toBeGreaterThan(40)
+      expect(/\d/.test(a.inhoud.slice(a.inhoud.indexOf('## Voorbeeld'), a.inhoud.indexOf('## Valkuilen'))), `${a.slug}: voorbeeld met data`).toBe(true)
+      expect(a.inhoud.slice(a.inhoud.indexOf('## Zo doe je het in Dealtrace')), a.slug).toMatch(/\]\(\/helpcenter\/[a-z0-9-]+\)/)
+      for (const m of a.inhoud.matchAll(/[a-z0-9.-]+@([a-z0-9-]+(?:\.[a-z0-9-]+)+)/gi)) expect(m[1], a.slug).toMatch(/\.test$/)
+    }
   })
   it('de academie heeft twee hoofdstukken: het vak en Nieuwe klanten werven, samen alle categorieën', () => {
     expect(ACADEMIE_HOOFDSTUKKEN.map((h) => h.sleutel)).toEqual(['vak', 'werven'])

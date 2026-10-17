@@ -124,13 +124,13 @@ export function campagneResultaat(items: Pick<Item, 'accountId' | 'kolom' | 'win
   return { accounts: items.length, bereikt, gesprekken, afsprakenGepland: gepland, afsprakenGehouden: gehouden, overgedragen, conversie: items.length ? Math.round((gepland / items.length) * 100) : 0, winpuntUitgevoerd: beantwoord.length ? Math.round((beantwoord.filter((i) => i.winpuntUitgevoerd).length / beantwoord.length) * 100) : null }
 }
 
-export interface Kandidaat { id: string; naam: string; ritmeActief?: boolean; afkoelingTot?: string | null; partner?: string | null; nbStatus?: string | null; campagneIds?: string[] }
-const MEERVOUD: Record<string, string> = { 'zit al in een ritme': 'zitten al in een ritme', 'zit al in een campagne': 'zitten al in een campagne', 'zei nee': 'zeiden nee', 'in afkoelperiode': 'in afkoelperiode', 'hoort bij een partner': 'horen bij een partner' }
+export interface Kandidaat { id: string; naam: string; gedeactiveerd?: boolean; ritmeActief?: boolean; afkoelingTot?: string | null; partner?: string | null; nbStatus?: string | null; campagneIds?: string[] }
+const MEERVOUD: Record<string, string> = { 'is gedeactiveerd': 'zijn gedeactiveerd', 'zit al in een ritme': 'zitten al in een ritme', 'zit al in een campagne': 'zitten al in een campagne', 'zei nee': 'zeiden nee', 'in afkoelperiode': 'in afkoelperiode', 'hoort bij een partner': 'horen bij een partner' }
 /** Wie overgeslagen wordt, met reden: al in een ritme of andere campagne, in afkoeling, nee, of bij een partner (bij direct). */
 export function overslagen(accounts: Kandidaat[], kanaalVia: 'direct' | 'partner', nu: Date): { mee: Kandidaat[]; over: { account: Kandidaat; reden: string }[]; samenvatting: string[] } {
   const mee: Kandidaat[] = []; const over: { account: Kandidaat; reden: string }[] = []
   for (const a of accounts) {
-    const reden = a.ritmeActief ? 'zit al in een ritme' : a.campagneIds?.length ? 'zit al in een campagne' : a.nbStatus === 'nee' ? 'zei nee' : a.afkoelingTot && Date.parse(a.afkoelingTot) > nu.getTime() ? 'in afkoelperiode' : kanaalVia === 'direct' && a.partner ? 'hoort bij een partner' : null
+    const reden = a.gedeactiveerd ? 'is gedeactiveerd' : a.ritmeActief ? 'zit al in een ritme' : a.campagneIds?.length ? 'zit al in een campagne' : a.nbStatus === 'nee' ? 'zei nee' : a.afkoelingTot && Date.parse(a.afkoelingTot) > nu.getTime() ? 'in afkoelperiode' : kanaalVia === 'direct' && a.partner ? 'hoort bij een partner' : null
     if (reden) over.push({ account: a, reden }); else mee.push(a)
   }
   const tel = new Map<string, number>()

@@ -145,7 +145,7 @@ async function planEen(tx: Tx, org: string, door: Planner, p: PlanInvoer, nu = n
   if (!soort) fout(422, 'Kies een meetingsoort')
   // Intern overleg kan zonder klant; een klantafspraak niet.
   const [a] = p.accountId ? await rijen(tx, sql`select id, name, owner_id, city, data from accounts where id = ${p.accountId}`) : []
-  if (!a && soort!.type === 'klant') fout(422, 'Kies een klant')
+  if (!a && soort!.type === 'klant') fout(422, 'Kies een prospect')
   const owner = p.voorWie && p.voorWie !== door.id ? p.voorWie : door.id
   if (owner !== door.id) {
     if (!door.mag.voorCollega) fout(403, 'Plannen voor een collega staat voor jou nog niet aan')
@@ -202,6 +202,8 @@ async function planEen(tx: Tx, org: string, door: Planner, p: PlanInvoer, nu = n
     await tx.execute(sql`insert into notificaties (id, organisation_id, gebruiker_id, soort, titel, tekst, link, op, data) values (${crypto.randomUUID()}, ${org}, ${c}, 'systeem', 'Je bent uitgenodigd voor een afspraak',
       ${`${door.naam.replace(/^Testgebruiker /, '')} nodigt je uit: ${afspraakTitel(titel, soort!.naam, a?.name)} op ${new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(start)}.`}, ${`/agenda?afspraak=${id}`}, now(), '{}'::jsonb)`)
   }
+  // F3 Dagplanner: heeft de eigenaar vandaag een dagplanning, dan plant hij de rest van de dag opnieuw.
+  await (await import('./agents/dagplanner')).herplanBijWijziging(tx, org, owner, nu, 'nieuw')
   await schrijfAudit(tx, { organisationId: org, actorId: door.id, action: 'afspraak.plannen', resourceType: 'appointments', resourceId: id, changes: { owner, soort: soort!.slug, eerste, contact: ct?.id ?? null, uitgenodigd: collegas.length, reeks: p.reeksId ?? null } })
   return { id, eerste, tekst: `Afspraak gepland${a ? ` met ${a.name}` : ''}, ${new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(start)}.` }
 }
@@ -274,6 +276,8 @@ export async function zetAfspraakStatus(tx: Tx, org: string, afspraakId: string,
   const kansen = await kansenRond(tx, ap!.owner_id, ap!.account_id, new Date(ap!.start_at), new Date(ap!.end_at), nu).catch(() => [])
   const waarom = kansen.length ? `Er is tijd vrijgekomen. In de buurt: ${kansen.map((k) => `${k.naam} (${k.omrij} min)`).join(', ')}.` : 'Er is tijd vrijgekomen. Er staan nu geen kansen in de buurt.'
   await tx.execute(sql`insert into signals (organisation_id, account_id, owner_id, type, title, relevance_score, status, bron, data) values (${org}, ${ap!.account_id}, ${ap!.owner_id}, 'gat-in-agenda', ${`Gat in je agenda: ${ap!.account_naam ?? 'afspraak'} ${status === 'geannuleerd' ? 'geannuleerd' : 'niet verschenen'}`}, 70, 'nieuw', 'intern', ${JSON.stringify({ waarom, afspraakId: ap!.id, kansen })}::jsonb)`)
+  // F3 Dagplanner: heeft de eigenaar vandaag een dagplanning, dan plant hij de rest van de dag opnieuw.
+  await (await import('./agents/dagplanner')).herplanBijWijziging(tx, org, ap!.owner_id, nu, status)
   await schrijfAudit(tx, { organisationId: org, actorId: door, action: `afspraak.${status}`, resourceType: 'appointments', resourceId: ap!.id, changes: { eerste } })
   return { status, eerste }
 }
@@ -296,6 +300,8 @@ export async function verplaatsAfspraak(tx: Tx, org: string, afspraakId: string,
     data.externalIds = { ...(data.externalIds ?? {}), [k.provider]: r.externId }
   }
   await tx.execute(sql`update appointments set start_at = ${start.toISOString()}, end_at = ${eind.toISOString()}, data = ${JSON.stringify(data)}::jsonb, updated_at = now(), versie = versie + 1 where id = ${ap!.id}`)
+  // F3 Dagplanner: heeft de eigenaar vandaag een dagplanning, dan plant hij de rest van de dag opnieuw.
+  await (await import('./agents/dagplanner')).herplanBijWijziging(tx, org, ap!.owner_id, nu, start.getTime() === new Date(ap!.start_at).getTime() ? 'uitloop' : 'verzet')
   await schrijfAudit(tx, { organisationId: org, actorId: door, action: 'afspraak.verplaatsen', resourceType: 'appointments', resourceId: ap!.id, changes: { van: new Date(ap!.start_at).toISOString(), naar: start.toISOString(), duur } })
   return { id: ap!.id, start: start.toISOString(), eind: eind.toISOString(), tekst: `Verplaatst naar ${new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }).format(start)}.` }
 }
@@ -310,7 +316,7 @@ export async function agendaVoor(tx: Tx, gebruikers: string[], van: Date, tot: D
     from appointments ap join meetingsoorten m on m.id = ap.meetingsoort_id left join accounts a on a.id = ap.account_id join users u on u.id = ap.owner_id left join users g on g.id = ap.gepland_door left join contacts c on c.id = ap.contact_id
     where (ap.owner_id = any(string_to_array(${lijst}, ',')) or coalesce(ap.data->'uitgenodigd', '[]'::jsonb) ?| string_to_array(${lijst}, ',')) and ap.end_at > ${van.toISOString()} and ap.start_at < ${tot.toISOString()} and ap.status <> 'geannuleerd' order by ap.start_at`)
   // Afgeronde blokken komen mee (de agenda toont ze als hele-dag-item met het aantal gesprekken).
-  const blokken = await rijen(tx, sql`select s.id, s.gebruiker_id, s.start_op, s.eind_op, s.status, greatest(coalesce((s.data->'resultaat'->>'gevoerd')::int, 0), jsonb_array_length(coalesce(s.data->'gesprekken', '[]'::jsonb)), (select count(*)::int from tasks t where t.belblok_id = s.id)) as gesprekken
+  const blokken = await rijen(tx, sql`select s.id, s.gebruiker_id, s.start_op, s.eind_op, s.status, s.data ? 'dagplanner' as dagplanner, greatest(coalesce((s.data->'resultaat'->>'gevoerd')::int, 0), jsonb_array_length(coalesce(s.data->'gesprekken', '[]'::jsonb)), (select count(*)::int from tasks t where t.belblok_id = s.id)) as gesprekken
     from belblok_sessies s where s.gebruiker_id = any(string_to_array(${lijst}, ',')) and s.eind_op > ${van.toISOString()} and s.start_op < ${tot.toISOString()} and s.status in ('gepland', 'bezig', 'klaar')`)
   const uitAfs = afs.map((x) => ({
     id: x.id, ownerId: x.owner_id, ownerNaam: x.owner_naam, geplandDoor: x.gepland_door !== x.owner_id ? x.gepland_door_naam : null, accountId: x.account_id, accountNaam: x.account_naam,
@@ -320,7 +326,7 @@ export async function agendaVoor(tx: Tx, gebruikers: string[], van: Date, tot: D
   const bezet = gebruikers.length === 1 ? await bezetExtern(tx, gebruikers[0]!, van, tot) : []
   return {
     afspraken: uitAfs,
-    belblokken: blokken.map((b) => ({ id: b.id, gebruikerId: b.gebruiker_id, start: new Date(b.start_op).toISOString(), eind: new Date(b.eind_op).toISOString(), status: b.status, gesprekken: Number(b.gesprekken ?? 0) })),
+    belblokken: blokken.map((b) => ({ id: b.id, gebruikerId: b.gebruiker_id, start: new Date(b.start_op).toISOString(), eind: new Date(b.eind_op).toISOString(), status: b.status, gesprekken: Number(b.gesprekken ?? 0), herkomst: b.dagplanner ? 'Dagplanner' : null })),
     bezet, conflicten: [...conflicten(uitAfs.map((a) => ({ id: a.id, ownerId: a.ownerId, start: a.start, eind: a.eind, status: a.status })))],
   }
 }

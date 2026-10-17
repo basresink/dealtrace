@@ -1,11 +1,11 @@
 <script setup lang="ts">
-// Klant en contactpersoon als zoekvelden (opzet van DealDrive, NieuweTaakFlyout en TaakFlyout): typen zoekt,
+// Prospect (standaardlabel) en contactpersoon als zoekvelden (opzet van DealDrive, NieuweTaakFlyout en TaakFlyout): typen zoekt,
 // klikken kiest, het kruisje wist. Met een klant toont het contactveld diens contacten (beslisser eerst);
 // zonder klant zoek je over alle contacten en neemt het gekozen contact zijn klant mee. Een andere klant
 // wist een contact dat er niet bij hoort.
 export interface Klant { id: string; naam: string; plaats?: string | null }
 export interface Contact { id: string; naam: string; functie?: string | null; accountId?: string | null; accountNaam?: string | null }
-const props = withDefaults(defineProps<{ prefix?: string; klantLabel?: string; contactLabel?: string }>(), { prefix: 'nt', klantLabel: 'Klant', contactLabel: 'Contactpersoon' })
+const props = withDefaults(defineProps<{ prefix?: string; klantLabel?: string; contactLabel?: string }>(), { prefix: 'nt', klantLabel: 'Prospect', contactLabel: 'Contactpersoon' })
 const klant = defineModel<Klant | null>('klant', { default: null })
 const contact = defineModel<Contact | null>('contact', { default: null })
 

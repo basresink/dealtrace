@@ -1,8 +1,10 @@
 <script setup lang="ts">
 // Accountplannen op de accountkaart (tabblad Reis en kwalificatie): de plannen van dit account met status,
 // geldigheid en voortgang, en "+ Accountplan" met het account al ingevuld. Alleen als de functie aanstaat.
+// Een plan is voor een topprospect; voor een klant staat er geen + Accountplan (plannen voor klanten horen in DealDrive).
 import { WEERGAVE_LABEL, geldigheidLabel } from '~~/shared/accountplannen'
-const props = defineProps<{ account: { id: string; naam: string } }>()
+const props = defineProps<{ account: { id: string; naam: string; soort?: string | null } }>()
+const isKlant = computed(() => props.account.soort === 'klant')
 const { functie } = useMe()
 const aan = computed(() => !!functie('nav.accountplannen')?.beschikbaar)
 const { data } = await useFetch<any>('/api/accountplannen', { query: { accountId: props.account.id }, immediate: aan.value, default: () => ({ plannen: [] }) })
@@ -14,7 +16,7 @@ const pilKlas = (w: string) => ({ actueel: 'pil--geel', verlopen: 'pil--rood', a
   <article v-if="aan" class="kaart" data-test="ak-accountplannen">
     <header class="kaart-kop">
       <h2 class="kaart-titel">Accountplannen</h2>
-      <button type="button" class="dd-act dd-act--geel" data-test="ak-accountplan-nieuw" @click="nieuwOpen = true"><Icoon naam="Plus" :grootte="14" />Accountplan</button>
+      <button v-if="!isKlant" type="button" class="dd-act dd-act--geel" data-test="ak-accountplan-nieuw" @click="nieuwOpen = true"><Icoon naam="Plus" :grootte="14" />Accountplan</button>
     </header>
     <ul v-if="data.plannen.length" class="akp-lijst" role="list">
       <li v-for="p in data.plannen" :key="p.id" class="akp-rij">
@@ -24,8 +26,9 @@ const pilKlas = (w: string) => ({ actueel: 'pil--geel', verlopen: 'pil--rood', a
         </NuxtLink>
       </li>
     </ul>
-    <p v-else class="meta">Nog geen accountplan voor {{ account.naam }}. Een plan geeft deze klant doelen, een strategie en acties met een datum.</p>
-    <AccountplanNieuwFlyout :open="nieuwOpen" :account="account" @sluit="nieuwOpen = false" />
+    <p v-else-if="isKlant" class="meta">Een plan voor een klant maak je in DealDrive.</p>
+    <p v-else class="meta">Nog geen accountplan voor {{ account.naam }}. Een plan geeft deze topprospect doelen, een strategie en acties met een datum.</p>
+    <AccountplanNieuwFlyout v-if="!isKlant" :open="nieuwOpen" :account="account" @sluit="nieuwOpen = false" />
   </article>
 </template>
 

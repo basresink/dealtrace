@@ -53,12 +53,32 @@ export async function isAfgemeld(tx: Tx, email: string) {
   return !!(await rijen(tx, sql`select 1 from onderdrukkingslijst where email_hash = ${emailHash(email)} limit 1`)).length
 }
 
+/**
+ * Zonder mailkoppeling (alleen voor opvolgreeksen, `terugval`): via Resend met de platformafzender en de verkoper als
+ * antwoordadres als RESEND_API_KEY er is, anders in de mock-outbox. Een .test-adres gaat nooit naar buiten.
+ */
+async function verstuurZonderKoppeling(org: string, b: Bericht & { tekst: string }, antwoordAan: string | null, nu: Date): Promise<{ ok: true } | { ok: false; status: number; tekst: string }> {
+  const sleutel = process.env.RESEND_API_KEY
+  if (sleutel && !b.aan.endsWith('.test')) {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST', headers: { authorization: `Bearer ${sleutel}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ from: process.env.MAIL_AFZENDER || 'Dealtrace <verkoop@dealtrace.nl>', to: [b.aan], subject: b.onderwerp, text: b.tekst, ...(antwoordAan ? { reply_to: antwoordAan } : {}) }),
+      signal: AbortSignal.timeout(8000),
+    }).catch(() => null)
+    return res?.ok ? { ok: true } : { ok: false, status: 502, tekst: 'De mailserver nam de mail niet aan. Probeer het later opnieuw.' }
+  }
+  MOCK_POSTVAK.push({ ...b, van: antwoordAan ?? 'outbox', org, op: nu.toISOString() })
+  if (MOCK_POSTVAK.length > 500) MOCK_POSTVAK.shift()
+  return { ok: true }
+}
+
 /** Versturen: weigert een afgemeld adres; een eerste mail krijgt de informatieplicht. */
-export async function verstuurMail(tx: Tx, org: string, b: Bericht, opties: { eersteMail: boolean; basisUrl: string }, nu = new Date()): Promise<{ ok: true } | { ok: false; status: number; tekst: string }> {
+export async function verstuurMail(tx: Tx, org: string, b: Bericht, opties: { eersteMail: boolean; basisUrl: string; terugval?: boolean; antwoordAan?: string | null }, nu = new Date()): Promise<{ ok: true } | { ok: false; status: number; tekst: string }> {
   const k = await mailKoppeling(tx)
-  if (!k) return { ok: false, status: 409, tekst: 'Er is nog geen mailkoppeling. Gebruik "Verstuur via je mail" of vraag je beheerder de mail te koppelen.' }
+  if (!k && !opties.terugval) return { ok: false, status: 409, tekst: 'Er is nog geen mailkoppeling. Gebruik "Verstuur via je mail" of vraag je beheerder de mail te koppelen.' }
   if (await isAfgemeld(tx, b.aan)) return { ok: false, status: 403, tekst: 'Dit adres heeft zich afgemeld en krijgt geen mail meer.' }
   const tekst = opties.eersteMail ? `${b.tekst}${afmeldVoet(afmeldUrl(opties.basisUrl, org, b.aan), `${opties.basisUrl}/privacy`)}` : b.tekst
+  if (!k) return verstuurZonderKoppeling(org, { ...b, tekst }, opties.antwoordAan ?? null, nu)
   const [run] = await rijen(tx, sql`insert into koppeling_runs (organisation_id, koppeling_id, soort, handeling, start) values (${org}, ${k.id}, 'mail', 'versturen', ${nu.toISOString()}) returning id`)
   try {
     if (k.modus === 'mock') MOCK_POSTVAK.push({ ...b, tekst, van: k.van, org, op: nu.toISOString() })

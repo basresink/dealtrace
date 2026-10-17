@@ -1,7 +1,7 @@
 // GET /api/accounts/top: "Top deze week", de zes belangrijkste eigen prospects.
 // Rangschikking op score met een kleine bonus voor open inzichten, een actieve
 // aanleiding en recent contact. Levert ook de klassen voor het label op de kaart.
-import { and, count, eq, inArray, notInArray, sql } from 'drizzle-orm'
+import { and, count, eq, inArray, isNull, notInArray, sql } from 'drizzle-orm'
 import { metOrganisatie, schema } from '../../utils/db'
 import { vereisFunctie } from '../../utils/sessie'
 
@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   const ctx = await vereisFunctie(event, 'prospects.lijst')
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
     const rijen = await tx.select().from(schema.accounts)
-      .where(and(eq(schema.accounts.accountKind, 'prospect'), eq(schema.accounts.ownerId, ctx.gebruiker.id), notInArray(schema.accounts.nbStatus, ['nee', 'overgedragen'])))
+      .where(and(eq(schema.accounts.accountKind, 'prospect'), eq(schema.accounts.ownerId, ctx.gebruiker.id), isNull(schema.accounts.gedeactiveerdOp), notInArray(schema.accounts.nbStatus, ['nee', 'overgedragen'])))
     const [klasseRij] = await tx.select().from(schema.orgSettings).where(sql`${schema.orgSettings.key} = 'klassen'`)
     const klassen = ((klasseRij?.value as { id: string; naam: string; tabblad?: string }[]) ?? [])
       .filter((k) => !k.tabblad || k.tabblad === 'Prospects').map((k) => ({ id: k.id, naam: k.naam }))

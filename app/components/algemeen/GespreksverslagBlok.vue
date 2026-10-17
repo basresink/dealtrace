@@ -135,7 +135,7 @@ defineExpose({ bewaarVerslag })
     <section class="gv-deel" :aria-labelledby="`${uid}-vs`">
       <h4 :id="`${uid}-vs`" class="gv-sub">Gespreksverslag</h4>
       <VerslagVeld v-model="tekst" :record="record" groot placeholder="Typ je verslag: wat is besproken, wat speelt er en wat is afgesproken" />
-      <p class="meta mt-8">{{ tekst.trim() ? `${telWoorden(tekst)} woorden.` : 'Typ, plak of spreek in.' }} Het verslag staat op het tabblad Gespreksverslagen van de klant{{ heeftContact ? ' en het contact' : '' }}.</p>
+      <p class="meta mt-8">{{ tekst.trim() ? `${telWoorden(tekst)} woorden.` : 'Typ, plak of spreek in.' }} Het verslag staat op het tabblad Gespreksverslagen van de prospect{{ heeftContact ? ' en het contact' : '' }}.</p>
       <div class="dd-acties mt-8"><span class="dd-acties-vul" /><button type="button" class="dd-act" :disabled="!gewijzigd || bewaartVerslag" :data-test="tid('verslag-bewaar')" @click="bewaarVerslag()">{{ bewaartVerslag ? 'Bewaren…' : 'Bewaar verslag' }}</button></div>
     </section>
 
@@ -143,7 +143,7 @@ defineExpose({ bewaarVerslag })
       <div class="gv-an-kop"><div><span class="fo-blok-kicker">Notulist</span><h4 :id="`${uid}-an`" class="gv-sub">AI-analyse van het verslag</h4></div>
         <button type="button" class="dd-act dd-act--primair" :disabled="analyseert || !account || !(tekst.trim() || transcript)" :data-test="tid('analyseer')" @click="analyseer"><Icoon naam="Sparkles" />{{ analyseert ? 'Analyseren…' : analyse ? 'Opnieuw analyseren' : 'Analyseer verslag' }}</button>
       </div>
-      <p v-if="!account" class="meta">Een analyse hoort bij {{ waar }} met een klant.</p>
+      <p v-if="!account" class="meta">Een analyse hoort bij {{ waar }} met een prospect.</p>
       <p v-else-if="!analyse && !analyseReden" class="meta">De Notulist maakt een samenvatting, zet actiepunten als concepttaak klaar en legt koopsignalen vast als inzicht. Jij keurt goed.</p>
       <p v-if="analyseReden" class="veld-fout" :data-test="tid('analyse-reden')">{{ analyseReden }}</p>
       <template v-if="analyse">
@@ -157,7 +157,7 @@ defineExpose({ bewaarVerslag })
         <div class="gv-an-blok" :data-test="tid('koopsignalen')"><span class="gv-an-label">Koopsignalen</span>
           <ul v-if="analyse.koopsignalen.length"><li v-for="k in analyse.koopsignalen" :key="k">{{ k }}</li></ul>
           <p v-else class="meta">Geen koopsignalen gevonden.</p>
-          <p v-if="analyse.koopsignalen.length && account" class="meta">Staan als inzicht op de <NuxtLink :to="`/accounts/${account.id}?tab=inzichten`" class="tekst-link" @click="emit('sluit')">klantkaart</NuxtLink>.</p>
+          <p v-if="analyse.koopsignalen.length && account" class="meta">Staan als inzicht op de <NuxtLink :to="`/accounts/${account.id}?tab=inzichten`" class="tekst-link" @click="emit('sluit')">accountkaart</NuxtLink>.</p>
         </div>
         <div v-if="analyse.bezwaren.length" class="gv-an-blok" :data-test="tid('bezwaren')"><span class="gv-an-label">Bezwaren</span><ul><li v-for="b in analyse.bezwaren" :key="b">{{ b }}</li></ul></div>
         <div v-if="analyse.openVragen.length" class="gv-an-blok"><span class="gv-an-label">Open vragen</span><ul><li v-for="q in analyse.openVragen" :key="q">{{ q }}</li></ul></div>

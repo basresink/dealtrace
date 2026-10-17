@@ -4,7 +4,7 @@ import { eq, sql } from 'drizzle-orm'
 import { AFKOELING_STANDAARD, KANAAL_LABEL, KANALEN } from '../../shared/nbStatus'
 import { pastInDoelgroep } from '../../shared/reis'
 import {
-  AFSPRAAKMATRIX_STANDAARD, BELMATRIX_STANDAARD, CAPACITEIT_STANDAARD, FREQUENTIEPLAFOND_STANDAARD, KLASSEN_STANDAARD, STARTPLAFOND_STANDAARD,
+  AFSPRAAKMATRIX_STANDAARD, BELMATRIX_RIJEN, BELMATRIX_STANDAARD, CAPACITEIT_STANDAARD, KLANT_TABBLAD, FREQUENTIEPLAFOND_STANDAARD, KLASSEN_STANDAARD, STARTPLAFOND_STANDAARD,
   klasseCode, klasseGrenzen, leesMatrix, ritmeLabel, verwachtingVoorMij, type Klasse,
 } from '../../shared/ritmematrix'
 import { kan } from '../utils/accounts'
@@ -30,8 +30,10 @@ export default defineEventHandler(async (event) => {
       : []
     const bel = leesMatrix(instellingen.get('belmatrix'), {})
     const afspraak = leesMatrix(instellingen.get('afspraakmatrix'), {})
-    // Alleen de klassen die de organisatie heeft; zonder eigen klassen de standaard (A tot D).
-    const codes = [...new Set((klassen.length ? klassen : KLASSEN_STANDAARD).map((k) => k.code!).filter(Boolean))].sort()
+    // Alleen de klassen die de organisatie heeft; zonder eigen klassen de standaard (A tot D). Klassen op het
+    // tabblad Klanten (uit DealDrive of het CRM) horen niet bij de accountmatrix: geen ritme voor klanten.
+    const prospectKlassen = klassen.filter((k) => k.tabblad !== KLANT_TABBLAD)
+    const codes = [...new Set((prospectKlassen.length ? prospectKlassen : KLASSEN_STANDAARD).map((k) => k.code!).filter(Boolean))].sort()
     const doelgroepAccounts = doelgroepRijen.map((r) => alsDoelgroepAccount(r))
     const segmenten = segmentDefs.map((s) => ({ ...s, leden: doelgroepAccounts.filter((d) => pastInDoelgroep(d, { data: { eigenVeldFilters: s.filters ?? [] } })).length }))
     const reizen = await tx.select({ id: schema.reistemplates.id, naam: schema.reistemplates.naam, data: schema.reistemplates.data }).from(schema.reistemplates)
@@ -51,7 +53,7 @@ export default defineEventHandler(async (event) => {
       klassen: klassen.map((k) => ({ ...k, aantal: accounts.filter((x) => x.klasse === k.id).length })),
       zonderKlasse: accounts.filter((x) => x.accountKind === 'prospect' && !x.klasse).length,
       codes,
-      belmatrix: Object.fromEntries(['prospect', 'klant'].map((rij) => [rij, Object.fromEntries(codes.map((c) => [c, cel(bel.matrix, BELMATRIX_STANDAARD, rij, c)]))])),
+      belmatrix: Object.fromEntries(BELMATRIX_RIJEN.map((rij) => [rij, Object.fromEntries(codes.map((c) => [c, cel(bel.matrix, BELMATRIX_STANDAARD, rij, c)]))])),
       afspraakmatrix: Object.fromEntries(['meeting', 'bezoek'].map((rij) => [rij, Object.fromEntries(codes.map((c) => [c, cel(afspraak.matrix, AFSPRAAKMATRIX_STANDAARD, rij, c)]))])),
       afkoeling: KANALEN.map((k) => ({ id: k, label: KANAAL_LABEL[k], dagen: ((instellingen.get('afkoeling') as any) ?? AFKOELING_STANDAARD)[k] ?? AFKOELING_STANDAARD[k] })),
       frequentieplafond: (instellingen.get('frequentieplafond') as typeof FREQUENTIEPLAFOND_STANDAARD) ?? FREQUENTIEPLAFOND_STANDAARD,

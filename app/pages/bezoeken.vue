@@ -162,7 +162,7 @@ useHead({ title: 'Bezoeken · Dealtrace' })
             <div v-if="!dagGroepen.length" class="rl-leeg-week">Geen bezoeken gepland in deze week.</div>
             <div v-if="stat" class="bz-tellers" data-test="dagstat">
               <div class="bz-tel"><span class="bz-tel-num tnum">{{ stat.bezoeken }}</span><span class="bz-tel-label">Bezoeken</span></div>
-              <div class="bz-tel"><span class="bz-tel-num tnum">{{ stat.contact }}</span><span class="bz-tel-label">Klantcontact</span></div>
+              <div class="bz-tel"><span class="bz-tel-num tnum">{{ stat.contact }}</span><span class="bz-tel-label">Contactmomenten</span></div>
               <div class="bz-tel"><span class="bz-tel-num tnum">{{ stat.rij }}</span><span class="bz-tel-label">Rijtijd</span></div>
               <div class="bz-tel"><span class="bz-tel-num tnum">{{ stat.km }}</span><span class="bz-tel-label">Geschat km</span></div>
             </div>

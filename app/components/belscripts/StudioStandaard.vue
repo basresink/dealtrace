@@ -211,7 +211,7 @@ const code = (v: string) => '{' + v + '}'
           <div class="kaart-kop"><h2 class="kaart-titel">Bezwaren</h2><span class="meta">uit het verkoopverhaal en eigen</span></div>
           <p class="meta">Tijdens het bellen klapt de accountmanager een bezwaar open voor het antwoord. Een bezwaar met een koppeling volgt het verkoopverhaal.</p>
           <div v-for="(z, i) in s.data.bezwaren" :key="z.id" class="ss-bezwaar" :data-test="`studio-bezwaar-${i}`">
-            <label class="veld"><span class="veld-label">Als de klant zegt</span><input v-model="z.bezwaar" class="invoer" :disabled="!kanBewerken"></label>
+            <label class="veld"><span class="veld-label">Als de prospect zegt</span><input v-model="z.bezwaar" class="invoer" :disabled="!kanBewerken"></label>
             <label class="veld"><span class="veld-label">Antwoord</span><textarea v-model="z.antwoord" class="invoer" rows="2" :disabled="!kanBewerken" /></label>
             <label class="veld"><span class="veld-label">Wedervraag</span><input v-model="z.wedervraag" class="invoer" :disabled="!kanBewerken"></label>
             <div class="rijtje">
@@ -269,7 +269,7 @@ const code = (v: string) => '{' + v + '}'
         <aside class="fo-panel fo-panel--smal" role="dialog" aria-modal="true" aria-labelledby="ss-var-titel" data-test="variabelen-flyout">
           <header class="fo-head"><div class="fo-head-tekst"><span class="fo-kicker">Hulp</span><h2 id="ss-var-titel" class="fo-titel">Variabelen</h2></div><button type="button" class="fo-sluit" aria-label="Sluiten" @click="alleVariabelen = false"><Icoon naam="X" /></button></header>
           <div class="fo-body">
-            <p class="fo-tekst">Een variabele tussen accolades wordt bij het bellen vervangen door het gegeven uit Dealtrace. Is het onbekend, dan hoort de klant de terugvalzin. Klik om in te voegen.</p>
+            <p class="fo-tekst">Een variabele tussen accolades wordt bij het bellen vervangen door het gegeven uit Dealtrace. Is het onbekend, dan hoort de prospect de terugvalzin. Klik om in te voegen.</p>
             <div class="tabel-schuif mt-12">
               <table class="tabel">
                 <thead><tr><th>Variabele</th><th>Terugvalzin</th></tr></thead>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // De aanleiding van de dag als groot blok (opzet uit DealDrive, LeadCard): links een vlak met de initialen
 // van het account en het label "Aanleiding", rechts de kop, waarom het ertoe doet, bron en tijd, en
-// "Open klantkaart" en "Maak taak".
+// "Open kaart" en "Maak taak".
 const props = defineProps<{ a: { id: string; titel: string; waarom: string | null; bron: string; bronNaam: string; op: string; relevantie: number; account: { id: string; naam: string } | null } }>()
 defineEmits<{ maakTaak: [id: string] }>()
 const initialen = computed(() => (props.a.account?.naam ?? props.a.titel).replace(/^Test(bedrijf|installatie)?\s*/i, '').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join('') || 'DT')
@@ -24,7 +24,7 @@ const wanneer = computed(() => {
       <p v-if="a.waarom" class="ah-waarom">{{ a.waarom }}</p>
       <div class="ah-regel"><span class="ah-bron"><span class="ah-blokje" :class="a.bron === 'extern' ? 'ah-blokje--extern' : ''" />{{ a.bronNaam }}</span><span class="tnum">{{ wanneer }} · relevantie {{ a.relevantie }}</span></div>
       <div class="ah-knoppen">
-        <NuxtLink v-if="a.account" :to="`/accounts/${a.account.id}`" class="ah-knop ah-knop--primair" data-test="aanleiding-open-kaart">→ Open klantkaart</NuxtLink>
+        <NuxtLink v-if="a.account" :to="`/accounts/${a.account.id}`" class="ah-knop ah-knop--primair" data-test="aanleiding-open-kaart">→ Open kaart</NuxtLink>
         <button type="button" class="ah-knop" data-test="aanleiding-maak-taak" @click="$emit('maakTaak', a.id)">+ Maak taak</button>
       </div>
     </div>

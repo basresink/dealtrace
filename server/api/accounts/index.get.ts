@@ -1,9 +1,10 @@
 // GET /api/accounts?soort=prospect|klant&...filters&sort&pagina: rijen, tellers en
 // opties. Filters en tellers rekenen op de server met shared/accountFilters.
 import { and, count, inArray, isNotNull, lt, lte, max, notInArray, sql } from 'drizzle-orm'
-import { filterTellers, filtersUitQuery, pasFiltersToe, sorteer, type Sortering } from '../../../shared/accountFilters'
+import { actiefTellers, filterTellers, filtersUitQuery, pasFiltersToe, sorteer, type Sortering } from '../../../shared/accountFilters'
 import { accountRijen, effectiefNiveau, eigenVeldenVoor, kan, primairContact } from '../../utils/accounts'
 import { metOrganisatie, schema } from '../../utils/db'
+import { lopendeReeksen } from '../../utils/opvolgreeksOverzicht'
 import { eigenTeams } from '../../utils/gebruikers'
 import { terugkomControleLui } from '../../utils/reis'
 import { vereisFunctie } from '../../utils/sessie'
@@ -13,7 +14,7 @@ type Tx = Parameters<Parameters<typeof metOrganisatie>[1]>[0]
 const PER_PAGINA = 25
 const DAG = 24 * 3600 * 1000
 /** Activiteiten van het systeem tellen niet als laatste activiteit. */
-const SYSTEEM_SOORTEN = ['import', 'reis']
+const SYSTEEM_SOORTEN = ['import', 'reis', 'gedeactiveerd', 'geheractiveerd']
 
 /**
  * Extra's voor de zichtbare rijen in drie gegroepeerde queries (geen N+1): open
@@ -76,6 +77,8 @@ export default defineEventHandler(async (event) => {
     const namen = new Map((await tx.select({ id: schema.users.id, naam: schema.users.name }).from(schema.users)).map((u) => [u.id, u.naam]))
     const zichtbaar = resultaat.slice(0, pagina * PER_PAGINA)
     const extra = await rijExtra(tx, zichtbaar.map((r) => r.id), fctx.nu)
+    // F7: de lopende opvolgreeks per zichtbare rij (stap x van y en de volgende stap).
+    const reeksen = await lopendeReeksen(tx, zichtbaar.map((r) => r.id), fctx.nu)
     // Fases van alle reistemplates (standaard eerst), voor het faselabel op de rij.
     const faseLabels = new Map<string, { label: string; kleur: string | null }>()
     if (reisFilter) {
@@ -85,7 +88,7 @@ export default defineEventHandler(async (event) => {
       }
     }
     return {
-      totaal: rijen.length,
+      totaal: rijen.filter((r) => !r.gedeactiveerd).length,
       aantal: resultaat.length,
       rijen: zichtbaar.map((r) => {
         const actief = r.contacten.filter((c) => c.status !== 'vertrokken')
@@ -100,10 +103,14 @@ export default defineEventHandler(async (event) => {
           laatsteActiviteitOp: laatste,
           nextActionDagenOver: extra.dagenOver.get(r.id) ?? null,
           fase: r.faseId ? faseLabels.get(r.faseId) ?? null : null,
+          reeks: reeksen.get(r.id) ?? null,
         }
       }),
       meer: resultaat.length > pagina * PER_PAGINA,
       tellers: filterTellers(rijen, filters, fctx, mogelijk),
+      // 0064: het filter Status (actief, gedeactiveerd, alle) en de gekozen stand.
+      actief: filters.actief ?? 'actief',
+      actiefTellers: actiefTellers(rijen, filters, fctx),
       klassen,
       fases,
       eigenVelden: filterbaar.map((v) => ({ sleutel: v.sleutel, naam: v.naam, type: v.type, opties: v.data.opties ?? [] })),

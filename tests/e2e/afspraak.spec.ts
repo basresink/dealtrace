@@ -14,7 +14,7 @@ test.describe('afspraakvenster', () => {
     await page.getByTestId('afspraken-nieuw').click()
     const venster = page.getByTestId('plan-afspraak')
     await expect(venster).toContainText('Plan een afspraak in')
-    await expect(venster).toContainText('Voeg een briefing toe vanuit de klantkaart.')
+    await expect(venster).toContainText('Voeg een briefing toe vanuit de accountkaart.')
     await expect(page.getByTestId('pa-klant-gekozen')).toContainText('Testtechniek Vathorst')
     // De beslisser staat voorgekozen; wissen en een ander contact van deze klant kiezen.
     await expect(page.getByTestId('pa-contact-gekozen')).toContainText('Martijn Testvathorst')

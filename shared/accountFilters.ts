@@ -1,6 +1,7 @@
 // Filters en tellers voor de prospect- en klantlijst (F03). Tellers rekenen mee
 // met alle andere actieve filters; binnen een groep is het "of".
 import { normaliseerNaam } from './ontdubbelen'
+import { leesActiefFilter, pastBijActief, type ActiefFilter } from './deactiveren'
 
 export interface AccountRij {
   id: string
@@ -20,10 +21,14 @@ export interface AccountRij {
   cf: Record<string, unknown>
   telefoon?: string | null
   email?: string | null
+  /** 0064: gedeactiveerd; standaard niet in de lijst. */
+  gedeactiveerd?: boolean
 }
 
 export interface Filters {
   q?: string
+  /** Status actief, gedeactiveerd of alle (0064); zonder waarde alleen actieve accounts. */
+  actief?: ActiefFilter
   eigenaar?: 'mij' | 'team' | 'iedereen'
   status?: string[]
   /** Reis en fase (P05): fase-id's. */
@@ -77,6 +82,7 @@ function groepen(f: Filters): [Groep | `cf.${string}`, string[]][] {
 }
 
 function basis(a: AccountRij, f: Filters, ctx: FilterContext): boolean {
+  if (!pastBijActief(!!a.gedeactiveerd, f.actief ?? 'actief')) return false
   if (f.q) {
     const q = normaliseerNaam(f.q)
     if (!normaliseerNaam(`${a.name} ${a.city ?? ''}`).includes(q)) return false
@@ -141,6 +147,7 @@ export function filtersUitQuery(q: Record<string, unknown>): Filters {
   const lijst = (v: unknown) => (Array.isArray(v) ? v : typeof v === 'string' && v ? v.split(',') : []).map(String).filter(Boolean)
   const f: Filters = {
     q: typeof q.q === 'string' ? q.q : undefined,
+    actief: leesActiefFilter(q.actief),
     eigenaar: (['mij', 'team', 'iedereen'] as const).find((e) => e === q.eigenaar) ?? 'mij',
     status: lijst(q.status), fase: lijst(q.fase), klasse: lijst(q.klasse), aanleiding: lijst(q.aanleiding),
     laatsteContact: lijst(q.laatsteContact), bereikbaarheid: lijst(q.bereikbaarheid), cf: {},
@@ -152,8 +159,15 @@ export function filtersUitQuery(q: Record<string, unknown>): Filters {
 export function filtersNaarQuery(f: Filters): Record<string, string> {
   const q: Record<string, string> = {}
   if (f.q) q.q = f.q
+  if (f.actief && f.actief !== 'actief') q.actief = f.actief
   if (f.eigenaar && f.eigenaar !== 'mij') q.eigenaar = f.eigenaar
   for (const k of ['status', 'fase', 'klasse', 'aanleiding', 'laatsteContact', 'bereikbaarheid'] as const) if (f[k]?.length) q[k] = f[k]!.join(',')
   for (const [k, v] of Object.entries(f.cf ?? {})) if (v.length) q[`cf.${k}`] = v.join(',')
   return q
+}
+
+/** Tellers voor het filter Status (actief, gedeactiveerd, alle), met alle andere filters erop. */
+export function actiefTellers(rijen: AccountRij[], f: Filters, ctx: FilterContext): Record<ActiefFilter, number> {
+  const tel = (actief: ActiefFilter) => pasFiltersToe(rijen, { ...f, actief }, ctx).length
+  return { actief: tel('actief'), gedeactiveerd: tel('gedeactiveerd'), alle: tel('alle') }
 }

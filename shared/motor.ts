@@ -159,7 +159,8 @@ export function motorRun(inv: MotorInvoer): MotorUitvoer {
   const nieuwOpen = new Set<string>()
   const ritmeNu = new Map(inv.ritmeVan)
   let geraakt = 0
-  const accounts = inv.accountIds ? inv.accounts.filter((a) => inv.accountIds!.includes(a.id)) : inv.accounts
+  // 0064: een gedeactiveerd account krijgt geen taken, inzichten of startactiviteiten meer.
+  const accounts = (inv.accountIds ? inv.accounts.filter((a) => inv.accountIds!.includes(a.id)) : inv.accounts).filter((a) => !a.gedeactiveerd)
   const gebruiker = new Map(inv.gebruikers.map((g) => [g.id, g]))
   const blokken: { start: string }[] = []
   const regiodagenVan = (owner: string | null | undefined) => (inv.regiodagen ?? []).filter((r) => r.gebruikerId === owner)

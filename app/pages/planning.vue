@@ -14,7 +14,7 @@ const tab = computed(() => tabs.value.find((t) => t.k === route.query.tab)?.k ??
 const KOP: Record<string, { titel: string; uitleg: string; hulp: string }> = {
   jaar: { titel: 'Jaarplanning prospects', uitleg: 'Hoe groter de kans, hoe eerder je erbij wilt zijn: grote prospects vooraan het verkoopjaar, middelgrote in de eerste vijf maanden, kleine doorlopend. Per maand zie je wie aan de beurt is en wie je nog moet spreken.', hulp: 'prospectplanning' },
   ritme: { titel: 'Hercontactritme', uitleg: 'De reeks pogingen tot een afspraak. Na de laatste poging zonder reactie wordt het account geparkeerd.', hulp: 'hercontactritme' },
-  terugkom: { titel: 'Terugkomregels', uitleg: 'Wanneer en hoe je terugkomt na een nee, een verlies of een slapende periode.', hulp: 'wanneer-we-iemand-terugbellen' },
+  terugkom: { titel: 'Terugkomregels', uitleg: 'Wanneer en hoe je terugkomt na een nee of een verlies.', hulp: 'wanneer-we-iemand-terugbellen' },
 }
 const kicker = computed(() => `Prospectplanning · ${tabs.value.find((t) => t.k === tab.value)?.t ?? ''}`)
 useHead({ title: 'Prospectplanning · Dealtrace' })

@@ -170,7 +170,7 @@ useHead({ title: 'Weekreview · Dealtrace' })
                     <label v-else-if="keuze.besluit === 'overdragen'" class="veld"><span>Aan wie?</span>
                       <select v-model="keuze.naar" required data-test="wr-naar"><option v-for="c in r.collegas" :key="c.id" :value="c.id">{{ c.naam }}</option></select>
                     </label>
-                    <label v-else class="veld"><span>Waarom laat je hem los?</span><input v-model="keuze.reden" type="text" maxlength="200" required placeholder="Bijvoorbeeld: klant koos een ander" data-test="wr-reden"></label>
+                    <label v-else class="veld"><span>Waarom laat je hem los?</span><input v-model="keuze.reden" type="text" maxlength="200" required placeholder="Bijvoorbeeld: prospect koos een ander" data-test="wr-reden"></label>
                     <div class="wr-besluit-knoppen">
                       <button type="button" class="dd-act" @click="keuze.taakId = null">Annuleer</button>
                       <button type="submit" class="dd-act dd-act--geel" :disabled="bezig" data-test="wr-bevestig">Bevestig</button>

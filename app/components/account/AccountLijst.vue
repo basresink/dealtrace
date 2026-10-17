@@ -46,11 +46,14 @@ const EIGENAAR = [['mij', 'Van mij'], ['team', 'Team'], ['iedereen', 'Iedereen']
 const eigenaarLabel = computed(() => EIGENAAR.find((x) => x[0] === eigenaar.value)?.[1] ?? 'Van mij')
 function kiesSortering(w: string) { keuzemenu.value = null; zetQuery({ sort: w === 'score' ? undefined : w }) }
 function wisselFilters() { filtersOpen.value = !filtersOpen.value }
-const actieveFilters = computed(() => ['status', 'fase', 'klasse', 'aanleiding', 'laatsteContact', 'bereikbaarheid', ...Object.keys(route.query).filter((k) => k.startsWith('cf.'))].reduce((s, k) => s + lijst(k).length, 0))
+const actieveFilters = computed(() => (actief.value !== 'actief' ? 1 : 0) + ['status', 'fase', 'klasse', 'aanleiding', 'laatsteContact', 'bereikbaarheid', ...Object.keys(route.query).filter((k) => k.startsWith('cf.'))].reduce((s, k) => s + lijst(k).length, 0))
 const teller = (groep: string, w: string) => data.value.tellers?.[groep]?.[w] ?? 0
+// 0064: Status actief, gedeactiveerd of alle; standaard alleen actieve prospects (één keuze, in de URL als ?actief=).
+const ACTIEF = [['actief', 'Actief'], ['gedeactiveerd', 'Gedeactiveerd'], ['alle', 'Alle']] as const
+const actief = computed(() => String(route.query.actief ?? 'actief'))
 const groepen = computed(() => {
   const g: { sleutel: string; label: string; waarden: { w: string; label: string }[] }[] = []
-  if (props.soort === 'prospect') g.push({ sleutel: 'status', label: 'Status', waarden: ['nieuw', 'in reis', 'wachtend', 'nee', 'gescoord'].map((w) => ({ w, label: STATUS_LABEL[w]! })) })
+  if (props.soort === 'prospect') g.push({ sleutel: 'status', label: 'Reisstatus', waarden: ['nieuw', 'in reis', 'wachtend', 'nee', 'gescoord'].map((w) => ({ w, label: STATUS_LABEL[w]! })) })
   if (props.soort === 'prospect' && data.value.kan?.reisFilter) g.push({ sleutel: 'fase', label: 'Reis en fase', waarden: (data.value.fases ?? []).map((f: any) => ({ w: f.id, label: f.label })) })
   g.push({ sleutel: 'klasse', label: 'Klasse', waarden: [...(data.value.klassen ?? []).map((k: any) => ({ w: k.id, label: k.naam.split('·')[0].trim() })), { w: 'geen', label: 'Geen klasse' }] })
   if (data.value.kan?.alleFilters) {
@@ -88,12 +91,12 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
     <PaginaKop>
       <template #kicker>
         <NuxtLink v-if="soort === 'prospect'" to="/prospects" class="kicker kicker--paars lijst-kruimel"><Icoon naam="ArrowLeft" :grootte="14" /> Prospects · {{ data.totaal }} prospects totaal</NuxtLink>
-        <span v-else class="kicker kicker--streep">Klanten · {{ data.totaal }} {{ data.totaal === 1 ? 'klant' : 'klanten' }} totaal</span>
+        <span v-else class="kicker kicker--streep">Alleen lezen · {{ data.totaal }} {{ data.totaal === 1 ? 'klant' : 'klanten' }} totaal</span>
       </template>
-      <template #titel><h1 class="title title--groot">{{ soort === 'prospect' ? 'Alle prospects' : 'Klanten' }}</h1></template>
+      <template #titel><h1 class="title title--groot">{{ soort === 'prospect' ? 'Alle prospects' : 'Bestaande klanten (uit DealDrive)' }}</h1></template>
       <template #uitleg>
-        <p v-if="soort === 'prospect'" class="subtitle subtitle--groot">Alle prospects van jouw organisatie, te filteren op accountklasse en functie. Klanten zie je op <NuxtLink to="/klanten" class="tekst-link">Klanten →</NuxtLink></p>
-        <p v-else class="subtitle subtitle--groot">Klanten komen uit DealDrive of je CRM, voor kansen langs de route en winback. Dealtrace maakt zelf geen klant van een prospect.</p>
+        <p v-if="soort === 'prospect'" class="subtitle subtitle--groot">Alle prospects van jouw organisatie, te filteren op accountklasse en functie. Klanten zie je bij <NuxtLink to="/klanten" class="tekst-link">Bestaande klanten →</NuxtLink></p>
+        <p v-else class="subtitle subtitle--groot">Klanten komen uit DealDrive of je CRM en zijn hier alleen te lezen: als bron voor kansen langs de route en warme introducties, en om klanten uit je prospectlijsten te houden. Dealtrace maakt zelf geen klant van een prospect.</p>
       </template>
       <template #acties>
         <button v-if="soort === 'prospect'" type="button" class="dd-actie dd-actie--zwart" data-test="nieuwe-prospect" @click="nieuwOpen = true"><Icoon naam="Plus" class="dd-actie-icoon" />Prospect</button>
@@ -116,6 +119,13 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
             <span class="filter-label">Eigenaar</span>
             <button v-for="e in EIGENAAR" :key="e[0]" type="button" class="filter-pil" :class="{ 'filter-pil--aan': eigenaar === e[0] }" :aria-pressed="eigenaar === e[0]" :data-test="`eigenaar-${e[0]}`" @click="zetQuery({ eigenaar: e[0] === 'mij' ? undefined : e[0] })">{{ e[1] }}</button>
           </div>
+          <div class="filter-groep" role="radiogroup" aria-label="Status" data-test="filter-actief">
+            <span class="filter-label">Status</span>
+            <button
+              v-for="s in ACTIEF" :key="s[0]" type="button" role="radio" class="filter-pil" :class="{ 'filter-pil--aan': actief === s[0] }" :aria-checked="actief === s[0]"
+              :data-test="`filter-actief-${s[0]}`" @click="zetQuery({ actief: s[0] === 'actief' ? undefined : s[0] })"
+            >{{ s[1] }} <span class="pil-teller">{{ data.actiefTellers?.[s[0]] ?? 0 }}</span></button>
+          </div>
           <div v-for="g in groepen" :key="g.sleutel" class="filter-groep">
             <span class="filter-label">{{ g.label }}</span>
             <button
@@ -133,7 +143,7 @@ const exportUrl = computed(() => `/api/accounts/export?${new URLSearchParams({ .
     </PaginaKop>
     <section class="section section--alt section--laatste">
       <div class="container">
-        <p class="meta lijst-aantal"><span data-test="aantal">{{ data.aantal }} {{ data.aantal === 1 ? 'resultaat' : 'resultaten' }}</span> · {{ eigenaarLabel }} · gesorteerd op {{ sortLabel.toLowerCase() }}</p>
+        <p class="meta lijst-aantal"><span data-test="aantal">{{ data.aantal }} {{ data.aantal === 1 ? 'resultaat' : 'resultaten' }}</span> · {{ eigenaarLabel }}<template v-if="actief !== 'actief'"> · {{ actief === 'alle' ? 'actief en gedeactiveerd' : 'gedeactiveerd' }}</template> · gesorteerd op {{ sortLabel.toLowerCase() }}</p>
         <div v-if="!data.rijen.length && !pending" class="lege-staat"><p class="lege-staat-titel">Niets gevonden.</p><button type="button" class="dd-act" @click="router.replace({ query: { eigenaar: 'iedereen' } })">Toon alles</button></div>
         <ul v-else class="acc-lijst" :class="`acc-lijst--${weergave}`" data-test="account-lijst">
           <AccountRij v-for="r in data.rijen" :key="r.id" :rij="r" :klassen="data.klassen" :weergave="weergave" :toon-score="!!data.kan?.alleFilters" @contextmenu="openMenu($event, r)" />

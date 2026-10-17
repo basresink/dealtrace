@@ -4,6 +4,7 @@
 const { functie } = useMe()
 const aan = computed(() => !!functie('koppeling.mail')?.beschikbaar)
 const toast = useToast()
+const INKOMEND_LABEL: Record<string, string> = { gestopt: 'reeks gestopt', 'auto-antwoord': 'automatisch antwoord', 'geen-reeks': 'geen lopende reeks', onbekend: 'onbekende afzender' }
 const { data, refresh } = await useFetch<any>('/api/koppelingen/mail', { immediate: aan.value, default: () => ({ status: 'uit', instellingen: { modus: 'smtp', poort: 587 } }) })
 const f = reactive<any>({ modus: 'smtp', host: '', poort: 587, gebruiker: '', van: '', naam: '', domein: '', dkimSelector: 'default' })
 const wachtwoord = ref('')
@@ -48,6 +49,17 @@ useHead({ title: 'Mail koppelen · Dealtrace' })
               <button v-if="data.status === 'actief'" type="button" class="dd-actie dd-actie--secundair" @click="ontkoppel">Ontkoppelen</button>
             </div>
           </form>
+          <!-- F7: antwoorden op opvolgreeksen herkennen. De provider stuurt inkomende mail door naar deze ondertekende URL. -->
+          <article v-if="data.inkomend" class="kaart mt-16" data-test="mail-inkomend">
+            <header class="kaart-kop"><h2 class="kaart-titel">Antwoorden herkennen</h2></header>
+            <p class="kaart-meta">Laat je mailprovider inkomende mail op het verzendadres doorsturen (webhook, POST) naar dit adres. Een antwoord van een contact stopt zijn opvolgreeks en zet een taak bel terug binnen twee uur klaar. Een automatisch antwoord telt niet.</p>
+            <label class="veld mt-8"><span class="veld-label">Adres voor inkomende mail</span><input class="invoer tnum" :value="data.inkomend.url" readonly data-test="mail-inkomend-url" @focus="($event.target as HTMLInputElement).select()"></label>
+            <p v-if="data.instellingen.modus === 'mock'" class="meta mt-8">De testmailbox leest inkomende mail uit het geheugen bij elke ronde van de reeksen.</p>
+            <ul v-if="data.inkomend.laatste.length" class="schakel-lijst mt-8" aria-label="Laatste inkomende mail">
+              <li v-for="(x, i) in data.inkomend.laatste" :key="i" class="schakel-rij"><span>{{ x.van }}<template v-if="x.onderwerp"> · {{ x.onderwerp }}</template></span><span class="meta">{{ INKOMEND_LABEL[x.verwerking] ?? x.verwerking }} · {{ new Date(x.op).toLocaleDateString('nl-NL') }}</span></li>
+            </ul>
+            <p v-else class="meta mt-8">Nog geen inkomende mail.</p>
+          </article>
         </div>
       </section>
     </template>

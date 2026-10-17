@@ -30,4 +30,4 @@ Er is geen soort voor offertes of onderhandelen. Die gesprekken horen in DealDri
 5. Geef elke uitkomst een **gevolg**: eerste afspraak gehouden met de vraag "Overdragen?", wachtend tot een datum, een nieuwe contactpersoon, nee met reden, een eerste afspraak plannen, of geen gevolg.
 6. Klik **Bewaar**.
 
-Een uitkomst zonder gevolg kun je niet bewaren. Een soort van het type **Intern** heeft geen klantuitkomsten en telt nooit als klantcontact. Zet een soort uit met **Actief** als je hem niet meer wilt gebruiken; oude afspraken blijven staan.
+Een uitkomst zonder gevolg kun je niet bewaren. Een soort van het type **Intern** heeft geen gespreksuitkomsten en telt nooit als contactmoment. Zet een soort uit met **Actief** als je hem niet meer wilt gebruiken; oude afspraken blijven staan.

@@ -221,6 +221,16 @@ describe('starterset (gat 8, 41)', () => {
     // Niet ingesteld (null) valt terug op de standaard.
     expect(motorRun(invoer({ regels: [sr04], accounts: [a], belmatrix: { prospect: { C: null } } })).taken).toHaveLength(1)
   })
+  it('geen beltaken voor klanten: ook niet met een oude rij klant in de belmatrix of een regel zonder afbakening', () => {
+    const sr04 = regel('SR04')
+    const klant = acc({ type: 'klant', nbStatus: 'klant', klasseCode: 'A', laatsteContactOp: dagen(400) })
+    const oud = { prospect: {}, klant: { A: { aantal: 12, periode: 'maand' } } } as unknown as Matrix
+    expect(motorRun(invoer({ regels: [sr04], accounts: [klant], belmatrix: oud })).taken).toHaveLength(0)
+    const zonderAfbakening: Regel = { ...regel('SR06'), data: { ...regel('SR06').data, afbakening: {} } }
+    expect(ruleTargetsAccount(zonderAfbakening, klant, NU)).toBe(false)
+    expect(BELMATRIX_STANDAARD.klant).toBeUndefined()
+    expect(ritmeAfrekening([{ id: 'k', type: 'klant', klasseCode: 'A' }], [], { van: '2026-01-01', tot: '2026-03-31' })[0]).toMatchObject({ verwacht: 0, stand: 'uit' })
+  })
   it('een motortaak krijgt het primaire contact (beslisser) mee als contactId, en null zonder contact', () => {
     const sr04 = regel('SR04')
     const met = acc({ klasseCode: 'C', laatsteContactOp: dagen(10), contactId: 'c-beslisser', contactNaam: 'Petra Testbeek' })

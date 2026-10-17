@@ -3,13 +3,19 @@ import { expect, test } from '@playwright/test'
 import { apiLogin, ga, login } from './hulp'
 
 test.describe('regels', () => {
-  test('Beginner: uitleg "Nog niet aangezet" en de API weigert met reden niveau', async ({ page }) => {
+  test('Beginner: de motor is er voor iedereen (0064): regels lezen met droogloop, organisatieregels niet wijzigen', async ({ page }) => {
     await login(page, 'u-02')
-    await ga(page, '/instellingen/regels')
-    await expect(page.getByTestId('niet-aangezet-pagina')).toContainText('Nog niet aangezet')
+    await ga(page, '/instellingen/regels?regel=')
+    await expect(page.getByTestId('niet-aangezet-pagina')).toHaveCount(0)
+    await expect(page.getByTestId('regel-lijst')).toContainText('Contact-stilte 45 dagen')
+    await page.getByTestId('regel-SR06').click()
+    await expect(page.getByTestId('veld-cadans')).toBeDisabled()
+    await expect(page.getByTestId('droogloop')).toContainText(/raakt nu \d+ accounts/)
+    await expect(page.getByTestId('draai-motor')).toHaveCount(0)
     const r = await page.request.get('/api/regels')
-    expect(r.status()).toBe(403)
-    expect((await r.json()).data).toMatchObject({ functie: 'regels.lezen', reden: 'niveau' })
+    expect(r.status()).toBe(200)
+    const sr06 = (await r.json()).regels.find((x: any) => x.code === 'SR06')
+    expect((await page.request.put(`/api/regels/${sr06.id}`, { data: { cadansDagen: 1 } })).status()).toBe(403)
   })
 
   test('Gevorderd: alles alleen lezen, de droogloop werkt', async ({ page }) => {

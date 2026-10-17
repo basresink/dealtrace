@@ -134,7 +134,7 @@ async function maak() {
           <article class="fo-blok" data-test="np-matrix">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Plek in de matrix</h3></header>
             <p v-if="uitgebreid" class="meta np-uitleg">Deze gegevens bepalen klasse, potentie, regio en doelgroep, en daarmee het ritme en de eerste stap van de motor.</p>
-            <p v-else class="meta np-uitleg" data-test="np-matrix-kort">Weet je het niet, laat het dan leeg. Je vult het later aan op de klantkaart.</p>
+            <p v-else class="meta np-uitleg" data-test="np-matrix-kort">Weet je het niet, laat het dan leeg. Je vult het later aan op de accountkaart.</p>
             <div class="formulier-raster">
               <label v-if="context.branches.length" class="veld"><span class="veld-label">Branche</span>
                 <select v-model="f.vvBrancheId" class="invoer" data-test="np-branche"><option value="">Nog niet bekend</option><option v-for="b in context.branches" :key="b.id" :value="b.id">{{ b.naam }}{{ b.focus === 'primair' ? ' (focus)' : '' }}</option></select>

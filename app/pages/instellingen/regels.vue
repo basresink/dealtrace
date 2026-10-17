@@ -224,9 +224,7 @@ useHead({ title: 'Regels · Instellingen · Dealtrace' })
                 </div>
                 <div class="afbakening mt-16">
                   <span class="veld-label">Afbakening</span>
-                  <div class="reis-knoppen">
-                    <label v-for="t in ['prospect', 'klant']" :key="t" class="schakel-naam"><input type="checkbox" :checked="(bewerk.data.afbakening.accounttypes ?? []).includes(t)" :disabled="beperkt" @change="lijstVeld('accounttypes', t)"> {{ t }}</label>
-                  </div>
+                  <p class="meta" data-test="alleen-prospects">Regels gelden alleen voor prospects. Klanten volgen het ritme in DealDrive.</p>
                   <div class="reis-knoppen"><label v-for="s in NB_STATUSSEN" :key="s" class="schakel-naam"><input type="checkbox" :checked="(bewerk.data.afbakening.statussen ?? []).includes(s)" :disabled="beperkt" @change="lijstVeld('statussen', s)"> {{ s }}</label></div>
                   <div class="reis-knoppen"><label v-for="x in fases" :key="x.id" class="schakel-naam"><input type="checkbox" :checked="(bewerk.data.afbakening.faseIds ?? []).includes(x.id)" :disabled="beperkt" @change="lijstVeld('faseIds', x.id)"> {{ x.label }}</label></div>
                   <div class="reis-knoppen"><label v-for="k in ['A', 'B', 'C', 'D']" :key="k" class="schakel-naam"><input type="checkbox" :checked="(bewerk.data.afbakening.klassen ?? []).includes(k)" :data-test="`klasse-${k}`" @change="lijstVeld('klassen', k)"> klasse {{ k }}</label></div>

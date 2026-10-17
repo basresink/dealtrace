@@ -127,7 +127,7 @@ export interface NeeGegevens {
 
 export interface BenaderAccount {
   nbStatus: string
-  data?: { nee?: NeeGegevens | null; wachtendTot?: string | null } | null
+  data?: { nee?: NeeGegevens | null; wachtendTot?: string | null; gedeactivering?: { op: string } | null } | null
 }
 
 const DAG = 24 * 3600 * 1000
@@ -154,6 +154,8 @@ export function cooldownActief(account: BenaderAccount, kanaal: Kanaal, nu: Date
 /** Mag je dit account nu via dit kanaal benaderen? Gecontroleerd vóór elke poging. */
 export function magBenaderen(account: BenaderAccount, kanaal: Kanaal, nu: Date, opties: { belMeNiet?: boolean } = {}): { mag: boolean; reden?: string } {
   if (account.nbStatus === 'overgedragen') return { mag: false, reden: 'Overgedragen; het vervolg loopt in DealDrive of het CRM' }
+  // 0064: een gedeactiveerde prospect benader je niet meer, via geen enkel kanaal.
+  if (account.data?.gedeactivering) return { mag: false, reden: 'Gedeactiveerd' }
   if (cooldownActief(account, kanaal, nu)) {
     return { mag: false, reden: `Afkoelperiode ${KANAAL_LABEL[kanaal].toLowerCase()} tot ${afkoelingTot(account.data?.nee, kanaal)}` }
   }

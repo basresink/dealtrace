@@ -71,7 +71,7 @@ test.describe('Helpcenter in de opzet van DealDrive', () => {
       await login(page, gebruiker)
       await ga(page, '/helpcenter')
       await expect(page.getByTestId('ingang-werven'), gebruiker).toHaveCount(0)
-      await expect(page.getByTestId('ingang-academie'), gebruiker).toContainText('55 artikelen')
+      await expect(page.getByTestId('ingang-academie'), gebruiker).toContainText('75 artikelen')
       await expect(page.getByTestId('groep-academie').getByTestId('categorie-Je verhaal schrijven'), gebruiker).toBeVisible()
     }
     await page.getByTestId('categorie-Je verhaal schrijven').click()
@@ -85,17 +85,23 @@ test.describe('Helpcenter in de opzet van DealDrive', () => {
     await expect(page.getByTestId('artikel-inhoud').locator('.ha-blok')).toHaveCount(5)
     await expect(page.getByTestId('controlevragen')).toBeVisible()
     await expect(page.getByTestId('artikel-inhoud').getByRole('link', { name: 'Een belscript kiezen' })).toHaveAttribute('href', '/helpcenter/een-belscript-kiezen')
-    // De academie: het hoofdstuk Nieuwe klanten werven met de twaalf artikelen, zoeken binnen de academie.
+    // De academie: het hoofdstuk Nieuwe klanten werven met de 32 artikelen (12 uit The Perfect Pitch, 20 uit Sales Hunter), zoeken binnen de academie.
     await ga(page, '/helpcenter/academie')
     const werven = page.getByTestId('hoofdstuk-werven')
     await expect(page.getByTestId('hoofdstuk-vak')).toBeVisible()
     await expect(werven.getByRole('heading', { name: 'Nieuwe klanten werven' })).toBeVisible()
     await expect(werven.getByTestId('groep-Waarom klanten kopen')).toBeVisible()
     await expect(werven.getByTestId('groep-Openen en presenteren')).toBeVisible()
-    await expect(werven.locator('[data-test^="help-kaart-"]')).toHaveCount(12)
+    await expect(werven.locator('[data-test^="help-kaart-"]')).toHaveCount(32)
+    await expect(werven.getByTestId('groep-Kanalen inzetten')).toBeVisible()
     await page.getByTestId('overzicht-zoek').fill('foray')
     await expect(page.getByTestId('help-kaart-de-foray-toestemming-voor-je-vragen')).toBeVisible()
     await expect(page.getByTestId('help-kaart-vertel-een-userstory')).toHaveCount(0)
+    // Een artikel uit Sales Hunter noemt zijn bron en heeft de vijf vaste onderdelen.
+    await ga(page, '/helpcenter/een-bezwaar-in-vier-stappen')
+    await expect(page.getByTestId('artikel-bron')).toHaveText('Uit het boek Sales Hunter')
+    await expect(page.getByTestId('artikel-inhoud').locator('.ha-blok')).toHaveCount(5)
+    await expect(page.getByTestId('controlevragen')).toBeVisible()
     // Het oude adres stuurt door naar het hoofdstuk.
     await ga(page, '/helpcenter/werven')
     await expect(page).toHaveURL(/\/helpcenter\/academie#werven$/)

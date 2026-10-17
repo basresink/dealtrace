@@ -13,7 +13,7 @@ const AGENT_NAAM: Record<string, string> = { waarnemer: 'Waarnemer', verrijker: 
 const DUIDING: Record<string, string> = {
   'te-lang-in-fase': 'Zet het account een stap verder of parkeer het met een terugkomdatum, zodat de reis blijft lopen.',
   kansanalyse: 'Kijk wat er sinds de vorige analyse veranderde en kies één volgende stap voor dit account.',
-  koopsignaal: 'De klant noemde het zelf: maak het het eerste punt van je volgende gesprek.',
+  koopsignaal: 'Je gesprekspartner noemde het zelf: maak het het eerste punt van je volgende gesprek.',
   'regel-voorstel': 'Een voorstel voor je regels: beoordeel het bij Instellingen en Regels.',
   'campagne-achterstand': 'Begin bij de accounts waar het het langst stil is; het bord rekent ze voor je uit.',
   website: 'Een wijziging op de site is een natuurlijke aanleiding om te bellen; vraag wat erachter zit.',
@@ -68,7 +68,9 @@ export default defineEventHandler(async (event) => {
     const ouderdom = (s: { createdAt: string }) => nu - Date.parse(s.createdAt)
     // Alle filters behalve de teller: de tellers en de lijst vertellen zo dezelfde waarheid.
     let basis = alle.filter((s) => statussen.includes(s.status))
-    if (q.soort === 'prospect' || q.soort === 'klant') basis = basis.filter((s) => s.account?.soort === q.soort)
+    // Prospects is een uitsluiting: inzichten bij klanten vallen weg, inzichten zonder account blijven staan.
+    if (q.soort === 'prospect') basis = basis.filter((s) => s.account?.soort !== 'klant')
+    if (q.soort === 'klant') basis = basis.filter((s) => s.account?.soort === 'klant')
     if (q.bron === 'intern' || q.bron === 'extern') basis = basis.filter((s) => s.bron === q.bron)
     const sinds = SINDS[q.sinds ?? ''] ?? (q.periode === 'week' ? SINDS.week : undefined)
     if (sinds) basis = basis.filter((s) => ouderdom(s) <= sinds)

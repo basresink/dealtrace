@@ -1,7 +1,7 @@
 // Belblokken op de server (F07): kandidaten laden met dezelfde rangorde als pagina en
 // belmodus, de vuller na elke motorrun, een blok plannen, en de sessie van de belmodus.
 // Een taak hangt via tasks.belblok_id aan een blok (gat 35).
-import { and, eq, inArray, ne, or, sql } from 'drizzle-orm'
+import { and, eq, inArray, isNull, ne, or, sql } from 'drizzle-orm'
 import {
   blokResultaat, uitkomstNaarCode, type KnopSleutel, type TegelSleutel,
   bouwBellijst, planVuller, schatDuur, standaardBlokken, STANDAARD_VOORKEUREN, valideerBlokken, verdeelOverBlok, volgendVastBlok,
@@ -43,7 +43,7 @@ export async function laadBelKandidaten(tx: Tx, gebruikerId: string): Promise<Ka
   const accounts = await tx.select({
     id: schema.accounts.id, naam: schema.accounts.name, score: schema.accounts.score, faseId: schema.accounts.faseId, nbStatus: schema.accounts.nbStatus,
     kind: schema.accounts.accountKind, owner: schema.accounts.ownerId, data: schema.accounts.data,
-  }).from(schema.accounts).where(or(eq(schema.accounts.ownerId, gebruikerId), metTaak.size ? inArray(schema.accounts.id, [...metTaak]) : sql`false`))
+  }).from(schema.accounts).where(and(isNull(schema.accounts.gedeactiveerdOp), or(eq(schema.accounts.ownerId, gebruikerId), metTaak.size ? inArray(schema.accounts.id, [...metTaak]) : sql`false`)))
   const perAccount = new Map(accounts.map((a) => [a.id, a]))
   const ids = accounts.map((a) => a.id)
   const contacten = ids.length ? await tx.select().from(schema.contacts).where(and(inArray(schema.contacts.accountId, ids), ne(schema.contacts.status, 'vertrokken'))) : []

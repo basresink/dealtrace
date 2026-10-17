@@ -4,7 +4,8 @@
 // uitklapbaar filterpaneel met meerekenende tellers (alles in de URL) en daarin ook de sortering
 // (standaard Rol) en de weergave (lijst, compact, kaarten),
 // één witte kaart met ContactRij-rijen, "Toon meer" en de stand per rol onderaan.
-// Filters: eigenaar ("Van mijn accounts" staat standaard aan), rol, prospects of klanten, en
+// Filters: eigenaar ("Van mijn accounts" staat standaard aan), rol, Ook klanten (standaard alleen contacten bij
+// prospects: klanten blijven buiten beeld; ?soort=alle toont ze ook), en
 // vanaf Gevorderd bereikbaarheid, laatste contact en toestemming (bel me niet, geen mail).
 // Rechtsklik op een rij opent het contextmenu (bellen, mailen, taak, afspraak, bel me niet, vertrokken).
 import { CONTACTROL_LABEL, ROLLEN_CONTACT } from '~~/shared/contactgegevens'
@@ -28,7 +29,9 @@ async function wisselZoek() {
   zoekOpen.value = !zoekOpen.value
   if (zoekOpen.value) { await nextTick(); zoekVeld.value?.focus() }
 }
-const query = computed(() => ({ ...route.query, pagina: String(pagina.value) }))
+// Standaard alleen contacten bij prospects; "Ook klanten" (?soort=alle) haalt die uitsluiting weg.
+const soortVoorApi = () => (route.query.soort === 'alle' ? undefined : typeof route.query.soort === 'string' && route.query.soort ? route.query.soort : 'prospect')
+const query = computed(() => ({ ...route.query, soort: soortVoorApi(), pagina: String(pagina.value) }))
 const { data, pending, refresh } = await useFetch<any>('/api/contacten', { query, default: () => ({ contacten: [], aantal: 0, totaal: 0, tellers: {}, stand: {}, kan: {} }) })
 const zoek = ref(String(route.query.q ?? ''))
 let zoekTimer: any
@@ -53,11 +56,11 @@ const WEERGAVEN = [['lijst', 'Lijst', 'List'], ['compact', 'Compact', 'LayoutLis
 const sortLabel = computed(() => SORTERINGEN.find((x) => x[0] === sort.value)?.[1] ?? 'Rol')
 function kiesSortering(w: string) { zetQuery({ sort: w === 'rol' ? undefined : w }) }
 function kiesWeergave(w: 'lijst' | 'compact' | 'kaarten') { weergave.value = w }
-const teller = (groep: string, w: string) => data.value.tellers?.[groep]?.[w] ?? 0
+const teller = (groep: string, w: string) => (groep === 'soort' && w === 'alle' ? data.value.tellers?.soort?.klant ?? 0 : data.value.tellers?.[groep]?.[w] ?? 0)
 const groepen = computed(() => {
   const g: { sleutel: string; label: string; waarden: { w: string; label: string }[] }[] = [
     { sleutel: 'rol', label: 'Rol', waarden: ROLLEN_CONTACT.map((r) => ({ w: r, label: CONTACTROL_LABEL[r] })) },
-    { sleutel: 'soort', label: 'Accounts', waarden: [{ w: 'prospect', label: 'Bij prospects' }, { w: 'klant', label: 'Bij klanten' }] },
+    { sleutel: 'soort', label: 'Accounts', waarden: [{ w: 'alle', label: 'Ook klanten' }] },
   ]
   if (data.value.kan?.filters) {
     g.push({ sleutel: 'bereikbaarheid', label: 'Bereikbaarheid', waarden: [{ w: 'zonderEmail', label: 'Zonder e-mail' }, { w: 'zonderTelefoon', label: 'Zonder telefoon' }] })
@@ -92,7 +95,7 @@ async function wijzig(c: any, patch: Record<string, unknown>, melding: string) {
 const nummer = (c: any) => c.mobiel ?? c.telefoon
 
 async function aangemaakt(id: string) { nieuwOpen.value = false; await navigateTo(`/contacten/${id}`) }
-const exportUrl = computed(() => `/api/contacten/export?${new URLSearchParams(Object.entries(route.query).filter(([, v]) => typeof v === 'string') as [string, string][]).toString()}`)
+const exportUrl = computed(() => `/api/contacten/export?${new URLSearchParams(Object.entries({ ...route.query, soort: soortVoorApi() }).filter(([, v]) => typeof v === 'string') as [string, string][]).toString()}`)
 // Minder gebruikte acties staan onder Meer, zodat de kop op een laptop op één regel blijft.
 const meerItems = computed(() => [
   { label: 'Nieuwe taak', icoon: 'ListTodo', actie: () => taakVoor(null), test: 'lijst-taak' },

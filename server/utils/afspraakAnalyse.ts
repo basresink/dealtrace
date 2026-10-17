@@ -7,7 +7,7 @@ import {
   afspraakCijfers, bezoekKpi, cijfersPerSoort, dekkingPerAccount, klasseDekking, leesVenster, meetingKpi, regioDekking, regioRitme, regiodagenEnRoutes,
   type AnalyseAccount, type AnalyseAfspraak, type Bereik, type Moment,
 } from '../../shared/afspraakAnalyse'
-import { AFSPRAAKMATRIX_STANDAARD, geldendeCel, intervalDagen, jaartotaal, klasseCode, leesMatrix, ritmeLabel, type Klasse } from '../../shared/ritmematrix'
+import { AFSPRAAKMATRIX_STANDAARD, KLANT_TABBLAD, geldendeCel, intervalDagen, jaartotaal, klasseCode, leesMatrix, ritmeLabel, type Klasse } from '../../shared/ritmematrix'
 import type { Regio } from '../../shared/gebieden'
 import { gebruikDb } from './db'
 import { eigenTeams } from './gebruikers'
@@ -150,9 +150,11 @@ export async function meetingAnalyse(tx: Tx, g: Kijker, q: Record<string, unknow
   const regios = (await instelling<Regio[]>(tx, 'gebieden')) ?? []
   const klassen = (await instelling<Klasse[]>(tx, 'klassen')) ?? []
   const matrix = leesMatrix(await instelling(tx, 'afspraakmatrix'), AFSPRAAKMATRIX_STANDAARD).matrix
-  const accounts = await laadAccounts(tx, bereik.eigenaren, klassen)
+  // Meetings tellen voor prospects: klanten (uit DealDrive of het CRM) staan niet in de meetinganalyse.
+  const klantIds = new Set((await rijen(tx, sql`select id from accounts where account_kind = 'klant'`)).map((r) => r.id as string))
+  const accounts = (await laadAccounts(tx, bereik.eigenaren, klassen)).filter((a) => a.soort === 'prospect')
   const ids = new Set(accounts.map((a) => a.id))
-  const alle = await laadAfspraken(tx)
+  const alle = (await laadAfspraken(tx)).filter((a) => !a.accountId || !klantIds.has(a.accountId))
   const meetingSoorten = (await rijen(tx, sql`select slug, naam, vorm from meetingsoorten where vorm <> 'bezoek' and type = 'klant' and actief order by naam`)).map((r) => ({ slug: r.slug as string, naam: r.naam as string, vorm: r.vorm as string }))
   const soort = typeof q.soort === 'string' && q.soort ? q.soort : null
   const vorm = q.vorm === 'online' || q.vorm === 'telefoon' ? q.vorm : null
@@ -164,7 +166,7 @@ export async function meetingAnalyse(tx: Tx, g: Kijker, q: Record<string, unknow
   for (const a of meetings) if (a.status === 'afgerond' && a.accountId && ids.has(a.accountId)) zet(a.accountId, a.start)
   if (!soort && !vorm && ids.size) for (const r of await rijen(tx, sql`select account_id, max(op) as op from activiteiten where soort = 'afspraak' and kanaal in ('online', 'telefoon') and account_id = any(${lijstSql([...ids])}) group by 1`)) zet(r.account_id, iso(r.op)!)
 
-  const klasseNamen = klassen.map((k) => ({ code: klasseCode(k) ?? k.id, naam: k.naam }))
+  const klasseNamen = klassen.filter((k) => k.tabblad !== KLANT_TABBLAD).map((k) => ({ code: klasseCode(k) ?? k.id, naam: k.naam }))
   const ritme = (code: string) => {
     const cel = geldendeCel(matrix, 'meeting', code, AFSPRAAKMATRIX_STANDAARD)
     return { perJaar: jaartotaal(cel), interval: intervalDagen(cel), label: ritmeLabel(cel) }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Het venster van een document uit de kennisbank (opzet van DealDrive DocumentDetailFlyout): kicker
 // "Kennisbank · <type>", de naam en de beschrijving; Datavelden (type, versie, bestand, bijgewerkt, wie het
-// uploadde en de gekoppelde klanten en contacten als chips met link), die als context naar de AI gaan; de preview
+// uploadde en de gekoppelde bedrijven en contacten als chips met link), die als context naar de AI gaan; de preview
 // (afbeelding, pdf in een frame of de uitgelezen tekst, anders de melding dat er geen voorbeeld is); "Vraag de
 // AI over dit document" met drie voorgestelde vragen en een eigen vraag, beantwoord in het venster zelf. Voet:
 // Verwijderen (rood, met bevestiging, voor wie het uploadde en de beheerder) en Openen (zwart, het bestand).
@@ -81,7 +81,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', opEscape))
                 <div class="def-rij"><dt>Bestand</dt><dd class="tnum">{{ grootteLabel(doc.grootte) }} · {{ bestandSoort(doc.mime) }}</dd></div>
                 <div class="def-rij"><dt>Bijgewerkt</dt><dd class="tnum">{{ datum(doc.bijgewerktOp) }}</dd></div>
                 <div class="def-rij"><dt>Geüpload door</dt><dd>{{ doc.eigenaar?.naam ?? '–' }}</dd></div>
-                <div class="def-rij"><dt>Gekoppelde klanten</dt>
+                <div class="def-rij"><dt>Gekoppelde bedrijven</dt>
                   <dd><template v-if="doc.accounts.length"><NuxtLink v-for="a in doc.accounts" :key="a.id" :to="`/accounts/${a.id}`" class="ddf-chip" data-test="ddf-klant" @click="emit('sluit')">{{ a.naam }}</NuxtLink></template><span v-else class="meta">Geen</span></dd>
                 </div>
                 <div class="def-rij"><dt>Gekoppelde contacten</dt>

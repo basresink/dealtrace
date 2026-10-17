@@ -5687,3 +5687,9 @@ button.trechter-rij:disabled { cursor: default; }
 .waarnemer-rij { border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px; align-items: end; }
 @media (min-width: 900px) { .formulier-raster.waarnemer-rij { grid-template-columns: 170px 2fr 110px 1.4fr; } }
 fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+
+/* Scrollslot (app/plugins/scrollSlot.client.ts): zolang een flyout of venster open is scrollt
+   de pagina erachter niet en toont ze geen tweede scrollbalk. De padding-right vult de breedte
+   van de verdwenen scrollbalk op zodat de layout niet verspringt. */
+html.scroll-slot { overflow: hidden; overscroll-behavior: none; }
+html.scroll-slot body { padding-right: calc(var(--safe-area-right) + var(--scroll-slot-balk, 0px)); }

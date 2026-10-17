@@ -142,7 +142,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
           <dl class="af-defs" data-test="af-defs">
             <div class="af-def"><dt>Wanneer</dt><dd class="tnum">{{ wanneer }} <span class="meta">· {{ duurLabel }}</span></dd></div>
             <div class="af-def"><dt>Toegewezen aan</dt><dd>{{ eigenaar }}</dd></div>
-            <div v-if="a.account" class="af-def"><dt>Klant</dt><dd><NuxtLink :to="`/accounts/${a.account.id}`" class="tekst-link" data-test="af-account" @click="emit('sluit')">{{ a.account.naam }}</NuxtLink></dd></div>
+            <div v-if="a.account" class="af-def"><dt>Prospect</dt><dd><NuxtLink :to="`/accounts/${a.account.id}`" class="tekst-link" data-test="af-account" @click="emit('sluit')">{{ a.account.naam }}</NuxtLink></dd></div>
             <div v-if="a.account" class="af-def"><dt>Contactpersoon</dt><dd><NuxtLink v-if="a.contact" :to="`/contacten/${a.contact.id}`" class="tekst-link" data-test="af-contact" @click="emit('sluit')">{{ a.contact.naam }}</NuxtLink><span v-if="a.contact && (a.contact.functie || a.contact.rol)" class="meta">&nbsp;· {{ a.contact.functie ?? a.contact.rol }}</span><span v-if="!a.contact" class="meta">Geen contactpersoon gekoppeld</span></dd></div>
             <div v-if="a.beschrijving" class="af-def"><dt>Beschrijving</dt><dd class="af-pre">{{ a.beschrijving }}</dd></div>
             <div v-if="a.locatie" class="af-def"><dt>Locatie</dt><dd>{{ a.locatie }}</dd></div>
@@ -153,7 +153,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
           </dl>
 
           <article v-if="a.account" class="fo-blok">
-            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Klant in context</h3></header>
+            <header class="fo-blok-kop"><h3 class="fo-blok-titel">Prospect in context</h3></header>
             <div class="af-account">
               <span class="af-account-merk" aria-hidden="true">{{ initialen }}</span>
               <div>
@@ -189,7 +189,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
           <article class="fo-blok fo-blok--agent" data-test="af-pitstop">
             <header class="fo-blok-kop"><div><span class="fo-blok-kicker">AI-agent</span><h3 class="fo-blok-titel">Pitstop</h3></div></header>
             <BriefingPaneel v-if="functie('briefing.lezen')?.beschikbaar && a.account" onderwerp="afspraak" :id="a.id" />
-            <p v-else class="meta">Een briefing hoort bij een afspraak met een klant.</p>
+            <p v-else class="meta">Een briefing hoort bij een afspraak met een prospect.</p>
           </article>
 
           <!-- Transcript en gespreksverslag: drie wegen (bestand, plakken, inspreken) naar één analyse. -->
@@ -204,7 +204,7 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
             <div v-if="a.soort.uitkomsten.length" class="uitkomst-raster">
               <button v-for="u in a.soort.uitkomsten" :key="u.code" type="button" class="uitkomst-knop" :class="{ 'uitkomst-knop--actief': f.uitkomst === u.code }" :data-test="`af-uitkomst-${u.code}`" @click="f.uitkomst = u.code">{{ u.label }}</button>
             </div>
-            <p v-else class="meta">Intern overleg heeft geen klantuitkomst.</p>
+            <p v-else class="meta">Intern overleg heeft geen gespreksuitkomst.</p>
             <label v-if="later" class="veld mt-16"><span class="veld-label">Wanneer terug?</span><input v-model="f.laterOp" type="date" class="invoer" :min="morgen"></label>
             <template v-if="nee">
               <label class="veld mt-16"><span class="veld-label">Reden <span class="veld-verplicht">*</span></span><select v-model="f.reden" class="invoer" data-test="af-reden"><option value="" disabled>Kies een reden</option><option v-for="r in NEE_REDENEN" :key="r" :value="r">{{ r }}</option></select></label>
@@ -239,13 +239,13 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
           </template>
           <button v-else type="button" class="dd-act" @click="afronden = false">Terug</button>
           <span class="dd-acties-vul fo-foot-vul" />
-          <NuxtLink v-if="a.account && !opKlantkaart && !afronden" :to="`/accounts/${a.account.id}`" class="dd-act dd-act--icoon af-naar-kaart" title="Open klantkaart" aria-label="Open klantkaart" @click="emit('sluit')"><Icoon naam="ArrowRight" /></NuxtLink>
+          <NuxtLink v-if="a.account && !opKlantkaart && !afronden" :to="`/accounts/${a.account.id}`" class="dd-act dd-act--icoon af-naar-kaart" title="Open kaart" aria-label="Open kaart" @click="emit('sluit')"><Icoon naam="ArrowRight" /></NuxtLink>
           <button v-if="!afronden" type="button" class="dd-act dd-act--geel af-hoofd" data-test="af-rond-af" @click="afronden = true; verplaatsen = false">Rond af</button>
           <button v-else type="button" class="dd-act dd-act--primair af-hoofd" :disabled="bezig || ongeldig" data-test="af-bewaar" @click="rondAf">Bewaar</button>
         </footer>
         <footer v-else-if="a?.account && !opKlantkaart" class="fo-foot dd-acties">
           <span class="dd-acties-vul fo-foot-vul" />
-          <NuxtLink :to="`/accounts/${a.account.id}`" class="dd-act" @click="emit('sluit')">Open klantkaart<Icoon naam="ArrowRight" /></NuxtLink>
+          <NuxtLink :to="`/accounts/${a.account.id}`" class="dd-act" @click="emit('sluit')">Open kaart<Icoon naam="ArrowRight" /></NuxtLink>
         </footer>
       </aside>
     </div>

@@ -65,7 +65,8 @@ export interface RunOpties { soort: 'uur' | 'gebeurtenis' | 'handmatig'; door?: 
 export async function laadMotorInvoer(tx: Tx, org: string, nu: Date, accountIds?: string[]) {
   const waarschuwingen: string[] = []
   const regels = (await tx.select().from(schema.activityRules)).map(regelUitRij)
-  const accountRijen = await tx.select().from(schema.accounts).where(accountIds?.length ? inArray(schema.accounts.id, accountIds) : sql`true`)
+  // 0064: gedeactiveerde accounts doen niet mee met de motor.
+  const accountRijen = await tx.select().from(schema.accounts).where(and(isNull(schema.accounts.gedeactiveerdOp), accountIds?.length ? inArray(schema.accounts.id, accountIds) : sql`true`))
   const users = await tx.select().from(schema.users)
   const gebruikers: MotorGebruiker[] = users.map((u) => ({ id: u.id, naam: u.name, rol: u.role, werkplek: (u.werkplek as any) ?? 'binnendienst', niveau: u.niveau, teamId: u.teamId, status: u.status }))
   const perGebruiker = new Map(gebruikers.map((g) => [g.id, g]))

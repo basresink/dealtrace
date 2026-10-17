@@ -44,8 +44,8 @@ useHead({ title: 'Meetingsoorten · Dealtrace' })
               <div class="lijst">
                 <div v-for="s in g.soorten" :key="s.id" class="rij rij--compact" :class="{ 'rij--uit': !s.actief }">
                   <div class="rij-info">
-                    <h3 class="rij-titel">{{ s.naam }} <span class="pil pil--leeg">{{ s.type === 'intern' ? 'intern' : 'klant' }}</span><span v-if="s.data.eersteAfspraak" class="pil pil--leeg">eerste afspraak</span><span v-if="!s.actief" class="pil">uit</span></h3>
-                    <div class="rij-sub">{{ s.duurMin }} min · {{ VORM[s.vorm] }} · {{ s.data.agenda.length }} agendapunten · {{ s.data.uitkomsten.length ? s.data.uitkomsten.map((u: any) => u.label).join(', ') : 'geen klantuitkomst' }}</div>
+                    <h3 class="rij-titel">{{ s.naam }} <span class="pil pil--leeg">{{ s.type === 'intern' ? 'intern' : 'prospect' }}</span><span v-if="s.data.eersteAfspraak" class="pil pil--leeg">eerste afspraak</span><span v-if="!s.actief" class="pil">uit</span></h3>
+                    <div class="rij-sub">{{ s.duurMin }} min · {{ VORM[s.vorm] }} · {{ s.data.agenda.length }} agendapunten · {{ s.data.uitkomsten.length ? s.data.uitkomsten.map((u: any) => u.label).join(', ') : 'geen gespreksuitkomst' }}</div>
                   </div>
                   <button type="button" class="dd-act" :data-test="`ms-bewerk-${s.slug}`" @click="open(s)">Bewerk</button>
                 </div>
@@ -67,7 +67,7 @@ useHead({ title: 'Meetingsoorten · Dealtrace' })
             <article class="fo-blok">
               <div class="formulier-raster">
                 <label class="veld"><span class="veld-label">Naam <span class="veld-verplicht">*</span></span><input v-model="bewerk.naam" class="invoer" required minlength="2" data-test="ms-naam"></label>
-                <label class="veld"><span class="veld-label">Type</span><select v-model="bewerk.type" class="invoer"><option value="klant">Klant</option><option value="intern">Intern (telt nooit als klantcontact)</option></select></label>
+                <label class="veld"><span class="veld-label">Type</span><select v-model="bewerk.type" class="invoer"><option value="klant">Prospect</option><option value="intern">Intern (telt nooit als contactmoment)</option></select></label>
                 <label class="veld"><span class="veld-label">Duur (minuten)</span><input v-model.number="bewerk.duurMin" type="number" min="5" max="480" step="5" class="invoer"></label>
                 <label class="veld"><span class="veld-label">Categorie</span><select :value="bewerk.categorie" class="invoer" data-test="ms-categorie" @change="zetCategorie(($event.target as HTMLSelectElement).value as Categorie)"><option value="bezoek">Afspraak (bezoek op locatie)</option><option value="meeting">Meeting (online of telefonisch)</option></select></label>
                 <label class="veld"><span class="veld-label">Vorm</span><select v-model="bewerk.vorm" class="invoer" data-test="ms-vorm" :disabled="bewerk.categorie === 'bezoek'"><option v-for="k in VORMEN_PER_CATEGORIE[bewerk.categorie as Categorie]" :key="k" :value="k">{{ VORM[k] }}</option></select></label>
@@ -85,7 +85,7 @@ useHead({ title: 'Meetingsoorten · Dealtrace' })
             </article>
             <article class="fo-blok">
               <header class="fo-blok-kop"><h3 class="fo-blok-titel">Uitkomsten met gevolg</h3></header>
-              <p v-if="bewerk.type === 'intern'" class="meta">Intern overleg heeft geen klantuitkomst.</p>
+              <p v-if="bewerk.type === 'intern'" class="meta">Intern overleg heeft geen gespreksuitkomst.</p>
               <template v-else>
                 <div v-for="(u, i) in bewerk.data.uitkomsten" :key="i" class="formulier-raster mt-8">
                   <label class="veld"><span class="veld-label">Label</span><input v-model="u.label" class="invoer"></label>

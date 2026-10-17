@@ -15,7 +15,7 @@ Had je een gesprek in Teams of Zoom? Dan heb je al een transcript. Laat de Notul
 
 - Een samenvatting van het gesprek, zonder dat je hoeft terug te luisteren.
 - Hooguit drie actiepunten staan als concepttaak klaar in **Concepten**; jij keurt goed.
-- Koopsignalen komen als inzicht op de klantkaart, genoemde concurrenten ook.
+- Koopsignalen komen als inzicht op de accountkaart, genoemde concurrenten ook.
 - Bezwaren en open vragen staan op een rij voor je volgende gesprek.
 
 ## Zo doe je het
@@ -33,7 +33,7 @@ Je had om 14:00 een Teams-gesprek met Laura Smit van Logistiek Waalhaven. Je sle
 ## Valkuilen
 
 - **Een Word- of pdf-bestand uploaden.** Dat kan niet; kopieer de tekst en plak hem.
-- **Een afspraak zonder klant.** Een analyse hoort bij een afspraak met een klant.
+- **Een afspraak zonder prospect.** Een analyse hoort bij een afspraak met een prospect.
 - **Alles blind goedkeuren.** De Notulist zet klaar; jij beslist welke taak er echt komt.
 
 ## Meer weten
@@ -51,6 +51,6 @@ Lees [Een afspraak plannen, afronden en overdragen](/helpcenter/een-afspraak-pla
    - [x] Als concepttaak in Concepten
    - [ ] In een mail aan de klant
 3. Wat wordt een koopsignaal uit het transcript?
-   - [x] Een inzicht op de klantkaart
+   - [x] Een inzicht op de accountkaart
    - [ ] Een nieuwe campagne
    - [ ] Een wijziging van de fase

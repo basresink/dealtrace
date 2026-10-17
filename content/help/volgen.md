@@ -46,9 +46,16 @@ Een reeks is een vaste volgorde van stappen per dag. Er zijn drie startsjablonen
 2. **Na voicemail**: dag 0 korte mail, dag 2 bellen op een ander uur, dag 5 LinkedIn, dag 9 een laatste vraag.
 3. **Na eerste gesprek**: dag 0 samenvatting, dag 2 LinkedIn, dag 7 bellen om de afspraak te plannen, dag 14 praktijkvoorbeeld.
 
-Kies onder **Opvolgreeks** een sjabloon, de contactpersoon en het mandaat, en kies **Start reeks**. Er loopt hooguit één reeks per account. Zolang de reeks loopt, staat het hercontactritme stil.
+Een reeks start je op vier plekken:
 
-- **Mail en LinkedIn**: een werkdag voor de stap schrijft de Schrijver een concept (dat kost AI-credits). Het is altijd een concept: je past het aan en keurt het goed. Kies **Keur goed en verstuur** (via de mailkoppeling) of **Zelf verstuurd** als je het uit je eigen mail stuurde.
+- onder **Opvolgreeks** in het venster Volgen: kies een sjabloon, de contactpersoon en het mandaat, en kies **Start reeks**;
+- op de pagina **Opvolgreeksen** (in het menu onder Activiteiten, bij Taken) met **Start reeks**: kies eerst de prospect;
+- in **Rond af** van een taak: kies je **Voicemail ingesproken** of **Gesproken, later**, dan staat onder de uitkomst **Opvolgreeks starten** met het sjabloon dat bij die uitkomst hoort. Vroeg de prospect om informatie, kies dan **Na informatie**. Kies **Geen reeks** als je niets wilt starten;
+- in de **belmodus**: na **Voicemail ingesproken** of **Gesproken, later** kies je bij Afronden een sjabloon of Geen reeks.
+
+Er loopt hooguit één reeks per account. Zolang de reeks loopt, staat het hercontactritme stil. Een gedeactiveerde prospect krijgt geen reeks; wordt een prospect gedeactiveerd terwijl er een reeks loopt, dan stopt die zonder taak bel terug.
+
+- **Mail en LinkedIn**: een werkdag voor de stap schrijft de Schrijver een concept (dat kost AI-credits). Het is altijd een concept: je past het aan en keurt het goed. Kies **Keur goed en verstuur** of **Zelf verstuurd** als je het uit je eigen mail stuurde. Keur goed en verstuur gaat via de Verzender, langs de Bewaker, met de afmeldlink onder een eerste mail. Zonder mailkoppeling gaat de mail via de afzender van Dealtrace met jou als antwoordadres (in een testomgeving naar de testmailbox).
 - **LinkedIn verstuurt Dealtrace nooit zelf.** Kies **Kopieer en vink af**: de tekst staat op je klembord en de taak is klaar.
 - **Bellen**: de stap wordt een beltaak in je belblok op die dag.
 - **Einde**: zonder reactie gaat het account terug naar het hercontactritme, met de volgende poging na een vast aantal dagen.
@@ -64,10 +71,39 @@ De reeks stopt vanzelf bij een reactie:
 
 - een **geplande afspraak** op het account;
 - een **nee** of een **afmelding** voor mail;
-- een **gelogde reactie**: een gesprek dat je afrondde met bijvoorbeeld "Gesproken, later", of **Reactie ontvangen** in het venster.
+- een **gelogde reactie**: een gesprek dat je afrondde met bijvoorbeeld "Gesproken, later", of **Reactie ontvangen** in het venster;
+- een **antwoord in de mailbox**: als de mail van je organisatie gekoppeld is, herkent Dealtrace een antwoord van het contact op het afzenderadres. Een automatisch antwoord (afwezig, bezorgfout) telt niet.
 
 Bij een reactie, afspraak of afmelding komt er een taak **Bel terug** binnen twee uur, als de Bewaker bellen toestaat. Na een nee niet: dan loopt de afkoeling. Je krijgt een melding.
 
 Met **Pauzeer** zet je de reeks stil; bij **Hervat** schuiven de geplande stappen even ver op. Met **Stop** vallen open stappen weg en gaat het ritme verder waar het was.
 
-Dealtrace werkt de reeksen elk kwartier bij, en ook zodra je het venster opent.
+Dealtrace werkt de reeksen elk kwartier bij, en ook zodra je het venster of de pagina Opvolgreeksen opent.
+
+## De pagina Opvolgreeksen
+
+In het menu onder **Activiteiten** staat **Opvolgreeksen**. De kop zegt hoeveel reeksen lopen en hoeveel op jou wachten, met daaronder de reacties en afspraken uit een reeks van deze week. Elke reeks heeft een stand:
+
+- **Concept**: een concept van de Schrijver wacht op je goedkeuring. Deze staan bovenaan.
+- **Open**: een stap wacht op jou, zoals een LinkedIn-taak of een beltaak.
+- **Loopt**: niets wacht; de volgende stap staat gepland.
+- **Raak**: gestopt door een reactie of een afspraak.
+- **Gestopt**: gestopt na een nee, een afmelding, met de hand, of klaar zonder reactie.
+
+Filter op stand, sjabloon of naam. Als salesmanager kies je ook **Mijn team**, als beheerder **Hele organisatie**. Rechts staat de gekozen reeks met de stappen per dag, het mandaat, **Reactie ontvangen**, **Pauzeer** en **Stop**. Concepten en LinkedIn-stappen van een reeks staan ook als taak op Vandaag en bij Taken, met "stap 2 van 4".
+
+Een lopende reeks zie je ook bij **Prospects** (onder de prospect: de reeks, stap x van y en de volgende stap) en op de gesprekskaart in de **belmodus**.
+
+## Sjablonen beheren
+
+Een salesmanager of beheerder beheert de sjablonen onder **Instellingen, Opvolgreeksen** (of via **Sjablonen** op de pagina Opvolgreeksen). Per sjabloon:
+
+- de **stappen**: de dag, het kanaal (mail, LinkedIn of bellen) en de titel van de taak, met voor mail en LinkedIn een **onderwerp** en een **instructie voor de Schrijver**;
+- het **einde**: op welke dag de reeks zonder reactie terug gaat naar het ritme, en na hoeveel dagen de volgende poging komt;
+- bij welke **uitkomst** Rond af en de belmodus het sjabloon voorstellen: Stuur informatie, Voicemail ingesproken of Gesproken, later;
+- de **stopregels**: een reactie, een afspraak en een nee stoppen standaard de reeks; je kunt ze per sjabloon uitzetten. Een afmelding stopt altijd;
+- **aan of uit**. Een sjabloon dat uit staat, kun je niet meer kiezen; lopende reeksen lopen door met de stappen waarmee ze startten.
+
+## Antwoorden uit de mailbox
+
+Met een mailkoppeling (Instellingen, Mail koppelen) staat daar een adres voor inkomende mail. Laat je mailprovider antwoorden op je verkoopmails naar dat adres doorsturen; Dealtrace herkent het contact op het afzenderadres, stopt de lopende reeks en zet een taak **Bel terug** binnen twee uur klaar. Elke mail telt één keer en Dealtrace bewaart alleen het onderwerp en het begin van de tekst. Zonder koppeling gelden de andere stopregels.

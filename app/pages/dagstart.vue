@@ -4,6 +4,9 @@
 // uit alle belpogingen), een voorbereidingsblok voor de eerste afspraak, en "Wat schoof" als er na de
 // eerste indeling iets veranderde. Buitendienst of binnendienst wissel je in de kop (?modus=). Het
 // voorstel komt pas in je agenda na je akkoord. Eén bron: GET /api/dagstart (shared/dagritme.ts planDag).
+// Met "Plan mijn dag automatisch" deelt de Dagplanner de dag zelf in (volgens je werkplek): dan toont de
+// pagina wat hij in je agenda zette, met Ongedaan maken per blok of voor de hele dag, Loopt uit voor de
+// lopende afspraak en in "Wat schoof" wat er bij herplannen veranderde (shared/dagplanning.ts).
 const { functie } = useMe()
 const aan = !!functie('dagritme.dagstart')?.beschikbaar
 const toast = useToast()
@@ -45,7 +48,7 @@ const stijl = (x: { s: number; e: number; baan: number; banen: number }) => ({
   left: `calc(${(100 / x.banen) * x.baan}% + ${x.baan ? 2 : 0}px)`, width: `calc(${100 / x.banen}% - ${x.banen > 1 ? 2 : 0}px)`,
 })
 const Link = resolveComponent('NuxtLink')
-const ICOON: Record<string, string> = { afspraak: 'Handshake', bezoek: 'MapPin', reis: 'Car', kans: 'Compass', bel: 'Phone', voorbereiding: 'BookOpen', lunch: 'Utensils', focus: 'SquareCheck' }
+const ICOON: Record<string, string> = { afspraak: 'Handshake', bezoek: 'MapPin', reis: 'Car', kans: 'Compass', bel: 'Phone', voorbereiding: 'BookOpen', lunch: 'Utensils', focus: 'SquareCheck', bezet: 'Lock' }
 const ICOON_KLASSE: Record<string, string> = { bel: 'item-icoon--call', bezoek: 'item-icoon--visit', kans: 'item-icoon--visit', afspraak: 'item-icoon--email' }
 
 const maxProcent = computed(() => Math.max(1, ...((d.value?.bereik?.uren ?? []).map((u: any) => u.procent ?? 0))))
@@ -61,6 +64,44 @@ async function zetInAgenda() {
 async function neemOver() {
   try { await $fetch('/api/dagstart/bewaar', { method: 'POST' }); toast.toon('De nieuwe indeling is je dag.'); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
+// De automatische dagplanning (F3).
+const dp = computed(() => d.value?.dagplanning ?? null)
+const gepland = computed(() => !!d.value?.vandaag && dp.value?.status === 'gepland')
+const AANLEIDING: Record<string, string> = { verzet: 'Afspraak verzet', uitloop: 'Afspraak loopt uit', geannuleerd: 'Afspraak geannuleerd', niet_verschenen: 'Niet verschenen', nieuw: 'Nieuwe afspraak', agenda: 'Wijziging in je agenda', ongedaan: 'Ongedaan gemaakt' }
+const ITEM_ICOON: Record<string, string> = { belblok: 'Phone', voorbereiding: 'BookOpen', kans: 'Compass', lunch: 'Utensils', focus: 'SquareCheck' }
+const nuTik = ref(Date.now())
+let klok: ReturnType<typeof setInterval> | undefined
+onMounted(() => { nuTik.value = Date.now(); klok = setInterval(() => { nuTik.value = Date.now() }, 60_000) })
+onBeforeUnmount(() => clearInterval(klok))
+const kanOngedaan = (i: { start: string }) => Date.parse(i.start) > nuTik.value
+const bezigDp = ref<string | null>(null)
+async function ongedaan(sleutel?: string) {
+  bezigDp.value = sleutel ?? 'dag'
+  try {
+    const r = await $fetch<any>('/api/dagplanning/ongedaan', { method: 'POST', body: sleutel ? { sleutel } : {} })
+    toast.toon(r.tekst)
+    await refresh()
+  } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezigDp.value = null }
+}
+async function planNu() {
+  bezigDp.value = 'plan'
+  try {
+    const r = await $fetch<any>('/api/dagplanning/plan', { method: 'POST' })
+    toast.toon(r.status === 'gepland' ? 'Je dag is ingedeeld en staat in je agenda.' : r.status === 'voorstel' ? 'De Bewaker liet alleen een voorstel toe.' : 'Je dag was al ingedeeld.')
+    await refresh()
+  } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezigDp.value = null }
+}
+/** De lopende of eerstvolgende afspraak van vandaag: die kan uitlopen. */
+const lopend = computed(() => (d.value?.plan?.blokken ?? []).find((b: any) => (b.soort === 'afspraak' || b.soort === 'bezoek') && b.vast && Date.parse(b.eind) > nuTik.value) ?? null)
+async function uitloop(minuten: number) {
+  if (!lopend.value) return
+  bezigDp.value = `uitloop-${minuten}`
+  try {
+    const r = await $fetch<any>(`/api/afspraken/${lopend.value.id}/uitloop`, { method: 'POST', body: { minuten } })
+    toast.toon(`${r.tekst} De rest van je dag is opnieuw ingedeeld.`)
+    await refresh()
+  } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { bezigDp.value = null }
+}
 useHead({ title: 'Dagstart · Dealtrace' })
 </script>
 
@@ -73,7 +114,8 @@ useHead({ title: 'Dagstart · Dealtrace' })
         <template #titel><h1 class="title title--groot" data-test="ds-titel">{{ d.titel }}</h1></template>
         <template #uitleg><p class="subtitle subtitle--groot" data-test="ds-lede">{{ d.lede }}</p></template>
         <template #acties>
-          <div class="keuzegroep" role="group" aria-label="Werkplek voor de indeling">
+          <span v-if="gepland" class="pil pil--grijs ds-werkplek" data-test="ds-werkplek">{{ d.modus === 'buiten' ? 'Buitendienst' : 'Binnendienst' }} · je werkplek</span>
+          <div v-else class="keuzegroep" role="group" aria-label="Werkplek voor de indeling">
             <button type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': d.modus === 'buiten' }" :aria-pressed="d.modus === 'buiten'" data-test="ds-modus-buiten" @click="zet({ modus: 'buiten' })">Buitendienst</button>
             <button type="button" class="keuzegroep-knop" :class="{ 'keuzegroep-knop--aan': d.modus === 'binnen' }" :aria-pressed="d.modus === 'binnen'" data-test="ds-modus-binnen" @click="zet({ modus: 'binnen' })">Binnendienst</button>
           </div>
@@ -131,9 +173,43 @@ useHead({ title: 'Dagstart · Dealtrace' })
 
             <article class="kaart" data-test="ds-schoof">
               <header class="kaart-kop"><h2 class="kaart-titel">Wat schoof</h2></header>
-              <ul v-if="d.schoof.length" class="ds-schoof"><li v-for="s in d.schoof" :key="s">{{ s }}</li></ul>
+              <div v-if="gepland && dp.wijzigingen.length" class="ds-wijzigingen">
+                <section v-for="(w, n) in [...dp.wijzigingen].reverse()" :key="`${w.op}-${n}`" class="ds-wijziging" :data-test="n === 0 ? 'ds-wijziging-laatste' : undefined">
+                  <h3 class="ds-wijziging-kop">{{ tijd(w.op) }} · {{ AANLEIDING[w.aanleiding] ?? 'Herpland' }}</h3>
+                  <ul class="ds-schoof"><li v-for="(r, i) in w.regels" :key="i">{{ r }}</li></ul>
+                </section>
+              </div>
+              <ul v-else-if="d.schoof.length" class="ds-schoof"><li v-for="(r, i) in d.schoof" :key="i">{{ r }}</li></ul>
               <p v-else class="meta">Niets. Alles past vandaag.</p>
-              <button v-if="d.schoof.length" type="button" class="dd-act mt-8" data-test="ds-neem-over" @click="neemOver">Neem de nieuwe indeling over</button>
+              <button v-if="d.schoof.length && !gepland" type="button" class="dd-act mt-8" data-test="ds-neem-over" @click="neemOver">Neem de nieuwe indeling over</button>
+            </article>
+
+            <article v-if="d.vandaag && d.werkdag && (gepland || dp?.automatisch)" class="kaart" data-test="ds-dagplanner">
+              <header class="kaart-kop"><h2 class="kaart-titel">{{ gepland ? 'Gepland door de Dagplanner' : 'Dagplanner' }}</h2></header>
+              <template v-if="gepland">
+                <p class="meta">Dit zette de Dagplanner zelf in je dag. Een blok dat nog niet begon, maak je hier ongedaan.</p>
+                <ul class="ds-items">
+                  <li v-for="i in dp.items" :key="i.sleutel" class="item-rij ds-item" :data-test="`ds-item-${i.sleutel}`">
+                    <span class="item-tijd">{{ tijd(i.start) }}<small>{{ tijd(i.eind) }}</small></span>
+                    <span class="item-icoon" :class="ICOON_KLASSE[i.soort === 'belblok' ? 'bel' : i.soort]"><Icoon :naam="ITEM_ICOON[i.soort] ?? 'Clock'" /></span>
+                    <span class="item-body"><span class="item-naam">{{ i.titel }}</span><span v-if="i.sub" class="item-meta">{{ i.sub }}</span><span class="pil-tags"><span class="pil pil--paars">Dagplanner</span><span v-if="i.agenda" class="pil pil--grijs">In je agenda</span></span>
+                      <button v-if="kanOngedaan(i)" type="button" class="dd-act ds-item-knop" :disabled="!!bezigDp" :data-test="`ds-ongedaan-${i.sleutel}`" :aria-label="`Maak ${i.titel} ongedaan`" @click="ongedaan(i.sleutel)"><Icoon naam="Undo2" />Ongedaan</button>
+                    </span>
+                  </li>
+                </ul>
+                <p v-if="!dp.items.length" class="meta">Er staat niets meer van de Dagplanner in je dag.</p>
+                <div v-if="lopend" class="ds-uitloop" data-test="ds-uitloop">
+                  <span class="meta">Loopt {{ lopend.titel }} uit?</span>
+                  <div class="ds-uitloop-knoppen">
+                    <button v-for="m in [15, 30, 60]" :key="m" type="button" class="dd-act" :disabled="!!bezigDp" :data-test="`ds-uitloop-${m}`" @click="uitloop(m)">+{{ m }} min</button>
+                  </div>
+                </div>
+                <button type="button" class="dd-actie dd-actie--secundair mt-8" :disabled="!!bezigDp" data-test="ds-ongedaan-dag" @click="ongedaan()"><Icoon naam="Undo2" class="dd-actie-icoon" />Maak de hele dag ongedaan</button>
+              </template>
+              <template v-else>
+                <p class="meta" data-test="ds-dagplanner-stand">{{ dp?.status === 'ongedaan' ? 'Je maakte de planning van vandaag ongedaan. De Dagplanner plant vandaag niet meer vanzelf.' : dp?.status === 'voorstel' ? 'De Bewaker liet vandaag alleen een voorstel toe. Plan zelf in, of laat de Dagplanner het nu doen.' : `De Dagplanner deelt je dag om ${dp?.tijd} in. Wil je niet wachten, plan dan nu.` }}</p>
+                <button type="button" class="dd-actie dd-actie--primair mt-8" :disabled="!!bezigDp" data-test="ds-plan-nu" @click="planNu"><Icoon naam="CalendarClock" class="dd-actie-icoon" />Plan mijn dag nu</button>
+              </template>
             </article>
 
             <article v-if="d.plan.voorstellen.length" class="kaart" data-test="ds-voorstel">
@@ -141,6 +217,8 @@ useHead({ title: 'Dagstart · Dealtrace' })
               <p class="meta">{{ d.plan.voorstellen.length === 1 ? 'Het belblok staat' : `${d.plan.voorstellen.length} belblokken staan` }} als voorstel in je dag. Pas na je akkoord komt het in je agenda, met je {{ d.belTaken }} belacties erin.</p>
               <button type="button" class="dd-actie dd-actie--primair mt-8" :disabled="bezig" data-test="ds-zet-in-agenda" @click="zetInAgenda"><Icoon naam="CalendarCheck" class="dd-actie-icoon" />Zet in mijn agenda</button>
             </article>
+
+            <DagplanningVoorkeur compact @gewijzigd="refresh()" />
 
             <nav class="kaart ds-links" aria-label="Meer van je ritme">
               <NuxtLink to="/weekstart" class="tekst-link">Weekstart</NuxtLink>
@@ -171,6 +249,7 @@ useHead({ title: 'Dagstart · Dealtrace' })
 .ds-blok--voorstel { border-style: dashed; border-width: 1px 1px 1px 3px; border-color: var(--ink); border-left-color: var(--yellow); background: var(--wit); }
 .ds-blok--reis { background: transparent; border-left: 1px dashed var(--border-strong); }
 .ds-blok--lunch { background: transparent; }
+.ds-blok--bezet { background: repeating-linear-gradient(-45deg, var(--surface), var(--surface) 6px, var(--border) 6px, var(--border) 7px); border-left-color: var(--muted); }
 .ds-blok--voorbereiding { border-left-color: var(--purple); }
 .ds-lijst { display: none; list-style: none; margin: 8px 0 0; padding: 0; }
 .ds-lijst a.item-rij { text-decoration: none; }
@@ -186,8 +265,17 @@ useHead({ title: 'Dagstart · Dealtrace' })
 .ds-staaf-uur { font-size: 11px; color: var(--muted); }
 .ds-uitleg { margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
 .ds-schoof { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; }
+.ds-wijzigingen { display: grid; gap: 10px; max-height: 340px; overflow-y: auto; }
+.ds-wijziging-kop { margin: 0 0 2px; font-size: 12px; font-weight: 700; color: var(--muted); font-feature-settings: 'tnum'; }
 .ds-links { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
 .ds-links a { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; }
+.ds-werkplek { align-self: center; }
+.ds-items { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.ds-item { align-items: start; grid-template-columns: auto auto minmax(0, 1fr); }
+.ds-item .item-body { min-width: 0; }
+.ds-item-knop { justify-self: start; margin-top: 6px; }
+.ds-uitloop { display: grid; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+.ds-uitloop-knoppen { display: flex; gap: 8px; flex-wrap: wrap; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 1023px) { .ds { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 719px) {

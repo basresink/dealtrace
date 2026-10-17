@@ -163,7 +163,7 @@ export function kiesWinpunt(winpunten: Winpunt[], opties: { faseId?: string | nu
   return [...kandidaten].sort((a, b) => { const x = sleutel(a), y = sleutel(b); for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i]! - y[i]!; return a.id.localeCompare(b.id) })[0]!
 }
 
-/** "Als de klant zegt": '"Online is het goedkoper." Antwoord: "Per stuk soms wel."' naar bezwaar en antwoord. */
+/** "Als de prospect zegt": '"Online is het goedkoper." Antwoord: "Per stuk soms wel."' naar bezwaar en antwoord. */
 export function leesAlsDeKlantZegt(t: string | null | undefined): { bezwaar: string; antwoord: string } | null {
   if (!t) return null
   const m = /^\s*"?(.+?)"?\s*Antwoord:\s*"?(.+?)"?\s*$/s.exec(t)
@@ -180,7 +180,7 @@ export const ONDERDEEL_LABEL: Record<Onderdeel, string> = {
 }
 /** Sublaagcode zoals in SalesDNA (0.4), voor de teksten in het leesmodel. */
 export const SUBLAAG: Partial<Record<Onderdeel, string>> = { golden_circle: 'L0.0', bedrijfsverhaal: 'L0.1', ambitie: 'L0.2', waarde: 'L0.4', branches: 'L0.6', concurrenten: 'L0.8', winpunten: 'L2.1', terugkomregels: 'L3.14' }
-export const CONCURRENT_SOORTEN = { direct: 'Direct', indirect: 'Indirect', intern: 'Intern (de klant doet het zelf)', niets: 'Niets doen' } as const
+export const CONCURRENT_SOORTEN = { direct: 'Direct', indirect: 'Indirect', intern: 'Intern (de prospect doet het zelf)', niets: 'Niets doen' } as const
 export const TERMIJNEN = [0, 30, 61, 91, 182, 365] as const
 export const MAX_HOOG_IMPACT = 3
 
@@ -215,7 +215,7 @@ export function ontbrekendeVelden<O extends Onderdeel>(onderdeel: O, c: Concepte
     case 'ambitie': if (leeg((c as Concepten['ambitie']).visie)) f.push('Visie'); break
     case 'waarde': { const w = c as Concepten['waarde']; if (leeg(w.kernbelofte)) f.push('Kernbelofte'); if (leeg(w.waardestatement)) f.push('Waardestatement'); break }
     case 'branches': { const b = c as Concepten['branches']; if (!b.items?.length) f.push('Minstens één branche'); regels(b.items, (x, i) => x.naam || `Branche ${i + 1}`, [['naam', 'naam'], ['focus', 'focus']]); break }
-    case 'concurrenten': regels((c as Concepten['concurrenten']).items, (x, i) => x.naam || `Concurrent ${i + 1}`, [['naam', 'naam'], ['soort', 'soort'], ['onderscheid', 'onderscheid'], ['zoZegJeHet', 'Zo zeg je het'], ['alsDeKlantZegt', 'Als de klant zegt']]); break
+    case 'concurrenten': regels((c as Concepten['concurrenten']).items, (x, i) => x.naam || `Concurrent ${i + 1}`, [['naam', 'naam'], ['soort', 'soort'], ['onderscheid', 'onderscheid'], ['zoZegJeHet', 'Zo zeg je het'], ['alsDeKlantZegt', 'Als de prospect zegt']]); break
     case 'winpunten': regels((c as Concepten['winpunten']).items, (x, i) => x.titel || `Winpunt ${i + 1}`, [['titel', 'titel'], ['faseId', 'fase'], ['omschrijving', 'omschrijving'], ['waarom', 'waarom wij hier winnen']]); break
     case 'terugkomregels': regels((c as Concepten['terugkomregels']).items, (x, i) => x.reden || `Regel ${i + 1}`, [['reden', 'reden'], ['termijn', 'termijn'], ['kanaal', 'kanaal'], ['aanpak', 'aanpak']]); break
   }

@@ -138,6 +138,8 @@ export interface MotorAccount {
   partnerLeads?: { id: string; deadline: string; bevestigd: boolean }[]
   jaarplanning?: { vensterEind: string; benaderdDitJaar: boolean } | null
   kvkMutaties?: { id: string; soort: string; op: string }[]
+  /** 0064: gedeactiveerd; de motor en de droogloop slaan het account over. */
+  gedeactiveerd?: boolean
   [k: string]: unknown
 }
 
@@ -233,6 +235,9 @@ export function evaluateTrigger(regel: Pick<Regel, 'data'>, a: MotorAccount, nu:
 
 /** Raakt de regel dit account? Elke afbakening filtert echt (gat 6), plus scope en afkoeling. */
 export function ruleTargetsAccount(regel: Pick<Regel, 'data' | 'scope' | 'eigenaarId' | 'teamId' | 'reisId' | 'faseId'>, a: MotorAccount, nu = new Date()): boolean {
+  // Dealtrace is new business: de motor maakt nooit taken of inzichten voor klanten. Het
+  // onderhoudsritme en winback van klanten lopen in DealDrive (testronde, Prospects of klanten).
+  if (a.type === 'klant') return false
   const b = regel.data.afbakening ?? {}
   if (b.accounttypes?.length && !b.accounttypes.includes(a.type)) return false
   if (b.statussen?.length && !b.statussen.includes(a.nbStatus)) return false
@@ -323,6 +328,7 @@ export interface PoortContext {
  * twee ritmes op één account. Geeft de cadans in dagen, of null als de regel dit account overslaat.
  */
 export function regelPoort(regel: Regel, a: MotorAccount, nu: Date, ctx: PoortContext = {}): { cadans: number } | null {
+  if (a.gedeactiveerd) return null
   if (!ruleTargetsAccount(regel, a, nu)) return null
   const patroon = regel.data.trigger.patroon
   if (a.ritme?.actief && regel.data.activiteit === 'taak' && CONTACT_ACTIE.has(regel.data.gevolg.actiesoort) && !RITME_PATRONEN.has(patroon)) return null

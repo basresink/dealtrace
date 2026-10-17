@@ -81,7 +81,7 @@ async function stopsVan(tx: Tx, gebruikerId: string, dag: string) {
 
 /** Alle kandidaten voor kansen: punt, eigenaar, status, basisscore en bronnen (bezoektaak, klaargezet, aanleiding, ritme, ongepland). */
 export async function laadKandidaten(tx: Tx, ik: string, dag: string, regioVanDag: string | null, metOngepland: boolean, nu: Date): Promise<Kandidaat[]> {
-  const accounts = await rijen(tx, sql`select id, name, owner_id, account_kind, nb_status, klasse, fase_id, gebied_id, vv_branche_id, doelgroep_id, score, lat, lng, geo_bron, laatste_contact_op, data->'nee' as nee from accounts where lat is not null`)
+  const accounts = await rijen(tx, sql`select id, name, owner_id, account_kind, nb_status, klasse, fase_id, gebied_id, vv_branche_id, doelgroep_id, score, lat, lng, geo_bron, laatste_contact_op, data->'nee' as nee from accounts where lat is not null and gedeactiveerd_op is null`)
   const taken = await rijen(tx, sql`select id, account_id, title, created_at from tasks where owner_id = ${ik} and action_type = 'bezoek' and status in ('open', 'bezig') and coalesce(data->>'soort', '') <> 'afspraak' and data->>'afspraakId' is null`)
   const klaar = await rijen(tx, sql`select k.account_id, k.reden, k.datum, k.regio_id, u.name as van_naam, u.werkplek from klaargezet_voor k join users u on u.id = k.van_gebruiker where k.voor_gebruiker = ${ik} and k.status = 'open'`)
   const signalen = await rijen(tx, sql`select account_id, title, relevance_score, created_at from signals where account_id is not null and status in ('nieuw', 'gelezen') and created_at > ${new Date(nu.getTime() - 30 * 864e5).toISOString()} and relevance_score >= 60`)
