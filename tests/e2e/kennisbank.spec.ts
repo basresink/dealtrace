@@ -19,7 +19,7 @@ test.describe('kennisbank', () => {
     await expect(page.getByTestId('document-naam')).toHaveValue(`Case Testzon ${z}.md`)
     await page.getByTestId('document-versie').fill('2')
     await page.getByTestId('kbu-account').fill('Gevelpunt')
-    await page.getByTestId('kbu-account-optie').first().click()
+    await page.getByTestId('kbu-account-optie').filter({ hasText: 'Gevelpunt' }).first().click()
     await expect(page.getByTestId('kbu-account-chip')).toContainText('Gevelpunt')
     await page.getByTestId('document-bewaar').click()
 
@@ -105,8 +105,11 @@ test.describe('kennisbank', () => {
     await expect(page.getByTestId('ddf-preview-pdf')).toBeVisible()
     await expect(page.getByTestId('ddf-ai-zonder')).toContainText('Het lezen van dit bestand is mislukt')
     await expect(page.getByTestId('ddf-ai-zonder')).toContainText('alleen titel, type en koppelingen')
-    await page.getByTestId('ddf-vraag').first().click()
-    await expect(page.getByTestId('ddf-antwoord')).toContainText('niet de inhoud')
+    // De PDF-preview laadt tegelijk; klik opnieuw als de eerste klik daardoor verloren ging.
+    await expect(async () => {
+      await page.getByTestId('ddf-vraag').first().click()
+      await expect(page.getByTestId('ddf-antwoord').first()).toContainText('niet de inhoud', { timeout: 3000 })
+    }).toPass({ timeout: 20000 })
     await expect(page.getByTestId('ddf-open')).toHaveAttribute('href', `/api/documenten/${id}/bestand`)
     expect((await page.request.get(`/api/documenten/${id}/bestand`)).headers()['content-type']).toBe('application/pdf')
     expect((await page.request.post('/api/documenten', { data: { naam: 'virus.exe', mime: 'application/x-msdownload', data: 'eA==' } })).status()).toBe(415)
