@@ -238,6 +238,8 @@ export interface PlanInput {
   belTaken: number
   acties?: number
   bereik: Bereikbaarheid
+  /** Organisatie: je eigen belpogingen waren te weinig, het uur komt uit de belpogingen van de hele organisatie. */
+  bereikBron?: 'eigen' | 'organisatie'
   /** Blokken die al vastliggen en niet opnieuw ingedeeld worden (wat de Dagplanner eerder vandaag al deed). */
   extra?: PlanBlok[]
 }
@@ -342,6 +344,7 @@ export function planDag(p: PlanInput): Dagplan {
     const uurT = (u: number) => `${String(u).padStart(2, '0')}:00`
     const verschil = `${hier?.procent ?? 0}% neemt dan op${laag ? ` tegen ${laag.procent}% om ${uurT(laag.uur)}` : ''}.`
     belUitleg = top?.uur === belUur ? `Daarom ligt het belblok om ${uurT(belUur)}: ${verschil}` : `Het belblok ligt om ${uurT(belUur)}, het beste vrije uur: ${verschil} Om ${uurT(top!.uur)} (${top!.procent}%) staat al iets.`
+    if (p.bereikBron === 'organisatie') belUitleg += ' Je hebt zelf nog te weinig belpogingen; dit uur komt uit de belpogingen van je organisatie.'
   }
   const afs = blokken.filter((b) => b.soort === 'afspraak').length
   const bez = blokken.filter((b) => b.soort === 'bezoek').length

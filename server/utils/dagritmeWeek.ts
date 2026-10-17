@@ -325,9 +325,9 @@ export async function laadWeekstart(tx: Tx, gebruikerId: string, nu = new Date()
  * De eigen belpogingen van de gebruiker in de laatste 90 dagen, met de branche van het account. Dagstart
  * toont alleen je eigen resultaten, geen cijfers van het team of van anderen.
  */
-async function belpogingen(tx: Tx, gebruikerId: string, nu: Date): Promise<BereikPoging[]> {
+async function belpogingen(tx: Tx, gebruikerId: string | null, nu: Date): Promise<BereikPoging[]> {
   const r = await rijen(tx, sql`select a.op, a.uitkomst, a.soort, acc.vv_branche_id from activiteiten a left join accounts acc on acc.id = a.account_id
-    where a.door = ${gebruikerId} and a.soort = 'gebeld' and a.op >= ${new Date(nu.getTime() - 90 * 864e5).toISOString()} and coalesce(a.kanaal, '') <> 'intern'`)
+    where ${gebruikerId ? sql`a.door = ${gebruikerId}` : sql`true`} and a.soort = 'gebeld' and a.op >= ${new Date(nu.getTime() - 90 * 864e5).toISOString()} and coalesce(a.kanaal, '') <> 'intern'`)
   return r.map((x) => ({ op: iso(x.op)!, brancheId: x.vv_branche_id ?? null, gesproken: isGesproken({ soort: x.soort, uitkomst: x.uitkomst }) }))
 }
 
@@ -381,6 +381,9 @@ export async function planBron(tx: Tx, g: DagritmeGebruiker, dag: string, nu: Da
   const meest = [...tel].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? null
   const doelBranche = opties.branche && branches.some((b) => b.id === opties.branche) ? opties.branche : opties.branche === 'alle' ? null : meest
   const bereik = bereikVoorDoelgroep(await belpogingen(tx, g.id, nu), doelBranche ? [doelBranche] : [])
+  // Dagstart toont alleen je eigen belpogingen. Zijn dat er te weinig, dan plant de dag (en de Dagplanner)
+  // het belblok op de belpogingen van de hele organisatie, zodat een nieuwe gebruiker toch een goed uur krijgt.
+  const planBereik = bereik.genoeg ? bereik : bereikVoorDoelgroep(await belpogingen(tx, null, nu), doelBranche ? [doelBranche] : [])
   const doelgroep = bereik.bron === 'doelgroep' ? branches.find((b) => b.id === doelBranche)?.naam ?? null : null
   // Kansen langs de route alleen in de buitendienststand en als er bezoeken zijn; nooit een gedeactiveerde prospect.
   let kansen: { id: string; naam: string; start: string | null; sub: string | null; accountId: string }[] = []
@@ -394,7 +397,7 @@ export async function planBron(tx: Tx, g: DagritmeGebruiker, dag: string, nu: Da
     } catch { kansen = [] }
   }
   const werk = { start: 8, eind: 18, ...((await rijen(tx, sql`select value from org_settings where key = 'dagritme'`))[0]?.value ?? {}) } as Record<string, any>
-  const plan = planDag({ dag, nu, modus, werkdag: { start: Number(werk.werkdagStart ?? 8), eind: Number(werk.werkdagEind ?? 18) }, vast: [...vast, ...bezet], kansen, belblokken: bb.map((b) => ({ id: b.id, start: iso(b.start_op)!, eind: iso(b.eind_op)!, gesprekken: b.n })), belTaken: bel.length, acties: ac?.n ?? 0, bereik, extra: opties.extra })
+  const plan = planDag({ dag, nu, modus, werkdag: { start: Number(werk.werkdagStart ?? 8), eind: Number(werk.werkdagEind ?? 18) }, vast: [...vast, ...bezet], kansen, belblokken: bb.map((b) => ({ id: b.id, start: iso(b.start_op)!, eind: iso(b.eind_op)!, gesprekken: b.n })), belTaken: bel.length, acties: ac?.n ?? 0, bereik: planBereik, bereikBron: planBereik === bereik ? 'eigen' : 'organisatie', extra: opties.extra })
   return { modus, vast, vastStand, plan, bereik, doelBranche, doelgroep, branches, belTaken: bel.length, bezoeken: vast.filter((v) => v.soort === 'bezoek').length }
 }
 

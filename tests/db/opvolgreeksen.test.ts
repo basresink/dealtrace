@@ -31,6 +31,9 @@ const ORG = 'org-voltvast'
 const ACC = 'pr-g16'
 const anouk = { id: 'u-01', rol: 'accountmanager', niveau: 'gevorderd', werkplek: 'binnendienst', data: {} }
 const collega = { id: 'u-02', rol: 'accountmanager', niveau: 'beginner', werkplek: 'binnendienst', data: {} }
+// De stap hangt af van de dag (weekend, plafond per werkdagen sinds het laatste contact in de seed):
+// de test rekent op een werkdag een week vooruit, 10:00.
+const werkdag = (() => { const d = new Date(); d.setDate(d.getDate() + 7); d.setHours(10, 0, 0, 0); while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1); return d })()
 const rijen = async (tx: any, q: any) => (await tx.execute(q)).rows as any[]
 const rij = async (tx: any, q: any) => (await rijen(tx, q))[0]
 const sjabloon = async (tx: any, sleutel: string) => (await r.sjablonen(tx, ORG)).find((s) => s.sleutel === sleutel)!.id
@@ -99,20 +102,20 @@ describe('opvolgreeksen', () => {
 
   it('volgende beste stap uit de database, Niet nu en de taak bij Doe het nu', async () => {
     await inOrg(ORG, async (tx) => {
-      const u = await v.volgenVoor(tx, ORG, anouk, ACC, null)
+      const u = await v.volgenVoor(tx, ORG, anouk, ACC, null, werkdag)
       expect(u.stap.factoren.length).toBeGreaterThan(0)
       expect(u.stap.bewaker.tekst).toMatch(/^(Mag|Tegengehouden)/)
       expect(u.sjablonen).toHaveLength(3)
       expect(u.mandaten).toEqual(['C', 'B'])
       const k = [u.stap, ...u.alternatieven].find((x) => x.bewaker.mag && x.soort !== 'wachten')!
-      const nu = await v.kiesStap(tx, ORG, anouk, ACC, { sleutel: k.sleutel, keuze: 'nu' })
+      const nu = await v.kiesStap(tx, ORG, anouk, ACC, { sleutel: k.sleutel, keuze: 'nu' }, werkdag)
       expect((await rij(tx, sql`select status, owner_id from tasks where id = ${nu.taskId}`))).toEqual({ status: 'open', owner_id: 'u-01' })
-      const na = await v.volgenVoor(tx, ORG, anouk, ACC, null)
-      await v.kiesStap(tx, ORG, anouk, ACC, { sleutel: na.stap.sleutel, keuze: 'niet-nu', reden: 'klopt-niet' })
-      const daarna = await v.volgenVoor(tx, ORG, anouk, ACC, null)
+      const na = await v.volgenVoor(tx, ORG, anouk, ACC, null, werkdag)
+      await v.kiesStap(tx, ORG, anouk, ACC, { sleutel: na.stap.sleutel, keuze: 'niet-nu', reden: 'klopt-niet' }, werkdag)
+      const daarna = await v.volgenVoor(tx, ORG, anouk, ACC, null, werkdag)
       expect(daarna.stap.sleutel).not.toBe(na.stap.sleutel)
-      await expect(v.kiesStap(tx, ORG, anouk, ACC, { sleutel: 'bestaat-niet', keuze: 'nu' })).rejects.toMatchObject({ statusCode: 409 })
-      await expect(v.volgenVoor(tx, ORG, anouk, ACC, 'eva-a09-c1')).rejects.toMatchObject({ statusCode: 422 })
+      await expect(v.kiesStap(tx, ORG, anouk, ACC, { sleutel: 'bestaat-niet', keuze: 'nu' }, werkdag)).rejects.toMatchObject({ statusCode: 409 })
+      await expect(v.volgenVoor(tx, ORG, anouk, ACC, 'eva-a09-c1', werkdag)).rejects.toMatchObject({ statusCode: 422 })
     })
   })
 

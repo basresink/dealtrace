@@ -141,7 +141,10 @@ describe('overdracht en terugmeldingen (stand mock)', () => {
       expect(a.w).toMatchObject({ bron: 'dealdrive', reden: 'Prijs', verlorenAan: 'Online webgroothandel', regelId: 'hc-03', kanaal: 'bezoek', rol: 'Accountmanager' })
       const t = await rij(tx, sql`select action_type, due_date from tasks where account_id = 'pr-02' and title like 'Terug in beeld%'`)
       expect(t.action_type).toBe('bezoek')
-      expect(new Date(t.due_date).toISOString().slice(0, 10)).toBe(a.w.datum)
+      // De taak staat op het eerstvolgende werkmoment op of na de terugkomdatum (valt die in het weekend, dan maandag).
+      const taakDag = new Date(t.due_date).toISOString().slice(0, 10)
+      expect(taakDag >= a.w.datum && (Date.parse(taakDag) - Date.parse(a.w.datum)) / 864e5 <= 2).toBe(true)
+      expect([0, 6]).not.toContain(new Date(`${taakDag}T12:00:00Z`).getUTCDay())
       await stuur(u, melding('webhook-klant-slapend.json', { dealtraceAccountId: 'pr-02' }))
       await dd.verwerkTerugmeldingen(tx, ORG)
       const h = await rij(tx, sql`select terug_regel_id, data->'herwin' as h from accounts where id = 'pr-02'`)
