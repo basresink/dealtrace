@@ -11,6 +11,7 @@ const LEDE: Record<RitmeMoment, string> = {
   weekstart: 'Zo haal je meer uit je week.',
   weekreview: 'Wat je volgende week anders kunt doen.',
 }
+const Link = resolveComponent('NuxtLink')
 const tips = computed(() => props.steun?.tips ?? [])
 const artikelen = computed(() => props.steun?.artikelen ?? [])
 </script>
@@ -20,14 +21,16 @@ const artikelen = computed(() => props.steun?.artikelen ?? [])
     <article class="kaart rs-blok" data-test="steun-tips">
       <header class="kaart-kop rs-kop"><h2 class="kaart-titel">Tips en tricks</h2><span class="meta">{{ LEDE[moment] }}</span></header>
       <ul class="rs-lijst">
-        <li v-for="t in tips" :key="t.sleutel" class="rs-tip" :data-test="`steun-tip-${t.sleutel}`">
-          <span class="rs-icoon" aria-hidden="true"><Icoon naam="Lightbulb" :grootte="16" /></span>
-          <span class="rs-body">
-            <NuxtLink v-if="t.href" :to="t.href" class="rs-titel rs-link">{{ t.titel }}</NuxtLink>
-            <b v-else class="rs-titel">{{ t.titel }}</b>
-            <span class="rs-tekst">{{ t.tekst }}</span>
-            <span v-if="t.reden" class="rs-reden">{{ t.reden }}</span>
-          </span>
+        <li v-for="t in tips" :key="t.sleutel">
+          <component :is="t.href ? Link : 'div'" :to="t.href ?? undefined" :class="t.href ? 'rs-artikel' : 'rs-tip'" :data-test="`steun-tip-${t.sleutel}`">
+            <span class="rs-icoon" aria-hidden="true"><Icoon naam="Lightbulb" :grootte="16" /></span>
+            <span class="rs-body">
+              <span class="rs-titel">{{ t.titel }}</span>
+              <span class="rs-tekst">{{ t.tekst }}</span>
+              <span v-if="t.reden" class="rs-reden">{{ t.reden }}</span>
+            </span>
+            <Icoon v-if="t.href" naam="ChevronRight" :grootte="16" class="rs-pijl" />
+          </component>
         </li>
       </ul>
       <p v-if="!tips.length" class="meta">Nog geen tips voor dit moment.</p>
@@ -68,7 +71,6 @@ const artikelen = computed(() => props.steun?.artikelen ?? [])
 .rs-icoon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: var(--surface); color: var(--ink); }
 .rs-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .rs-titel { font-size: 14px; font-weight: 700; color: var(--ink); line-height: 1.35; }
-.rs-link { text-decoration: underline; text-decoration-color: var(--yellow); text-underline-offset: 3px; }
 .rs-tekst { font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
 .rs-reden { font-size: 12px; color: var(--muted); }
 .rs-pijl { align-self: center; color: var(--muted); }

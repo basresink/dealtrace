@@ -46,7 +46,7 @@ test.describe('flyout en paginascroll', () => {
 
   test('Taakvenster op Taken en navigeren met een open flyout', async ({ page }) => {
     await login(page, 'u-07')
-    await ga(page, '/taken')
+    await ga(page, '/taken?weergave=lijst')
     await page.getByTestId('taak-titel').first().click()
     await expect(page.getByTestId('taak-flyout')).toBeVisible({ timeout: 20_000 })
     await expect.poll(() => scrollbaar(page)).toBe(false)

@@ -105,27 +105,62 @@ test.describe('Weekstart en dagstart', () => {
     await expect(page.getByTestId('ws-naar-dagstart')).toHaveAttribute('href', '/dagstart')
   })
 
-  test('dagstart deelt de dag in met het belblok op het beste uur en wisselt buiten- en binnendienst', async ({ page }) => {
+  test('dagstart deelt de dag in volgens je werkplek, zonder keuzeknop, met alleen je eigen cijfers', async ({ page }) => {
     await login(page, 'u-07')
     const dag = volgendeWerkdag()
     await ga(page, `/dagstart?dag=${dag}`)
     await expect(page.getByTestId('ds-titel')).toHaveText('Je dag staat klaar.')
     await expect(page.getByTestId('ds-bereik')).toContainText('Wanneer neemt jouw doelgroep op?')
+    await expect(page.getByTestId('ds-bereik-meta')).toContainText('eigen belpoging')
     await expect(page.getByTestId('ds-bel-uitleg')).not.toBeEmpty()
     await expect(page.getByTestId('ds-schoof')).toContainText('Wat schoof')
-    await page.getByTestId('ds-modus-buiten').click()
-    await expect(page).toHaveURL(/modus=buiten/)
-    await expect(page.getByTestId('ds-modus-buiten')).toHaveAttribute('aria-pressed', 'true')
-    const api = await (await page.request.get(`/api/dagstart?dag=${dag}&modus=binnen`)).json()
+    // Geen keuzeknop binnendienst of buitendienst: de werkplek (Eva: binnendienst) bepaalt het.
+    await expect(page.getByTestId('ds-modus-buiten')).toHaveCount(0)
+    await expect(page.getByTestId('ds-modus-binnen')).toHaveCount(0)
+    await expect(page.getByTestId('ds-werkplek')).toHaveText('Binnendienst · je werkplek')
+    const api = await (await page.request.get(`/api/dagstart?dag=${dag}`)).json()
     expect(api.modus).toBe('binnen')
     expect(api.plan.blokken.length).toBeGreaterThan(0)
+    // De bereikbaarheid telt alleen Eva's eigen belpogingen.
+    const mijn = await (await page.request.get('/api/dagstart')).json()
+    expect(api.bereik.pogingen).toBe(mijn.bereik.pogingen)
     expect((await page.request.get('/api/dagstart?dag=morgen')).status()).toBe(400)
   })
+
+  for (const [pad, moment] of [['/dagstart', 'dagstart'], ['/weekstart', 'weekstart'], ['/weekreview', 'weekreview']] as const) {
+    test(`${pad}: Tips en tricks en drie artikelen uit de academie, ook op de telefoon`, async ({ page }) => {
+      await login(page, 'u-07')
+      const api = await (await page.request.get(`/api${pad}`)).json()
+      expect(api.steun.artikelen).toHaveLength(3)
+      expect(api.steun.tips.length).toBeGreaterThan(0)
+      for (const a of api.steun.artikelen) {
+        expect(a.href).toBe(`/helpcenter/${a.slug}`)
+        expect(`${a.titel} ${a.reden}`).not.toMatch(/[\u2013\u2014]/)
+      }
+      await ga(page, pad)
+      const blok = page.getByTestId(`steun-${moment}`)
+      await expect(blok.getByTestId('steun-tips')).toContainText('Tips en tricks')
+      const artikelen = blok.getByTestId('steun-artikelen').locator('[data-test^="steun-artikel-"]')
+      await expect(artikelen).toHaveCount(3)
+      const eerste = api.steun.artikelen[0]
+      await expect(blok.getByTestId(`steun-artikel-${eerste.slug}`)).toHaveAttribute('href', `/helpcenter/${eerste.slug}`)
+      await expect(blok.getByTestId(`steun-artikel-${eerste.slug}`)).toContainText(eerste.reden)
+      // Op de telefoon onder elkaar, zonder horizontale scroll en met tikdoelen van minstens 44 px.
+      await page.setViewportSize({ width: 390, height: 844 })
+      await expect(artikelen.first()).toBeVisible()
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+      expect((await artikelen.first().boundingBox())!.height).toBeGreaterThanOrEqual(44)
+      await blok.getByTestId(`steun-artikel-${eerste.slug}`).click()
+      await expect(page).toHaveURL(new RegExp(`/helpcenter/${eerste.slug}$`))
+    })
+  }
 
   test('Vandaag en Mijn dashboard leiden naar het ritme', async ({ page }) => {
     await login(page, 'u-07')
     await ga(page, '/')
-    await expect(page.locator('[data-test="dagritme-strook"]:visible')).toHaveCount(1)
+    // Vandaag heeft geen dagritmeblok meer; de knop Dagstart in de kop leidt naar de dagstart.
+    await expect(page.getByTestId('dagritme-strook')).toHaveCount(0)
+    await expect(page.getByTestId('vandaag-dagstart')).toHaveAttribute('href', '/dagstart')
     await ga(page, '/mijn-dashboard')
     await page.getByTestId('kop-meer').click()
     await expect(page.getByTestId('knop-weekreview')).toHaveAttribute('href', '/weekreview')

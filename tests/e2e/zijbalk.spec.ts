@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { login } from './hulp'
+import { ga, login } from './hulp'
 
 test.describe('zijbalk per niveau', () => {
   test('Beginner buitendienst: 14 items met Planning open, en Bezoeken voor Belblokken', async ({ page }) => {
@@ -11,7 +11,7 @@ test.describe('zijbalk per niveau', () => {
     await expect(items).toHaveCount(15)
     const sleutels = await items.evaluateAll((els) => els.map((e) => e.getAttribute('data-sleutel')))
     expect(sleutels.indexOf('nav.bezoeken')).toBeLessThan(sleutels.indexOf('nav.belblokken'))
-    // Nog niet aangezet: Inzichten, Kennisbank, Accountplannen, Leadgenerator, Signaalradar en Prospectreizen.
+    // Nog niet aangezet: Inzichten, Briefings, Accountplannen, Leadgenerator, Signaalradar en Prospectreizen.
     await expect(page.locator('.sb-slotgroep-teller')).toHaveText('6')
     await expect(page.getByTestId('gebruikersblok')).toHaveText('ACCOUNTMANAGER · BEGINNER')
   })
@@ -59,6 +59,18 @@ test.describe('zijbalk per niveau', () => {
     await rij.getByTestId('sb-mijn-instellingen').click()
     await expect(page).toHaveURL(/\/mijn-instellingen$/)
     await expect(page.getByTestId('toestellen')).toBeVisible()
+  })
+
+  test('Activiteiten: Inzichten voor Taken, Briefings onder Taken; Kennisbank via het helpcenter', async ({ page }) => {
+    await login(page, 'u-01')
+    const groep = page.locator('.sb-groep[data-groep="Activiteiten"]')
+    await expect(groep.locator('.sb-link .sb-link-tekst')).toHaveText(['Inzichten', 'Taken', 'Briefings', 'Opvolgreeksen', 'Concepten'])
+    await expect(page.locator('.sb-nav a[href="/kennisbank"]')).toHaveCount(0)
+    await groep.locator('.sb-link[data-sleutel="briefing.bewerken"]').click()
+    await expect(page).toHaveURL(/\/briefings$/)
+    await ga(page, '/helpcenter')
+    await page.getByTestId('ingang-kennisbank').click()
+    await expect(page).toHaveURL(/\/kennisbank$/)
   })
 
   test('/resultaten stuurt door naar /mijn-dashboard met de query', async ({ page }) => {

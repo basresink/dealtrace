@@ -53,3 +53,17 @@ test('Ongedaan maken: de taak blijft open', async ({ page }) => {
   const t = await (await page.request.get(`/api/tasks/${taak.id}`)).json()
   expect(t.status).toBe('open')
 })
+
+test('Taken op de telefoon: horizon als standaard, Periode met tikdoelen van 44 px, rijen zonder vinkje of afrondknop', async ({ page }) => {
+  await login(page, 'u-03')
+  await ga(page, '/taken')
+  await expect(page.getByTestId('horizon-vandaag')).toBeVisible()
+  await expect(page.getByTestId('briefings-knop')).toHaveCount(0)
+  await page.getByTestId('filters-knop').click()
+  for (const k of await page.getByTestId('filter-periode').locator('button, input').all()) expect((await k.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0)
+  await ga(page, '/taken?weergave=lijst')
+  await expect(page.locator('.taak-kaart').first()).toBeVisible()
+  await expect(page.locator('.taak-kaart input[type=checkbox], .taak-kaart [data-test=vink]')).toHaveCount(0)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0)
+})

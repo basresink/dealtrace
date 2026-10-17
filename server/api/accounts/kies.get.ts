@@ -19,15 +19,15 @@ export default defineEventHandler(async (event) => {
   return metOrganisatie(ctx.organisatie.id, async (tx) => {
     const rijen = await tx.select({
       id: a.id, naam: a.name, plaats: a.city,
-      branche: sql<string | null>`coalesce((select b.naam from vv_branches b where b.extern_id = ${a.vvBrancheId} and b.organisation_id = ${a.organisationId} limit 1), ${a.data}->>'branche')`,
+      branche: sql<string | null>`coalesce((select b.naam from vv_branches b where b.extern_id = accounts.vv_branche_id and b.organisation_id = accounts.organisation_id limit 1), accounts.data->>'branche')`,
     }).from(a)
       .where(and(q ? ilike(a.name, `%${q}%`) : undefined, alleenProspects ? eq(a.accountKind, 'prospect') : undefined, isNull(a.gedeactiveerdOp)))
-      .orderBy(
+      .orderBy(...[
         sql`(${a.ownerId} = ${ctx.gebruiker.id}) desc nulls last`,
-        q ? sql`(${a.name} ilike ${`${q}%`}) desc` : sql`true`,
+        ...(q ? [sql`(${a.name} ilike ${`${q}%`}) desc`] : []),
         sql`greatest(${a.laatsteContactOp}, ${a.updatedAt}) desc nulls last`,
         asc(a.name), asc(a.id),
-      ).limit(KIES_LIMIET)
+      ]).limit(KIES_LIMIET)
     return rijen
   })
 })

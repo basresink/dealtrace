@@ -5,6 +5,7 @@
 // voor een gekozen prospect met onbekende variabelen gemarkeerd. Opslaan als concept houdt de actieve
 // versie in gebruik; Activeer maakt een nieuwe versie (opening, afsluiting en voicemail verplicht).
 // De salesmanager en de beheerder bewerken; de rest kijkt mee.
+import type { KiesAccount } from '~/utils/kiezers'
 import {
   BLOK_LABEL, CONTACT_ROLLEN, DOEL_LABEL, INVULWIJZE_LABEL, SCRIPT_DOELEN, STUDIO_BLOKKEN, VARIABELE_CHIPS, VARIABELEN,
   lengteMelding, nieuwBlok, onbekendVoor, valideerScript, verplaatsBlok, voegBlokToe, voegVariabeleIn, voorbeeldSegmenten, woordenVan,
@@ -52,7 +53,7 @@ const voorbeeldNaam = ref('')
 const accountNaam = computed(() => voorbeeldNaam.value || voorbeeld.value.accounts.find((a: any) => a.id === voorbeeldAccount.value)?.naam || 'dit prospect')
 // Voorbeeld voor: de gedeelde zoekkiezer (eigen recente prospects eerst) in plaats van een keuzelijst.
 const voorbeeldWissen = ref(false)
-const voorbeeldGekozen = computed(() => (voorbeeldWissen.value || !voorbeeldAccount.value ? null : { id: voorbeeldAccount.value, naam: accountNaam.value }))
+const voorbeeldGekozen = computed<KiesAccount | null>(() => (voorbeeldWissen.value || !voorbeeldAccount.value ? null : { id: voorbeeldAccount.value, naam: accountNaam.value }))
 const zoekVoorbeeld = (q: string) => zoekAccounts(q, 'prospect')
 function kiesVoorbeeld(a: { id: string; naam: string }) { voorbeeldNaam.value = a.naam; voorbeeldWissen.value = false; voorbeeldAccount.value = a.id }
 const onbekend = computed(() => (s.value ? onbekendVoor(s.value.data, voorbeeld.value.waarden) : []))

@@ -2,6 +2,7 @@
 // Editor voor een belscript (F08): flyout van 760 px over de volle hoogte. Eigenschappen,
 // opbouw (blokken met volgorde, variabelen, invulwijze, veldkoppeling, terugval), bezwaren en
 // rechts een voorbeeld voor een echt account. Opslaan als concept of Activeer (nieuwe versie).
+import type { KiesAccount } from '~/utils/kiezers'
 import { BLOK_LABEL, BLOK_VOLGORDE, CONTACT_ROLLEN, DOEL_LABEL, SCRIPT_DOELEN, VARIABELEN, valideerScript, vulScript, woordenVan, bezwarenMetConcurrent, type ScriptData } from '~~/shared/belscripts'
 import { BAND_LETTERS } from '~~/shared/bandKwalificatie'
 const props = defineProps<{ scriptId: string | null; teams?: { id: string; naam: string }[]; kanBezwaren?: boolean }>()
@@ -28,7 +29,7 @@ watch(voorbeeldAccount, laadVoorbeeld)
 // Voorbeeld voor: de gedeelde zoekkiezer (eigen recente prospects eerst) in plaats van een keuzelijst.
 const voorbeeldNaam = ref('')
 const voorbeeldWissen = ref(false)
-const voorbeeldGekozen = computed(() => (voorbeeldWissen.value || !voorbeeldAccount.value ? null : { id: voorbeeldAccount.value, naam: voorbeeldNaam.value || (voorbeeld.value.accounts ?? []).find((a: any) => a.id === voorbeeldAccount.value)?.naam || 'Prospect' }))
+const voorbeeldGekozen = computed<KiesAccount | null>(() => (voorbeeldWissen.value || !voorbeeldAccount.value ? null : { id: voorbeeldAccount.value, naam: voorbeeldNaam.value || (voorbeeld.value.accounts ?? []).find((a: any) => a.id === voorbeeldAccount.value)?.naam || 'Prospect' }))
 const zoekVoorbeeld = (q: string) => zoekAccounts(q, 'prospect')
 function kiesVoorbeeld(a: { id: string; naam: string }) { voorbeeldNaam.value = a.naam; voorbeeldWissen.value = false; voorbeeldAccount.value = a.id }
 onMounted(laadVoorbeeld)

@@ -76,7 +76,7 @@ useHead({ title: 'Vandaag · Dealtrace' })
       </div>
     </section>
     </div>
-    <TaakFlyout :open="!!open" :taak-id="open" @sluit="open = null" @klaar="refresh()" @gewijzigd="refresh()" />
+    <TaakFlyout :open="!!open" :taak-id="open" :lijst="v?.taken?.lijst?.map((x: any) => x.id)" @sluit="open = null" @klaar="refresh()" @gewijzigd="refresh()" />
     <NieuweTaakFlyout :open="nieuweTaak" @sluit="nieuweTaak = false" @gemaakt="nieuweTaak = false; refresh()" />
     <PlanAfspraakFlyout :open="nieuweAfspraak" @sluit="nieuweAfspraak = false" @gepland="(id: string) => { nieuweAfspraak = false; navigateTo(`/agenda?weergave=dag&afspraak=${id}`) }" />
   </div>

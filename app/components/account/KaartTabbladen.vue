@@ -296,7 +296,7 @@ const tabs = computed(() => [
       </div>
     </section>
 
-    <TaakFlyout :open="!!taakId" :taak-id="taakId" @sluit="taakId = null" @klaar="taakId = null; ververs()" @gewijzigd="ververs()" />
+    <TaakFlyout :open="!!taakId" :taak-id="taakId" :lijst="openTaken.map((x: any) => x.id)" @sluit="taakId = null" @klaar="taakId = null; ververs()" @gewijzigd="ververs()" />
     <InzichtFlyout :open="!!inzicht" :inzicht="inzicht" @sluit="inzicht = null" @gewijzigd="inzicht = null; ververs()" />
     <AfspraakFlyout :open="!!afspraakId" :afspraak-id="afspraakId" @sluit="afspraakId = null" @gewijzigd="ververs()" />
     <VerslagFlyout :open="!!verslag" :verslag="verslag" @sluit="verslag = null" @afspraak="(id) => { verslag = null; afspraakId = id }" />

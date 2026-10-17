@@ -141,7 +141,7 @@ const nieuweAfspraak = ref(false)
         <footer class="fo-foot dd-acties"><span class="dd-acties-vul fo-foot-vul" /><button type="submit" class="dd-act dd-act--primair" :disabled="!annuleerReden.trim()">Annuleer taak</button></footer>
       </form>
     </div>
-    <TaakFlyout :open="!!open" :taak-id="open" :basis="alle.find((t: any) => t.id === open)" :volgende="true" :teamleden="data.teamleden" @sluit="open = null" @klaar="klaar" @gewijzigd="refresh" />
+    <TaakFlyout :open="!!open" :taak-id="open" :basis="alle.find((t: any) => t.id === open)" :lijst="alle.map((t: any) => t.id)" :volgende="true" :teamleden="data.teamleden" @sluit="open = null" @klaar="klaar" @gewijzigd="refresh" />
     <NieuweTaakFlyout :open="nieuw" :teamleden="data.teamleden" @sluit="nieuw = false" @gemaakt="nieuw = false; refresh()" />
     <PlanAfspraakFlyout :open="nieuweAfspraak" @sluit="nieuweAfspraak = false" @gepland="(id: string) => { nieuweAfspraak = false; navigateTo(`/agenda?weergave=dag&afspraak=${id}`) }" />
   </div>

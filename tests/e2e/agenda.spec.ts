@@ -30,6 +30,25 @@ test.describe('agenda', () => {
     await expect(page.getByTestId('agenda-maand')).toBeVisible()
   })
 
+  test('kop: geen knop Taak, rechts van Afspraak de knoppen Weekstart en Weekreview op één regel', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await login(page, 'u-07')
+    await ga(page, '/agenda')
+    const rij = page.getByTestId('kop-knoppen')
+    await expect(page.getByTestId('agenda-taak')).toHaveCount(0)
+    await expect(rij.getByRole('button', { name: /^Taak$/ })).toHaveCount(0)
+    await expect(page.getByTestId('agenda-weekstart')).toHaveAttribute('href', '/weekstart')
+    await expect(page.getByTestId('agenda-weekreview')).toHaveAttribute('href', '/weekreview')
+    const afspraak = (await page.getByTestId('plan-afspraak-knop').boundingBox())!
+    const ws = (await page.getByTestId('agenda-weekstart').boundingBox())!
+    const wr = (await page.getByTestId('agenda-weekreview').boundingBox())!
+    expect(ws.x).toBeGreaterThan(afspraak.x)
+    expect(wr.x).toBeGreaterThan(ws.x)
+    expect(Math.abs(wr.y - afspraak.y)).toBeLessThan(4)
+    await page.getByTestId('agenda-weekstart').click()
+    await expect(page).toHaveURL(/\/weekstart$/)
+  })
+
   test('hele-dag-rij met afgerond belblok en klik op een afspraak', async ({ page }) => {
     await login(page, 'u-07')
     await ga(page, '/agenda')
