@@ -849,6 +849,10 @@ export const whatsappBerichten = pgTable('whatsapp_berichten', {
 export interface AccountplanData {
   secties?: Partial<Record<'klantinformatie' | 'doelstellingen' | 'kansen' | 'bedreigingen' | 'strategieen' | 'evaluatie', string>>
   contactIds?: string[]
+  /** Aantekeningen bij het plan, nieuwste eerst. */
+  notities?: { id: string; tekst: string; door: string | null; op: string }[]
+  /** Eigen velden met object accountplan (sleutel naar waarde). */
+  velden?: Record<string, unknown>
 }
 export const accountplannen = pgTable('accountplannen', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),

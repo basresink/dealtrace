@@ -1,4 +1,4 @@
-// Het logo van de organisatie: een bijlage (record_soort 'organisatie', soort 'logo') met een verwijzing in
+// Het logo van de organisatie: een bijlage (record_soort 'organisatie', soort 'foto', naam 'logo') met een verwijzing in
 // org_settings.logo. De beheerder wisselt of verwijdert het; iedereen in de organisatie ziet het in de zijbalk.
 import { sql } from 'drizzle-orm'
 import { controleerLogo } from '../../shared/organisatieLogo'
@@ -22,11 +22,11 @@ export async function bewaarLogo(tx: Tx, org: string, actorId: string, inhoud: B
   const oud = await leesLogo(tx)
   const id = crypto.randomUUID()
   await tx.execute(sql`insert into bijlagen (id, organisation_id, eigenaar_id, record_soort, record_id, soort, mime, grootte, inhoud, bewaren_tot, naam)
-    values (${id}, ${org}, ${actorId}, 'organisatie', ${org}, 'logo', ${c.mime}, ${inhoud.length}, ${inhoud}, date '9999-12-31', 'logo')`)
+    values (${id}, ${org}, ${actorId}, 'organisatie', ${org}, 'foto', ${c.mime}, ${inhoud.length}, ${inhoud}, date '9999-12-31', 'logo')`)
   const nieuw: LogoInstelling = { bijlageId: id, mime: c.mime, grootte: inhoud.length, op: new Date().toISOString() }
   await tx.execute(sql`insert into org_settings (organisation_id, key, value, updated_at) values (${org}, 'logo', ${JSON.stringify(nieuw)}::jsonb, now())
     on conflict (organisation_id, key) do update set value = excluded.value, updated_at = now()`)
-  if (oud) await tx.execute(sql`delete from bijlagen where id = ${oud.bijlageId} and organisation_id = ${org} and record_soort = 'organisatie' and soort = 'logo'`)
+  if (oud) await tx.execute(sql`delete from bijlagen where id = ${oud.bijlageId} and organisation_id = ${org} and record_soort = 'organisatie' and naam = 'logo'`)
   await schrijfAudit(tx, { organisationId: org, actorId, action: 'organisatie.logo', resourceType: 'org_settings', resourceId: 'logo', changes: { mime: c.mime, grootte: inhoud.length, vervangen: !!oud } })
   return nieuw
 }
@@ -34,7 +34,7 @@ export async function bewaarLogo(tx: Tx, org: string, actorId: string, inhoud: B
 export async function verwijderLogo(tx: Tx, org: string, actorId: string): Promise<void> {
   const oud = await leesLogo(tx)
   if (!oud) return
-  await tx.execute(sql`delete from bijlagen where id = ${oud.bijlageId} and organisation_id = ${org} and record_soort = 'organisatie' and soort = 'logo'`)
+  await tx.execute(sql`delete from bijlagen where id = ${oud.bijlageId} and organisation_id = ${org} and record_soort = 'organisatie' and naam = 'logo'`)
   await tx.execute(sql`delete from org_settings where organisation_id = ${org} and key = 'logo'`)
   await schrijfAudit(tx, { organisationId: org, actorId, action: 'organisatie.logo', resourceType: 'org_settings', resourceId: 'logo', changes: { verwijderd: true } })
 }

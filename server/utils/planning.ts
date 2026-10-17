@@ -188,7 +188,7 @@ export async function verwerkTerugkomst(tx: Tx, org: string, accountId: string, 
   const vv = await verkoopverhaal(tx)
   const v = terugkomDatum(g.reden, vv, nu, await afkoelingInstelling(tx), g.bronSoort)
   const tekst = terugkomTekst(v.datum, v.regel)
-  const data = { ...(a!.data as any), terugkom: { datum: v.datum, regelId: v.regel?.id ?? null, reden: v.regel?.reden ?? g.reden, aanpak: v.regel?.aanpak ?? null, kanaal: v.kanaal, bron: g.bronSoort } }
+  const data = { ...(a!.data as any), terugkom: { datum: v.datum, regelId: v.regel?.id ?? null, reden: v.regel?.reden ?? g.reden, aanpak: v.regel?.aanpak ?? null, kanaal: v.kanaal, bron: g.bronSoort, verlorenOp: nu.toISOString().slice(0, 10), verliesReden: g.reden } }
   await tx.update(schema.accounts).set({ terugOp: v.datum, terugRegelId: v.regel?.id ?? null, data, updatedAt: nu.toISOString() }).where(eq(schema.accounts.id, accountId))
   const [sr18] = await tx.select({ id: schema.activityRules.id }).from(schema.activityRules).where(eq(schema.activityRules.code, 'SR18'))
   const tijd = nu.toISOString()

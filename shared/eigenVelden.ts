@@ -8,7 +8,7 @@ export const VELDTYPE_LABEL: Record<Veldtype, string> = {
   tekst: 'Tekst', langeTekst: 'Lange tekst', getal: 'Getal', bedrag: 'Bedrag', datum: 'Datum', janee: 'Ja of nee',
   keuzelijst: 'Keuzelijst', meerkeuze: 'Meerkeuze', telefoon: 'Telefoon', email: 'E-mail', link: 'Link', gebruiker: 'Gebruiker',
 }
-export const VELD_OBJECTEN = ['account', 'contact', 'campagne', 'afspraak'] as const
+export const VELD_OBJECTEN = ['account', 'contact', 'campagne', 'afspraak', 'accountplan'] as const
 export type VeldObject = typeof VELD_OBJECTEN[number]
 export const MAX_VELDEN_PER_OBJECT = 100
 

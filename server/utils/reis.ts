@@ -13,6 +13,7 @@ import {
 } from '../../shared/reis'
 import { terugkomDatum, type VerkoopverhaalStand } from '../../shared/verkoopverhaal'
 import { metAfkoeling } from '../../shared/planning'
+import { bijHeropvolging } from '../../shared/terugInBeeld'
 import { schrijfAudit } from './audit'
 import { leesStand } from './vvProjectie'
 import { schema } from './db'
@@ -232,6 +233,9 @@ export async function meldGebeurtenis(tx: Tx, m: Melding): Promise<{ fase: strin
   if (m.gebeurtenis === 'heropvolging') {
     // Terug in de reis: de terugkomregel is afgehandeld; de nee blijft in de historie.
     Object.assign(data, { terugkom: null, wachtendTot: null, pauzeReden: null, vorigeNee: a.data?.nee ?? a.data?.vorigeNee ?? null, nee: null })
+    // Terug in beeld laat hem zien tot het hercontact gestart is (shared/terugInBeeld.ts).
+    const tib = bijHeropvolging(a, nu)
+    if (tib) Object.assign(data, { terugInBeeld: tib })
     terugOp = null
   }
   await voerWisselUit(tx, a, reis, {

@@ -135,6 +135,13 @@ export const FUNCTIES: readonly Functie[] = [
     uitleg: { watHetDoet: 'Je jaar- en maandplanning: wie je wanneer benadert, en wanneer een geparkeerd account terugkomt.', totDieTijd: 'De motor zet de volgende poging voor je klaar.' },
   },
   {
+    // Terug in beeld: verloren prospects die volgens de terugkomregel weer benaderd mogen worden, met Start hercontact.
+    // Zelfde niveau als de terugkomregels (terugkomen.lezen, Beginner).
+    sleutel: 'nav.terugInBeeld', naam: 'Terug in beeld', pakket: 'starter', rollen: 'iedereen', helpartikel: 'wanneer-we-iemand-terugbellen', startNiveau: 'beginner',
+    zijbalk: { groep: 'Planning', route: '/terug-in-beeld', icoon: 'Undo2', na: 'nav.planning' },
+    uitleg: { watHetDoet: 'Verloren prospects die weer benaderd mogen worden: waarom, wanneer, via welk kanaal en met welke aanpak, en het hercontact starten met één knop.', totDieTijd: 'Op de terugkomdatum staat de prospect vanzelf in Vandaag.' },
+  },
+  {
     sleutel: 'nav.richting', naam: 'Richting', pakket: 'starter', rollen: 'iedereen', helpartikel: 'richting', startNiveau: 'beginner',
     zijbalk: { groep: 'Start', route: '/richting', icoon: 'Compass', beginnerLabel: 'lezen', na: 'nav.agenda' },
     uitleg: { watHetDoet: 'Het verkoopverhaal van je organisatie: verhaal, belofte, concurrenten, winpunten.', totDieTijd: 'Niets; Richting is voor iedereen te lezen.' },

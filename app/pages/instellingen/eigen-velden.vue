@@ -9,7 +9,7 @@ const toast = useToast()
 const object = ref<typeof VELD_OBJECTEN[number]>('account')
 const { data, refresh } = await useFetch<any>('/api/eigen-velden', { query: { object }, default: () => ({ velden: [], voorstellen: [] }) })
 const SECTIES: Record<string, string[]> = { account: ['Adres', 'Bereik', 'Stamgegevens', 'Kwalificatie', 'Contract en order'], contact: ['Stamgegevens', 'Bereik'], campagne: ['Stamgegevens'], afspraak: ['Stamgegevens'] }
-const OBJECT_LABEL: Record<string, string> = { account: 'Account', contact: 'Contact', campagne: 'Campagne', afspraak: 'Afspraak' }
+const OBJECT_LABEL: Record<string, string> = { account: 'Account', contact: 'Contact', campagne: 'Campagne', afspraak: 'Afspraak', accountplan: 'Accountplan' }
 const secties = computed(() => {
   const namen = [...new Set([...SECTIES[object.value]!, ...data.value.velden.map((v: any) => v.sectie)])]
   return namen.map((n) => ({ naam: n, velden: data.value.velden.filter((v: any) => v.sectie === n) }))

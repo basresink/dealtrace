@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   const b = await metOrganisatie(ctx.organisatie.id, async (tx) => {
     const l = await leesLogo(tx)
     if (!l) return null
-    const [r] = (await tx.execute(sql`select mime, inhoud from bijlagen where id = ${l.bijlageId} and organisation_id = ${ctx.organisatie.id} and record_soort = 'organisatie' and soort = 'logo'`)).rows as any[]
+    const [r] = (await tx.execute(sql`select mime, inhoud from bijlagen where id = ${l.bijlageId} and organisation_id = ${ctx.organisatie.id} and record_soort = 'organisatie' and naam = 'logo'`)).rows as any[]
     return r ?? null
   })
   if (!b?.inhoud) throw createError({ statusCode: 404, statusMessage: 'Geen logo' })

@@ -33,7 +33,7 @@ Je hoeft Richting niet uit je hoofd te leren. Dealtrace gebruikt het bevestigde 
 - **Belscripts**: de openingszin, de belofte en het winpunt van de fase komen uit Richting. Noemt de prospect een concurrent, dan zie je meteen het antwoord dat erbij hoort.
 - **Briefings**: voor een bezoek zie je het verhaal en de belofte voor de branche van dat account, met het winpunt dat in die fase het verschil maakt.
 - **Opvolging**: na een nee of een stille periode zet Dealtrace de volgende poging op de termijn uit de terugkomregels, met het kanaal en de aanpak die jullie hebben afgesproken.
-- **De motor**: bij het klaarzetten van taken, het vullen van belblokken en het zoeken van nieuwe leads gebruikt de motor de branches, de winpunten en de terugkomregels. Ook campagnes en de AI-assistent lezen alleen het bevestigde verhaal.
+- **De motor**: de wekelijkse leadrondes zoeken nieuwe prospects in jullie branches, met de SBI-codes en trefwoorden per branche. De signaalradar koppelt aan elke golf het winpunt dat erbij past. Ook campagnes en de AI-assistent lezen alleen het bevestigde verhaal.
 
 Verandert de salesmanager iets en bevestigt hij het, dan gebruikt alles in Dealtrace vanaf dat moment de nieuwe versie. Je hoeft niemand bij te praten.
 
