@@ -3,7 +3,7 @@ titel: Wanneer we iemand terugbellen
 categorie: Plannen en sturen
 collectie: product
 samenvatting: Terugkomregels na een nee, een verlies of een slapende periode, en het verschil met het hercontactritme.
-routes: /instellingen/terugkomen
+routes: /instellingen/terugkomen, /terug-in-beeld
 ---
 
 # Wanneer we iemand terugbellen
@@ -15,6 +15,28 @@ Een **terugkomregel** zegt wanneer en hoe je terugkomt na een nee, een verloren 
 Dit zijn de regels van jouw organisatie:
 
 {{verhaal:terugkomregels}}
+
+## Terug in beeld
+
+Onder **Planning**, **Terug in beeld** staan je verloren prospects die terugkomen. Je salesmanager ziet die van zijn team. Bovenaan staan tellers: deze week, deze maand, later, over tijd en gestart. Je zoekt op naam of plaats en filtert op regel, kanaal en status. De lijst is verdeeld in **Deze week** (ook wie over tijd is), **Deze maand** en **Later**.
+
+Per prospect zie je de verliesreden en waar hij vandaan komt (nee gezet, deal verloren of offerte verloren, met de datum), de terugkomdatum, de regel met de wachttijd, het kanaal, wie het oppakt en de aanpak. Bij de datum staat "opgeschoven door de afkoeling" of "met de hand aangepast" als dat zo is. De status is een van deze vijf:
+
+- **Over tijd**: de datum is voorbij en je bent nog niet begonnen. Begin je binnen vijf werkdagen na de datum, dan telt het nog als op tijd.
+- **Klaar om te starten**: de datum valt deze week en de afkoeling is voorbij.
+- **Nog in afkoeling**: de datum valt deze week, maar je mag via dit kanaal nog niet. Je ziet vanaf welke dag het wel mag.
+- **Gepland**: later. Op de datum staat de prospect vanzelf in Vandaag.
+- **Gestart**: het hercontact loopt.
+
+**Start hercontact** opent een venster met drie keuzes, met de datums er vooraf bij:
+
+1. **Opvolgreeks**: het hercontactritme van de regel (zonder eigen ritme het standaard winbackritme). Elke stap wordt een taak op zijn dag. Zonder reactie na de laatste stap wordt de prospect geparkeerd.
+2. **Eén taak**: een taak op het eerstvolgende werkmoment, met de aanpak als aanleiding. Daarna beslis je zelf.
+3. **In een belblok**: een beltaak in je eerstvolgende koude belblok. Dit kan alleen als de regel bellen zegt.
+
+Na het starten staat de prospect weer in de reis. De taak of de eerste stap staat in **Taken**, op zijn dag in **Vandaag** en op de prospect. Starten kan pas als de afkoeling voorbij is; is de afkoeling voorbij, dan mag het ook al voor de terugkomdatum.
+
+Met **Later** of **Pas datum aan** kies je een andere datum met een reden. Een datum binnen de afkoeling schuift naar het einde ervan.
 
 ## Verschil met het hercontactritme
 

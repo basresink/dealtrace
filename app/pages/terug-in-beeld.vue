@@ -123,7 +123,7 @@ useHead({ title: 'Terug in beeld · Dealtrace' })
                       <div class="tib-naam">
                         <NuxtLink :to="`/accounts/${r.id}`" class="tib-link">{{ r.naam }}</NuxtLink>
                         <Label v-if="r.klasse" soort="klasse" :waarde="r.klasse" />
-                        <Label soort="terug" :waarde="statusVan(r, vandaag)" :data-test="`tib-status-label-${r.id}`" />
+                        <Label :soort="statusVan(r, vandaag) === 'overtijd' ? 'urgentie' : 'terug'" :waarde="statusVan(r, vandaag) === 'overtijd' ? 'over-tijd' : statusVan(r, vandaag)" :data-test="`tib-status-label-${r.id}`" />
                       </div>
                       <p class="meta mt-8">{{ [r.plaats, herkomstTekst(r), eigenaar(r) ? `van ${eigenaar(r)}` : null].filter(Boolean).join(' · ') }}<template v-if="r.toelichting"> · "{{ r.toelichting }}"</template></p>
                       <dl class="tib-feiten">

@@ -12,10 +12,10 @@ function gebruiker(overig: Partial<GebruikerContext> = {}): GebruikerContext {
 }
 
 describe('zijbalk per niveau (6.1)', () => {
-  it('Beginner 15, Gevorderd 19, Expert 21 items (met Concepten, Meetings, Briefings, Accountplannen, Signaalradar, Opvolgreeksen en Prospectplanning voor iedereen)', () => {
-    expect(telItems(zijbalkVoor(gebruiker(), org, stand))).toBe(15)
-    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'gevorderd' }), org, stand))).toBe(19)
-    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'expert' }), org, stand))).toBe(21)
+  it('Beginner 16, Gevorderd 20, Expert 22 items (met Concepten, Meetings, Briefings, Accountplannen, Signaalradar, Opvolgreeksen, Prospectplanning en Terug in beeld voor iedereen)', () => {
+    expect(telItems(zijbalkVoor(gebruiker(), org, stand))).toBe(16)
+    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'gevorderd' }), org, stand))).toBe(20)
+    expect(telItems(zijbalkVoor(gebruiker({ niveau: 'expert' }), org, stand))).toBe(22)
   })
 
   it('wat uit staat komt in "Nog niet aangezet" met het niveau waarvoor het aanstaat', () => {
@@ -70,7 +70,7 @@ describe('zijbalk per niveau (6.1)', () => {
 
   it('Toon minder haalt weg, nooit erbij', () => {
     const z = zijbalkVoor(gebruiker({ verborgen: ['nav.campagnes', 'nav.leadgenerator'] }), org, stand)
-    expect(telItems(z)).toBe(14)
+    expect(telItems(z)).toBe(15)
     expect(z.groepen.flatMap((g) => g.items).some((i) => i.sleutel === 'nav.leadgenerator')).toBe(false)
   })
 
@@ -98,7 +98,7 @@ describe('zijbalk per niveau (6.1)', () => {
   it('Iedereen ziet alles: geen groep Nog niet aangezet', () => {
     const z = zijbalkVoor(gebruiker(), { ...org, iedereenAlles: true }, stand)
     expect(z.nietAangezet).toHaveLength(0)
-    expect(telItems(z)).toBe(21)
+    expect(telItems(z)).toBe(22)
   })
 })
 

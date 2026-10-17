@@ -192,9 +192,8 @@ export const LABELS = {
     mislukt: zacht('Mislukt', 'rood', 'TriangleAlert'),
     gewonnen: zacht('Gewonnen na overdracht', 'groen', 'Trophy'),
   },
-  /** Terug in beeld: waar een verloren prospect staat. Over tijd vraagt nu een handeling (gevuld rood). */
+  /** Terug in beeld: waar een verloren prospect staat. Over tijd is urgentie over-tijd (gevuld rood). */
   terug: {
-    overtijd: vol('Over tijd', 'Clock'),
     klaar: zacht('Klaar om te starten', 'blauw', 'CirclePlay'),
     afkoeling: zacht('Nog in afkoeling', 'oranje', 'Hourglass'),
     gepland: zacht('Gepland', 'grijs', 'CalendarClock'),
