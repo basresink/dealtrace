@@ -133,8 +133,8 @@ test('telefoon: cellen als knoppen per branche, geen horizontale scroll', async 
   await knop.click()
   await expect(page.getByTestId('sr-detail-kicker')).toContainText('Golf')
   // Het detail staat onder de cellen; het lampje is een tikdoel van 44 px.
-  const mob = (await page.getByTestId('sr-mobiel').boundingBox())!
-  expect((await page.getByTestId('sr-detail-kaart').boundingBox())!.y).toBeGreaterThan(mob.y + mob.height)
+  const [mobOnder, detailBoven] = await page.evaluate(() => [document.querySelector('[data-test="sr-mobiel"]')!.getBoundingClientRect().bottom, document.querySelector('[data-test="sr-detail-kaart"]')!.getBoundingClientRect().top])
+  expect(detailBoven).toBeGreaterThan(mobOnder)
   const lampje = page.getByTestId('sr-accounts').locator('a[data-test^="sr-signaal-"]').first()
   if (await lampje.count()) expect((await lampje.boundingBox())!.height).toBeGreaterThanOrEqual(44)
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)

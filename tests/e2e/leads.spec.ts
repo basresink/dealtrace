@@ -25,7 +25,7 @@ test.describe('Leadgenerator op de desktop', () => {
     await kaart.getByTestId('voeg-toe').click()
     await expect(page.getByTestId('voeg-toe-flyout')).toBeVisible()
     await page.getByTestId('vt-opslaan').click()
-    await expect(page.getByText(new RegExp(`${naam.replace(/[.&]/g, '.')} staat nu bij je prospects`))).toBeVisible()
+    await expect(page.getByTestId('toegevoegd-melding')).toContainText(`${naam} staat nu bij je prospects`)
     await expect(page.locator(`[data-groep="alBekend"] [data-lead="${naam}"]`)).toBeVisible()
   })
 

@@ -238,9 +238,10 @@ async function metContacten(request: APIRequestContext, gebruiker: string) {
   await apiLogin(request, gebruiker)
   const accountNaam = naam()
   const { id: accountId } = await (await request.post('/api/accounts', { data: { naam: accountNaam } })).json()
-  const beslisser = await (await request.post('/api/contacten', { data: { accountId, voornaam: 'Petra', achternaam: `Testbeek ${uniek()}`, rol: 'beslisser', functie: 'Directeur' } })).json()
+  const beslisserAchternaam = `Testbeek ${uniek()}`
+  const beslisser = await (await request.post('/api/contacten', { data: { accountId, voornaam: 'Petra', achternaam: beslisserAchternaam, rol: 'beslisser', functie: 'Directeur' } })).json()
   const tweede = await (await request.post('/api/contacten', { data: { accountId, voornaam: 'Bram', achternaam: `Proefveld ${uniek()}`, rol: 'beinvloeder', functie: 'Inkoper' } })).json()
-  return { accountId, accountNaam, beslisser, tweede }
+  return { accountId, accountNaam, beslisser, beslisserAchternaam, tweede }
 }
 
 test.describe('nieuwe taak en taakvenster in de opzet van DealDrive', () => {
@@ -464,7 +465,7 @@ test.describe('Taken: nieuwe URL, horizon in het filter en Briefings', () => {
     await expect(page.getByTestId(`taak-${oud.id}`)).toBeVisible()
   })
 
-  test('Briefings in het menu onder Taken opent /briefings; daar kies je een prospect en een contactpersoon', async ({ page }) => {
+  test('Briefings in het menu onder Taken opent /briefings; daar zoek je een prospect of een contactpersoon in één veld', async ({ page }) => {
     test.setTimeout(60_000)
     const x = await metContacten(page.request, 'u-03')
     await login(page, 'u-03')
@@ -473,37 +474,40 @@ test.describe('Taken: nieuwe URL, horizon in het filter en Briefings', () => {
     await expect(page).toHaveURL(/\/briefings$/)
     await expect(page.getByTestId('briefing-zoeken')).toBeVisible()
     // Het overzicht van komende gesprekken blijft.
-    await expect(page.getByTestId('briefings').or(page.getByText('Geen briefings in deze periode.'))).toBeVisible()
+    await expect(page.getByTestId('briefings').or(page.getByText('Geen briefings in dit filter.'))).toBeVisible()
     // Zes treffers in beeld, de rest scrolt (ZoekKiezer).
-    await page.getByTestId('bf-klant').fill('te')
-    await expect(page.getByTestId('bf-klant-optie').first()).toBeVisible()
+    await page.getByTestId('bf-zoek').fill('te')
+    await expect(page.getByTestId('bf-zoek-optie').first()).toBeVisible()
     const lijstHoogte = await page.getByTestId('zoekkiezer-lijst').evaluate((e) => e.clientHeight)
-    const rijHoogte = await page.getByTestId('bf-klant-optie').first().evaluate((e) => e.getBoundingClientRect().height)
+    const rijHoogte = await page.getByTestId('bf-zoek-optie').first().evaluate((e) => e.getBoundingClientRect().height)
     expect(Math.round(lijstHoogte / rijHoogte)).toBeLessThanOrEqual(6)
-    await page.getByTestId('bf-klant').fill(x.accountNaam.slice(0, 12))
-    await page.getByTestId('bf-klant-optie').filter({ hasText: x.accountNaam }).click()
+    // Een prospect kiezen: zijn briefing opent in de flyout, de keuze staat in de link.
+    await page.getByTestId('bf-zoek').fill(x.accountNaam.slice(0, 12))
+    await page.getByTestId('bf-zoek-optie').filter({ hasText: x.accountNaam }).first().click()
     await expect(page).toHaveURL(new RegExp(`account=${x.accountId}`))
     const gekozen = page.getByTestId('briefing-gekozen')
     await expect(gekozen.getByTestId('briefing')).toBeVisible()
     await expect(gekozen.getByTestId('briefing-contact')).toHaveCount(0)
     await expect(gekozen.getByTestId('briefing-open-account')).toHaveAttribute('href', `/accounts/${x.accountId}`)
-    // Contact van dit prospect: beslisser eerst, dan zijn gegevens bij de briefing.
-    await page.getByTestId('bf-contact').click()
-    await expect(page.getByTestId('bf-contact-optie')).toHaveCount(2)
-    await page.getByTestId('bf-contact-optie').filter({ hasText: 'Petra' }).click()
+    await gekozen.getByRole('button', { name: 'Sluiten' }).click()
+    await expect(page).not.toHaveURL(/account=/)
+    // In hetzelfde veld een contactpersoon zoeken: dan staan zijn gegevens bij de briefing van zijn account.
+    await page.getByTestId('bf-zoek').fill(`Petra ${x.beslisserAchternaam}`)
+    await page.getByTestId('bf-zoek-optie').filter({ hasText: x.accountNaam }).first().click()
+    await expect(page).toHaveURL(new RegExp(`account=${x.accountId}`))
     await expect(page).toHaveURL(new RegExp(`contact=${x.beslisser.id}`))
     await expect(gekozen.getByTestId('briefing-contact')).toContainText('Petra')
     await expect(gekozen.getByTestId('briefing-contact')).toContainText('Directeur')
     await expect(gekozen.getByTestId('briefing-contact-naam')).toHaveAttribute('href', `/contacten/${x.beslisser.id}`)
-    // Herladen houdt de keuze, met namen.
+    // Herladen houdt de keuze.
     await page.reload()
-    await expect(page.getByTestId('bf-klant-keuze')).toContainText(x.accountNaam)
-    await expect(page.getByTestId('bf-contact-keuze')).toContainText('Petra')
     await expect(page.getByTestId('briefing-contact')).toContainText('Petra')
+    await expect(page.locator('#bfd-titel')).toContainText(x.accountNaam)
     // Contact wissen: weer de briefing van het account.
-    await page.getByRole('button', { name: 'Wis gekozen contactpersoon' }).click()
+    await page.getByTestId('briefing-wis-contact').click()
     await expect(page).not.toHaveURL(/contact=/)
     await expect(page.getByTestId('briefing-contact')).toHaveCount(0)
+    await expect(page.getByTestId('briefing-gekozen')).toBeVisible()
   })
 
   test('API: een contact van een ander account geeft 404; zonder contact de account-briefing', async ({ request }) => {

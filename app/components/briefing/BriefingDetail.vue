@@ -210,7 +210,7 @@ onBeforeUnmount(() => { window.removeEventListener('keydown', opEscape); for (co
 
               <article v-for="(b, i) in data.blokken" :key="b.sleutel" class="bfd-blok" :class="{ 'bfd-blok--accent': b.sleutel === 'doel' }" :data-test="`blok-${b.sleutel}`">
                 <header class="bfd-blok-kop">
-                  <span class="bfd-nr tnum">{{ i + 1 }}</span>
+                  <span class="bfd-nr tnum">{{ Number(i) + 1 }}</span>
                   <h3 class="bfd-blok-titel">{{ b.titel }}</h3>
                   <span class="bf-herkomst" :class="`bf-herkomst--${b.herkomst}`">{{ HERKOMST_LABEL[b.herkomst as 'berekend'] }}</span>
                   <button v-if="kanBewerken && !alles && bewerk !== b.sleutel" type="button" class="dd-act dd-act--icoon" :aria-label="`Bewerk ${b.titel}`" title="Bewerken" :data-test="`bewerk-${b.sleutel}`" @click="startBewerk(b)"><Icoon naam="Pencil" :grootte="14" /></button>
