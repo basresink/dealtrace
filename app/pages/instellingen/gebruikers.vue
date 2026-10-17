@@ -161,9 +161,9 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
           </div>
 
           <LegeStaat v-if="!actief.length" :titel="beheerder ? 'Nog geen gebruikers.' : 'Nog niemand in je teams.'" :tekst="beheerder ? 'Voeg je eerste collega toe met Gebruiker toevoegen.' : 'De beheerder zet accountmanagers in jouw teams.'" />
-          <div v-else class="tabel-wrap mt-16">
+          <div v-else class="tabel-wrap gb-wrap mt-16">
             <table class="tabel tabel--kaarten gb-tabel" data-test="gebruikers-tabel">
-              <thead><tr><th>Naam</th><th>Rol</th><th>Niveau</th><th>Werkplek</th><th>Team</th><th>Laatste inlog</th><th>Status</th><th v-if="beheerder"><span class="sr-only">Acties</span></th></tr></thead>
+              <thead><tr><th>Naam</th><th>Rol</th><th>Niveau</th><th>Werkplek</th><th>Team</th><th>Status</th><th v-if="beheerder"><span class="sr-only">Acties</span></th></tr></thead>
               <tbody>
                 <tr v-for="g in actief" :key="g.id" :data-gebruiker="g.id" :class="{ 'tabel-rij--gemarkeerd': gemarkeerd === g.id }">
                   <td><div class="gebruiker-cel"><strong>{{ g.naam }}</strong><small>{{ g.email }}</small><small v-if="g.rol === 'salesmanager' && g.eigenPortefeuille">Met eigen portefeuille</small></div></td>
@@ -193,10 +193,9 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
                     </select>
                     <template v-else>{{ teamNaam(g.teamId) }}</template>
                   </td>
-                  <td class="gb-inlog" :data-test="`inlog-${g.id}`"><span class="gb-mobiel-label">Laatste inlog: </span>{{ inlog(g.laatsteInlog) }}</td>
-                  <td :data-test="`status-${g.id}`">
-                    <Label v-if="g.status === 'uitgenodigd'" soort="status" waarde="wachtend" tekst="Uitgenodigd" />
-                    <span v-else class="gb-actief">Actief</span>
+                  <td class="gb-status">
+                    <span :data-test="`status-${g.id}`"><Label v-if="g.status === 'uitgenodigd'" soort="status" waarde="wachtend" tekst="Uitgenodigd" /><template v-else>Actief</template></span>
+                    <small class="gb-inlog" :data-test="`inlog-${g.id}`">Laatste inlog {{ inlog(g.laatsteInlog).toLowerCase() }}</small>
                   </td>
                   <td v-if="beheerder">
                     <div class="gb-acties">
@@ -256,9 +255,10 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
 .gb-ico-tekst { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .gb-tabel select.invoer { width: auto; max-width: 100%; }
 .gb-tabel th, .gb-tabel td { padding-left: 8px; padding-right: 8px; }
-.gb-inlog { min-width: 72px; color: var(--muted); font-size: 13px; }
-.gb-actief { font-size: 13px; color: var(--muted); }
-.gb-mobiel-label { display: none; }
+.gb-status { min-width: 96px; font-size: 13px; }
+.gb-status > span { display: block; }
+.gb-inlog { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
+.gb-wrap { overflow-x: auto; }
 .gb-archief { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .gb-archief-rij { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .gb-archief-rij .gebruiker-cel { flex: 1 1 260px; min-width: 0; }
@@ -266,7 +266,6 @@ useHead({ title: 'Gebruikers · Instellingen · Dealtrace' })
 .gb-fout { flex-basis: 100%; margin: 0; color: var(--red); font-size: 13px; font-weight: 600; }
 .gb-fout a { margin-left: 6px; color: var(--ink); }
 @media (max-width: 767px) {
-  .gb-mobiel-label { display: inline; }
   .gb-acties .dd-act { min-height: var(--touch-target-min); }
   .gb-ico { width: auto; height: auto; padding: 0 14px; }
   .gb-ico-tekst { position: static; width: auto; height: auto; overflow: visible; clip: auto; }

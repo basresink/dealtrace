@@ -40,7 +40,7 @@ for (const breedte of [1280, 390]) {
         const rij = page.locator(`tr[data-gebruiker="${g.id}"]`)
         await verwacht(rij).toBeVisible()
         await verwacht(page.getByTestId(`status-${g.id}`)).toHaveText(/Uitgenodigd/)
-        await verwacht(page.getByTestId(`inlog-${g.id}`)).toHaveText(/Nog niet/)
+        await verwacht(page.getByTestId(`inlog-${g.id}`)).toHaveText(/nog niet/)
         await geenHorizontaleScroll(page)
 
         // Wijzigen: een bestaand e-mailadres geeft een melding, een nieuwe naam wordt bewaard.

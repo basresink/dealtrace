@@ -26,7 +26,7 @@ De salesmanager kiest het niveau voor de mensen in zijn teams; de beheerder voor
 4. Bij een salesmanager zet je hier ook **Eigen portefeuille** aan of uit. Aan: hij werkt ook zelf prospects en krijgt de werkbalk van een accountmanager.
 5. Klik op **Bewaren**.
 
-Rol, werkplek en team kies je direct in de tabel. In de kolommen **Laatste inlog** en **Status** zie je wie actief is en wie zijn uitnodiging nog niet gebruikte.
+Rol, werkplek en team kies je direct in de tabel. In de kolom **Status** zie je met de laatste inlog wie actief is en wie zijn uitnodiging nog niet gebruikte.
 
 ## Iemand archiveren
 

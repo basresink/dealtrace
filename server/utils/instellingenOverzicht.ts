@@ -129,7 +129,7 @@ export const KAARTEN: Record<string, Kaart> = {
       return t.b ? zin(`${t.b} van 8 onderdelen bevestigd`, t.s ? `${t.s} uit SalesDNA` : null) : NIET_INGERICHT
     },
   },
-  '/instellingen/terugkomen': { mag: ofBeheerder('verkoopverhaal.inrichten'), stand: terugkomregels },
+  '/instellingen/terugkomen': { mag: functie('verkoopverhaal.inrichten', 'verkoopverhaal.mappings', 'instellingen.afkoeling', 'ritme.beheer'), stand: terugkomregels },
   '/instellingen/nee-redenen': { mag: isBeheerder, stand: terugkomregels },
   '/instellingen/gebieden': {
     mag: functie('instellingen.gebieden'),
