@@ -11,7 +11,7 @@ import { mockGids } from './assistent'
 import { mockOpdracht } from '../../shared/spraakOpdracht'
 import { mockDocumentAntwoord } from '../../shared/kennisbank'
 import { mockHouding } from '../../shared/invloed'
-import { bandUitAnalyse } from '../../shared/bandUitVerslag'
+import { bandUitAnalyse, mockBandInvulling } from '../../shared/bandUitVerslag'
 import { promptVoor, providerVoor } from './aiKoppeling'
 import { metOrganisatie } from './db'
 
@@ -131,6 +131,8 @@ MOCK_GENERATOREN.notulist = (m) => {
     band: Object.fromEntries(Object.entries(bandUitAnalyse({ koopsignalen: zinnen, bezwaren: zinnen.filter((z) => /duur|geen budget|geen haast/i.test(z)) })).map(([l, v]) => [l, { oordeel: v!.ja ? 'ja' : 'nee', citaat: v!.citaat }])),
   }
 }
+// BAND-invulling (Vul in met AI op de kwalificatie): per onderdeel een letterlijke zin uit een verslag.
+MOCK_GENERATOREN.bandInvulling = (m) => mockBandInvulling(m)
 // De Coach (P21): punten uit de cijfers, elk met een bestaand artikel; onder het minimum geen vergelijking.
 MOCK_GENERATOREN.coach = (m) => {
   if (!m?.coach) return { tekst: 'Mock-antwoord voor coach' }

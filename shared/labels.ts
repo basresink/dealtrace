@@ -91,18 +91,23 @@ export const LABELS = {
     tegen: zacht('Tegen', 'rood', 'Ban'),
     onbekend: leeg('Onbekend', 'CircleHelp'),
   },
-  /** Taaktype en kanaal: rand met icoon; het icoon draagt het onderscheid. */
+  /** Soort activiteit (taaktype, kanaal en afspraakvorm): zacht, elke soort een eigen tint en icoon, overal gelijk
+   *  (tijdlijn van account- en contactkaart, Taken, horizon, flyouts). Paars blijft voor AI, rood voor urgentie. */
   actie: {
-    bellen: rand('Bellen', 'Phone'),
-    mailen: rand('Mail', 'Mail'),
-    linkedin: rand('LinkedIn', 'Linkedin'),
-    bezoek: rand('Bezoek', 'MapPin'),
-    bericht: rand('WhatsApp', 'MessageCircle'),
-    sms: rand('SMS', 'MessageSquare'),
-    whatsapp: rand('WhatsApp', 'MessageCircle'),
-    online: rand('Online', 'Video'),
-    taak: rand('Taak', 'ListTodo'),
-    geen: rand('Taak', 'ListTodo'),
+    bellen: zacht('Bellen', 'blauw', 'Phone'),
+    mailen: zacht('Mail', 'cyaan', 'Mail'),
+    linkedin: zacht('LinkedIn', 'blauw', 'Linkedin'),
+    bezoek: zacht('Bezoek', 'oranje', 'MapPin'),
+    bericht: zacht('WhatsApp', 'groen', 'MessageCircle'),
+    sms: zacht('SMS', 'cyaan', 'MessageSquare'),
+    whatsapp: zacht('WhatsApp', 'groen', 'MessageCircle'),
+    online: zacht('Online', 'blauw', 'Video'),
+    taak: zacht('Taak', 'grijs', 'ListTodo'),
+    geen: zacht('Taak', 'grijs', 'ListTodo'),
+  },
+  /** Branche van een account (verkoopverhaal of vrije tekst): een feit; de naam komt als tekst mee. */
+  branche: {
+    branche: rand('Branche', 'Building2'),
   },
   /** Waar een taak vandaan komt. Handmatig is de standaard; een agent is AI. */
   herkomst: {

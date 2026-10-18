@@ -1,8 +1,11 @@
 <script setup lang="ts">
 // Kwalificatie van een account (venster Kwalificatie onder Meer, op de accountkaart en de contactkaart):
-// BAND met Kwalificeer, het buying committee met "Stel voor met AI" (Profielbouwer, 3 credits),
-// contactpersonen zoeken via Datacollectief en de contactpersonen met hun rol. Op de contactkaart staat
+// BAND met Kwalificeer, het buying committee met "Stel voor met AI" (Profielbouwer, 3 credits) en de
+// contactpersonen met hun rol (zoeken via Datacollectief staat hier niet meer). Op de contactkaart staat
 // bovenaan de rol van dat contact in het committee.
+// BAND vul je zelf in (vinkjes) of laat je invullen met "Vul in met AI" (soort bandInvulling, prijs op de knop): de
+// AI leest alle gespreksverslagen en zet per onderdeel een voorstel met citaat en bron klaar. Zonder verslagen staat
+// de knop uit met "Nog geen gespreksverslagen".
 // BAND uit de gespreksverslagen: de analyses van de Notulist leveren per letter een voorstel met citaat en
 // herkomst (welk verslag, welke datum); de gebruiker bevestigt, bewerkt of verwerpt per letter. Een letter die al
 // is ingevuld krijgt geen voorstel; met de hand ingevuld blijft leidend.
@@ -28,9 +31,23 @@ async function zetBand(letter: string, ja: boolean) {
 const magVoorstel = computed(() => !!functie('reis.kwalificeer')?.beschikbaar)
 const voorstellen = ref<BandVoorstel[]>([])
 const verslagen = ref(0)
+const ai = ref<{ verslagen: number; credits: number; op: string | null } | null>(null)
 async function laadVoorstellen() {
-  try { const r = await $fetch<any>(`/api/accounts/${a.value.id}/band-voorstel`); voorstellen.value = r.voorstellen; verslagen.value = r.verslagen } catch { voorstellen.value = [] }
+  try { const r = await $fetch<any>(`/api/accounts/${a.value.id}/band-voorstel`); voorstellen.value = r.voorstellen; verslagen.value = r.verslagen; ai.value = r.ai ?? null } catch { voorstellen.value = [] }
 }
+// Vul in met AI: alleen voorstellen, nooit stil ingevuld.
+const aiBezig = ref(false)
+const aiCredits = computed(() => ai.value?.credits ?? 1)
+const aiUit = computed(() => (!ai.value?.verslagen ? 'Nog geen gespreksverslagen' : bandJa.value === 4 || BAND.every((k) => a.value.band?.[k]) ? 'Alle vier onderdelen zijn ingevuld' : null))
+async function vulMetAi() {
+  aiBezig.value = true
+  try {
+    const r = await $fetch<any>(`/api/accounts/${a.value.id}/band-ai`, { method: 'POST' })
+    toast.toon(r.voorstellen ? `${r.voorstellen} ${r.voorstellen === 1 ? 'voorstel' : 'voorstellen'} uit ${r.verslagen} ${r.verslagen === 1 ? 'verslag' : 'verslagen'}. Beslis per onderdeel.` : 'De verslagen zeggen nog niets over de open onderdelen.')
+    await laadVoorstellen()
+  } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { aiBezig.value = false }
+}
+const aantalAi = computed(() => voorstellen.value.filter((v) => v.ai).length)
 onMounted(laadVoorstellen)
 watch(() => JSON.stringify(a.value.band ?? {}), laadVoorstellen)
 const bewerkt = ref<string | null>(null)
@@ -51,7 +68,7 @@ async function ongedaan(letter: string) {
   try { await $fetch(`/api/accounts/${a.value.id}/band-voorstel`, { method: 'POST', body: { letter, besluit: 'ongedaan' } }); emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') }
 }
 const dagKort = (d: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Amsterdam' }).format(new Date(d)).replace('.', '')
-const bronLabel = (b: { soort: string; datum: string }) => `${b.soort === 'afspraak' ? 'Verslag' : 'Belverslag'} ${dagKort(b.datum)}`
+const bronLabel = (b: { soort: string; datum: string }) => `${b.soort === 'afspraak' ? 'Verslag' : b.soort === 'transcript' ? 'Transcript' : 'Belverslag'} ${dagKort(b.datum)}`
 async function kwalificeer() {
   try {
     const r = await $fetch<any>('/api/reis/gebeurtenis', { method: 'POST', body: { accountId: a.value.id, gebeurtenis: 'gekwalificeerd' } })
@@ -64,17 +81,6 @@ const committeeBezig = ref(false)
 async function stelCommitteeVoor() {
   committeeBezig.value = true
   try { const r = await $fetch<any>(`/api/accounts/${a.value.id}/committee`, { method: 'POST' }); committee.value = r.voorstellen; if (!r.voorstellen.length) toast.toon(r.reden ?? 'Nog te weinig functies bekend om een voorstel te doen.') } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { committeeBezig.value = false }
-}
-// P15: contactpersonen zoeken via Datacollectief, met bevestiging van de kosten.
-const dcBezig = ref(false)
-const online = ref(true)
-function zetOnline() { online.value = navigator.onLine }
-onMounted(() => { zetOnline(); window.addEventListener('online', zetOnline); window.addEventListener('offline', zetOnline) })
-onBeforeUnmount(() => { window.removeEventListener('online', zetOnline); window.removeEventListener('offline', zetOnline) })
-async function zoekContacten() {
-  if (!confirm('Contactpersonen zoeken via Datacollectief? Dit kost tot 5 records van jullie tegoed.')) return
-  dcBezig.value = true
-  try { const r: any = await ($fetch as any)(`/api/accounts/${a.value.id}/verrijk-contacten`, { method: 'POST', body: { max: 5 } }); toast.toon(r.tekst); emit('gewijzigd') } catch (e) { toast.toon(foutTekst(e), 'fout') } finally { dcBezig.value = false }
 }
 const ontbrekend = computed(() => ((a.value.ontbrekendeRollen ?? []) as string[]).map((r) => CONTACTROL_LABEL[r as ContactRol] ?? r).join(', '))
 </script>
@@ -98,12 +104,17 @@ const ontbrekend = computed(() => ((a.value.ontbrekendeRollen ?? []) as string[]
         </span>
       </li>
     </ul>
+    <div v-if="magVoorstel && magBand" class="kb-ai" data-test="band-ai">
+      <button type="button" class="dd-act" :disabled="aiBezig || !!aiUit" :aria-describedby="aiUit ? 'kb-ai-uit' : undefined" data-test="band-ai-knop" @click="vulMetAi"><Icoon naam="Sparkles" class="dd-act-icoon" />{{ aiBezig ? 'AI leest de verslagen…' : 'Vul in met AI' }}<span class="kb-ai-prijs tnum" data-test="band-ai-prijs">{{ aiCredits }} {{ aiCredits === 1 ? 'credit' : 'credits' }}</span></button>
+      <span v-if="aiUit" id="kb-ai-uit" class="meta" data-test="band-ai-uit">{{ aiUit }}</span>
+      <span v-else class="meta">Of vink zelf aan. De AI leest {{ ai?.verslagen }} {{ ai?.verslagen === 1 ? 'gespreksverslag' : 'gespreksverslagen' }} en doet per onderdeel een voorstel.</span>
+    </div>
     <section v-if="magVoorstel && voorstellen.length" class="kb-voorstellen" data-test="band-voorstellen">
       <h3 class="kb-voorstellen-titel"><Label soort="ai" waarde="voorstel" /> Uit je gespreksverslagen</h3>
-      <p class="kaart-meta">De Notulist las {{ verslagen }} {{ verslagen === 1 ? 'verslag' : 'verslagen' }}. Bevestig, bewerk of verwerp per letter; er wordt niets vanzelf ingevuld.</p>
+      <p class="kaart-meta"><template v-if="aantalAi">De AI las {{ ai?.verslagen }} {{ ai?.verslagen === 1 ? 'verslag' : 'verslagen' }}.</template><template v-else>De Notulist las {{ verslagen }} {{ verslagen === 1 ? 'verslag' : 'verslagen' }}.</template> Bevestig, bewerk of verwerp per letter; er wordt niets vanzelf ingevuld.</p>
       <article v-for="v in voorstellen" :key="v.letter" class="kb-voorstel" :data-test="`band-voorstel-${v.letter}`">
         <header class="kb-voorstel-kop">
-          <strong>{{ label(v.letter) }}</strong><span class="meta">{{ BAND_UITLEG[v.letter] }}</span>
+          <strong>{{ label(v.letter) }}</strong><span class="meta">{{ BAND_UITLEG[v.letter] }}</span><span v-if="v.ai" class="kb-chip" data-test="band-voorstel-ai"><Icoon naam="Sparkles" :grootte="12" />AI</span>
           <span class="kb-oordeel" :class="v.ja ? 'kb-oordeel--ja' : 'kb-oordeel--nee'" data-test="band-voorstel-oordeel">{{ v.ja ? 'Ja' : 'Nee' }}</span>
         </header>
         <p class="kb-citaat">"{{ v.citaat }}"</p>
@@ -134,10 +145,6 @@ const ontbrekend = computed(() => ((a.value.ontbrekendeRollen ?? []) as string[]
     <ul v-if="committee?.length" class="schakel-lijst kaart mt-16" data-test="committee-voorstel">
       <li v-for="v in committee" :key="v.functie" class="schakel-rij"><span><strong>{{ v.functie }}</strong>: {{ v.rol }} <span v-if="v.vermoedelijk" class="pil pil--leeg">vermoedelijk</span><br><span class="meta">{{ v.bron }} · zekerheid {{ v.zekerheid }}</span></span></li>
     </ul>
-    <div v-if="functie('datacollectief.verrijken')?.beschikbaar" class="kaart kaart--vlak dc-zoek mt-16" data-test="dc-zoek-blok">
-      <button type="button" class="dd-act dc-knop" :disabled="dcBezig || !online" data-test="dc-zoek" @click="zoekContacten">{{ online ? 'Zoek contactpersonen' : 'Niet beschikbaar zonder verbinding' }}</button>
-      <span class="meta">Datacollectief · kost tot 5 records</span>
-    </div>
     <ul v-if="a.contacten?.length" class="schakel-lijst kaart mt-16"><li v-for="c in a.contacten" :key="c.id" class="schakel-rij"><FunctieLink als-tekst :to="`/contacten/${c.id}`">{{ c.naam }}</FunctieLink><span class="meta">{{ CONTACTROL_LABEL[c.rol as ContactRol] }}<template v-if="c.functie"> · {{ c.functie }}</template><template v-if="c.status === 'vertrokken'"> · vertrokken</template><template v-if="c.herkomst?.bron === 'datacollectief'"> · Datacollectief · {{ c.herkomst.op.slice(0, 10) }}</template></span></li></ul>
   </section>
 </template>
@@ -158,7 +165,9 @@ const ontbrekend = computed(() => ((a.value.ontbrekendeRollen ?? []) as string[]
 .kb-oordeel--ja { color: var(--green); }
 .kb-oordeel--nee { color: var(--red); }
 .kb-acties { display: flex; flex-wrap: wrap; gap: 8px; }
+.kb-ai { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 12px; }
+.kb-ai-prijs { margin-left: 4px; padding: 1px 6px; border: 1px solid var(--border-strong); border-radius: 2px; font-size: 11px; font-weight: 700; color: var(--ink-soft); }
 .kb-bewerk { display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .kb-keuze { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; padding: 0; border: 0; }
-@media (max-width: 767px) { .kb-acties .dd-act, .kb-link { min-height: 44px; } }
+@media (max-width: 767px) { .kb-acties .dd-act, .kb-link, .kb-ai .dd-act { min-height: 44px; } }
 </style>

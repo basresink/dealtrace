@@ -200,7 +200,7 @@ export function geenKring(personen: Pick<InvloedPersoon, 'id' | 'rapporteertAan'
 export interface Knoop<T extends InvloedPersoon = InvloedPersoon> { persoon: T; x: number; y: number; laag: number }
 export interface Indeling<T extends InvloedPersoon = InvloedPersoon> { knopen: Knoop<T>[]; lijnen: { van: string; naar: string; d: string }[]; breedte: number; hoogte: number }
 export const KNOOP_B = 156
-export const KNOOP_H = 58
+export const KNOOP_H = 66
 const GAT_X = 16
 const LAAG_H = 100
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // Accountkaart (F03, 8.5.5) in de opzet van DealDrive: kop met logovlak, kruimel, branche en plaats, naam met
 // klasselabel, website en de stuurstrip; rechts Zoeken, Vraag AI, Contacten, Info en Meer. Meer opent een venster
-// met korte kaders (Briefing, Volgen, Invloed, Opvolgreeksen, Belscript, Dossier, Kwalificatie, Reis, Campagnes, Accountplan,
-// Klaarzetten, Overdragen en Deactiveren) die elk hun eigen venster openen, met "Meer" terug in de kop;
+// met korte kaders (Briefing, Volgen, Invloed, Opvolgreeksen, Dossier, Kwalificatie, Reis, Campagnes, Accountplan en
+// Overdragen) die elk hun eigen venster openen, met "Meer" terug in de kop; Deactiveren staat onderaan Info;
 // ?meer=<id> opent er direct een. Het logovlak toont het logo (eigen logo-URL of het favicon van de website) en
 // anders de initialen. Daaronder de statstrook over de volle breedte, de stand van een overdracht en de
 // tabbladen Tijdlijn, Inzichten, Taken, Notities, E-mails, Afspraken, Gespreksverslagen en Documenten. Eigen velden en de
@@ -15,7 +15,7 @@ import type { Ref } from 'vue'
 import type { MeerKader } from '~/components/account/MeerFlyout.vue'
 import { STATUS_LABEL, datumKort, klasseKort, telLink, toonTelefoon } from '~/utils/accountWeergave'
 const route = useRoute()
-const { functie, me } = useMe()
+const { functie } = useMe()
 if (!functie('prospects.kaart')?.beschikbaar) throw createError({ statusCode: 403, statusMessage: 'Geen toegang' })
 const toast = useToast()
 const { data: a, refresh } = await useFetch<any>(() => `/api/accounts/${route.params.id}`)
@@ -63,9 +63,6 @@ const navigeer = computed(() => {
   const ios = import.meta.client && /iPhone|iPad/.test(navigator.userAgent)
   return ios ? `https://maps.apple.com/?q=${encodeURIComponent(adres)}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(adres)}`
 })
-async function zetKlasse(k: string) {
-  try { await $fetch(`/api/accounts/${a.value.id}`, { method: 'PUT', body: { klasse: k || null } }); await refresh() } catch (e) { toast.toon(foutTekst(e), 'fout') }
-}
 async function gedeactiveerd(tekst: string) { deactiveerOpen.value = false; infoOpen.value = false; toast.toon(tekst); await ververs() }
 async function heractiveer() {
   heractiveerBezig.value = true
@@ -74,10 +71,7 @@ async function heractiveer() {
 const SOORT: Record<string, string> = { gebeld: 'Gebeld', mail: 'Mail', notitie: 'Notitie', bericht: 'Bericht', linkedin: 'LinkedIn', afspraak: 'Afspraak', bezoek: 'Bezoek', 'account verwijderd': 'Verwijderd', gedeactiveerd: 'Gedeactiveerd', geheractiveerd: 'Heractiveerd', reis: 'Reis', import: 'Import' }
 const momenten = computed(() => a.value.tijdlijn.filter((x: any) => x.soort !== 'notitie').slice(0, 3))
 useHead({ title: computed(() => `${a.value?.naam ?? 'Account'} · Dealtrace`) })
-// P14: de binnendienst zet een prospect klaar voor de regiodag van een collega van de buitendienst.
-const klaarOpen = ref(false)
 const kaartjeOpen = ref(false)
-const kanKlaarzetten = computed(() => !!functie('bezoeken.klaarzetten')?.beschikbaar && me.value?.gebruiker.werkplek !== 'buitendienst')
 // P30: een account buiten het dagpakket bewaren voor offline.
 const dagpakket = useDagpakket()
 const inPakket = computed(() => !!dagpakket.account(String(route.params.id)))
@@ -98,7 +92,6 @@ const metAccountplan = computed(() => !!functie('nav.accountplannen')?.beschikba
 // Het lopende accountplan voor de regel in Meer (alleen met de functie Accountplannen).
 const { data: plannen } = useLazyFetch<any>('/api/accountplannen', { query: { accountId: route.params.id }, server: false, immediate: metAccountplan.value, default: () => ({ plannen: [] }) })
 const lopendPlan = computed(() => plannen.value?.plannen?.find((p: any) => p.weergave === 'actueel') ?? plannen.value?.plannen?.[0] ?? null)
-const belscriptOpen = ref(false)
 // F7: de opvolgreeksen van deze prospect onder Meer (lopend, eerdere en Start reeks); alleen als Opvolgreeksen aanstaat.
 const reeksenOpen = ref(false)
 const metReeksen = computed(() => !!functie('nav.opvolgreeksen')?.beschikbaar && !!functie('prospects.volgen')?.beschikbaar)
@@ -122,20 +115,17 @@ const kaders = computed<MeerKader[]>(() => {
   if (functie('prospects.volgen')?.beschikbaar) k.push({ id: 'volgen', titel: 'Volgen', tekst: 'Volgende beste stap en opvolgreeks', icoon: 'Route', test: 'knop-volgen' })
   k.push({ id: 'invloed', titel: 'Invloed', tekst: `Wie beslist en wie beïnvloedt · ${aantalContacten.value} ${aantalContacten.value === 1 ? 'contact' : 'contacten'}`, icoon: 'Network', test: 'knop-invloed' })
   if (metReeksen.value) k.push({ id: 'reeksen', titel: 'Opvolgreeksen', tekst: reeksenRegel.value, icoon: 'Repeat', test: 'meer-reeksen' })
-  if (functie('belscript.kiezen')?.beschikbaar) k.push({ id: 'belscript', titel: 'Belscript', tekst: 'Het script voor je volgende gesprek', icoon: 'ScrollText', test: 'meer-belscript' })
   k.push({ id: 'dossier', titel: 'Dossier', tekst: x.dossier?.op ? `Wat de Verrijker vond · ververst ${datumKortJaar(x.dossier.op)}` : 'Nog geen dossier', icoon: 'Database', test: 'meer-dossier' })
   k.push({ id: 'kwalificatie', titel: 'Kwalificatie', tekst: `BAND ${bandJa.value} van 4 · buying committee`, icoon: 'ClipboardCheck', test: 'meer-kwalificatie' })
   k.push({ id: 'reis', titel: 'Reis', tekst: x.terugkom?.tekst ?? (x.reis ? `${x.reis.naam} · ${x.reis.fase?.label ?? ''} · ${STATUS_LABEL[x.status] ?? x.status}` : x.soort === 'klant' ? 'Klanten lopen geen prospectreis' : 'Nog geen reis'), icoon: 'Compass', test: 'meer-reis' })
   const nCamp = t.value.campagnes.length
   k.push({ id: 'campagnes', titel: 'Campagnes', tekst: nCamp ? `Loopt mee in ${nCamp} ${nCamp === 1 ? 'campagne' : 'campagnes'}` : 'Loopt in geen campagne mee', icoon: 'Megaphone', test: 'meer-campagnes' })
   if (metAccountplan.value) k.push({ id: 'accountplan', titel: 'Accountplan', tekst: lopendPlan.value ? `${lopendPlan.value.titel} · ${lopendPlan.value.acties?.klaar ?? 0} van ${lopendPlan.value.acties?.totaal ?? 0} acties klaar` : 'Nog geen accountplan', icoon: 'Target', test: 'meer-accountplan' })
-  if (kanKlaarzetten.value) k.push({ id: 'klaarzetten', titel: 'Klaarzetten', tekst: 'Zet klaar voor de regiodag van een collega', icoon: 'MapPin', test: 'klaarzetten-knop' })
   if (telefoon.value && functie('contact.visitekaartje')?.beschikbaar) k.push({ id: 'visitekaartje', titel: 'Scan visitekaartje', tekst: 'Maak een contact van een foto', icoon: 'Camera', test: 'scan-visitekaartje' })
   if (telefoon.value && !inPakket.value && functie('onderweg.dagpakket')?.beschikbaar) k.push({ id: 'offline', titel: 'Bewaar voor offline', tekst: 'Neem dit account mee zonder verbinding', icoon: 'Download', test: 'bewaar-offline' })
-  if (x.kan.deactiveren) k.push({ id: 'deactiveren', titel: 'Deactiveren', tekst: 'Haal het account uit de motor, met een reden', icoon: 'Archive', test: 'deactiveer-knop' })
   return k
 })
-const OPEN: Record<string, Ref<boolean>> = { info: infoOpen, briefing: briefingOpen, volgen: volgenOpen, reeksen: reeksenOpen, invloed: invloedOpen, belscript: belscriptOpen, dossier: dossierOpen, kwalificatie: kwalificatieOpen, reis: reisOpen, campagnes: campagnesOpen, accountplan: accountplanOpen, klaarzetten: klaarOpen, overdragen: overdragenOpen, visitekaartje: kaartjeOpen, deactiveren: deactiveerOpen }
+const OPEN: Record<string, Ref<boolean>> = { info: infoOpen, briefing: briefingOpen, volgen: volgenOpen, reeksen: reeksenOpen, invloed: invloedOpen, dossier: dossierOpen, kwalificatie: kwalificatieOpen, reis: reisOpen, campagnes: campagnesOpen, accountplan: accountplanOpen, overdragen: overdragenOpen, visitekaartje: kaartjeOpen }
 // Een venster dat vanuit Meer opent, heeft "Meer" terug in de kop (FlyoutShell); Escape gaat ook terug.
 const meerTerug = maakMeerTerug(() => { meerOpen.value = true })
 function kies(id: string, uitMeer = true) {
@@ -166,6 +156,7 @@ function ritmeActie(soort: 'nee' | 'pauzeer' | 'verplaats' | 'fase' | 'terugop')
 const MERK = ['#194c8f', '#1e7c4a', '#c0392b', '#4c1d95', '#b45309', '#0a0a0a', '#0f766e']
 const initialen = computed(() => a.value.naam.replace(/^(Test)(?=[A-Z])/, '').split(/\s+/).filter(Boolean).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase())
 const merkKleur = computed(() => MERK[[...a.value.naam].reduce((s: number, c: string) => s + c.charCodeAt(0), 0) % MERK.length])
+const brancheNaam = computed<string | null>(() => a.value.vvBranche?.naam ?? a.value.branche ?? null)
 const klasseNaam = computed(() => a.value.klassen.find((k: any) => k.id === a.value.klasse)?.naam ?? klasseKort(a.value.klasse, a.value.klassen))
 const extern = (u: string) => (/^https?:\/\//i.test(u) ? u : `https://${u}`)
 // Het logovlak is 64 px, op de telefoon 48 px (zoals de initialen eerder).
@@ -204,20 +195,20 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
           <AccountLogo class="ak-merk" :naam="a.naam" :initialen="initialen" :kleur="merkKleur ?? 'var(--ink)'" :logo-url="a.logoUrl" :website="a.website" :domein="a.domein" :logo-uit="a.logoUit" :grootte="logoMaat" />
           <div class="ak-kop-info">
             <FunctieLink als-tekst :to="a.soort === 'klant' ? '/klanten' : '/prospects/alle'" class="ak-kruimel"><Icoon naam="ArrowLeft" :grootte="12" /> {{ a.soort === 'klant' ? 'Bestaande klanten' : 'Alle prospects' }}</FunctieLink>
-            <p class="ak-eyebrow"><span v-for="(c, i) in [a.branche, a.plaats, a.land, a.vvBranche?.naam].filter(Boolean)" :key="i"><template v-if="i"> · </template>{{ c }}</span></p>
+            <!-- Plaats en land, met de branche als één label erachter (verkoopverhaal, anders de vrije tekst). -->
+            <p class="ak-eyebrow"><span v-if="a.plaats || a.land">{{ [a.plaats, a.land].filter(Boolean).join(' · ') }}</span>
+              <Label v-if="brancheNaam" class="ak-branche" soort="branche" waarde="branche" :tekst="brancheNaam" :titel="a.vvBranche ? 'Branche uit het verkoopverhaal, te wijzigen in Info' : 'Branche, te wijzigen in Info'" data-test="vv-branche" /><span v-if="a.vvBranche?.verwijderd" class="meta" data-test="branche-verwijderd">{{ a.vvBranche.verwijderd }}</span></p>
+            <!-- De klasse is hier alleen een label; wijzigen gaat via Info (Stamgegevens, Klasse). -->
             <h1 class="ak-titel" data-test="account-naam">{{ a.naam }}
-              <span v-if="a.kan.klasse" class="lbl-kies"><Label soort="klasse" :waarde="a.klasse ? klasseNaam : null" data-test="klasse-label" /><Icoon naam="ChevronDown" :grootte="12" /><select :value="a.klasse ?? ''" aria-label="Klasse" data-test="klasse" @change="zetKlasse(($event.target as HTMLSelectElement).value)">
-                <option value="">Geen klasse</option><option v-for="k in a.klassen" :key="k.id" :value="k.id" :title="k.naam">{{ k.naam }}</option>
-              </select></span>
-              <Label v-else soort="klasse" :waarde="a.klasse ? klasseNaam : null" data-test="klasse-label" />
+              <Label soort="klasse" :waarde="a.klasse ? klasseNaam : null" :titel="a.kan.klasse ? 'Klasse, te wijzigen in Info' : undefined" data-test="klasse-label" />
             </h1>
+            <!-- Volgorde: status prospect, fase, status (In reis) en direct daarachter het aantal dagen in de fase. -->
             <div class="ak-pillen">
-              <Label v-if="a.reis?.fase" soort="fase" :waarde="a.reis.fase.hoofdfase" :tekst="a.reis.fase.label" knop :uit="!a.kan.geschiedenis" :titel="a.kan.geschiedenis ? `Fase ${a.reis.fase.label}. Open de reisgeschiedenis` : undefined" data-test="fasepil" @click="openFase" />
-              <Label soort="status" :waarde="a.status" data-test="statuspil" />
               <Label v-if="a.prospectStatus" soort="prospectstatus" :waarde="a.prospectStatus" titel="Status prospect, te wijzigen in Info" data-test="prospect-status-pil" />
-              <Label v-if="a.dagenInFase !== null && a.reis && a.reis.fase?.overschreden" soort="status" waarde="te-lang-in-fase" :tekst="`${a.dagenInFase} d in fase`" titel="Langer in deze fase dan verwacht" data-test="dagen-in-fase" />
-              <span v-else-if="a.dagenInFase !== null && a.reis" class="meta" data-test="dagen-in-fase">{{ a.dagenInFase }} dagen in fase</span>
-              <span v-if="a.vvBranche" class="chip chip--branche" title="Branche (verkoopverhaal)" data-test="vv-branche">{{ a.vvBranche.naam }}</span><span v-if="a.vvBranche?.verwijderd" class="meta" data-test="branche-verwijderd">{{ a.vvBranche.verwijderd }}</span>
+              <Label v-if="a.reis?.fase" soort="fase" :waarde="a.reis.fase.hoofdfase" :tekst="a.reis.fase.label" knop :uit="!a.kan.geschiedenis" :titel="a.kan.geschiedenis ? `Fase ${a.reis.fase.label}. Open de reisgeschiedenis` : undefined" data-test="fasepil" @click="openFase" />
+              <span class="ak-status-dagen"><Label soort="status" :waarde="a.status" data-test="statuspil" />
+                <Label v-if="a.dagenInFase !== null && a.reis && a.reis.fase?.overschreden" soort="status" waarde="te-lang-in-fase" :tekst="`${a.dagenInFase} d in fase`" titel="Langer in deze fase dan verwacht" data-test="dagen-in-fase" />
+                <span v-else-if="a.dagenInFase !== null && a.reis" class="meta" data-test="dagen-in-fase">{{ a.dagenInFase }} {{ a.dagenInFase === 1 ? 'dag' : 'dagen' }} in fase</span></span>
             </div>
             <div class="ak-contactstrip">
               <a v-if="a.website" :href="extern(a.website)" target="_blank" rel="noopener" data-test="ak-website"><Icoon naam="Globe" :grootte="14" /> {{ websiteKort }} <span class="ak-ext">↗</span></a>
@@ -331,11 +322,10 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
     <KaartFlyout v-if="metAccountplan" :open="accountplanOpen" kicker="Accountplan" :titel="a.naam" meta="Het lopende accountplan met samenvatting, acties en voortgang." test="accountplan-flyout" maat="breed" :account-id="a.id" @sluit="accountplanOpen = false">
       <AccountplanTab :account="{ id: a.id, naam: a.naam, soort: a.soort }" in-flyout />
     </KaartFlyout>
-    <BelscriptFlyout v-if="functie('belscript.kiezen')?.beschikbaar" :open="belscriptOpen" :account-id="a.id" :naam="a.naam" @sluit="belscriptOpen = false" />
     <ReisgeschiedenisFlyout v-if="a.kan.geschiedenis" :open="geschiedenisOpen" :account-id="a.id" :naam="a.naam" @sluit="geschiedenisOpen = false" />
     <ZetNeeFlyout v-if="a.kan.nee" :open="neeOpen" :account="{ id: a.id, naam: a.naam }" :concurrenten="a.concurrenten" @sluit="neeOpen = false" @klaar="klaar" />
     <ReisHandelingFlyout v-if="handeling" :open="!!handeling" :soort="handeling" :account="a" @sluit="handeling = null" @klaar="klaar" />
-    <InfoFlyout :open="infoOpen" :account="a" @sluit="infoOpen = false" @gewijzigd="refresh" @deactiveer="deactiveerOpen = true" />
+    <InfoFlyout :open="infoOpen" :account="a" @sluit="infoOpen = false" @gewijzigd="refresh" @deactiveer="deactiveerOpen = true" @heractiveer="heractiveer" />
     <ContactenFlyout :open="contactenOpen" :account="{ id: a.id, naam: a.naam }" :contacten="a.contacten" @sluit="contactenOpen = false" @gewijzigd="refresh" />
     <BriefingFlyout :open="briefingOpen" :account="{ id: a.id, naam: a.naam }" @sluit="briefingOpen = false" />
     <VolgenFlyout v-if="functie('prospects.volgen')?.beschikbaar" :open="volgenOpen" :account-id="a.id" :naam="a.naam" @sluit="volgenOpen = false" @gewijzigd="ververs" />
@@ -343,7 +333,6 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
     <InvloedFlyout :open="invloedOpen" :account-id="a.id" @sluit="invloedOpen = false" @gewijzigd="refresh" />
     <DeactiveerFlyout v-if="a.kan.deactiveren" :open="deactiveerOpen" :account="{ id: a.id, naam: a.naam }" @sluit="deactiveerOpen = false" @klaar="gedeactiveerd" />
     <VisitekaartjeVenster :open="kaartjeOpen" :account="a ? { id: a.id, naam: a.naam } : null" @sluit="kaartjeOpen = false" @bewaard="refresh()" />
-    <KlaarzetFlyout :open="klaarOpen" :account="a ? { id: a.id, naam: a.naam } : null" @sluit="klaarOpen = false" />
     <OverdrachtVenster :open="overdragenOpen" :account-id="a?.id ?? null" :account-naam="a?.naam ?? ''" @sluit="overdragenOpen = false" @overgedragen="ververs()" />
   </div>
   <OfflineAccount v-else :id="String(route.params.id)" />
@@ -364,9 +353,11 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
 .ak-merk { margin-top: 22px; }
 .ak-kruimel { display: inline-flex; align-items: center; gap: 4px; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: var(--muted); text-decoration: none; }
 .ak-kruimel:hover { color: var(--ink); }
-.ak-eyebrow { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+.ak-eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
 .ak-titel { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin: 4px 0 0; font-family: var(--font-serif); font-size: clamp(28px, 4vw, 40px); font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; color: var(--ink); }
 .ak-pillen { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+/* De status (In reis) en het aantal dagen in de fase blijven bij elkaar, ook als de rij afbreekt. */
+.ak-status-dagen { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .ak-contactstrip { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 10px; font-size: 13px; }
 .ak-contactstrip a { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; color: var(--ink); text-decoration: none; border-bottom: 1px solid transparent; }
 .ak-contactstrip a:hover { border-bottom-color: var(--yellow); }

@@ -3,7 +3,7 @@
 export const BAND_LETTERS = ['behoefte', 'autoriteit', 'noodzaak', 'draagvlak'] as const
 export type BandLetter = typeof BAND_LETTERS[number]
 /** Een letter: ja of nee, met de bron. Bevestigd uit een gespreksverslag: ook het citaat (toelichting) en de herkomst. */
-export interface BandWaarde { ja: boolean; bron?: string; op?: string; toelichting?: string; herkomst?: { soort: 'afspraak' | 'taak'; id: string; titel: string; datum: string } }
+export interface BandWaarde { ja: boolean; bron?: string; op?: string; toelichting?: string; herkomst?: { soort: 'afspraak' | 'taak' | 'transcript'; id: string; titel: string; datum: string; ai?: boolean } }
 export type Band = Partial<Record<BandLetter, BandWaarde>>
 
 export function bandScore(band: Band | null | undefined): number {

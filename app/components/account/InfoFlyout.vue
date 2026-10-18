@@ -3,11 +3,12 @@
 // branche en plaats; blokken Adres, Bereik en Stamgegevens (met de status prospect) met per veld inline bewerken (potlood, en
 // "+ Voeg ... toe" als het leeg is). Eigen velden staan onder hun eigen kopje, of onder een vast kopje met
 // dezelfde naam. Daarna Extra bronnen (eigen webadressen die de agents volgen), en voor Expert de score en
-// de herkomst. Deactiveren (0064, verwijderen bestaat niet meer) staat onderaan de inhoud. Elke wijziging bewaart zichzelf.
+// de herkomst. Onderaan een rustige sectie Deactiveren (0064, verwijderen bestaat niet meer; stond eerder onder Meer)
+// die het venster Deactiveren opent, of Heractiveren als de prospect al gedeactiveerd is. Elke wijziging bewaart zichzelf.
 import { SCORE_DELEN } from '~/utils/accountWeergave'
 import { PROSPECT_STATUSSEN, PROSPECT_STATUS_LABEL } from '~~/shared/prospectStatus'
 const props = defineProps<{ open: boolean; account: any }>()
-const emit = defineEmits<{ sluit: []; gewijzigd: []; deactiveer: [] }>()
+const emit = defineEmits<{ sluit: []; gewijzigd: []; deactiveer: []; heractiveer: [] }>()
 const toast = useToast()
 const { me } = useMe()
 const meer = ref(false)
@@ -152,13 +153,25 @@ const ondertitel = computed(() => [props.account?.officieleNaam && props.account
           </template>
           <button v-else type="button" class="dd-act if-meer" data-test="if-meer" @click="meer = true">Meer gegevens</button>
 
+          <!-- Deactiveren (stond onder Meer): dezelfde rechten en hetzelfde bevestigingsvenster; gedeactiveerd: Heractiveren. -->
+          <section v-if="account.gedeactiveerd ? account.kan?.heractiveren : account.kan?.deactiveren" class="if-sectie if-deactiveer" data-test="if-deactiveer-sectie">
+            <h3 class="if-sectie-titel">{{ account.gedeactiveerd ? 'Gedeactiveerd' : 'Deactiveren' }}</h3>
+            <template v-if="account.gedeactiveerd">
+              <p class="if-uitleg">{{ account.gedeactiveerd.tekst }}. Heractiveren zet de prospect weer in de motor; de historie bleef bewaard.</p>
+              <button type="button" class="dd-act" data-test="if-heractiveer" @click="emit('heractiveer')"><Icoon naam="RefreshCw" class="dd-act-icoon" />Heractiveren</button>
+            </template>
+            <template v-else>
+              <p class="if-uitleg">Haal deze prospect uit de motor, met een reden. Verwijderen kan niet: alles wat er gebeurde blijft te lezen.</p>
+              <button type="button" class="dd-act" data-test="if-deactiveer" @click="emit('deactiveer')"><Icoon naam="Archive" class="dd-act-icoon" />Deactiveren</button>
+            </template>
+          </section>
+
         </div>
-    <!-- Voet (flyoutstandaard): Klaar sluit, Deactiveren als rode icoonknop. Verwijderen kan niemand: de historie blijft. -->
+    <!-- Voet (flyoutstandaard): Klaar sluit. Deactiveren staat als rustige sectie onderaan de inhoud. -->
     <template #voet>
       <footer class="fo-foot fs-voet">
         <button type="button" class="dd-actie dd-actie--zwart fs-hoofdactie" data-test="if-klaar" @click="shell?.vraagSluiten()"><Icoon naam="Check" :grootte="16" />Klaar</button>
         <span class="fo-foot-vul" />
-        <button v-if="account?.kan?.deactiveren" type="button" class="fs-ibtn fs-ibtn--rood" title="Deactiveren" aria-label="Deactiveren" data-test="if-deactiveer" @click="emit('deactiveer')"><Icoon naam="Archive" :grootte="18" /></button>
       </footer>
     </template>
   </FlyoutShell>
@@ -178,9 +191,12 @@ const ondertitel = computed(() => [props.account?.officieleNaam && props.account
 .if-logo-knop:hover { color: var(--ink); }
 .if-lijst { margin: 4px 0 8px; padding-left: 18px; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
 .if-meer { align-self: flex-start; }
+.if-deactiveer { padding-bottom: 14px; }
+.if-uitleg { margin: 6px 0 10px; font-size: 13px; line-height: 1.45; color: var(--muted); }
 @media (max-width: 767px) {
   .if-vast { grid-template-columns: 1fr; gap: 2px; }
   .if-kopieer, .if-logo-knop { min-width: 44px; min-height: 44px; }
+  .if-deactiveer .dd-act { min-height: 44px; }
 }
 .if-zo-zeg { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 8px; padding: 10px 12px; border-left: 3px solid var(--yellow); background: var(--bg); font-size: 13px; }
 .if-zo-zeg p { margin: 0; }

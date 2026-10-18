@@ -2,7 +2,8 @@
 // Contactkaart (F04) in de opzet van DealDrive: kop met avatar en rol, kruimel, functie en account (link),
 // naam met rollabel, contactgegevens (mail, telefoon, mobiel, LinkedIn), de stuurstrip van het account en rechts
 // Zoeken, Vraag AI, Info en Meer. Meer opent een venster met korte kaders (Briefing, Volgen, Invloed, Belscript,
-// Dossier, Kwalificatie, Reis, Campagnes, Accountplan als het contact in een plan staat, en Klaarzetten) die elk
+// Dossier, Kwalificatie, Reis, Campagnes, Accountplan (het accountplan van het account, zoals op de accountkaart,
+// alleen met nav.accountplannen), en Klaarzetten) die elk
 // hun eigen venster openen, met "Meer" terug in de kop; ?meer=<id> opent er direct een. Dossier, Kwalificatie en
 // Reis tonen de stand van het account. Bellen gaat via het nummer in de kop. Daaronder de statstrook en
 // dezelfde tabbladen als de accountkaart (KaartTabbladen), met alleen wat bij dit contact hoort; eigen velden
@@ -50,6 +51,10 @@ const accountplanOpen = ref(false)
 // De accountplannen waarin dit contact staat (als contactpersoon of met een actie); zonder de functie een lege lijst.
 const { data: plannen } = useLazyFetch<any>(() => `/api/contacten/${route.params.id}/accountplannen`, { server: false, default: () => ({ plannen: [] }) })
 const contactPlannen = computed<any[]>(() => plannen.value?.plannen ?? [])
+// Accountplan onder Meer: het plan van het account van dit contact (AccountplanTab, zoals op de accountkaart).
+const metAccountplan = computed(() => !!functie('nav.accountplannen')?.beschikbaar)
+const { data: accountPlannen } = useLazyFetch<any>('/api/accountplannen', { query: { accountId: c.value?.accountId }, server: false, immediate: metAccountplan.value && !!c.value?.accountId, default: () => ({ plannen: [] }) })
+const lopendPlan = computed(() => accountPlannen.value?.plannen?.find((p: any) => p.weergave === 'actueel') ?? accountPlannen.value?.plannen?.[0] ?? null)
 const kanKlaarzetten = computed(() => !!functie('bezoeken.klaarzetten')?.beschikbaar && me.value?.gebruiker.werkplek !== 'buitendienst')
 const datumKort = (d: string | null | undefined) => (d ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date(d)).replace('.', '') : '')
 const kaders = computed<MeerKader[]>(() => {
@@ -68,8 +73,7 @@ const kaders = computed<MeerKader[]>(() => {
   }
   const nCamp = t.value.campagnes.length
   k.push({ id: 'campagnes', titel: 'Campagnes', tekst: nCamp ? `${roepnaam.value} in ${nCamp} ${nCamp === 1 ? 'campagne' : 'campagnes'}` : 'In geen campagne', icoon: 'Megaphone', test: 'meer-campagnes' })
-  const p = contactPlannen.value[0]
-  if (p) k.push({ id: 'accountplan', titel: 'Accountplan', tekst: contactPlannen.value.length > 1 ? `${p.titel} en ${contactPlannen.value.length - 1} meer` : `${p.titel} · ${p.voortgang.klaar} van ${p.voortgang.totaal} acties klaar`, icoon: 'Target', test: 'meer-accountplan' })
+  if (c.value?.account && metAccountplan.value) k.push({ id: 'accountplan', titel: 'Accountplan', tekst: lopendPlan.value ? `${lopendPlan.value.titel} · ${lopendPlan.value.acties?.klaar ?? 0} van ${lopendPlan.value.acties?.totaal ?? 0} acties klaar` : `Nog geen accountplan voor ${c.value.account.naam}`, icoon: 'Target', test: 'meer-accountplan' })
   if (c.value?.account && kanKlaarzetten.value) k.push({ id: 'klaarzetten', titel: 'Klaarzetten', tekst: 'Zet klaar voor de regiodag van een collega', icoon: 'MapPin', test: 'klaarzetten-knop' })
   return k
 })
@@ -83,8 +87,6 @@ onMounted(() => {
   if (q === 'info') { infoOpen.value = true; return }
   if (typeof q === 'string' && kaders.value.some((x) => x.id === q && !x.href)) kies(q, false)
 })
-// Het accountplan-kader komt pas na het laden van de plannen; ?meer=accountplan wacht daarop.
-watch(contactPlannen, (l) => { if (l.length && route.query.meer === 'accountplan' && !accountplanOpen.value) kies('accountplan', false) })
 
 // Kop: avatar met initialen in een vaste kleur per naam, de rol als label met eigen icoon (kies via de keuzelijst eronder).
 const KLEUR = ['#194c8f', '#1e7c4a', '#c0392b', '#4c1d95', '#b45309', '#0a0a0a', '#0f766e']
@@ -203,8 +205,12 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
     <KaartFlyout :open="campagnesOpen" kicker="Campagnes" :titel="c.naam" :meta="`De campagnes met een taak of contactmoment voor ${roepnaam}.`" test="campagnes-flyout" :account-id="c.accountId" @sluit="campagnesOpen = false">
       <KaartCampagnes :campagnes="t.campagnes" op-contact />
     </KaartFlyout>
-    <KaartFlyout v-if="contactPlannen.length" :open="accountplanOpen" kicker="Accountplan" :titel="c.naam" :meta="`De accountplannen waarin ${roepnaam} staat.`" test="accountplan-flyout" maat="breed" :account-id="c.accountId" @sluit="accountplanOpen = false">
-      <ContactAccountplannen :plannen="contactPlannen" :roepnaam="roepnaam" />
+    <KaartFlyout v-if="c.account && metAccountplan" :open="accountplanOpen" kicker="Accountplan" :titel="c.account.naam" :meta="`Het accountplan van ${c.account.naam}, het account van ${roepnaam}.`" test="accountplan-flyout" maat="breed" :account-id="c.accountId" @sluit="accountplanOpen = false">
+      <AccountplanTab :account="{ id: c.accountId, naam: c.account.naam, soort: a?.soort ?? c.account.soort ?? null }" in-flyout />
+      <template v-if="contactPlannen.length">
+        <h3 class="ck-plan-kop">Waar {{ roepnaam }} in staat</h3>
+        <ContactAccountplannen :plannen="contactPlannen" :roepnaam="roepnaam" />
+      </template>
     </KaartFlyout>
     <BelscriptFlyout v-if="c.account && functie('belscript.kiezen')?.beschikbaar" :open="belscriptOpen" :account-id="c.accountId" :naam="c.account.naam" :contact-id="c.id" @sluit="belscriptOpen = false" />
     <KlaarzetFlyout v-if="c.account" :open="klaarOpen" :account="{ id: c.accountId, naam: c.account.naam }" @sluit="klaarOpen = false" />
@@ -249,6 +255,7 @@ const band = computed(() => (a.value?.band ? Object.values(a.value.band).filter(
 .ck-acties { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
 @media (min-width: 1000px) { .ck-acties { grid-column: auto; justify-content: flex-end; max-width: 620px; } }
 
+.ck-plan-kop { margin: 8px 0 0; font-family: var(--font-serif); font-size: 15px; font-weight: 700; color: var(--ink); }
 /* Statstrook */
 .ck-stats { padding: 24px 0; background: var(--bg); border-bottom: 1px solid var(--border); }
 .ck-stat-raster { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }

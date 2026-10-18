@@ -49,14 +49,14 @@ for (const breedte of [1280, 390]) {
       await expect(tl.locator('.tl-item').filter({ has: page.locator('[data-test=tl-actie][data-waarde=online]') }).first().locator('.tl-soort')).toHaveCount(0)
       const bel = tl.locator('[data-test=tl-actie][data-waarde=bellen]').first()
       await expect(bel).toBeVisible()
-      await expect(bel).toHaveClass(/lbl lbl--rand/)
+      await expect(bel).toHaveClass(/lbl lbl--zacht lbl--blauw/)
       await expect(bel.locator('svg')).toHaveCount(1)
       await expect(tl.locator('[data-test=tl-actie][data-waarde=online]').first()).toHaveText(/Online/)
       // Geen losse typepil meer voor taken en afspraken.
       await expect(tl.locator('.tl-type', { hasText: 'Bellen' })).toHaveCount(0)
 
       await page.getByTestId('tab-afspraken').click()
-      await expect(page.locator('[data-test=tl-actie][data-waarde=online]').first()).toHaveClass(/lbl--rand/)
+      await expect(page.locator('[data-test=tl-actie][data-waarde=online]').first()).toHaveClass(/lbl--zacht/)
       await page.getByTestId('tab-taken').click()
       const tabLabel = page.locator('[data-test=tl-actie][data-waarde=bellen]').first()
       const kaartKlasse = await tabLabel.getAttribute('class')

@@ -53,6 +53,20 @@ test('accountkaart: fase met stappen als knop, status zacht met icoon, klasse ki
   await expect(status.locator('svg')).toHaveCount(1)
   await expect(page.getByTestId('klasse-label')).toBeVisible()
   await nietGeel(page.locator('.ak-kop .lbl'))
+  // De klasse is in de kop alleen een label; wijzigen gaat via Info (zelfde recht kan.klasse).
+  await expect(page.locator('.ak-kop select, .ak-kop .lbl-kies')).toHaveCount(0)
+  const ak = await (await page.request.get(`/api/accounts/${a.id}`)).json()
+  const andere = ak.klassen.find((k: any) => k.id !== ak.klasse)
+  if (ak.kan.klasse && andere) {
+    await page.getByTestId('info-knop').click()
+    const veld = page.getByTestId('info-flyout').getByTestId('if-klasse')
+    await veld.getByTestId(ak.klasse ? 'if-klasse-bewerk' : 'if-klasse-leeg').click()
+    await veld.getByLabel('Klasse').selectOption(andere.id)
+    await veld.getByTestId('if-klasse-bewaar').click()
+    await expect.poll(async () => (await (await page.request.get(`/api/accounts/${a.id}`)).json()).klasse).toBe(andere.id)
+    await page.getByTestId('info-flyout').getByTestId('if-klaar').click()
+    await expect(page.getByTestId('klasse-label')).toHaveAttribute('data-waarde', andere.naam)
+  }
 })
 
 test('contactrij: rol met eigen icoon, Bel me niet gevuld vooraan', async ({ page }) => {
@@ -89,7 +103,8 @@ test('taakrij: over tijd is het enige gevulde label, soort en herkomst als rand,
   await expect(rij.locator('.lbl--vol')).toHaveCount(1)
   await expect(rij.getByTestId('taak-over-tijd')).toHaveText('Over tijd')
   await expect(rij.getByTestId('taak-soort')).toHaveText('Bellen')
-  await expect(rij.getByTestId('taak-soort')).toHaveClass(/lbl--rand/)
+  // Soort activiteit: zacht met een eigen tint per soort (Bellen blauw), overal gelijk.
+  await expect(rij.getByTestId('taak-soort')).toHaveClass(/lbl--zacht lbl--blauw/)
   await expect(rij.getByTestId('taak-herkomst')).toHaveCount(0)
   expect(await rij.locator('.taak-labels .lbl').count()).toBeLessThanOrEqual(4)
   await nietGeel(rij.locator('.lbl'))

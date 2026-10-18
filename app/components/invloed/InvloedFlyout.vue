@@ -108,15 +108,15 @@ function sluit() { gekozen.value = null; emit('sluit') }
                       >
                         <rect class="inv-kader" :x="k.x - KNOOP_B / 2" :y="k.y - KNOOP_H / 2" :width="KNOOP_B" :height="KNOOP_H" rx="2" />
                         <rect :class="`inv-strook inv-strook--${kleur(k.persoon)}`" :x="k.x - KNOOP_B / 2 + 1" :y="k.y + KNOOP_H / 2 - 6" :width="KNOOP_B - 2" height="5" />
-                        <foreignObject :x="k.x - KNOOP_B / 2 + 6" :y="k.y - KNOOP_H / 2 + 3" :width="KNOOP_B - 12" height="22">
+                        <foreignObject :x="k.x - KNOOP_B / 2 + 6" :y="k.y - KNOOP_H / 2 + 6" :width="KNOOP_B - 12" height="22">
                           <div class="inv-fo-rij">
                             <Label soort="rol" :waarde="k.persoon.rol || 'onbekend'" :vermoedelijk="k.persoon.onbekend || k.persoon.vermoedelijk" />
                             <span v-if="modus === 'houding'" class="lbl inv-houding-ico" :class="houdingKlas(k.persoon.houding)" :title="`Houding ${HOUDING_LABEL[k.persoon.houding as Houding].toLowerCase()}`" :data-test="`inv-houding-${k.persoon.id}`"><Icoon :naam="houdingIcoon(k.persoon.houding)" :grootte="12" /></span>
                           </div>
                         </foreignObject>
-                        <text :x="k.x - KNOOP_B / 2 + 9" :y="k.y - KNOOP_H / 2 + 31" class="inv-t-functie">{{ kort(k.persoon.functie ?? k.persoon.naam) }}</text>
-                        <text :x="k.x - KNOOP_B / 2 + 9" :y="k.y - KNOOP_H / 2 + 45" class="inv-t-naam" :class="{ 'inv-t-naam--onbekend': k.persoon.onbekend }">{{ kort(k.persoon.functie ? k.persoon.naam : contactTekst(k.persoon.momenten), 24) }}</text>
-                        <circle v-if="k.persoon.voorstel" class="inv-stip" :cx="k.x + KNOOP_B / 2 - 9" :cy="k.y - KNOOP_H / 2 + 10" r="4"><title>Voorstel van de Notulist</title></circle>
+                        <text :x="k.x - KNOOP_B / 2 + 9" :y="k.y - KNOOP_H / 2 + 43" class="inv-t-functie">{{ kort(k.persoon.functie ?? k.persoon.naam) }}</text>
+                        <text :x="k.x - KNOOP_B / 2 + 9" :y="k.y - KNOOP_H / 2 + 57" class="inv-t-naam" :class="{ 'inv-t-naam--onbekend': k.persoon.onbekend }">{{ kort(k.persoon.functie ? k.persoon.naam : contactTekst(k.persoon.momenten), 24) }}</text>
+                        <circle v-if="k.persoon.voorstel" class="inv-stip" :cx="k.x + KNOOP_B / 2 - 9" :cy="k.y - KNOOP_H / 2 + 17" r="4"><title>Voorstel van de Notulist</title></circle>
                       </g>
                     </svg>
                   </div>
@@ -204,7 +204,9 @@ function sluit() { gekozen.value = null; emit('sluit') }
 .inv-rij { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 8px 12px; background: var(--wit); border: 0; border-bottom: 1px solid var(--border); font: inherit; text-align: left; color: var(--ink); cursor: pointer; }
 .inv-rij:hover { background: var(--surface); }
 .inv-staaf { flex-shrink: 0; width: 6px; align-self: stretch; }
-.inv-rij-tekst { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.inv-rij-tekst { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; flex: 1; }
+/* Het rollabel houdt zijn eigen breedte en staat met dezelfde ruimte boven de functie als in het organigram. */
+.inv-rij-tekst > .lbl { margin-bottom: 2px; }
 .inv-rij-rechts { flex-shrink: 0; }
 .inv-legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 0; }
 .inv-legenda > span:not(.lbl) { display: inline-flex; align-items: center; gap: 6px; }

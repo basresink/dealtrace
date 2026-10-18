@@ -6,7 +6,7 @@ import type { Pakket } from './types'
 
 export const AI_SOORTEN = [
   'assistent', 'assistentUitgebreid', 'webonderzoek', 'zoekronde', 'dossier', 'inzichtBeoordeling', 'concept',
-  'belscript', 'notulist', 'brief', 'coach', 'spraakopdracht', 'visitekaartje', 'transcriptie',
+  'belscript', 'notulist', 'brief', 'coach', 'spraakopdracht', 'visitekaartje', 'transcriptie', 'bandInvulling',
 ] as const
 export type AiSoort = typeof AI_SOORTEN[number]
 
@@ -31,6 +31,7 @@ export const AI_SOORT: Record<AiSoort, AiSoortDef> = {
   spraakopdracht: { naam: 'Spraakopdracht', credits: 1, pakketten: ALLE },
   visitekaartje: { naam: 'Visitekaartje', credits: 2, pakketten: ALLE },
   transcriptie: { naam: 'Transcriptie (per begonnen minuut)', credits: 1, pakketten: ALLE },
+  bandInvulling: { naam: 'BAND-invulling uit gespreksverslagen', credits: 1, pakketten: ALLE },
 }
 
 /** Pot per gebruiker per maand, samen in één pot per organisatie (voorlopig, open vraag 24). */
