@@ -13,12 +13,16 @@ routes: /prospects,/accounts
 De accountkaart toont één account:
 
 - **Kop**: naam, fase en eigenaar, met rechts **Zoeken**, **Vraag AI**, **Contacten**, **Info** (bedrijfsgegevens, de huidige leverancier en eigen velden) en **Meer**.
-- **Meer**: korte kaders die elk een eigen venster openen: **Overdragen** (alleen na een gehouden eerste afspraak met vervolg), Briefing, Volgen, Invloed, Belscript, Dossier, Kwalificatie (BAND en het buying committee), Reis (de geschiedenis, en het ritme met **Zet nee**, **Pauzeer**, **Verplaats**, **Fase corrigeren** en **Terugkomdatum**), Campagnes, het lopende **Accountplan** (Expert), **Klaarzetten** en **Deactiveren**. Op de telefoon staan er ook **Scan visitekaartje** en **Bewaar voor offline**. Je ziet alleen de kaders van functies die voor je aanstaan. Met **Meer** linksboven in een venster, of met Escape, ga je terug naar Meer; het kruisje sluit alles.
+- **Meer**: korte kaders die elk een eigen venster openen: **Overdragen** (alleen na een gehouden eerste afspraak met vervolg), Briefing, Volgen, Invloed, **Opvolgreeksen**, Belscript, Dossier, Kwalificatie (BAND en het buying committee), Reis (de geschiedenis, en het ritme met **Zet nee**, **Pauzeer**, **Verplaats**, **Fase corrigeren** en **Terugkomdatum**), Campagnes, het lopende **Accountplan** (Expert), **Klaarzetten** en **Deactiveren**. Op de telefoon staan er ook **Scan visitekaartje** en **Bewaar voor offline**. Je ziet alleen de kaders van functies die voor je aanstaan. Met **Meer** linksboven in een venster, of met Escape, ga je terug naar Meer; het kruisje sluit alles.
 - **Kwalificatie uit je verslagen**: na een gespreksverslag stelt Dealtrace per BAND-letter een antwoord voor, met het citaat en het verslag waar het vandaan komt. Je bevestigt, bewerkt of verwerpt elk voorstel; wat je zelf al invulde, blijft staan.
 - **Contactpersonen**: met hun rol in het buying committee.
 - **Tabbladen**: Tijdlijn, Inzichten, Taken, Notities, E-mails, Afspraken, Gespreksverslagen en Documenten. Een overdracht en wat DealDrive terugmeldt, zie je in de tijdlijn.
 - **Contactkaart**: rechts **Zoeken**, **Vraag AI**, **Info** en **Meer**. Bellen doe je via het nummer in de kop. De tijdlijn noemt bij elk item wie het deed; de naam van het contact staat er niet bij, want je zit al op zijn kaart. Staat het contact in een accountplan, dan vind je dat onder Meer.
 - **Score**: hoe kansrijk het account is (de opbouw zie je als Expert).
+
+### Opvolgreeksen onder Meer
+
+Onder **Meer**, **Opvolgreeksen** zie je de opvolgreeksen van deze prospect. Bovenaan staat de lopende reeks met stap x van y, de volgende stap en het contact, met de knoppen om een concept te bekijken, een stap over te slaan, te pauzeren, te hervatten of te stoppen. Daaronder staan de eerdere reeksen met hun uitkomst. Loopt er niets, dan start je met **Start reeks** een nieuwe reeks voor deze prospect. Meer hierover lees je in het artikel over Volgen en opvolgreeksen.
 
 ### Filteren in Alle prospects
 

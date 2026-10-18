@@ -178,3 +178,38 @@ export async function sjablonenBeheer(tx: Tx, org: string) {
   const tel = new Map((await rijen(tx, sql`select sjabloon_id, count(*)::int as n from reeksen where status in ('loopt', 'gepauzeerd') group by sjabloon_id`)).map((r) => [r.sjabloon_id, r.n as number]))
   return lijst.map((s) => ({ ...s, lopend: tel.get(s.id) ?? 0 }))
 }
+
+/**
+ * De opvolgreeksen van één prospect (Meer, Opvolgreeksen op de accountkaart): de lopende of gepauzeerde reeks met
+ * stap x van y en de volgende stap, de eerdere reeksen met hun uitkomst (nieuwste eerst, hooguit 20) en of je hier een
+ * reeks mag starten, met de reden als het niet mag. Dezelfde regels als startReeks: eigenaar, zijn salesmanager of de
+ * beheerder; niet op nee, overgedragen of gedeactiveerd; één lopende reeks per account. Een reeks van een collega
+ * buiten je team staat erin, maar zonder detail (magOpenen false), net als GET /api/reeksen/:id.
+ */
+export async function reeksenVanAccount(tx: Tx, org: string, g: ReeksGebruiker, accountId: string, nu = new Date()) {
+  const [a] = await rijen(tx, sql`select id, name, owner_id, nb_status, account_kind, to_jsonb(a) ->> 'gedeactiveerd_op' as gedeactiveerd_op from accounts a where a.id = ${accountId}`)
+  if (!a) fout(404, 'Account onbekend')
+  const lopendId = (await rijen(tx, sql`select id from reeksen where account_id = ${accountId} and status = 'loopt' limit 1`))[0]?.id
+  if (lopendId) await werkReeksBij(tx, org, lopendId, nu, { gebruiker: g }).catch(() => null)
+  const rs = await rijen(tx, sql`select r.*, a.name as account_naam, u.name as eigenaar, c.first_name, c.last_name from reeksen r
+    join accounts a on a.id = r.account_id left join users u on u.id = r.owner_id left join contacts c on c.id = r.contact_id
+    where r.account_id = ${accountId} order by (r.status in ('loopt', 'gepauzeerd')) desc, r.gestart_op desc limit 21`)
+  const stappen = await stappenVoor(tx, rs.map((r) => r.id))
+  const ids = await eigenaren(tx, g, g.rol === 'beheerder' ? 'org' : 'team')
+  const lijst = rs.map((r) => ({
+    ...regelVan(r, stappen.get(r.id) ?? [], nu),
+    toelichting: (r.data?.stopToelichting ?? null) as string | null, mailOnderwerp: (r.data?.mailOnderwerp ?? null) as string | null,
+    aanleiding: (r.data?.aanleiding ?? null) as string | null, magOpenen: ids === null || ids.includes(r.owner_id),
+    gedaan: (stappen.get(r.id) ?? []).filter((s) => s.kanaal !== 'einde' && s.status === 'gedaan').length,
+  }))
+  const lopend = lijst.find((x) => x.status === 'loopt' || x.status === 'gepauzeerd') ?? null
+  const eerdere = lijst.filter((x) => x !== lopend).slice(0, 20)
+  const mag = await magVolgen(tx, g, a!.owner_id ?? null)
+  const reden = !mag ? 'Alleen de eigenaar van deze prospect, zijn salesmanager of de beheerder start hier een reeks.'
+    : a!.gedeactiveerd_op ? 'Deze prospect is gedeactiveerd; een gedeactiveerde prospect krijgt geen reeks.'
+    : a!.nb_status === 'overgedragen' ? 'Deze prospect is overgedragen; het vervolg loopt in DealDrive of het CRM.'
+    : a!.nb_status === 'nee' ? 'Deze prospect staat op nee; de afkoeling loopt nog.'
+    : lopend ? `Op deze prospect loopt al de reeks ${lopend.naam}. Stop die eerst; één reeks per prospect.`
+    : null
+  return { account: { id: a!.id as string, naam: a!.name as string }, lopend, eerdere, kan: { starten: !reden, wijzigen: mag, reden } }
+}

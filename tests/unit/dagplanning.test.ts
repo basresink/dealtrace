@@ -3,6 +3,7 @@
 // herplannen met `nu` als parameter: verzet, geannuleerd, uitgelopen, niets verdwijnt stil.
 import { describe, expect, it } from 'vitest'
 import { blokkenMetItems, controleerPlanTijd, dagplanningKop, dagplanningVoorkeur, herplan, itemsUitPlan, planAanDeBeurt, vastSleutel, vastVerschil, type PlanItem, type VastStand } from '../../shared/dagplanning'
+import { motivatieVanDeDag } from '../../shared/motivatie'
 import { bereikbaarheid, planDag, type BereikPoging, type PlanInput } from '../../shared/dagritme'
 import { nlTijdstip } from '../../shared/datum'
 
@@ -152,7 +153,7 @@ describe('vaste punten', () => {
     expect(vastSleutel([v()])).not.toBe(vastSleutel([v({ eind: om(DAG, 11, 15) })]))
   })
   it('de kop zegt wanneer de dag is ingedeeld of herpland', () => {
-    expect(dagplanningKop({ geplandOp: om(DAG, 7), wijzigingen: 0, samenvatting: '1 afspraak, 1 bezoek, 1 belblok' })).toEqual({ titel: 'Je dag staat klaar.', lede: 'Ingedeeld om 07:00 · 1 afspraak, 1 bezoek, 1 belblok' })
-    expect(dagplanningKop({ geplandOp: om(DAG, 7), herplandOp: om(DAG, 9, 12), wijzigingen: 1, samenvatting: '' })).toEqual({ titel: 'Je dag is opnieuw ingedeeld.', lede: 'Herpland om 09:12 · 1 wijziging' })
+    expect(dagplanningKop({ dag: DAG, wijzigingen: 0 })).toEqual({ titel: 'Je dag staat klaar.', lede: motivatieVanDeDag(DAG), motivatie: true })
+    expect(dagplanningKop({ dag: DAG, herplandOp: om(DAG, 9, 12), wijzigingen: 1 })).toEqual({ titel: 'Je dag is opnieuw ingedeeld.', lede: 'Herpland om 09:12 · 1 wijziging', motivatie: false })
   })
 })

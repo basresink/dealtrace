@@ -8,7 +8,7 @@ const props = defineProps<{ open: boolean; onderwerp: string; kaders: MeerKader[
 const emit = defineEmits<{ sluit: []; kies: [id: string] }>()
 // Een kader van een functie die uit staat, staat er niet (wens: geen knop naar een uitgezette functie).
 const FUNCTIE_VAN: Record<string, string> = {
-  briefing: 'briefing.lezen', volgen: 'prospects.volgen', belscript: 'belscript.kiezen', reis: 'reis.zien', kwalificatie: 'reis.kwalificeer',
+  briefing: 'briefing.lezen', volgen: 'prospects.volgen', reeksen: 'nav.opvolgreeksen', belscript: 'belscript.kiezen', reis: 'reis.zien', kwalificatie: 'reis.kwalificeer',
   campagnes: 'campagnes.meedoen', accountplan: 'nav.accountplannen', klaarzetten: 'bezoeken.klaarzetten', overdragen: 'overdracht.basis',
   visitekaartje: 'contact.visitekaartje', offline: 'onderweg.dagpakket', deactiveren: 'prospects.deactiveren',
 }

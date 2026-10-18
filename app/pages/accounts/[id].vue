@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Accountkaart (F03, 8.5.5) in de opzet van DealDrive: kop met logovlak, kruimel, branche en plaats, naam met
 // klasselabel, website en de stuurstrip; rechts Zoeken, Vraag AI, Contacten, Info en Meer. Meer opent een venster
-// met korte kaders (Briefing, Volgen, Invloed, Belscript, Dossier, Kwalificatie, Reis, Campagnes, Accountplan,
+// met korte kaders (Briefing, Volgen, Invloed, Opvolgreeksen, Belscript, Dossier, Kwalificatie, Reis, Campagnes, Accountplan,
 // Klaarzetten, Overdragen en Deactiveren) die elk hun eigen venster openen, met "Meer" terug in de kop;
 // ?meer=<id> opent er direct een. Het logovlak toont het logo (eigen logo-URL of het favicon van de website) en
 // anders de initialen. Daaronder de statstrook over de volle breedte, de stand van een overdracht en de
@@ -99,6 +99,19 @@ const metAccountplan = computed(() => !!functie('nav.accountplannen')?.beschikba
 const { data: plannen } = useLazyFetch<any>('/api/accountplannen', { query: { accountId: route.params.id }, server: false, immediate: metAccountplan.value, default: () => ({ plannen: [] }) })
 const lopendPlan = computed(() => plannen.value?.plannen?.find((p: any) => p.weergave === 'actueel') ?? plannen.value?.plannen?.[0] ?? null)
 const belscriptOpen = ref(false)
+// F7: de opvolgreeksen van deze prospect onder Meer (lopend, eerdere en Start reeks); alleen als Opvolgreeksen aanstaat.
+const reeksenOpen = ref(false)
+const metReeksen = computed(() => !!functie('nav.opvolgreeksen')?.beschikbaar && !!functie('prospects.volgen')?.beschikbaar)
+const { data: reeksenStand, refresh: refreshReeksen } = useLazyFetch<any>(() => `/api/accounts/${route.params.id}/reeksen`, { server: false, immediate: metReeksen.value, default: () => null })
+const reeksenRegel = computed(() => {
+  const x = reeksenStand.value
+  if (!x) return 'Lopende reeks, eerdere reeksen en Start reeks'
+  if (x.lopend) return `${x.lopend.naam} · stap ${x.lopend.stap} van ${x.lopend.van}${x.lopend.status === 'gepauzeerd' ? ' · gepauzeerd' : ''}`
+  return x.eerdere.length ? `Geen lopende reeks · ${x.eerdere.length} ${x.eerdere.length === 1 ? 'eerdere reeks' : 'eerdere reeksen'}` : 'Nog geen opvolgreeks'
+})
+async function reeksenGewijzigd() { await Promise.all([ververs(), refreshReeksen()]) }
+// De regel in Meer volgt wat er intussen in Volgen of op /opvolgreeksen gebeurde.
+watch(meerOpen, (o) => { if (o && metReeksen.value) void refreshReeksen() })
 const datumKortJaar = (d: string | null | undefined) => (d ? new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date(d)).replace('.', '') : '')
 const bandJa = computed(() => ['behoefte', 'autoriteit', 'noodzaak', 'draagvlak'].filter((k) => a.value?.band?.[k]?.ja).length)
 const kaders = computed<MeerKader[]>(() => {
@@ -108,6 +121,7 @@ const kaders = computed<MeerKader[]>(() => {
   k.push({ id: 'briefing', titel: 'Briefing', tekst: 'Wat je moet weten voor je volgende contact', icoon: 'FileText', test: 'briefing-knop' })
   if (functie('prospects.volgen')?.beschikbaar) k.push({ id: 'volgen', titel: 'Volgen', tekst: 'Volgende beste stap en opvolgreeks', icoon: 'Route', test: 'knop-volgen' })
   k.push({ id: 'invloed', titel: 'Invloed', tekst: `Wie beslist en wie beïnvloedt · ${aantalContacten.value} ${aantalContacten.value === 1 ? 'contact' : 'contacten'}`, icoon: 'Network', test: 'knop-invloed' })
+  if (metReeksen.value) k.push({ id: 'reeksen', titel: 'Opvolgreeksen', tekst: reeksenRegel.value, icoon: 'Repeat', test: 'meer-reeksen' })
   if (functie('belscript.kiezen')?.beschikbaar) k.push({ id: 'belscript', titel: 'Belscript', tekst: 'Het script voor je volgende gesprek', icoon: 'ScrollText', test: 'meer-belscript' })
   k.push({ id: 'dossier', titel: 'Dossier', tekst: x.dossier?.op ? `Wat de Verrijker vond · ververst ${datumKortJaar(x.dossier.op)}` : 'Nog geen dossier', icoon: 'Database', test: 'meer-dossier' })
   k.push({ id: 'kwalificatie', titel: 'Kwalificatie', tekst: `BAND ${bandJa.value} van 4 · buying committee`, icoon: 'ClipboardCheck', test: 'meer-kwalificatie' })
@@ -121,7 +135,7 @@ const kaders = computed<MeerKader[]>(() => {
   if (x.kan.deactiveren) k.push({ id: 'deactiveren', titel: 'Deactiveren', tekst: 'Haal het account uit de motor, met een reden', icoon: 'Archive', test: 'deactiveer-knop' })
   return k
 })
-const OPEN: Record<string, Ref<boolean>> = { info: infoOpen, briefing: briefingOpen, volgen: volgenOpen, invloed: invloedOpen, belscript: belscriptOpen, dossier: dossierOpen, kwalificatie: kwalificatieOpen, reis: reisOpen, campagnes: campagnesOpen, accountplan: accountplanOpen, klaarzetten: klaarOpen, overdragen: overdragenOpen, visitekaartje: kaartjeOpen, deactiveren: deactiveerOpen }
+const OPEN: Record<string, Ref<boolean>> = { info: infoOpen, briefing: briefingOpen, volgen: volgenOpen, reeksen: reeksenOpen, invloed: invloedOpen, belscript: belscriptOpen, dossier: dossierOpen, kwalificatie: kwalificatieOpen, reis: reisOpen, campagnes: campagnesOpen, accountplan: accountplanOpen, klaarzetten: klaarOpen, overdragen: overdragenOpen, visitekaartje: kaartjeOpen, deactiveren: deactiveerOpen }
 // Een venster dat vanuit Meer opent, heeft "Meer" terug in de kop (FlyoutShell); Escape gaat ook terug.
 const meerTerug = maakMeerTerug(() => { meerOpen.value = true })
 function kies(id: string, uitMeer = true) {
@@ -325,6 +339,7 @@ const openDeals = computed(() => t.value.deals.filter((d: any) => !['gewonnen', 
     <ContactenFlyout :open="contactenOpen" :account="{ id: a.id, naam: a.naam }" :contacten="a.contacten" @sluit="contactenOpen = false" @gewijzigd="refresh" />
     <BriefingFlyout :open="briefingOpen" :account="{ id: a.id, naam: a.naam }" @sluit="briefingOpen = false" />
     <VolgenFlyout v-if="functie('prospects.volgen')?.beschikbaar" :open="volgenOpen" :account-id="a.id" :naam="a.naam" @sluit="volgenOpen = false" @gewijzigd="ververs" />
+    <AccountReeksenFlyout v-if="metReeksen" :open="reeksenOpen" :account="{ id: a.id, naam: a.naam }" @sluit="reeksenOpen = false" @gewijzigd="reeksenGewijzigd" />
     <InvloedFlyout :open="invloedOpen" :account-id="a.id" @sluit="invloedOpen = false" @gewijzigd="refresh" />
     <DeactiveerFlyout v-if="a.kan.deactiveren" :open="deactiveerOpen" :account="{ id: a.id, naam: a.naam }" @sluit="deactiveerOpen = false" @klaar="gedeactiveerd" />
     <VisitekaartjeVenster :open="kaartjeOpen" :account="a ? { id: a.id, naam: a.naam } : null" @sluit="kaartjeOpen = false" @bewaard="refresh()" />

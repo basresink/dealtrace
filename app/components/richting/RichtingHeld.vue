@@ -13,16 +13,16 @@ const datum = (d: string | null) => (d ? new Intl.DateTimeFormat('nl-NL', { day:
 </script>
 
 <template>
-  <section class="ri-held" aria-labelledby="ri-held-zin" data-test="ri-held">
+  <section class="ri-held" :class="{ 'ri-held--enkel': !cijfers.length }" :aria-labelledby="kernzin ? 'ri-held-zin' : undefined" :aria-label="kernzin ? undefined : RICHTING_TEKST.heldKicker" data-test="ri-held">
     <div class="ri-held-links">
       <span class="ri-held-kicker">{{ RICHTING_TEKST.heldKicker }}</span>
-      <p id="ri-held-zin" class="ri-held-zin" data-test="ri-held-kernzin">{{ kernzin || 'Nog geen kernzin bevestigd.' }}</p>
+      <p v-if="kernzin" id="ri-held-zin" class="ri-held-zin" data-test="ri-held-kernzin">{{ kernzin }}</p>
       <p v-if="belofte" class="ri-held-belofte" data-test="ri-held-belofte">
         <Icoon naam="ShieldCheck" :grootte="16" class="ri-held-belofte-ico" />
         <span><strong>{{ RICHTING_TEKST.belofteLabel }}</strong> {{ belofte }}</span>
       </p>
     </div>
-    <dl class="ri-held-feiten" aria-label="Kerncijfers" data-test="ri-kerncijfers">
+    <dl v-if="cijfers.length" class="ri-held-feiten" aria-label="Kerncijfers" data-test="ri-kerncijfers">
       <div v-for="c in cijfers" :key="c.sleutel" class="ri-held-feit" :data-cijfer="c.sleutel">
         <dt class="ri-held-feit-tekst">{{ c.tekst }}</dt>
         <dd class="ri-held-feit-cijfer tnum">{{ c.cijfer }}</dd>
@@ -37,7 +37,13 @@ const datum = (d: string | null) => (d ? new Intl.DateTimeFormat('nl-NL', { day:
 </template>
 
 <style scoped>
-.ri-held { margin-top: 4px; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 28px; padding: 28px 32px; background: var(--ink); color: var(--wit); border-left: 4px solid var(--yellow); border-radius: 3px; }
+/* Zelfde kaartstijl en marges als de andere blokken: rand 1 px, radius van een kaart, binnenmarge
+   van een kaart (24 px, 16 px op de telefoon) en 24 px tussen de onderdelen. De gele streep zit
+   boven de kicker, zodat de inhoud gelijk uitlijnt met de kaarten eronder. */
+.ri-held { margin: 0; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 24px; padding: var(--kaart-padding); background: var(--ink); color: var(--wit); border: 1px solid var(--ink); border-radius: var(--radius-card); }
+.ri-held--enkel { grid-template-columns: minmax(0, 1fr); }
+.ri-held-kicker { display: inline-flex; align-items: center; gap: 10px; }
+.ri-held-kicker::before { content: ''; width: 24px; height: 2px; background: var(--yellow); }
 .ri-held-links { min-width: 0; }
 .ri-held-kicker { font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--yellow); }
 .ri-held-zin { margin: 10px 0 0; font-family: var(--font-serif); font-size: clamp(22px, 3.2vw, 32px); font-weight: 700; line-height: 1.2; color: var(--wit); }
@@ -52,5 +58,5 @@ const datum = (d: string | null) => (d ? new Intl.DateTimeFormat('nl-NL', { day:
 .ri-held-feit-tekst { font-size: var(--fs-meta); color: var(--wit-70); }
 .ri-held-voet { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 16px; padding-top: 14px; border-top: 1px solid var(--wit-16); font-size: var(--fs-meta); color: var(--wit-70); }
 .ri-held-voet span { display: inline-flex; align-items: center; gap: 6px; }
-@media (max-width: 900px) { .ri-held { grid-template-columns: minmax(0, 1fr); gap: 20px; padding: 22px 20px; } }
+@media (max-width: 900px) { .ri-held { grid-template-columns: minmax(0, 1fr); gap: 20px; } }
 </style>

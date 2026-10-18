@@ -117,7 +117,7 @@ useHead({ title: 'Dagstart · Dealtrace' })
       <PaginaKop helpartikel="dagstart">
         <template #kicker><span class="kicker kicker--streep" data-test="ds-kicker">{{ d.kicker }}</span></template>
         <template #titel><h1 class="title title--groot" data-test="ds-titel">{{ d.titel }}</h1></template>
-        <template #uitleg><p class="subtitle subtitle--groot" data-test="ds-lede">{{ d.lede }}</p></template>
+        <template #uitleg><p class="subtitle subtitle--groot" :class="{ 'ds-motivatie': d.ledeMotivatie }" data-test="ds-lede">{{ d.lede }}</p></template>
         <template #acties>
           <FunctieLink to="/agenda" class="dd-actie dd-actie--secundair"><Icoon naam="Calendar" class="dd-actie-icoon" />Agenda</FunctieLink>
           <span class="ds-werkplek-rij"><span class="pil pil--grijs ds-werkplek" data-test="ds-werkplek">{{ d.modus === 'buiten' ? 'Buitendienst' : 'Binnendienst' }} · je werkplek</span></span>
@@ -242,6 +242,7 @@ useHead({ title: 'Dagstart · Dealtrace' })
 </template>
 
 <style scoped>
+.ds-motivatie { font-family: var(--font-serif); font-style: italic; color: var(--ink-soft, var(--muted)); }
 .ds { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
 .ds-zij { display: grid; gap: 16px; min-width: 0; }
 .ds-dag { min-width: 0; }

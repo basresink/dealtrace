@@ -3,6 +3,7 @@
 // meteen iets in de week erna; "Kies opnieuw" maakt de test herhaalbaar. Fictieve data.
 import { expect, test } from '@playwright/test'
 import { ga, login } from './hulp'
+import { motivatieVanDeDag } from '../../shared/motivatie'
 
 test.describe.configure({ timeout: 120_000 })
 
@@ -110,6 +111,9 @@ test.describe('Weekstart en dagstart', () => {
     const dag = volgendeWerkdag()
     await ga(page, `/dagstart?dag=${dag}`)
     await expect(page.getByTestId('ds-titel')).toHaveText('Je dag staat klaar.')
+    // Onder de titel de motiverende zin van de dag, niet meer het tijdstip van indelen.
+    await expect(page.getByTestId('ds-lede')).toHaveText(motivatieVanDeDag(dag))
+    await expect(page.getByTestId('ds-lede')).not.toContainText('Ingedeeld om')
     await expect(page.getByTestId('ds-bereik')).toContainText('Wanneer neemt jouw doelgroep op?')
     await expect(page.getByTestId('ds-bereik-meta')).toContainText('eigen belpoging')
     await expect(page.getByTestId('ds-bel-uitleg')).not.toBeEmpty()

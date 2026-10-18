@@ -44,7 +44,7 @@ describe('functies per niveau', () => {
   it('een afwijking voor deze organisatie gaat voor de standaard en is gemarkeerd', () => {
     const eigen: FunctieRegel[] = [...stand, { functie: 'nav.inzichten', niveau: 'beginner', aan: true, organisationId: 'org-a' }]
     const f = niveauOverzicht(org, eigen).groepen.flatMap((g) => g.functies).find((x) => x.sleutel === 'nav.inzichten')!
-    expect(f.cellen.beginner).toEqual({ aan: true, afwijking: true })
+    expect(f.cellen.beginner).toMatchObject({ aan: true, afwijking: true })
     expect(f.cellen.gevorderd.afwijking).toBe(false)
     expect(niveauOverzicht(org, eigen).afwijkingen).toBe(1)
     // Een afwijking voor een andere organisatie telt niet.

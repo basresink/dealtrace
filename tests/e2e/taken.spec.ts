@@ -142,7 +142,7 @@ test.describe('inzichten', () => {
     await page.request.post('/api/motor/run', { data: {} })
     await login(page, 'u-03')
     await ga(page, '/inzichten?gelezen=alle')
-    await expect(page.getByTestId('inzichten-titel')).toHaveText('Wat speelt er bij je accounts?')
+    await expect(page.getByTestId('inzichten-titel')).toHaveText('Wat speelt er bij je prospects?')
     await expect(page.getByTestId('inzichten-aantal')).toHaveText(/^\d+ inzicht(en)?$/)
     await expect(page.getByText('Klik op een kaart voor de volledige context')).toBeVisible()
     const kaarten = page.locator('[data-test=inzichten] .inzicht-kaart')

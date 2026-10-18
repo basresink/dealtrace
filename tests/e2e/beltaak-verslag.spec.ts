@@ -127,16 +127,13 @@ test.describe('afspraak plannen: type afspraak in groepen', () => {
 
     // Een meeting: online of telefonisch, geen bezoek.
     await soort.selectOption({ label: 'Belafspraak' })
-    await expect(page.getByTestId('pa-vorm-telefoon')).toBeVisible()
-    await expect(page.getByTestId('pa-vorm-bezoek')).toHaveCount(0)
+    await expect(page.getByTestId('pa-soort')).toHaveAttribute('data-vorm', 'telefoon')
     await soort.selectOption({ label: 'Online meeting' })
-    await expect(page.getByTestId('pa-vorm-online')).toBeVisible()
+    await expect(page.getByTestId('pa-soort')).toHaveAttribute('data-vorm', 'online')
 
     // Een afspraak uit de groep Afspraak is een bezoek op locatie, met de route.
     await soort.selectOption({ label: 'Gepland bezoek' })
-    await expect(page.getByTestId('pa-vorm-bezoek')).toBeVisible()
-    await expect(page.getByTestId('pa-vorm-online')).toHaveCount(0)
-    await expect(page.getByTestId('pa-vorm-telefoon')).toHaveCount(0)
+    await expect(page.getByTestId('pa-soort')).toHaveAttribute('data-vorm', 'bezoek')
     await expect(page.getByTestId('pa-uitleg')).toContainText('route')
     await page.getByTestId('pa-datum').fill(dagOver(74))
     await page.getByTestId('pa-start').fill('09:30')

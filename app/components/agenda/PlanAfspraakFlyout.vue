@@ -37,12 +37,6 @@ const groepen = computed(() => (['bezoek', 'meeting'] as Categorie[]).map((c) =>
   categorie: c, label: CATEGORIE_LABEL[c],
   soorten: soorten.value.filter((s) => categorieVan(s) === c).sort((a, b) => plek(a.slug) - plek(b.slug) || a.naam.localeCompare(b.naam, 'nl')),
 })).filter((g) => g.soorten.length))
-/** De vorm die uit het type volgt, als actielabel (zelfde label als in Taken en op de accountkaart). */
-const VORM_ACTIE: Record<string, { waarde: string; tekst: string; uitleg: string }> = {
-  bezoek: { waarde: 'bezoek', tekst: 'Bezoek op locatie', uitleg: 'Een afspraak op locatie: komt op de route van die dag.' },
-  online: { waarde: 'online', tekst: 'Online', uitleg: 'Een meeting op afstand via een meetinglink.' },
-  telefoon: { waarde: 'bellen', tekst: 'Telefonisch', uitleg: 'Een meeting op afstand: je belt op het afgesproken moment.' },
-}
 const intern = computed(() => soort.value?.type === 'intern')
 const voorgesteldeTitel = computed(() => soort.value ? (klant.value ? `${soort.value.naam} · ${klant.value.naam}` : soort.value.naam) : '')
 
@@ -189,15 +183,10 @@ async function plan() {
           <SnelContact :account="klant ? { id: klant.id, naam: klant.naam } : null" prefix="pa-nc" :geen-contacten="!klantContacten.length" @gemaakt="nieuwContact" />
 
           <label class="veld"><span class="veld-label">Type afspraak <span class="veld-verplicht">*</span></span>
-            <select v-model="f.meetingsoortId" class="invoer" required data-test="pa-soort">
+            <select v-model="f.meetingsoortId" class="invoer" required :data-vorm="soort ? f.vorm : undefined" data-test="pa-soort">
               <optgroup v-for="g in groepen" :key="g.categorie" :label="g.label" :data-test="`pa-groep-${g.categorie}`"><option v-for="s in g.soorten" :key="s.id" :value="s.id" :data-test="`pa-soort-${s.slug}`">{{ s.naam }}</option></optgroup>
             </select>
           </label>
-          <p v-if="soort?.data?.doel" class="veld-uitleg pa-krap">{{ soort.data.doel }}</p>
-          <div v-if="soort" class="pa-vorm" data-test="pa-vorm">
-            <Label soort="actie" :waarde="VORM_ACTIE[f.vorm]!.waarde" :tekst="VORM_ACTIE[f.vorm]!.tekst" :data-test="`pa-vorm-${f.vorm}`" />
-            <p class="veld-uitleg" data-test="pa-vorm-uitleg">{{ VORM_ACTIE[f.vorm]!.uitleg }} De vorm volgt uit het type.</p>
-          </div>
 
           <label class="veld"><span class="veld-label">Titel <span class="veld-verplicht">*</span></span>
             <input :value="f.titel" class="invoer" required maxlength="140" placeholder="Bijvoorbeeld: Kwartaalbespreking leverplan" data-test="pa-titel" @input="typTitel">
@@ -249,8 +238,6 @@ async function plan() {
 .pa-body { display: flex; flex-direction: column; gap: 16px; }
 .pa-body > .veld { margin: 0; }
 .pa-krap { margin-top: -8px; }
-.pa-vorm { margin-top: -8px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
-.pa-vorm .veld-uitleg { margin: 0; }
 .pa-keuze { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 4px 4px 4px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface); }
 .pa-keuze-tekst { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pa-wis { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex-shrink: 0; border: 0; background: none; color: var(--muted); cursor: pointer; border-radius: var(--radius); }

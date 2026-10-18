@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { RICHTING_TABS, bevestigdStand, doelVoortgang, eenheidTekst, kanaalIcoon, kerncijfers, tijdlijn } from '../../shared/richting'
+import { RICHTING_TABS, bevestigdStand, ingevuldeTabs, tabIngevuld, doelVoortgang, eenheidTekst, kanaalIcoon, kerncijfers, tijdlijn } from '../../shared/richting'
 
 // Richting verbeterd: kerncijfers, voetregel, tijdlijn en de vaste teksten per tabblad.
 describe('richting', () => {
@@ -31,5 +31,15 @@ describe('richting', () => {
     expect(eenheidTekst('aantal')).toBe('')
     expect(eenheidTekst('procent')).toBe(' procent')
     expect([kanaalIcoon('E-mail'), kanaalIcoon('Bezoek'), kanaalIcoon('Telefoon')]).toEqual(['Mail', 'MapPin', 'Phone'])
+  })
+  it('tabIngevuld: een tabblad zonder bevestigde tekst of regel is leeg', () => {
+    expect(ingevuldeTabs({})).toEqual([])
+    expect(tabIngevuld('verhaal', { teksten: [{ sleutel: 'bedrijfsverhaal', tekst: '  ' }] })).toBe(false)
+    expect(tabIngevuld('verhaal', { teksten: [{ sleutel: 'verhaal', tekst: 'Per branche' }] })).toBe(true)
+    expect(tabIngevuld('richting', { ambitiedoelen: [{}] })).toBe(true)
+    expect(tabIngevuld('belofte', { teksten: [{ sleutel: 'ambitie', tekst: 'Groei' }] })).toBe(false)
+    expect(tabIngevuld('winpunten', { winpunten: [{ actief: false }] })).toBe(false)
+    const st = { teksten: [{ sleutel: 'kernbelofte', tekst: 'Op tijd' }], concurrenten: [{}], terugkomregels: [{}] }
+    expect(ingevuldeTabs(st).map((t) => t.k)).toEqual(['belofte', 'concurrenten', 'terugkomen'])
   })
 })

@@ -54,6 +54,8 @@ export interface OrganisatieContext {
   features: { aan?: string[]; uit?: string[] }
   /** "Iedereen ziet alles" (4.2). */
   iedereenAlles: boolean
+  /** Keuzes van de beheerder op Instellingen, Niveaus: per functie en niveau aan of uit, alleen wat afwijkt van de standaard. */
+  keuzes?: Record<string, Partial<Record<Niveau, boolean>>>
 }
 
 /** Eén regel uit de tabel functies_per_niveau. */

@@ -5,7 +5,8 @@
 // Pauzeer en Stop. Een open beltaak opent het taakvenster.
 import { OVERZICHT_LABEL, type OverzichtStand } from '~~/shared/opvolgreeks'
 
-const props = defineProps<{ reeksId: string }>()
+// zonderAccount: in het venster Opvolgreeksen op de accountkaart staat de prospect al in de kop.
+const props = defineProps<{ reeksId: string; zonderAccount?: boolean }>()
 const emit = defineEmits<{ gewijzigd: [] }>()
 const taakId = ref<string | null>(null)
 // useFetch met een vaste sleutel: de server geeft de reeks mee in de payload, zodat de client hetzelfde rendert (geen hydration mismatch).
@@ -37,7 +38,7 @@ const stopTekst = computed(() => {
       <header class="rd-kop">
         <div class="rd-kop-tekst">
           <p class="kicker">Opvolgreeks · {{ OVERZICHT_LABEL[(d.stand ?? 'loopt') as OverzichtStand] }}</p>
-          <h2 class="rd-titel"><NuxtLink :to="`/accounts/${d.account.id}`" class="tekst-link">{{ d.account.naam }}</NuxtLink> · {{ r.naam }}</h2>
+          <h2 class="rd-titel"><template v-if="!zonderAccount"><NuxtLink :to="`/accounts/${d.account.id}`" class="tekst-link">{{ d.account.naam }}</NuxtLink> · </template>{{ r.naam }}</h2>
         </div>
         <span class="pil" :class="pil" data-test="rd-status">{{ r.stand.label }}</span>
       </header>

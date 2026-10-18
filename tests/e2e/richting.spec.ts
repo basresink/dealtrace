@@ -22,6 +22,9 @@ for (const breedte of [1280, 390]) {
       await expect(page.getByTestId('ri-held-kernzin')).not.toBeEmpty()
       await expect(page.getByTestId('ri-kerncijfers').locator('[data-cijfer]')).toHaveCount(4)
       await expect(page.getByTestId('ri-held-voet')).toContainText(/\d+ van \d+ onderdelen bevestigd/)
+      // Het label "Eigen inrichting" staat niet meer in de kop.
+      await expect(page.getByTestId('paginakop')).not.toContainText(/eigen (in)?richting/i)
+      await expect(page.getByText(/eigen (in)?richting/i)).toHaveCount(0)
 
       const tabs = page.getByRole('tab')
       await expect(tabs).toHaveText([/^Verhaal$/, /^Richting$/, /^Belofte$/, /^Branches\s*\d+$/, /^Concurrenten\s*\d+$/, /^Winpunten\s*\d+$/, /^Terugkomen\s*\d+$/])
@@ -92,5 +95,56 @@ test.describe('Richting per niveau', () => {
     await expect(page.locator('[data-concurrent]').first()).toBeVisible()
     await expect(page.getByTestId('concurrentiekaart')).toHaveCount(0)
     await expect(page.getByTestId('stel-voor')).toHaveCount(0)
+  })
+})
+
+// Een leeg onderdeel staat niet op Richting: geen tabblad, geen kerncijfer, geen lege kop. Het
+// leesmodel wordt in de browser aangepast (client-navigatie), zodat de gedeelde database gelijk blijft.
+test.describe('Richting toont alleen ingevulde onderdelen', () => {
+  test.use({ viewport: { width: 1280, height: 900 } })
+
+  async function metStand(page: Page, gebruiker: string, pas: (d: any) => void) {
+    await login(page, gebruiker)
+    await ga(page, '/taken')
+    await page.route('**/api/richting', async (route) => {
+      const res = await route.fetch()
+      const d = await res.json()
+      pas(d)
+      await route.fulfill({ response: res, json: d })
+    })
+    await page.locator('a[href="/richting"]').first().click()
+    await page.waitForURL(/\/richting/)
+  }
+
+  test('lege tabbladen ontbreken, de rest blijft', async ({ page }) => {
+    await metStand(page, 'u-07', (d) => {
+      d.stand.terugkomregels = []
+      d.stand.concurrenten = []
+      d.stand.teksten = d.stand.teksten.filter((t: any) => !['ambitie', 'visie', 'missie'].includes(t.sleutel))
+      d.stand.ambitiedoelen = []
+    })
+    await expect(page.getByTestId('ri-held')).toBeVisible()
+    await expect(page.getByRole('tab')).toHaveText([/^Verhaal$/, /^Belofte$/, /^Branches\s*\d+$/, /^Winpunten\s*\d+$/])
+    await expect(page.getByTestId('tab-terugkomen')).toHaveCount(0)
+    await expect(page.getByTestId('tab-concurrenten')).toHaveCount(0)
+    await expect(page.getByTestId('tab-richting')).toHaveCount(0)
+    await expect(page.locator('[data-cijfer="terugkomregels"]')).toHaveCount(0)
+    await expect(page.locator('[data-cijfer="concurrenten"]')).toHaveCount(0)
+    await expect(page.locator('[data-cijfer="branches"]')).toBeVisible()
+  })
+
+  test('alles leeg: ontworpen lege staat met de weg naar de inrichting voor wie mag inrichten', async ({ page }) => {
+    const leeg = (d: any) => { d.stand = { teksten: [], branches: [], concurrenten: [], winpunten: [], fasen: [], terugkomregels: [], ambitiedoelen: [] }; d.branches = []; d.golden = {} }
+    await metStand(page, 'u-06', leeg)
+    await expect(page.getByTestId('vv-leeg')).toBeVisible()
+    await expect(page.getByTestId('ri-tabs')).toHaveCount(0)
+    await expect(page.getByTestId('ri-held')).toHaveCount(0)
+    await expect(page.getByTestId('leeg-inrichten')).toHaveAttribute('href', '/instellingen/verkoopverhaal')
+  })
+
+  test('alles leeg voor wie alleen leest: geen knop naar de inrichting', async ({ page }) => {
+    await metStand(page, 'u-02', (d) => { d.stand = { teksten: [], branches: [], concurrenten: [], winpunten: [], fasen: [], terugkomregels: [], ambitiedoelen: [] }; d.branches = []; d.golden = {} })
+    await expect(page.getByTestId('vv-leeg')).toBeVisible()
+    await expect(page.getByTestId('leeg-inrichten')).toHaveCount(0)
   })
 })

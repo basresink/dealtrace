@@ -1,11 +1,12 @@
 <script setup lang="ts">
 // Start reeks (F7) vanaf /opvolgreeksen: kies een prospect, dan een sjabloon, de contactpersoon en het mandaat. Een
 // prospect met een lopende reeks, op nee, overgedragen of gedeactiveerd krijgt geen nieuwe reeks; de server zegt
-// waarom. Na het starten opent de reeks in de detailkolom.
+// waarom. Na het starten opent de reeks in de detailkolom. Met `account` (Meer, Opvolgreeksen op de accountkaart)
+// staat de prospect vast en vooraf gekozen; `bovenop` legt het venster boven een ander venster.
 import { REEKS_KANAAL_LABEL, REEKS_MANDAAT_LABEL } from '~~/shared/opvolgreeks'
 import { CONTACTROL_LABEL, type ContactRol } from '~~/shared/contactgegevens'
 
-const props = defineProps<{ open: boolean }>()
+const props = defineProps<{ open: boolean; account?: { id: string; naam: string } | null; bovenop?: boolean }>()
 const emit = defineEmits<{ sluit: []; gestart: [id: string] }>()
 const toast = useToast()
 const gekozen = ref<{ id: string; naam: string } | null>(null)
@@ -13,7 +14,11 @@ const v = ref<any>(null)
 const laadt = ref(false)
 const bezig = ref(false)
 const start = reactive({ sjabloonId: '', contactId: '', mandaat: 'C' as 'B' | 'C' })
-watch(() => props.open, (o) => { if (o) { gekozen.value = null; v.value = null; Object.assign(start, { sjabloonId: '', contactId: '', mandaat: 'C' }) } })
+watch(() => props.open, (o) => {
+  if (!o) return
+  gekozen.value = null; v.value = null; Object.assign(start, { sjabloonId: '', contactId: '', mandaat: 'C' })
+  if (props.account) void kies(props.account)
+}, { immediate: true })
 const zoek = (q: string) => zoekAccounts(q, 'prospect')
 async function kies(a: { id: string; naam: string }) {
   gekozen.value = { id: a.id, naam: a.naam }
@@ -47,15 +52,15 @@ opslag.volg(() => [gekozen.value?.id ?? null, start])
 </script>
 
 <template>
-  <FlyoutShell v-if="open" open titel-id="sr-start-titel" data-test="reeks-start-flyout" :opslag="opslag" :ai="{ accountId: gekozen?.id ?? null, label: gekozen?.naam ?? 'Opvolgreeks', voorstellen: ['Welk sjabloon past bij deze prospect?', 'Met wie start ik de reeks?', 'Wanneer stop ik de reeks?'] }" @sluit="emit('sluit')" @bewaar="doeStart">
-      <template #kop><span class="fo-kicker">Opvolgreeks</span><h2 id="sr-start-titel" class="fo-titel">Start reeks</h2><p class="fo-meta">Kies een prospect en een sjabloon. De reeks stopt vanzelf zodra de prospect reageert.</p></template>
+  <FlyoutShell v-if="open" open titel-id="sr-start-titel" data-test="reeks-start-flyout" :overlay-klasse="{ 'fs-overlay--top': bovenop }" :opslag="opslag" :ai="{ accountId: gekozen?.id ?? null, label: gekozen?.naam ?? 'Opvolgreeks', voorstellen: ['Welk sjabloon past bij deze prospect?', 'Met wie start ik de reeks?', 'Wanneer stop ik de reeks?'] }" @sluit="emit('sluit')" @bewaar="doeStart">
+      <template #kop><span class="fo-kicker">Opvolgreeks</span><h2 id="sr-start-titel" class="fo-titel">Start reeks</h2><p class="fo-meta">{{ account ? `Kies een sjabloon en een contact voor ${account.naam}.` : 'Kies een prospect en een sjabloon.' }} De reeks stopt vanzelf zodra de prospect reageert.</p></template>
         <form id="sr-start-form" class="fs-form" @submit.prevent="doeStart">
         <div class="fo-body">
           <div class="veld">
             <span class="veld-label">Prospect</span>
             <div v-if="gekozen" class="rsf-gekozen" data-test="rsf-gekozen">
               <span>{{ gekozen.naam }}</span>
-              <button type="button" class="dd-act dd-act--icoon" aria-label="Andere prospect kiezen" @click="gekozen = null; v = null"><Icoon naam="X" :grootte="14" /></button>
+              <button v-if="!account" type="button" class="dd-act dd-act--icoon" aria-label="Andere prospect kiezen" @click="gekozen = null; v = null"><Icoon naam="X" :grootte="14" /></button>
             </div>
             <ZoekKiezer v-else :zoek="zoek" placeholder="Zoek een prospect op naam" label="Zoek een prospect" data-test="rsf-zoek" :optie-test="(t) => `rsf-kies-${t.id}`" :sub="accountSub" leeg="Geen prospect gevonden." @kies="kies" />
           </div>

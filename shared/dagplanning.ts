@@ -7,6 +7,7 @@
 import { isWerkdag, nlMoment, nlTijdstip, type WerkdagInstelling } from './datum'
 import type { Dagplan, PlanBlok } from './dagritme'
 import { naStilte, type MeldingInstelling } from './meldingsregels'
+import { motivatieVanDeDag } from './motivatie'
 
 export interface DagplanningVoorkeur { automatisch: boolean; tijd: string }
 export const DAGPLANNING_STANDAARD: DagplanningVoorkeur = { automatisch: false, tijd: '07:00' }
@@ -201,8 +202,8 @@ export function herplan(oud: PlanItem[], nieuw: PlanItem[], nu: Date, naar: Door
   return uit
 }
 
-/** De kop van de dagstart als de Dagplanner de dag indeelde. */
-export function dagplanningKop(p: { geplandOp: string; herplandOp?: string | null; wijzigingen: number; samenvatting: string }): { titel: string; lede: string } {
-  if (p.herplandOp && p.wijzigingen) return { titel: 'Je dag is opnieuw ingedeeld.', lede: `Herpland om ${hhmm(p.herplandOp)} · ${p.wijzigingen === 1 ? '1 wijziging' : `${p.wijzigingen} wijzigingen`}` }
-  return { titel: 'Je dag staat klaar.', lede: `Ingedeeld om ${hhmm(p.geplandOp)} · ${p.samenvatting}` }
+/** De kop van de dagstart als de Dagplanner de dag indeelde. Zonder wijzigingen staat onder de titel de motiverende zin van de dag. */
+export function dagplanningKop(p: { dag: string; herplandOp?: string | null; wijzigingen: number }): { titel: string; lede: string; motivatie: boolean } {
+  if (p.herplandOp && p.wijzigingen) return { titel: 'Je dag is opnieuw ingedeeld.', lede: `Herpland om ${hhmm(p.herplandOp)} · ${p.wijzigingen === 1 ? '1 wijziging' : `${p.wijzigingen} wijzigingen`}`, motivatie: false }
+  return { titel: 'Je dag staat klaar.', lede: motivatieVanDeDag(p.dag), motivatie: true }
 }

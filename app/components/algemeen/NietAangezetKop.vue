@@ -2,7 +2,7 @@
 // Directe link naar een pagina die niet aanstaat: de paginakop met kicker
 // "Nog niet aangezet" en dezelfde uitleg als de flyout; nooit een foutpagina (6.1).
 import { functie } from '~~/shared/functies'
-import { NIVEAU_LABEL, ROL_LABEL, type Niveau, type Rol } from '~~/shared/types'
+import { NIVEAU_LABEL, NIVEAUS, ROL_LABEL, type Niveau, type Rol } from '~~/shared/types'
 const props = defineProps<{ sleutel: string }>()
 const { me, functie: meFunctie } = useMe()
 const { magNaar } = useFunctie()
@@ -17,8 +17,11 @@ const rolTekst = computed(() => {
 // Kanalen: de afkoeling staat op Terugkomen; link erheen als je die pagina mag zien.
 const verder = computed(() => (props.sleutel === 'instellingen.kanalen' && magNaar('/instellingen/terugkomen') ? { to: '/instellingen/terugkomen?tab=afkoeling', tekst: 'Bekijk de afkoeling bij Terugkomen' } : null))
 // Zonder niveau waarop hij aangaat, staat de functie voor de hele organisatie uit (de founder zette hem uit).
+// Staat hij aan bij een lager niveau dan het jouwe, dan zette je organisatie hem voor jouw niveau uit.
 const niveau = computed(() => {
   const n = meFunctie(props.sleutel)?.aanVanaf as Niveau | null | undefined
+  const mijn = me.value?.gebruiker.niveau as Niveau | undefined
+  if (n && mijn && NIVEAUS.indexOf(n) <= NIVEAUS.indexOf(mijn)) return null
   return n ? NIVEAU_LABEL[n] : null
 })
 </script>

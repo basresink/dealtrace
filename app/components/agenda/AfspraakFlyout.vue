@@ -154,15 +154,14 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
     </template>
 
         <div v-if="a" class="fo-body fo-body--formulier">
-          <!-- Wijzigen: type, titel, moment, duur, contact, locatie en notitie. De vorm volgt uit het type. -->
+          <!-- Wijzigen: type, titel, moment, duur, contact, locatie en notitie. De vorm volgt intern uit het type (data-vorm). -->
           <article v-if="verplaatsen" class="fo-blok fo-blok--accent af-wijzig" data-test="af-verplaats-blok">
             <header class="fo-blok-kop"><h3 class="fo-blok-titel">Wijzig de afspraak</h3></header>
             <label class="veld"><span class="veld-label">Type afspraak</span>
-              <select v-model="vp.soortId" class="invoer" data-test="af-vp-soort">
+              <select v-model="vp.soortId" class="invoer" :data-vorm="vpVorm" data-test="af-vp-soort">
                 <optgroup v-for="g in (['bezoek', 'meeting'] as const)" :key="g" :label="CATEGORIE_LABEL[g]"><option v-for="s in kiesbareSoorten.filter((x) => x.groep === g)" :key="s.id" :value="s.id" :data-test="`af-vp-soort-${s.slug}`">{{ s.naam }}</option></optgroup>
               </select>
             </label>
-            <p class="af-vorm" data-test="af-vp-vorm"><Label soort="actie" :waarde="vpVorm === 'telefoon' ? 'bellen' : vpVorm" :tekst="VORM[vpVorm]" /><span class="meta">De vorm volgt uit het type.</span></p>
             <label class="veld"><span class="veld-label">Titel</span><input v-model="vp.titel" class="invoer" :placeholder="a.titel" data-test="af-vp-titel"></label>
             <div class="af-rij3">
               <label class="veld"><span class="veld-label">Datum <span class="veld-verplicht">*</span></span><input v-model="vp.datum" type="date" class="invoer" required data-test="af-vp-datum"></label>
@@ -310,7 +309,6 @@ const morgen = computed(() => new Date(Date.now() + 864e5).toISOString().slice(0
 .af-rij3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .af-wijzig { display: flex; flex-direction: column; gap: 14px; }
 .af-wijzig .veld { margin: 0; }
-.af-vorm { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: -6px 0 0; }
 @media (max-width: 720px) {
   .af-def { grid-template-columns: 1fr; gap: 2px; }
   .af-rij3 { grid-template-columns: 1fr 1fr; }

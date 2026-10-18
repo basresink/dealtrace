@@ -69,8 +69,8 @@ defineExpose({ refresh })
 <template>
   <div class="if">
     <!-- Op /inzichten de standaard paginakop (zoeken, AI en hulp vooraan); als tabblad alleen de knoppen. -->
-    <PaginaKop v-if="props.metKop" kicker="Accounts · Inzichten" uitleg="Interne en externe inzichten uit je CRM, nieuws, vacatures, KvK en bedrijfssites, gefilterd op je accounts. Elk inzicht heeft een AI-context en directe acties." helpartikel="inzichten">
-      <template #titel><h1 class="title title--groot" data-test="inzichten-titel">Wat speelt er bij je accounts?</h1></template>
+    <PaginaKop v-if="props.metKop" kicker="Prospects · Inzichten" uitleg="Interne en externe inzichten uit je CRM, nieuws, vacatures, KvK en bedrijfssites, gefilterd op je prospects. Elk inzicht heeft een AI-context en directe acties." helpartikel="inzichten">
+      <template #titel><h1 class="title title--groot" data-test="inzichten-titel">Wat speelt er bij je prospects?</h1></template>
       <template #acties>
         <button v-if="magMetBron" type="button" class="dd-actie dd-actie--secundair" data-test="inzicht-met-bron-knop" @click="metBron = true"><Icoon naam="Plus" class="dd-actie-icoon" />Inzicht</button>
         <button type="button" class="dd-actie dd-actie--secundair" :class="{ 'if-filters--aan': filtersOpen || actieveFilters }" :aria-expanded="filtersOpen" data-test="inzicht-filters" @click="filtersOpen = !filtersOpen">

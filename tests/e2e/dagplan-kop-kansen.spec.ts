@@ -85,7 +85,7 @@ for (const breedte of [1280, 900]) {
     await expect(pa).toBeVisible()
     await expect(page.getByTestId('pa-klant-gekozen')).toContainText(kans.naam)
     await expect(page.getByTestId('pa-datum')).toHaveValue(dag)
-    await expect(page.getByTestId('pa-vorm-bezoek')).toBeVisible()
+    await expect(page.getByTestId('pa-soort')).toHaveAttribute('data-vorm', 'bezoek')
     await expect(page.getByTestId('pa-contact-gekozen')).toContainText(kans.contact.naam)
     await expect(page.getByTestId('pa-aanleiding')).toHaveValue(/Inloopbezoek/)
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(breedte)

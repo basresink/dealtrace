@@ -64,8 +64,9 @@ Een reeks is een vaste volgorde van stappen per dag. Er zijn drie startsjablonen
 
 ### Waar je een reeks start
 
-Een reeks start je op vier plekken:
+Een reeks start je op vijf plekken:
 
+- op de accountkaart onder **Meer**, **Opvolgreeksen**: de prospect staat al vast, je kiest het sjabloon en het contact;
 - onder **Opvolgreeks** in het venster Volgen: kies een sjabloon, de contactpersoon en het mandaat, en kies **Start reeks**;
 - op de pagina **Opvolgreeksen** (in de zijbalk onder **Activiteiten**) met **Start reeks**: kies eerst de prospect;
 - in **Rond af** van een taak: kies je **Voicemail ingesproken** of **Gesproken, later**, dan staat onder de uitkomst **Opvolgreeks starten** met het sjabloon dat bij die uitkomst hoort. Vroeg de prospect om informatie, kies dan **Na informatie**. Kies **Geen reeks** als je niets wilt starten;
@@ -103,6 +104,18 @@ Bij een reactie, afspraak of afmelding komt er een taak **Bel terug** binnen twe
 ### Pauzeren en stoppen met de hand
 
 Met **Pauzeer** zet je de reeks stil; bij **Hervat** schuiven de geplande stappen even ver op. Met **Stop** vallen open stappen weg en gaat het ritme verder waar het was.
+
+### Opvolgreeksen op de accountkaart
+
+Op de accountkaart staat onder **Meer** het kader **Opvolgreeksen**, met in één regel de lopende reeks en de stap waar hij is. Het venster toont bovenaan de lopende reeks: stap x van y, de volgende stap met de datum en het contact. Daaronder staan de stappen per dag met dezelfde knoppen als op de pagina Opvolgreeksen: het mandaat, **Bekijk** voor een concept, **Sla over**, **Reactie ontvangen**, **Pauzeer**, **Hervat** en **Stop**.
+
+### Eerdere reeksen van een prospect
+
+Onder de lopende reeks staan de eerdere reeksen van deze prospect, de nieuwste eerst, met hun uitkomst: de prospect reageerde, er staat een afspraak, een antwoord in de mailbox, een nee, met de hand gestopt of klaar zonder reactie. Klik op een reeks om de stappen terug te zien.
+
+### Start reeks vanaf de accountkaart
+
+Loopt er geen reeks, dan staat onderaan het venster **Start reeks**. De prospect staat al ingevuld; je kiest het sjabloon, de contactpersoon en het mandaat. Er gelden dezelfde regels als elders: één reeks per prospect, geen reeks op een prospect die op nee staat, is overgedragen of gedeactiveerd, en alleen de eigenaar, zijn salesmanager of de beheerder start er een. Mag het niet, dan zegt het venster waarom. Heeft de prospect nog nooit een reeks gehad, dan legt het venster uit wat een reeks doet. Staat Opvolgreeksen voor je uit, dan zie je het kader niet.
 
 ### Hoe vaak Dealtrace bijwerkt
 

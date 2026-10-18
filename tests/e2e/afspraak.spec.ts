@@ -25,7 +25,7 @@ test.describe('afspraakvenster', () => {
     await expect(page.getByTestId('pa-contact-gekozen')).toContainText('Petra Testvathorst')
     // De vorm volgt uit het type: een belafspraak is telefonisch.
     await page.getByTestId('pa-soort').selectOption({ label: 'Belafspraak' })
-    await expect(page.getByTestId('pa-vorm-telefoon')).toBeVisible()
+    await expect(page.getByTestId('pa-soort')).toHaveAttribute('data-vorm', 'telefoon')
     await page.getByTestId('pa-titel').fill(titel)
     await page.getByTestId('pa-datum').fill(dagOver(70))
     await page.getByTestId('pa-start').fill('16:30')

@@ -5,6 +5,7 @@
 // auditregel in dezelfde transactie.
 import { sql } from 'drizzle-orm'
 import { bereikVoorDoelgroep, bouwWeekstart, planDag, planModus, watSchoof, weekVan, type BereikPoging, type PlanBlok, type VastPunt } from '../../shared/dagritme'
+import { motivatieVanDeDag } from '../../shared/motivatie'
 import { blokkenMetItems, dagplanningKop, dagplanningVoorkeur, SCHRIJFT_IN_AGENDA, type PlanItem, type VastStand } from '../../shared/dagplanning'
 import { DAGRITME_MAILS, DAGRITME_MAIL_ROUTE, dagstartMail, mailAanDeBeurt, mailSleutel, mailVoorkeuren, weekreviewMail, weekstartMail, type DagritmeMail } from '../../shared/dagritmeMail'
 import { isWerkdag, nlMoment, nlTijdstip, plusDagen, type WerkdagInstelling } from '../../shared/datum'
@@ -460,8 +461,8 @@ export async function laadDagstart(tx: Tx, gebruikerId: string, nu = new Date(),
     const items = (dp.data?.items ?? []) as PlanItem[]
     const blokken = blokkenMetItems(plan, items)
     const schoof = dagplanning.wijzigingen.flatMap((x) => x.regels)
-    const kop = dagplanningKop({ geplandOp: iso(dp.gepland_op)!, herplandOp: iso(dp.herpland_op), wijzigingen: dagplanning.wijzigingen.length ? dagplanning.wijzigingen[dagplanning.wijzigingen.length - 1]!.regels.filter((r) => r !== 'Je planning hoefde niet te veranderen.' && r !== 'Niets schoof naar een andere dag.').length : 0, samenvatting: dp.data?.samenvatting ?? plan.samenvatting })
-    return { ...basis, modus: dp.modus as 'buiten' | 'binnen', titel: kop.titel, lede: kop.lede, plan: { ...plan, blokken, voorstellen: [], belUur: dp.data?.belUur ?? plan.belUur, belUitleg: dp.data?.belUitleg ?? plan.belUitleg }, schoof }
+    const kop = dagplanningKop({ dag, herplandOp: iso(dp.herpland_op), wijzigingen: dagplanning.wijzigingen.length ? dagplanning.wijzigingen[dagplanning.wijzigingen.length - 1]!.regels.filter((r) => r !== 'Je planning hoefde niet te veranderen.' && r !== 'Niets schoof naar een andere dag.').length : 0 })
+    return { ...basis, modus: dp.modus as 'buiten' | 'binnen', titel: kop.titel, lede: kop.lede, ledeMotivatie: kop.motivatie, plan: { ...plan, blokken, voorstellen: [], belUur: dp.data?.belUur ?? plan.belUur, belUitleg: dp.data?.belUitleg ?? plan.belUitleg }, schoof }
   }
   // De eerste indeling van de dag blijft bewaard; daartegen zie je wat er schoof.
   let snap = await moment(tx, g.id, 'dagstart', dag)
@@ -474,7 +475,8 @@ export async function laadDagstart(tx: Tx, gebruikerId: string, nu = new Date(),
   return {
     ...basis, modus: bron.modus,
     titel: schoof.length ? 'Je dag is opnieuw ingedeeld.' : 'Je dag staat klaar.',
-    lede: schoof.length ? `Herpland om ${hhmm(nu.toISOString())} · ${schoof.length === 1 ? '1 wijziging' : `${schoof.length} wijzigingen`}` : `${snap?.op ? `Ingedeeld om ${hhmm(snap.op)}` : 'Voorstel'} · ${plan.samenvatting}`,
+    lede: schoof.length ? `Herpland om ${hhmm(nu.toISOString())} · ${schoof.length === 1 ? '1 wijziging' : `${schoof.length} wijzigingen`}` : motivatieVanDeDag(dag),
+    ledeMotivatie: !schoof.length,
     plan, schoof,
   }
 }

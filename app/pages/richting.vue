@@ -5,16 +5,19 @@
 // Elk tabblad opent met zijn status en het blok "Waarom dit ertoe doet". Download concurrentiekaart
 // vanaf Gevorderd, Stel voor bij Expert; inrichten doet de beheerder of salesmanager in Instellingen.
 import { kernzin as eersteZin } from '~~/shared/verkoopverhaal'
-import { CONCURRENT_FILTERS, RICHTING_TABS, RICHTING_TEKST, bevestigdStand, doelVoortgang, eenheidTekst, kerncijfers, type RichtingTab } from '~~/shared/richting'
+import { CONCURRENT_FILTERS, RICHTING_TEKST, bevestigdStand, doelVoortgang, eenheidTekst, ingevuldeTabs, kerncijfers, tabIngevuld, type RichtingTab } from '~~/shared/richting'
 
 const toast = useToast()
 const route = useRoute()
 const router = useRouter()
 const { data } = await useFetch<any>('/api/richting', { default: () => null })
 
-const tab = computed(() => RICHTING_TABS.find((t) => t.k === route.query.tab) ?? RICHTING_TABS[0]!)
-const st = computed(() => data.value?.status?.[tab.value.o] ?? null)
 const stand = computed(() => data.value?.stand ?? {})
+// Alleen ingevulde tabbladen (minstens één bevestigde tekst of regel); een leeg onderdeel toont Richting niet.
+const tabs = computed(() => ingevuldeTabs(stand.value))
+const helemaalLeeg = computed(() => !!data.value?.leeg || !tabs.value.length)
+const tab = computed(() => tabs.value.find((t) => t.k === route.query.tab) ?? tabs.value[0] ?? null)
+const st = computed(() => (tab.value ? data.value?.status?.[tab.value.o] ?? null : null))
 const tekst = (sleutel: string, br: string | null = null) => (stand.value.teksten ?? []).find((t: any) => t.sleutel === sleutel && (t.brancheId ?? null) === br)?.tekst ?? null
 const algemeen = computed(() => (stand.value.teksten ?? []).find((t: any) => t.sleutel === 'bedrijfsverhaal' && !t.brancheId) ?? null)
 const kernzin = computed(() => (algemeen.value ? algemeen.value.kernzin || eersteZin(algemeen.value.tekst) : null))
@@ -31,7 +34,11 @@ const fasen = computed(() => (stand.value.fasen ?? []) as any[])
 const winpunten = computed(() => ((stand.value.winpunten ?? []) as any[]).filter((w) => w.actief))
 const winpuntenIn = (f: string) => winpunten.value.filter((w) => w.faseId === f)
 const regels = computed(() => (stand.value.terugkomregels ?? []) as any[])
-const cijfers = computed(() => kerncijfers(stand.value))
+const CIJFER_TAB: Record<string, RichtingTab> = { branches: 'branches', concurrenten: 'concurrenten', winpunten: 'winpunten', terugkomregels: 'terugkomen' }
+const cijfers = computed(() => kerncijfers(stand.value).filter((c) => tabIngevuld(CIJFER_TAB[c.sleutel] ?? 'verhaal', stand.value)))
+const koers = computed(() => ([['ambitie', 'Ambitie', doelJaar.value ? `Waar staan we in ${doelJaar.value}` : 'Waar we heen willen'], ['visie', 'Visie', 'Wat er verandert in de markt'], ['missie', 'Missie', 'Wat we elke dag doen']] as const)
+  .map(([k, titel, vraag]) => ({ k, titel, vraag, tekst: tekst(k) })).filter((x) => x.tekst))
+const brancheBelofte = computed(() => branches.value.some((b) => tekst('kernbelofte', b.id)))
 const bevestigd = computed(() => bevestigdStand(data.value?.status))
 const doelJaar = computed(() => (stand.value.ambitiedoelen ?? []).map((d: any) => d.jaar).filter(Boolean).sort().at(-1) ?? null)
 const tellers = computed<Record<RichtingTab, number | null>>(() => ({
@@ -40,17 +47,19 @@ const tellers = computed<Record<RichtingTab, number | null>>(() => ({
 
 // Tabbladen: klik of pijltjes (links, rechts, Home, End); de keuze staat in de URL.
 function kies(k: RichtingTab, focus = false) {
-  router.replace({ query: { ...route.query, tab: k === 'verhaal' ? undefined : k } })
+  router.replace({ query: { ...route.query, tab: k === tabs.value[0]?.k ? undefined : k } })
   if (focus) nextTick(() => document.getElementById(`ri-tab-${k}`)?.focus())
 }
 function toets(e: KeyboardEvent) {
   const doel = (e.target as HTMLElement | null)?.id?.replace('ri-tab-', '')
-  const i = Math.max(0, RICHTING_TABS.findIndex((t) => t.k === (doel || tab.value.k)))
-  const n = RICHTING_TABS.length
+  const lijst = tabs.value
+  const i = Math.max(0, lijst.findIndex((t) => t.k === (doel || tab.value?.k)))
+  const n = lijst.length
+  if (!n) return
   const naar = e.key === 'ArrowRight' ? (i + 1) % n : e.key === 'ArrowLeft' ? (i - 1 + n) % n : e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : -1
   if (naar < 0) return
   e.preventDefault()
-  kies(RICHTING_TABS[naar]!.k, true)
+  kies(lijst[naar]!.k, true)
 }
 
 // Concurrenten: filter per soort.
@@ -73,21 +82,25 @@ useHead({ title: 'Richting · Dealtrace' })
   <div v-if="data">
     <PaginaKop :kicker="RICHTING_TEKST.kicker" :titel="RICHTING_TEKST.titel" helpartikel="richting">
       <template #acties>
-        <span class="pil pil--leeg vv-bron" data-test="vv-bron" title="Waar het verhaal vandaan komt">{{ data.bron === 'salesdna' ? `Uit SalesDNA${data.bronBijgewerkt ? ` · bijgewerkt ${datum(data.bronBijgewerkt)}` : ''}` : 'Eigen inrichting' }}</span>
+        <span v-if="data.bron === 'salesdna'" class="pil pil--leeg vv-bron" data-test="vv-bron" title="Waar het verhaal vandaan komt">Uit SalesDNA{{ data.bronBijgewerkt ? ` · bijgewerkt ${datum(data.bronBijgewerkt)}` : '' }}</span>
         <span v-if="data.kan.inrichten && st?.bron === 'salesdna'" class="meta vv-bron" data-test="wijzig-in-salesdna">Wijzigen doe je in SalesDNA</span>
         <FunctieLink v-else-if="data.kan.inrichten" class="dd-act" to="/instellingen/verkoopverhaal" data-test="inrichten">Inrichten</FunctieLink>
       </template>
     </PaginaKop>
     <section class="section section--laatste ri-pagina">
       <div class="container">
-        <LegeStaat v-if="data.leeg" :titel="RICHTING_TEKST.leeg" :tekst="data.kan.inrichten ? 'Klik Inrichten om te beginnen.' : 'Je beheerder richt het in.'" data-test="vv-leeg" />
-        <template v-else>
+        <div v-if="helemaalLeeg" class="kaart ri-leeg" data-test="vv-leeg">
+          <LegeStaat kicker="Richting" :titel="RICHTING_TEKST.leeg" :tekst="data.kan.inrichten ? RICHTING_TEKST.leegInrichten : RICHTING_TEKST.leegLezen">
+            <FunctieLink v-if="data.kan.inrichten" class="dd-actie dd-actie--primair mt-16" to="/instellingen/verkoopverhaal" data-test="leeg-inrichten"><Icoon naam="Settings" class="dd-actie-icoon" />Richt SalesDNA in</FunctieLink>
+          </LegeStaat>
+        </div>
+        <template v-else-if="tab">
           <RichtingHeld :kernzin="kernzin" :belofte="tekst('kernbelofte')" :cijfers="cijfers" :bevestigd="bevestigd" />
 
           <div class="ri-tabs" data-test="ri-tabs">
             <div class="tabbalk tabbalk--schuif ri-tabbalk" role="tablist" aria-label="Onderdelen" @keydown="toets">
               <button
-                v-for="t in RICHTING_TABS" :id="`ri-tab-${t.k}`" :key="t.k" type="button" role="tab" class="tab" :class="{ 'tab--actief': tab.k === t.k }"
+                v-for="t in tabs" :id="`ri-tab-${t.k}`" :key="t.k" type="button" role="tab" class="tab" :class="{ 'tab--actief': tab.k === t.k }"
                 :aria-selected="tab.k === t.k" :tabindex="tab.k === t.k ? 0 : -1" aria-controls="ri-paneel" :data-test="`tab-${t.k}`" @click="kies(t.k)"
               >
                 {{ t.t }}<span v-if="tellers[t.k] != null" class="tab-teller ri-teller">{{ tellers[t.k] }}</span>
@@ -100,15 +113,14 @@ useHead({ title: 'Richting · Dealtrace' })
 
             <!-- Verhaal -->
             <div v-if="tab.k === 'verhaal'" data-test="vv-verhaal">
-              <div class="ri-verhaal-raster">
-                <article class="kaart">
+              <div v-if="algemeen || branches.length" class="ri-verhaal-raster" :class="{ 'ri-verhaal-raster--enkel': !algemeen || !branches.length }">
+                <article v-if="algemeen" class="kaart">
                   <span class="ri-label">Het hele verhaal</span>
-                  <p v-if="algemeen" class="ri-leestekst mt-8"><mark v-if="kernzinVooraan" class="ri-mark" data-test="kernzin">{{ kernzin }}</mark> {{ restVerhaal }}</p>
-                  <p v-if="algemeen && !kernzinVooraan && kernzin" class="ri-leestekst mt-8"><mark class="ri-mark" data-test="kernzin">{{ kernzin }}</mark></p>
-                  <p v-if="algemeen" class="meta mt-16">{{ RICHTING_TEKST.kernzinUitleg }}</p>
-                  <p v-else class="meta mt-8">Nog geen algemeen verhaal bevestigd.</p>
+                  <p class="ri-leestekst mt-8"><mark v-if="kernzinVooraan" class="ri-mark" data-test="kernzin">{{ kernzin }}</mark> {{ restVerhaal }}</p>
+                  <p v-if="!kernzinVooraan && kernzin" class="ri-leestekst mt-8"><mark class="ri-mark" data-test="kernzin">{{ kernzin }}</mark></p>
+                  <p class="meta mt-16">{{ RICHTING_TEKST.kernzinUitleg }}</p>
                 </article>
-                <aside class="kaart" aria-labelledby="ri-perbranche">
+                <aside v-if="branches.length" class="kaart" aria-labelledby="ri-perbranche">
                   <div class="kaart-kop"><h3 id="ri-perbranche" class="kaart-titel">Per branche</h3><span class="meta tnum" data-test="dekking-verhaal">{{ data.dekking.verhaal.met }} van {{ data.dekking.verhaal.totaal }} met een eigen verhaal</span></div>
                   <div class="ri-dekking" aria-hidden="true"><span v-for="b in branches" :key="b.id" :class="{ aan: !!tekst('verhaal', b.id) }" /></div>
                   <ul class="ri-branchelijst">
@@ -120,18 +132,16 @@ useHead({ title: 'Richting · Dealtrace' })
                   </ul>
                 </aside>
               </div>
-              <div v-if="data.golden.waarom" class="kaart mt-16"><h3 class="kaart-titel">Waarom, hoe, wat</h3><dl class="gegevens mt-8"><dt>Waarom</dt><dd>{{ data.golden.waarom }}</dd><dt>Hoe</dt><dd>{{ data.golden.hoe }}</dd><template v-if="data.golden.wat"><dt>Wat</dt><dd>{{ data.golden.wat }}</dd></template></dl></div>
+              <div v-if="data.golden.waarom" class="kaart" :class="{ 'mt-16': algemeen || branches.length }"><h3 class="kaart-titel">Waarom, hoe, wat</h3><dl class="gegevens mt-8"><dt>Waarom</dt><dd>{{ data.golden.waarom }}</dd><dt>Hoe</dt><dd>{{ data.golden.hoe }}</dd><template v-if="data.golden.wat"><dt>Wat</dt><dd>{{ data.golden.wat }}</dd></template></dl></div>
             </div>
 
             <!-- Richting -->
             <div v-else-if="tab.k === 'richting'" data-test="vv-richting">
-              <div class="ri-raster-3 ri-koers mt-24">
-                <article class="kaart"><h3 class="kaart-titel">Ambitie</h3><p class="ri-vraag">{{ doelJaar ? `Waar staan we in ${doelJaar}` : 'Waar we heen willen' }}</p><p class="ri-koers-tekst">{{ tekst('ambitie') ?? 'Nog niet vastgelegd.' }}</p></article>
-                <article class="kaart"><h3 class="kaart-titel">Visie</h3><p class="ri-vraag">Wat er verandert in de markt</p><p class="ri-koers-tekst">{{ tekst('visie') ?? 'Nog niet vastgelegd.' }}</p></article>
-                <article class="kaart"><h3 class="kaart-titel">Missie</h3><p class="ri-vraag">Wat we elke dag doen</p><p class="ri-koers-tekst">{{ tekst('missie') ?? 'Nog niet vastgelegd.' }}</p></article>
+              <div v-if="koers.length" class="ri-raster-3 ri-koers ri-blok">
+                <article v-for="x in koers" :key="x.k" class="kaart" :data-koers="x.k"><h3 class="kaart-titel">{{ x.titel }}</h3><p class="ri-vraag">{{ x.vraag }}</p><p class="ri-koers-tekst">{{ x.tekst }}</p></article>
               </div>
               <template v-if="(stand.ambitiedoelen ?? []).length">
-                <h3 class="ri-subkop mt-24">Ambitiedoelen</h3>
+                <h3 class="ri-subkop ri-blok">Ambitiedoelen</h3>
                 <div class="ri-raster-2 mt-16">
                   <article v-for="d in stand.ambitiedoelen" :key="d.id" class="kaart ri-doel" data-test="ambitiedoel">
                     <div class="ri-doel-kop">
@@ -147,11 +157,12 @@ useHead({ title: 'Richting · Dealtrace' })
 
             <!-- Belofte -->
             <div v-else-if="tab.k === 'belofte'" data-test="vv-belofte">
-              <div class="ri-belofte">
-                <div><span class="ri-label">Kernbelofte</span><blockquote class="ri-citaat" data-test="kernbelofte">{{ tekst('kernbelofte') ?? 'Nog niet vastgelegd.' }}</blockquote></div>
-                <div><span class="ri-label">Als de prospect doorvraagt</span><p class="ri-leestekst ri-leestekst--klein mt-8">{{ tekst('waardestatement') ?? 'Nog niet vastgelegd.' }}</p></div>
+              <div v-if="tekst('kernbelofte') || tekst('waardestatement')" class="ri-belofte" :class="{ 'ri-belofte--enkel': !tekst('kernbelofte') || !tekst('waardestatement') }">
+                <div v-if="tekst('kernbelofte')"><span class="ri-label">Kernbelofte</span><blockquote class="ri-citaat" data-test="kernbelofte">{{ tekst('kernbelofte') }}</blockquote></div>
+                <div v-if="tekst('waardestatement')"><span class="ri-label">Als de prospect doorvraagt</span><p class="ri-leestekst ri-leestekst--klein mt-8">{{ tekst('waardestatement') }}</p></div>
               </div>
-              <div class="kaart-kop mt-24 ri-kop-rij"><h3 class="ri-subkop">Per branche</h3><span class="meta tnum" data-test="dekking-belofte">{{ data.dekking.belofte.met }} van {{ data.dekking.belofte.totaal }} branches hebben een eigen belofte</span></div>
+              <template v-if="branches.length && (tekst('kernbelofte') || brancheBelofte)">
+              <div class="kaart-kop ri-blok ri-kop-rij"><h3 class="ri-subkop">Per branche</h3><span class="meta tnum" data-test="dekking-belofte">{{ data.dekking.belofte.met }} van {{ data.dekking.belofte.totaal }} branches hebben een eigen belofte</span></div>
               <div class="tabel-wrap ri-tabel-wrap">
                 <table class="ri-tabel">
                   <thead><tr><th scope="col">Branche</th><th scope="col">Belofte</th><th scope="col">Als de prospect doorvraagt</th></tr></thead>
@@ -164,11 +175,12 @@ useHead({ title: 'Richting · Dealtrace' })
                   </tbody>
                 </table>
               </div>
+              </template>
             </div>
 
             <!-- Branches -->
             <div v-else-if="tab.k === 'branches'" data-test="vv-branches">
-              <div class="kaart ri-branches mt-24">
+              <div class="kaart ri-branches ri-blok">
                 <div v-for="b in branches" :key="b.id" class="ri-brancherij" :data-branche="b.id">
                   <div class="ri-brancherij-naam">
                     <h3 class="kaart-titel">{{ b.naam }}</h3>
@@ -255,7 +267,9 @@ useHead({ title: 'Richting · Dealtrace' })
 <style scoped>
 /* De bronpil staat midden op de hoogte van de knoppen in de kop (B22). */
 .vv-bron { align-self: center; }
-.ri-pagina { padding-top: 0; }
+/* Elk blok op de pagina staat 24 px onder het vorige, net als de held onder de kop. */
+.ri-blok { margin-top: 24px; }
+.ri-leeg { max-width: 720px; }
 
 /* Tabbladen: plakken bovenaan (op de telefoon onder de mobiele kop). */
 .ri-tabs { position: sticky; top: 0; z-index: var(--z-sticky); margin-top: 24px; background: var(--bg); }
@@ -274,7 +288,8 @@ useHead({ title: 'Richting · Dealtrace' })
 .ri-gat { color: var(--muted); font-style: italic; }
 
 /* Verhaal */
-.ri-verhaal-raster { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; margin-top: 20px; align-items: start; }
+.ri-verhaal-raster { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; margin-top: 24px; align-items: start; }
+.ri-verhaal-raster--enkel { grid-template-columns: minmax(0, 1fr); }
 .ri-dekking { display: flex; gap: 4px; margin-top: 10px; }
 .ri-dekking span { flex: 1; height: 6px; border-radius: 1px; background: var(--border); }
 .ri-dekking span.aan { background: var(--yellow); }
@@ -297,12 +312,13 @@ useHead({ title: 'Richting · Dealtrace' })
 .ri-balk span { display: block; height: 100%; background: var(--yellow); }
 
 /* Belofte */
-.ri-belofte { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 20px; background: var(--wit); border: 1px solid var(--border); border-radius: 3px; }
-.ri-belofte > div { padding: 24px; min-width: 0; }
+.ri-belofte { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 24px; background: var(--wit); border: 1px solid var(--border); border-radius: var(--radius-card); }
+.ri-belofte--enkel { grid-template-columns: minmax(0, 1fr); }
+.ri-belofte > div { padding: var(--kaart-padding); min-width: 0; }
 .ri-belofte > div + div { border-left: 1px solid var(--border); background: var(--surface); }
 .ri-citaat { margin: 10px 0 0; padding-left: 16px; border-left: 4px solid var(--yellow); font-family: var(--font-serif); font-size: clamp(22px, 3vw, 30px); font-weight: 700; line-height: 1.25; color: var(--ink); }
 .ri-kop-rij { flex-wrap: wrap; align-items: baseline; }
-.ri-tabel-wrap { margin-top: 8px; overflow-x: auto; background: var(--wit); border: 1px solid var(--border); border-radius: 3px; }
+.ri-tabel-wrap { margin-top: 8px; overflow-x: auto; background: var(--wit); border: 1px solid var(--border); border-radius: var(--radius-card); }
 .ri-tabel { width: 100%; border-collapse: collapse; font-size: var(--fs-klein); }
 .ri-tabel thead th { padding: 10px 14px; text-align: left; font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: var(--surface); border-bottom: 1px solid var(--border); white-space: nowrap; }
 .ri-tabel tbody th, .ri-tabel td { padding: 12px 14px; text-align: left; vertical-align: top; border-top: 1px solid var(--border); line-height: 1.5; }
@@ -322,11 +338,11 @@ useHead({ title: 'Richting · Dealtrace' })
 .ri-leeg-rij { padding: 16px 20px; margin: 0; }
 
 /* Concurrenten */
-.ri-filterrij { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; margin-top: 20px; }
+.ri-filterrij { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; margin-top: 24px; }
 .ri-filters { display: flex; flex-wrap: wrap; gap: 6px; }
 
 /* Winpunten */
-.ri-reis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 20px; background: var(--wit); border: 1px solid var(--border); border-radius: 3px; }
+.ri-reis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 24px; background: var(--wit); border: 1px solid var(--border); border-radius: 3px; }
 .ri-fase { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 16px; border-left: 1px solid var(--border); }
 .ri-fase:first-child { border-left: 0; }
 .ri-fase-kop { display: flex; align-items: center; gap: 8px; }
@@ -348,7 +364,6 @@ useHead({ title: 'Richting · Dealtrace' })
 @media (max-width: 900px) { .ri-raster-3 { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 800px) {
   .ri-belofte { grid-template-columns: minmax(0, 1fr); }
-  .ri-belofte > div { padding: 18px 16px; }
   .ri-belofte > div + div { border-left: 0; border-top: 1px solid var(--border); }
   .ri-brancherij { grid-template-columns: minmax(0, 1fr); padding: 14px 16px; }
 }

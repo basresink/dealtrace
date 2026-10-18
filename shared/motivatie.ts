@@ -1,0 +1,78 @@
+// De motiverende zin op Dagstart: korte, eigen zinnen in je-vorm voor een verkoper of accountmanager.
+// Elke dag een andere, deterministisch gekozen op het dagnummer van de Nederlandse datum, zodat de
+// laptop en de telefoon dezelfde zin tonen. Een eigen lijst, los van de quote van de dag op Vandaag.
+import { dagnummer } from './dagquotes'
+
+export const MOTIVATIES: readonly string[] = [
+  'Je eerste gesprek van vandaag zet de toon voor de rest.',
+  'Je hoeft niet alles te winnen, je moet alleen beginnen.',
+  'Jij bepaalt vandaag hoe vol je pijplijn volgende maand is.',
+  'Elke keer dat je belt, word je er beter in.',
+  'Je beste deal van dit jaar kan vandaag beginnen.',
+  'Je klant onthoudt hoe je luisterde, niet wat je vertelde.',
+  'Je maakt het verschil met je opvolging.',
+  'Je ritme brengt je verder dan je talent.',
+  'Je mag trots zijn op elke poging, ook als het nee wordt.',
+  'Je vraagt vandaag één keer meer door dan gisteren.',
+  'Jij brengt de energie mee in elk gesprek.',
+  'Je kent je klant beter na elk gesprek.',
+  'Je bouwt vandaag aan relaties die jaren meegaan.',
+  'Je hoeft niet perfect te zijn om een goed gesprek te voeren.',
+  'Je plan staat klaar, nu jij nog.',
+  'Je pakt de telefoon en de rest volgt.',
+  'Je zet vandaag een stap die je morgen terugziet.',
+  'Je bent er voor je klant, niet voor je product.',
+  'Je kunt een nee goed gebruiken als leermoment.',
+  'Je haalt het meeste uit je beste uur door te bellen.',
+  'Je maakt van een koude lijst een warme agenda.',
+  'Je eerlijke vraag opent meer dan een mooie pitch.',
+  'Je houdt vol waar anderen afhaken.',
+  'Je kleine stappen van vandaag tellen op.',
+  'Je mag vandaag nieuwsgierig zijn naar elke klant.',
+  'Je volgende afspraak zit in je volgende gesprek.',
+  'Je werkt slim als je eerst plant en dan belt.',
+  'Je levert vandaag waarde, ook in een kort gesprek.',
+  'Je laat geen kans liggen door netjes op te volgen.',
+  'Je maakt het jezelf makkelijk met een goede voorbereiding.',
+  'Je groeit van elk gesprek dat je durft te voeren.',
+  'Je gesprek van vandaag is de omzet van straks.',
+  'Je bent de reden dat een klant voor jullie kiest.',
+  'Je hebt vandaag alles wat je nodig hebt om te starten.',
+  'Je pakt de lastigste klus als eerste op.',
+  'Je geeft je klant vandaag een reden om terug te bellen.',
+  'Je maakt het verschil met de vragen die je stelt.',
+  'Je wint vertrouwen door te doen wat je belooft.',
+  'Je vult je week met gesprekken die ertoe doen.',
+  'Je bent een dag dichter bij je doel als je nu begint.',
+  'Je hoeft het niet alleen te doen, je team staat achter je.',
+  'Je energie is besmettelijk, gebruik hem goed.',
+  'Je luistert vandaag naar wat je klant niet zegt.',
+  'Je maakt elke afspraak beter dan de vorige.',
+  'Je zet de klant centraal en de deal volgt.',
+  'Je durft vandaag te vragen om de volgende stap.',
+  'Je houdt je focus op wat je zelf in de hand hebt.',
+  'Je zaait vandaag wat je volgend kwartaal oogst.',
+  'Je bent goed in wat je doet, laat het zien.',
+  'Je maakt van elke tegenwerping een gesprek.',
+  'Je belt vandaag met een reden en met vertrouwen.',
+  'Je neemt na elk gesprek even tijd om het vast te leggen.',
+  'Je verrast je klant vandaag met een goede vraag.',
+  'Je laat je niet uit het veld slaan door één nee.',
+  'Je maakt vandaag tijd voor de prospect die je steeds uitstelt.',
+  'Je houdt het simpel: bellen, luisteren, opvolgen.',
+  'Je eindigt de dag beter dan je hem begon.',
+  'Je bent vandaag de verkoper die je klant verdient.',
+  'Je gelooft in wat je verkoopt en dat hoort je klant.',
+  'Je maakt vooruitgang, ook als het nog niet zichtbaar is.',
+  'Je kiest vandaag voor actie in plaats van twijfel.',
+  'Je beste gesprek van de week kan het volgende zijn.',
+  'Je geeft niet op na de eerste poging.',
+  'Je bent klaar voor vandaag. Zet de eerste stap.',
+]
+
+/** De motiverende zin van de dag (JJJJ-MM-DD, Nederlandse datum): opeenvolgende dagen krijgen opeenvolgende zinnen. */
+export function motivatieVanDeDag(datum: string, lijst: readonly string[] = MOTIVATIES): string {
+  if (!lijst.length) return ''
+  const n = dagnummer(datum)
+  return lijst[((n % lijst.length) + lijst.length) % lijst.length]!
+}

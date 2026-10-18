@@ -41,6 +41,8 @@ export const RICHTING_TEKST = {
   waaromKop: 'Waarom dit ertoe doet',
   gebruik: 'Belscripts, briefings en opvolging gebruiken deze versie',
   leeg: 'Jullie SalesDNA is nog niet vastgelegd.',
+  leegInrichten: 'Leg het verhaal, de belofte, de branches, concurrenten, winpunten en terugkomregels vast in de inrichting. Wat je bevestigt, verschijnt hier voor het hele team.',
+  leegLezen: 'Je beheerder of salesmanager richt het in. Zodra er iets is bevestigd, lees je het hier.',
   kernzinUitleg: 'Gemarkeerd: de kernzin. Die gebruikt je belscript als opening.',
   geenBrancheVerhaal: 'Nog geen eigen verhaal. Je belscript en briefing gebruiken het algemene verhaal.',
   geenBrancheBelofte: 'De algemene belofte geldt.',
@@ -113,3 +115,40 @@ export function doelVoortgang(d: { stand: number | null; doel: number }): number
 
 /** Eenheid achter een getal: "aantal" toont niets, "procent" wordt " procent". */
 export const eenheidTekst = (e: string | null | undefined) => (!e || e === 'aantal' ? '' : ` ${e}`)
+
+interface IngevuldStand {
+  teksten?: { sleutel: string; tekst?: string | null }[]
+  ambitiedoelen?: unknown[]
+  branches?: unknown[]
+  concurrenten?: unknown[]
+  winpunten?: { actief?: boolean }[]
+  terugkomregels?: unknown[]
+}
+
+/** Sleutels van de bevestigde teksten per tabblad (algemeen en per branche). */
+const TAB_SLEUTELS: Partial<Record<RichtingTab, string[]>> = {
+  verhaal: ['bedrijfsverhaal', 'verhaal', 'waarom', 'hoe', 'wat'],
+  richting: ['ambitie', 'visie', 'missie'],
+  belofte: ['kernbelofte', 'waardestatement'],
+}
+
+/**
+ * Is een tabblad op Richting ingevuld? Minstens één bevestigde tekst of regel: een verhaal (algemeen,
+ * per branche of de golden circle), een ambitie, visie, missie of ambitiedoel, een kernbelofte of
+ * waardestatement, of minstens één branche, concurrent, actief winpunt of terugkomregel.
+ * Een leeg tabblad toont Richting niet.
+ */
+export function tabIngevuld(k: RichtingTab, stand: IngevuldStand | null | undefined): boolean {
+  const s = stand ?? {}
+  const tekstMet = (sleutels: string[]) => (s.teksten ?? []).some((t) => sleutels.includes(t.sleutel) && !!(t.tekst ?? '').trim())
+  if (k === 'verhaal') return tekstMet(TAB_SLEUTELS.verhaal!)
+  if (k === 'richting') return tekstMet(TAB_SLEUTELS.richting!) || (s.ambitiedoelen ?? []).length > 0
+  if (k === 'belofte') return tekstMet(TAB_SLEUTELS.belofte!)
+  if (k === 'branches') return (s.branches ?? []).length > 0
+  if (k === 'concurrenten') return (s.concurrenten ?? []).length > 0
+  if (k === 'winpunten') return (s.winpunten ?? []).some((w) => w.actief !== false)
+  return (s.terugkomregels ?? []).length > 0
+}
+
+/** De tabbladen van Richting die ingevuld zijn, in vaste volgorde. */
+export const ingevuldeTabs = (stand: IngevuldStand | null | undefined) => RICHTING_TABS.filter((t) => tabIngevuld(t.k, stand))
