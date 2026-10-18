@@ -26,7 +26,8 @@ test.describe('import', () => {
     const batches = await (await request.get('/api/import')).json()
     const batch = batches.find((b: any) => b.id === uitkomst.batchId)
     expect(batch.status).toBe('verwerkt')
-    const nieuw = (await (await request.get('/api/accounts?eigenaar=mij&sort=naam')).json()).rijen.find((r: any) => r.name.startsWith('Testimp'))
+    // Zoek op de unieke naam: de eerste pagina van Eva hangt af van hoeveel prospects er al zijn.
+    const nieuw = (await (await request.get(`/api/accounts?eigenaar=mij&sort=naam&q=Testimp${stempel % 100000}`)).json()).rijen.find((r: any) => r.name.startsWith(`Testimp${stempel % 100000}`))
     const kaart = await (await request.get(`/api/accounts/${nieuw.id}`)).json()
     expect(kaart.laatsteContactOp).toBeNull()
     expect(kaart.herkomst.kvk).toMatchObject({ bron: 'import', batchId: uitkomst.batchId })

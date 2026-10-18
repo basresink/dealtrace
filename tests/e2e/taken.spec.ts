@@ -173,7 +173,9 @@ test.describe('inzichten', () => {
     await expect(page).toHaveURL(/teller=hot/)
     await page.getByTestId('reset-filters').click()
     await expect(page).not.toHaveURL(/sinds=/)
-    // Markeer als gelezen vanaf de kaart: de kaart verdwijnt uit Ongelezen.
+    // Markeer als gelezen vanaf de kaart: de kaart verdwijnt uit Ongelezen. Eerdere runs lazen alles al, dus eerst een eigen ongelezen inzicht.
+    const eigen = (await (await page.request.get('/api/accounts?eigenaar=mij')).json()).rijen[0]
+    expect((await page.request.post('/api/signals/handmatig', { data: { accountId: eigen.id, titel: `Testinzicht ${Date.now()}`, bron: 'Testbron', citaat: 'Fictief citaat voor de test.' } })).ok()).toBe(true)
     await ga(page, '/inzichten')
     const kaart = page.locator('[data-test=inzichten] .inzicht-kaart').first()
     const id = (await kaart.getAttribute('data-test'))!
