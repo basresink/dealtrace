@@ -19,7 +19,9 @@ const UIT_GEVORDERD = ['/accountplannen', '/reizen']
 const PAGINAS = ['/', '/taken', '/prospects', '/agenda', '/bezoeken', '/meetings', '/dagstart']
 
 async function geenIngangen(page: Page, paden: string[], waar: string) {
-  for (const p of paden) expect(await page.locator(link(p)).count(), `${waar}: link naar ${p}`).toBe(0)
+  // Een reis bekijken (/reizen/<id>, alleen lezen) hoort bij "Reis bekijken" (vanaf Gevorderd); uit is alleen het overzicht.
+  const sel = (p: string) => (p === '/reizen' ? `a[href="${p}"], a[href^="${p}?"]` : link(p))
+  for (const p of paden) expect(await page.locator(sel(p)).count(), `${waar}: link naar ${p}`).toBe(0)
   await expect(page.getByText('Nog niet aangezet'), `${waar}: "Nog niet aangezet"`).toHaveCount(0)
   await expect(page.getByTestId('niet-aangezet-pagina')).toHaveCount(0)
 }

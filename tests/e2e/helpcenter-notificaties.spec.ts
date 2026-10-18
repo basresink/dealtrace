@@ -197,7 +197,7 @@ test.describe('Notificaties in de opzet van DealDrive', () => {
       const [g, h] = await Promise.all([0, 1].map((i) => kaarten.nth(i).boundingBox()))
       return h!.y > g!.y + 10
     }).toBe(true)
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
   })
 
   test('filters op soort en Ongelezen of Alles staan in de URL', async ({ page }) => {

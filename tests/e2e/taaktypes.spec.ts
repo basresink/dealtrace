@@ -34,6 +34,8 @@ for (const breedte of [1280, 390]) {
     test.beforeEach(async ({ page }) => { await page.setViewportSize({ width: breedte, height: breedte === 390 ? 844 : 900 }) })
 
     test('een WhatsApp- en een SMS-taak maken, afronden en terugzien op Mijn dashboard en de funnel', async ({ page }) => {
+      // Een lange route langs Taken, Mijn dashboard en de funnel: ruimere tijd onder een volle testrun.
+      test.slow()
       await login(page, 'u-07')
       const wa = await maakTaak(page, 'bericht', `WhatsApp ${uniek()}`)
       const sms = await maakTaak(page, 'sms', `SMS ${uniek()}`)

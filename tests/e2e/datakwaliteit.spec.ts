@@ -88,7 +88,11 @@ test.describe('datakwaliteit', () => {
     await page.locator(`[data-categorie="${c.sleutel}"]`).getByTestId('dk-open').click()
     await page.getByTestId('dk-flyout').getByTestId('dk-filter').click()
     await expect(page).toHaveURL(/\/prospects\/alle\?/)
-    await expect(page.getByTestId('aantal')).toHaveText(`${c.aantal} ${c.aantal === 1 ? 'resultaat' : 'resultaten'}`)
+    // Andere tests kunnen intussen prospects toevoegen: vergelijk met het aantal van dit moment.
+    await expect.poll(async () => {
+      const nu = (await (await request.get('/api/data-kwaliteit')).json()).categorieen.find((x: any) => x.sleutel === c.sleutel).aantal
+      return (await page.getByTestId('aantal').textContent())?.trim() === `${nu} ${nu === 1 ? 'resultaat' : 'resultaten'}`
+    }, { timeout: 15000 }).toBe(true)
   })
 
   test('een eigen veld met "Meenemen in Datakwaliteit" wordt de controle "Zonder <veldnaam>"', async ({ page, request }) => {
