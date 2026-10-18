@@ -26,3 +26,7 @@ De rol kies je op de contactkaart: klik op het rollabel naast de naam. Op de acc
 ### Beslissers en vertrekkers
 
 Een mail aan een beslisser gaat nooit zonder jouw goedkeuring de deur uit. Vertrekt iemand, zet het contact dan in het venster **Info** op de contactkaart op vertrokken; de geschiedenis blijft bewaard.
+
+### Stel voor met AI
+
+Onder **Meer**, **Kwalificatie** stelt **Stel voor met AI** per bekende functie een rol voor, met bron en zekerheid. Het blijft een voorstel: de rol kies je zelf op de contactkaart. Contactpersonen zoeken via Datacollectief doe je hier niet meer; nieuwe contactpersonen voeg je toe met **Contacten** op de accountkaart.

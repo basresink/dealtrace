@@ -374,12 +374,16 @@ test.describe('Taken: portie per groep, titel en kop (B09, B14, B17)', () => {
     await expect(knoppen.locator('button', { hasText: /^Hulp$/ })).toHaveCount(0)
     const statVandaag = await page.getByTestId('stat-vandaag').locator('.stat-num').textContent()
     if (Number(statVandaag)) await expect(page.getByTestId('acties-titel')).toHaveText(new RegExp(`^${statVandaag} (taak|taken) vandaag\\.$`))
-    const meer = page.locator('[data-test^="toon-meer-"]').first()
-    if (await meer.count()) {
-      const groep = page.locator('.taak-groep').filter({ has: meer })
-      const voor = await groep.locator('.taak-kaart').count()
+    const eerste = page.locator('[data-test^="toon-meer-"]').first()
+    if (await eerste.count()) {
+      // Vast op deze groep: na de laatste portie verdwijnt de knop, en .first() zou dan een andere groep pakken.
+      const meer = page.locator(`[data-test="${await eerste.getAttribute('data-test')}"]`)
+      const groep = page.locator('.taak-groep').filter({ has: page.locator(`[data-test="${await eerste.getAttribute('data-test')}"]`) }).first()
+      const groepId = await groep.evaluate((el) => Array.from(document.querySelectorAll('.taak-groep')).indexOf(el))
+      const vast = page.locator('.taak-groep').nth(groepId)
+      const voor = await vast.locator('.taak-kaart').count()
       await meer.click()
-      await expect.poll(() => groep.locator('.taak-kaart').count()).toBeGreaterThan(voor)
+      await expect.poll(() => vast.locator('.taak-kaart').count()).toBeGreaterThan(voor)
     }
   })
 })

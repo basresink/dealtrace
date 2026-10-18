@@ -15,8 +15,9 @@ test.describe('Meer op de accountkaart', () => {
     const meer = page.getByTestId('meer-flyout')
     await expect(meer).toBeVisible()
     const ids = await meer.locator('.mf-kader').evaluateAll((els) => els.map((e) => e.getAttribute('data-test')))
-    for (const id of ['briefing-knop', 'knop-volgen', 'knop-invloed', 'meer-belscript', 'meer-dossier', 'meer-kwalificatie', 'meer-reis', 'meer-campagnes', 'meer-accountplan']) expect(ids).toContain(id)
-    for (const id of ['info-knop', 'meer-ritme']) expect(ids).not.toContain(id)
+    for (const id of ['briefing-knop', 'knop-volgen', 'knop-invloed', 'meer-dossier', 'meer-kwalificatie', 'meer-reis', 'meer-campagnes', 'meer-accountplan']) expect(ids).toContain(id)
+    // Belscript staat alleen op de contactkaart; Klaarzetten is weg en Deactiveren staat onderaan Info.
+    for (const id of ['info-knop', 'meer-ritme', 'meer-belscript', 'klaarzetten-knop', 'deactiveer-knop']) expect(ids).not.toContain(id)
     // Elk kader heeft een titel, een regel uitleg of stand en een pijl.
     const kwalificatie = meer.getByTestId('meer-kwalificatie')
     await expect(kwalificatie.locator('.mf-titel')).toHaveText('Kwalificatie')
@@ -46,7 +47,10 @@ test.describe('Meer op de accountkaart', () => {
     await page.keyboard.press('Escape')
     await expect(page.getByTestId('meer-flyout')).toHaveCount(0)
 
-    // Belscript: de bewaarde versie of het standaardscript, met een link naar de Belscript Studio.
+    // Belscript (op de contactkaart): de bewaarde versie of het standaardscript, met een link naar de Belscript Studio.
+    const eva = await (await page.request.get('/api/accounts/eva-a04')).json()
+    const contact = eva.contacten.find((c: any) => c.status !== 'vertrokken')
+    await ga(page, `/contacten/${contact.id}`)
     await page.getByTestId('kop-meer').click()
     await page.getByTestId('meer-belscript').click()
     const bs = page.getByTestId('belscript-flyout')

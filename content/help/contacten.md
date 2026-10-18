@@ -22,3 +22,7 @@ routes: /contacten/alle
 ### De contactkaart
 
 Een klik op een naam opent de contactkaart. Lees "Het buying committee" voor hoe je rollen gebruikt.
+
+### Meer op de contactkaart
+
+Onder **Meer** op de contactkaart staan onder andere **Belscript** (het script voor je gesprek met dit contact) en **Accountplan**: het accountplan van het account waar het contact bij hoort, net als op de accountkaart. Accountplan zie je alleen als de functie Accountplannen voor je aanstaat.

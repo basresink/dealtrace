@@ -102,7 +102,7 @@ for (const breedte of [1280, 390]) {
       await geenScroll(page)
     })
 
-    test('contactkaart: Info in de kop, geen Account, geen Info en Bel in Meer, metaregel zonder het contact, accountplan onder Meer', async ({ page }) => {
+    test('contactkaart: Info in de kop, geen Account, geen Info en Bel in Meer, metaregel zonder het contact, accountplan van het account onder Meer', async ({ page }) => {
       await login(page, 'u-07')
       await ga(page, '/contacten/eva-a07-c1')
       // 7. Info staat waar Account stond; geen "Account ·" in de stuurstrip.
@@ -123,19 +123,24 @@ for (const breedte of [1280, 390]) {
       const meer = page.getByTestId('meer-flyout')
       for (const id of ['contact-info-knop', 'bel-knop', 'meer-ritme']) await expect(meer.getByTestId(id)).toHaveCount(0)
       await expect(meer.getByTestId('meer-campagnes')).toBeVisible()
-      // 9. Het accountplan waarin dit contact staat, met een link naar het plan.
+      // 9. Accountplan onder Meer: het plan van het account (zoals op de accountkaart) en het plan waarin dit contact staat.
+      await expect(meer.getByTestId('meer-accountplan').locator('.mf-regel')).toContainText(/\d+ van \d+ acties klaar/)
       await meer.getByTestId('meer-accountplan').click()
+      await expect(page.getByTestId('accountplan-flyout').getByTestId('apt-lopend')).toBeVisible()
+      await expect(page.getByTestId('accountplan-flyout').getByTestId('apt-open')).toHaveAttribute('href', '/accountplannen/eva-plan-01')
       const plan = page.getByTestId('accountplan-flyout').getByTestId('contact-accountplan-eva-plan-01')
       await expect(plan).toContainText('contactpersoon')
       await expect(plan.getByTestId('contact-accountplan-open')).toHaveAttribute('href', '/accountplannen/eva-plan-01')
       await page.getByTestId('accountplan-flyout').getByTestId('fs-terug').click()
       await expect(meer).toBeVisible()
       await geenScroll(page)
-      // Een contact zonder plan heeft geen kader Accountplan.
+      // Een contact dat zelf in geen plan staat, heeft toch het kader Accountplan: het plan van zijn account.
       await ga(page, '/contacten/eva-a08-c1')
       await page.getByTestId('kop-meer').click()
       await expect(page.getByTestId('meer-flyout').getByTestId('meer-campagnes')).toBeVisible()
-      await expect(page.getByTestId('meer-flyout').getByTestId('meer-accountplan')).toHaveCount(0)
+      await page.getByTestId('meer-flyout').getByTestId('meer-accountplan').click()
+      await expect(page.getByTestId('accountplan-flyout').getByTestId('ak-accountplannen')).toBeVisible()
+      await expect(page.getByTestId('accountplan-flyout').getByTestId('contact-accountplannen')).toHaveCount(0)
     })
 
     test('kwalificatie: BAND uit het belverslag als voorstel, bevestigen, bewerken en verwerpen; handmatig blijft leidend', async ({ page }) => {

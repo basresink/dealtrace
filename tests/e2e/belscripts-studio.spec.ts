@@ -137,13 +137,20 @@ test.describe('Belscript Studio', () => {
     }
   })
 
-  test('accountkaart: Meer, Belscript toont de bewaarde versie van het prospect met een link naar de studio', async ({ page }) => {
+  test('contactkaart: Meer, Belscript toont de bewaarde versie van het prospect met een link naar de studio; niet op de accountkaart', async ({ page }) => {
     await login(page, 'u-01')
     const { prospecten } = await (await page.request.get('/api/belscripts/prospecten')).json()
     const p = prospecten.find((x: any) => x.versies > 0)
     expect(p, 'een eerdere test bewaarde een versie').toBeTruthy()
     const ctx = await (await page.request.get('/api/belscripts/prospect', { params: { accountId: p.accountId } })).json()
+    // Een belscript is per contact: de accountkaart heeft het niet meer onder Meer.
     await ga(page, `/accounts/${p.accountId}`)
+    await page.getByTestId('kop-meer').click()
+    await expect(page.getByTestId('meer-flyout').getByTestId('meer-dossier')).toBeVisible()
+    await expect(page.getByTestId('meer-flyout').getByTestId('meer-belscript')).toHaveCount(0)
+    let contact = (await (await page.request.get(`/api/accounts/${p.accountId}`)).json()).contacten.find((c: any) => c.status !== 'vertrokken')
+    if (!contact) contact = await (await page.request.post('/api/contacten', { data: { accountId: p.accountId, achternaam: 'Belscripttest', voornaam: 'Sanne' } })).json()
+    await ga(page, `/contacten/${contact.id}`)
     await page.getByTestId('kop-meer').click()
     await page.getByTestId('meer-belscript').click()
     const f = page.getByTestId('belscript-flyout')

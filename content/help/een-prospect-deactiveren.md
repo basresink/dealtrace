@@ -14,7 +14,7 @@ In Dealtrace verwijder je geen prospects. Is een bedrijf failliet, dubbel, buite
 
 ## Deactiveren
 
-1. Open de accountkaart en klik op **Meer** en dan **Deactiveren** (of open **Info** en klik onderaan op **Deactiveren**).
+1. Open de accountkaart, klik op **Info** en klik onderaan in de sectie **Deactiveren** op **Deactiveren**. Onder **Meer** staat het niet meer.
 2. Kies een reden: **Failliet of opgeheven**, **Dubbel account**, **Buiten de doelgroep**, **Definitief geen interesse** of **Overig**. Bij Overig schrijf je er een toelichting bij.
 3. Klik **Deactiveren**.
 
@@ -38,4 +38,4 @@ De eigenaar van de prospect, de salesmanager van zijn team en de beheerder.
 
 ## Heractiveren
 
-Klik in de balk op **Heractiveren**. De prospect doet weer mee in lijsten, belblokken en de motor. Liep er een hercontactritme, dan pakt de motor dat weer op. Deactiveren en heractiveren staan allebei in de tijdlijn en de audit.
+Klik in de balk bovenaan de kaart op **Heractiveren**, of open **Info** en klik onderaan op **Heractiveren**. De prospect doet weer mee in lijsten, belblokken en de motor. Liep er een hercontactritme, dan pakt de motor dat weer op. Deactiveren en heractiveren staan allebei in de tijdlijn en de audit.
