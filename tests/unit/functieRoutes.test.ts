@@ -48,6 +48,8 @@ describe('register scherm naar functie', () => {
     const aan = aanVoor(gebruiker({ niveau: 'gevorderd' }))
     for (const pad of ['/inzichten', '/leadgenerator', '/bezoek-analyse', '/meeting-analyse', '/briefings']) expect(magNaarPad(pad, aan), pad).toBe(true)
     for (const pad of ['/accountplannen', '/reizen']) expect(magNaarPad(pad, aan), pad).toBe(false)
+    // Een reis bekijken (alleen lezen) mag wel, via Reis bekijken.
+    expect(magNaarPad('/reizen/r-1', aan)).toBe(true)
   })
 
   it('"een van": de pagina Terugkomen staat open zodra een van zijn functies aanstaat', () => {

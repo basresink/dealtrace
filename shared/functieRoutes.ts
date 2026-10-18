@@ -67,12 +67,18 @@ const SCHERMEN: readonly RouteFunctie[] = [
   { pad: '/instellingen/eigen-velden', eenVan: ['eigenVelden.beheren'] },
   { pad: '/instellingen/verbruik', eenVan: ['credits.verbruikLezen'] },
   { pad: '/instellingen/verkoopverhaal', eenVan: ['verkoopverhaal.inrichten'] },
+  // Een reis bekijken (alleen lezen, de link op de accountkaart) kan vanaf "Reis bekijken"; het overzicht
+  // /reizen zelf hoort bij Prospectreizen (de zijbalkregel hieronder geldt daarom alleen exact).
+  { pad: '/reizen', eenVan: ['nav.reizen', 'reis.overzicht'] },
 ]
 
-/** Zijbalkroutes: Vandaag alleen exact, Instellingen staat hierboven, Platformbeheer hangt niet aan een organisatie. */
+/** Zijbalkroutes die alleen exact gelden: hun subpaden hebben een eigen regel in SCHERMEN. */
+const ALLEEN_EXACT = new Set(['/', '/reizen'])
+
+/** Zijbalkroutes: Vandaag en Prospectreizen alleen exact, Instellingen staat hierboven, Platformbeheer hangt niet aan een organisatie. */
 const ZIJBALK: readonly RouteFunctie[] = FUNCTIES
   .filter((f) => f.zijbalk && f.sleutel !== 'nav.platform' && f.sleutel !== 'nav.instellingen')
-  .map((f) => ({ pad: f.zijbalk!.route, eenVan: [f.sleutel], ...(f.zijbalk!.route === '/' ? { exact: true } : {}) }))
+  .map((f) => ({ pad: f.zijbalk!.route, eenVan: [f.sleutel], ...(ALLEEN_EXACT.has(f.zijbalk!.route) ? { exact: true } : {}) }))
 
 export const ROUTE_FUNCTIES: readonly RouteFunctie[] = [...ZIJBALK, ...SCHERMEN]
 

@@ -1,5 +1,5 @@
 // P10: belblokken, belmodus, belscripts en bellen op de telefoon.
-import { expect, test } from '@playwright/test'
+import { expect, test, type APIRequestContext } from '@playwright/test'
 import { apiLogin, ga, login } from './hulp'
 
 test.describe.configure({ mode: 'serial' })
@@ -112,15 +112,33 @@ test.describe('Belscripts', () => {
   })
 })
 
+/** Een naam die niet op andere testnamen lijkt (de dubbelcheck kijkt naar gelijkenis). */
+const naam = () => Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => 'bcdfghjklmnprstvwz'[Math.floor(Math.random() * 18)] + 'aeiou'[Math.floor(Math.random() * 5)]).join('')).join(' ')
+
+/**
+ * Een eigen beltaak voor vandaag, zodat de bellijst van vandaag nooit leeg is (ook in het weekend of als
+ * eerdere tests de taken van vandaag al afrondden).
+ */
+async function beltaakVoorVandaag(request: APIRequestContext) {
+  await apiLogin(request, 'u-03')
+  const telefoon = `030 ${Math.floor(100 + Math.random() * 900)} ${Math.floor(1000 + Math.random() * 9000)}`
+  const a = await request.post('/api/accounts', { data: { naam: naam(), telefoon } })
+  expect(a.ok()).toBe(true)
+  const { id } = await a.json()
+  const t = await request.post('/api/tasks', { data: { title: `Bel e2e ${Date.now()}`, actionType: 'bellen', accountId: id, dueDate: new Date().toISOString() } })
+  expect(t.ok()).toBe(true)
+}
+
 test.describe('Bellen op de telefoon', () => {
   for (const breedte of [375, 390, 412]) {
     test(`${breedte} px: belknop van minstens 44 px; na terugkeer "Hoe ging het?"; Niet bereikt in 2 tikken`, async ({ page }) => {
       await page.setViewportSize({ width: breedte, height: 800 })
+      await beltaakVoorVandaag(page.request)
       await login(page, 'u-03')
       await ga(page, '/bellen')
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(breedte)
       const knop = page.locator('[data-test^="bel-"]').first()
-      test.skip(!(await knop.count()), 'Geen gesprekken voor vandaag')
+      await expect(knop).toBeVisible()
       const box = await knop.boundingBox()
       expect(box!.height).toBeGreaterThanOrEqual(44)
       // tel:-links openen niets in de test; we bootsen de terugkeer in de app na.
@@ -135,10 +153,11 @@ test.describe('Bellen op de telefoon', () => {
   }
   test('offline: de uitkomst wordt bewaard en verstuurd zodra er verbinding is', async ({ page, context }) => {
     await page.setViewportSize({ width: 390, height: 800 })
+    await beltaakVoorVandaag(page.request)
     await login(page, 'u-03')
     await ga(page, '/bellen')
     const knop = page.locator('[data-test^="bel-"]').first()
-    test.skip(!(await knop.count()), 'Geen gesprekken voor vandaag')
+    await expect(knop).toBeVisible()
     await knop.evaluate((a: HTMLAnchorElement) => { a.removeAttribute('href') })
     await knop.click()
     await context.setOffline(true)

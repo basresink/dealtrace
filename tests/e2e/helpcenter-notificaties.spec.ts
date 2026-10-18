@@ -185,14 +185,18 @@ test.describe('Notificaties in de opzet van DealDrive', () => {
     const [a, b, c] = await Promise.all([0, 1, 2].map((i) => kaarten.nth(i).boundingBox()))
     expect(Math.abs(a!.y - b!.y)).toBeLessThan(2)
     expect(Math.abs(a!.y - c!.y)).toBeLessThan(2)
+    // Na een andere breedte wachten tot de kaarten opnieuw geschikt zijn (de lijst kan intussen nog bijladen).
     await page.setViewportSize({ width: 900, height: 900 })
-    const [d, e, f] = await Promise.all([0, 1, 2].map((i) => kaarten.nth(i).boundingBox()))
-    expect(Math.abs(d!.y - e!.y)).toBeLessThan(2)
-    expect(f!.y).toBeGreaterThan(d!.y + 10)
+    await expect.poll(async () => {
+      const [d, e, f] = await Promise.all([0, 1, 2].map((i) => kaarten.nth(i).boundingBox()))
+      return Math.abs(d!.y - e!.y) < 2 && f!.y > d!.y + 10
+    }).toBe(true)
     await page.setViewportSize({ width: 390, height: 844 })
     await expect.poll(ruimte).toBeGreaterThanOrEqual(12)
-    const [g, h] = await Promise.all([0, 1].map((i) => kaarten.nth(i).boundingBox()))
-    expect(h!.y).toBeGreaterThan(g!.y + 10)
+    await expect.poll(async () => {
+      const [g, h] = await Promise.all([0, 1].map((i) => kaarten.nth(i).boundingBox()))
+      return h!.y > g!.y + 10
+    }).toBe(true)
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
   })
 

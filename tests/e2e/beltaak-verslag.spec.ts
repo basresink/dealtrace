@@ -71,7 +71,10 @@ test.describe('beltaak: transcript en gespreksverslag', () => {
     const antwoord = await (await bewaard).json()
     expect(antwoord.activiteitId).toBeTruthy()
     await page.getByTestId('tf-transcript-bestand').setInputFiles({ name: 'gesprek.txt', mimeType: 'text/plain', buffer: Buffer.from(`Klant: We willen in maart een demo ${z}.`) })
+    // Op een drukke machine duurt bewaren soms langer dan de standaard 5 seconden: wacht op het antwoord.
+    const transcriptBewaard = page.waitForResponse((x) => x.url().endsWith(`/api/tasks/${id}/transcript`) && x.request().method() === 'POST', { timeout: 60_000 })
     await page.getByTestId('tf-transcript-bewaar').click()
+    expect((await transcriptBewaard).ok()).toBe(true)
     await expect(page.getByTestId('tf-transcript')).toContainText('gesprek.txt')
 
     for (const kaart of ['/accounts/eva-a08', '/contacten/eva-a08-c1']) {

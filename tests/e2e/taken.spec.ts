@@ -451,7 +451,15 @@ test.describe('Taken: nieuwe URL, horizon in het filter en Briefings', () => {
     await page.getByTestId('periode-morgen').click()
     await expect(page).toHaveURL(/periode=morgen/)
     await expect(page.getByTestId('periode-morgen')).toHaveAttribute('aria-pressed', 'true')
-    await expect(page.getByTestId(`taak-${morgen.id}`)).toBeVisible()
+    // Eerdere runs laten taken voor morgen achter: haal zo nodig met Toon meer de volgende portie op.
+    const rijMorgen = page.getByTestId(`taak-${morgen.id}`)
+    await expect(async () => {
+      if (!(await rijMorgen.isVisible())) {
+        const meer = page.locator('[data-test^="toon-meer-"]').first()
+        if (await meer.count()) await meer.click()
+      }
+      await expect(rijMorgen).toBeVisible({ timeout: 2_000 })
+    }).toPass({ timeout: 60_000 })
     // Eigen periode in het verleden: de vaste keuze gaat uit, de afgeronde taak staat erbij als lijst.
     await page.getByTestId('periode-van').fill(dag(-25))
     await page.getByTestId('periode-van').dispatchEvent('change')

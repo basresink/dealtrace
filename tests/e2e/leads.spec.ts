@@ -5,6 +5,15 @@ import { apiLogin, ga, login } from './hulp'
 
 test.describe.configure({ mode: 'serial' })
 
+// De KvK-mock heeft een vaste set bedrijven en elke run neemt er een paar over (Voeg toe) en wijst er een paar
+// af (Niet relevant, komt nooit terug). Zonder opschonen is er na een paar runs niets meer te vinden. Daarom zet
+// de ontwikkelroute de leadgenerator van de testorganisatie eerst terug naar de beginstand (alleen ontwikkelmodus).
+test.beforeAll(async ({ request }) => {
+  await apiLogin(request, 'u-06')
+  const r = await request.post('/api/sessie/ontwikkel-leads', { data: {} })
+  expect(r.ok(), `leads terugzetten: ${r.status()}`).toBe(true)
+})
+
 test.describe('Leadgenerator op de desktop', () => {
   test('ronde starten: vijf groepen met bewijs en meters; Voeg toe maakt een prospect', async ({ page }) => {
     await login(page, 'u-03')
