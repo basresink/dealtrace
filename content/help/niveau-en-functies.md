@@ -3,14 +3,14 @@ titel: Je niveau en functies die aanstaan
 categorie: Aan de slag
 collectie: product
 samenvatting: Wat Beginner, Gevorderd en Expert betekenen, en waarom je een functie die nog uit staat niet ziet.
-routes: /mij,/instellingen/niveaus
+routes: /mij
 ---
 
 # Je niveau en functies die aanstaan
 
 ### Drie niveaus
 
-Dealtrace kent drie niveaus. Een niveau is een set functies die voor je aanstaat. Zo ziet de indeling er standaard uit; je beheerder kan hem voor je organisatie aanpassen.
+Dealtrace kent drie niveaus. Een niveau is een set functies die voor je aanstaat. Zo ziet de indeling er standaard uit; je organisatie kan hem aanpassen.
 
 | Niveau | Wat je ziet |
 |---|---|
@@ -22,17 +22,9 @@ Dealtrace kent drie niveaus. Een niveau is een set functies die voor je aanstaat
 
 Een functie die voor jouw niveau nog niet aanstaat, zie je nergens: geen menu-item, geen knop en geen link. Kom je via een oude link toch op zo'n scherm, dan toont Dealtrace de pagina "Nog niet aangezet" met wat de functie doet.
 
-### Functies aan of uit zetten
+### Per niveau bekijken
 
-Je beheerder zet bij **Instellingen**, **Niveaus** per functie en per niveau een schakelaar aan of uit. Wat hij kiest, geldt voor iedereen in je organisatie. De beginstand is de standaard van Dealtrace (de tabel hierboven); met **Terug naar de standaard** komt die terug.
-
-Een paar dingen blijven vast:
-
-- Een functie die niet in jullie pakket zit, kan niet aan. Een ander pakket vraagt de beheerder aan bij **Abonnement**.
-- Functies die bij een rol horen, zoals Team voor de salesmanager, hangen niet af van het niveau. Een accountmanager krijgt ze nooit.
-- Heeft Dealtrace een functie uitgezet, dan blijft hij uit.
-
-Zet je beheerder een functie uit voor jouw niveau, dan verdwijnt hij overal: uit het menu, van knoppen en uit het zoeken. Een oude link toont "Nog niet aangezet".
+Je beheerder ziet bij **Instellingen**, **Niveaus** per niveau welke functies aanstaan.
 
 ## Wie kiest je niveau?
 

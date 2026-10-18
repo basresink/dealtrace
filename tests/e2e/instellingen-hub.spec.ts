@@ -33,7 +33,7 @@ test.describe('Instellingen beheer', () => {
     })
   }
 
-  test('functies per niveau met schakelaars en wie mag wat', async ({ page }) => {
+  test('functies per niveau en wie mag wat, alleen lezen', async ({ page }) => {
     for (const breedte of [1280, 390]) {
       await page.setViewportSize({ width: breedte, height: 900 })
       await login(page, 'u-06')
@@ -44,7 +44,7 @@ test.describe('Instellingen beheer', () => {
       const rij = page.locator('[data-test="niveau-functie"][data-sleutel="nav.inzichten"]')
       await expect(rij).toBeVisible()
       await expect(rij.locator('[data-niveau="expert"]')).toHaveAttribute('data-aan', 'ja')
-      await expect(rij.getByRole('switch')).toHaveCount(3)
+      await expect(rij.locator('button, input, select')).toHaveCount(0)
       await expect(page.getByTestId('wie-mag-wat').locator('[data-onderdeel="abonnement"] [data-rol="accountmanager"]')).toContainText('Geen toegang')
       await geenScroll(page)
     }

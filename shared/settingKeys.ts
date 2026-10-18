@@ -30,7 +30,6 @@ export const SETTING_KEYS = [
   'bewaartermijnen', // Bewaartermijnen uit shared/privacy.ts: maanden per soort, null = niet opschonen
   'factuurgegevens', // Factuurgegevens uit shared/facturatie.ts: naam, adres, KvK, btw, factuur-e-mail
   'logo', // {bijlageId, mime, grootte, op}: het logo van de organisatie (shared/organisatieLogo.ts)
-  'functieKeuzes', // FunctieKeuzes uit shared/niveauOverzicht.ts: per functie en niveau aan of uit (Instellingen, Niveaus)
   // Van de leverancier:
   'pakket',
   'aiCredits',
@@ -44,7 +43,7 @@ export const VERBORGEN_KEYS: readonly SettingKey[] = ['pakket', 'aiCredits', 'fe
 
 /** Sleutels met een eigen pagina en endpoint (validatie, audit en wie het mag lezen staan daar). De algemene
  * PUT /api/settings/:key weigert ze en GET /api/settings laat ze weg. */
-export const EIGEN_PAGINA_KEYS: readonly SettingKey[] = ['bewaartermijnen', 'factuurgegevens', 'logo', 'functieKeuzes']
+export const EIGEN_PAGINA_KEYS: readonly SettingKey[] = ['bewaartermijnen', 'factuurgegevens', 'logo']
 
 export function isEigenPaginaKey(k: string): boolean {
   return (EIGEN_PAGINA_KEYS as readonly string[]).includes(k)

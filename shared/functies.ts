@@ -1095,8 +1095,8 @@ export function startindeling(): Omit<FunctieRegel, 'organisationId'>[] {
 }
 
 /** Het niveau waarvoor een functie voor het eerst aanstaat, volgens de stand. */
-export function aanVanaf(sleutel: string, organisatie: Pick<OrganisatieContext, 'id' | 'keuzes'>, stand: FunctieRegel[]): Niveau | null {
-  for (const n of NIVEAUS) if (niveauAan(sleutel, n, organisatie, stand)) return n
+export function aanVanaf(sleutel: string, organisatie: Pick<OrganisatieContext, 'id'>, stand: FunctieRegel[]): Niveau | null {
+  for (const n of NIVEAUS) if (aanVoorNiveau(sleutel, n, organisatie, stand)) return n
   return null
 }
 
@@ -1119,33 +1119,6 @@ export function aanVoorNiveau(
   return algemeen ?? false
 }
 
-/**
- * Zette Dealtrace (de founder) deze functie voor dit niveau uit? Een regel voor deze organisatie met aan = false,
- * of zonder zo'n regel een algemene regel die uit staat waar de startindeling hem aan heeft. Een platform-uitzetting
- * gaat voor de keuze van de organisatie.
- */
-export function founderUit(sleutel: string, niveau: Niveau, organisatie: Pick<OrganisatieContext, 'id'>, stand: FunctieRegel[]): boolean {
-  let algemeen: boolean | undefined
-  for (const r of stand) {
-    if (r.functie !== sleutel || r.niveau !== niveau) continue
-    if (r.organisationId === organisatie.id) return !r.aan
-    if (r.organisationId === null) algemeen = r.aan
-  }
-  const f = functie(sleutel)
-  return algemeen === false && !!f && NIVEAUS.indexOf(niveau) >= NIVEAUS.indexOf(f.startNiveau)
-}
-
-/**
- * Staat de functie aan voor dit niveau in deze organisatie? De standaard is de stand uit functies_per_niveau
- * (die begint als de startindeling); de keuze van de beheerder (Instellingen, Niveaus) gaat daarvoor, een
- * uitzetting van Dealtrace gaat voor alles.
- */
-export function niveauAan(sleutel: string, niveau: Niveau, organisatie: Pick<OrganisatieContext, 'id' | 'keuzes'>, stand: FunctieRegel[]): boolean {
-  if (founderUit(sleutel, niveau, organisatie, stand)) return false
-  const k = organisatie.keuzes?.[sleutel]?.[niveau]
-  return typeof k === 'boolean' ? k : aanVoorNiveau(sleutel, niveau, organisatie, stand)
-}
-
 export function pakketBevat(organisatie: Pick<OrganisatieContext, 'pakket' | 'features'>, f: Functie): boolean {
   if (organisatie.features.uit?.includes(f.sleutel)) return false
   if (organisatie.features.aan?.includes(f.sleutel)) return true
@@ -1161,7 +1134,7 @@ export type Weigerreden = 'pakket' | 'rol' | 'niveau'
 export type Beschikbaarheid = { ok: true } | { ok: false; reden: Weigerreden }
 
 /**
- * beschikbaar = pakketBevat && rolMag && niveauAan (4.2; niveauAan neemt de keuze van de organisatie mee). Er is geen
+ * beschikbaar = pakketBevat && rolMag && aanVoorNiveau (4.2). Er is geen
  * uitzondering per gebruiker. "Iedereen ziet alles" zet alles uit het pakket
  * aan, maar nooit boven pakket of rol. Een onbekende sleutel is geweigerd op rol.
  */
@@ -1178,7 +1151,7 @@ export function beschikbaar(
   if (organisatie.iedereenAlles) return { ok: true }
   // Managers en beheerders hebben de functies van hun rol altijd aan (4.1).
   if (f.rollen !== 'iedereen' || f.altijdVoor?.includes(gebruiker.rol)) return { ok: true }
-  if (!niveauAan(sleutel, gebruiker.niveau, organisatie, stand)) return { ok: false, reden: 'niveau' }
+  if (!aanVoorNiveau(sleutel, gebruiker.niveau, organisatie, stand)) return { ok: false, reden: 'niveau' }
   return { ok: true }
 }
 

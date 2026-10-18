@@ -11,7 +11,6 @@ import { eq, or, isNull } from 'drizzle-orm'
 import { sql } from 'drizzle-orm'
 import { beschikbaar, type Weigerreden } from '../../shared/functies'
 import { toestelLabel } from '../../shared/inloggen'
-import { schoneKeuzes } from '../../shared/niveauOverzicht'
 import type { FunctieRegel, GebruikerContext, Niveau, OrganisatieContext, Pakket, Rol, Werkplek } from '../../shared/types'
 import type { WerkIn } from '../../shared/werkIn'
 import { onthoud } from './kortGeheugen'
@@ -120,7 +119,7 @@ async function leesGebruiker(event: H3Event, sessie: SessieInhoud): Promise<Sess
   }
 }
 
-/** Organisatie, instelling "Iedereen ziet alles", de functiekeuzes van de beheerder en de stand uit functies_per_niveau; 30 seconden in het korte geheugen. */
+/** Organisatie, instelling "Iedereen ziet alles" en de stand uit functies_per_niveau; 30 seconden in het korte geheugen. */
 export function leesOrganisatie(organisationId: string) {
   return onthoud(`org:${organisationId}`, 30_000, () => leesOrganisatieUitDb(organisationId))
 }
@@ -128,10 +127,8 @@ async function leesOrganisatieUitDb(organisationId: string) {
   return metOrganisatie(organisationId, async (tx) => {
     const [org] = await tx.select().from(schema.organisations).where(eq(schema.organisations.id, organisationId))
     if (!org) throw createError({ statusCode: 401, statusMessage: 'Organisatie onbekend' })
-    const instellingen = await tx.select().from(schema.orgSettings)
-      .where(sql`${schema.orgSettings.key} in ('niveaus', 'functieKeuzes')`)
-    const niveaus = instellingen.find((r) => r.key === 'niveaus')
-    const keuzes = schoneKeuzes(instellingen.find((r) => r.key === 'functieKeuzes')?.value)
+    const [niveaus] = await tx.select().from(schema.orgSettings)
+      .where(sql`${schema.orgSettings.key} = 'niveaus'`)
     const regels = await tx.select().from(schema.functiesPerNiveau)
       .where(or(isNull(schema.functiesPerNiveau.organisationId), eq(schema.functiesPerNiveau.organisationId, organisationId)))
     const organisatie: OrganisatieContext & { naam: string } = {
@@ -140,7 +137,6 @@ async function leesOrganisatieUitDb(organisationId: string) {
       pakket: org.pakket as Pakket,
       features: org.features ?? {},
       iedereenAlles: Boolean((niveaus?.value as any)?.iedereenAlles),
-      keuzes,
     }
     const stand: FunctieRegel[] = regels.map((r) => ({
       functie: r.functie, niveau: r.niveau as Niveau, aan: r.aan, organisationId: r.organisationId,
