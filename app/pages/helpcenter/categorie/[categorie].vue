@@ -1,24 +1,15 @@
 <script setup lang="ts">
-// Eén categorie van het helpcenter: de artikelen als kaarten, de andere categorieën van dezelfde
-// collectie eronder. Een onbekende categorie en een categorie die niet voor jouw rol is (Inrichten,
-// Voor de salesmanager) geven hetzelfde antwoord, zodat het adres niets verklapt.
-import { CATEGORIE_UITLEG, COLLECTIES, categorieLink, categorieUitSlug, hoofdstukVan } from '~~/shared/help'
+// Eén categorie van het helpcenter: kruimelpad (Helpcenter, de collectie, de categorie), de categorieën als
+// filter-pillen met deze categorie aan, en de artikelen als kaarten. Een onbekende categorie en een
+// categorie die niet voor jouw rol is (Inrichten, Voor de salesmanager) geven hetzelfde antwoord, zodat het adres niets verklapt.
+import { CATEGORIE_UITLEG, COLLECTIES, categorieUitSlug, overzichtLink } from '~~/shared/help'
 const route = useRoute()
 const cat = computed(() => categorieUitSlug(String(route.params.categorie ?? '')))
 const { data } = await useFetch<any>('/api/help', { key: 'help-categorie', default: () => ({ artikelen: [] }) })
 const artikelen = computed<any[]>(() => (cat.value ? data.value.artikelen.filter((a: any) => a.collectie === cat.value!.collectie && a.categorie === cat.value!.naam) : []))
 const collectieNaam = computed(() => COLLECTIES[cat.value?.collectie ?? 'product'].naam)
 // Een categorie uit Nieuwe klanten werven gaat terug naar dat hoofdstuk van de academie.
-const overzicht = computed(() => {
-  const o = COLLECTIES[cat.value?.collectie ?? 'product'].overzicht
-  const h = cat.value?.collectie === 'newbusiness' ? hoofdstukVan(cat.value.naam) : null
-  return h && h.sleutel !== 'vak' ? `${o}#${h.sleutel}` : o
-})
-const verwant = computed(() => {
-  if (!cat.value) return []
-  const namen = COLLECTIES[cat.value.collectie].categorieen
-  return namen.filter((n) => n !== cat.value!.naam && data.value.artikelen.some((a: any) => a.collectie === cat.value!.collectie && a.categorie === n))
-})
+const overzicht = computed(() => overzichtLink(cat.value?.collectie ?? 'product', cat.value?.naam))
 // Een productcategorie zonder artikelen voor jou bestaat niet; de academie en de tips tonen een lege staat.
 const bestaat = computed(() => !!cat.value && (artikelen.value.length > 0 || cat.value.collectie !== 'product'))
 useHead({ title: () => `${bestaat.value ? cat.value!.naam : 'Categorie'} · Helpcenter · Dealtrace` })
@@ -27,8 +18,9 @@ useHead({ title: () => `${bestaat.value ? cat.value!.naam : 'Categorie'} · Help
 <template>
   <div>
     <template v-if="bestaat">
-      <PaginaKop :kicker="`Helpcenter · ${collectieNaam}`" :titel="cat!.naam" :uitleg="CATEGORIE_UITLEG[cat!.naam]" helpartikel="helpcenter">
-        <template #acties><NuxtLink :to="overzicht" class="dd-actie dd-actie--secundair" data-test="terug-overzicht"><Icoon naam="ArrowLeft" class="dd-actie-icoon" />{{ collectieNaam }}</NuxtLink></template>
+      <PaginaKop :titel="cat!.naam" :uitleg="CATEGORIE_UITLEG[cat!.naam]" helpartikel="helpcenter">
+        <template #kicker><HelpKruimelpad :pad="[{ label: 'Helpcenter', to: '/helpcenter' }, { label: collectieNaam, to: overzicht, test: 'kruimel-overzicht' }, { label: cat!.naam }]" /></template>
+        <template #na><HelpCategorieen :actief="cat!.naam" :collectie="cat!.collectie" /></template>
       </PaginaKop>
       <section class="section hcat">
         <div class="container">
@@ -36,19 +28,14 @@ useHead({ title: () => `${bestaat.value ? cat.value!.naam : 'Categorie'} · Help
             <HelpKaart v-for="a in artikelen" :key="a.id" :artikel="a" />
           </HelpGroep>
           <p v-if="!artikelen.length" class="hcat-leeg">{{ cat!.collectie === 'newbusiness' ? 'De artikelen volgen met de academie.' : 'De artikelen in deze categorie volgen.' }}</p>
-          <nav v-if="verwant.length" class="hcat-verwant" aria-label="Andere categorieën">
-            <h2 class="hcat-verwant-titel">Andere categorieën</h2>
-            <ul class="hcat-verwant-lijst" role="list">
-              <li v-for="n in verwant" :key="n"><NuxtLink :to="categorieLink(n)" class="hcat-verwant-link">{{ n }}</NuxtLink></li>
-            </ul>
-          </nav>
         </div>
       </section>
       <HelpSteun />
     </template>
     <section v-else class="section">
       <div class="container">
-        <NuxtLink to="/helpcenter" class="hcat-kruimel">Helpcenter</NuxtLink>
+        <HelpKruimelpad :pad="[{ label: 'Helpcenter', to: '/helpcenter' }, { label: 'Categorie niet gevonden' }]" />
+        <HelpCategorieen class="hcat-chips" />
         <div class="hcat-melding" data-test="categorie-onbekend">
           <h1 class="hcat-melding-titel">Deze categorie is er niet.</h1>
           <p>Het adres bestaat niet, of de categorie hoort bij een rol die jij niet hebt. Ga terug naar het <NuxtLink to="/helpcenter" class="hcat-inline">helpcenter</NuxtLink> voor alles wat wel op jouw werk van toepassing is.</p>
@@ -61,15 +48,7 @@ useHead({ title: () => `${bestaat.value ? cat.value!.naam : 'Categorie'} · Help
 <style scoped>
 .hcat { padding-top: 0; }
 .hcat-leeg { padding: 24px; background: var(--wit); border: 1px dashed var(--border-strong); color: var(--muted); text-align: center; }
-.hcat-verwant { margin-top: 32px; }
-.hcat-verwant-titel { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
-.hcat-verwant-lijst { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-@media (min-width: 700px) { .hcat-verwant-lijst { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1100px) { .hcat-verwant-lijst { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.hcat-verwant-link { display: flex; align-items: center; min-height: var(--touch-target-min); padding: 10px 14px; background: var(--wit); border: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--ink); text-decoration: none; }
-.hcat-verwant-link:hover { border-color: var(--ink); }
-.hcat-kruimel { display: inline-flex; align-items: center; min-height: var(--touch-target-min); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
-.hcat-kruimel::before { content: '\2190  '; white-space: pre; }
+.hcat-chips { margin: 0 0 20px; }
 .hcat-melding { padding: 28px; background: var(--wit); border: 1px dashed var(--border-strong); }
 .hcat-melding-titel { font-family: var(--font-serif); font-size: 22px; font-weight: 700; margin: 0 0 8px; }
 .hcat-melding p { margin: 0; font-size: 14px; line-height: 1.65; color: var(--ink-soft); }

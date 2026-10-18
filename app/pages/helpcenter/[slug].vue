@@ -1,10 +1,10 @@
 <script setup lang="ts">
-// Artikelpagina (F21, P25) in de opzet van een instructie in DealDrive: kruimel, kicker met collectie en
-// categorie, titel, samenvatting, "Probeer het" als zwarte knop, de inhoud in genummerde blokken (één
+// Artikelpagina (F21, P25) in de opzet van een instructie in DealDrive: kruimelpad (Helpcenter, collectie,
+// categorie, artikel), de categorieën als filter-pillen met deze categorie aan, titel, samenvatting, "Probeer het" als zwarte knop, de inhoud in genummerde blokken (één
 // blok per kop), controlevragen, "Markeer als gelezen", "Was dit nuttig?", "Ook in deze categorie" en een
 // voet, en onderaan Verder zoeken (HelpSteun). Gelezen na scrollen tot het einde of met de knop, via de wachtrij (ook offline). Lezen is nergens
 // een voorwaarde.
-import { categorieLink, COLLECTIES, FEEDBACK_REDENEN, helpLink, isCollectie, isGelezen } from '~~/shared/help'
+import { categorieLink, COLLECTIES, FEEDBACK_REDENEN, helpLink, isCollectie, isGelezen, overzichtLink } from '~~/shared/help'
 import { markdownNaarHtml } from '~~/shared/markdown'
 import { NIVEAU_LABEL, type Niveau } from '~~/shared/types'
 const route = useRoute()
@@ -24,7 +24,13 @@ const blokken = computed(() => {
   return { inleiding, blokken: delen.map((d) => { const m = /^<h3>([\s\S]*?)<\/h3>/.exec(d); return { kop: m?.[1] ?? '', inhoud: m ? d.slice(m[0].length) : d } }) }
 })
 const leestijd = computed(() => a.value?.leestijd ?? 1)
-const collectieNaam = computed(() => { const c: unknown = a.value?.collectie; return COLLECTIES[isCollectie(c) ? c : 'product'].naam })
+const collectie = computed(() => { const c: unknown = a.value?.collectie; return isCollectie(c) ? c : 'product' })
+const kruimelpad = computed(() => [
+  { label: 'Helpcenter', to: '/helpcenter' },
+  { label: COLLECTIES[collectie.value].naam, to: overzichtLink(collectie.value, a.value?.categorie), test: 'kruimel-overzicht' },
+  { label: a.value?.categorie ?? '', to: categorieLink(a.value?.categorie ?? ''), test: 'artikel-categorie' },
+  { label: a.value?.titel ?? '' },
+])
 const datum = (iso: string) => new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso))
 // useFetch geeft een ondiepe ref: "gelezen" houden we apart bij.
 const gelezenNu = ref(false)
@@ -65,7 +71,8 @@ useHead({ title: () => `${a.value?.titel ?? 'Artikel'} · Helpcenter · Dealtrac
   <div>
     <section v-if="error" class="section">
       <div class="container">
-        <NuxtLink to="/helpcenter" class="ha-kruimel">Helpcenter</NuxtLink>
+        <HelpKruimelpad :pad="[{ label: 'Helpcenter', to: '/helpcenter' }, { label: 'Artikel niet gevonden' }]" />
+        <HelpCategorieen class="ha-chips" />
         <div class="ha-melding" data-test="artikel-onbekend">
           <h1 class="ha-melding-titel">Dit artikel bestaat niet (meer).</h1>
           <p>Het adres klopt niet, of het artikel is gearchiveerd. Zoek het onderwerp in het helpcenter.</p>
@@ -75,11 +82,8 @@ useHead({ title: () => `${a.value?.titel ?? 'Artikel'} · Helpcenter · Dealtrac
     </section>
     <section v-else-if="a" class="section">
       <div class="container ha">
-        <nav class="ha-kruimels" aria-label="Kruimelpad">
-          <NuxtLink to="/helpcenter" class="ha-kruimel">Helpcenter</NuxtLink>
-          <NuxtLink :to="categorieLink(a.categorie)" class="ha-kruimel ha-kruimel--door" data-test="artikel-categorie">{{ a.categorie }}</NuxtLink>
-        </nav>
-        <span class="kicker kicker--streep">{{ collectieNaam }} · {{ a.categorie }}</span>
+        <HelpKruimelpad :pad="kruimelpad" />
+        <HelpCategorieen :actief="a.categorie" :collectie="collectie" class="ha-chips" />
         <h1 class="ha-titel" data-test="artikel-titel">{{ a.titel }}</h1>
         <p v-if="a.samenvatting" class="ha-samenvatting">{{ a.samenvatting }}</p>
         <p class="ha-meta">
@@ -150,12 +154,8 @@ useHead({ title: () => `${a.value?.titel ?? 'Artikel'} · Helpcenter · Dealtrac
 
 <style scoped>
 .ha { max-width: 860px; }
-.ha-kruimels { display: flex; align-items: center; flex-wrap: wrap; gap: 0 4px; margin-bottom: 6px; }
-.ha-kruimel { display: inline-flex; align-items: center; min-height: var(--touch-target-min); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
-.ha-kruimel:first-child::before { content: '\2190  '; white-space: pre; }
-.ha-kruimel--door::before { content: '/  '; white-space: pre; color: var(--muted-light); }
-.ha-kruimel:hover { color: var(--ink); }
-.ha-titel { font-family: var(--font-serif); font-size: clamp(26px, 4vw, 38px); line-height: 1.15; font-weight: 700; margin: 12px 0 8px; color: var(--ink); overflow-wrap: anywhere; }
+.ha-chips { margin: 0 0 18px; }
+.ha-titel { font-family: var(--font-serif); font-size: clamp(26px, 4vw, 38px); line-height: 1.15; font-weight: 700; margin: 0 0 8px; color: var(--ink); overflow-wrap: anywhere; }
 .ha-samenvatting { margin: 0 0 10px; font-size: 15px; line-height: 1.6; color: var(--ink-soft); max-width: 64ch; }
 .ha-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 18px; font-size: 12px; color: var(--muted); }
 .ha-bron { display: flex; align-items: center; gap: 6px; margin: -8px 0 18px; font-size: 12px; font-style: italic; color: var(--muted); }

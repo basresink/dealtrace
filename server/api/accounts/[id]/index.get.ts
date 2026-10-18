@@ -13,6 +13,7 @@ import { terugkomControleLui, verkoopverhaal } from '../../../utils/reis'
 import { vereisFunctie } from '../../../utils/sessie'
 import { extraBronnenUit } from '../../../utils/extraBronnen'
 import { magDitAccount } from '../../../utils/deactiveren'
+import { magBandBewerken } from '../../../utils/bandVoorstel'
 import { DEACTIVEER_REDEN_LABEL, deactiveerTekst } from '../../../../shared/deactiveren'
 
 export default defineEventHandler(async (event) => {
@@ -125,6 +126,8 @@ export default defineEventHandler(async (event) => {
         prospectStatus: magStatus,
         reis: kan(ctx, 'reis.zien') && a.accountKind === 'prospect',
         kwalificeer: kan(ctx, 'reis.kwalificeer') && a.nbStatus === 'nieuw' && ['gevonden', 'dossier-compleet'].includes(a.faseId ?? ''),
+        // BAND invullen of bijwerken (zelf of via het AI-voorstel) staat los van Kwalificeer en kan ook voorbij status nieuw.
+        band: kan(ctx, 'reis.kwalificeer') && await magBandBewerken(tx, ctx.gebruiker, a.id),
         faseCorrigeren: kan(ctx, 'reis.faseCorrigeren') && a.accountKind === 'prospect',
         geschiedenis: kan(ctx, 'reis.geschiedenis'),
         reisBekijken: kan(ctx, 'reis.overzicht'),

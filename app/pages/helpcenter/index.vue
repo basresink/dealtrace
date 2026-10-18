@@ -1,11 +1,12 @@
 <script setup lang="ts">
 // Helpcenter (F21, P25) in de opzet van DealDrive: kop met rechtsboven een zoekicoon dat een zoekveld onder
-// de kop uitklapt (?zoek= in de URL), "Voor jou" en "Nieuw en bijgewerkt", de ingangen (Hoe werkt Dealtrace,
-// de academie met Nieuwe klanten werven, Tips & Tricks en de Kennisbank) en de categorieën als blokken met
-// hun eerste zes artikelen (HelpCategorieBlok, met Toon alle als er meer zijn).
+// de kop uitklapt (?zoek= in de URL), daaronder de categorieën als filter-pillen (HelpCategorieen), de
+// ingangen (Hoe werkt Dealtrace, de academie, Tips & Tricks en de Kennisbank) en drie secties met elk zes
+// artikelen als kaarten (uitgelicht: om de beurt een artikel per categorie) en de link "Alle artikelen in
+// <sectie>" naar het overzicht. Zoekresultaten krijgen een kruimelpad terug naar de start.
 // Een categorie opent /helpcenter/categorie/<naam>, een artikel /helpcenter/<slug>.
 // Geen voortgang, geen teller, geen leerpaden (B19).
-import { CATEGORIEEN_NEWBUSINESS, CATEGORIEEN_PRODUCT, CATEGORIEEN_TIPS, CATEGORIEEN_WERVEN, COLLECTIES, type HelpCollectie, helpLink } from '~~/shared/help'
+import { COLLECTIES, type HelpCollectie, uitgelicht } from '~~/shared/help'
 const route = useRoute()
 const router = useRouter()
 const zoek = ref(typeof route.query.zoek === 'string' ? route.query.zoek : '')
@@ -15,7 +16,7 @@ const zoekInvoer = ref<HTMLInputElement>()
 async function openZoeken() { zoekOpen.value = true; await nextTick(); zoekInvoer.value?.focus() }
 function wisselZoeken() { if (zoekOpen.value && !zoek.value.trim()) zoekOpen.value = false; else void openZoeken() }
 function sluitZoeken() { zoek.value = ''; zoekOpen.value = false }
-const { data } = await useFetch<any>('/api/help', { query: computed(() => ({ zoek: route.query.zoek, collectie: route.query.collectie, niveau: route.query.niveau })), default: () => ({ artikelen: [], resultaten: null, voorJou: { nieuw: [], aanDeSlag: [], bijgewerkt: [] }, kan: {} }) })
+const { data } = await useFetch<any>('/api/help', { query: computed(() => ({ zoek: route.query.zoek, collectie: route.query.collectie, niveau: route.query.niveau })), default: () => ({ artikelen: [], resultaten: null, kan: {} }) })
 const { functie } = useMe()
 const aiAan = computed(() => !!functie('assistent.chat')?.beschikbaar)
 const beheerAan = computed(() => !!functie('help.eigenArtikelen')?.beschikbaar)
@@ -26,13 +27,11 @@ let timer: ReturnType<typeof setTimeout> | undefined
 watch(zoek, (z) => { clearTimeout(timer); timer = setTimeout(() => router.replace({ query: { ...route.query, zoek: z.trim() || undefined } }), 300) })
 watch(() => route.query.zoek, (z) => { if ((typeof z === 'string' ? z : '') !== zoek.value.trim()) zoek.value = typeof z === 'string' ? z : ''; if (z) zoekOpen.value = true })
 
-const perCategorie = (collectie: string, namen: readonly string[]) => namen.map((naam) => ({ naam, artikelen: data.value.artikelen.filter((a: any) => a.collectie === collectie && a.categorie === naam) }))
-// Inrichten en Voor de salesmanager laat de server alleen zien aan wie ze mag lezen; een lege productcategorie valt weg.
-const product = computed(() => perCategorie('product', CATEGORIEEN_PRODUCT).filter((c) => c.artikelen.length))
-// De academie: het vak en het hoofdstuk Nieuwe klanten werven; een categorie zonder artikelen staat er rustig bij.
-const newbusiness = computed(() => perCategorie('newbusiness', CATEGORIEEN_NEWBUSINESS))
-const isWerven = (naam: string) => (CATEGORIEEN_WERVEN as readonly string[]).includes(naam)
-const tips = computed(() => perCategorie('tips', CATEGORIEEN_TIPS).filter((c) => c.artikelen.length))
+// Per sectie zes artikelen als kaarten; Inrichten en Voor de salesmanager laat de server alleen zien aan wie ze mag lezen.
+const sectie = (collectie: HelpCollectie) => uitgelicht<any>(data.value.artikelen.filter((a: any) => a.collectie === collectie), COLLECTIES[collectie].categorieen)
+const product = computed(() => sectie('product'))
+const newbusiness = computed(() => sectie('newbusiness'))
+const tips = computed(() => sectie('tips'))
 const aantal = (collectie: string) => data.value.artikelen.filter((a: any) => a.collectie === collectie).length
 const resultatenPerCollectie = computed(() => data.value.resultaten ? (Object.keys(COLLECTIES) as HelpCollectie[]).map((c) => ({ naam: COLLECTIES[c].naam, artikelen: data.value.resultaten.filter((a: any) => a.collectie === c) })).filter((g) => g.artikelen.length) : [])
 useHead({ title: 'Helpcenter · Dealtrace' })
@@ -41,6 +40,7 @@ useHead({ title: 'Helpcenter · Dealtrace' })
 <template>
   <div>
     <PaginaKop kicker="Ondersteuning" titel="Helpcenter" uitleg="Uitleg over elk scherm, de new business-academie en tips om slimmer te werken. Kom je er niet uit? Vraag de AI-assistent of mail support." helpartikel="helpcenter" :zoeken="{ actie: wisselZoeken, aan: zoekOpen, label: 'Zoeken in het helpcenter', test: 'help-zoekicoon', controls: 'hc-zoekpaneel' }">
+      <template v-if="data.resultaten" #kicker><HelpKruimelpad :pad="[{ label: 'Helpcenter', to: '/helpcenter' }, { label: 'Zoekresultaten' }]" /></template>
       <template #acties>
         <FunctieLink v-if="beheerAan" to="/instellingen/help" class="dd-actie dd-actie--secundair" data-test="help-beheer"><Icoon naam="Pencil" class="dd-actie-icoon" />Artikelen beheren</FunctieLink>
       </template>
@@ -51,6 +51,7 @@ useHead({ title: 'Helpcenter · Dealtrace' })
           <span v-if="data.resultaten" class="hc-telling tnum">{{ data.resultaten.length }} {{ data.resultaten.length === 1 ? 'artikel' : 'artikelen' }}</span>
           <button type="button" class="dd-actie dd-actie--icoon hc-zoeksluit" aria-label="Zoeken sluiten" title="Zoeken sluiten" data-test="help-zoek-sluit" @click="sluitZoeken"><Icoon naam="X" /></button>
         </div>
+        <HelpCategorieen />
       </template>
     </PaginaKop>
     <section class="section hc-sectie">
@@ -68,26 +69,6 @@ useHead({ title: 'Helpcenter · Dealtrace' })
         </div>
 
         <template v-else>
-          <div class="hc-duo">
-            <article class="hc-blok" data-test="voor-jou">
-              <h2 class="hc-blok-titel">Voor jou</h2>
-              <ul v-if="data.voorJou.nieuw.length" class="hc-lijst">
-                <li v-for="a in data.voorJou.nieuw" :key="a.id" data-test="voor-jou-nieuw"><span class="pil pil--geel">nieuw</span><NuxtLink :to="helpLink(a.slug)">{{ a.titel }}</NuxtLink><Icoon v-if="a.gelezen" naam="CircleCheck" class="hc-vinkje" :grootte="16" /></li>
-              </ul>
-              <template v-if="data.voorJou.aanDeSlag.length">
-                <h3 class="hc-blok-sub">Aan de slag</h3>
-                <ul class="hc-lijst" data-test="aan-de-slag">
-                  <li v-for="a in data.voorJou.aanDeSlag" :key="a.id" :data-test="`aan-de-slag-${a.slug}`"><NuxtLink :to="helpLink(a.slug)">{{ a.titel }}</NuxtLink><Icoon v-if="a.gelezen" naam="CircleCheck" class="hc-vinkje" :grootte="16" data-test="gelezen-vinkje" /></li>
-                </ul>
-              </template>
-              <p v-if="!data.voorJou.nieuw.length && !data.voorJou.aanDeSlag.length" class="hc-blok-tekst">Je hebt de eerste stappen gezet. Hiernaast staat wat er nieuw is.</p>
-            </article>
-            <article class="hc-blok" data-test="bijgewerkt">
-              <h2 class="hc-blok-titel">Nieuw en bijgewerkt</h2>
-              <ul class="hc-lijst"><li v-for="a in data.voorJou.bijgewerkt" :key="a.id"><NuxtLink :to="helpLink(a.slug)">{{ a.titel }}</NuxtLink><Icoon v-if="a.gelezen" naam="CircleCheck" class="hc-vinkje" :grootte="16" /></li></ul>
-            </article>
-          </div>
-
           <div class="hc-ingangen">
             <NuxtLink to="/helpcenter/instructies" class="hc-ingang" data-test="ingang-instructies">
               <span class="hc-ingang-label">{{ aantal('product') }} artikelen</span>
@@ -115,23 +96,16 @@ useHead({ title: 'Helpcenter · Dealtrace' })
             </FunctieLink>
           </div>
 
-          <HelpGroep titel="Hoe werkt Dealtrace" uitleg="Per onderwerp de uitleg over de schermen." link="/helpcenter/instructies" link-tekst="Alle instructies" class="mt-32">
-            <HelpCategorieBlok v-for="c in product" :key="c.naam" :naam="c.naam" :artikelen="c.artikelen" />
+          <HelpGroep v-if="product.length" :titel="COLLECTIES.product.naam" uitleg="Per onderwerp de uitleg over de schermen." :link="COLLECTIES.product.overzicht" :link-tekst="`Alle artikelen in ${COLLECTIES.product.naam}`" class="mt-32" data-test="groep-instructies">
+            <HelpKaart v-for="a in product" :key="a.id" :artikel="a" met-categorie />
           </HelpGroep>
 
-          <HelpGroep titel="New business" uitleg="De academie: het vak, los van de schermen, en nieuwe klanten werven uit eigen vakliteratuur." link="/helpcenter/academie" link-tekst="Hele academie" class="mt-32" data-test="groep-academie">
-            <template v-for="c in newbusiness" :key="c.naam">
-              <HelpCategorieBlok v-if="c.artikelen.length" :naam="c.naam" :artikelen="c.artikelen" :kicker="isWerven(c.naam) ? 'Nieuwe klanten werven' : undefined" />
-              <div v-else class="hc-categorie hc-categorie--leeg" :data-test="`categorie-${c.naam}`">
-                <span v-if="isWerven(c.naam)" class="hc-categorie-kicker">Nieuwe klanten werven</span>
-                <h3 class="hc-categorie-titel">{{ c.naam }}</h3>
-                <p class="hc-categorie-tekst">De artikelen volgen met de academie.</p>
-              </div>
-            </template>
+          <HelpGroep v-if="newbusiness.length" :titel="COLLECTIES.newbusiness.naam" uitleg="De academie: het vak, los van de schermen, en nieuwe klanten werven uit eigen vakliteratuur." :link="COLLECTIES.newbusiness.overzicht" :link-tekst="`Alle artikelen in ${COLLECTIES.newbusiness.naam}`" class="mt-32" data-test="groep-academie">
+            <HelpKaart v-for="a in newbusiness" :key="a.id" :artikel="a" met-categorie />
           </HelpGroep>
 
-          <HelpGroep v-if="tips.length" titel="Tips &amp; Tricks" uitleg="Van het DealDrive-team: slim werken in Dealtrace, per tip een concreet voordeel." link="/helpcenter/tips" link-tekst="Alle tips" class="mt-32" data-test="groep-tips">
-            <HelpCategorieBlok v-for="c in tips" :key="c.naam" :naam="c.naam" :artikelen="c.artikelen" soort="tips" />
+          <HelpGroep v-if="tips.length" :titel="COLLECTIES.tips.naam" uitleg="Van het DealDrive-team: slim werken in Dealtrace, per tip een concreet voordeel." :link="COLLECTIES.tips.overzicht" :link-tekst="`Alle artikelen in ${COLLECTIES.tips.naam}`" class="mt-32" data-test="groep-tips">
+            <HelpKaart v-for="a in tips" :key="a.id" :artikel="a" met-categorie />
           </HelpGroep>
         </template>
       </div>
@@ -155,20 +129,8 @@ useHead({ title: 'Helpcenter · Dealtrace' })
 .hc-ai { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 12px; padding: 14px 18px; background: var(--surface); border-left: 3px solid var(--yellow); font-size: 14px; color: var(--ink-soft); }
 .hc-ai p { margin: 0; }
 
-.hc-duo { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
-@media (min-width: 900px) { .hc-duo { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.hc-blok { padding: 20px 22px; background: var(--wit); border: 1px solid var(--border); min-width: 0; }
-.hc-blok-titel { font-family: var(--font-serif); font-size: 19px; font-weight: 700; margin: 0 0 6px; }
-.hc-blok-sub { font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 14px 0 0; }
-.hc-blok-tekst { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
-.hc-lijst { list-style: none; padding: 0; margin: 0; }
-.hc-lijst li { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
-.hc-lijst li:last-child { border-bottom: 0; }
-.hc-lijst a { color: var(--ink); text-decoration: none; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
-.hc-lijst a:hover { text-decoration: underline; text-decoration-color: var(--yellow); text-underline-offset: 3px; }
-.hc-vinkje { color: var(--green); flex-shrink: 0; margin-left: auto; }
 
-.hc-ingangen { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-top: 24px; }
+.hc-ingangen { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
 @media (min-width: 700px) { .hc-ingangen { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .hc-ingang { display: flex; flex-direction: column; align-items: flex-start; padding: 22px 24px; background: var(--ink); color: var(--wit); text-decoration: none; border-left: 3px solid var(--yellow); transition: background var(--transition-fast); }
 .hc-ingang:hover { background: var(--ink-soft); }
@@ -177,15 +139,10 @@ useHead({ title: 'Helpcenter · Dealtrace' })
 .hc-ingang-tekst { margin: 0 0 14px; font-size: 13px; line-height: 1.55; color: var(--wit-78); }
 .hc-ingang .hc-cta { color: var(--wit); }
 
-.hc-categorie { display: flex; flex-direction: column; min-width: 0; padding: 18px 20px; background: var(--wit); border: 1px solid var(--border); border-left: 3px solid var(--yellow); color: var(--ink); text-decoration: none; }
-.hc-categorie--leeg { border-left-color: var(--border-strong); background: var(--surface); }
-.hc-categorie-kicker { font-size: var(--fs-label); font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
-.hc-categorie-titel { font-family: var(--font-serif); font-size: 17px; font-weight: 700; margin: 0 0 6px; }
-.hc-categorie-tekst { margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: var(--ink-soft); }
 .hc-cta { font-size: 12px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; border-bottom: 2px solid var(--yellow); padding-bottom: 1px; }
 .hc-cta::after { content: ' \2192'; }
 @media (max-width: 719px) {
   .hc-zoekrij { flex-wrap: wrap; }
-  .hc-blok, .hc-ingang, .hc-categorie { padding: 16px; }
+  .hc-ingang { padding: 16px; }
 }
 </style>

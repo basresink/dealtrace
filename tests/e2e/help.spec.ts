@@ -35,19 +35,20 @@ test.describe('Hulp per scherm', () => {
 })
 
 test.describe('Helpcenter', () => {
-  test('Aan de slag: vijf artikelen; markeer als gelezen geeft een vinkje, zonder teller of balk', async ({ page }) => {
+  test('Aan de slag: markeer als gelezen geeft een vinkje op de kaart, zonder teller of balk', async ({ page }) => {
     await login(page, 'u-05')
     await ga(page, '/helpcenter')
-    await expect(page.getByTestId('aan-de-slag').locator('li')).toHaveCount(5)
     await expect(page.locator('progress, .voortgang')).toHaveCount(0)
     await expect(page.getByText(/van 5 gelezen/)).toHaveCount(0)
-    await page.getByTestId('aan-de-slag-je-eerste-dag-in-dealtrace').getByRole('link').click()
+    await page.getByTestId('help-categorieen').getByTestId('hc-cat-Aan de slag').click()
+    await expect(page).toHaveURL(/\/helpcenter\/categorie\/aan-de-slag$/)
+    await page.getByTestId('help-kaart-je-eerste-dag-in-dealtrace').click()
     await expect(page.getByTestId('artikel-titel')).toHaveText('Je eerste dag in Dealtrace')
     // Een kort artikel telt bij openen als gelezen; anders klik je "Markeer als gelezen".
     if (await page.getByTestId('markeer-gelezen').isEnabled()) await page.getByTestId('markeer-gelezen').click()
     await expect(page.getByTestId('markeer-gelezen')).toHaveText('Gelezen')
-    await ga(page, '/helpcenter')
-    await expect(page.getByTestId('aan-de-slag-je-eerste-dag-in-dealtrace').getByTestId('gelezen-vinkje')).toBeVisible()
+    await page.getByTestId('artikel-categorie').click()
+    await expect(page.getByTestId('help-kaart-je-eerste-dag-in-dealtrace').getByTestId('gelezen-vinkje')).toBeVisible()
   })
 
   test('zoeken vindt "Poging" zonder accenten; niets gevonden geeft de lege staat', async ({ page }) => {

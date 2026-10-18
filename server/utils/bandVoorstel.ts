@@ -12,6 +12,7 @@ import { schrijfAudit } from './audit'
 import { platformCredits } from './credits'
 import { voerAiStapUit } from './llm-provider'
 import { gebruikDb } from './db'
+import { magAccount } from './overdracht'
 import { alsHttpFout, meldGebeurtenis } from './reis'
 
 type Tx = Parameters<Parameters<ReturnType<typeof gebruikDb>['transaction']>[0]>[0]
@@ -21,6 +22,39 @@ const iso = (v: unknown) => (v == null ? new Date(0).toISOString() : v instanceo
 const fout = (s: number, m: string): never => { throw createError({ statusCode: s, statusMessage: m }) }
 
 /** De verslagen met een analyse van de Notulist, nieuwste eerst (hoogstens twintig). */
+/**
+ * BAND bewerken staat los van Kwalificeer: de eigenaar, zijn salesmanager en de beheerder (de bestaande rechten op
+ * het account, zoals bij "Vul in met AI") vullen BAND in of werken het bij, ook als de prospect al voorbij status
+ * nieuw is. Kwalificeren als gebeurtenis gebeurt alleen bij status nieuw (zie bandMeldtKwalificatie).
+ */
+export async function magBandBewerken(tx: Tx, g: { id: string; rol: string }, accountId: string): Promise<boolean> {
+  return magAccount(tx, g, accountId)
+}
+
+export async function vereisBandRecht(tx: Tx, g: { id: string; rol: string }, accountId: string) {
+  if (!(await magBandBewerken(tx, g, accountId))) fout(403, 'Alleen de eigenaar, zijn salesmanager of de beheerder werkt BAND bij')
+}
+
+/** Alleen bij status nieuw meldt BAND minimaal 3 van 4 `gekwalificeerd`; daarna is bijwerken geen gebeurtenis in de reis. */
+export function bandMeldtKwalificatie(band: Band, a: { nbStatus: string | null; accountKind: string | null }): boolean {
+  return bandGekwalificeerd(band) && a.nbStatus === 'nieuw' && a.accountKind === 'prospect'
+}
+
+/** Eén BAND-letter zelf zetten (PUT /band). */
+export async function zetBandLetter(tx: Tx, door: { id: string; rol: string }, accountId: string, invoer: { letter?: string; ja?: boolean; bron?: string }, nu = new Date()) {
+  if (!(BAND_LETTERS as readonly string[]).includes(invoer?.letter ?? '')) fout(422, 'Kies behoefte, autoriteit, noodzaak of draagvlak')
+  const [a] = await rijen(tx, sql`select data, nb_status, account_kind from accounts where id = ${accountId}`)
+  if (!a) fout(404, 'Account onbekend')
+  await vereisBandRecht(tx, door, accountId)
+  const band: Band = { ...(a!.data?.band ?? {}), [invoer.letter!]: { ja: !!invoer.ja, bron: invoer.bron?.slice(0, 200) || 'hand', op: nu.toISOString() } }
+  await tx.execute(sql`update accounts set data = jsonb_set(coalesce(data, '{}'::jsonb), '{band}', ${JSON.stringify(band)}::jsonb), updated_at = now() where id = ${accountId}`)
+  let gemeld = null
+  if (bandMeldtKwalificatie(band, { nbStatus: a!.nb_status, accountKind: a!.account_kind })) {
+    gemeld = await meldGebeurtenis(tx, { accountId, gebeurtenis: 'gekwalificeerd', door: door.id, reden: 'BAND minimaal 3 van 4' }).catch(alsHttpFout)
+  }
+  return { band, gemeld }
+}
+
 export async function verslagBronnen(tx: Tx, accountId: string): Promise<VerslagBron[]> {
   const afspraken = await rijen(tx, sql`select ap.id, ap.start_at, ap.data->>'titel' as titel, m.naam as soort, ap.data->'notulist' as analyse
     from appointments ap join meetingsoorten m on m.id = ap.meetingsoort_id where ap.account_id = ${accountId} and ap.data ? 'notulist' order by ap.start_at desc limit 10`)
@@ -104,12 +138,14 @@ export async function bandMetAi(tx: Tx, org: string, gebruiker: { id: string; ni
 export interface BandBesluit { letter: string; besluit: 'bevestig' | 'bewerk' | 'verwerp' | 'ongedaan'; ja?: boolean; toelichting?: string; bronId?: string }
 
 /** Bevestigen of bewerken zet de letter (met citaat en herkomst); verwerpen onthoudt het; ongedaan haalt een letter uit een verslag weer weg. */
-export async function besluitBandVoorstel(tx: Tx, org: string, door: string, accountId: string, b: BandBesluit, nu = new Date()) {
+export async function besluitBandVoorstel(tx: Tx, org: string, gebruiker: { id: string; rol: string }, accountId: string, b: BandBesluit, nu = new Date()) {
+  const door = gebruiker.id
   if (!(BAND_LETTERS as readonly string[]).includes(b.letter)) fout(422, 'Kies behoefte, autoriteit, noodzaak of draagvlak')
   if (!['bevestig', 'bewerk', 'verwerp', 'ongedaan'].includes(b.besluit)) fout(422, 'Kies bevestig, bewerk of verwerp')
   const letter = b.letter as BandLetter
   const [a] = await rijen(tx, sql`select data, nb_status, account_kind from accounts where id = ${accountId}`)
   if (!a) fout(404, 'Account onbekend')
+  await vereisBandRecht(tx, gebruiker, accountId)
   const data = { ...(a!.data ?? {}) }
   const band: Band = { ...(data.band ?? {}) }
   const verworpen = { ...(data.bandVerworpen ?? {}) } as Partial<Record<BandLetter, BandVerworpen>>
@@ -140,7 +176,7 @@ export async function besluitBandVoorstel(tx: Tx, org: string, door: string, acc
   if (bandAi) data.bandAi = bandAi
   await tx.execute(sql`update accounts set data = ${JSON.stringify(data)}::jsonb, updated_at = now() where id = ${accountId}`)
   await schrijfAudit(tx, { organisationId: org, actorId: door, action: `band.voorstel.${b.besluit}`, resourceType: 'accounts', resourceId: accountId, changes: { letter, ja: band[letter]?.ja ?? null, bronId: b.bronId ?? null } })
-  if (b.besluit !== 'verwerp' && b.besluit !== 'ongedaan' && bandGekwalificeerd(band) && a!.nb_status === 'nieuw' && a!.account_kind === 'prospect') {
+  if (b.besluit !== 'verwerp' && b.besluit !== 'ongedaan' && bandMeldtKwalificatie(band, { nbStatus: a!.nb_status, accountKind: a!.account_kind })) {
     gemeld = await meldGebeurtenis(tx, { accountId, gebeurtenis: 'gekwalificeerd', door, reden: 'BAND minimaal 3 van 4' }).catch(alsHttpFout)
   }
   return { band, gemeld }

@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { helpBestanden } from '../../server/db/helpStart'
 import { FUNCTIES, featureGroep } from '../../shared/functies'
 
-import { AAN_DE_SLAG, ACADEMIE_HOOFDSTUKKEN, CATEGORIEEN_NEWBUSINESS, CATEGORIEEN_TIPS, CATEGORIEEN_VAK, CATEGORIEEN_WERVEN, COLLECTIES, HELPCENTER_GERESERVEERD, TIPS_ONDERDELEN, VERHAAL_LEEG, WERVEN_BRONNEN, collectieUit, hoofdstukVan, categorieUitSlug, slugVan, artikelVoorRoute, citatenGeldig, helpLink, controleerArtikel, haalControlevragen, leestijd, ontbrekendeOnderdelen, vulVerhaal, zichtbareArtikelen } from '../../shared/help'
+import { AAN_DE_SLAG, ACADEMIE_HOOFDSTUKKEN, CATEGORIEEN_NEWBUSINESS, CATEGORIEEN_TIPS, CATEGORIEEN_VAK, CATEGORIEEN_WERVEN, COLLECTIES, HELPCENTER_GERESERVEERD, TIPS_ONDERDELEN, VERHAAL_LEEG, WERVEN_BRONNEN, collectieUit, hoofdstukVan, categorieUitSlug, slugVan, artikelVoorRoute, citatenGeldig, helpLink, controleerArtikel, haalControlevragen, leestijd, ontbrekendeOnderdelen, overzichtLink, uitgelicht, vulVerhaal, zichtbareArtikelen } from '../../shared/help'
 
 const alle = helpBestanden()
 const perSlug = new Map(alle.map((a) => [a.slug, a]))
@@ -201,5 +201,23 @@ describe('controleerArtikel en artikelVoorRoute', () => {
   it('route met parameter valt terug op het artikel van het scherm', () => {
     expect(artikelVoorRoute('/accounts/pr-01', alle)).toBe('de-accountkaart-lezen')
     expect(artikelVoorRoute('/belblokken', alle)).toBeTruthy()
+  })
+})
+
+describe('de start van het helpcenter', () => {
+  it('uitgelicht: om de beurt een artikel per categorie, hooguit zes, in vaste volgorde', () => {
+    const a = (categorie: string, n: number) => ({ categorie, slug: `${categorie}-${n}` })
+    const lijst = [a('B', 1), a('A', 1), a('A', 2), a('A', 3), a('C', 1), a('A', 4), a('A', 5), a('A', 6), a('A', 7)]
+    expect(uitgelicht(lijst, ['A', 'B', 'C', 'D']).map((x) => x.slug)).toEqual(['A-1', 'B-1', 'C-1', 'A-2', 'A-3', 'A-4'])
+    expect(uitgelicht([a('A', 1)], ['A', 'B'])).toHaveLength(1)
+    expect(uitgelicht([], ['A'])).toEqual([])
+    const nb = alle.filter((x) => x.collectie === 'newbusiness')
+    expect(uitgelicht(nb, COLLECTIES.newbusiness.categorieen)).toHaveLength(6)
+  })
+  it('overzichtLink: een categorie uit Nieuwe klanten werven gaat naar dat hoofdstuk', () => {
+    expect(overzichtLink('product', 'Dagelijks werk')).toBe('/helpcenter/instructies')
+    expect(overzichtLink('newbusiness', 'Bellen')).toBe('/helpcenter/academie')
+    expect(overzichtLink('newbusiness', 'Je verhaal schrijven')).toBe('/helpcenter/academie#werven')
+    expect(overzichtLink('tips')).toBe('/helpcenter/tips')
   })
 })

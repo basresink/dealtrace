@@ -234,6 +234,23 @@ export const HELPCENTER_GERESERVEERD = ['instructies', 'academie', 'werven', 'ti
 /** Het adres van een artikel en van een categorie in het helpcenter. */
 export const helpLink = (slug: string) => `/helpcenter/${slug}`
 export const categorieLink = (categorie: string) => `/helpcenter/categorie/${slugVan(categorie)}`
+/** Het overzicht van een collectie; een categorie uit Nieuwe klanten werven gaat naar dat hoofdstuk van de academie. */
+export function overzichtLink(collectie: HelpCollectie, categorie?: string): string {
+  const o = COLLECTIES[collectie].overzicht
+  const h = collectie === 'newbusiness' && categorie ? hoofdstukVan(categorie) : null
+  return h && h.sleutel !== 'vak' ? `${o}#${h.sleutel}` : o
+}
+/**
+ * De artikelen die een sectie op de start van het helpcenter als kaart toont: om de beurt het volgende
+ * artikel uit elke categorie (in de volgorde van de collectie), tot `max`. Zo staat elke categorie erin
+ * zolang er plek is, en blijft de keuze vast.
+ */
+export function uitgelicht<T extends { categorie: string }>(artikelen: T[], categorieen: readonly string[], max = 6): T[] {
+  const per = categorieen.map((c) => artikelen.filter((a) => a.categorie === c)).filter((l) => l.length)
+  const uit: T[] = []
+  for (let i = 0; uit.length < max && per.some((l) => l.length > i); i++) for (const l of per) if (l[i] && uit.length < max) uit.push(l[i]!)
+  return uit
+}
 /** Categorie bij een slug uit de URL, of null. */
 export function categorieUitSlug(slug: string): { naam: string; collectie: HelpCollectie } | null {
   for (const [collectie, c] of Object.entries(COLLECTIES) as [HelpCollectie, (typeof COLLECTIES)[HelpCollectie]][]) {

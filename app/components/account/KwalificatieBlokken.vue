@@ -18,7 +18,9 @@ const { functie } = useMe()
 const a = computed(() => props.account)
 const BAND = ['behoefte', 'autoriteit', 'noodzaak', 'draagvlak'] as const
 const bandJa = computed(() => BAND.filter((k) => a.value.band?.[k]?.ja).length)
-const magBand = computed(() => !!a.value.kan?.kwalificeer || (!!a.value.kan?.reis && a.value.status === 'nieuw'))
+// BAND bewerken (zelf of via het AI-voorstel) staat los van Kwalificeer: de eigenaar, zijn salesmanager en de beheerder
+// werken BAND ook bij als de prospect al voorbij status nieuw is. Dat bijwerken is dan geen gebeurtenis in de reis.
+const magBand = computed(() => !!a.value.kan?.band)
 const label = (k: string) => k.charAt(0).toUpperCase() + k.slice(1)
 async function zetBand(letter: string, ja: boolean) {
   try {
@@ -100,7 +102,7 @@ const ontbrekend = computed(() => ((a.value.ontbrekendeRollen ?? []) as string[]
         <span v-if="a.band?.[k]?.herkomst" class="kb-herkomst" :data-test="`band-herkomst-${k}`">
           <span class="kb-chip"><Icoon naam="FileText" :grootte="12" />Gebaseerd op {{ bronLabel(a.band[k].herkomst) }} · {{ a.band[k].herkomst.titel }}</span>
           <span v-if="a.band[k].toelichting" class="kb-citaat">"{{ a.band[k].toelichting }}"</span>
-          <button v-if="magVoorstel" type="button" class="kb-link" :data-test="`band-ongedaan-${k}`" @click="ongedaan(k)">Ongedaan maken</button>
+          <button v-if="magVoorstel && magBand" type="button" class="kb-link" :data-test="`band-ongedaan-${k}`" @click="ongedaan(k)">Ongedaan maken</button>
         </span>
       </li>
     </ul>
@@ -109,7 +111,7 @@ const ontbrekend = computed(() => ((a.value.ontbrekendeRollen ?? []) as string[]
       <span v-if="aiUit" id="kb-ai-uit" class="meta" data-test="band-ai-uit">{{ aiUit }}</span>
       <span v-else class="meta">Of vink zelf aan. De AI leest {{ ai?.verslagen }} {{ ai?.verslagen === 1 ? 'gespreksverslag' : 'gespreksverslagen' }} en doet per onderdeel een voorstel.</span>
     </div>
-    <section v-if="magVoorstel && voorstellen.length" class="kb-voorstellen" data-test="band-voorstellen">
+    <section v-if="magVoorstel && magBand && voorstellen.length" class="kb-voorstellen" data-test="band-voorstellen">
       <h3 class="kb-voorstellen-titel"><Label soort="ai" waarde="voorstel" /> Uit je gespreksverslagen</h3>
       <p class="kaart-meta"><template v-if="aantalAi">De AI las {{ ai?.verslagen }} {{ ai?.verslagen === 1 ? 'verslag' : 'verslagen' }}.</template><template v-else>De Notulist las {{ verslagen }} {{ verslagen === 1 ? 'verslag' : 'verslagen' }}.</template> Bevestig, bewerk of verwerp per letter; er wordt niets vanzelf ingevuld.</p>
       <article v-for="v in voorstellen" :key="v.letter" class="kb-voorstel" :data-test="`band-voorstel-${v.letter}`">
